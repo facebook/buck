@@ -1,0 +1,39 @@
+java_library(
+    name = "hamcrest",
+    exported_deps = [
+        ":hamcrest-junit",
+        ":java-hamcrest",
+    ],
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [],
+)
+
+prebuilt_jar(
+    name = "java-hamcrest",
+    binary_jar = "java-hamcrest-2.0.0.0.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "hamcrest-junit",
+    binary_jar = "hamcrest-junit-2.0.0.0.jar",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":java-hamcrest",
+    ],
+)

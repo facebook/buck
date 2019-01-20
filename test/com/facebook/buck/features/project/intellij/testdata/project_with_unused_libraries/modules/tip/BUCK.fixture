@@ -1,0 +1,7 @@
+java_library(
+    name = "tip",
+    srcs = glob(["src/**/*.java"]),
+    deps = [
+        "buck//third-party/java/guava:guava",
+    ],
+)

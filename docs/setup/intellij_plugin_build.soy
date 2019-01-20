@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.intellij_plugin_build.soy}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'Building the IntelliJ Plugin' /}
+    {param navid: 'rule_intellij_plugin_build' /}
     {param prettify: true /}
     {param description}
       How to build and setup the Intellij Buck plugin for your project.
@@ -18,16 +34,16 @@
 cd third-party/java/intellij/
 sh get_jars.sh "PathToYourIntellijLib" #for unix systems
 get_jars.bat "PathToYourIntellijLib"   #for windows systems
-buck build //src/com/facebook/buck/intellij/plugin:ideabuck
+buck build ideabuck
 </pre>
 {/literal}
 Once you have built the plugin, you can install it by following the{sp}
-<a href="https://www.jetbrains.com/idea/help/installing-plugin-from-disk.html">
-Installing Plugin from Disk</a> guide.
+<a href="https://www.jetbrains.com/help/idea/installing-a-plugin-from-disk.html">
+Installing a Plugin from Disk</a> guide.
 In order to access it you have to go to <code>View > Tool Windows > Buck</code>.
 <h2 id="manual-build-intellij">Building with Intellij</h2>
 <p>
-  The Buck Intellij plugin can also be built with intellij. A big advantage of this, when working
+  The ideabuck plugin can also be built with intellij. A big advantage of this, when working
   on the plugin, is the fact that you can easily debug it by creating a new Run/Debug Configuration.
 </p>
 <ol>
@@ -42,8 +58,8 @@ In order to access it you have to go to <code>View > Tool Windows > Buck</code>.
         After you installed Grammar-Kit you can generate the files by navigating in Intellij to
         {literal}
           <pre>
-src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang/Buck.bnf
-src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang/Buck.flex
+tools/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf
+tools/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex
           </pre>
         {/literal}
         and pressing <code>ctrl-shift-G / meta-shift-G</code>.
@@ -52,25 +68,26 @@ src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang
         If you don't want to install the Grammar-Kit plugin you can run
         {literal}
           <pre>
-python scripts/intellij/generate_grammar_kit.py
+python tools/ideabuck/scripts/generate_grammar_kit.py
           </pre>
         {/literal}
         <p>
           The above mentioned commands will create a <code>gen</code> directory in {sp}
-          <code>src/com/facebook/buck/intellij/plugin</code>.
+          <code>tools/ideabuck</code>.
         </p>
       </li>
     </ul>
   </li>
-
   <li>
     <a href="https://www.jetbrains.com/idea/help/configuring-intellij-platform-plugin-sdk.html">
     Configure the Intellij Platform Plugin SDK</a> and set it as the{sp}
-    <a href="https://www.jetbrains.com/idea/help/configuring-global-project-and-module-sdks.html">
-    plugin's module sdk</a>.
+    <a href="https://www.jetbrains.com/help/idea/sdk.html#change-module-sdk">
+    SDK of ideabuck module</a>. If you don't see "ideabuck" in the <code>Project Settings/Modules</code>, you need to
+    first import ideabuck module by right clicking on <code>tools/ideabuck/ideabuck.iml</code> and
+    choose <code>Import "ideabuck" Module</code>
   </li>
   <li>
-    Remove the Buck Intellij Plugin, <code>buck/src/com/facebook/buck/intellij/plugin</code> from{sp}
+    Remove the Buck Intellij Plugin, <code>tools/ideabuck</code> from{sp}
     <a href="https://www.jetbrains.com/help/idea/15.0/compiler-excludes.html?origin=old_help">
     the Compiler Excludes list</a>.
   </li>

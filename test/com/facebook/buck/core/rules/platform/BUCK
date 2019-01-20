@@ -1,0 +1,25 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_immutables_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/platform:platform",
+    ],
+    visibility = ["//test/..."],
+)
+
+java_test(
+    name = "platform",
+    srcs = glob(["*Test.java"]),
+    has_immutable_types = True,
+    deps = [
+        ":testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

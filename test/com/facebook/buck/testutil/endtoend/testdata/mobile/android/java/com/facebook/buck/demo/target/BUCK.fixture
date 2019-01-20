@@ -1,0 +1,26 @@
+# Copyright 2018-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+target = read_config("android", "target")
+
+python_binary(
+    name = "generate_jar",
+    main = "generate_jar.py",
+)
+
+genrule(
+    name = "generated_jar",
+    out = "genned.jar",
+    cmd = "$(exe :generate_jar) \"" + target + "\" $TMP $OUT",
+)
+
+prebuilt_jar(
+    name = "target_jar",
+    binary_jar = ":generated_jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)

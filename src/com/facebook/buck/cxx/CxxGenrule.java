@@ -16,28 +16,27 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.HasOutputName;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.shell.Genrule;
 
-public class CxxGenrule extends NoopBuildRule implements HasOutputName {
+/** Genrule with C++ aware macros. */
+public class CxxGenrule extends NoopBuildRuleWithDeclaredAndExtraDeps implements HasOutputName {
 
-  private final BuildRuleResolver resolver;
   private final String output;
 
   public CxxGenrule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
-      BuildRuleResolver resolver,
       String output) {
-    super(params, pathResolver);
-    this.resolver = resolver;
+    super(buildTarget, projectFilesystem, params);
     this.output = output;
   }
 
@@ -46,9 +45,11 @@ public class CxxGenrule extends NoopBuildRule implements HasOutputName {
     return output;
   }
 
-  public SourcePath getGenrule(CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    BuildRule rule = resolver.requireRule(getBuildTarget().withFlavors(cxxPlatform.getFlavor()));
-    return new BuildTargetSourcePath(rule.getBuildTarget());
+  /** Get the genrule */
+  public SourcePath getGenrule(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    Genrule rule =
+        (Genrule)
+            graphBuilder.requireRule(getBuildTarget().withAppendedFlavors(cxxPlatform.getFlavor()));
+    return rule.getSourcePathToOutput();
   }
-
 }

@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.apple_bundle}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'apple_bundle()' /}
+    {param navid: 'rule_apple_bundle' /}
     {param prettify: true /}
     {param description}
       A rule that generates an Apple bundle.
@@ -13,9 +29,34 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
+<p>
 An <code>apple_bundle()</code> rule takes an Apple binary and all of the resources and asset
 catalogs in the rule's transitive dependencies and generates a bundle containing all of those files.
 Optionally the generated bundle can also be signed using specified provisioning profiles.
+</p>
+<p>
+Code signing will embed entitlements pointed to by the <code>entitlements_file</code> arg in
+the bundle's <code>apple_binary</code>.  This is the preferred way to specify entitlements
+when building with Buck.
+</p>
+<p>If the entitlements file is not present, it falls back to the <code>CODE_SIGN_ENTITLEMENTS</code> entry in
+   <code>info_plist_substitutions</code>.
+</p>
+<p>
+If after these checks, an entitlements file is still not specified, it will be derived based
+on the entitlements of the selected provisioning profile. Provisioning profiles will be selected
+from profiles pointed to by <code>apple.provisioning_profile_search_path</code>, based on a
+non-expired profile that matches the bundle id and entitlements.
+</p>
+
+<p>
+Code signing will embed entitlements pointed to by the <code>CODE_SIGN_ENTITLEMENTS</code> entry in
+<code>info_plist_substitutions</code>. If an entitlements file is omitted, it will be derived based
+on the entitlements of the selected provisioning profile. Provisioning profiles will be selected
+from profiles pointed to by <code>apple.provisioning_profile_search_path</code>, based on a
+non-expired profile that matches the bundle id and entitlements.
+</p>
+
 {/param}
 
 {param args}
@@ -72,7 +113,31 @@ Optionally the generated bundle can also be signed using specified provisioning 
 
 {call apple_common.info_plist_substitutions_arg /}
 
-{call buck.tests_arg /}
+{call buck.tests_apple_arg /}
+
+{call buck.arg}
+  {param name: 'asset_catalogs_compilation_options' /}
+  {param desc}
+  A dict holding parameters for asset catalogs compiler (actool). Its options include:
+  <ul>
+    <li><code>notices</code> (defaults to <code>True</code>)</li>
+    <li><code>warnings</code> (defaults to <code>True</code>)</li>
+    <li><code>errors</code> (defaults to <code>True</code>)</li>
+    <li><code>compress_pngs</code> (defaults to <code>True</code>)</li>
+    <li><code>optimization</code> (defaults to <code>'space'</code>)</li>
+    <li><code>output_format</code> (defaults to <code>'human-readable-text'</code>)</li>
+    <li><code>extra_flags</code> (defaults to <code>[]</code>)</li>
+  </ul>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'ibtool_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  List of flags to be passed to ibtool during interface builder file compilation.
+  {/param}
+{/call}
 
 {/param} // args
 
@@ -108,6 +173,18 @@ apple_bundle(
   binary = ':DemoAppBinary',
   deps = [':DemoWatchApp#watch'],
   extension = 'app',
+  info_plist = 'Info.plist',
+)
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+# iOS app using safeAreaInsets delivering to iOS 9.x
+apple_bundle(
+  name = 'DemoIBApp',
+  binary = ':DemoIBAppBinary',
+  deps = [':DemoIBAppResources'],
+  extension = 'app',
+  ibtool_flags = ["--minimum-deployment-target", "9.0"],
   info_plist = 'Info.plist',
 )
 </pre>{/literal}

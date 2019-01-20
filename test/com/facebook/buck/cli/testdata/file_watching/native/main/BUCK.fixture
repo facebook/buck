@@ -1,0 +1,8 @@
+cxx_binary(
+    name = "main",
+    srcs = glob(["*.cpp"]),
+    compiler_flags = ["-g"],
+    deps = [
+        "//native/lib:lib",
+    ],
+)

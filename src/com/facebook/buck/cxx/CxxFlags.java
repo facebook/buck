@@ -16,74 +16,66 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.args.RuleKeyAppendableFunction;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-
-import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
-import java.util.SortedMap;
+import java.util.Optional;
 
 public class CxxFlags {
 
   private CxxFlags() {}
 
-  public static RuleKeyAppendableFunction<String, String> getTranslateMacrosFn(
-      final CxxPlatform cxxPlatform) {
-
-    final ImmutableSortedMap<String, String> flagMacros =
-        ImmutableSortedMap.copyOf(cxxPlatform.getFlagMacros());
-
-    return new RuleKeyAppendableFunction<String, String>() {
-
-      @Override
-      public void appendToRuleKey(RuleKeyObjectSink sink) {
-        SortedMap<String, String> sanitizedMap = Maps.transformValues(
-            flagMacros,
-            cxxPlatform.getDebugPathSanitizer().sanitize(Optional.<Path>absent()));
-        sink.setReflectively("flagMacros", sanitizedMap);
-      }
-
-      @Override
-      public String apply(String flag) {
-        // TODO(agallager): We're currently tied to `$VARIABLE` style of macros as much of the apple
-        // support relies on this.  Long-term though, we should make this consistent with the
-        // `$(macro ...)` style we use in the rest of the codebase.
-        for (Map.Entry<String, String> entry : flagMacros.entrySet()) {
-          flag = flag.replace("$" + entry.getKey(), entry.getValue());
-        }
-        return flag;
-      }
-    };
-  }
-
-  public static ImmutableList<String> getFlags(
-      Optional<ImmutableList<String>> flags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
+  public static ImmutableList<String> getFlagsWithPlatformMacroExpansion(
+      ImmutableList<String> flags,
+      PatternMatchedCollection<ImmutableList<String>> platformFlags,
       CxxPlatform platform) {
-    return FluentIterable
-        .from(flags.or(ImmutableList.<String>of()))
-        .append(
-            Iterables.concat(
-                platformFlags
-                    .or(PatternMatchedCollection.<ImmutableList<String>>of())
-                    .getMatchingValues(platform.getFlavor().toString())))
-        .transform(getTranslateMacrosFn(platform))
-        .toList();
+    return RichStream.from(getFlags(flags, platformFlags, platform))
+        .map(
+            new TranslateMacrosFunction(
+                ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform))
+        .toImmutableList();
   }
 
-  private static ImmutableListMultimap<CxxSource.Type, String> toLanguageFlags(
-      ImmutableList<String> flags) {
+  public static ImmutableList<StringWithMacros> getFlagsWithMacrosWithPlatformMacroExpansion(
+      ImmutableList<StringWithMacros> flags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformFlags,
+      CxxPlatform platform) {
+    AddsToRuleKeyFunction<String, String> translateMacrosFn =
+        new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
+    return RichStream.from(getFlags(flags, platformFlags, platform))
+        .map(s -> s.mapStrings(translateMacrosFn))
+        .toImmutableList();
+  }
 
-    ImmutableListMultimap.Builder<CxxSource.Type, String> result = ImmutableListMultimap.builder();
+  public static <T> ImmutableList<T> getFlags(
+      ImmutableList<T> flags,
+      PatternMatchedCollection<ImmutableList<T>> platformFlags,
+      CxxPlatform platform) {
+    ImmutableList.Builder<T> result = ImmutableList.builder();
+    result.addAll(flags);
+    for (ImmutableList<T> fl : platformFlags.getMatchingValues(platform.getFlavor().toString())) {
+      result.addAll(fl);
+    }
+    return result.build();
+  }
+
+  static <T> ImmutableListMultimap<CxxSource.Type, T> toLanguageFlags(Iterable<T> flags) {
+
+    ImmutableListMultimap.Builder<CxxSource.Type, T> result = ImmutableListMultimap.builder();
 
     for (CxxSource.Type type : CxxSource.Type.values()) {
       result.putAll(type, flags);
@@ -93,24 +85,98 @@ public class CxxFlags {
   }
 
   public static ImmutableListMultimap<CxxSource.Type, String> getLanguageFlags(
-      Optional<ImmutableList<String>> flags,
-      Optional<PatternMatchedCollection<ImmutableList<String>>> platformFlags,
-      Optional<ImmutableMap<CxxSource.Type, ImmutableList<String>>> languageFlags,
+      ImmutableList<String> flags,
+      PatternMatchedCollection<ImmutableList<String>> platformFlags,
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> languageFlags,
       CxxPlatform platform) {
 
     ImmutableListMultimap.Builder<CxxSource.Type, String> langFlags =
         ImmutableListMultimap.builder();
 
-    langFlags.putAll(toLanguageFlags(getFlags(flags, platformFlags, platform)));
+    langFlags.putAll(
+        toLanguageFlags(getFlagsWithPlatformMacroExpansion(flags, platformFlags, platform)));
 
     for (ImmutableMap.Entry<CxxSource.Type, ImmutableList<String>> entry :
-         languageFlags.or(ImmutableMap.<CxxSource.Type, ImmutableList<String>>of()).entrySet()) {
+        languageFlags.entrySet()) {
       langFlags.putAll(
           entry.getKey(),
-          Iterables.transform(entry.getValue(), getTranslateMacrosFn(platform)));
+          Iterables.transform(
+              entry.getValue(),
+              (new TranslateMacrosFunction(
+                      ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform))
+                  ::apply));
     }
 
     return langFlags.build();
   }
 
+  public static ImmutableListMultimap<CxxSource.Type, StringWithMacros> getLanguageFlagsWithMacros(
+      ImmutableList<StringWithMacros> flags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformFlags,
+      ImmutableMap<CxxSource.Type, ? extends Collection<StringWithMacros>> languageFlags,
+      ImmutableMap<CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          languagePlatformFlags,
+      CxxPlatform platform) {
+
+    ImmutableListMultimap.Builder<CxxSource.Type, StringWithMacros> langFlags =
+        ImmutableListMultimap.builder();
+
+    langFlags.putAll(
+        toLanguageFlags(
+            getFlagsWithMacrosWithPlatformMacroExpansion(flags, platformFlags, platform)));
+
+    for (ImmutableMap.Entry<CxxSource.Type, ? extends Collection<StringWithMacros>> entry :
+        languageFlags.entrySet()) {
+      AddsToRuleKeyFunction<String, String> translateMacrosFn =
+          new TranslateMacrosFunction(
+              ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
+      langFlags.putAll(
+          entry.getKey(),
+          entry.getValue().stream().map(s -> s.mapStrings(translateMacrosFn))::iterator);
+    }
+
+    for (ImmutableMap.Entry<
+            CxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+        entry : languagePlatformFlags.entrySet()) {
+      langFlags.putAll(entry.getKey(), getFlags(ImmutableList.of(), entry.getValue(), platform));
+    }
+
+    return langFlags.build();
+  }
+
+  /** Function for translating cxx arg macros. */
+  public static class TranslateMacrosFunction implements AddsToRuleKeyFunction<String, String> {
+
+    @CustomFieldBehavior(DefaultFieldSerialization.class)
+    private final ImmutableSortedMap<String, String> flagMacros;
+
+    @AddToRuleKey private final DebugPathSanitizer compilerDebugPathSanitizer;
+    @AddToRuleKey private final ImmutableSortedMap<String, String> santizedMap;
+
+    public TranslateMacrosFunction(
+        ImmutableSortedMap<String, String> flagMacros, CxxPlatform cxxPlatform) {
+      this(flagMacros, cxxPlatform.getCompilerDebugPathSanitizer());
+    }
+
+    public TranslateMacrosFunction(
+        ImmutableSortedMap<String, String> flagMacros, DebugPathSanitizer pathSanitizer) {
+      this.flagMacros = flagMacros;
+      this.compilerDebugPathSanitizer = pathSanitizer;
+      this.santizedMap =
+          ImmutableSortedMap.copyOf(
+              Maps.transformValues(
+                  flagMacros, compilerDebugPathSanitizer.sanitize(Optional.empty())::apply));
+    }
+
+    @Override
+    public String apply(String flag) {
+      // TODO(agallager): We're currently tied to `$VARIABLE` style of macros as much of the apple
+      // support relies on this.  Long-term though, we should make this consistent with the
+      // `$(macro ...)` style we use in the rest of the codebase.
+      for (Map.Entry<String, String> entry : flagMacros.entrySet()) {
+        flag = flag.replace("$" + entry.getKey(), entry.getValue());
+      }
+      return flag;
+    }
+  }
 }

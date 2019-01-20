@@ -31,6 +31,9 @@ class DevNull(object):
   def write(self, *args, **kw):
     pass
 
+  def flush(self):
+    pass
+
 
 class PEX(object):  # noqa: T000
   """PEX, n. A self-contained python environment."""
@@ -135,6 +138,11 @@ class PEX(object):  # noqa: T000
       # builtins can stay
       if not hasattr(module, '__path__'):
         new_modules[module_name] = module
+        continue
+
+      # Unexpected objects, e.g. namespace packages, should just be dropped:
+      if not isinstance(module.__path__, list):
+        TRACER.log('Dropping %s' % (module_name,), V=3)
         continue
 
       # Pop off site-impacting __path__ elements in-place.

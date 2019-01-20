@@ -17,29 +17,24 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.util.concurrent.TimeSpan;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.AbstractScheduledService;
 import com.google.common.util.concurrent.ServiceManager;
-
+import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class HangMonitor extends AbstractScheduledService {
-  private static final Logger LOG = Logger.get(HangMonitor.class);
-
-  private final Function<String, Void> hangReportConsumer;
+  private final Consumer<String> hangReportConsumer;
   private final AtomicInteger eventsSeenSinceLastCheck;
-  private final TimeSpan hangCheckTimeout;
+  private final Duration hangCheckTimeout;
   private volatile String mostRecentReport;
 
-  public HangMonitor(
-      Function<String, Void> hangReportConsumer,
-      TimeSpan hangCheckTimeout) {
+  public HangMonitor(Consumer<String> hangReportConsumer, Duration hangCheckTimeout) {
     this.hangReportConsumer = hangReportConsumer;
     this.eventsSeenSinceLastCheck = new AtomicInteger(0);
     this.hangCheckTimeout = hangCheckTimeout;
@@ -53,7 +48,7 @@ public class HangMonitor extends AbstractScheduledService {
   }
 
   @Override
-  protected void runOneIteration() throws Exception {
+  protected void runOneIteration() {
     if (eventsSeenSinceLastCheck.get() > 0) {
       eventsSeenSinceLastCheck.set(0);
       return;
@@ -78,27 +73,21 @@ public class HangMonitor extends AbstractScheduledService {
     String currentReport = hangReportBuilder.toString();
     if (!currentReport.equals(mostRecentReport)) {
       mostRecentReport = currentReport;
-      hangReportConsumer.apply(currentReport);
+      hangReportConsumer.accept(currentReport);
     }
   }
 
   @Override
   protected Scheduler scheduler() {
     return Scheduler.newFixedRateSchedule(
-        hangCheckTimeout.getDuration(),
-        hangCheckTimeout.getDuration(),
-        hangCheckTimeout.getUnit());
+        hangCheckTimeout.toMillis(), hangCheckTimeout.toMillis(), TimeUnit.MILLISECONDS);
   }
 
   public static class AutoStartInstance {
     private final HangMonitor hangMonitor;
     private final ServiceManager serviceManager;
 
-    public AutoStartInstance(
-        Function<String, Void> hangReportConsumer,
-        TimeSpan hangCheckTimeout) {
-
-      LOG.info("HangMonitorAutoStart");
+    public AutoStartInstance(Consumer<String> hangReportConsumer, Duration hangCheckTimeout) {
       hangMonitor = new HangMonitor(hangReportConsumer, hangCheckTimeout);
       serviceManager = new ServiceManager(ImmutableList.of(hangMonitor));
       serviceManager.startAsync();
@@ -108,5 +97,4 @@ public class HangMonitor extends AbstractScheduledService {
       return hangMonitor;
     }
   }
-
 }

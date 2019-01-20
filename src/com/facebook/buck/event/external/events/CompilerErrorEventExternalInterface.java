@@ -19,23 +19,16 @@ package com.facebook.buck.event.external.events;
 import com.google.common.collect.ImmutableSet;
 
 /**
- * Describes a compiler error thrown by buck.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes a compiler error thrown by buck. This type is intended to be used by external
+ * applications (like the Intellij Buck plugin) to deserialize events coming from the webserver.
  */
 public interface CompilerErrorEventExternalInterface extends BuckEventExternalInterface {
   // Sent when a compiler error has been found
   String COMPILER_ERROR_EVENT = "CompilerErrorEvent";
-  /**
-   * @return the stacktrace of the error that occurred.
-   */
+  /** @return the stacktrace of the error that occurred. */
   String getError();
-  /**
-   * @return the target on which the error occurred.
-   */
+  /** @return the target on which the error occurred. */
   String getTarget();
-  /**
-   * @return suggestions on how to fix the error.
-   */
+  /** @return suggestions on how to fix the error. */
   ImmutableSet<String> getSuggestions();
 }

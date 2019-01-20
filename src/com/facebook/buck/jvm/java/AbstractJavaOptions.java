@@ -16,31 +16,24 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.google.common.collect.ImmutableCollection;
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
-
 @Value.Immutable
-@BuckStyleImmutable
-abstract class AbstractJavaOptions implements RuleKeyAppendable {
+@BuckStyleTuple
+abstract class AbstractJavaOptions {
+  public abstract ToolProvider getJavaRuntimeProvider();
 
-  public JavaRuntimeLauncher getJavaRuntimeLauncher() {
-    Optional<Path> javaPath = getJavaPath();
-    if (javaPath.isPresent()) {
-      return new ExternalJavaRuntimeLauncher(javaPath.get().toString());
-    }
-    return new ExternalJavaRuntimeLauncher("java");
+  public Tool getJavaRuntimeLauncher(BuildRuleResolver ruleResolver) {
+    return getJavaRuntimeProvider().resolve(ruleResolver);
   }
 
-  protected abstract Optional<Path> getJavaPath();
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("java", getJavaRuntimeLauncher());
+  public void addParseTimeDeps(ImmutableCollection.Builder<BuildTarget> depsBuilder) {
+    depsBuilder.addAll(getJavaRuntimeProvider().getParseTimeDeps());
   }
 }

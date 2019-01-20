@@ -16,53 +16,34 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.collect.ImmutableCollection;
+import com.facebook.buck.rules.args.HasSourcePath;
 import com.google.common.collect.ImmutableList;
-
+import java.util.function.Consumer;
 import org.immutables.value.Value;
 
 /**
- * An {@link Arg} implementation that represents a thin archive.  As opposed to normal archives,
- * thin archives also need to propagate their inputs as build time deps to consumers, since they
- * only embed relative paths to the inputs, which need to exist at build time.
+ * An {@link Arg} implementation that represents a thin archive. As opposed to normal archives, thin
+ * archives also need to propagate their inputs as build time deps to consumers, since they only
+ * embed relative paths to the inputs, which need to exist at build time.
  */
 @Value.Immutable
-@BuckStyleTuple
-abstract class AbstractThinArchiveArg extends Arg {
+@BuckStylePackageVisibleTuple
+abstract class AbstractThinArchiveArg implements Arg, HasSourcePath {
 
-  protected abstract SourcePathResolver getPathResolver();
-  protected abstract SourcePath getPath();
+  @Override
+  @AddToRuleKey
+  public abstract SourcePath getPath();
+
+  @AddToRuleKey
   protected abstract ImmutableList<SourcePath> getContents();
 
   @Override
-  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
-    builder.add(getPathResolver().getAbsolutePath(getPath()).toString());
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    consumer.accept(pathResolver.getAbsolutePath(getPath()).toString());
   }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.<SourcePath>builder()
-        .add(getPath())
-        .addAll(getContents())
-        .build();
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(getInputs());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("archive", getPath())
-        .setReflectively("inputs", getContents());
-  }
-
 }

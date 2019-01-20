@@ -1,0 +1,9 @@
+java_library(
+    name = "programrunner",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//third-party/java/guava:guava",
+    ],
+)

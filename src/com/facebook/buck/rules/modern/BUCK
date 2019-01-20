@@ -1,0 +1,80 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+TYPES = [
+    "OutputPath.java",
+    "PublicOutputPath.java",
+    "ValueTypeInfo.java",
+    "ValueVisitor.java",
+    "ValueCreator.java",
+    "FieldInfo.java",
+    "ClassInfo.java",
+]
+
+java_immutables_library(
+    name = "types",
+    srcs = TYPES,
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/rules/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//third-party/java/guava:guava",
+    ],
+)
+
+java_library(
+    name = "modern",
+    srcs = glob(
+        [
+            "*.java",
+            "impl/*.java",
+        ],
+        exclude = TYPES,
+    ),
+    exported_deps = [
+        ":types",
+        "//src/com/facebook/buck/core/rules/modern/annotations:annotations",
+        "//src/com/facebook/buck/rules/keys:keys",
+    ],
+    tests = [
+        "//test/com/facebook/buck/rules/modern/impl:impl",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/rules/attr:attr",
+        "//src/com/facebook/buck/core/rules/common:common",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/rules/modern:modern",
+        "//src/com/facebook/buck/core/rules/pipeline:pipeline",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/objenesis:objenesis",
+    ],
+)

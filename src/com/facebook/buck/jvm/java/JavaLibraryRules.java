@@ -16,118 +16,108 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.graph.AbstractBreadthFirstThrowingTraversal;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.keys.AbiRule;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasJavaAbi;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
-/**
- * Common utilities for working with {@link JavaLibrary} objects.
- */
+/** Common utilities for working with {@link JavaLibrary} objects. */
 public class JavaLibraryRules {
 
   /** Utility class: do not instantiate. */
   private JavaLibraryRules() {}
 
   static void addAccumulateClassNamesStep(
-      JavaLibrary javaLibrary,
-      BuildableContext buildableContext,
-      ImmutableList.Builder<Step> steps) {
-
-    Path pathToClassHashes = JavaLibraryRules.getPathToClassHashes(
-        javaLibrary.getBuildTarget(), javaLibrary.getProjectFilesystem());
-    steps.add(new MkdirStep(javaLibrary.getProjectFilesystem(), pathToClassHashes.getParent()));
-    steps.add(
-        new AccumulateClassNamesStep(
-            javaLibrary.getProjectFilesystem(),
-            Optional.fromNullable(javaLibrary.getPathToOutput()),
-            pathToClassHashes));
-    buildableContext.recordArtifact(pathToClassHashes);
+      BuildCellRelativePathFactory cellRelativePathFactory,
+      ProjectFilesystem filesystem,
+      Builder<Step> steps,
+      Optional<Path> pathToClasses,
+      Path pathToClassHashes) {
+    steps.add(MkdirStep.of(cellRelativePathFactory.from(pathToClassHashes.getParent())));
+    steps.add(new AccumulateClassNamesStep(filesystem, pathToClasses, pathToClassHashes));
   }
 
-  static JavaLibrary.Data initializeFromDisk(
-      BuildTarget buildTarget,
-      ProjectFilesystem filesystem,
-      OnDiskBuildInfo onDiskBuildInfo)
+  static JavaLibrary.Data initializeFromDisk(BuildTarget buildTarget, ProjectFilesystem filesystem)
       throws IOException {
-    Optional<Sha1HashCode> abiKeyHash = onDiskBuildInfo.getHash(AbiRule.ABI_KEY_ON_DISK_METADATA);
-    if (!abiKeyHash.isPresent()) {
-      throw new IllegalStateException(String.format(
-          "Should not be initializing %s from disk if the ABI key is not written.",
-          buildTarget));
-    }
-
-    List<String> lines =
-        onDiskBuildInfo.getOutputFileContentsByLine(getPathToClassHashes(buildTarget, filesystem));
-    ImmutableSortedMap<String, HashCode> classHashes = AccumulateClassNamesStep.parseClassHashes(
-        lines);
+    List<String> lines = filesystem.readLines(getPathToClassHashes(buildTarget, filesystem));
+    ImmutableSortedMap<String, HashCode> classHashes =
+        AccumulateClassNamesStep.parseClassHashes(lines);
 
     return new JavaLibrary.Data(classHashes);
   }
 
-  private static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, buildTarget, "%s.classes.txt");
+  static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.classes.txt");
   }
 
   /**
-   * @return all the transitive native libraries a rule depends on, represented as
-   *     a map from their system-specific library names to their {@link SourcePath} objects.
+   * @return all the transitive native libraries a rule depends on, represented as a map from their
+   *     system-specific library names to their {@link SourcePath} objects.
    */
   public static ImmutableMap<String, SourcePath> getNativeLibraries(
-      Iterable<BuildRule> deps,
-      final CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    final ImmutableMap.Builder<String, SourcePath> libraries = ImmutableMap.builder();
-
-    new AbstractBreadthFirstThrowingTraversal<BuildRule, NoSuchBuildTargetException>(deps) {
-      @Override
-      public ImmutableSet<BuildRule> visit(BuildRule rule) throws NoSuchBuildTargetException {
-        if (rule instanceof NativeLinkable) {
-          NativeLinkable linkable = (NativeLinkable) rule;
-          libraries.putAll(linkable.getSharedLibraries(cxxPlatform));
-        }
-        if (rule instanceof NativeLinkable ||
-            rule instanceof JavaLibrary) {
-          return rule.getDeps();
-        } else {
-          return ImmutableSet.of();
-        }
-      }
-    }.start();
-
-    return libraries.build();
+      Iterable<BuildRule> deps, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    // Allow the transitive walk to find NativeLinkables through the BuildRuleParams deps of a
+    // JavaLibrary or CalculateAbi object. The deps may be either one depending if we're compiling
+    // against ABI rules or full rules
+    return NativeLinkables.getTransitiveSharedLibraries(
+        cxxPlatform,
+        graphBuilder,
+        deps,
+        r ->
+            r instanceof JavaLibrary
+                ? Optional.of(((JavaLibrary) r).getDepsForTransitiveClasspathEntries())
+                : r instanceof CalculateAbi ? Optional.of(r.getBuildDeps()) : Optional.empty(),
+        true);
   }
 
-  public static ImmutableSortedSet<SourcePath> getAbiInputs(Iterable<? extends BuildRule> inputs) {
-    ImmutableSortedSet.Builder<SourcePath> abiRules =
-        ImmutableSortedSet.naturalOrder();
-    for (BuildRule dep : inputs) {
-      if (dep instanceof HasJavaAbi) {
-        abiRules.addAll(((HasJavaAbi) dep).getAbiJar().asSet());
+  public static ImmutableSortedSet<BuildRule> getAbiRules(
+      ActionGraphBuilder graphBuilder, Iterable<BuildRule> inputs) {
+    ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
+    for (BuildRule input : inputs) {
+      if (input instanceof HasJavaAbi && ((HasJavaAbi) input).getAbiJar().isPresent()) {
+        Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) input).getAbiJar();
+        BuildRule abiJarRule = graphBuilder.requireRule(abiJarTarget.get());
+        abiRules.add(abiJarRule);
       }
     }
     return abiRules.build();
   }
 
+  public static ImmutableSortedSet<BuildRule> getSourceOnlyAbiRules(
+      ActionGraphBuilder graphBuilder, Iterable<BuildRule> inputs) {
+    ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
+    for (BuildRule input : inputs) {
+      if (input instanceof HasJavaAbi) {
+        HasJavaAbi hasAbi = (HasJavaAbi) input;
+        Optional<BuildTarget> abiJarTarget = hasAbi.getSourceOnlyAbiJar();
+        if (!abiJarTarget.isPresent()) {
+          abiJarTarget = hasAbi.getAbiJar();
+        }
+
+        if (abiJarTarget.isPresent()) {
+          BuildRule abiJarRule = graphBuilder.requireRule(abiJarTarget.get());
+          abiRules.add(abiJarRule);
+        }
+      }
+    }
+    return abiRules.build();
+  }
 }

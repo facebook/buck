@@ -1,38 +1,46 @@
 java_binary(
-  name = 'bootstrapper',
-  deps = [
-    ':bootstrapper_lib',
-  ],
-  visibility = [
-    '//programs:bucklib',
-    '//programs:bucklib-no-nailgun',
-    '//test/com/facebook/buck/cli/bootstrapper:bootstrapper',
-  ],
+    name = "bootstrapper",
+    visibility = [
+        "//programs:bucklib",
+        "//programs:bucklib-no-nailgun",
+        "//programs:calculate-buck-binary-hash",
+        "//test/com/facebook/buck/cli/bootstrapper:bootstrapper",
+    ],
+    deps = [
+        ":bootstrapper_lib",
+        "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
+    ],
 )
 
 java_library(
-  name = 'bootstrapper_lib',
-  srcs = glob(['*.java']),
-  autodeps = False, # See below.
-  deps = [
-    # Be very careful what is added here, and leave comments justifying
-    # each addition. The bootstrapper is intended to keep the
-    # system ClassLoader free of classes that might conflict with
-    # those used by compiler plugins and annotation processors. As such,
-    # it cannot depend on third-party libraries, directly or indirectly.
+    name = "bootstrapper_lib",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//test/...",
+        "//third-party/java/aosp:tests",
+        "//tools/...",
+    ],
+    deps = [
+        # Be very careful what is added here, and leave comments justifying
+        # each addition. The bootstrapper is intended to keep the
+        # system ClassLoader free of classes that might conflict with
+        # those used by compiler plugins and annotation processors. As such,
+        # it cannot depend on third-party libraries, directly or indirectly.
 
-    # The Tracing API jar must be accessible to both Buck and compiler plugins, so we put it
-    # in the bootstrapper. Compiler plugins will have their own copy linked in, but the ClassLoaders
-    # will end up loading this one instead when they are run inside Buck.
-    '//src/com/facebook/buck/event/api:api',
+        # The Tracing API jar must be accessible to both Buck and compiler plugins, so we put it
+        # in the bootstrapper. Compiler plugins will have their own copy linked in, but the ClassLoaders
+        # will end up loading this one instead when they are run inside Buck.
+        "//src/com/facebook/buck/event/api:api",
 
-    # This is an internal API used by the javac tracing support (TracingTaskListener).
-    # TaskListeners are a kind of compiler plugin, so the same logic applies as the Tracing API
-    # above. This is just a more specialized tracing API we've built for this one case.
-    '//src/com/facebook/buck/jvm/java/tracing:api',
-  ],
-  visibility = [
-    '//test/...',
-    '//third-party/java/aosp:tests',
-  ],
+        # This is an internal API used to communicate between Buck and the source-based ABI validator
+        # running inside javac.
+        "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+
+        # This is a set of utility classes for working with javax.lang.model that are useful both
+        # from Buck and the compiler
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
+
+        # This is an internal API used to communicate between Buck and the compiler plugin
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
+    ],
 )

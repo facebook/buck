@@ -15,61 +15,85 @@
  */
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.rules.RuleKey;
-import com.google.common.annotations.VisibleForTesting;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.LazyPath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
+import java.util.List;
+import javax.annotation.Nullable;
 
 /**
  * Decorator for wrapping a {@link ArtifactCache} to log a {@link ArtifactCacheEvent} for the start
- * and finish of each event.
- * The underlying cache must only provide synchronous operations.
+ * and finish of each event. The underlying cache must only provide synchronous operations.
  */
-public class LoggingArtifactCacheDecorator implements ArtifactCache {
+public class LoggingArtifactCacheDecorator implements ArtifactCache, CacheDecorator {
   private final BuckEventBus eventBus;
   private final ArtifactCache delegate;
   private final ArtifactCacheEventFactory eventFactory;
 
   public LoggingArtifactCacheDecorator(
-      BuckEventBus eventBus,
-      ArtifactCache delegate,
-      ArtifactCacheEventFactory eventFactory) {
+      BuckEventBus eventBus, ArtifactCache delegate, ArtifactCacheEventFactory eventFactory) {
     this.eventBus = eventBus;
     this.delegate = delegate;
     this.eventFactory = eventFactory;
   }
 
   @Override
-  public CacheResult fetch(RuleKey ruleKey, LazyPath output) {
+  public ListenableFuture<CacheResult> fetchAsync(
+      @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
     ArtifactCacheEvent.Started started =
         eventFactory.newFetchStartedEvent(ImmutableSet.of(ruleKey));
     eventBus.post(started);
-    CacheResult fetchResult = delegate.fetch(ruleKey, output);
-    eventBus.post(eventFactory.newFetchFinishedEvent(
-            started,
-            fetchResult));
-    return fetchResult;
+    CacheResult fetchResult = Futures.getUnchecked(delegate.fetchAsync(target, ruleKey, output));
+    eventBus.post(eventFactory.newFetchFinishedEvent(started, fetchResult));
+    return Futures.immediateFuture(fetchResult);
   }
 
   @Override
-  public ListenableFuture<Void> store(
-      ImmutableSet<RuleKey> ruleKeys,
-      ImmutableMap<String, String> metadata,
-      BorrowablePath output) {
-    ArtifactCacheEvent.Started started = eventFactory.newStoreStartedEvent(ruleKeys, metadata);
+  public void skipPendingAndFutureAsyncFetches() {
+    delegate.skipPendingAndFutureAsyncFetches();
+  }
+
+  @Override
+  public ListenableFuture<Void> store(ArtifactInfo info, BorrowablePath output) {
+    ArtifactCacheEvent.Started started =
+        eventFactory.newStoreStartedEvent(info.getRuleKeys(), info.getMetadata());
     eventBus.post(started);
-    ListenableFuture<Void> storeFuture = delegate.store(ruleKeys, metadata, output);
+    ListenableFuture<Void> storeFuture = delegate.store(info, output);
     eventBus.post(eventFactory.newStoreFinishedEvent(started));
     return storeFuture;
   }
 
   @Override
-  public boolean isStoreSupported() {
-    return delegate.isStoreSupported();
+  public ListenableFuture<ImmutableMap<RuleKey, CacheResult>> multiContainsAsync(
+      ImmutableSet<RuleKey> ruleKeys) {
+    ArtifactCacheEvent.Started started = eventFactory.newContainsStartedEvent(ruleKeys);
+    eventBus.post(started);
+
+    return Futures.transform(
+        delegate.multiContainsAsync(ruleKeys),
+        results -> {
+          eventBus.post(eventFactory.newContainsFinishedEvent(started, results));
+          return results;
+        },
+        MoreExecutors.directExecutor());
+  }
+
+  @Override
+  public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
+    return delegate.deleteAsync(ruleKeys);
+  }
+
+  @Override
+  public CacheReadMode getCacheReadMode() {
+    return delegate.getCacheReadMode();
   }
 
   @Override
@@ -77,8 +101,8 @@ public class LoggingArtifactCacheDecorator implements ArtifactCache {
     delegate.close();
   }
 
-  @VisibleForTesting
-  ArtifactCache getDelegate() {
+  @Override
+  public ArtifactCache getDelegate() {
     return delegate;
   }
 }

@@ -1,2 +1,3 @@
 [java]
     src_roots = java
+    skip_checking_missing_deps = false

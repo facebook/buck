@@ -1,0 +1,4 @@
+[cxx]
+  default_platform = appletvsimulator-x86_64
+[apple]
+  device_helper_path = fbsimctl/fbsimctl

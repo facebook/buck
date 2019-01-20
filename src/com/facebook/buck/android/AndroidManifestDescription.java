@@ -16,83 +16,57 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
+import org.immutables.value.Value;
 
-import java.util.Collections;
+public class AndroidManifestDescription
+    implements DescriptionWithTargetGraph<AndroidManifestDescriptionArg> {
 
-public class AndroidManifestDescription implements Description<AndroidManifestDescription.Arg> {
+  private final AndroidManifestFactory androidManifestFactory;
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_manifest");
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public AndroidManifestDescription(AndroidManifestFactory androidManifestFactory) {
+    this.androidManifestFactory = androidManifestFactory;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<AndroidManifestDescriptionArg> getConstructorArgType() {
+    return AndroidManifestDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> AndroidManifest createBuildRule(
-      TargetGraph targetGraph,
+  public AndroidManifest createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    AndroidTransitiveDependencyGraph transitiveDependencyGraph =
-        new AndroidTransitiveDependencyGraph(resolver.getAllRules(args.deps.get()));
-    ImmutableSet<SourcePath> manifestFiles = transitiveDependencyGraph.findManifestFiles();
-
-    // The only rules that need to be built before this AndroidManifest are those
-    // responsible for generating the AndroidManifest.xml files in the manifestFiles set (and
-    // possibly the skeleton).
-    //
-    // If the skeleton is a BuildTargetSourcePath, then its build rule must also be in the deps.
-    // The skeleton does not appear to be in either params.getDeclaredDeps() or
-    // params.getExtraDeps(), even though the type of Arg.skeleton is SourcePath.
-    // TODO(shs96c): t4744625 This should happen automagically.
-    ImmutableSortedSet<BuildRule> newDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(
-            pathResolver.filterBuildRuleInputs(
-                Sets.union(manifestFiles, Collections.singleton(args.skeleton))))
-        .build();
-
-    return new AndroidManifest(
-        params.copyWithDeps(
-            Suppliers.ofInstance(newDeps),
-            params.getExtraDeps()),
-        pathResolver,
-        args.skeleton,
-        manifestFiles);
+      AndroidManifestDescriptionArg args) {
+    return androidManifestFactory.createBuildRule(
+        buildTarget,
+        context.getProjectFilesystem(),
+        context.getActionGraphBuilder(),
+        args.getDeps(),
+        args.getSkeleton());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath skeleton;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAndroidManifestDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getSkeleton();
 
     /**
      * A collection of dependencies that includes android_library rules. The manifest files of the
-     * android_library rules will be filtered out to become dependent source files for the
-     * {@link AndroidManifest}.
+     * android_library rules will be filtered out to become dependent source files for the {@link
+     * AndroidManifest}.
      */
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    @Override
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getDeps();
   }
 }

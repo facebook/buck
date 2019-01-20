@@ -1,0 +1,9 @@
+go_binary(
+    name = "hello",
+    srcs = [
+        "main.go",
+    ],
+    resources = [
+        "files/test.txt",
+    ],
+)

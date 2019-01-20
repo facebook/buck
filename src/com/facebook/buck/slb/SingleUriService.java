@@ -16,13 +16,12 @@
 
 package com.facebook.buck.slb;
 
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class SingleUriService implements HttpService {
   private static final String PATH_SEPARATOR = "/";

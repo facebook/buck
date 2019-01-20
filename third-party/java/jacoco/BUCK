@@ -1,42 +1,38 @@
 java_library(
-  name = 'jacoco',
-  exported_deps = [
-    ':core',
-    ':report',
-  ],
-  deps = [
-    '//third-party/java/asm:asm',
-  ],
-  visibility = [
-    '//src/com/facebook/buck/jvm/java/coverage:coverage',
-  ],
+    name = "jacoco",
+    exported_deps = [
+        ":core",
+        ":report",
+        "//third-party/java/asm:asm",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/jvm/java/coverage:coverage",
+    ],
 )
 
 prebuilt_jar(
-  name = 'core',
-  binary_jar = 'org.jacoco.core-0.7.5.201505241946.jar',
-  source_jar = 'org.jacoco.core-0.7.5.201505241946-sources.jar',
-  licenses = [
-    'license.html',
-  ],
+    name = "core",
+    binary_jar = "org.jacoco.core-0.8.3.201812281252.jar",
+    licenses = [
+        "license.html",
+    ],
 )
 
 prebuilt_jar(
-  name = 'report',
-  binary_jar = 'org.jacoco.report-0.7.5.201505241946.jar',
-  source_jar = 'org.jacoco.report-0.7.5.201505241946-sources.jar',
-  licenses = [
-    'license.html',
-  ],
+    name = "report",
+    binary_jar = "org.jacoco.report-0.8.3.201812281252.jar",
+    licenses = [
+        "license.html",
+    ],
 )
 
 prebuilt_jar(
-  name = 'agent',
-  binary_jar = 'jacocoagent.jar',
-  licenses = [
-    'license.html',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "agent",
+    binary_jar = "jacocoagent.jar",
+    licenses = [
+        "license.html",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )

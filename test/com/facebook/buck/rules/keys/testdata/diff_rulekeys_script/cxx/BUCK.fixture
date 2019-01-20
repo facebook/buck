@@ -1,0 +1,24 @@
+cxx_library(
+    name = "cxx_lib",
+    exported_headers = [
+        "a.h",
+    ],
+)
+
+cxx_binary(
+    name = "cxx_bin",
+    srcs = ["a.cpp"],
+    deps = [":cxx_lib"],
+)
+
+python_library(
+    name = "cxx_py_lib",
+    srcs = ["cxx.py"],
+)
+
+python_binary(
+    name = "cxx",
+    main_module = "cxx",
+    visibility = ["PUBLIC"],
+    deps = [":cxx_py_lib"],
+)

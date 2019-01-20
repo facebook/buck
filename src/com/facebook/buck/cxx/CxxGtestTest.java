@@ -16,37 +16,33 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExternalTestRunnerRule;
-import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.ChunkAccumulator;
-import com.facebook.buck.util.XmlDomParser;
+import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,115 +50,120 @@ import java.io.InputStreamReader;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
+import java.util.stream.Stream;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
+class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunnerRule {
 
   private static final Pattern START = Pattern.compile("^\\[\\s*RUN\\s*\\] (.*)$");
   private static final Pattern END = Pattern.compile("^\\[\\s*(FAILED|OK)\\s*\\] .*");
   private static final String NOTRUN = "notrun";
 
   private final BuildRule binary;
-  private final Tool executable;
   private final long maxTestOutputSize;
 
   public CxxGtestTest(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       BuildRule binary,
       Tool executable,
-      Supplier<ImmutableMap<String, String>> env,
-      Supplier<ImmutableList<String>> args,
-      ImmutableSortedSet<SourcePath> resources,
-      Supplier<ImmutableSortedSet<BuildRule>> additionalDeps,
-      ImmutableSet<Label> labels,
+      ImmutableMap<String, Arg> env,
+      ImmutableList<Arg> args,
+      ImmutableSortedSet<? extends SourcePath> resources,
+      ImmutableSet<SourcePath> additionalCoverageTargets,
+      Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> additionalDeps,
+      ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
-      ImmutableSet<BuildRule> sourceUnderTest,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs,
       long maxTestOutputSize) {
     super(
+        buildTarget,
+        projectFilesystem,
         params,
-        resolver,
-        executable.getEnvironment(resolver),
+        executable,
         env,
         args,
         resources,
+        additionalCoverageTargets,
         additionalDeps,
         labels,
         contacts,
-        sourceUnderTest,
         runTestSeparately,
         testRuleTimeoutMs);
     this.binary = binary;
-    this.executable = executable;
     this.maxTestOutputSize = maxTestOutputSize;
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return binary.getPathToOutput();
+  public SourcePath getSourcePathToOutput() {
+    return ForwardingBuildTargetSourcePath.of(
+        getBuildTarget(), Objects.requireNonNull(binary.getSourcePathToOutput()));
   }
 
   @Override
-  protected ImmutableList<String> getShellCommand(Path output) {
+  protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
     return ImmutableList.<String>builder()
-        .addAll(executable.getCommandPrefix(getResolver()))
+        .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
         .add("--gtest_color=no")
-        .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output).toString())
+        .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output))
         .build();
   }
 
-  private TestResultSummary getProgramFailureSummary(
-      String message,
-      String output) {
+  private TestResultSummary getProgramFailureSummary(String message, String output) {
     return new TestResultSummary(
-        getBuildTarget().toString(),
-        "main",
-        ResultType.FAILURE,
-        0L,
-        message,
-        "",
-        output,
-        "");
+        getBuildTarget().toString(), "main", ResultType.FAILURE, 0L, message, "", output, "");
   }
 
   @Override
-  protected ImmutableList<TestResultSummary> parseResults(
-      Path exitCode,
-      Path output,
-      Path results)
-      throws IOException, SAXException {
+  protected ImmutableList<TestResultSummary> parseResults(Path exitCode, Path output, Path results)
+      throws IOException {
+
+    // Make sure we didn't die abnormally
+    Optional<String> abnormalExitError = validateExitCode(getProjectFilesystem().resolve(exitCode));
+    if (abnormalExitError.isPresent()) {
+      return ImmutableList.of(
+          getProgramFailureSummary(
+              abnormalExitError.get(),
+              getProjectFilesystem().readFileIfItExists(output).orElse("")));
+    }
 
     // Try to parse the results file first, which should be written if the test suite exited
     // normally (even in the event of a failing test).  If this fails, just construct a test
     // summary with the output we have.
     Document doc;
     try {
-      doc = XmlDomParser.parse(results);
+      doc = XmlDomParser.parse(getProjectFilesystem().resolve(results));
     } catch (SAXException e) {
       return ImmutableList.of(
           getProgramFailureSummary(
               "test program aborted before finishing",
-              getProjectFilesystem().readFileIfItExists(output).or("")));
+              getProjectFilesystem().readFileIfItExists(output).orElse("")));
     }
 
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();
 
     // It's possible the test output had invalid characters in it's output, so make sure to
     // ignore these as we parse the output lines.
-    Optional<String> currentTest = Optional.absent();
-    Map<String, ChunkAccumulator> stdout = Maps.newHashMap();
+    Optional<String> currentTest = Optional.empty();
+    Map<String, ChunkAccumulator> stdout = new HashMap<>();
     CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
     decoder.onMalformedInput(CodingErrorAction.IGNORE);
     try (InputStream input = getProjectFilesystem().newFileInputStream(output);
-         BufferedReader reader = new BufferedReader(new InputStreamReader(input, decoder))) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input, decoder))) {
       String line;
       while ((line = reader.readLine()) != null) {
         Matcher matcher;
@@ -171,9 +172,9 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
           currentTest = Optional.of(test);
           stdout.put(test, new ChunkAccumulator(Charsets.UTF_8, maxTestOutputSize));
         } else if (END.matcher(line.trim()).matches()) {
-          currentTest = Optional.absent();
+          currentTest = Optional.empty();
         } else if (currentTest.isPresent()) {
-          stdout.get(currentTest.get()).append(line);
+          Objects.requireNonNull(stdout.get(currentTest.get())).append(line);
         }
       }
     }
@@ -207,14 +208,7 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
 
       summariesBuilder.add(
           new TestResultSummary(
-              testCase,
-              testName,
-              type,
-              time.longValue(),
-              message,
-              "",
-              testStdout,
-              ""));
+              testCase, testName, type, time.longValue(), message, "", testStdout, ""));
     }
 
     return summariesBuilder.build();
@@ -223,26 +217,31 @@ public class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTes
   // The C++ test rules just wrap a test binary produced by another rule, so make sure that's
   // always available to run the test.
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(super.getRuntimeDeps())
-        .addAll(executable.getDeps(getResolver()))
-        .build();
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return Stream.concat(
+        super.getRuntimeDeps(ruleFinder),
+        BuildableSupport.getDeps(getExecutableCommand(), ruleFinder)
+            .map(BuildRule::getBuildTarget));
   }
 
   @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions) {
+      TestRunningOptions testRunningOptions,
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
         .setType("gtest")
-        .addAllCommand(executable.getCommandPrefix(getResolver()))
-        .addAllCommand(getArgs().get())
-        .putAllEnv(getEnv().get())
+        .addAllCommand(
+            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+        .addAllCommand(Arg.stringify(getArgs(), buildContext.getSourcePathResolver()))
+        .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .addAllAdditionalCoverageTargets(
+            buildContext
+                .getSourcePathResolver()
+                .getAllAbsolutePaths(getAdditionalCoverageTargets()))
         .build();
   }
-
 }

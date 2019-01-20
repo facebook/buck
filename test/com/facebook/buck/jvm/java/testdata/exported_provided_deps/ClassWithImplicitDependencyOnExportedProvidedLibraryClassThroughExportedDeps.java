@@ -1,0 +1,4 @@
+package com.test;
+
+public class ClassWithImplicitDependencyOnExportedProvidedLibraryClassThroughExportedDeps
+    extends ClassWithImplicitDependencyOnExportedProvidedLibraryClass {}

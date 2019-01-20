@@ -1,0 +1,19 @@
+java_library(
+    name = "dep1",
+    srcs = glob(["src/**/*.java"]),
+    resources = glob(["src/**/*.txt"]),
+    resources_root = "src/res/",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_test(
+    name = "dep1_test",
+    srcs = glob(["test/**/*Test.java"]),
+    resources = glob(["test/**/*.txt"]),
+    resources_root = "test/res/",
+    deps = [
+        ":dep1",
+    ],
+)

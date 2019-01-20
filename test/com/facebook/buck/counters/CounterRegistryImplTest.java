@@ -21,46 +21,40 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEvent;
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.testutil.FakeExecutor;
-import com.facebook.buck.timing.FakeClock;
+import com.facebook.buck.util.timing.FakeClock;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.eventbus.Subscribe;
-
-import org.easymock.Capture;
-import org.easymock.EasyMock;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Delayed;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
 
 public class CounterRegistryImplTest {
 
   private static final String CATEGORY = "Counter_Category";
   private static final String NAME = "Counter_Name";
-  public static final ImmutableMap<String, String> TAGS = ImmutableMap.of(
-      "My super Tag Key", "And the according value!"
-  );
+  public static final ImmutableMap<String, String> TAGS =
+      ImmutableMap.of("My super Tag Key", "And the according value!");
 
   private BuckEventBus eventBus;
   private ScheduledThreadPoolExecutor executor;
-  private Capture<Runnable> flushCountersRunnable;
-  private Capture<BuckEvent> countersEvent;
+  private Runnable caughtFlushCountersRunnable;
 
-  // Apparently EasyMock does not deal very well with Generic Types using wildcard ?.
-  // Several workarounds can be found on StackOverflow this one being the list intrusive.
-  @SuppressWarnings("rawtypes")
-  private ScheduledFuture mockFuture;
+  private ScheduledFuture<?> mockFuture;
 
   private static class SnapshotEventListener {
     public final List<CountersSnapshotEvent> snapshotEvents =
@@ -73,26 +67,18 @@ public class CounterRegistryImplTest {
   }
 
   @Before
-  @SuppressWarnings("unchecked")
   public void setUp() {
-    this.countersEvent = EasyMock.newCapture();
-    this.mockFuture = EasyMock.createMock(ScheduledFuture.class);
-    this.flushCountersRunnable = EasyMock.newCapture();
-    this.eventBus = EasyMock.createNiceMock(BuckEventBus.class);
-    this.executor = EasyMock.createNiceMock(ScheduledThreadPoolExecutor.class);
-
-    this.eventBus.post(EasyMock.capture(countersEvent));
-    EasyMock.expectLastCall();
-    EasyMock.expect(this.executor
-        .scheduleAtFixedRate(
-            EasyMock.capture(flushCountersRunnable),
-            EasyMock.anyInt(),
-            EasyMock.anyInt(),
-            EasyMock.anyObject(TimeUnit.class)))
-        .andReturn(this.mockFuture);
-    EasyMock.expect(this.mockFuture.cancel(EasyMock.anyBoolean())).andReturn(true).once();
-
-    EasyMock.replay(eventBus, executor, mockFuture);
+    this.mockFuture = new FakeScheduledFuture<>();
+    this.eventBus = BuckEventBusForTests.newInstance();
+    this.executor =
+        new ScheduledThreadPoolExecutor(1) {
+          @Override
+          public ScheduledFuture<?> scheduleAtFixedRate(
+              Runnable command, long initialDelay, long period, TimeUnit unit) {
+            caughtFlushCountersRunnable = command;
+            return mockFuture;
+          }
+        };
   }
 
   @Test
@@ -106,17 +92,16 @@ public class CounterRegistryImplTest {
 
   @Test
   public void testFlushingCounters() throws IOException {
+    CountersSnapshotEventEventListener listener = new CountersSnapshotEventEventListener();
+    eventBus.register(listener);
     try (CounterRegistryImpl registry = new CounterRegistryImpl(executor, eventBus)) {
       IntegerCounter counter = registry.newIntegerCounter(CATEGORY, NAME, TAGS);
       counter.inc(42);
       TagSetCounter tagSetCounter = registry.newTagSetCounter(CATEGORY, "TagSet_Counter", TAGS);
       tagSetCounter.add("value1");
       tagSetCounter.addAll(ImmutableSet.of("value2", "value3"));
-      Assert.assertTrue(flushCountersRunnable.hasCaptured());
-      flushCountersRunnable.getValue().run();
-      Assert.assertTrue(countersEvent.hasCaptured());
-      CountersSnapshotEvent event =
-          (CountersSnapshotEvent) countersEvent.getValue();
+      caughtFlushCountersRunnable.run();
+      CountersSnapshotEvent event = listener.getTheOnlyEvent();
       Assert.assertEquals(2, event.getSnapshots().size());
       Assert.assertEquals(42, (long) event.getSnapshots().get(0).getValues().values().toArray()[0]);
       Assert.assertEquals(
@@ -130,48 +115,33 @@ public class CounterRegistryImplTest {
 
   @Test
   public void noEventsFlushedIfNoCountersRegistered() throws IOException {
-    BuckEventBus fakeEventBus = new BuckEventBus(
-        new FakeClock(0),
-        false,
-        new BuildId("12345"),
-        1000);
+    BuckEventBus fakeEventBus =
+        new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
     fakeEventBus.register(listener);
     FakeExecutor fakeExecutor = new FakeExecutor();
     try (CounterRegistryImpl registry = new CounterRegistryImpl(fakeExecutor, fakeEventBus)) {
       assertThat(
-          "No events should be flushed before timer fires",
-          listener.snapshotEvents,
-          empty());
+          "No events should be flushed before timer fires", listener.snapshotEvents, empty());
       fakeExecutor.drain();
-      assertThat(
-          "No events should be flushed after timer fires",
-          listener.snapshotEvents,
-          empty());
+      assertThat("No events should be flushed after timer fires", listener.snapshotEvents, empty());
     }
 
     assertThat(
-        "No events should be flushed after registry closed",
-        listener.snapshotEvents,
-        empty());
+        "No events should be flushed after registry closed", listener.snapshotEvents, empty());
   }
 
   @Test
   public void noEventsFlushedIfCounterRegisteredButHasNoData() throws IOException {
-    BuckEventBus fakeEventBus = new BuckEventBus(
-        new FakeClock(0),
-        false,
-        new BuildId("12345"),
-        1000);
+    BuckEventBus fakeEventBus =
+        new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
     fakeEventBus.register(listener);
     FakeExecutor fakeExecutor = new FakeExecutor();
     try (CounterRegistryImpl registry = new CounterRegistryImpl(fakeExecutor, fakeEventBus)) {
       registry.newIntegerCounter(CATEGORY, NAME, TAGS);
       assertThat(
-          "No events should be flushed before timer fires",
-          listener.snapshotEvents,
-          empty());
+          "No events should be flushed before timer fires", listener.snapshotEvents, empty());
       fakeExecutor.drain();
       assertThat(
           "No events should be flushed after timer fires when counter has no data",
@@ -180,18 +150,13 @@ public class CounterRegistryImplTest {
     }
 
     assertThat(
-        "No events should be flushed after registry closed",
-        listener.snapshotEvents,
-        empty());
+        "No events should be flushed after registry closed", listener.snapshotEvents, empty());
   }
 
   @Test
   public void eventIsFlushedIfCounterRegisteredWithData() throws IOException {
-    BuckEventBus fakeEventBus = new BuckEventBus(
-        new FakeClock(0),
-        false,
-        new BuildId("12345"),
-        1000);
+    BuckEventBus fakeEventBus =
+        new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
     fakeEventBus.register(listener);
     FakeExecutor fakeExecutor = new FakeExecutor();
@@ -200,14 +165,10 @@ public class CounterRegistryImplTest {
       IntegerCounter counter = registry.newIntegerCounter(CATEGORY, NAME, TAGS);
       counter.inc(42);
       assertThat(
-          "No events should be flushed before timer fires",
-          listener.snapshotEvents,
-          empty());
+          "No events should be flushed before timer fires", listener.snapshotEvents, empty());
       fakeExecutor.drain();
       assertThat(
-          "One event should be flushed after timer fires",
-          listener.snapshotEvents,
-          hasSize(1));
+          "One event should be flushed after timer fires", listener.snapshotEvents, hasSize(1));
       assertThat(
           "Counter with expected value should be flushed after timer fires",
           listener.snapshotEvents.get(0).getSnapshots(),
@@ -222,11 +183,8 @@ public class CounterRegistryImplTest {
 
   @Test
   public void closingRegistryBeforeTimerFiresFlushesCounters() throws IOException {
-    BuckEventBus fakeEventBus = new BuckEventBus(
-        new FakeClock(0),
-        false,
-        new BuildId("12345"),
-        1000);
+    BuckEventBus fakeEventBus =
+        new DefaultBuckEventBus(FakeClock.doNotCare(), false, new BuildId("12345"), 1000);
     SnapshotEventListener listener = new SnapshotEventListener();
     fakeEventBus.register(listener);
     FakeExecutor fakeExecutor = new FakeExecutor();
@@ -235,9 +193,7 @@ public class CounterRegistryImplTest {
       IntegerCounter counter = registry.newIntegerCounter(CATEGORY, NAME, TAGS);
       counter.inc(42);
       assertThat(
-          "No events should be flushed before timer fires",
-          listener.snapshotEvents,
-          empty());
+          "No events should be flushed before timer fires", listener.snapshotEvents, empty());
     }
 
     // We explicitly do not call fakeExecutor.drain() here, because we want to simulate what
@@ -256,5 +212,57 @@ public class CounterRegistryImplTest {
                 .setTags(TAGS)
                 .putValues(NAME, 42)
                 .build()));
+  }
+
+  private static class FakeScheduledFuture<V> implements ScheduledFuture<V> {
+
+    @Override
+    public long getDelay(TimeUnit unit) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int compareTo(Delayed o) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean cancel(boolean mayInterruptIfRunning) {
+      return true;
+    }
+
+    @Override
+    public boolean isCancelled() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isDone() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V get() {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public V get(long timeout, TimeUnit unit) {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  private static class CountersSnapshotEventEventListener {
+    private final List<CountersSnapshotEvent> logEvents = new ArrayList<>();
+
+    @Subscribe
+    public void logEvent(CountersSnapshotEvent event) {
+      logEvents.add(event);
+    }
+
+    public CountersSnapshotEvent getTheOnlyEvent() {
+      Preconditions.checkArgument(logEvents.size() == 1);
+      return logEvents.iterator().next();
+    }
   }
 }

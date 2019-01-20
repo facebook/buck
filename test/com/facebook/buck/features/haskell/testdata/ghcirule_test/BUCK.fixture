@@ -1,0 +1,20 @@
+haskell_ghci(
+    name = "foo",
+    srcs = [
+        "Foo.hs",
+    ],
+    extra_script_templates = [
+        "extra_scripts/foo_ghc",
+    ],
+)
+
+haskell_ghci(
+    name = "foo_prof",
+    srcs = [
+        "Foo.hs",
+    ],
+    enable_profiling = True,
+    extra_script_templates = [
+        "extra_scripts/foo_ghc",
+    ],
+)

@@ -1,0 +1,19 @@
+java_library(
+    name = "lib",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//lib:idea",
+    ],
+)
+
+java_binary(
+    name = "plugin",
+    labels = [
+        "intellij_plugin",
+    ],
+    meta_inf_directory = "META-INF",
+    deps = [
+        ":lib",
+        "//lib:idea",
+    ],
+)

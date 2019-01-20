@@ -1,0 +1,32 @@
+prebuilt_jar(
+    name = "junit",
+    binary_jar = "junit-4.12.jar",
+    javadoc_url = "http://junit-team.github.io/junit/javadoc/latest/",
+    licenses = [
+        "LICENSE-junit.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/hamcrest:hamcrest-junit",
+    ],
+)
+
+prebuilt_jar(
+    name = "junit-no-hamcrest",
+    binary_jar = "junit-4.12.jar",
+    javadoc_url = "http://junit-team.github.io/junit/javadoc/latest/",
+    licenses = [
+        "LICENSE-junit.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "junit-4-8-2",
+    binary_jar = "junit-4.8.2.jar",
+    visibility = ["PUBLIC"],
+)

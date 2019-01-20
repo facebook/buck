@@ -16,15 +16,14 @@
 
 package com.facebook.buck.json;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.file.Path;
+import java.util.Optional;
 
 @VisibleForTesting
 class JsonConcatenator {
@@ -35,19 +34,17 @@ class JsonConcatenator {
   private BufferedWriter destinationBufferedWriter;
   private boolean stillEmpty;
 
-
-  @VisibleForTesting
-  static final String JSON_ENCODING = "UTF-8";
+  @VisibleForTesting static final String JSON_ENCODING = "UTF-8";
 
   public JsonConcatenator(
-      ImmutableSortedSet<Path> inputs,
-      Path destination,
-      ProjectFilesystem filesystem) throws IOException {
+      ImmutableSortedSet<Path> inputs, Path destination, ProjectFilesystem filesystem)
+      throws IOException {
     this.inputs = inputs;
     this.stillEmpty = true;
     try {
-      this.destinationBufferedWriter = new BufferedWriter(
-          new OutputStreamWriter(filesystem.newFileOutputStream(destination), JSON_ENCODING));
+      this.destinationBufferedWriter =
+          new BufferedWriter(
+              new OutputStreamWriter(filesystem.newFileOutputStream(destination), JSON_ENCODING));
     } catch (IOException e) {
       closeAll();
       throw e;
@@ -103,7 +100,7 @@ class JsonConcatenator {
     if (result.isPresent()) {
       return result.get();
     } else {
-      throw new IOException("Error loading " + input.toString());
+      throw new IOException("Error loading " + input);
     }
   }
 
@@ -116,5 +113,4 @@ class JsonConcatenator {
   String stripArrayTokens(String array) {
     return array.replaceAll("^(\\s)*\\[", "").replaceAll("\\](\\s)*$", "");
   }
-
 }

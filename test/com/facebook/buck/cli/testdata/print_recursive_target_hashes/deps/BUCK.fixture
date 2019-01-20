@@ -1,0 +1,35 @@
+cxx_library(
+    name = "dep1",
+    srcs = ["dep1.cpp"],
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
+    name = "dep2",
+    srcs = ["dep2.cpp"],
+    visibility = ["PUBLIC"],
+    deps = [":dep1"],
+)
+
+cxx_library(
+    name = "dep3",
+    srcs = ["dep3.cpp"],
+    exported_deps = [
+        ":dep1",
+        ":dep2",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
+    name = "dep4",
+    srcs = ["dep4.cpp"],
+    visibility = ["PUBLIC"],
+    deps = [":dep1"],
+)
+
+cxx_library(
+    name = "dep5",
+    srcs = ["dep5.cpp"],
+    visibility = ["PUBLIC"],
+)

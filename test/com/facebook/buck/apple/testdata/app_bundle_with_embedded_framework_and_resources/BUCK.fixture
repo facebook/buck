@@ -1,0 +1,53 @@
+apple_resource(
+    name = "Resources",
+    dirs = [],
+    files = ["Resource.plist"],
+)
+
+apple_library(
+    name = "TestLib",
+    srcs = ["lib.c"],
+    # TestLib2 is going to be in the same dylib as TestLib, but it's listed in
+    # exported_deps instead of deps. The binary should not TestLib2's resource
+    # dependencies.
+    exported_deps = [":TestLib2"],
+    exported_headers = ["lib.h"],
+    preferred_linkage = "shared",
+    deps = [":Resources"],
+)
+
+apple_library(
+    name = "TestLib2",
+    srcs = ["lib.c"],
+    deps = [":Resources"],
+)
+
+apple_bundle(
+    name = "TestFramework",
+    binary = ":TestLib#shared",
+    extension = "framework",
+    info_plist = "Dummy-Info.plist",
+)
+
+apple_library(
+    name = "LibUsedInBinary",
+    srcs = ["binlib.c"],
+    deps = [":TestLib#headers"],
+)
+
+apple_binary(
+    name = "DemoAppBinary",
+    srcs = ["main.c"],
+    deps = [
+        ":LibUsedInBinary",
+        ":TestLib",
+    ],
+)
+
+apple_bundle(
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Dummy-Info.plist",
+    deps = [":TestFramework"],
+)

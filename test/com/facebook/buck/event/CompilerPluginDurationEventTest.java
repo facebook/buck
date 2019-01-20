@@ -16,67 +16,55 @@
 
 package com.facebook.buck.event;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableMap;
-
 import org.junit.Test;
-
 
 public class CompilerPluginDurationEventTest {
 
-
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     String pluginName = "com.facebook.FakePlugin";
     String durationName = "fakeDuration";
 
-    CompilerPluginDurationEvent startedEventOne = configureTestEvent(
-        CompilerPluginDurationEvent.started(
-            target,
-            pluginName,
-            durationName,
-            ImmutableMap.<String, String>of()));
-    CompilerPluginDurationEvent startedEventTwo = configureTestEvent(
-        CompilerPluginDurationEvent.started(
-            target,
-            pluginName,
-            durationName,
-            ImmutableMap.<String, String>of()));
+    CompilerPluginDurationEvent startedEventOne =
+        configureTestEvent(
+            CompilerPluginDurationEvent.started(
+                target, pluginName, durationName, ImmutableMap.of()));
+    CompilerPluginDurationEvent startedEventTwo =
+        configureTestEvent(
+            CompilerPluginDurationEvent.started(
+                target, pluginName, durationName, ImmutableMap.of()));
 
     assertEquals(startedEventOne, startedEventOne);
     assertNotEquals(startedEventOne, startedEventTwo);
   }
 
   @Test
-  public void testIsRelated() throws Exception {
+  public void testIsRelated() {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     String pluginName = "com.facebook.FakePlugin";
     String durationName = "fakeDuration";
 
-    CompilerPluginDurationEvent.Started startedEventOne = configureTestEvent(
-        CompilerPluginDurationEvent.started(
-            target,
-            pluginName,
-            durationName,
-            ImmutableMap.<String, String>of()));
-    CompilerPluginDurationEvent.Started startedEventTwo = configureTestEvent(
-        CompilerPluginDurationEvent.started(
-            target,
-            pluginName,
-            durationName,
-            ImmutableMap.<String, String>of()));
-    CompilerPluginDurationEvent finishedEventOne = configureTestEvent(
-        CompilerPluginDurationEvent.finished(
-            startedEventOne,
-            ImmutableMap.<String, String>of()));
+    CompilerPluginDurationEvent.Started startedEventOne =
+        configureTestEvent(
+            CompilerPluginDurationEvent.started(
+                target, pluginName, durationName, ImmutableMap.of()));
+    CompilerPluginDurationEvent.Started startedEventTwo =
+        configureTestEvent(
+            CompilerPluginDurationEvent.started(
+                target, pluginName, durationName, ImmutableMap.of()));
+    CompilerPluginDurationEvent finishedEventOne =
+        configureTestEvent(
+            CompilerPluginDurationEvent.finished(startedEventOne, ImmutableMap.of()));
 
     assertTrue(startedEventOne.isRelatedTo(finishedEventOne));
     assertTrue(finishedEventOne.isRelatedTo(startedEventOne));

@@ -16,21 +16,17 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.EnumSet;
+import java.util.Optional;
+import java.util.Set;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractTestRunningOptions {
-
-  @Value.Default
-  public boolean isUsingOneTimeOutputDirectories() {
-    return false;
-  }
 
   @Value.Default
   public boolean isCodeCoverageEnabled() {
@@ -53,16 +49,6 @@ abstract class AbstractTestRunningOptions {
   }
 
   @Value.Default
-  public boolean isResultsCacheEnabled() {
-    return true;
-  }
-
-  @Value.Default
-  public boolean isDryRun() {
-    return false;
-  }
-
-  @Value.Default
   public boolean isShufflingTests() {
     return false;
   }
@@ -72,8 +58,8 @@ abstract class AbstractTestRunningOptions {
   public abstract Optional<String> getPathToJavaAgent();
 
   @Value.Default
-  public CoverageReportFormat getCoverageReportFormat() {
-    return CoverageReportFormat.HTML;
+  public Set<CoverageReportFormat> getCoverageReportFormats() {
+    return EnumSet.of(CoverageReportFormat.HTML);
   }
 
   @Value.Default
@@ -82,4 +68,10 @@ abstract class AbstractTestRunningOptions {
   }
 
   public abstract ImmutableMap<String, String> getEnvironmentOverrides();
+
+  public abstract Optional<String> getCoverageExcludes();
+
+  public abstract Optional<String> getCoverageIncludes();
+
+  public abstract Optional<String> getJavaTempDir();
 }

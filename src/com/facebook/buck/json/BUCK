@@ -1,61 +1,89 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 RULES_SRCS = [
-  'JsonConcatenate.java',
+    "JsonConcatenate.java",
 ]
+
 java_library(
-  name = 'rules',
-  srcs = RULES_SRCS,
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "rules",
+    srcs = RULES_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":steps",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 STEPS_SRCS = [
-  'JsonConcatenateStep.java',
+    "JsonConcatenateStep.java",
 ]
+
 java_library(
-  name = 'steps',
-  srcs = STEPS_SRCS,
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "steps",
+    srcs = STEPS_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":json",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 java_immutables_library(
-  name = 'json',
-  srcs = glob(['*.java'], excludes = RULES_SRCS + STEPS_SRCS),
-  immutable_types = [
-    'ProjectBuildFileParserOptions',
-  ],
-  tests = [
-    '//test/com/facebook/buck/json:json',
-  ],
-  resources = [
-    'buck.py',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-python_library(
-  name = 'buck',
-  srcs = [
-    'buck.py',
-  ],
-  deps = [
-    '//third-party/py/pathlib:pathlib',
-    '//third-party/py/pywatchman:pywatchman',
-    '//third-party/py/scandir:scandir',
-  ],
-)
-
-python_test(
-  name = 'buck_test',
-  srcs = [
-    'processor_test.py',
-    'buck_test.py',
-  ],
-  deps = [
-    ':buck',
-    '//third-party/py/pathlib:pathlib',
-  ],
+    name = "json",
+    srcs = glob(
+        ["*.java"],
+        exclude = RULES_SRCS + STEPS_SRCS,
+    ),
+    # Place the python package in the JAR root so the jar can be imported by
+    # python's built in zip importer.
+    resources_root = ".",
+    tests = [
+        "//test/com/facebook/buck/json:json",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//python-dsl:resources",
+        "//src/com/facebook/buck/core/description/impl:impl",
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/io/watchman:watchman",
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/events:events",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/parser/function:function",
+        "//src/com/facebook/buck/parser/options:options",
+        "//src/com/facebook/buck/rules/coercer:interface",
+        "//src/com/facebook/buck/skylark/function:function",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//src/com/facebook/buck/skylark/parser:parser",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/hashing:hashing",
+        "//src/com/facebook/buck/util/json:json",
+        "//third-party/java/bazel:bazel",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+    ],
 )

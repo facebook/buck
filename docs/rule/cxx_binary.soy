@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace cxx_binary}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'cxx_binary()' /}
+    {param navid: 'rule_cxx_binary' /}
     {param prettify: true /}
     {param description}
       A cxx_binary() rule builds a native C/C++ executable.
@@ -46,13 +62,25 @@ and link against their static archives (which are *not* built using {sp}
 
 {call cxx_common.platform_compiler_flags_arg /}
 
+{call cxx_common.linker_extra_outputs_arg /}
+
 {call cxx_common.linker_flags_arg /}
 
 {call cxx_common.platform_linker_flags_arg /}
 
+{call cxx_common.precompiled_header_arg /}
+
 {call native_common.link_style /}
 
+{call buck.deps_query_arg /}
+
 {call buck.tests_arg /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
+
+{call cxx_common.raw_headers_arg /}
 
 {/param} // close args
 
@@ -60,13 +88,13 @@ and link against their static archives (which are *not* built using {sp}
   {call buck.arg}
     {param name : '#strip-debug' /}
     {param desc}
-    If appended to the target name, it will strip debugging symbols, but saving local and global symbols. 
+    If appended to the target name, it will strip debugging symbols, but saving local and global symbols.
     {/param}
   {/call}
   {call buck.arg}
     {param name : '#strip-non-global' /}
     {param desc}
-    If appended to the target name, it will strip non-global symbols, but keeping external symbols. 
+    If appended to the target name, it will strip non-global symbols, but keeping external symbols.
     This is preferred for dynamic shared libraries.
     {/param}
   {/call}

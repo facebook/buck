@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "xml",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/util/xml:xml",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

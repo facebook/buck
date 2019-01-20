@@ -1,6 +1,0 @@
-apple_library(
-  name='lib',
-  srcs=glob(['*.m']),
-  deps=['//res:res'],
-  visibility=['PUBLIC'],
-)

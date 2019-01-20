@@ -1,0 +1,8 @@
+README for OSHI
+
+URL: https://github.com/oshi/oshi/commit/e51f8e84f20bc4b132aa02601a4760b20bd4a198
+Version: 3.3-SNAPSHOT e51f8e84f20bc4b132aa02601a4760b20bd4a198
+Built with:
+  mvn package
+  mvn source:jar
+License: Eclipse Public License v1.0

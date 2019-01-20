@@ -1,0 +1,35 @@
+apple_binary(
+    name = "AppBinary",
+    srcs = ["App/App.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/AppKit.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    headers = ["App/App.h"],
+)
+
+apple_bundle(
+    name = "App",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "App/Info.plist",
+    deps = [
+        ":Plugin",
+    ],
+)
+
+apple_binary(
+    name = "PluginBinary",
+    srcs = ["Plugin/Plugin.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/AppKit.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+)
+
+apple_bundle(
+    name = "Plugin",
+    binary = ":PluginBinary",
+    extension = "plugin",
+    info_plist = "Plugin/Info.plist",
+)

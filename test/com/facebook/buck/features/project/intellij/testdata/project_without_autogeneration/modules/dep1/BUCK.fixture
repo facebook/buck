@@ -1,0 +1,7 @@
+android_library(
+    name = "dep1",
+    srcs = glob(["src/**/*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

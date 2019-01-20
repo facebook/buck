@@ -1,0 +1,7 @@
+[project]
+  ide = intellij
+  intellij_aggregation_mode = 2
+[intellij]
+  aggregate_android_resource_modules = true
+  generate_android_manifest = true
+  keep_module_files_in_module_dirs = true

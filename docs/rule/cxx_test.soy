@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace cxx_test}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'cxx_test()' /}
+    {param navid: 'rule_cxx_test' /}
     {param prettify: true /}
     {param description}
       A cxx_test() rule builds a native C/C++ executable.
@@ -14,7 +30,7 @@
 {param status: 'UNFROZEN' /}
 {param overview}
 A cxx_test() rule builds a C/C++ binary against a C/C++ testing framework and runs
-it as part of <code>buck test</code>.
+it as part of {call buck.cmd_test /}.
 {/param}
 
 {param args}
@@ -36,14 +52,35 @@ it as part of <code>buck test</code>.
 
 {call cxx_common.linker_flags_arg /}
 
-{call test_common.resources_arg /}
+{call cxx_common.precompiled_header_arg /}
+
+{call buck.deps_query_arg /}
+
+{call buck.arg}
+  {param name : 'resources' /}
+  {param default : '[]' /}
+  {param desc}
+  <p class="warning-banner">
+  This attribute is currently not implemented, and just causes buck to rebuild
+  the test file if any of the resources change. This will change in the future
+  to provide a more reliable interface for resource files.
+  </p>
+  Additional data or source files which this test uses.
+ {/param}
+{/call}
+
+{call cxx_common.raw_headers_arg /}
 
 {call buck.arg}
   {param name: 'framework' /}
   {param default : '"gtest"' /}
   {param desc}
-  The testing framework to build against and run with.
-  We currently support <a href="https://code.google.com/p/googletest/"><code>gtest</code></a> and <a href="http://www.boost.org/doc/libs/1_57_0/libs/test/doc/html/index.html"><code>boost</code></a>.
+  <p>
+    The testing framework to build against and run with.  We currently support <a href="https://github.com/google/googletest"><code>gtest</code></a> and <a href="http://www.boost.org/doc/libs/1_57_0/libs/test/doc/html/index.html"><code>boost</code></a>.
+  </p>
+  <p>
+    When set to <code>gtest</code>, you must also set {call buckconfig.cxx_gtest_dep /}.
+  </p>
   {/param}
 {/call}
 
@@ -84,6 +121,10 @@ it as part of <code>buck test</code>.
 {call buck.run_test_separately_arg /}
 
 {call buck.test_rule_timeout_ms /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // close args
 

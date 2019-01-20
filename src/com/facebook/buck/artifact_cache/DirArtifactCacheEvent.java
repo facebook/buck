@@ -16,42 +16,52 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.ArtifactCacheEvent.Operation;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.rules.RuleKey;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Map;
+import java.util.Optional;
 
 public class DirArtifactCacheEvent {
-  public static final ArtifactCacheEvent.CacheMode CACHE_MODE =
-      ArtifactCacheEvent.CacheMode.dir;
+  public static final ArtifactCacheEvent.CacheMode CACHE_MODE = ArtifactCacheEvent.CacheMode.dir;
 
   private DirArtifactCacheEvent() {}
 
   public static class DirArtifactCacheEventFactory implements ArtifactCacheEventFactory {
     @Override
     public ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
-      return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.<String>absent());
+      return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.empty());
+    }
+
+    @Override
+    public ArtifactCacheEvent.Started newContainsStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
+      return new Started(Operation.MULTI_CONTAINS, ruleKeys, Optional.empty());
     }
 
     @Override
     public ArtifactCacheEvent.Started newStoreStartedEvent(
         ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata) {
       return new Started(
-          ArtifactCacheEvent.Operation.STORE,
-          ruleKeys,
-          ArtifactCacheEvent.getTarget(metadata));
+          ArtifactCacheEvent.Operation.STORE, ruleKeys, ArtifactCacheEvent.getTarget(metadata));
     }
 
     @Override
     public ArtifactCacheEvent.Finished newStoreFinishedEvent(ArtifactCacheEvent.Started started) {
-      return newFinishedEvent(started, Optional.<CacheResult>absent());
+      return newFinishedEvent(started, Optional.empty());
     }
 
     @Override
     public ArtifactCacheEvent.Finished newFetchFinishedEvent(
         ArtifactCacheEvent.Started started, CacheResult cacheResult) {
       return newFinishedEvent(started, Optional.of(cacheResult));
+    }
+
+    @Override
+    public ArtifactCacheEvent.Finished newContainsFinishedEvent(
+        ArtifactCacheEvent.Started started, Map<RuleKey, CacheResult> results) {
+      return newFinishedEvent(started, Optional.empty());
     }
 
     public Finished newFinishedEvent(
@@ -63,8 +73,7 @@ public class DirArtifactCacheEvent {
           started.getTarget(),
           started.getRuleKeys(),
           started.getInvocationType(),
-          cacheResult
-      );
+          cacheResult);
     }
   }
 
@@ -106,5 +115,4 @@ public class DirArtifactCacheEvent {
       return "DirArtifactCacheEvent.Finished";
     }
   }
-
 }

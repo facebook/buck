@@ -16,45 +16,25 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Predicates;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import java.nio.file.Path;
 
-public class BuildTargetPatternTargetNodeParser
-    extends BuildTargetPatternParser<TargetNodeSpec> {
-
-  public BuildTargetPatternTargetNodeParser() {
-    super(/* baseName */ "");
-  }
-
-  @Override
-  public String makeTargetDescription(String buildTargetName, String buildFileName) {
-    return String.format("%s in command line context.", buildTargetName);
-  }
+public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser<TargetNodeSpec> {
 
   @Override
   public TargetNodeSpec createForDescendants(Path cellPath, Path basePath) {
     return TargetNodePredicateSpec.of(
-        Predicates.alwaysTrue(),
         BuildFileSpec.fromRecursivePath(cellPath.resolve(basePath), cellPath));
   }
 
   @Override
   public TargetNodeSpec createForChildren(Path cellPath, Path basePath) {
-    return TargetNodePredicateSpec.of(
-        Predicates.alwaysTrue(),
-        BuildFileSpec.fromPath(cellPath.resolve(basePath), cellPath));
+    return TargetNodePredicateSpec.of(BuildFileSpec.fromPath(cellPath.resolve(basePath), cellPath));
   }
 
   @Override
   public TargetNodeSpec createForSingleton(BuildTarget target) {
     return BuildTargetSpec.from(target);
   }
-
-  @Override
-  protected boolean isWildCardAllowed() {
-    return true;
-  }
-
 }

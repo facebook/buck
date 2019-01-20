@@ -1,0 +1,32 @@
+# This binary manually specifies the linker map flags and linker map output.
+cxx_binary(
+    name = "bin",
+    srcs = ["main.cpp"],
+    linker_extra_outputs = ["extra"],
+    linker_flags = [
+        "--extra-output",
+        "$(output extra)",
+    ],
+)
+
+# Ditto with shared libraries.
+cxx_library(
+    name = "lib",
+    srcs = ["lib.cpp"],
+    linker_extra_outputs = ["extra"],
+    linker_flags = [
+        "--extra-output",
+        "$(output extra)",
+    ],
+)
+
+# This genrule builds the binary without the implicit linkermap.
+genrule(
+    name = "map-extractor",
+    out = "result",
+    bash = """
+  mkdir -p $OUT
+  cp $(location :bin[extra]) $OUT/bin
+  cp $(location :lib#shared,default[extra]) $OUT/shared_lib
+  """,
+)

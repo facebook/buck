@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [[ "$OSTYPE" =~ ^darwin ]]; then
+  # This is OS X.
+  $BUCK_DEFAULT_RUNTIME_RESOURCES/binaries/os_x_node_executable "$@"
+  cat $BUCK_DEFAULT_RUNTIME_RESOURCES/stuff
+  cat $BUCK_EXTERNAL_RUNTIME_RESOURCES/subnode/stuff
+else
+  # This is not OS OX: assume Linux.
+  $BUCK_DEFAULT_RUNTIME_RESOURCES/binaries/linux_node_executable "$@"
+  cat $BUCK_DEFAULT_RUNTIME_RESOURCES/stuff
+  cat $BUCK_EXTERNAL_RUNTIME_RESOURCES/subnode/stuff
+fi

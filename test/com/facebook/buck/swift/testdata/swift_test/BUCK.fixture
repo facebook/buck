@@ -1,0 +1,22 @@
+swift_library(
+    name = "dep1",
+    srcs = ["dep1/echo.swift"],
+)
+
+apple_test(
+    name = "MixedTest",
+    srcs = [
+        "swift_testTests/DummyTest.m",
+        "swift_testTests/test_nodep.swift",
+        "swift_testTests/test_withdep.swift",
+    ],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "swift_testTests/Info.plist",
+    info_plist_substitutions = {
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.ubercab.swiftunittest",
+    },
+    deps = [":dep1"],
+)

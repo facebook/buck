@@ -1,0 +1,7 @@
+kotlin_library(
+    name = "fail",
+    srcs = ["Bad.kt"],
+    visibility = [
+        "PUBLIC",
+    ],
+)

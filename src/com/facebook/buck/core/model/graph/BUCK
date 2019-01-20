@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "graph",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

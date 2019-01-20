@@ -1,0 +1,21 @@
+android_binary(
+    name = "app",
+    keystore = "//android/keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//android/java/com/sample/lib:lib",
+        "//android/res/com/sample/base:base",
+        "//js:fruit-salad-in-a-bundle#android",
+    ],
+)
+
+android_binary(
+    name = "app_with_genrule",
+    keystore = "//android/keystores:debug",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//android/java/com/sample/lib:lib",
+        "//android/res/com/sample/base:base",
+        "//js:genrule-outer#android",
+    ],
+)

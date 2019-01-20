@@ -1,0 +1,5 @@
+genrule(
+    name = "example",
+    out = "baz.txt",
+    bash = read_config("test", "config", "foo"),
+)

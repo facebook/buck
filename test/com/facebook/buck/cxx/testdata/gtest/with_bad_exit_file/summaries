@@ -1,0 +1,12 @@
+[
+  {
+    "message": "Could not parse exit code from file",
+    "stacktrace": "",
+    "stdErr": "",
+    "stdOut": "[==========] Running 1 test from 1 test case.\n[----------] Global test environment set-up.\n[----------] 1 test from FOO\n[ RUN      ] FOO.BAR\n[       OK ] FOO.BAR (0 ms)\n[----------] 1 test from FOO (0 ms total)\n\n[----------] Global test environment tear-down\n[==========] 1 test from 1 test case ran. (0 ms total)\n[  PASSED  ] 1 test.\n",
+    "testCase": "main",
+    "testCaseName": "//:test",
+    "time": 0,
+    "type": "FAILURE"
+  }
+]

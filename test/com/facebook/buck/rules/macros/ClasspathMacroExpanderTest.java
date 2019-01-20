@@ -16,167 +16,157 @@
 
 package com.facebook.buck.rules.macros;
 
-import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.io.MorePathsForTests;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ExportFileBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-
+import java.io.File;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class ClasspathMacroExpanderTest {
-
-  private static final Path ROOT =
-      MorePathsForTests.rootRelativePath(".").normalize().resolve("opt");
   private ClasspathMacroExpander expander;
-  private FakeProjectFilesystem filesystem;
+  private ProjectFilesystem filesystem;
 
   @Before
   public void createMacroExpander() {
     this.expander = new ClasspathMacroExpander();
-    this.filesystem = new FakeProjectFilesystem() {
-      @Override
-      public Path resolve(Path path) {
-        return ROOT.resolve(path);
-      }
-    };
+    this.filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
   }
 
   @Test
   public void shouldIncludeARuleIfNothingIsGiven() throws Exception {
-    final BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     BuildRule rule =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//cheese:cake"))
-            .addSrc(Paths.get("Example.java"))  // Force a jar to be created
-            .build(buildRuleResolver, filesystem);
+        getLibraryBuilder("//cheese:cake")
+            .addSrc(Paths.get("Example.java")) // Force a jar to be created
+            .build(graphBuilder, filesystem);
 
-    assertExpandsTo(rule, buildRuleResolver, ROOT + File.separator + rule.getPathToOutput());
+    assertExpandsTo(
+        rule,
+        graphBuilder,
+        filesystem.getRootPath()
+            + File.separator
+            + pathResolver.getRelativePath(rule.getSourcePathToOutput()));
   }
 
   @Test
   public void shouldIncludeTransitiveDependencies() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule dep =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
-            .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver, filesystem);
+    TargetNode<?> depNode =
+        getLibraryBuilder("//exciting:dep").addSrc(Paths.get("Dep.java")).build();
 
-    BuildRule rule =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
+    TargetNode<?> ruleNode =
+        getLibraryBuilder("//exciting:target")
             .addSrc(Paths.get("Other.java"))
-            .addDep(dep.getBuildTarget())
-            .build(ruleResolver, filesystem);
+            .addDep(depNode.getBuildTarget())
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+
+    BuildRule rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
+    BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
 
     // Alphabetical sorting expected, so "dep" should be before "rule"
     assertExpandsTo(
         rule,
-        ruleResolver,
+        graphBuilder,
         String.format(
             "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
-            ROOT,
-            dep.getPathToOutput(),
-            ROOT,
-            rule.getPathToOutput()));
+            filesystem.getRootPath(),
+            pathResolver.getRelativePath(dep.getSourcePathToOutput()),
+            filesystem.getRootPath(),
+            pathResolver.getRelativePath(rule.getSourcePathToOutput())));
+  }
+
+  public JavaLibraryBuilder getLibraryBuilder(String target) {
+    return JavaLibraryBuilder.createBuilder(
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), target), filesystem);
   }
 
   @Test(expected = MacroException.class)
   public void shouldThrowAnExceptionWhenRuleToExpandDoesNotHaveAClasspath() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     BuildRule rule =
-        ExportFileBuilder.newExportFileBuilder(BuildTargetFactory.newInstance("//cheese:peas"))
-          .setSrc(new FakeSourcePath("some-file.jar"))
-          .build(ruleResolver);
+        new ExportFileBuilder(
+                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cheese:peas"))
+            .setSrc(FakeSourcePath.of("some-file.jar"))
+            .build(graphBuilder);
 
-    expander.expand(pathResolver, rule);
-  }
-
-  @Test
-  public void shouldExpandTransitiveDependencies() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule dep =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
-            .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
-    BuildRule rule =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
-            .addSrc(Paths.get("Other.java"))
-            .addDep(dep.getBuildTarget())
-            .build(ruleResolver);
-
-    BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
-    ImmutableList<BuildRule> deps =
-        expander.extractBuildTimeDeps(
-            forTarget,
-            createCellRoots(filesystem),
-            ruleResolver,
-            rule.getBuildTarget().toString());
-
-    assertThat(deps, Matchers.containsInAnyOrder(rule, dep));
+    expander.expand(pathResolver, ClasspathMacro.of(rule.getBuildTarget()), rule);
   }
 
   @Test
   public void extractRuleKeyAppendables() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    BuildRule dep =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
-            .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
-    BuildRule rule =
-        JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
+    TargetNode<?> depNode =
+        getLibraryBuilder("//exciting:dep").addSrc(Paths.get("Dep.java")).build();
+    TargetNode<?> ruleNode =
+        getLibraryBuilder("//exciting:target")
             .addSrc(Paths.get("Other.java"))
-            .addDep(dep.getBuildTarget())
-            .build(ruleResolver);
+            .addDep(depNode.getBuildTarget())
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
+
+    BuildRule rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
+    BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
+
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
-    assertThat(
-        expander.extractRuleKeyAppendables(
+    CellPathResolver cellRoots = createCellRoots(filesystem);
+    Arg ruleKeyAppendables =
+        expander.expandFrom(
             forTarget,
-            createCellRoots(filesystem),
-            ruleResolver,
-            rule.getBuildTarget().toString()),
-        Matchers.<Object>equalTo(
-            ImmutableSortedSet.of(
-                new BuildTargetSourcePath(rule.getBuildTarget()),
-                new BuildTargetSourcePath(dep.getBuildTarget()))));
+            cellRoots,
+            graphBuilder,
+            expander.parse(
+                forTarget, cellRoots, ImmutableList.of(rule.getBuildTarget().toString())));
+
+    ImmutableList<BuildRule> deps =
+        BuildableSupport.deriveDeps(ruleKeyAppendables, new SourcePathRuleFinder(graphBuilder))
+            .collect(ImmutableList.toImmutableList());
+
+    assertThat(deps, Matchers.equalTo(ImmutableList.of(dep, rule)));
   }
 
   private void assertExpandsTo(
-      BuildRule rule,
-      BuildRuleResolver buildRuleResolver,
-      String expectedClasspath) throws MacroException {
-    String classpath = expander.expand(new SourcePathResolver(buildRuleResolver), rule);
-    String fileClasspath = expander.expandForFile(
-        rule.getBuildTarget(),
-        createCellRoots(filesystem),
-        buildRuleResolver,
-        ':' + rule.getBuildTarget().getShortName());
-
+      BuildRule rule, ActionGraphBuilder graphBuilder, String expectedClasspath)
+      throws MacroException {
+    DefaultSourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    String classpath =
+        Arg.stringify(
+            expander.expand(pathResolver, ClasspathMacro.of(rule.getBuildTarget()), rule),
+            pathResolver);
     assertEquals(expectedClasspath, classpath);
-    assertEquals(String.format("'%s'", expectedClasspath), fileClasspath);
   }
 }

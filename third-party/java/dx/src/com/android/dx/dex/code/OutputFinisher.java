@@ -560,7 +560,7 @@ public final class OutputFinisher {
     /**
      * Helper for {@link #finishProcessingAndGetList}, which goes
      * through each instruction in the output, making sure its opcode
-     * can accomodate its arguments. In cases where the opcode is
+     * can accommodate its arguments. In cases where the opcode is
      * unable to do so, this replaces the instruction with a larger
      * instruction with identical semantics that <i>will</i> work.
      *

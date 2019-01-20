@@ -17,151 +17,142 @@
 package com.facebook.buck.android;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.easymock.EasyMock.expect;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.dalvik.EstimateLinearAllocStep;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.android.dalvik.EstimateDexWeightStep;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeOnDiskBuildInfo;
-import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
-import org.easymock.EasyMockSupport;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import org.junit.Test;
 
-public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMockSupport {
+public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
   @Test
   public void testGetBuildStepsWhenThereAreClassesToDex() throws IOException, InterruptedException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    FakeJavaLibrary javaLibraryRule = new FakeJavaLibrary(
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
-        pathResolver,
-        filesystem,
-        ImmutableSortedSet.<BuildRule>of()) {
-      @Override
-      public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
-        return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
-      }
-    };
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    FakeJavaLibrary javaLibraryRule =
+        new FakeJavaLibrary(
+            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
+            filesystem,
+            ImmutableSortedSet.of()) {
+          @Override
+          public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
+            return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
+          }
+        };
+    graphBuilder.addToIndex(javaLibraryRule);
     Path jarOutput =
-        BuildTargets.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
+        BuildTargetPaths.getGenPath(filesystem, javaLibraryRule.getBuildTarget(), "%s.jar");
     javaLibraryRule.setOutputFile(jarOutput.toString());
 
-    BuildContext context = createMock(BuildContext.class);
+    BuildContext context =
+        FakeBuildContext.withSourcePathResolver(pathResolver)
+            .withBuildCellRootPath(filesystem.getRootPath());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
-    replayAll();
+    Path dexOutput =
+        BuildTargetPaths.getGenPath(
+            filesystem,
+            javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR),
+            "%s.dex.jar");
+    createFiles(filesystem, dexOutput.toString(), jarOutput.toString());
 
-    Path dexOutput = BuildTargets.getGenPath(
-        filesystem,
-        javaLibraryRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.DEX_FLAVOR),
-        "%s.dex.jar");
-    createFiles(
-        filesystem,
-        dexOutput.toString(),
-        jarOutput.toString());
+    AndroidPlatformTarget androidPlatformTarget =
+        AndroidPlatformTarget.of(
+            "android",
+            Paths.get(""),
+            Collections.emptyList(),
+            () -> new SimpleTool(""),
+            () -> new SimpleTool(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("/usr/bin/dx"),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""));
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setProjectFilesystem(filesystem)
-        .build();
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
-        new DexProducedFromJavaLibrary(params, pathResolver, javaLibraryRule);
+        new DexProducedFromJavaLibrary(
+            buildTarget, filesystem, androidPlatformTarget, params, javaLibraryRule, DxStep.DX);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
-    verifyAll();
-    resetAll();
+    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
-    AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(androidPlatformTarget.getDxExecutable()).andReturn(Paths.get("/usr/bin/dx"));
-
-    replayAll();
-
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .build();
-
-    String expectedDxCommand = String.format(
-        "%s --dex --no-optimize --force-jumbo --output %s %s",
-        Paths.get("/usr/bin/dx"),
-        filesystem.resolve(dexOutput),
-        filesystem.resolve(jarOutput));
-    MoreAsserts.assertSteps("Generate bar.dex.jar.",
+    String expectedDxCommand =
+        String.format(
+            "%s --dex --no-optimize --force-jumbo --output %s %s",
+            Paths.get("/usr/bin/dx"), filesystem.resolve(dexOutput), filesystem.resolve(jarOutput));
+    MoreAsserts.assertSteps(
+        "Generate bar.dex.jar.",
         ImmutableList.of(
-            String.format("rm -f %s", filesystem.resolve(dexOutput)),
-            String.format("mkdir -p %s", filesystem.resolve(dexOutput).getParent()),
-            "estimate_linear_alloc",
+            String.format("rm -f %s", dexOutput),
+            String.format("mkdir -p %s", dexOutput.getParent()),
+            "estimate_dex_weight",
             "(cd " + filesystem.getRootPath() + " && " + expectedDxCommand + ")",
-            String.format("zip-scrub %s", dexOutput),
+            String.format("zip-scrub %s", filesystem.resolve(dexOutput)),
             "record_dx_success"),
         steps,
         executionContext);
 
-    verifyAll();
-    resetAll();
-
-    replayAll();
-
-    ((EstimateLinearAllocStep) steps.get(2)).setLinearAllocEstimateForTesting(250);
+    ((EstimateDexWeightStep) steps.get(2)).setWeightEstimateForTesting(250);
     Step recordArtifactAndMetadataStep = steps.get(5);
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
-    assertEquals("The generated .dex.jar file should be in the set of recorded artifacts.",
-        ImmutableSet.of(BuildTargets.getGenPath(filesystem, buildTarget, "%s.dex.jar")),
-        buildableContext.getRecordedArtifacts());
+    MoreAsserts.assertContainsOne(
+        "The generated .dex.jar file should be in the set of recorded artifacts.",
+        buildableContext.getRecordedArtifacts(),
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.dex.jar"));
 
-    buildableContext.assertContainsMetadataMapping(
-        DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA, "250");
-
-    verifyAll();
+    BuildOutputInitializer<DexProducedFromJavaLibrary.BuildOutput> outputInitializer =
+        preDex.getBuildOutputInitializer();
+    outputInitializer.initializeFromDisk(pathResolver);
+    assertEquals(250, outputInitializer.getBuildOutput().weightEstimate);
   }
 
   private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {
@@ -174,154 +165,103 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest extends EasyMo
   }
 
   @Test
-  public void testGetBuildStepsWhenThereAreNoClassesToDex()
-      throws IOException, InterruptedException {
-    JavaLibrary javaLibrary = createMock(JavaLibrary.class);
-    expect(javaLibrary.getClassNamesToHashes()).andReturn(
-        ImmutableSortedMap.<String, HashCode>of());
+  public void testGetBuildStepsWhenThereAreNoClassesToDex() throws Exception {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    DefaultJavaLibrary javaLibrary =
+        JavaLibraryBuilder.createBuilder("//foo:bar").build(graphBuilder);
+    javaLibrary
+        .getBuildOutputInitializer()
+        .setBuildOutputForTests(new JavaLibrary.Data(ImmutableSortedMap.of()));
 
-    BuildContext context = createMock(BuildContext.class);
+    BuildContext context = FakeBuildContext.NOOP_CONTEXT;
     FakeBuildableContext buildableContext = new FakeBuildableContext();
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    replayAll();
-
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget)
-        .setProjectFilesystem(projectFilesystem)
-        .build();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
+            buildTarget,
+            projectFilesystem,
+            TestAndroidPlatformTargetFactory.create(),
             params,
-            new SourcePathResolver(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer())),
-            javaLibrary);
+            javaLibrary,
+            DxStep.DX);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
-    verifyAll();
-    resetAll();
+    Path dexOutput = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
 
-    Path dexOutput = BuildTargets.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar");
-    replayAll();
+    ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
 
-    ExecutionContext executionContext = TestExecutionContext
-        .newBuilder()
-        .build();
-
-    MoreAsserts.assertSteps("Do not generate a .dex.jar file.",
+    MoreAsserts.assertSteps(
+        "Do not generate a .dex.jar file.",
         ImmutableList.of(
-          String.format("rm -f %s", projectFilesystem.resolve(dexOutput)),
-          String.format("mkdir -p %s", projectFilesystem.resolve(dexOutput.getParent())),
-          "record_empty_dx"),
+            String.format("rm -f %s", dexOutput),
+            String.format("mkdir -p %s", dexOutput.getParent()),
+            "record_empty_dx"),
         steps,
         executionContext);
-
-    verifyAll();
-    resetAll();
-
-    replayAll();
 
     Step recordArtifactAndMetadataStep = steps.get(2);
     assertThat(recordArtifactAndMetadataStep.getShortName(), startsWith("record_"));
     int exitCode = recordArtifactAndMetadataStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
-
-    verifyAll();
   }
 
   @Test
   public void testObserverMethods() {
-    JavaLibrary accumulateClassNames = createMock(JavaLibrary.class);
-    expect(accumulateClassNames.getClassNamesToHashes())
-        .andReturn(ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe")))
-        .anyTimes();
-
-    replayAll();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    DefaultJavaLibrary accumulateClassNames =
+        JavaLibraryBuilder.createBuilder("//foo:bar").build(graphBuilder);
+    accumulateClassNames
+        .getBuildOutputInitializer()
+        .setBuildOutputForTests(
+            new JavaLibrary.Data(
+                ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"))));
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary preDexWithClasses =
         new DexProducedFromJavaLibrary(
+            buildTarget,
+            projectFilesystem,
+            TestAndroidPlatformTargetFactory.create(),
             params,
-            new SourcePathResolver(
-                new BuildRuleResolver(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer())),
-            accumulateClassNames);
-    assertNull(preDexWithClasses.getPathToOutput());
+            accumulateClassNames,
+            DxStep.DX);
+    assertNull(preDexWithClasses.getSourcePathToOutput());
     assertEquals(
-        BuildTargets.getGenPath(params.getProjectFilesystem(), buildTarget, "%s.dex.jar"),
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.dex.jar"),
         preDexWithClasses.getPathToDex());
-
-    verifyAll();
-  }
-
-  private static <T> void initialize(
-      InitializableFromDisk<T> initializableFromDisk,
-      OnDiskBuildInfo onDiskBuildInfo) throws IOException {
-    BuildOutputInitializer<T> buildOutputInitializer =
-        initializableFromDisk.getBuildOutputInitializer();
-    buildOutputInitializer.setBuildOutput(
-        initializableFromDisk.initializeFromDisk(onDiskBuildInfo));
-  }
-
-  @Test
-  public void getOutputDoesNotAccessWrappedJavaLibrary() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-
-    JavaLibrary javaLibrary =
-        (JavaLibrary) JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:lib"))
-            .build(ruleResolver);
-
-    BuildRuleParams params =
-        new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:target"))
-            .build();
-    DexProducedFromJavaLibrary dexProducedFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, pathResolver, javaLibrary);
-
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-    FakeOnDiskBuildInfo onDiskBuildInfo =
-        new FakeOnDiskBuildInfo()
-            .putMetadata(
-                DexProducedFromJavaLibrary.LINEAR_ALLOC_KEY_ON_DISK_METADATA,
-                "0")
-            .putMetadata(
-                DexProducedFromJavaLibrary.CLASSNAMES_TO_HASHES,
-                mapper.writeValueAsString(ImmutableMap.<String, String>of()));
-    initialize(dexProducedFromJavaLibrary, onDiskBuildInfo);
-
-    assertFalse(dexProducedFromJavaLibrary.hasOutput());
   }
 
   @Test
   public void testComputeAbiKey() {
-    ImmutableSortedMap<String, HashCode> classNamesAndHashes = ImmutableSortedMap.of(
-        "com/example/Foo", HashCode.fromString("e4fccb7520b7795e632651323c63217c9f59f72a"),
-        "com/example/Bar", HashCode.fromString("087b7707a5f8e0a2adf5652e3cd2072d89a197dc"),
-        "com/example/Baz", HashCode.fromString("62b1c2510840c0de55c13f66065a98a719be0f19"));
-    String observedSha1 = DexProducedFromJavaLibrary
-        .computeAbiKey(classNamesAndHashes)
-        .getHash();
+    ImmutableSortedMap<String, HashCode> classNamesAndHashes =
+        ImmutableSortedMap.of(
+            "com/example/Foo", HashCode.fromString("e4fccb7520b7795e632651323c63217c9f59f72a"),
+            "com/example/Bar", HashCode.fromString("087b7707a5f8e0a2adf5652e3cd2072d89a197dc"),
+            "com/example/Baz", HashCode.fromString("62b1c2510840c0de55c13f66065a98a719be0f19"));
+    String observedSha1 = DexProducedFromJavaLibrary.computeAbiKey(classNamesAndHashes).getHash();
 
-    String expectedSha1 = Hashing.sha1().newHasher()
-        .putUnencodedChars("com/example/Bar")
-        .putByte((byte) 0)
-        .putUnencodedChars("087b7707a5f8e0a2adf5652e3cd2072d89a197dc")
-        .putByte((byte) 0)
-        .putUnencodedChars("com/example/Baz")
-        .putByte((byte) 0)
-        .putUnencodedChars("62b1c2510840c0de55c13f66065a98a719be0f19")
-        .putByte((byte) 0)
-        .putUnencodedChars("com/example/Foo")
-        .putByte((byte) 0)
-        .putUnencodedChars("e4fccb7520b7795e632651323c63217c9f59f72a")
-        .putByte((byte) 0)
-        .hash()
-        .toString();
+    String expectedSha1 =
+        Hashing.sha1()
+            .newHasher()
+            .putUnencodedChars("com/example/Bar")
+            .putByte((byte) 0)
+            .putUnencodedChars("087b7707a5f8e0a2adf5652e3cd2072d89a197dc")
+            .putByte((byte) 0)
+            .putUnencodedChars("com/example/Baz")
+            .putByte((byte) 0)
+            .putUnencodedChars("62b1c2510840c0de55c13f66065a98a719be0f19")
+            .putByte((byte) 0)
+            .putUnencodedChars("com/example/Foo")
+            .putByte((byte) 0)
+            .putUnencodedChars("e4fccb7520b7795e632651323c63217c9f59f72a")
+            .putByte((byte) 0)
+            .hash()
+            .toString();
     assertEquals(expectedSha1, observedSha1);
   }
 }

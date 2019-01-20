@@ -16,12 +16,25 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
+import org.immutables.value.Value;
 
 public interface HasAppleBundleFields {
-  public Either<AppleBundleExtension, String> getExtension();
-  public SourcePath getInfoPlist();
-  public Optional<String> getXcodeProductType();
+  Either<AppleBundleExtension, String> getExtension();
+
+  SourcePath getInfoPlist();
+
+  Optional<String> getProductName();
+
+  Optional<String> getXcodeProductType();
+
+  ImmutableMap<String, String> getInfoPlistSubstitutions();
+
+  @Value.Default
+  default AppleAssetCatalogsCompilationOptions getAssetCatalogsCompilationOptions() {
+    return AppleAssetCatalogsCompilationOptions.builder().build();
+  }
 }

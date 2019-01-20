@@ -15,81 +15,40 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 
 public final class JavacOptionsFactory {
   public static JavacOptions create(
       JavacOptions defaultOptions,
-      BuildRuleParams params,
+      BuildTarget buildTarget,
       BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
       JvmLibraryArg jvmLibraryArg) {
-    if ((jvmLibraryArg.source.isPresent() || jvmLibraryArg.target.isPresent()) &&
-        jvmLibraryArg.javaVersion.isPresent()) {
+    if ((jvmLibraryArg.getSource().isPresent() || jvmLibraryArg.getTarget().isPresent())
+        && jvmLibraryArg.getJavaVersion().isPresent()) {
       throw new HumanReadableException("Please set either source and target or java_version.");
     }
 
     JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
 
-    if (jvmLibraryArg.javaVersion.isPresent()) {
-      builder.setSourceLevel(jvmLibraryArg.javaVersion.get());
-      builder.setTargetLevel(jvmLibraryArg.javaVersion.get());
+    if (jvmLibraryArg.getJavaVersion().isPresent()) {
+      builder.setSourceLevel(jvmLibraryArg.getJavaVersion().get());
+      builder.setTargetLevel(jvmLibraryArg.getJavaVersion().get());
     }
 
-    if (jvmLibraryArg.source.isPresent()) {
-      builder.setSourceLevel(jvmLibraryArg.source.get());
+    if (jvmLibraryArg.getSource().isPresent()) {
+      builder.setSourceLevel(jvmLibraryArg.getSource().get());
     }
 
-    if (jvmLibraryArg.target.isPresent()) {
-      builder.setTargetLevel(jvmLibraryArg.target.get());
+    if (jvmLibraryArg.getTarget().isPresent()) {
+      builder.setTargetLevel(jvmLibraryArg.getTarget().get());
     }
 
-    if (jvmLibraryArg.extraArguments.isPresent()) {
-      builder.addAllExtraArguments(jvmLibraryArg.extraArguments.get());
-    }
-
-    if (jvmLibraryArg.compiler.isPresent()) {
-      Either<BuiltInJavac, SourcePath> either = jvmLibraryArg.compiler.get();
-
-      if (either.isRight()) {
-        SourcePath sourcePath = either.getRight();
-
-        Optional<BuildRule> possibleRule = pathResolver.getRule(sourcePath);
-        if (possibleRule.isPresent()) {
-          BuildRule rule = possibleRule.get();
-          if (rule instanceof PrebuiltJar) {
-            builder.setJavacJarPath(
-                new BuildTargetSourcePath(rule.getBuildTarget()));
-          } else {
-            throw new HumanReadableException("Only prebuilt_jar targets can be used as a javac");
-          }
-        } else {
-          builder.setJavacPath(pathResolver.getAbsolutePath(sourcePath));
-        }
-      }
-    } else {
-      if (jvmLibraryArg.javac.isPresent() || jvmLibraryArg.javacJar.isPresent()) {
-        if (jvmLibraryArg.javac.isPresent() && jvmLibraryArg.javacJar.isPresent()) {
-          throw new HumanReadableException("Cannot set both javac and javacjar");
-        }
-        builder.setJavacPath(jvmLibraryArg.javac);
-        builder.setJavacJarPath(jvmLibraryArg.javacJar);
-      }
-    }
+    builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 
     AnnotationProcessingParams annotationParams =
-        jvmLibraryArg.buildAnnotationProcessingParams(
-            params.getBuildTarget(),
-            params.getProjectFilesystem(),
-            resolver);
+        jvmLibraryArg.buildAnnotationProcessingParams(buildTarget, resolver);
     builder.setAnnotationProcessingParams(annotationParams);
 
     return builder.build();

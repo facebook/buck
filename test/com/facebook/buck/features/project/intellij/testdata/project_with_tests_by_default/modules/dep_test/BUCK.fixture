@@ -1,0 +1,8 @@
+java_library(
+    name = "dep_test",
+    srcs = [
+        "Test.java",
+    ],
+    source = "8",
+    target = "8",
+)

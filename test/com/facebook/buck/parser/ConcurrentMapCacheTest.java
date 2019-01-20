@@ -23,14 +23,12 @@ import static org.junit.Assert.assertThat;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.util.concurrent.ExecutionException;
-
 public class ConcurrentMapCacheTest {
 
   @Test
-  public void shouldAllowAnEntryToBeAdded() throws ExecutionException {
+  public void shouldAllowAnEntryToBeAdded() {
     ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
-    cache.get("cake", 1);
+    cache.putIfAbsentAndGet("cake", 1);
 
     Integer value = cache.getIfPresent("cake");
 
@@ -38,9 +36,9 @@ public class ConcurrentMapCacheTest {
   }
 
   @Test
-  public void shouldRemoveValues() throws ExecutionException {
+  public void shouldRemoveValues() {
     ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
-    cache.get("cake", 1);
+    cache.putIfAbsentAndGet("cake", 1);
 
     cache.invalidate("cake");
 
@@ -48,21 +46,21 @@ public class ConcurrentMapCacheTest {
   }
 
   @Test
-  public void shouldOnlyAddAnItemOnceToTheCache() throws ExecutionException {
+  public void shouldOnlyAddAnItemOnceToTheCache() {
     ConcurrentMapCache<String, WeirdInt> cache = new ConcurrentMapCache<>(1);
     WeirdInt value = new WeirdInt(42);
     WeirdInt value2 = new WeirdInt(42);
 
-    cache.get("cake", value);
-    cache.get("cake", value2);
+    cache.putIfAbsentAndGet("cake", value);
+    cache.putIfAbsentAndGet("cake", value2);
 
     assertThat(cache.getIfPresent("cake"), Matchers.is(value));
   }
 
   @Test(expected = NullPointerException.class)
-  public void disallowsNullValuesInTheCache() throws ExecutionException {
+  public void disallowsNullValuesInTheCache() {
     ConcurrentMapCache<String, Integer> cache = new ConcurrentMapCache<>(1);
-    cache.get("cake", null);
+    cache.putIfAbsentAndGet("cake", null);
   }
 
   private static class WeirdInt {

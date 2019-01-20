@@ -16,30 +16,43 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasSourceUnderTest;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.MetadataProvidingDescription;
+import com.facebook.buck.core.description.arg.HasContacts;
+import com.facebook.buck.core.description.arg.HasTestTimeout;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,259 +61,282 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.function.Function;
+import org.immutables.value.Value;
 
-public class CxxTestDescription implements
-    Description<CxxTestDescription.Arg>,
-    Flavored,
-    ImplicitDepsInferringDescription<CxxTestDescription.Arg> {
+public class CxxTestDescription
+    implements DescriptionWithTargetGraph<CxxTestDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<CxxTestDescription.AbstractCxxTestDescriptionArg>,
+        MetadataProvidingDescription<CxxTestDescriptionArg>,
+        VersionRoot<CxxTestDescriptionArg> {
 
-  private static final BuildRuleType TYPE = BuildRuleType.of("cxx_test");
   private static final CxxTestType DEFAULT_TEST_TYPE = CxxTestType.GTEST;
 
+  private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
+  private final ImmutableSet<Flavor> declaredPlatforms;
+  private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
 
   public CxxTestDescription(
+      ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
-      Optional<Long> defaultTestRuleTimeoutMs) {
+      CxxBinaryMetadataFactory cxxBinaryMetadataFactory) {
+    this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+    this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
+    this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
+  }
+
+  private ImmutableSet<BuildTarget> getImplicitFrameworkDeps(
+      AbstractCxxTestDescriptionArg constructorArg) {
+    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+
+    CxxTestType type = constructorArg.getFramework().orElse(getDefaultTestType());
+    switch (type) {
+      case GTEST:
+        {
+          cxxBuckConfig.getGtestDep().ifPresent(deps::add);
+          if (constructorArg.getUseDefaultTestMain().orElse(true)) {
+            cxxBuckConfig.getGtestDefaultTestMainDep().ifPresent(deps::add);
+          }
+          break;
+        }
+      case BOOST:
+        {
+          cxxBuckConfig.getBoostTestDep().ifPresent(deps::add);
+          break;
+        }
+      default:
+        {
+          break;
+        }
+    }
+
+    return deps.build();
+  }
+
+  private CxxPlatform getCxxPlatform(
+      BuildTarget target, CxxBinaryDescription.CommonArg constructorArg) {
+    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+
+    // First check if the build target is setting a particular target.
+    Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
+    if (targetPlatform.isPresent()) {
+      return targetPlatform.get();
+    }
+
+    // Next, check for a constructor arg level default platform.
+    if (constructorArg.getDefaultPlatform().isPresent()) {
+      return cxxPlatforms.getValue(constructorArg.getDefaultPlatform().get());
+    }
+
+    // Otherwise, fallback to the description-level default platform.
+    return cxxPlatforms.getValue(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor());
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<CxxTestDescriptionArg> getConstructorArgType() {
+    return CxxTestDescriptionArg.class;
   }
 
+  @SuppressWarnings("PMD.PrematureDeclaration")
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget inputBuildTarget,
+      BuildRuleParams params,
+      CxxTestDescriptionArg args) {
+    Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(inputBuildTarget);
+    Optional<LinkerMapMode> flavoredLinkerMapMode =
+        LinkerMapMode.FLAVOR_DOMAIN.getValue(inputBuildTarget);
+    inputBuildTarget =
+        CxxStrip.removeStripStyleFlavorInTarget(inputBuildTarget, flavoredStripStyle);
+    inputBuildTarget =
+        LinkerMapMode.removeLinkerMapModeFlavorInTarget(inputBuildTarget, flavoredLinkerMapMode);
+    BuildTarget buildTarget = inputBuildTarget;
 
-  @Override
-  public <A extends Arg> BuildRule createBuildRule(
-      TargetGraph targetGraph,
-      BuildRuleParams inputParams,
-      final BuildRuleResolver resolver,
-      final A args) throws NoSuchBuildTargetException {
-    Optional<StripStyle> flavoredStripStyle =
-        StripStyle.FLAVOR_DOMAIN.getValue(inputParams.getBuildTarget());
-    final BuildRuleParams params =
-        CxxStrip.removeStripStyleFlavorInParams(inputParams, flavoredStripStyle);
+    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    CellPathResolver cellRoots = context.getCellPathResolver();
 
-    CxxPlatform cxxPlatform = cxxPlatforms.getValue(params.getBuildTarget()).or(defaultCxxPlatform);
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
+      CxxLinkAndCompileRules cxxLinkAndCompileRules =
+          CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
+              buildTarget.withoutFlavors(CxxCompilationDatabase.COMPILATION_DATABASE),
+              projectFilesystem,
+              graphBuilder,
+              cellRoots,
+              cxxBuckConfig,
+              cxxPlatform,
+              args,
+              getImplicitFrameworkDeps(args),
+              flavoredStripStyle,
+              flavoredLinkerMapMode);
+      return CxxCompilationDatabase.createCompilationDatabase(
+          buildTarget, projectFilesystem, cxxLinkAndCompileRules.compileRules);
+    }
 
-    if (params.getBuildTarget().getFlavors()
-          .contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      return CxxDescriptionEnhancer.createCompilationDatabase(
-          params,
-          resolver,
-          pathResolver,
-          cxxBuckConfig,
-          cxxPlatform,
-          args);
+    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+      return CxxDescriptionEnhancer.createUberCompilationDatabase(
+          getCxxPlatformsProvider().getCxxPlatforms().getValue(buildTarget).isPresent()
+              ? buildTarget
+              : buildTarget.withAppendedFlavors(cxxPlatform.getFlavor()),
+          projectFilesystem,
+          graphBuilder);
     }
 
     // Generate the link rule that builds the test binary.
-    final CxxLinkAndCompileRules cxxLinkAndCompileRules =
+    CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-            params,
-            resolver,
+            buildTarget,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
             cxxBuckConfig,
             cxxPlatform,
             args,
-            flavoredStripStyle);
+            getImplicitFrameworkDeps(args),
+            flavoredStripStyle,
+            flavoredLinkerMapMode);
 
     // Construct the actual build params we'll use, notably with an added dependency on the
     // CxxLink rule above which builds the test binary.
+    BuildTarget testBuildTarget =
+        CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
+    testBuildTarget =
+        LinkerMapMode.restoreLinkerMapModeFlavorInTarget(testBuildTarget, flavoredLinkerMapMode);
     BuildRuleParams testParams =
-        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver));
-    testParams = CxxStrip.restoreStripStyleFlavorInParams(testParams, flavoredStripStyle);
+        params
+            .withDeclaredDeps(cxxLinkAndCompileRules.deps)
+            .copyAppendingExtraDeps(
+                BuildableSupport.getDepsCollection(cxxLinkAndCompileRules.executable, ruleFinder));
+
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .addExpanders(new LocationMacroExpander())
+            .build();
 
     // Supplier which expands macros in the passed in test environment.
-    Supplier<ImmutableMap<String, String>> testEnv =
-        new Supplier<ImmutableMap<String, String>>() {
-          @Override
-          public ImmutableMap<String, String> get() {
-            return ImmutableMap.copyOf(
-                Maps.transformValues(
-                    args.env.or(ImmutableMap.<String, String>of()),
-                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        resolver)));
+    ImmutableMap<String, Arg> testEnv =
+        ImmutableMap.copyOf(
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
+
+    ImmutableList<Arg> testArgs =
+        args.getArgs()
+            .stream()
+            .map(x -> macrosConverter.convert(x, graphBuilder))
+            .collect(ImmutableList.toImmutableList());
+
+    Function<SourcePathRuleFinder, ImmutableSortedSet<BuildRule>> additionalDeps =
+        ruleFinderInner -> {
+          ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+
+          // It's not uncommon for users to add dependencies onto other binaries that they run
+          // during the test, so make sure to add them as runtime deps.
+          deps.addAll(
+              Sets.difference(
+                  params.getBuildDeps(), cxxLinkAndCompileRules.getBinaryRule().getBuildDeps()));
+
+          // Add any build-time from any macros embedded in the `env` or `args` parameter.
+          for (Arg part : Iterables.concat(testArgs, testEnv.values())) {
+            deps.addAll(BuildableSupport.getDepsCollection(part, ruleFinderInner));
           }
-        };
 
-    // Supplier which expands macros in the passed in test arguments.
-    Supplier<ImmutableList<String>> testArgs =
-        new Supplier<ImmutableList<String>>() {
-          @Override
-          public ImmutableList<String> get() {
-            return FluentIterable.from(args.args.or(ImmutableList.<String>of()))
-                .transform(
-                    CxxDescriptionEnhancer.MACRO_HANDLER.getExpander(
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        resolver))
-                .toList();
-          }
-        };
-
-    Supplier<ImmutableSortedSet<BuildRule>> additionalDeps =
-        new Supplier<ImmutableSortedSet<BuildRule>>() {
-          @Override
-          public ImmutableSortedSet<BuildRule> get() {
-            ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
-
-            // It's not uncommon for users to add dependencies onto other binaries that they run
-            // during the test, so make sure to add them as runtime deps.
-            deps.addAll(
-                Sets.difference(
-                    params.getDeps(),
-                    cxxLinkAndCompileRules.getBinaryRule().getDeps()));
-
-            // Add any build-time from any macros embedded in the `env` or `args` parameter.
-            for (String part :
-                Iterables.concat(
-                    args.args.or(ImmutableList.<String>of()),
-                    args.env.or(ImmutableMap.<String, String>of()).values())) {
-              try {
-                deps.addAll(
-                    CxxDescriptionEnhancer.MACRO_HANDLER.extractBuildTimeDeps(
-                        params.getBuildTarget(),
-                        params.getCellRoots(),
-                        resolver,
-                        part));
-              } catch (MacroException e) {
-                throw new HumanReadableException(
-                    e,
-                    "%s: %s",
-                    params.getBuildTarget(),
-                    e.getMessage());
-              }
-            }
-
-            return deps.build();
-          }
+          return deps.build();
         };
 
     CxxTest test;
 
-    CxxTestType type = args.framework.or(getDefaultTestType());
+    CxxTestType type = args.getFramework().orElse(getDefaultTestType());
     switch (type) {
-      case GTEST: {
-        test = new CxxGtestTest(
-            testParams,
-            pathResolver,
-            cxxLinkAndCompileRules.getBinaryRule(),
-            cxxLinkAndCompileRules.executable,
-            testEnv,
-            testArgs,
-            FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
-                .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
-                .toSortedSet(Ordering.natural()),
-            additionalDeps,
-            args.labels.get(),
-            args.contacts.get(),
-            resolver.getAllRules(args.sourceUnderTest.get()),
-            args.runTestSeparately.or(false),
-            args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-            cxxBuckConfig.getMaximumTestOutputSize());
-        break;
-      }
-      case BOOST: {
-        test = new CxxBoostTest(
-            testParams,
-            pathResolver,
-            cxxLinkAndCompileRules.getBinaryRule(),
-            cxxLinkAndCompileRules.executable,
-            testEnv,
-            testArgs,
-            FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
-                .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
-                .toSortedSet(Ordering.natural()),
-            additionalDeps,
-            args.labels.get(),
-            args.contacts.get(),
-            resolver.getAllRules(args.sourceUnderTest.get()),
-            args.runTestSeparately.or(false),
-            args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs));
-        break;
-      }
-      default: {
-        Preconditions.checkState(false, "Unhandled C++ test type: %s", type);
-        throw new RuntimeException();
-      }
+      case GTEST:
+        {
+          test =
+              new CxxGtestTest(
+                  testBuildTarget,
+                  projectFilesystem,
+                  testParams,
+                  cxxLinkAndCompileRules.getBinaryRule(),
+                  cxxLinkAndCompileRules.executable,
+                  testEnv,
+                  testArgs,
+                  FluentIterable.from(args.getResources())
+                      .transform(p -> PathSourcePath.of(projectFilesystem, p))
+                      .toSortedSet(Ordering.natural()),
+                  args.getAdditionalCoverageTargets(),
+                  additionalDeps,
+                  args.getLabels(),
+                  args.getContacts(),
+                  args.getRunTestSeparately().orElse(false),
+                  args.getTestRuleTimeoutMs()
+                      .map(Optional::of)
+                      .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
+                  cxxBuckConfig.getMaximumTestOutputSize());
+          break;
+        }
+      case BOOST:
+        {
+          test =
+              new CxxBoostTest(
+                  testBuildTarget,
+                  projectFilesystem,
+                  testParams,
+                  cxxLinkAndCompileRules.getBinaryRule(),
+                  cxxLinkAndCompileRules.executable,
+                  testEnv,
+                  testArgs,
+                  FluentIterable.from(args.getResources())
+                      .transform(p -> PathSourcePath.of(projectFilesystem, p))
+                      .toSortedSet(Ordering.natural()),
+                  args.getAdditionalCoverageTargets(),
+                  additionalDeps,
+                  args.getLabels(),
+                  args.getContacts(),
+                  args.getRunTestSeparately().orElse(false),
+                  args.getTestRuleTimeoutMs()
+                      .map(Optional::of)
+                      .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()));
+          break;
+        }
+      default:
+        {
+          Preconditions.checkState(false, "Unhandled C++ test type: %s", type);
+          throw new RuntimeException();
+        }
     }
 
     return test;
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+      AbstractCxxTestDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     // Get any parse time deps from the C/C++ platforms.
-    deps.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            cxxPlatforms
-                .getValue(buildTarget.getFlavors())
-                .or(defaultCxxPlatform)));
+    targetGraphOnlyDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatform(buildTarget, constructorArg)));
 
-    // Extract parse time deps from flags, args, and environment parameters.
-    Iterable<Iterable<String>> macroStrings =
-        ImmutableList.<Iterable<String>>builder()
-            .add(constructorArg.linkerFlags.get())
-            .addAll(constructorArg.platformLinkerFlags.get().getValues())
-            .add(constructorArg.args.get())
-            .add(constructorArg.env.get().values())
-            .build();
-    for (String macroString : Iterables.concat(macroStrings)) {
-      try {
-        deps.addAll(
-            CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget,
-                cellRoots,
-                macroString));
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
-      }
-    }
+    // Add in any implicit framework deps.
+    extraDepsBuilder.addAll(getImplicitFrameworkDeps(constructorArg));
 
-    CxxTestType type = constructorArg.framework.or(getDefaultTestType());
-    switch (type) {
-      case GTEST: {
-        deps.add(cxxBuckConfig.getGtestDep());
-        boolean useDefaultTestMain = constructorArg.useDefaultTestMain.or(true);
-        if (useDefaultTestMain) {
-          deps.add(cxxBuckConfig.getGtestDefaultTestMainDep());
-        }
-        break;
-      }
-      case BOOST: {
-        deps.add(cxxBuckConfig.getBoostTestDep());
-        break;
-      }
-      default: {
-        break;
-      }
-    }
-
-    return deps.build();
+    constructorArg
+        .getDepsQuery()
+        .ifPresent(
+            depsQuery ->
+                QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
+                    .forEach(extraDepsBuilder::add));
   }
 
   public CxxTestType getDefaultTestType() {
@@ -318,36 +354,61 @@ public class CxxTestDescription implements
       return true;
     }
 
+    if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
+      return true;
+    }
+
     if (StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors)) {
       return true;
     }
 
-    for (Flavor flavor : cxxPlatforms.getFlavors()) {
-      if (flavors.equals(ImmutableSet.of(flavor))) {
-        return true;
-      }
+    if (LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors)) {
+      return true;
     }
 
-    return false;
+    return getCxxPlatformsProvider().getCxxPlatforms().containsAnyOf(flavors)
+        || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
-  @SuppressFieldNotInitialized
-  public class Arg extends CxxBinaryDescription.Arg implements HasSourceUnderTest {
-    public Optional<ImmutableSet<String>> contacts;
-    public Optional<ImmutableSet<Label>> labels;
-    public Optional<ImmutableSortedSet<BuildTarget>> sourceUnderTest;
-    public Optional<CxxTestType> framework;
-    public Optional<ImmutableMap<String, String>> env;
-    public Optional<ImmutableList<String>> args;
-    public Optional<Boolean> runTestSeparately;
-    public Optional<Boolean> useDefaultTestMain;
-    public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableSortedSet<Path>> resources;
-
-    @Override
-    public ImmutableSortedSet<BuildTarget> getSourceUnderTest() {
-      return sourceUnderTest.get();
-    }
+  @Override
+  public <U> Optional<U> createMetadata(
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxTestDescriptionArg args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      Class<U> metadataClass) {
+    return cxxBinaryMetadataFactory.createMetadata(
+        buildTarget, graphBuilder, args.getDeps(), metadataClass);
   }
 
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable(copy = true)
+  interface AbstractCxxTestDescriptionArg
+      extends CxxBinaryDescription.CommonArg, HasContacts, HasTestTimeout {
+    Optional<CxxTestType> getFramework();
+
+    ImmutableMap<String, StringWithMacros> getEnv();
+
+    ImmutableList<StringWithMacros> getArgs();
+
+    Optional<Boolean> getRunTestSeparately();
+
+    Optional<Boolean> getUseDefaultTestMain();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<Path> getResources();
+
+    ImmutableSet<SourcePath> getAdditionalCoverageTargets();
+  }
 }

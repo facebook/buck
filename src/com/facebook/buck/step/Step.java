@@ -15,15 +15,16 @@
  */
 
 package com.facebook.buck.step;
+
 import java.io.IOException;
 
+/** Steps are executed in the same working directory as the root cell. */
 public interface Step {
 
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException;
+  StepExecutionResult execute(ExecutionContext context) throws IOException, InterruptedException;
 
   /** @return a short name/description for the command, such as "javac". Should fit on one line. */
-  public String getShortName();
+  String getShortName();
 
-  public String getDescription(ExecutionContext context);
+  String getDescription(ExecutionContext context);
 }

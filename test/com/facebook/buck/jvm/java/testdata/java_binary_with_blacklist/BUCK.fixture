@@ -1,0 +1,23 @@
+java_library(
+    name = "lib",
+    srcs = glob(["*.java"]),
+    resources = glob(["com/**/*.txt"]),
+)
+
+java_binary(
+    name = "bin-no-blacklist",
+    deps = [
+        ":lib",
+    ],
+)
+
+java_binary(
+    name = "bin-blacklist",
+    blacklist = [
+        # This excludes com.example.A and com.example.Alligator.
+        "com.example.A",
+    ],
+    deps = [
+        ":lib",
+    ],
+)

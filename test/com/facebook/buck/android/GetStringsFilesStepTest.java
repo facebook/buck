@@ -21,19 +21,16 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
+import org.junit.Test;
 
 public class GetStringsFilesStepTest {
   private ProjectFilesystem filesystem;
@@ -45,9 +42,9 @@ public class GetStringsFilesStepTest {
   }
 
   @Test
-  public void testStringFileOrderIsMaintained() throws IOException {
+  public void testStringFileOrderIsMaintained() throws Exception {
     setUpFakeFilesystem(
-        ImmutableSet.<Path>of(
+        ImmutableSet.of(
             Paths.get("test/res/values/strings.xml"),
             Paths.get("test/res/values-es/strings.xml"),
             Paths.get("test/res/values-es-rES/strings.xml"),
@@ -60,23 +57,25 @@ public class GetStringsFilesStepTest {
             Paths.get("test3/res/values/dimens.xml")));
 
     ImmutableList.Builder<Path> stringFilesBuilder = ImmutableList.builder();
-    GetStringsFilesStep step = new GetStringsFilesStep(
-        filesystem,
-        ImmutableList.of(Paths.get("test3"), Paths.get("test"), Paths.get("test2")),
-        stringFilesBuilder);
+    GetStringsFilesStep step =
+        new GetStringsFilesStep(
+            filesystem,
+            ImmutableList.of(Paths.get("test3"), Paths.get("test"), Paths.get("test2")),
+            stringFilesBuilder);
 
     assertEquals(0, step.execute(context).getExitCode());
 
-    ImmutableList<Path> expectedStringFiles = ImmutableList.of(
-        Paths.get("test3/res/values/strings.xml"),
-        Paths.get("test3/res/values-es/strings.xml"),
-        Paths.get("test3/res/values-es-rES/strings.xml"),
-        Paths.get("test/res/values/strings.xml"),
-        Paths.get("test/res/values-es/strings.xml"),
-        Paths.get("test/res/values-es-rES/strings.xml"),
-        Paths.get("test2/res/values/strings.xml"),
-        Paths.get("test2/res/values-es/strings.xml"),
-        Paths.get("test2/res/values-es-rES/strings.xml"));
+    ImmutableList<Path> expectedStringFiles =
+        ImmutableList.of(
+            Paths.get("test3/res/values/strings.xml"),
+            Paths.get("test3/res/values-es/strings.xml"),
+            Paths.get("test3/res/values-es-rES/strings.xml"),
+            Paths.get("test/res/values/strings.xml"),
+            Paths.get("test/res/values-es/strings.xml"),
+            Paths.get("test/res/values-es-rES/strings.xml"),
+            Paths.get("test2/res/values/strings.xml"),
+            Paths.get("test2/res/values-es/strings.xml"),
+            Paths.get("test2/res/values-es-rES/strings.xml"));
 
     assertIterablesEquals(expectedStringFiles, stringFilesBuilder.build());
   }

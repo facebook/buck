@@ -16,6 +16,4 @@
 
 package com.facebook.buck.query;
 
-public interface QueryTarget extends Comparable<QueryTarget> {
-
-}
+public interface QueryTarget extends Comparable<QueryTarget> {}

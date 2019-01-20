@@ -1,0 +1,24 @@
+cxx_library(
+    name = "lib",
+    srcs = [
+        "lib.c",
+    ],
+    exported_headers = [
+        "lib.h",
+    ],
+    link_style = "static",
+    preferred_linkage = "static",
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "lib-out",
+    out = "lib.lib",
+    cmd_exe = "copy \"$(location //lib:lib#windows-x86_64,static)\" %OUT%",
+)
+
+genrule(
+    name = "dll-out",
+    out = "lib.dll",
+    cmd_exe = "copy \"$(location //lib:lib#windows-x86_64,shared)\" %OUT%",
+)

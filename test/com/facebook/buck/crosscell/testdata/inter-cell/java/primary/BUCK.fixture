@@ -1,16 +1,15 @@
-
 java_library(
-  name = 'lib',
-  srcs = glob(['*.java']),
-  deps = [
-    'secondary//:lib',
-  ],
+    name = "primary_lib",
+    srcs = glob(["*.java"]),
+    deps = [
+        "secondary//:secondary_lib",
+    ],
 )
 
 java_binary(
-  name = 'java-binary',
-  main_class = 'com.example.Main',
-  deps = [
-    ':lib',
-  ],
+    name = "java-binary",
+    main_class = "com.example.Main",
+    deps = [
+        ":primary_lib",
+    ],
 )

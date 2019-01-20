@@ -1,2 +1,2 @@
 #!/bin/sh
-exec /usr/bin/gcc "$@"
+exec gcc "$@"

@@ -1,5 +1,5 @@
 sh_test(
-  name = 'test-spin',
-  test = 'test.sh',
-  test_rule_timeout_ms = 500,
+    name = "test-spin",
+    test = "test.sh",
+    test_rule_timeout_ms = 500,
 )

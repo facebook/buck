@@ -19,28 +19,24 @@ import static org.hamcrest.CoreMatchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.RawConfig;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.util.environment.Architecture;
-import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.config.RawConfig;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableMap;
-
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class GroovyBuckConfigTest {
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
-  @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void refuseToContinueWhenInsufficientInformationToFindGroovycIsProvided() {
@@ -51,71 +47,65 @@ public class GroovyBuckConfigTest {
 
     ImmutableMap<String, String> environment = ImmutableMap.of();
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.of();
-    final GroovyBuckConfig groovyBuckConfig =
-        createGroovyConfig(environment, rawConfig);
+    GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
 
-    groovyBuckConfig.getGroovyCompiler();
+    groovyBuckConfig.getGroovyc();
   }
 
   @Test
   public void refuseToContinueWhenInformationResultsInANonExistentGroovycPath() {
-    String invalidPath = temporaryFolder.getRoot().getAbsolutePath() + "DoesNotExist";
+    String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
     Path invalidDir = Paths.get(invalidPath);
     Path invalidGroovyc = invalidDir.resolve(MorePaths.pathWithPlatformSeparators("bin/groovyc"));
-    thrown.expectMessage(
-        containsString("Unable to locate " + invalidGroovyc + " on PATH"));
+    thrown.expectMessage(containsString("Unable to locate " + invalidGroovyc + " on PATH"));
 
     ImmutableMap<String, String> environment = ImmutableMap.of("GROOVY_HOME", invalidPath);
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.of();
-    final GroovyBuckConfig groovyBuckConfig =
-        createGroovyConfig(environment, rawConfig);
+    GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
 
-    groovyBuckConfig.getGroovyCompiler();
+    groovyBuckConfig.getGroovyc();
   }
 
   @Test
   public void byDefaultFindGroovycFromGroovyHome() {
-    String systemGroovyHome = System.getenv("GROOVY_HOME");
+    String systemGroovyHome = EnvVariablesProvider.getSystemEnv().get("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 
-    //noinspection ConstantConditions
     ImmutableMap<String, String> environment = ImmutableMap.of("GROOVY_HOME", systemGroovyHome);
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig = ImmutableMap.of();
-    final GroovyBuckConfig groovyBuckConfig =
-        createGroovyConfig(environment, rawConfig);
+    GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
 
     // it's enough that this doesn't throw.
-    groovyBuckConfig.getGroovyCompiler();
+    groovyBuckConfig.getGroovyc();
   }
 
   @Test
   public void explicitConfigurationOverridesTheEnvironment() {
-    String systemGroovyHome = System.getenv("GROOVY_HOME");
+    String systemGroovyHome = EnvVariablesProvider.getSystemEnv().get("GROOVY_HOME");
     assumeTrue(systemGroovyHome != null);
 
     // deliberately break the env
     ImmutableMap<String, String> environment = ImmutableMap.of("GROOVY_HOME", "/oops");
-    //noinspection ConstantConditions
     ImmutableMap<String, ImmutableMap<String, String>> rawConfig =
         ImmutableMap.of("groovy", ImmutableMap.of("groovy_home", systemGroovyHome));
-    final GroovyBuckConfig groovyBuckConfig =
-        createGroovyConfig(environment, rawConfig);
+    GroovyBuckConfig groovyBuckConfig = createGroovyConfig(environment, rawConfig);
 
     // it's enough that this doesn't throw.
-    groovyBuckConfig.getGroovyCompiler();
+    groovyBuckConfig.getGroovyc();
   }
 
   private GroovyBuckConfig createGroovyConfig(
       ImmutableMap<String, String> environment,
       ImmutableMap<String, ImmutableMap<String, String>> rawConfig) {
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(temporaryFolder.getRootPath());
-    BuckConfig config = new BuckConfig(
-        new Config(RawConfig.of(rawConfig)),
-        projectFilesystem,
-        Architecture.detect(),
-        Platform.detect(),
-        environment);
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(RawConfig.of(rawConfig))
+            .setFilesystem(projectFilesystem)
+            .setEnvironment(environment)
+            .build();
 
-    return new GroovyBuckConfig(config);
+    return new GroovyBuckConfig(buckConfig);
   }
 }

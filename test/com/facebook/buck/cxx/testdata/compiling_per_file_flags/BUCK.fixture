@@ -1,13 +1,19 @@
 cxx_binary(
-  name = 'broken-bin',
-  srcs = [
-    ('main.cpp', ['-Werror=unused-variable']),
-  ],
+    name = "broken-bin",
+    srcs = [
+        (
+            "main.cpp",
+            ["-Werror=unused-variable"],
+        ),
+    ],
 )
 
 cxx_binary(
-  name = 'working-bin',
-  srcs = [
-    ('main.cpp', ['-Wno-unused-variable']),
-  ],
+    name = "working-bin",
+    srcs = [
+        (
+            "main.cpp",
+            ["-Wno-unused-variable"],
+        ),
+    ],
 )

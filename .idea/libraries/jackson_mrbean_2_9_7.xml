@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="jackson-mrbean-2.9.7">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-module-mrbean-2.9.7.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-module-mrbean-2.9.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

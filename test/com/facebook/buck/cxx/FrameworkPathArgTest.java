@@ -18,58 +18,54 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableSet;
-
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.function.Consumer;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class FrameworkPathArgTest {
 
   private static class TestFrameworkPathArg extends FrameworkPathArg {
-    public TestFrameworkPathArg(SourcePathResolver resolver, FrameworkPath frameworkPath) {
-      super(resolver, ImmutableSet.of(frameworkPath));
+    public TestFrameworkPathArg(FrameworkPath frameworkPath) {
+      super(ImmutableSortedSet.of(frameworkPath));
     }
 
     @Override
-    public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
       throw new UnsupportedOperationException();
     }
   }
 
   @Test
-  public void testGetDeps() throws Exception {
+  public void testGetDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule");
-    BuildRule genrule = GenruleBuilder
-        .newGenruleBuilder(genruleTarget)
-        .setOut("foo/bar.o")
-        .build(ruleResolver, filesystem);
+    Genrule genrule =
+        GenruleBuilder.newGenruleBuilder(genruleTarget)
+            .setOut("foo/bar.o")
+            .build(graphBuilder, filesystem);
 
-    FrameworkPath sourcePathFrameworkPath = FrameworkPath.ofSourcePath(
-        new BuildTargetSourcePath(genruleTarget));
+    FrameworkPath sourcePathFrameworkPath =
+        FrameworkPath.ofSourcePath(genrule.getSourcePathToOutput());
 
-    FrameworkPathArg sourcePathFrameworkPathArg =
-        new TestFrameworkPathArg(resolver, sourcePathFrameworkPath);
+    FrameworkPathArg sourcePathFrameworkPathArg = new TestFrameworkPathArg(sourcePathFrameworkPath);
     assertThat(
-        sourcePathFrameworkPathArg.getDeps(resolver),
+        BuildableSupport.getDepsCollection(sourcePathFrameworkPathArg, ruleFinder),
         Matchers.contains(genrule));
   }
 }

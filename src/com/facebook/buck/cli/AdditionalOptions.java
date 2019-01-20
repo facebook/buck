@@ -24,11 +24,12 @@ import java.lang.annotation.Target;
 
 /**
  * If this annotation is used on a field in one of the {@code ..Options} classes (e.g. subclasses of
- * {@link AbstractCommand}), then a {@link AdditionalOptionsCmdLineParser} will recursively
- * look for options/arguments in the (class of the) field and add them to the parser, almost
- * allowing traits for options.
- * <p>
- * Usage example:
+ * {@link AbstractCommand}), then a {@link AdditionalOptionsCmdLineParser} will recursively look for
+ * options/arguments in the (class of the) field and add them to the parser, almost allowing traits
+ * for options.
+ *
+ * <p>Usage example:
+ *
  * <pre>
  * class MyOptions{
  *   &#64;AdditionalOptions
@@ -44,6 +45,4 @@ import java.lang.annotation.Target;
  */
 @Retention(RUNTIME)
 @Target({FIELD})
-public @interface AdditionalOptions {
-
-}
+public @interface AdditionalOptions {}

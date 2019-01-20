@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace apple_library}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'apple_library()' /}
+    {param navid: 'rule_apple_library' /}
     {param prettify: true /}
     {param description}
       An apple_library() rule represents a set of Objective-C/C++ source files.
@@ -13,14 +29,20 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-An <code>apple_library()</code> rule represents a set of Objective-C/C++ source files and is very
-similar to a <a href="{ROOT}rule/cxx_library.html"><code>cxx_library()</code> rule</a> with which it
-shares most of its attributes. In addition to those common
-attributes, <code>apple_library()</code> has a few more that are specific to libraries intended to
-be built using the Apple toolchain. Please also note that the way the libraries' header files are
-imported differs between <code>apple_library()</code> and <code>cxx_library()</code> to better
-accommodate existing conventions (see the documentation
-of the <code>headers</code> and <code>exported_headers</code> attributes for more details).
+An <code>apple_library()</code> rule represents a set of Objective-C/C++
+source files and is similar to a <a href="{ROOT}rule/cxx_library.html"><code>cxx_library()</code> rule</a> with which it shares many
+attributes. In addition to those common attributes, <code>apple_library()</code> has a some additional attributes 
+that are specific to binaries intended to be built using the Apple toolchain. 
+Note, however, that <code>apple_library()</code> and <code>cxx_library()</code> differ 
+in the way that they import header files, in order to better accommodate existing conventions. 
+See the sections for the <code>headers</code> and <code>exported_headers</code> attributes for more details.
+</p>
+
+<p>
+Buck enables you to override components of the Apple toolchain with
+alternate tools, either from the Xcode search paths or from directories
+that you specify.
+See {call buckconfig.apple_replacement /} and {call buckconfig.apple_xcode_tool_name_override /} for more information.
 {/param}
 
 {param args}
@@ -44,6 +66,8 @@ of the <code>headers</code> and <code>exported_headers</code> attributes for mor
 
 {call apple_common.header_path_prefix_arg /}
 
+{call cxx_common.header_namespace_arg /}
+
 {call apple_common.frameworks_arg /}
 
 {call cxx_common.preprocessor_flags_arg /}
@@ -54,17 +78,30 @@ of the <code>headers</code> and <code>exported_headers</code> attributes for mor
 
 {call cxx_common.platform_compiler_flags_arg /}
 
+{call cxx_common.linker_extra_outputs_arg /}
+
 {call cxx_common.linker_flags_arg /}
 
 {call cxx_common.exported_linker_flags_arg /}
 
 {call cxx_common.exported_platform_linker_flags_arg /}
 
-{call cxx_common.preferred_linkage /}
+
+{call native_common.preferred_linkage /}
 
 {call native_common.link_style /}
 
-{call buck.tests_arg /}
+{call native_common.link_whole /}
+
+{call cxx_common.reexport_all_header_dependencies_arg /}
+
+{call cxx_common.exported_deps_arg /}
+
+{call buck.tests_apple_arg /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // close args
 

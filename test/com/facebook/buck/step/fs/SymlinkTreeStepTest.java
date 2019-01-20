@@ -19,29 +19,28 @@ package com.facebook.buck.step.fs;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 public class SymlinkTreeStepTest {
 
-  @Rule
-  public final TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public final TemporaryFolder tmpDir = new TemporaryFolder();
 
   @Test
-  public void testSymlinkFiles() throws IOException {
+  public void testSymlinkFiles() throws InterruptedException, IOException {
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmpDir.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
@@ -55,12 +54,14 @@ public class SymlinkTreeStepTest {
     Path source2 = Paths.get("source2");
     projectFilesystem.writeContentsToPath("bar", source2);
 
-    SymlinkTreeStep step = new SymlinkTreeStep(
-        projectFilesystem,
-        root,
-        ImmutableMap.of(
-            link1, source1,
-            link2, source2));
+    SymlinkTreeStep step =
+        new SymlinkTreeStep(
+            "link_tree",
+            projectFilesystem,
+            root,
+            ImmutableMap.of(
+                link1, source1,
+                link2, source2));
 
     step.execute(context);
 
@@ -73,7 +74,5 @@ public class SymlinkTreeStepTest {
     // Modify the original file and see if the linked file changes as well.
     projectFilesystem.writeContentsToPath("new", source1);
     assertEquals(Optional.of("new"), projectFilesystem.readFirstLine(root.resolve(link1)));
-
   }
-
 }

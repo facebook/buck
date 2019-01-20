@@ -1,0 +1,35 @@
+android_library(
+    name = "lib",
+    srcs = glob(["*.scala"]),
+    language = "SCALA",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)
+
+android_library(
+    name = "lib_using_transitive_empty_res",
+    srcs = glob(["*.scala"]),
+    language = "SCALA",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/empty_res:empty_res",
+    ],
+)
+
+android_library(
+    name = "lib_depending_on_main_lib",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":lib",
+    ],
+)

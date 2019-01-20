@@ -1,0 +1,8 @@
+android_resource(
+    name = "dep1",
+    assets = "assets",
+    package = "com.test",
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -1,0 +1,155 @@
+# Before merging:
+#
+#    A
+#   / \
+#  B   C
+#   \ /
+#    D
+#   / \
+#  E   F
+#
+#
+# After merging:
+#    1(AB)
+#    |\
+#    | C
+#    |/
+#    D
+#    |
+#    2(EF)
+#
+# Also, C and F each depend on a static and prebuilt library.
+
+cxx_library(
+    name = "A",
+    srcs = ["A.c"],
+    can_be_asset = True,
+    soname = "lib1a.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":B",
+        ":C",
+    ],
+)
+
+cxx_library(
+    name = "B",
+    srcs = ["B.c"],
+    can_be_asset = True,
+    soname = "lib1b.so",
+    deps = [
+        ":D",
+    ],
+)
+
+cxx_library(
+    name = "C",
+    srcs = ["C.c"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":D",
+        ":prebuilt_for_C",
+        ":static_for_C",
+    ],
+)
+
+cxx_library(
+    name = "D",
+    srcs = ["D.c"],
+    deps = [
+        ":E",
+        ":F",
+    ],
+)
+
+cxx_library(
+    name = "E",
+    srcs = ["E.c"],
+    soname = "lib2e.so",
+    deps = [
+    ],
+)
+
+cxx_library(
+    name = "F",
+    srcs = ["F.c"],
+    soname = "lib2f.so",
+    deps = [
+        ":prebuilt_for_F",
+        ":static_for_F",
+    ],
+)
+
+cxx_library(
+    name = "static_for_C",
+    srcs = ["static_for_C.c"],
+    force_static = True,
+    deps = [
+    ],
+)
+
+cxx_library(
+    name = "static_for_F",
+    srcs = ["static_for_F.c"],
+    force_static = True,
+    deps = [
+    ],
+)
+
+prebuilt_cxx_library(
+    name = "prebuilt_for_C",
+    platform_shared_lib = [
+        ("android-x86", "prebuilt_for_C/android-x86/libprebuilt_for_C.so"),
+    ],
+    supported_platforms_regex = "android-x86",
+)
+
+prebuilt_cxx_library(
+    name = "prebuilt_for_F",
+    platform_shared_lib = [
+        ("android-x86", "prebuilt_for_F/android-x86/libprebuilt_for_F.so"),
+    ],
+    supported_platforms_regex = "android-x86",
+)
+
+# Built manually to create .so file for prebuilt_for_C
+cxx_library(
+    name = "prebuilt_for_C_src",
+    srcs = ["prebuilt_for_C.c"],
+    soname = "libprebuilt_for_C.so",
+    deps = [
+    ],
+)
+
+# Built manually to create .so file for prebuilt_for_F
+cxx_library(
+    name = "prebuilt_for_F_src",
+    srcs = ["prebuilt_for_F.c"],
+    soname = "libprebuilt_for_F.so",
+    deps = [
+    ],
+)
+
+cxx_library(
+    name = "glue_1",
+    srcs = ["glue_1.c"],
+    force_static = True,
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)
+
+cxx_library(
+    name = "glue_2",
+    srcs = ["glue_2.c"],
+    force_static = True,
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)
+
+sh_binary(
+    name = "codegen",
+    main = "codegen.sh",
+    visibility = ["PUBLIC"],
+)

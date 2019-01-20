@@ -1,9 +1,5 @@
-android_library(
-  name = 'activity',
-  srcs = ['MyFirstActivity.java'],
-  visibility = [ 'PUBLIC' ],
-)
-
-project_config(
-  src_target = ':activity',
+java_library(
+    name = "activity",
+    srcs = ["MyFirstActivity.java"],
+    visibility = ["PUBLIC"],
 )

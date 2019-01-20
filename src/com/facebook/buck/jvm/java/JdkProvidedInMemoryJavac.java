@@ -16,51 +16,16 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.collect.ImmutableCollection;
-import com.google.common.collect.ImmutableSortedSet;
-
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import javax.tools.JavaCompiler;
-import javax.tools.ToolProvider;
 
 public class JdkProvidedInMemoryJavac extends Jsr199Javac {
-
-  JdkProvidedInMemoryJavac() {
-    // only here to limit this to package-level visibility
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("javac", "jsr199")
-        .setReflectively("javac.version", "in-memory");
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return ImmutableSortedSet.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSortedSet.of();
-  }
-
   @Override
   protected JavaCompiler createCompiler(
-      ExecutionContext context,
-      SourcePathResolver resolver) {
-    JavaCompiler compiler;
-    synchronized (ToolProvider.class) {
-      // ToolProvider has no synchronization internally, so if we don't synchronize from the
-      // outside we could wind up loading the compiler classes multiple times from different
-      // class loaders.
-      compiler = ToolProvider.getSystemJavaCompiler();
-    }
+      JavacExecutionContext context, SourcePathResolver pathResolver) {
+    JavaCompiler compiler = SynchronizedToolProvider.getSystemJavaCompiler();
 
     if (compiler == null) {
       throw new HumanReadableException(

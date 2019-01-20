@@ -16,124 +16,98 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.graph.Dot;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.jvm.java.HasClasspathEntries;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.ActionGraphCache;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.versions.VersionException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.SortedSet;
-
+import java.util.TreeSet;
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 public class AuditClasspathCommand extends AbstractCommand {
 
   /**
    * Expected usage:
+   *
    * <pre>
    * buck audit classpath --dot //java/com/facebook/pkg:pkg > /tmp/graph.dot
    * dot -Tpng /tmp/graph.dot -o /tmp/graph.png
    * </pre>
    */
-  @Option(name = "--dot",
-      usage = "Print dependencies as Dot graph")
+  @Option(name = "--dot", usage = "Print dependencies as Dot graph")
   private boolean generateDotOutput;
 
   public boolean shouldGenerateDotOutput() {
     return generateDotOutput;
   }
 
-  @Option(name = "--json",
-      usage = "Output in JSON format")
+  @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
   }
 
-  @Argument
-  private List<String> arguments = Lists.newArrayList();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
   }
 
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
-  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
-  }
-
   @Override
-  public int runWithoutHelp(final CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
-    // BuildRules for the specified BuildTargets.
-    final ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
-        .transform(new Function<String, BuildTarget>() {
-                     @Override
-                     public BuildTarget apply(String input) {
-                       return BuildTargetParser.INSTANCE.parse(
-                           input,
-                           BuildTargetPatternParser.fullyQualified(),
-                           params.getCell().getCellRoots());
-                     }
-                   })
-        .toSet();
+    // BuildRules for the specified BuildTargetPaths.
+    ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
 
     if (targets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Please specify at least one build target."));
-      return 1;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     TargetGraph targetGraph;
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Audit",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
-        getConcurrencyLimit(params.getBuckConfig()))) {
-      targetGraph = params.getParser().buildTargetGraph(
-          params.getBuckEventBus(),
-          params.getCell(),
-          getEnableParserProfiling(),
-          pool.getExecutor(),
-          targets);
-    } catch (BuildFileParseException | BuildTargetException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
+      targetGraph =
+          params
+              .getParser()
+              .buildTargetGraph(
+                  params.getCell(),
+                  getEnableParserProfiling(),
+                  pool.getListeningExecutorService(),
+                  targets);
+    } catch (BuildFileParseException e) {
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ExitCode.PARSE_ERROR;
     }
 
     try {
@@ -144,8 +118,8 @@ public class AuditClasspathCommand extends AbstractCommand {
       } else {
         return printClasspath(params, targetGraph, targets);
       }
-    } catch (NoSuchBuildTargetException e) {
-      throw new HumanReadableException(e.getHumanReadableErrorMessage());
+    } catch (VersionException e) {
+      throw new HumanReadableException(e, MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
   }
 
@@ -155,42 +129,59 @@ public class AuditClasspathCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  int printDotOutput(CommandRunnerParams params, TargetGraph targetGraph) {
-    Dot<TargetNode<?>> dot = new Dot<>(
-        targetGraph,
-        "target_graph",
-        new Function<TargetNode<?>, String>() {
-          @Override
-          public String apply(TargetNode<?> targetNode) {
-            return "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"";
-          }
-        },
-        params.getConsole().getStdOut());
+  ExitCode printDotOutput(CommandRunnerParams params, TargetGraph targetGraph) {
     try {
-      dot.writeOutput();
+      Dot.builder(targetGraph, "target_graph")
+          .setNodeToName(
+              targetNode -> "\"" + targetNode.getBuildTarget().getFullyQualifiedName() + "\"")
+          .setNodeToTypeName(targetNode -> targetNode.getRuleType().getName())
+          .build()
+          .writeOutput(params.getConsole().getStdOut());
     } catch (IOException e) {
-      return 1;
+      return ExitCode.FATAL_IO;
     }
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @VisibleForTesting
-  int printClasspath(
-      CommandRunnerParams params,
-      TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> targets) throws NoSuchBuildTargetException {
-    BuildRuleResolver resolver = Preconditions.checkNotNull(
-        ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph)).getResolver();
-    SortedSet<Path> classpathEntries = Sets.newTreeSet();
+  ExitCode printClasspath(
+      CommandRunnerParams params, TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
+      throws InterruptedException, VersionException {
+
+    if (params.getBuckConfig().getBuildVersions()) {
+      targetGraph =
+          toVersionedTargetGraph(params, TargetGraphAndBuildTargets.of(targetGraph, targets))
+              .getTargetGraph();
+    }
+
+    ActionGraphBuilder graphBuilder =
+        Objects.requireNonNull(
+                new ActionGraphProvider(
+                        params.getBuckEventBus(),
+                        ActionGraphFactory.create(
+                            params.getBuckEventBus(),
+                            params.getCell().getCellProvider(),
+                            params.getPoolSupplier(),
+                            params.getBuckConfig()),
+                        new ActionGraphCache(
+                            params.getBuckConfig().getMaxActionGraphCacheEntries()),
+                        params.getRuleKeyConfiguration(),
+                        params.getBuckConfig())
+                    .getFreshActionGraph(targetGraph))
+            .getActionGraphBuilder();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    SortedSet<Path> classpathEntries = new TreeSet<>();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
+      BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
-        classpathEntries.addAll(hasClasspathEntries.getTransitiveClasspathEntries().values());
+        classpathEntries.addAll(
+            pathResolver.getAllAbsolutePaths(hasClasspathEntries.getTransitiveClasspaths()));
       } else {
-        throw new HumanReadableException(rule.getFullyQualifiedName() + " is not a java-based" +
-            " build target");
+        throw new HumanReadableException(
+            rule.getFullyQualifiedName() + " is not a java-based" + " build target");
       }
     }
 
@@ -198,36 +189,59 @@ public class AuditClasspathCommand extends AbstractCommand {
       params.getConsole().getStdOut().println(path);
     }
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @VisibleForTesting
-  int printJsonClasspath(
-      CommandRunnerParams params,
-      TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> targets)
-      throws IOException, NoSuchBuildTargetException {
-    BuildRuleResolver resolver = Preconditions.checkNotNull(
-        ActionGraphCache.getFreshActionGraph(params.getBuckEventBus(), targetGraph)).getResolver();
+  ExitCode printJsonClasspath(
+      CommandRunnerParams params, TargetGraph targetGraph, ImmutableSet<BuildTarget> targets)
+      throws IOException, InterruptedException, VersionException {
+
+    if (params.getBuckConfig().getBuildVersions()) {
+      targetGraph =
+          toVersionedTargetGraph(params, TargetGraphAndBuildTargets.of(targetGraph, targets))
+              .getTargetGraph();
+    }
+
+    ActionGraphBuilder graphBuilder =
+        Objects.requireNonNull(
+                new ActionGraphProvider(
+                        params.getBuckEventBus(),
+                        ActionGraphFactory.create(
+                            params.getBuckEventBus(),
+                            params.getCell().getCellProvider(),
+                            params.getPoolSupplier(),
+                            params.getBuckConfig()),
+                        new ActionGraphCache(
+                            params.getBuckConfig().getMaxActionGraphCacheEntries()),
+                        params.getRuleKeyConfiguration(),
+                        params.getBuckConfig())
+                    .getFreshActionGraph(targetGraph))
+            .getActionGraphBuilder();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {
-      BuildRule rule = Preconditions.checkNotNull(resolver.requireRule(target));
+      BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries == null) {
         continue;
       }
       targetClasspaths.putAll(
           target.getFullyQualifiedName(),
-          Iterables.transform(
-              hasClasspathEntries.getTransitiveClasspathEntries().values(),
-              Functions.toStringFunction()));
+          hasClasspathEntries
+              .getTransitiveClasspaths()
+              .stream()
+              .map(pathResolver::getAbsolutePath)
+              .map(Object::toString)
+              .collect(ImmutableList.toImmutableList()));
     }
 
     // Note: using `asMap` here ensures that the keys are sorted
-    params.getObjectMapper().writeValue(params.getConsole().getStdOut(), targetClasspaths.asMap());
+    ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetClasspaths.asMap());
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Nullable
@@ -242,5 +256,4 @@ public class AuditClasspathCommand extends AbstractCommand {
   public String getShortDescription() {
     return "provides facilities to audit build targets' classpaths";
   }
-
 }

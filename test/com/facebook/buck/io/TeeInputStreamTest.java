@@ -21,16 +21,13 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import org.junit.Test;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import org.junit.Test;
 
-/**
- * Tests for {@link TeeInputStream}.
- */
+/** Tests for {@link TeeInputStream}. */
 public class TeeInputStreamTest {
 
   private static final String UTF_8 = StandardCharsets.UTF_8.name();
@@ -39,8 +36,8 @@ public class TeeInputStreamTest {
   public void readEmpty() throws IOException {
     byte[] input = new byte[0];
     try (ByteArrayInputStream sourceStream = new ByteArrayInputStream(input);
-         ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
-         TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
+        ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
+        TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
       assertThat(teeStream.read(), is(equalTo(-1)));
       assertThat(destinationStream.toString(UTF_8), is(emptyString()));
     }
@@ -50,8 +47,8 @@ public class TeeInputStreamTest {
   public void readEmptyWithBuffer() throws IOException {
     byte[] input = new byte[0];
     try (ByteArrayInputStream sourceStream = new ByteArrayInputStream(input);
-         ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
-         TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
+        ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
+        TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
       byte[] buffer = new byte[1];
       assertThat(teeStream.read(buffer), is(equalTo(-1)));
       assertThat(destinationStream.toString(UTF_8), is(emptyString()));
@@ -62,8 +59,8 @@ public class TeeInputStreamTest {
   public void readEmptyWithBufferAndIndexAndOffset() throws IOException {
     byte[] input = new byte[0];
     try (ByteArrayInputStream sourceStream = new ByteArrayInputStream(input);
-         ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
-         TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
+        ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
+        TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
       byte[] buffer = new byte[1];
       assertThat(teeStream.read(buffer, 0, 1), is(equalTo(-1)));
       assertThat(destinationStream.toString(UTF_8), is(emptyString()));
@@ -72,10 +69,10 @@ public class TeeInputStreamTest {
 
   @Test
   public void read() throws IOException {
-    byte[] input = new byte[] { 'X' };
+    byte[] input = new byte[] {'X'};
     try (ByteArrayInputStream sourceStream = new ByteArrayInputStream(input);
-         ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
-         TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
+        ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
+        TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
       assertThat(teeStream.read(), is(equalTo((int) 'X')));
       assertThat(destinationStream.toString(UTF_8), is("X"));
     }
@@ -83,10 +80,10 @@ public class TeeInputStreamTest {
 
   @Test
   public void readWithBuffer() throws IOException {
-    byte[] input = new byte[] { 'X' };
+    byte[] input = new byte[] {'X'};
     try (ByteArrayInputStream sourceStream = new ByteArrayInputStream(input);
-         ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
-         TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
+        ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
+        TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
       byte[] buffer = new byte[1];
       assertThat(teeStream.read(buffer), is(equalTo(1)));
       assertThat(buffer, is(equalTo(input)));
@@ -96,10 +93,10 @@ public class TeeInputStreamTest {
 
   @Test
   public void readWithBufferAndIndexAndOffset() throws IOException {
-    byte[] input = new byte[] { 'X' };
+    byte[] input = new byte[] {'X'};
     try (ByteArrayInputStream sourceStream = new ByteArrayInputStream(input);
-         ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
-         TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
+        ByteArrayOutputStream destinationStream = new ByteArrayOutputStream();
+        TeeInputStream teeStream = new TeeInputStream(sourceStream, destinationStream)) {
       byte[] buffer = new byte[1];
       assertThat(teeStream.read(buffer, 0, 1), is(equalTo(1)));
       assertThat(buffer, is(equalTo(input)));

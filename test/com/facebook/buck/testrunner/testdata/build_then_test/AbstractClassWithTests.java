@@ -20,13 +20,9 @@ import org.junit.Test;
 
 public abstract class AbstractClassWithTests {
 
-  /**
-   * This test method should not be run since the class is abstract and
-   * cannot be instantiated.
-   */
+  /** This test method should not be run since the class is abstract and cannot be instantiated. */
   @Test
   public void test() {
     throw new IllegalStateException("Attempt to call test declared in abstract class.");
   }
-
 }

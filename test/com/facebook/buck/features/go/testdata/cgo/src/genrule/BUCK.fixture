@@ -1,0 +1,23 @@
+go_binary(
+    name = "bin",
+    srcs = ["main.go"],
+    deps = [
+        ":cgo",
+    ],
+)
+
+cgo_library(
+    name = "cgo",
+    package_name = "cgo",
+    srcs = [":gen_cgosrc"],
+    deps = ["//src/cxx:lib"],
+)
+
+genrule(
+    name = "gen_cgosrc",
+    srcs = [
+        "other/cgosrc2.go",
+    ],
+    out = "out.go",
+    cmd = "$(exe //src/copy:copy) mod $OUT $SRCS",
+)

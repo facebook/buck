@@ -1,43 +1,65 @@
-# TODO(t10086051) track license information here
+version = "25.3.0"
 
 prebuilt_jar(
-  name = 'sdklib',
-  binary_jar = 'sdklib.jar',
-  visibility = [
-    '//src/com/facebook/buck/android:steps',
-  ]
+    name = "sdklib",
+    binary_jar = "sdklib-%s.jar" % version,
+    source_jar = "sdklib-%s-sources.jar" % version,
+    visibility = [
+        "//src/com/facebook/buck/android:steps",
+        "//third-party/java/aosp:aosp",
+    ],
 )
 
 java_library(
-  name = 'tools-sdk-common',
-  deps = [
-    ':sdklib',
-    ':layoutlib-api',
-  ],
-  exported_deps = [
-    ':common',
-    ':sdk-common',
-  ],
-  visibility = [
-    'PUBLIC'
-  ],
+    name = "tools-sdk-common",
+    exported_deps = [
+        ":common",
+        ":sdk-common",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":layoutlib-api",
+        ":sdklib",
+    ],
 )
 
 prebuilt_jar(
-  name = 'common',
-  binary_jar = 'common-24.2.3.jar',
-  source_jar = 'common-24.2.3-sources.jar',
+    name = "common",
+    binary_jar = "common-%s.jar" % version,
+    source_jar = "common-%s-sources.jar" % version,
+    visibility = [
+        "//src/com/facebook/buck/android:",
+    ],
 )
 
 prebuilt_jar(
-  name = 'sdk-common',
-  binary_jar = 'sdk-common-24.2.3.jar',
-  source_jar = 'sdk-common-24.2.3-sources.jar',
+    name = "sdk-common",
+    binary_jar = "sdk-common-%s.jar" % version,
+    source_jar = "sdk-common-%s-sources.jar" % version,
+    deps = ["//third-party/java/guava:shaded-guava-20"],
 )
 
 prebuilt_jar(
-  name = 'layoutlib-api',
-  binary_jar = 'layoutlib-api-24.2.3.jar',
-  source_jar = 'layoutlib-api-24.2.3-sources.jar',
+    name = "layoutlib-api",
+    binary_jar = "layoutlib-api-%s.jar" % version,
+    source_jar = "layoutlib-api-%s-sources.jar" % version,
 )
 
+prebuilt_jar(
+    name = "ddmlib",
+    binary_jar = "ddmlib-%s.jar" % version,
+    licenses = [
+        "NOTICE",
+    ],
+    source_jar = "ddmlib-%s-sources.jar" % version,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":common",
+        "//third-party/java/guava:shaded-guava-20",
+        "//third-party/java/kxml2:kxml2",
+    ],
+)

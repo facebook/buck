@@ -1,0 +1,22 @@
+android_library(
+    name = "small_with_shared",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//java/com/sample/shared:shared",
+    ],
+)
+
+android_library(
+    name = "small_with_shared_with_no_resource_deps",
+    # Seriously, do not add resource deps.
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//java/com/sample/shared:shared_with_no_resource_deps",
+    ],
+)

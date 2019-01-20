@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "decorators",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/json:json",
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/decorators:decorators",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//test/com/facebook/buck/event:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

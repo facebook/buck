@@ -1,0 +1,24 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "rule",
+    srcs = glob(
+        ["*.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/test/event:event",
+        "//src/com/facebook/buck/step:step",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/jackson:jackson-databind",
+    ],
+    tests = [
+        "//test/com/facebook/buck/core/test/rule:rule",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-core",
+    ],
+)

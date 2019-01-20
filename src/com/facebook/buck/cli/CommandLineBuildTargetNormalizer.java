@@ -16,12 +16,14 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.core.config.AliasConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.collect.Lists;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * In actual build files, Buck requires that build targets are well-formed, which means that they
@@ -32,25 +34,35 @@ import java.util.List;
  * do is tab-complete file paths. For this reason, the "//" and ":" are added, when appropriate. For
  * example, if the following argument were specified on the command line when a build target was
  * expected:
+ *
  * <pre>
  * src/com/facebook/orca
  * </pre>
+ *
  * then this normalizer would convert it to:
+ *
  * <pre>
  * //src/com/facebook/orca:orca
  * </pre>
+ *
  * It would also normalize it to the same thing if it contained a trailing slash:
+ *
  * <pre>
  * src/com/facebook/orca
  * </pre>
+ *
  * Similarly, if the argument were:
+ *
  * <pre>
  * src/com/facebook/orca:messenger
  * </pre>
+ *
  * then this normalizer would convert it to:
+ *
  * <pre>
  * //src/com/facebook/orca:messenger
  * </pre>
+ *
  * This makes it easier to tab-complete to the directory with the desired build target, and then
  * append the name of the build target by typing it out. Note that because of how the normalizer
  * works, it makes sense to name the most commonly built target in the package as the same name as
@@ -59,34 +71,37 @@ import java.util.List;
  */
 class CommandLineBuildTargetNormalizer {
 
-  private final Function<String, String> normalizer;
+  private final Function<String, ImmutableSet<String>> normalizer;
 
-  CommandLineBuildTargetNormalizer(final BuckConfig buckConfig) {
-    this.normalizer = new Function<String, String>() {
-      @Override
-      public String apply(String arg) {
-        String aliasValue = buckConfig.getBuildTargetForAliasAsString(arg);
-        if (aliasValue != null) {
-          return aliasValue;
-        } else {
-          return normalizeBuildTargetIdentifier(arg);
-        }
-      }
-    };
+  CommandLineBuildTargetNormalizer(BuckConfig buckConfig) {
+    this.normalizer =
+        arg -> {
+          ImmutableSet<String> aliasValues =
+              AliasConfig.from(buckConfig).getBuildTargetForAliasAsString(arg);
+          if (!aliasValues.isEmpty()) {
+            return aliasValues;
+          } else {
+            return ImmutableSet.of(normalizeBuildTargetIdentifier(arg));
+          }
+        };
   }
 
-  public String normalize(String argument) {
+  public ImmutableSet<String> normalize(String argument) {
     return normalizer.apply(argument);
   }
 
-  public List<String> normalizeAll(List<String> arguments) {
+  public ImmutableList<String> normalizeAll(List<String> arguments) {
     // When transforming command-line arguments, first check to see whether it is an alias in the
     // BuckConfig. If so, return the value associated with the alias. Otherwise, try normalize().
-    return Lists.transform(arguments, normalizer);
+    ImmutableList.Builder<String> builder = new ImmutableList.Builder<>();
+    for (String argument : arguments) {
+      builder.addAll(normalizer.apply(argument));
+    }
+    return builder.build();
   }
 
   @VisibleForTesting
-  static String normalizeBuildTargetIdentifier(final String buildTargetFromCommandLine) {
+  static String normalizeBuildTargetIdentifier(String buildTargetFromCommandLine) {
 
     // Build rules in the root are weird, but they do happen. Special-case them.
     if (buildTargetFromCommandLine.startsWith("//:")) {
@@ -96,16 +111,8 @@ class CommandLineBuildTargetNormalizer {
     String target = buildTargetFromCommandLine;
 
     // Save the cell
-    int targetSeparator = target.indexOf("//");
-    String cellName = "";
-    if (targetSeparator > 0) {
-      cellName = target.substring(0, targetSeparator);
-      target = target.substring(targetSeparator);
-    }
-
-    // Strip out the leading "//" if there is one to make it easier to normalize the
-    // remaining target string.  We'll add this back at the end.
-    target = MoreStrings.stripPrefix(target, "//").or(target);
+    BuckCellArg arg = BuckCellArg.of(target);
+    target = arg.getArg();
 
     // Add the colon, if necessary.
     int colonIndex = target.indexOf(':');
@@ -128,6 +135,6 @@ class CommandLineBuildTargetNormalizer {
       }
     }
 
-    return cellName + "//" + target;
+    return arg.getCellName().orElse("") + "//" + target;
   }
 }

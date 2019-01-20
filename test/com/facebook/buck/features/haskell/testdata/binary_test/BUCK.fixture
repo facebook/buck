@@ -1,0 +1,94 @@
+haskell_binary(
+    name = "foo",
+    srcs = [
+        "Foo.hs",
+    ],
+    main = "Foo",
+)
+
+haskell_binary(
+    name = "foo_rtsflags",
+    srcs = [
+        "Foo.hs",
+    ],
+    linker_flags = [
+        "-rtsopts",
+    ],
+    main = "Foo",
+)
+
+haskell_binary(
+    name = "dependent",
+    srcs = [
+        "Dependent.hs",
+    ],
+    main = "Dependent",
+    deps = [
+        ":dependency",
+    ],
+)
+
+haskell_library(
+    name = "dependency",
+    srcs = [
+        "Dependency.hs",
+    ],
+)
+
+haskell_binary(
+    name = "foreign",
+    srcs = [
+        "Foreign.hs",
+    ],
+    main = "Foreign",
+    deps = [
+        ":c",
+    ],
+)
+
+cxx_library(
+    name = "c",
+    srcs = [
+        "foreign.c",
+    ],
+)
+
+haskell_binary(
+    name = "gen_main",
+    srcs = [
+        ":gen",
+    ],
+)
+
+cxx_genrule(
+    name = "gen",
+    out = "Main.hs",
+    cmd = "echo 'module Main where\nmain = putStrLn \"$(cppflags)\"' > $OUT",
+)
+
+cxx_library(
+    name = "c_header",
+    exported_headers = [
+        "header.h",
+    ],
+)
+
+haskell_binary(
+    name = "hs_header",
+    srcs = [
+        "HsHeader.hs",
+    ],
+    compiler_flags = ["-cpp"],
+    main = "HsHeader",
+    deps = [
+        ":c_header",
+    ],
+)
+
+haskell_binary(
+    name = "error",
+    srcs = [
+        "Error.hs",
+    ],
+    main = "Error",
+)

@@ -17,10 +17,14 @@
 package com.facebook.buck.testrunner;
 
 import com.android.ddmlib.AndroidDebugBridge;
+import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
+import com.android.ddmlib.MultiLineReceiver;
+import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
-
+import com.android.ddmlib.testrunner.TestIdentifier;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,8 +39,11 @@ public class InstrumentationTestRunner {
   private final File outputDirectory;
   private final boolean attemptUninstall;
   private final Map<String, String> extraInstrumentationArguments;
+  private final boolean debug;
+  private final boolean codeCoverage;
   @Nullable private final String instrumentationApkPath;
   @Nullable private final String apkUnderTestPath;
+  @Nullable private final String codeCoverageOutputFile;
 
   public InstrumentationTestRunner(
       String adbExecutablePath,
@@ -47,6 +54,9 @@ public class InstrumentationTestRunner {
       String instrumentationApkPath,
       String apkUnderTestPath,
       boolean attemptUninstall,
+      boolean debug,
+      boolean codeCoverage,
+      String codeCoverageOutputFile,
       Map<String, String> extraInstrumentationArguments) {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
@@ -56,17 +66,23 @@ public class InstrumentationTestRunner {
     this.instrumentationApkPath = instrumentationApkPath;
     this.apkUnderTestPath = apkUnderTestPath;
     this.attemptUninstall = attemptUninstall;
+    this.codeCoverageOutputFile = codeCoverageOutputFile;
     this.extraInstrumentationArguments = extraInstrumentationArguments;
+    this.debug = debug;
+    this.codeCoverage = codeCoverage;
   }
 
-  public static InstrumentationTestRunner fromArgs(String... args) throws Throwable {
+  public static InstrumentationTestRunner fromArgs(String... args) {
     File outputDirectory = null;
     String adbExecutablePath = null;
     String apkUnderTestPath = null;
     String packageName = null;
     String testRunner = null;
     String instrumentationApkPath = null;
+    String codeCoverageOutputFile = null;
     boolean attemptUninstall = false;
+    boolean debug = false;
+    boolean codeCoverage = false;
     Map<String, String> extraInstrumentationArguments = new HashMap<String, String>();
 
     for (int i = 0; i < args.length; i++) {
@@ -95,6 +111,15 @@ public class InstrumentationTestRunner {
           break;
         case "--attempt-uninstall":
           attemptUninstall = true;
+          break;
+        case "--debug":
+          debug = true;
+          break;
+        case "--code-coverage":
+          codeCoverage = true;
+          break;
+        case "--code-coverage-output-file":
+          codeCoverageOutputFile = args[++i];
           break;
         case "--extra-instrumentation-argument":
           String rawArg = args[++i];
@@ -143,6 +168,9 @@ public class InstrumentationTestRunner {
         instrumentationApkPath,
         apkUnderTestPath,
         attemptUninstall,
+        debug,
+        codeCoverage,
+        codeCoverageOutputFile,
         extraInstrumentationArguments);
   }
 
@@ -155,6 +183,7 @@ public class InstrumentationTestRunner {
     }
 
     if (this.instrumentationApkPath != null) {
+      DdmPreferences.setTimeOut(60000);
       device.installPackage(this.instrumentationApkPath, true);
       if (this.apkUnderTestPath != null) {
         device.installPackage(this.apkUnderTestPath, true);
@@ -162,17 +191,62 @@ public class InstrumentationTestRunner {
     }
 
     try {
-      RemoteAndroidTestRunner runner = new RemoteAndroidTestRunner(
-          this.packageName,
-          this.testRunner,
-          getDevice(deviceSerial)
-      );
+      RemoteAndroidTestRunner runner =
+          new RemoteAndroidTestRunner(this.packageName, this.testRunner, getDevice(deviceSerial));
+
       for (Map.Entry<String, String> entry : this.extraInstrumentationArguments.entrySet()) {
         runner.addInstrumentationArg(entry.getKey(), entry.getValue());
       }
+      if (debug) {
+        runner.setDebug(true);
+      }
+      if (codeCoverage) {
+        runner.setCoverage(true);
+      }
       BuckXmlTestRunListener listener = new BuckXmlTestRunListener();
+      ITestRunListener trimLineListener =
+          new ITestRunListener() {
+            /**
+             * Before the actual run starts (and after the InstrumentationResultsParser is created),
+             * we need to do some reflection magic to make RemoteAndroidTestRunner not trim
+             * indentation from lines.
+             */
+            @Override
+            public void testRunStarted(String runName, int testCount) {
+              setTrimLine(runner, false);
+            }
+
+            @Override
+            public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {}
+
+            @Override
+            public void testRunFailed(String errorMessage) {}
+
+            @Override
+            public void testStarted(TestIdentifier test) {}
+
+            @Override
+            public void testFailed(TestIdentifier test, String trace) {}
+
+            @Override
+            public void testAssumptionFailure(TestIdentifier test, String trace) {}
+
+            @Override
+            public void testIgnored(TestIdentifier test) {}
+
+            @Override
+            public void testEnded(TestIdentifier test, Map<String, String> testMetrics) {}
+
+            @Override
+            public void testRunStopped(long elapsedTime) {}
+          };
+
       listener.setReportDir(this.outputDirectory);
-      runner.run(listener);
+      runner.run(trimLineListener, listener);
+      if (this.codeCoverageOutputFile != null) {
+        device.pullFile(
+            "/data/data/" + this.packageName + "/files/coverage.ec", this.codeCoverageOutputFile);
+      }
     } finally {
       if (this.attemptUninstall) {
         // Best effort uninstall from the emulator/device.
@@ -204,15 +278,14 @@ public class InstrumentationTestRunner {
   }
 
   /**
-   * Creates connection to adb and waits for this connection to be initialized
-   * and receive initial list of devices.
+   * Creates connection to adb and waits for this connection to be initialized and receive initial
+   * list of devices.
    */
   @Nullable
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private AndroidDebugBridge createAdb() throws InterruptedException {
     AndroidDebugBridge.initIfNeeded(/* clientSupport */ false);
-    AndroidDebugBridge adb =
-        AndroidDebugBridge.createBridge(this.adbExecutablePath, false);
+    AndroidDebugBridge adb = AndroidDebugBridge.createBridge(this.adbExecutablePath, false);
     if (adb == null) {
       System.err.println("Failed to connect to adb. Make sure adb server is running.");
       return null;
@@ -229,8 +302,18 @@ public class InstrumentationTestRunner {
     return isAdbInitialized(adb) ? adb : null;
   }
 
-  /**
-   * We minimize external dependencies, but we'd like to have {@link javax.annotation.Nullable}.
-   */
+  // VisibleForTesting
+  static void setTrimLine(RemoteAndroidTestRunner runner, boolean value) {
+    try {
+      Field mParserField = RemoteAndroidTestRunner.class.getDeclaredField("mParser");
+      mParserField.setAccessible(true);
+      MultiLineReceiver multiLineReceiver = (MultiLineReceiver) mParserField.get(runner);
+      multiLineReceiver.setTrimLine(value);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /** We minimize external dependencies, but we'd like to have {@link javax.annotation.Nullable}. */
   @interface Nullable {}
 }

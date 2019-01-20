@@ -19,7 +19,7 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 /**
  * Lists the files to be compiled for the containing {@link PBXTarget}.
  *
- * A target should contain at most one of this build phase.
+ * <p>A target should contain at most one of this build phase.
  */
 public class PBXSourcesBuildPhase extends PBXBuildPhase {
   @Override

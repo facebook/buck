@@ -16,13 +16,15 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
-
+import com.google.common.collect.Maps;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   private final TypeCoercer<K> keyTypeCoercer;
@@ -45,16 +47,11 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   }
 
   @Override
-  public Optional<ImmutableMap<K, V>> getOptionalValue() {
-    return Optional.of(ImmutableMap.<K, V>of());
-  }
-
-  @Override
-  public void traverse(ImmutableMap<K, V> object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, ImmutableMap<K, V> object, Traversal traversal) {
     traversal.traverse(object);
     for (Map.Entry<K, V> element : object.entrySet()) {
-      keyTypeCoercer.traverse(element.getKey(), traversal);
-      valueTypeCoercer.traverse(element.getValue(), traversal);
+      keyTypeCoercer.traverse(cellRoots, element.getKey(), traversal);
+      valueTypeCoercer.traverse(cellRoots, element.getValue(), traversal);
     }
   }
 
@@ -69,16 +66,11 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
       ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
 
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
-        K key = keyTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            entry.getKey());
-        V value = valueTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            entry.getValue());
+        K key =
+            keyTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, entry.getKey());
+        V value =
+            valueTypeCoercer.coerce(
+                cellRoots, filesystem, pathRelativeToProjectRoot, entry.getValue());
         builder.put(key, value);
       }
 
@@ -86,5 +78,22 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
+  }
+
+  @Nullable
+  @Override
+  public ImmutableMap<K, V> concat(Iterable<ImmutableMap<K, V>> elements) {
+    LinkedHashMap<K, V> result = Maps.newLinkedHashMap();
+    for (ImmutableMap<K, V> map : elements) {
+      for (Map.Entry<K, V> entry : map.entrySet()) {
+        V previousObject = result.putIfAbsent(entry.getKey(), entry.getValue());
+        if (previousObject != null) {
+          throw new HumanReadableException(
+              "Duplicate key found when trying to concatenate a map attribute: %s", entry.getKey());
+        }
+      }
+    }
+
+    return ImmutableMap.copyOf(result);
   }
 }

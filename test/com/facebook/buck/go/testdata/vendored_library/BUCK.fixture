@@ -1,9 +1,0 @@
-go_binary(
-  name = "hello",
-  srcs = [
-    "main.go",
-  ],
-  deps = [
-    "//messenger:messenger",
-  ],
-)

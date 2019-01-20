@@ -1,22 +1,26 @@
 java_test(
-  name = 'geometry',
-  srcs = ['EarthIsFlatTest.java'],
-  labels = [
-    'unscientific',
-    'not-herecy',
-    'testy',
-    'earthy'
-  ],
-  deps = [ '//lib:junit' ],
+    name = "geometry",
+    srcs = ["EarthIsFlatTest.java"],
+    labels = [
+        "earthy",
+        "not-herecy",
+        "testy",
+        "unscientific",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
 )
 
 java_test(
-  name = 'orientation',
-  srcs = ['PhotonsTest.java'],
-  labels = [
-    'scientific',
-    'testy',
-    'lighty'
-  ],
-  deps = [ '//lib:junit' ],
+    name = "orientation",
+    srcs = ["PhotonsTest.java"],
+    labels = [
+        "lighty",
+        "scientific",
+        "testy",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
 )

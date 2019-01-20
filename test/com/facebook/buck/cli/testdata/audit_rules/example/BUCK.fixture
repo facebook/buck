@@ -16,15 +16,19 @@ def my_genrule(
   )
 
 my_genrule(
-  name = 'example',
-  out = 'baz.txt',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "example",
+    out = "baz.txt",
+)
+
+genrule(
+    name = "foo",
+    out = "foo.txt",
+    cmd = "echo foo > $OUT",
+    environment_expansion_separator = ",",
 )
 
 keystore(
-  name = 'debug_keystore',
-  store = 'debug.keystore',
-  properties = 'debug.keystore.properties',
+    name = "debug_keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
 )

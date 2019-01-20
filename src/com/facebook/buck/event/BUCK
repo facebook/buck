@@ -1,12 +1,65 @@
-standard_java_library(
-  immutable_types = [
-    'ScubaData',
-  ],
-  tests = [
-    '//test/com/facebook/buck/event:event',
-  ],
-  provided_deps = [
-    # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
-    '//src/com/facebook/buck/event/api:api',
-  ],
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+EVENT_INTERFACES = [
+    "AbstractBuckEvent.java",
+    "AbstractEventKey.java",
+    "BuckEvent.java",
+    "BuckEventListener.java",
+    "BuckEventBus.java",
+    "ConsoleEvent.java",
+    "EventDispatcher.java",
+    "LeafEvent.java",
+    "ThrowableConsoleEvent.java",
+    "WorkAdvanceEvent.java",
+]
+
+java_immutables_library(
+    name = "interfaces",
+    srcs = EVENT_INTERFACES,
+    exported_deps = [
+        "//src/com/facebook/buck/event/external:external_lib",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/log/views:views",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
+)
+
+java_immutables_library(
+    name = "event",
+    srcs = glob(
+        ["*.java"],
+        exclude = EVENT_INTERFACES,
+    ),
+    exported_deps = [
+        ":interfaces",
+        # exported for BuildId.
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/util/cache:cache",
+    ],
+    provided_deps = [
+        # Event API is loaded by the bootstrapper at runtime; don't need to depend on it strongly
+        "//src/com/facebook/buck/event/api:api",
+    ],
+    tests = [
+        "//test/com/facebook/buck/event:event",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/log/views:views",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/timing:timing",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+    ],
 )

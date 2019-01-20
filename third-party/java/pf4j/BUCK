@@ -1,0 +1,20 @@
+prebuilt_jar(
+    name = "pf4j",
+    binary_jar = "pf4j-2.0.0-SNAPSHOT.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "pf4j-2.0.0-SNAPSHOT-sources.jar",
+    visibility = ["PUBLIC"],
+)
+
+java_annotation_processor(
+    name = "processor",
+    processor_class = "org.pf4j.processor.ExtensionAnnotationProcessor",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":pf4j",
+    ],
+)

@@ -1,0 +1,2 @@
+[alias]
+  multialias = //simple:simple //simple/foo:foo

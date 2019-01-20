@@ -16,36 +16,34 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Test;
-
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import org.junit.Test;
 
 public class JUnitStepTest {
 
   @Test
-  public void testGetShellCommand() throws IOException {
+  public void testGetShellCommand() {
     String testClass1 = "com.facebook.buck.shell.JUnitCommandTest";
     String testClass2 = "com.facebook.buck.shell.InstrumentCommandTest";
     Set<String> testClassNames = ImmutableSet.of(testClass1, testClass2);
@@ -58,39 +56,40 @@ public class JUnitStepTest {
     String buildIdArg = String.format("-Dcom.facebook.buck.buildId=%s", pretendBuildId);
 
     Path modulePath = Paths.get("module/submodule");
-    String modulePathArg = String.format(
-        "-Dcom.facebook.buck.moduleBasePath=%s",
-        modulePath);
+    String modulePathArg = String.format("-Dcom.facebook.buck.moduleBasePath=%s", modulePath);
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
-    Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
-    Path testRunnerClasspath = Paths.get("build/classes/junit");
+    Path testRunnerClasspath = Paths.get("ant-out/classes/junit");
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
-      JUnitJvmArgs args = JUnitJvmArgs.builder()
-        .setTmpDirectory(directoryForTemp)
-        .setBuildId(pretendBuildId)
-        .setBuckModuleBaseSourceCodePath(modulePath)
-        .setClasspathFile(classpathFile)
-        .setTestRunnerClasspath(testRunnerClasspath)
-        .setExtraJvmArgs(vmArgs)
-        .setTestType(TestType.JUNIT)
-        .setDirectoryForTestResults(directoryForTestResults)
-        .addAllTestClasses(testClassNames)
-        .build();
+    JUnitJvmArgs args =
+        JUnitJvmArgs.builder()
+            .setBuildId(pretendBuildId)
+            .setBuckModuleBaseSourceCodePath(modulePath)
+            .setClasspathFile(classpathFile)
+            .setTestRunnerClasspath(testRunnerClasspath)
+            .setExtraJvmArgs(vmArgs)
+            .setTestType(TestType.JUNIT)
+            .setDirectoryForTestResults(directoryForTestResults)
+            .addAllTestClasses(testClassNames)
+            .build();
 
-    JUnitStep junit = new JUnitStep(
-        filesystem,
-        /* nativeLibsEnvironment */ ImmutableMap.<String, String>of(),
-        /* testRuleTimeoutMs*/ Optional.<Long>absent(),
-        new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
-        args);
+    JUnitStep junit =
+        new JUnitStep(
+            filesystem,
+            /* nativeLibsEnvironment */ ImmutableMap.of(),
+            /* testRuleTimeoutMs */ Optional.empty(),
+            /* testCaseTimeoutMs */ Optional.empty(),
+            ImmutableMap.of(),
+            ImmutableList.of("/foo/bar/custom/java"),
+            args);
 
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setConsole(new TestConsole(Verbosity.ALL))
-        .setDefaultTestTimeoutMillis(5000L)
-        .build();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setConsole(new TestConsole(Verbosity.ALL))
+            .setDefaultTestTimeoutMillis(5000L)
+            .build();
     assertEquals(executionContext.getVerbosity(), Verbosity.ALL);
     assertEquals(executionContext.getDefaultTestTimeoutMillis(), 5000L);
 
@@ -98,16 +97,16 @@ public class JUnitStepTest {
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "/foo/bar/custom/java",
-            "-Djava.io.tmpdir=" + filesystem.resolve(directoryForTemp),
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
+            "-Dbuck.classpath_file=" + classpathFile,
             buildIdArg,
             modulePathArg,
+            "-Dapple.awt.UIElement=true",
             vmArg1,
             vmArg2,
             "-verbose",
             "-classpath",
-            "@" + classpathFile + File.pathSeparator +
-                MorePaths.pathWithPlatformSeparators("build/classes/junit"),
+            MorePaths.pathWithPlatformSeparators("ant-out/classes/junit"),
             FileClassPathRunner.class.getName(),
             "com.facebook.buck.testrunner.JUnitMain",
             "--output",
@@ -117,6 +116,43 @@ public class JUnitStepTest {
             testClass1,
             testClass2),
         observedArgs);
+  }
+
+  @Test
+  public void testGetEnvironmentVariables() {
+    BuildId pretendBuildId = new BuildId("pretend-build-id");
+    Path modulePath = Paths.get("module/submodule");
+
+    Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
+    Path testRunnerClasspath = Paths.get("ant-out/classes/junit");
+    ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    Path classpathFile = filesystem.resolve("foo");
+
+    JUnitJvmArgs args =
+        JUnitJvmArgs.builder()
+            .setBuildId(pretendBuildId)
+            .setBuckModuleBaseSourceCodePath(modulePath)
+            .setClasspathFile(classpathFile)
+            .setTestRunnerClasspath(testRunnerClasspath)
+            .setExtraJvmArgs(ImmutableList.of())
+            .setTestType(TestType.JUNIT)
+            .setDirectoryForTestResults(directoryForTestResults)
+            .addAllTestClasses(ImmutableList.of())
+            .build();
+
+    JUnitStep junit =
+        new JUnitStep(
+            filesystem,
+            /* nativeLibsEnvironment */ ImmutableMap.of(),
+            /* testRuleTimeoutMs */ Optional.empty(),
+            /* testCaseTimeoutMs */ Optional.empty(),
+            ImmutableMap.of("FOO", "BAR"),
+            ImmutableList.of("/foo/bar/custom/java"),
+            args);
+
+    ImmutableMap<String, String> observedEnvironment =
+        junit.getEnvironmentVariables(TestExecutionContext.newInstance());
+    assertThat(observedEnvironment, hasEntry("FOO", "BAR"));
   }
 
   @Test
@@ -133,58 +169,56 @@ public class JUnitStepTest {
     String buildIdArg = String.format("-Dcom.facebook.buck.buildId=%s", pretendBuildId);
 
     Path modulePath = Paths.get("module/submodule");
-    String modulePathArg = String.format(
-        "-Dcom.facebook.buck.moduleBasePath=%s",
-        modulePath);
+    String modulePathArg = String.format("-Dcom.facebook.buck.moduleBasePath=%s", modulePath);
 
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
-    Path directoryForTemp = Paths.get("buck-out/gen/thetmp/");
-    Path testRunnerClasspath = Paths.get("build/classes/junit");
+    Path testRunnerClasspath = Paths.get("ant-out/classes/junit");
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     Path classpathFile = filesystem.resolve("foo");
 
-    JUnitJvmArgs args = JUnitJvmArgs.builder()
-        .setTmpDirectory(directoryForTemp)
-        .setClasspathFile(classpathFile)
-        .setBuildId(pretendBuildId)
-        .setBuckModuleBaseSourceCodePath(modulePath)
-        .setTestRunnerClasspath(testRunnerClasspath)
-        .setDebugEnabled(true)
-        .setExtraJvmArgs(vmArgs)
-        .setTestType(TestType.JUNIT)
-        .setDirectoryForTestResults(directoryForTestResults)
-        .addAllTestClasses(testClassNames)
-        .build();
+    JUnitJvmArgs args =
+        JUnitJvmArgs.builder()
+            .setClasspathFile(classpathFile)
+            .setBuildId(pretendBuildId)
+            .setBuckModuleBaseSourceCodePath(modulePath)
+            .setTestRunnerClasspath(testRunnerClasspath)
+            .setDebugEnabled(true)
+            .setExtraJvmArgs(vmArgs)
+            .setTestType(TestType.JUNIT)
+            .setDirectoryForTestResults(directoryForTestResults)
+            .addAllTestClasses(testClassNames)
+            .build();
 
-    JUnitStep junit = new JUnitStep(
-        filesystem,
-        ImmutableMap.<String, String>of(),
-        /* testRuleTimeoutMs*/ Optional.<Long>absent(),
-        new ExternalJavaRuntimeLauncher("/foo/bar/custom/java"),
-        args);
+    JUnitStep junit =
+        new JUnitStep(
+            filesystem,
+            ImmutableMap.of(),
+            /* testRuleTimeoutMs */ Optional.empty(),
+            /* testCaseTimeoutMs */ Optional.empty(),
+            ImmutableMap.of(),
+            ImmutableList.of("/foo/bar/custom/java"),
+            args);
 
     TestConsole console = new TestConsole(Verbosity.ALL);
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setConsole(console)
-        .setDebugEnabled(true)
-        .build();
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder().setConsole(console).setDebugEnabled(true).build();
 
     List<String> observedArgs = junit.getShellCommand(executionContext);
     MoreAsserts.assertListEquals(
         ImmutableList.of(
             "/foo/bar/custom/java",
-            "-Djava.io.tmpdir=" + filesystem.resolve(directoryForTemp),
             "-Dbuck.testrunner_classes=" + testRunnerClasspath,
+            "-Dbuck.classpath_file=" + classpathFile,
             buildIdArg,
             modulePathArg,
+            "-Dapple.awt.UIElement=true",
             "-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=5005",
             vmArg1,
             vmArg2,
             "-verbose",
             "-classpath",
-            "@" + classpathFile + File.pathSeparator +
-                MorePaths.pathWithPlatformSeparators("build/classes/junit"),
+            MorePaths.pathWithPlatformSeparators("ant-out/classes/junit"),
             FileClassPathRunner.class.getName(),
             "com.facebook.buck.testrunner.JUnitMain",
             "--output",
@@ -195,8 +229,9 @@ public class JUnitStepTest {
             testClass2),
         observedArgs);
 
-    // TODO(shs96c): Why does the CapturingPrintStream append spaces?
-    assertEquals("Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.",
+    // TODO(simons): Why does the CapturingPrintStream append spaces?
+    assertEquals(
+        "Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.",
         console.getTextWrittenToStdErr().trim());
   }
 }

@@ -16,32 +16,32 @@
 
 package com.facebook.buck.apple.xcode.xcodeproj;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.util.Optionals;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 import java.util.Objects;
-
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
  * Utility class representing a tuple of (SourceTree, Path) used for uniquely describing a file
  * reference in a group.
  */
-public class SourceTreePath implements Comparable<SourceTreePath> {
-  private final PBXReference.SourceTree sourceTree;
+public class SourceTreePath implements Comparable<SourceTreePath>, AddsToRuleKey {
+  @AddToRuleKey private final PBXReference.SourceTree sourceTree;
+
+  @AddToRuleKey(stringify = true)
   private final Path path;
-  private final Optional<String> defaultType;
+
+  @AddToRuleKey private final Optional<String> defaultType;
 
   public SourceTreePath(
-      PBXReference.SourceTree sourceTree,
-      Path path,
-      Optional<String> defaultType) {
+      PBXReference.SourceTree sourceTree, Path path, Optional<String> defaultType) {
     this.sourceTree = sourceTree;
     Preconditions.checkState(
-        path.toString().length() > 0,
-        "A path to a file cannot be null or empty");
+        path.toString().length() > 0, "A path to a file cannot be null or empty");
     path = path.normalize();
     Preconditions.checkState(path.toString().length() > 0, "A path to a file cannot be empty");
     this.path = path;
@@ -65,10 +65,7 @@ public class SourceTreePath implements Comparable<SourceTreePath> {
   }
 
   public XCVersionGroup createVersionGroup() {
-    return new XCVersionGroup(
-        path.getFileName().toString(),
-        path.toString(),
-        sourceTree);
+    return new XCVersionGroup(path.getFileName().toString(), path.toString(), sourceTree);
   }
 
   @Override
@@ -93,14 +90,14 @@ public class SourceTreePath implements Comparable<SourceTreePath> {
 
   @Override
   public boolean equals(@Nullable Object other) {
-    if (other == null || !(other instanceof SourceTreePath)) {
+    if (!(other instanceof SourceTreePath)) {
       return false;
     }
 
     SourceTreePath that = (SourceTreePath) other;
-    return Objects.equals(this.sourceTree, that.sourceTree) &&
-        Objects.equals(this.path, that.path) &&
-        Objects.equals(this.defaultType, that.defaultType);
+    return Objects.equals(this.sourceTree, that.sourceTree)
+        && Objects.equals(this.path, that.path)
+        && Objects.equals(this.defaultType, that.defaultType);
   }
 
   @Override

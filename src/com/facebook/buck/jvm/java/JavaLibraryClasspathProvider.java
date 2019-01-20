@@ -16,124 +16,108 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.ExportDependencies;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.attr.ExportDependencies;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Sets;
-
-import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Optional;
 
 public class JavaLibraryClasspathProvider {
 
-  private JavaLibraryClasspathProvider() {
-  }
+  private JavaLibraryClasspathProvider() {}
 
-  public static ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries(
-      JavaLibrary javaLibraryRule,
-      SourcePathResolver resolver,
-      Optional<SourcePath> outputJar) {
-    ImmutableSetMultimap.Builder<JavaLibrary, Path> outputClasspathBuilder =
-        ImmutableSetMultimap.builder();
+  public static ImmutableSet<SourcePath> getOutputClasspathJars(
+      JavaLibrary javaLibraryRule, Optional<SourcePath> outputJar) {
+    ImmutableSet.Builder<SourcePath> outputClasspathBuilder = ImmutableSet.builder();
     Iterable<JavaLibrary> javaExportedLibraryDeps;
     if (javaLibraryRule instanceof ExportDependencies) {
       javaExportedLibraryDeps =
           getJavaLibraryDeps(((ExportDependencies) javaLibraryRule).getExportedDeps());
     } else {
-      javaExportedLibraryDeps = Sets.newHashSet();
+      javaExportedLibraryDeps = new HashSet<>();
     }
 
     for (JavaLibrary rule : javaExportedLibraryDeps) {
-      outputClasspathBuilder.putAll(rule, rule.getOutputClasspathEntries().values());
-      // If we have any exported deps, add an entry mapping ourselves to to their,
-      // classpaths so when suggesting libraries to add we know that adding this library
-      // would pull in it's deps.
-      outputClasspathBuilder.putAll(
-          javaLibraryRule,
-          rule.getOutputClasspathEntries().values());
+      outputClasspathBuilder.addAll(rule.getOutputClasspaths());
     }
 
     if (outputJar.isPresent()) {
-      outputClasspathBuilder.put(javaLibraryRule, resolver.getAbsolutePath(outputJar.get()));
+      outputClasspathBuilder.add(outputJar.get());
     }
 
     return outputClasspathBuilder.build();
   }
 
-  public static ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries(
-      JavaLibrary javaLibraryRule,
-      SourcePathResolver resolver,
-      Optional<SourcePath> outputJar) {
-    final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
-        ImmutableSetMultimap.builder();
-    ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForDeps =
-        Classpaths.getClasspathEntries(javaLibraryRule.getDepsForTransitiveClasspathEntries());
-
-    ImmutableSetMultimap<JavaLibrary, Path> classpathEntriesForExportedsDeps;
-    if (javaLibraryRule instanceof ExportDependencies) {
-      classpathEntriesForExportedsDeps =
-          Classpaths.getClasspathEntries(((ExportDependencies) javaLibraryRule).getExportedDeps());
-    } else {
-      classpathEntriesForExportedsDeps = ImmutableSetMultimap.of();
-    }
-
-    classpathEntries.putAll(classpathEntriesForDeps);
-
-    // If we have any exported deps, add an entry mapping ourselves to to their classpaths,
-    // so when suggesting libraries to add we know that adding this library would pull in
-    // it's deps.
-    if (!classpathEntriesForExportedsDeps.isEmpty()) {
-      classpathEntries.putAll(
-          javaLibraryRule,
-          classpathEntriesForExportedsDeps.values());
-    }
-
-    // Only add ourselves to the classpath if there's a jar to be built.
-    if (outputJar.isPresent()) {
-      classpathEntries.put(javaLibraryRule, resolver.getAbsolutePath(outputJar.get()));
-    }
-
-    return classpathEntries.build();
-  }
-
-  public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(
-      JavaLibrary javaLibrary,
-      Optional<SourcePath> outputJar) {
+  public static ImmutableSet<JavaLibrary> getTransitiveClasspathDeps(JavaLibrary javaLibrary) {
     ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
 
-    classpathDeps.addAll(
-        Classpaths.getClasspathDeps(
-            javaLibrary.getDepsForTransitiveClasspathEntries()));
+    classpathDeps.addAll(getClasspathDeps(javaLibrary.getDepsForTransitiveClasspathEntries()));
 
-    // Only add ourselves to the classpath if there's a jar to be built.
-    if (outputJar.isPresent()) {
+    // Only add ourselves to the classpath if there's a jar to be built or if we're a maven dep.
+    if (javaLibrary.getSourcePathToOutput() != null || javaLibrary.getMavenCoords().isPresent()) {
+      classpathDeps.add(javaLibrary);
+    }
+
+    // Or if there are exported dependencies, to be consistent with getTransitiveClasspaths.
+    if (javaLibrary instanceof ExportDependencies
+        && !((ExportDependencies) javaLibrary).getExportedDeps().isEmpty()) {
       classpathDeps.add(javaLibrary);
     }
 
     return classpathDeps.build();
   }
 
-  public static ImmutableSetMultimap<JavaLibrary, Path> getDeclaredClasspathEntries(
-      JavaLibrary javaLibraryRule) {
-    final ImmutableSetMultimap.Builder<JavaLibrary, Path> classpathEntries =
-        ImmutableSetMultimap.builder();
-
-    Iterable<JavaLibrary> javaLibraryDeps = getJavaLibraryDeps(
-        javaLibraryRule.getDepsForTransitiveClasspathEntries());
-
-    for (JavaLibrary rule : javaLibraryDeps) {
-      for (Path path : rule.getOutputClasspathEntries().values()) {
-        classpathEntries.put(rule, rule.getProjectFilesystem().resolve(path));
-      }
-    }
-    return classpathEntries.build();
-  }
-
   static FluentIterable<JavaLibrary> getJavaLibraryDeps(Iterable<BuildRule> deps) {
     return FluentIterable.from(deps).filter(JavaLibrary.class);
+  }
+
+  /**
+   * Include the classpath entries from all JavaLibraryRules that have a direct line of lineage to
+   * this rule through other JavaLibraryRules. For example, in the following dependency graph:
+   *
+   * <p>
+   *
+   * <pre>
+   *        A
+   *      /   \
+   *     B     C
+   *    / \   / \
+   *    D E   F G
+   *
+   * </pre>
+   *
+   * <p>If all of the nodes correspond to BuildRules that implement JavaLibraryRule except for B
+   * (suppose B is a Genrule), then A's classpath will include C, F, and G, but not D and E. This is
+   * because D and E are used to generate B, but do not contribute .class files to things that
+   * depend on B. However, if C depended on E as well as F and G, then E would be included in A's
+   * classpath.
+   */
+  public static ImmutableSet<JavaLibrary> getClasspathDeps(Iterable<BuildRule> deps) {
+    ImmutableSet.Builder<JavaLibrary> classpathDeps = ImmutableSet.builder();
+    for (BuildRule dep : deps) {
+      if (dep instanceof HasClasspathEntries) {
+        classpathDeps.addAll(((HasClasspathEntries) dep).getTransitiveClasspathDeps());
+      }
+    }
+    return classpathDeps.build();
+  }
+
+  /**
+   * Given libraries that may contribute classpaths, visit them and collect the classpaths.
+   *
+   * <p>This is used to generate transitive classpaths from library discovered in a previous
+   * traversal.
+   */
+  public static ImmutableSet<SourcePath> getClasspathsFromLibraries(
+      Iterable<JavaLibrary> libraries) {
+    ImmutableSet.Builder<SourcePath> classpathEntries = ImmutableSet.builder();
+    for (JavaLibrary library : libraries) {
+      classpathEntries.addAll(library.getImmediateClasspaths());
+    }
+    return classpathEntries.build();
   }
 }

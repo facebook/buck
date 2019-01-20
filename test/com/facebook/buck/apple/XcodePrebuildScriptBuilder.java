@@ -16,10 +16,10 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 
 public class XcodePrebuildScriptBuilder
-    extends AbstractXcodeScriptBuilder<XcodePrebuildScriptBuilder> {
+    extends AbstractXcodeScriptBuilder<XcodePrebuildScriptBuilder, XcodePrebuildScriptDescription> {
 
   protected XcodePrebuildScriptBuilder(BuildTarget target) {
     super(new XcodePrebuildScriptDescription(), target);
@@ -33,5 +33,4 @@ public class XcodePrebuildScriptBuilder
   protected XcodePrebuildScriptBuilder getThis() {
     return this;
   }
-
 }

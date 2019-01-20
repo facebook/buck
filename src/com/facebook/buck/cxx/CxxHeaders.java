@@ -16,63 +16,61 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.cxx.toolchain.PathShortener;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-
 import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
-/**
- * Encapsulates headers from a single root location.
- */
-public abstract class CxxHeaders implements RuleKeyAppendable {
+/** Encapsulates headers from a single root location. */
+public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
 
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
-  /**
-   * @return the root of the includes.
-   */
+  /** @return the root of the includes. */
+  @Nullable
   public abstract SourcePath getRoot();
 
-  /**
-   * @return the path to the optional header map to use for this header pack.
-   */
+  /** @return the path to the optional header map to use for this header pack. */
   public abstract Optional<SourcePath> getHeaderMap();
-
-  /**
-   * @return the path to add to the preprocessor search path to find the includes.  This defaults
-   *     to the root, but can be overridden to use an alternate path.
-   */
-  public abstract SourcePath getIncludeRoot();
 
   /**
    * Add this header pack to the given {@link com.facebook.buck.cxx.HeaderPathNormalizer.Builder}.
    */
   public abstract void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder);
 
-  /**
-   * @return all deps required by this header pack.
-   */
-  public abstract Iterable<BuildRule> getDeps(SourcePathResolver resolver);
+  /** @return all deps required by this header pack. */
+  @Override
+  public Stream<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    return BuildableSupport.deriveDeps(this, ruleFinder);
+  }
 
-  private static String resolveSourcePath(
-      SourcePathResolver resolver,
-      SourcePath path,
-      Optional<Function<Path, Path>> pathShortener) {
-    return Preconditions.checkNotNull(
-        pathShortener.or(Functions.<Path>identity())
-            .apply(resolver.getAbsolutePath(path))).toString();
+  /**
+   * @return the path to add to the preprocessor search path to find the includes. This defaults to
+   *     the root, but can be overridden to use an alternate path.
+   */
+  public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
+    return Optional.of(resolver.getAbsolutePath(Objects.requireNonNull(getRoot())));
+  }
+
+  private static Path resolveSourcePathAndShorten(
+      SourcePathResolver resolver, SourcePath path, Optional<PathShortener> pathShortener) {
+    Path resolvedPath = resolver.getAbsolutePath(path);
+    return pathShortener.isPresent() ? pathShortener.get().shorten(resolvedPath) : resolvedPath;
   }
 
   /**
@@ -82,7 +80,8 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
   public static Iterable<String> getArgs(
       Iterable<CxxHeaders> cxxHeaderses,
       SourcePathResolver resolver,
-      Optional<Function<Path, Path>> pathShortener) {
+      Optional<PathShortener> pathMinimizer,
+      Preprocessor preprocessor) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     // Collect the header maps and roots into buckets organized by include type, so that we can:
@@ -95,40 +94,39 @@ public abstract class CxxHeaders implements RuleKeyAppendable {
       if (headerMap.isPresent()) {
         headerMaps.put(
             cxxHeaders.getIncludeType(),
-            resolveSourcePath(resolver, headerMap.get(), pathShortener));
+            resolveSourcePathAndShorten(resolver, headerMap.get(), pathMinimizer).toString());
       }
-      roots.put(
-          cxxHeaders.getIncludeType(),
-          resolveSourcePath(resolver, cxxHeaders.getIncludeRoot(), pathShortener));
+      cxxHeaders
+          .getResolvedIncludeRoot(resolver)
+          .ifPresent(
+              resolvedPath ->
+                  roots.put(
+                      cxxHeaders.getIncludeType(),
+                      pathMinimizer
+                          .map(min -> min.shorten(resolvedPath))
+                          .orElse(resolvedPath)
+                          .toString()));
     }
 
     // Define the include type ordering.  We always add local ("-I") include paths first so that
     // headers match there before system ("-isystem") ones.
     ImmutableSet<CxxPreprocessables.IncludeType> includeTypes =
         ImmutableSet.of(
-            CxxPreprocessables.IncludeType.LOCAL,
-            CxxPreprocessables.IncludeType.SYSTEM);
+            CxxPreprocessables.IncludeType.LOCAL, CxxPreprocessables.IncludeType.SYSTEM);
 
     // Apply the header maps first, so that headers that matching there avoid falling back to
     // stat'ing files in the normal include roots.
     Preconditions.checkState(includeTypes.containsAll(headerMaps.keySet()));
     for (CxxPreprocessables.IncludeType includeType : includeTypes) {
-      args.addAll(
-          MoreIterables.zipAndConcat(
-              Iterables.cycle(includeType.getFlag()),
-              headerMaps.get(includeType)));
+      args.addAll(includeType.includeArgs(preprocessor, headerMaps.get(includeType)));
     }
 
     // Apply the regular includes last.
     Preconditions.checkState(includeTypes.containsAll(roots.keySet()));
     for (CxxPreprocessables.IncludeType includeType : includeTypes) {
-      args.addAll(
-          MoreIterables.zipAndConcat(
-              Iterables.cycle(includeType.getFlag()),
-              roots.get(includeType)));
+      args.addAll(includeType.includeArgs(preprocessor, roots.get(includeType)));
     }
 
     return args.build();
   }
-
 }

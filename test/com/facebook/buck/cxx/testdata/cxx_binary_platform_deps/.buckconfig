@@ -1,0 +1,5 @@
+[cxx#working-platform]
+
+[cxx#broken-platform]
+  cpp = //non/existing:target
+  cpp_type = clang

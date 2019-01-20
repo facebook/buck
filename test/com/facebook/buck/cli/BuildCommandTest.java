@@ -16,158 +16,156 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.rules.BuildRuleSuccessType.BUILT_LOCALLY;
-import static com.facebook.buck.rules.BuildRuleSuccessType.FETCHED_FROM_CACHE;
+import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.BUILT_LOCALLY;
+import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.FETCHED_FROM_CACHE;
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.artifact_cache.CacheResult;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.command.BuildExecutionResult;
 import com.facebook.buck.command.BuildReport;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildResult;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ObjectMappers;
 import com.facebook.buck.util.Verbosity;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.LinkedHashMap;
-
-import javax.annotation.Nullable;
 
 public class BuildCommandTest {
 
   private BuildExecutionResult buildExecutionResult;
+  private SourcePathResolver resolver;
 
   @Before
   public void setUp() {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver resolver = new SourcePathResolver(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
 
     LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = new LinkedHashMap<>();
 
-    BuildRule rule1 = new FakeBuildRule(
-        BuildTargetFactory.newInstance("//fake:rule1"),
-        resolver) {
-      @Override
-      @Nullable
-      public Path getPathToOutput() {
-        return Paths.get("buck-out/gen/fake/rule1.txt");
-      }
-    };
+    FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule1"));
+    rule1.setOutputFile("buck-out/gen/fake/rule1.txt");
+    graphBuilder.addToIndex(rule1);
     ruleToResult.put(
-        rule1,
-        Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
+        rule1, Optional.of(BuildResult.success(rule1, BUILT_LOCALLY, CacheResult.miss())));
 
-    BuildRule rule2 = new FakeBuildRule(
-        BuildTargetFactory.newInstance("//fake:rule2"),
-        resolver);
+    BuildRule rule2 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule2"));
     BuildResult rule2Failure = BuildResult.failure(rule2, new RuntimeException("some"));
     ruleToResult.put(rule2, Optional.of(rule2Failure));
+    graphBuilder.addToIndex(rule2);
 
-    BuildRule rule3 = new FakeBuildRule(
-        BuildTargetFactory.newInstance("//fake:rule3"),
-        resolver);
+    BuildRule rule3 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule3"));
     ruleToResult.put(
         rule3,
-        Optional.of(BuildResult.success(rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir"))));
+        Optional.of(
+            BuildResult.success(
+                rule3, FETCHED_FROM_CACHE, CacheResult.hit("dir", ArtifactCacheMode.dir))));
+    graphBuilder.addToIndex(rule3);
 
-    BuildRule rule4 = new FakeBuildRule(
-        BuildTargetFactory.newInstance("//fake:rule4"),
-        resolver);
-    ruleToResult.put(rule4, Optional.<BuildResult>absent());
+    BuildRule rule4 = new FakeBuildRule(BuildTargetFactory.newInstance("//fake:rule4"));
+    ruleToResult.put(rule4, Optional.empty());
+    graphBuilder.addToIndex(rule4);
 
-    buildExecutionResult = BuildExecutionResult.builder()
-        .setResults(ruleToResult)
-        .setFailures(ImmutableSet.of(rule2Failure))
-        .build();
+    buildExecutionResult =
+        BuildExecutionResult.builder()
+            .setResults(ruleToResult)
+            .setFailures(ImmutableSet.of(rule2Failure))
+            .build();
   }
 
   @Test
   public void testGenerateBuildReportForConsole() {
     String expectedReport =
-        "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 " +
-            "BUILT_LOCALLY " +
-            MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt") +
-            "\n" +
-        "\u001B[1m\u001B[41m\u001B[37mFAIL\u001B[0m //fake:rule2\n" +
-        "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE\n" +
-        "\u001B[1m\u001B[41m\u001B[37mFAIL\u001B[0m //fake:rule4\n";
-    String observedReport = new BuildReport(buildExecutionResult).generateForConsole(
-        new Console(
-            Verbosity.STANDARD_INFORMATION,
-            new CapturingPrintStream(),
-            new CapturingPrintStream(),
-            Ansi.forceTty()));
+        linesToText(
+            "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule1 "
+                + "BUILT_LOCALLY "
+                + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt"),
+            "\u001B[31mFAIL\u001B[0m //fake:rule2",
+            "\u001B[1m\u001B[42m\u001B[30mOK  \u001B[0m //fake:rule3 FETCHED_FROM_CACHE",
+            "\u001B[31mFAIL\u001B[0m //fake:rule4",
+            "",
+            " ** Summary of failures encountered during the build **",
+            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some.");
+    String observedReport =
+        new BuildReport(buildExecutionResult, resolver)
+            .generateForConsole(
+                new Console(
+                    Verbosity.STANDARD_INFORMATION,
+                    new CapturingPrintStream(),
+                    new CapturingPrintStream(),
+                    Ansi.forceTty()));
     assertEquals(expectedReport, observedReport);
   }
 
   @Test
   public void testGenerateVerboseBuildReportForConsole() {
     String expectedReport =
-        "OK   //fake:rule1 BUILT_LOCALLY " +
-        MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt") + "\n" +
-        "FAIL //fake:rule2\n" +
-        "OK   //fake:rule3 FETCHED_FROM_CACHE\n" +
-        "FAIL //fake:rule4\n\n" +
-        " ** Summary of failures encountered during the build **\n" +
-        "Rule //fake:rule2 FAILED because some.\n";
-    String observedReport = new BuildReport(buildExecutionResult).generateForConsole(
-        new TestConsole(Verbosity.COMMANDS));
+        linesToText(
+            "OK   //fake:rule1 BUILT_LOCALLY "
+                + MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt"),
+            "FAIL //fake:rule2",
+            "OK   //fake:rule3 FETCHED_FROM_CACHE",
+            "FAIL //fake:rule4",
+            "",
+            " ** Summary of failures encountered during the build **",
+            "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some.");
+    String observedReport =
+        new BuildReport(buildExecutionResult, resolver)
+            .generateForConsole(new TestConsole(Verbosity.COMMANDS));
     assertEquals(expectedReport, observedReport);
   }
 
   @Test
   public void testGenerateJsonBuildReport() throws IOException {
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-    String rule1TxtPath = mapper.valueToTree(
-        MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt")
-    ).toString();
-    String expectedReport = Joiner.on(System.lineSeparator()).join(
-        "{",
-        "  \"success\" : false,",
-        "  \"results\" : {",
-        "    \"//fake:rule1\" : {",
-        "      \"success\" : true,",
-        "      \"type\" : \"BUILT_LOCALLY\",",
-        "      \"output\" : " + rule1TxtPath,
-        "    },",
-        "    \"//fake:rule2\" : {",
-        "      \"success\" : false",
-        "    },",
-        "    \"//fake:rule3\" : {",
-        "      \"success\" : true,",
-        "      \"type\" : \"FETCHED_FROM_CACHE\",",
-        "      \"output\" : null",
-        "    },",
-        "    \"//fake:rule4\" : {",
-        "      \"success\" : false",
-        "    }",
-        "  },",
-        "  \"failures\" : {",
-        "    \"//fake:rule2\" : \"some\"",
-        "  }",
-        "}");
-    String observedReport = new BuildReport(buildExecutionResult).generateJsonBuildReport();
+    String rule1TxtPath =
+        ObjectMappers.legacyCreate()
+            .valueToTree(MorePaths.pathWithPlatformSeparators("buck-out/gen/fake/rule1.txt"))
+            .toString();
+    String expectedReport =
+        String.join(
+            System.lineSeparator(),
+            "{",
+            "  \"success\" : false,",
+            "  \"results\" : {",
+            "    \"//fake:rule1\" : {",
+            "      \"success\" : true,",
+            "      \"type\" : \"BUILT_LOCALLY\",",
+            "      \"output\" : " + rule1TxtPath,
+            "    },",
+            "    \"//fake:rule2\" : {",
+            "      \"success\" : false",
+            "    },",
+            "    \"//fake:rule3\" : {",
+            "      \"success\" : true,",
+            "      \"type\" : \"FETCHED_FROM_CACHE\"",
+            "    },",
+            "    \"//fake:rule4\" : {",
+            "      \"success\" : false",
+            "    }",
+            "  },",
+            "  \"failures\" : {",
+            "    \"//fake:rule2\" : \"java.lang.RuntimeException: some\"",
+            "  }",
+            "}");
+    String observedReport =
+        new BuildReport(buildExecutionResult, resolver).generateJsonBuildReport();
     assertEquals(expectedReport, observedReport);
   }
 }

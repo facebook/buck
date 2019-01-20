@@ -1,0 +1,5 @@
+cxx_library(
+    name = "lib1",
+    srcs = ["lib1.c"],
+    raw_headers = ["lib1.h"],
+)

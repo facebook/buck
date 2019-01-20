@@ -17,15 +17,14 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.Iterator;
 import java.util.List;
 
 /**
- * Splits an argument list into a list of command invocations whose total length will not exceed
- * the specified limit if possible. If that is not possible, all arguments that exceed the limit
- * will be used in their own invocation separate from all other arguments to minimize the maximal
- * command length.
+ * Splits an argument list into a list of command invocations whose total length will not exceed the
+ * specified limit if possible. If that is not possible, all arguments that exceed the limit will be
+ * used in their own invocation separate from all other arguments to minimize the maximal command
+ * length.
  */
 public class CommandSplitter {
 
@@ -35,9 +34,7 @@ public class CommandSplitter {
 
   private static final int DEFAULT_DESIRED_LIMIT = 32 * 1024;
 
-  public CommandSplitter(
-      List<String> commandPrefix,
-      int desiredLimit) {
+  public CommandSplitter(List<String> commandPrefix, int desiredLimit) {
     this.desiredLimit = desiredLimit;
     this.commandPrefix = ImmutableList.copyOf(commandPrefix);
     int commandPrefixLength = 0;
@@ -61,9 +58,7 @@ public class CommandSplitter {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
 
     String firstArgument = argumentIterator.next();
-    commandBuilder
-        .addAll(commandPrefix)
-        .add(firstArgument);
+    commandBuilder.addAll(commandPrefix).add(firstArgument);
     int commandLength = commandPrefixLength + firstArgument.length() + 1; // +1 for separator
 
     while (argumentIterator.hasNext()) {
@@ -84,5 +79,4 @@ public class CommandSplitter {
 
     return commands.build();
   }
-
 }

@@ -1,11 +1,12 @@
 prebuilt_jar(
-  name = 'objenesis',
-  binary_jar = 'objenesis-1.2.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//third-party/java/easymock:easymock',
-  ],
+    name = "objenesis",
+    binary_jar = "objenesis-1.2.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/rules/modern/...",
+        "//third-party/java/bazel:bazel",
+        "//third-party/java/easymock:easymock",
+    ],
 )
-

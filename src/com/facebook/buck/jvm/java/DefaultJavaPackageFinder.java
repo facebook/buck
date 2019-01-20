@@ -16,38 +16,36 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.HumanReadableException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Deque;
+import java.util.LinkedList;
 
 public class DefaultJavaPackageFinder implements JavaPackageFinder {
 
   /**
    * Each element in this set is a path prefix from the root of the repository.
-   * <p>
-   * Elements in this set are ordered opposite to their natural order such that if one element is a
-   * prefix of another element in the Set, the longer String will appear first. This makes it
+   *
+   * <p>Elements in this set are ordered opposite to their natural order such that if one element is
+   * a prefix of another element in the Set, the longer String will appear first. This makes it
    * possible to iterate over the elements in the set in order, comparing to a test element, such
    * that the longest matching prefix matches the test element.
-   * <p>
-   * Every element in this set ends with a slash.
+   *
+   * <p>Every element in this set ends with a slash.
    */
   private final ImmutableSortedSet<String> pathsFromRoot;
 
   private final ImmutableSet<String> pathElements;
 
-  private DefaultJavaPackageFinder(
-      ImmutableSortedSet<String> pathsFromRoot,
-      ImmutableSet<String> pathElements) {
+  public DefaultJavaPackageFinder(
+      ImmutableSortedSet<String> pathsFromRoot, ImmutableSet<String> pathElements) {
     this.pathsFromRoot = pathsFromRoot;
     this.pathElements = pathElements;
   }
@@ -58,20 +56,21 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
       if (pathRelativeToProjectRoot.startsWith(pathFromRoot)) {
         return MorePaths.getParentOrEmpty(
             MorePaths.relativize(
-                pathRelativeToProjectRoot.getFileSystem()
-                    .getPath(pathFromRoot), pathRelativeToProjectRoot));
+                pathRelativeToProjectRoot.getFileSystem().getPath(pathFromRoot),
+                pathRelativeToProjectRoot));
       }
     }
 
     Path directory = pathRelativeToProjectRoot.getParent();
-    Deque<String> parts = Lists.newLinkedList();
+    Deque<String> parts = new LinkedList<>();
     while (directory != null && !pathElements.contains(directory.getFileName().toString())) {
       parts.addFirst(directory.getFileName().toString());
       directory = directory.getParent();
     }
 
     if (!parts.isEmpty()) {
-      return pathRelativeToProjectRoot.getFileSystem()
+      return pathRelativeToProjectRoot
+          .getFileSystem()
           .getPath(Joiner.on(File.separatorChar).join(parts));
     } else {
       return pathRelativeToProjectRoot.getFileSystem().getPath("");

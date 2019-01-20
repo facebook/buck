@@ -29,6 +29,13 @@ public class ExplicitRunExecutorService extends FakeListeningExecutorService {
     }
   }
 
+  public void runOnce() {
+    if (!runnables.isEmpty()) {
+      Runnable next = runnables.remove();
+      next.run();
+    }
+  }
+
   @Override
   public void shutdown() {
     run();

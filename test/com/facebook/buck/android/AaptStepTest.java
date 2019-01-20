@@ -15,81 +15,86 @@
  */
 package com.facebook.buck.android;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import org.junit.Test;
 
-/**
- * Test generation of command line flags based on creation parameters
- */
+/** Test generation of command line flags based on creation parameters */
 public class AaptStepTest {
 
   private Path basePath = Paths.get("/java/com/facebook/buck/example");
+  private Path proguardConfig = basePath.resolve("mock_proguard.txt");
 
   /**
-   * Build an AaptStep that can be used to generate a shell command. Should only
-   * be used for checking the generated command, since it does not refer to useful
-   * directories (so it can't be executed).
+   * Build an AaptStep that can be used to generate a shell command. Should only be used for
+   * checking the generated command, since it does not refer to useful directories (so it can't be
+   * executed).
    */
   private AaptStep buildAaptStep(
-      Optional<Path> pathToGeneratedProguardConfig,
+      Path pathToGeneratedProguardConfig,
       boolean isCrunchFiles,
+      boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     return new AaptStep(
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+        AndroidPlatformTarget.of(
+            "android",
+            basePath.resolve("mock_android.jar"),
+            Collections.emptyList(),
+            () -> new SimpleTool("mock_aapt_bin"),
+            () -> new SimpleTool(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get(""),
+            Paths.get("")),
         /* workingDirectory */ basePath,
         /* manifestDirectory */ basePath.resolve("AndroidManifest.xml"),
-        /* resDirectories */ ImmutableList.<Path>of(),
-        /* assetsDirectories */ ImmutableSortedSet.<Path>of(),
+        /* resDirectories */ ImmutableList.of(),
+        /* assetsDirectories */ ImmutableSortedSet.of(),
         /* pathToOutputApk */ basePath.resolve("build").resolve("out.apk"),
         /* pathToRDotDText */ basePath.resolve("r"),
         pathToGeneratedProguardConfig,
+        ImmutableList.of(),
         isCrunchFiles,
-        manifestEntries
-    );
+        includesVectorDrawables,
+        manifestEntries);
   }
 
   /**
-   * Create an execution context with the given verbosity level. The execution context
-   * will yield fake values relative to the base path for all target queries.
-   * The mock context returned has not been replayed, so the calling code
-   * may add additional expectations, and is responsible for calling replay().
+   * Create an execution context with the given verbosity level. The execution context will yield
+   * fake values relative to the base path for all target queries. The mock context returned has not
+   * been replayed, so the calling code may add additional expectations, and is responsible for
+   * calling replay().
    */
   private ExecutionContext createTestExecutionContext(Verbosity verbosity) {
-    final AndroidPlatformTarget androidPlatformTarget = createMock(AndroidPlatformTarget.class);
-    expect(androidPlatformTarget.getAaptExecutable()).andReturn(basePath.resolve("mock_aapt_bin"));
-    expect(androidPlatformTarget.getAndroidJar()).andReturn(basePath.resolve("mock_android.jar"));
-    replay(androidPlatformTarget);
-
-    ExecutionContext executionContext = TestExecutionContext.newBuilder()
-        .setConsole(new TestConsole(verbosity))
-        .setAndroidPlatformTargetSupplier(Suppliers.ofInstance(androidPlatformTarget))
-        .build();
-
-    return executionContext;
+    return TestExecutionContext.newBuilder().setConsole(new TestConsole(verbosity)).build();
   }
 
   @Test
-  public void shouldEmitVerbosityFlagWithVerboseContext() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
+  public void shouldEmitVerbosityFlagWithVerboseContext() {
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -97,8 +102,8 @@ public class AaptStepTest {
   }
 
   @Test
-  public void shouldNotEmitVerbosityFlagWithQuietContext() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
+  public void shouldNotEmitVerbosityFlagWithQuietContext() {
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.SILENT);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -106,23 +111,21 @@ public class AaptStepTest {
   }
 
   @Test
-  public void shouldEmitGFlagIfProguardConfigPresent() throws Exception {
-    Path proguardConfig = basePath.resolve("mock_proguard.txt");
-    AaptStep aaptStep = buildAaptStep(Optional.of(proguardConfig), false, ManifestEntries.empty());
+  public void shouldEmitGFlagIfProguardConfigPresent() {
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
     assertTrue(command.contains("-G"));
-    String proguardConfigPath = MorePaths.pathWithPlatformSeparators(
-        "/java/com/facebook/buck/example/mock_proguard.txt"
-    );
+    String proguardConfigPath =
+        MorePaths.pathWithPlatformSeparators("/java/com/facebook/buck/example/mock_proguard.txt");
     assertTrue(command.contains(proguardConfigPath));
   }
 
   @Test
-  public void shouldEmitNoCrunchFlagIfNotCrunch() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), false, ManifestEntries.empty());
+  public void shouldEmitNoCrunchFlagIfNotCrunch() {
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -131,8 +134,8 @@ public class AaptStepTest {
   }
 
   @Test
-  public void shouldNotEmitNoCrunchFlagIfCrunch() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, ManifestEntries.empty());
+  public void shouldNotEmitNoCrunchFlagIfCrunch() {
+    AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
 
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
@@ -141,15 +144,36 @@ public class AaptStepTest {
   }
 
   @Test
-  public void shouldEmitFlagsForManifestEntries() throws Exception {
-    ManifestEntries entries = ManifestEntries.builder()
-        .setMinSdkVersion(3)
-        .setTargetSdkVersion(5)
-        .setVersionCode(7)
-        .setVersionName("eleven")
-        .setDebugMode(true)
-        .build();
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, entries);
+  public void shouldEmitNoVersionVectorsFlagIfRequested() {
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, true, ManifestEntries.empty());
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
+
+    assertTrue(command.contains("--no-version-vectors"));
+  }
+
+  @Test
+  public void shouldNotEmitNoVersionVectorsFlagIfNotRequested() {
+    AaptStep aaptStep = buildAaptStep(proguardConfig, false, false, ManifestEntries.empty());
+    ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
+
+    ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
+
+    assertFalse(command.contains("--no-version-vectors"));
+  }
+
+  @Test
+  public void shouldEmitFlagsForManifestEntries() {
+    ManifestEntries entries =
+        ManifestEntries.builder()
+            .setMinSdkVersion(3)
+            .setTargetSdkVersion(5)
+            .setVersionCode(7)
+            .setVersionName("eleven")
+            .setDebugMode(true)
+            .build();
+    AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, entries);
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
 
@@ -171,8 +195,8 @@ public class AaptStepTest {
   }
 
   @Test
-  public void shouldNotEmitFailOnInsertWithoutManifestEntries() throws Exception {
-    AaptStep aaptStep = buildAaptStep(Optional.<Path>absent(), true, ManifestEntries.empty());
+  public void shouldNotEmitFailOnInsertWithoutManifestEntries() {
+    AaptStep aaptStep = buildAaptStep(proguardConfig, true, false, ManifestEntries.empty());
     ExecutionContext executionContext = createTestExecutionContext(Verbosity.ALL);
     ImmutableList<String> command = aaptStep.getShellCommandInternal(executionContext);
     assertFalse(command.contains("--error-on-failed-insert"));

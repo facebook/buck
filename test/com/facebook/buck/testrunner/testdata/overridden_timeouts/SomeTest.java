@@ -8,4 +8,3 @@ public class SomeTest {
     Thread.sleep(1000);
   }
 }
-

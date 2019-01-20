@@ -16,12 +16,10 @@
 
 package com.facebook.buck.util.environment;
 
-import com.facebook.buck.log.Logger;
 import com.google.common.collect.ImmutableMap;
+import java.util.Properties;
 
-/**
- * Represents the CPU architecture of a system.
- */
+/** Represents the CPU architecture of a system. */
 public enum Architecture {
   AARCH64("aarch64"),
   ARM("arm"),
@@ -41,7 +39,7 @@ public enum Architecture {
 
   static {
     // Initialize nameToValueMap
-    ImmutableMap.Builder <String, Architecture> builder = ImmutableMap.builder();
+    ImmutableMap.Builder<String, Architecture> builder = ImmutableMap.builder();
     for (Architecture arch : Architecture.values()) {
       builder.put(arch.toString(), arch);
     }
@@ -51,20 +49,27 @@ public enum Architecture {
     nameToValueMap = builder.build();
   }
 
-  private Architecture(String name) {
+  Architecture(String name) {
     this.name = name;
   }
 
-  public static final Logger LOG = Logger.get(Architecture.class);
-
-  public static Architecture detect() {
-    String javaName = System.getProperty("os.arch");
+  /** Detect the host architecture from the given Java properties */
+  public static Architecture detect(Properties properties) {
+    String javaName = properties.getProperty("os.arch");
     Architecture result = nameToValueMap.get(javaName);
     if (result == null) {
       return UNKNOWN;
     } else {
       return result;
     }
+  }
+
+  public static Architecture detect() {
+    return detect(System.getProperties());
+  }
+
+  public static Architecture fromName(String name) {
+    return nameToValueMap.getOrDefault(name, UNKNOWN);
   }
 
   @Override

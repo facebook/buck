@@ -19,11 +19,14 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
@@ -32,11 +35,12 @@ public class BuildCommandOptionsTest {
 
   @Test
   public void testCreateJavaPackageFinder() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(
-        ImmutableMap.of(
-            "java",
-            ImmutableMap.of("src_roots", "src, test"))).build();
-    DefaultJavaPackageFinder javaPackageFinder = buckConfig.createDefaultJavaPackageFinder();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(ImmutableMap.of("java", ImmutableMap.of("src_roots", "src, test")))
+            .build();
+    DefaultJavaPackageFinder javaPackageFinder =
+        buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.of(), javaPackageFinder.getPathsFromRoot());
     assertEquals(ImmutableSet.of("src", "test"), javaPackageFinder.getPathElements());
   }
@@ -44,7 +48,8 @@ public class BuildCommandOptionsTest {
   @Test
   public void testCreateJavaPackageFinderFromEmptyBuckConfig() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    DefaultJavaPackageFinder javaPackageFinder = buckConfig.createDefaultJavaPackageFinder();
+    DefaultJavaPackageFinder javaPackageFinder =
+        buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.<String>of(), javaPackageFinder.getPathsFromRoot());
     assertEquals(ImmutableSet.of(), javaPackageFinder.getPathsFromRoot());
   }
@@ -53,12 +58,14 @@ public class BuildCommandOptionsTest {
   public void testCommandLineOptionOverridesOtherBuildThreadSettings() throws CmdLineException {
     BuildCommand command = new BuildCommand();
 
-    AdditionalOptionsCmdLineParser parser = new AdditionalOptionsCmdLineParser(command);
+    AdditionalOptionsCmdLineParser parser = CmdLineParserFactory.create(command);
     parser.parseArgument("--num-threads", "42");
 
-    BuckConfig buckConfig = FakeBuckConfig.builder()
-        .setSections(command.getConfigOverrides())
-        .build();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                command.getConfigOverrides(ImmutableMap.of()).getForCell(CellName.ROOT_CELL_NAME))
+            .build();
     assertThat(buckConfig.getNumThreads(), Matchers.equalTo(42));
   }
 }

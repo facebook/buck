@@ -16,12 +16,14 @@
 
 package com.android.common.utils;
 
-import com.android.common.annotations.NonNull;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 
 /**
+ * <p>
  * Dummy implementation of an {@link ILogger}.
- * <p/>
- * Use {@link #getLogger()} to get a default instance of this {@link com.android.common.utils.NullLogger}.
+ * </p>
+ * Use {@link #getLogger()} to get a default instance of this {@link NullLogger}.
  */
 public class NullLogger implements ILogger {
 
@@ -32,7 +34,7 @@ public class NullLogger implements ILogger {
     }
 
     @Override
-    public void error(Throwable t, String errorFormat, Object... args) {
+    public void error(@Nullable Throwable t, @Nullable String errorFormat, Object... args) {
         // ignore
     }
 

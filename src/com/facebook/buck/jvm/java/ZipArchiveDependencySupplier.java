@@ -16,49 +16,38 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.ArchiveMemberSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.rules.keys.ArchiveDependencySupplier;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Supplier;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.io.IOException;
-import java.nio.file.Path;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
-  private final Supplier<ImmutableSortedSet<SourcePath>> zipFiles;
-  private final ProjectFilesystem filesystem;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> zipFiles;
 
-  public ZipArchiveDependencySupplier(
-      Supplier<ImmutableSortedSet<SourcePath>> zipFiles,
-      ProjectFilesystem filesystem) {
+  public ZipArchiveDependencySupplier(ImmutableSortedSet<SourcePath> zipFiles) {
     this.zipFiles = zipFiles;
-    this.filesystem = filesystem;
   }
 
   @Override
-  public ImmutableSortedSet<SourcePath> get() {
-    return zipFiles.get();
-  }
-
-  @Override
-  public ImmutableSortedSet<SourcePath> getArchiveMembers(SourcePathResolver resolver) {
-    ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.naturalOrder();
-
-    for (SourcePath zipSourcePath : zipFiles.get()) {
-      final Path zipRelativePath = resolver.getRelativePath(zipSourcePath);
-      try {
-        for (Path member : filesystem.getZipMembers(zipRelativePath)) {
-          builder.add(new ArchiveMemberSourcePath(zipSourcePath, member));
-        }
-      } catch (IOException e) {
-        throw new HumanReadableException(e, "Failed to read archive: " + zipRelativePath);
-      }
-    }
-
-    return builder.build();
+  public Stream<SourcePath> getArchiveMembers(
+      SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
+    return zipFiles
+        .stream()
+        .flatMap(
+            zipSourcePath -> {
+              BuildRule rule = ruleFinder.getRule((BuildTargetSourcePath) zipSourcePath);
+              HasJavaAbi hasJavaAbi = (HasJavaAbi) rule;
+              SourcePath ruleOutput = Objects.requireNonNull(rule.getSourcePathToOutput());
+              Preconditions.checkState(ruleOutput.equals(zipSourcePath));
+              return hasJavaAbi.getAbiInfo().getJarContents().stream();
+            });
   }
 }

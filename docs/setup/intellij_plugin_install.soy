@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.intellij_plugin_install.soy}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'Installing and using the IntelliJ Plugin' /}
+    {param navid: 'setup_intellij_plugin_install' /}
     {param prettify: true /}
     {param description}
       How to install and use the Intellij Buck plugin for your project.
@@ -14,10 +30,10 @@
   {call buck.setup_install /}.
 </p>
 <h2 id="manual-install-buck">Installing the plugin </h2>
-You can download the plugin from here or manually build it by following the guide from{sp}
+You can download the plugin from <a href="https://plugins.jetbrains.com/plugin/7826-buck-for-idea">here</a> or manually build it by following the guide from{sp}
 {call buck.setup_build_intellij_plugin/}. After that, you can install it by following the{sp}
-<a href="https://www.jetbrains.com/idea/help/installing-plugin-from-disk.html">
-Installing Plugin from Disk</a> guide.
+<a href="https://www.jetbrains.com/help/idea/installing-a-plugin-from-disk.html">
+Installing a Plugin from Disk</a> guide.
 <h2 id="manual-use-intellij">Using the plugin</h2>
 <p>
   After you have installed it, you can view the Buck Plugin Tool Window

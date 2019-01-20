@@ -17,55 +17,53 @@
 package com.facebook.buck.util.versioncontrol;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.cli.FakeBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
+import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import com.google.common.io.CharStreams;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-
 public class HgCmdLineInterfaceIntegrationTest {
-  /**
-   * Test constants
-   */
 
-  private static final long MASTER_THREE_TS = 1440589283L; // Wed Aug 26 11:41:23 2015 UTC
-  private static final String MASTER_THREE_BOOKMARK = "master3";
-  private static final String BRANCH_FROM_MASTER_THREE_BOOKMARK = "branch_from_master3";
-  private static final String BRANCH_FROM_MASTER_TWO_ID = "2911b3";
-  private static final String BRANCH_FROM_MASTER_THREE_ID = "dee670";
-  private static final String MASTER_TWO_ID = "b1fd7e";
-  private static final String MASTER_THREE_ID = "adf7a0";
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   private static final String HG_REPOS_ZIP = "hg_repos.zip";
-  private static final String REPOS_DIR = "repos";
+  private static final String REPOS_DIR = "hg_repos";
   private static final String REPO_TWO_DIR = "hg_repo_two";
   private static final String REPO_THREE_DIR = "hg_repo_three";
-  private static final String REPO_WITH_SUB_DIR = "hg_repo_with_subdir";
 
-  /***
+  /**
+   * *
    *
-   * Test data:
+   * <p>Test data:
    *
-   * The following repo is used in the tests:
+   * <p>The following repo is used in the tests:
+   *
    * <pre>
    * @  e1b8ef  branch_from_master3
    * |  diverge from master_3 further
@@ -85,17 +83,13 @@ public class HgCmdLineInterfaceIntegrationTest {
    * o  f5091a  master1
    * commit1
    * </pre>
+   *
    * There are two different variants (both stored inside HG_REPOS_ZIP):
    *
-   * hg_repo_two: above, current tip @branch_from_master2, and no local changes.
-   * hg_repo_three: above, current tip @branch_from_master3, and with local changes.
-   *
-   * Additionally hg_repo_with_subdir is a new hg_repo with a directory called subdir
-   *
+   * <p>hg_repo_two: above, current tip @branch_from_master2, and no local changes. hg_repo_three:
+   * above, current tip @branch_from_master3, and with local changes.
    */
-  @SuppressWarnings("javadoc")
-  @ClassRule
-  public static TemporaryFolder tempFolder = new TemporaryFolder();
+  @ClassRule public static TemporaryFolder tempFolder = new TemporaryFolder();
 
   private static VersionControlCmdLineInterface repoTwoCmdLine;
   private static VersionControlCmdLineInterface repoThreeCmdLine;
@@ -110,139 +104,101 @@ public class HgCmdLineInterfaceIntegrationTest {
   }
 
   @Before
-  public void setUp() {
-    assumeHgInstalled();
-  }
-
-  @Test
-  public void testCurrentRevisionId()
-      throws VersionControlCommandFailedException, InterruptedException {
-    String currentRevisionId = repoThreeCmdLine.currentRevisionId();
-    assertThat(currentRevisionId.startsWith(BRANCH_FROM_MASTER_THREE_ID), is(true));
-  }
-
-  @Test
-  public void testRevisionId() throws VersionControlCommandFailedException, InterruptedException {
-    String currentRevisionId = repoThreeCmdLine.revisionId(MASTER_THREE_BOOKMARK);
-    assertThat(currentRevisionId.startsWith(MASTER_THREE_ID), is(true));
+  public void setUp() throws InterruptedException {
+    assumeTrue(repoTwoCmdLine.isSupportedVersionControlSystem());
   }
 
   @Test
   public void whenWorkingDirectoryUnchangedThenHasWorkingDirectoryChangesReturnsFalse()
       throws VersionControlCommandFailedException, InterruptedException {
-    assertThat(repoTwoCmdLine.hasWorkingDirectoryChanges(), is(false));
+    assertThat(repoTwoCmdLine.changedFiles("."), hasSize(0));
   }
 
   @Test
   public void whenWorkingDirectoryChangedThenHasWorkingDirectoryChangesReturnsTrue()
       throws VersionControlCommandFailedException, InterruptedException {
-    assertThat(repoThreeCmdLine.hasWorkingDirectoryChanges(), is(true));
-  }
-
-  @Test
-  public void testCommonAncestorWithBookmarks()
-      throws VersionControlCommandFailedException, InterruptedException {
-    String commonAncestor = repoThreeCmdLine.commonAncestor(
-        BRANCH_FROM_MASTER_THREE_BOOKMARK,
-        MASTER_THREE_BOOKMARK);
-
-    assertThat(commonAncestor.startsWith(MASTER_THREE_ID), is(true));
+    assertEquals(
+        ImmutableSet.of("A tracked_change", "? local_change"), repoThreeCmdLine.changedFiles("."));
   }
 
   @Test
   public void testChangedFilesFromHead()
       throws VersionControlCommandFailedException, InterruptedException {
-    ImmutableSet<String> changedFiles = repoThreeCmdLine.changedFiles(".");
-    assertThat(changedFiles, Matchers.contains("? local_change"));
+    assertEquals(
+        ImmutableSet.of("A tracked_change", "? local_change"), repoThreeCmdLine.changedFiles("."));
   }
 
   @Test
   public void testChangedFilesFromCommonAncestor()
       throws VersionControlCommandFailedException, InterruptedException {
     ImmutableSet<String> changedFiles = repoThreeCmdLine.changedFiles("ancestor(., master3)");
-    assertThat(changedFiles,
-        Matchers.containsInAnyOrder("A change3", "A change3-2", "? local_change"));
-  }
-
-  @Test
-  public void whenBranchedFromLatestMasterThenCommonAncestorWithLatestMasterReturnsLatestMaster()
-      throws VersionControlCommandFailedException, InterruptedException {
-    String commonAncestor = repoThreeCmdLine.commonAncestor(
-        BRANCH_FROM_MASTER_THREE_ID,
-        MASTER_THREE_ID);
-
-    assertThat(commonAncestor.startsWith(MASTER_THREE_ID), is(true));
-  }
-
-  @Test
-  public void whenBranchedFromOldMasterThenCommonAncestorWithLatestMasterReturnsOldMaster()
-      throws VersionControlCommandFailedException, InterruptedException {
-    String commonAncestor = repoTwoCmdLine.commonAncestor(
-        BRANCH_FROM_MASTER_TWO_ID,
-        MASTER_THREE_ID);
-
-    assertThat(commonAncestor.startsWith(MASTER_TWO_ID), is(true));
-  }
-
-  @Test
-  public void testCreateCmdLineInterfaceUsingHgSubDir()
-      throws VersionControlCommandFailedException, InterruptedException {
-    VersionControlCmdLineInterface subDirCmdLineInterface =
-        makeCmdLine(reposPath.resolve(REPO_WITH_SUB_DIR));
-
-    assertThat(subDirCmdLineInterface instanceof HgCmdLineInterface, is(true));
-  }
-
-  @Test
-  public void testTimestamp() throws VersionControlCommandFailedException, InterruptedException {
     assertThat(
-        MASTER_THREE_TS,
-        is(equalTo(repoThreeCmdLine.timestampSeconds(MASTER_THREE_ID))));
+        changedFiles,
+        Matchers.containsInAnyOrder(
+            "A tracked_change", "A change3", "A change3-2", "? local_change"));
   }
 
   @Test
-  public void givenNonVcDirThenFactoryReturnsNoOpCmdLine() throws InterruptedException {
-    DefaultVersionControlCmdLineInterfaceFactory vcFactory =
-        new DefaultVersionControlCmdLineInterfaceFactory(
-            tempFolder.getRoot().toPath(),
-            new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(FakeBuckConfig.builder().build()),
-            ImmutableMap.<String, String>of());
-    VersionControlCmdLineInterface cmdLineInterface = vcFactory.createCmdLineInterface();
-    assertEquals(NoOpCmdLineInterface.class, cmdLineInterface.getClass());
+  public void testDiffBetweenTheSameRevision()
+      throws VersionControlCommandFailedException, InterruptedException {
+    exception.expect(VersionControlCommandFailedException.class);
+    repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0").get();
   }
 
-  private static void assumeHgInstalled() {
-    // If Mercurial is not installed on the build box, then skip tests.
-    Assume.assumeTrue(repoTwoCmdLine instanceof HgCmdLineInterface);
+  @Test
+  public void testDiffBetweenDiffs()
+      throws VersionControlCommandFailedException, InterruptedException, IOException {
+    ImmutableList<String> expectedValue =
+        ImmutableList.of(
+            "# HG changeset patch",
+            "# User Joe Blogs <joe.blogs@fb.com>",
+            "# Date 1440589545 -3600",
+            "#      Wed Aug 26 12:45:45 2015 +0100",
+            "# Node ID 2911b3cab6b24374a3649ebb96b0e53324e9c02e",
+            "# Parent  b1fd7e5896af8aa30e3e797ef1445605eec6d055",
+            "diverge from master_2",
+            "",
+            "diff --git a/change2 b/change2",
+            "new file mode 100644",
+            "");
+    try (InputStream diffFileStream =
+        repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3").get()) {
+      InputStreamReader diffFileReader = new InputStreamReader(diffFileStream, Charsets.UTF_8);
+      String actualDiff = CharStreams.toString(diffFileReader);
+      assertEquals(String.join("\n", expectedValue), actualDiff);
+    }
   }
 
-  private static Path explodeReposZip() throws IOException {
+  private static Path explodeReposZip() throws InterruptedException, IOException {
+    return explodeReposZip(tempFolder.getRoot().toPath());
+  }
+
+  private static Path explodeReposZip(Path destination) throws InterruptedException, IOException {
     Path testDataDir = TestDataHelper.getTestDataDirectory(HgCmdLineInterfaceIntegrationTest.class);
     Path hgRepoZipPath = testDataDir.resolve(HG_REPOS_ZIP);
 
-    Path tempFolderPath = tempFolder.getRoot().toPath();
-    Path hgRepoZipCopyPath = tempFolderPath.resolve(HG_REPOS_ZIP);
+    Path hgRepoZipCopyPath = destination.resolve(HG_REPOS_ZIP);
 
     Files.copy(hgRepoZipPath, hgRepoZipCopyPath, REPLACE_EXISTING);
 
-    Path reposPath = tempFolderPath.resolve(REPOS_DIR);
-    Unzip.extractZipFile(
-        hgRepoZipCopyPath,
-        reposPath,
-        Unzip.ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    Path reposPath = destination.resolve(REPOS_DIR);
+
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            hgRepoZipCopyPath,
+            reposPath,
+            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
     return reposPath;
   }
 
-  private static VersionControlCmdLineInterface makeCmdLine(Path repoRootDir)
-      throws InterruptedException {
-    DefaultVersionControlCmdLineInterfaceFactory vcFactory =
-        new DefaultVersionControlCmdLineInterfaceFactory(
-            repoRootDir,
-            new TestProcessExecutorFactory(),
-            new VersionControlBuckConfig(FakeBuckConfig.builder().build()),
-            ImmutableMap.<String, String>of());
-    return vcFactory.createCmdLineInterface();
+  private static VersionControlCmdLineInterface makeCmdLine(Path repoRootDir) {
+    return new DelegatingVersionControlCmdLineInterface(
+        repoRootDir,
+        new TestProcessExecutorFactory(),
+        new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
+        ImmutableMap.of("PATH", EnvVariablesProvider.getSystemEnv().get("PATH")));
   }
 }

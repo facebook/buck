@@ -19,26 +19,22 @@ package com.facebook.buck.apple;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.coercer.SourceList;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class AppleDescriptionsTest {
 
@@ -47,155 +43,125 @@ public class AppleDescriptionsTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
   }
 
-
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromSet() {
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
-            "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
-            "prefix/another_file.h", new FakeSourcePath("path/to/another_file.h"),
-            "prefix/a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
-            "prefix/file.h", new FakeSourcePath("file.h")),
+            "prefix/some_file.h", FakeSourcePath.of("path/to/some_file.h"),
+            "prefix/another_file.h", FakeSourcePath.of("path/to/another_file.h"),
+            "prefix/a_file.h", FakeSourcePath.of("different/path/to/a_file.h"),
+            "prefix/file.h", FakeSourcePath.of("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            resolver.deprecatedPathFunction(),
+            BuildTargetFactory.newInstance("//:foobar"),
+            resolver::getRelativePath,
             Paths.get("prefix"),
-            SourceList.ofUnnamedSources(
-                ImmutableSortedSet.<SourcePath>of(
-                    new FakeSourcePath("path/to/some_file.h"),
-                    new FakeSourcePath("path/to/another_file.h"),
-                    new FakeSourcePath("different/path/to/a_file.h"),
-                    new FakeSourcePath("file.h")))));
+            SourceSortedSet.ofUnnamedSources(
+                ImmutableSortedSet.of(
+                    FakeSourcePath.of("path/to/some_file.h"),
+                    FakeSourcePath.of("path/to/another_file.h"),
+                    FakeSourcePath.of("different/path/to/a_file.h"),
+                    FakeSourcePath.of("file.h")))));
   }
 
   @Test
   public void parseAppleHeadersForUseFromTheSameFromSet() {
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
-            "some_file.h", new FakeSourcePath("path/to/some_file.h"),
-            "another_file.h", new FakeSourcePath("path/to/another_file.h"),
-            "a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
-            "file.h", new FakeSourcePath("file.h")),
+            "some_file.h", FakeSourcePath.of("path/to/some_file.h"),
+            "another_file.h", FakeSourcePath.of("path/to/another_file.h"),
+            "a_file.h", FakeSourcePath.of("different/path/to/a_file.h"),
+            "file.h", FakeSourcePath.of("file.h")),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            resolver.deprecatedPathFunction(),
-            SourceList.ofUnnamedSources(
-                ImmutableSortedSet.<SourcePath>of(
-                    new FakeSourcePath("path/to/some_file.h"),
-                    new FakeSourcePath("path/to/another_file.h"),
-                    new FakeSourcePath("different/path/to/a_file.h"),
-                    new FakeSourcePath("file.h")))));
+            BuildTargetFactory.newInstance("//:foobar"),
+            resolver::getRelativePath,
+            SourceSortedSet.ofUnnamedSources(
+                ImmutableSortedSet.of(
+                    FakeSourcePath.of("path/to/some_file.h"),
+                    FakeSourcePath.of("path/to/another_file.h"),
+                    FakeSourcePath.of("different/path/to/a_file.h"),
+                    FakeSourcePath.of("file.h")))));
   }
 
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromMap() {
-    ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.<String, SourcePath>of(
-        "virtual/path.h", new FakeSourcePath("path/to/some_file.h"),
-        "another/path.h", new FakeSourcePath("path/to/another_file.h"),
-        "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
-        "file.h", new FakeSourcePath("file.h"));
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    ImmutableSortedMap<String, SourcePath> headerMap =
+        ImmutableSortedMap.of(
+            "virtual/path.h", FakeSourcePath.of("path/to/some_file.h"),
+            "another/path.h", FakeSourcePath.of("path/to/another_file.h"),
+            "another/file.h", FakeSourcePath.of("different/path/to/a_file.h"),
+            "file.h", FakeSourcePath.of("file.h"));
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-            resolver.deprecatedPathFunction(),
+            BuildTargetFactory.newInstance("//:foobar"),
+            resolver::getRelativePath,
             Paths.get("prefix"),
-            SourceList.ofNamedSources(headerMap)));
+            SourceSortedSet.ofNamedSources(headerMap)));
   }
 
   @Test
   public void parseAppleHeadersForUseFromTheSameTargetFromMap() {
-    ImmutableSortedMap<String, SourcePath> headerMap = ImmutableSortedMap.<String, SourcePath>of(
-        "virtual/path.h", new FakeSourcePath("path/to/some_file.h"),
-        "another/path.h", new FakeSourcePath("path/to/another_file.h"),
-        "another/file.h", new FakeSourcePath("different/path/to/a_file.h"),
-        "file.h", new FakeSourcePath("file.h"));
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    ImmutableSortedMap<String, SourcePath> headerMap =
+        ImmutableSortedMap.of(
+            "virtual/path.h", FakeSourcePath.of("path/to/some_file.h"),
+            "another/path.h", FakeSourcePath.of("path/to/another_file.h"),
+            "another/file.h", FakeSourcePath.of("different/path/to/a_file.h"),
+            "file.h", FakeSourcePath.of("file.h"));
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-            resolver.deprecatedPathFunction(),
-            SourceList.ofNamedSources(headerMap)));
+            BuildTargetFactory.newInstance("//:foobar"),
+            resolver::getRelativePath,
+            SourceSortedSet.ofNamedSources(headerMap)));
   }
 
   @Test
   public void convertToFlatCxxHeadersWithPrefix() {
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
-            "prefix/some_file.h", new FakeSourcePath("path/to/some_file.h"),
-            "prefix/another_file.h", new FakeSourcePath("path/to/another_file.h"),
-            "prefix/a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
-            "prefix/file.h", new FakeSourcePath("file.h")),
+            "prefix/some_file.h", FakeSourcePath.of("path/to/some_file.h"),
+            "prefix/another_file.h", FakeSourcePath.of("path/to/another_file.h"),
+            "prefix/a_file.h", FakeSourcePath.of("different/path/to/a_file.h"),
+            "prefix/file.h", FakeSourcePath.of("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
+            BuildTargetFactory.newInstance("//:foobar"),
             Paths.get("prefix"),
-            resolver.deprecatedPathFunction(),
-            ImmutableSet.<SourcePath>of(
-                new FakeSourcePath("path/to/some_file.h"),
-                new FakeSourcePath("path/to/another_file.h"),
-                new FakeSourcePath("different/path/to/a_file.h"),
-                new FakeSourcePath("file.h"))));
+            resolver::getRelativePath,
+            ImmutableSet.of(
+                FakeSourcePath.of("path/to/some_file.h"),
+                FakeSourcePath.of("path/to/another_file.h"),
+                FakeSourcePath.of("different/path/to/a_file.h"),
+                FakeSourcePath.of("file.h"))));
   }
 
   @Test
   public void convertToFlatCxxHeadersWithoutPrefix() {
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
-            "some_file.h", new FakeSourcePath("path/to/some_file.h"),
-            "another_file.h", new FakeSourcePath("path/to/another_file.h"),
-            "a_file.h", new FakeSourcePath("different/path/to/a_file.h"),
-            "file.h", new FakeSourcePath("file.h")),
+            "some_file.h", FakeSourcePath.of("path/to/some_file.h"),
+            "another_file.h", FakeSourcePath.of("path/to/another_file.h"),
+            "a_file.h", FakeSourcePath.of("different/path/to/a_file.h"),
+            "file.h", FakeSourcePath.of("file.h")),
         AppleDescriptions.convertToFlatCxxHeaders(
+            BuildTargetFactory.newInstance("//:foobar"),
             Paths.get(""),
-            resolver.deprecatedPathFunction(),
-            ImmutableSet.<SourcePath>of(
-                new FakeSourcePath("path/to/some_file.h"),
-                new FakeSourcePath("path/to/another_file.h"),
-                new FakeSourcePath("different/path/to/a_file.h"),
-                new FakeSourcePath("file.h"))));
+            resolver::getRelativePath,
+            ImmutableSet.of(
+                FakeSourcePath.of("path/to/some_file.h"),
+                FakeSourcePath.of("path/to/another_file.h"),
+                FakeSourcePath.of("different/path/to/a_file.h"),
+                FakeSourcePath.of("file.h"))));
   }
-
-  @Test
-  public void expandSdkVariableReferences() {
-    Path appleSdkRoot = Paths.get("Root");
-    AppleSdkPaths appleSdkPaths =
-        AppleSdkPaths.builder()
-            .setDeveloperPath(appleSdkRoot)
-            .addToolchainPaths(appleSdkRoot.resolve("Toolchain"))
-            .setPlatformPath(appleSdkRoot.resolve("Platform"))
-            .setSdkPath(appleSdkRoot.resolve("SDK"))
-            .build();
-
-    Function<ImmutableList<String>, ImmutableList<String>> expandSdkVariableRefs =
-        AppleDescriptions.expandSdkVariableReferencesFunction(appleSdkPaths);
-
-    ImmutableList<String> expandedRefs = expandSdkVariableRefs.apply(
-        ImmutableList.of(
-            "-Ifoo/bar/baz",
-            "-L$DEVELOPER_DIR/blech",
-            "-I$SDKROOT/quux",
-            "-F$PLATFORM_DIR/xyzzy"));
-
-    assertEquals(
-        ImmutableList.of(
-            "-Ifoo/bar/baz",
-            "-LRoot/blech",
-            "-IRoot/SDK/quux",
-            "-FRoot/Platform/xyzzy"),
-        expandedRefs);
-  }
-
 }

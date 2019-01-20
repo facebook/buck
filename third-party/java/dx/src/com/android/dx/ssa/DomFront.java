@@ -27,7 +27,7 @@ import java.util.BitSet;
  */
 public class DomFront {
     /** local debug flag */
-    private static boolean DEBUG = false;
+    private static final boolean DEBUG = false;
 
     /** {@code non-null;} method being processed */
     private final SsaMethod meth;

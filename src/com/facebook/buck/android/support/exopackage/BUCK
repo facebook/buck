@@ -1,7 +1,0 @@
-android_library(
-  name = 'exopackage',
-  srcs = glob(['*.java']),
-  visibility = [
-    '//src/com/facebook/buck/android/support/...',
-  ],
-)

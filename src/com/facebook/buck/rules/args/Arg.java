@@ -16,105 +16,77 @@
 
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Function;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
- * An abstraction for modeling the arguments that contribute to a command run by a
- * {@link BuildRule}.
+ * An abstraction for modeling the arguments that contribute to a command run by a {@link
+ * BuildRule}, and also carry information for computing a rule key.
  */
-public abstract class Arg implements RuleKeyAppendable {
+public interface Arg extends AddsToRuleKey {
 
-  private static final Function<Arg, ImmutableList<String>> STRINGIFY_LIST =
-      new Function<Arg, ImmutableList<String>>() {
-        @Override
-        public ImmutableList<String> apply(Arg input) {
-          ImmutableList.Builder<String> builder = ImmutableList.builder();
-          input.appendToCommandLine(builder);
-          return builder.build();
-        }
-      };
-
-  private static final Function<Arg, ImmutableCollection<SourcePath>> GET_INPUTS =
-      new Function<Arg, ImmutableCollection<SourcePath>>() {
-        @Override
-        public ImmutableCollection<SourcePath> apply(Arg arg) {
-          return arg.getInputs();
-        }
-      };
-
-  /**
-   * @return any {@link BuildRule}s that need to be built before this argument can be used.
-   */
-  public abstract ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver);
-
-  /**
-   * @return any {@link BuildRule}s that need to be built before this argument can be used.
-   */
-  public abstract ImmutableCollection<SourcePath> getInputs();
-
-  /**
-   * Append the contents of the Arg to the supplied builder. This call may inject any number
-   * of elements (including zero) into the builder. This is only ever safe to call when the
-   * rule is running, as it may do things like resolving source paths.
-   */
-  public abstract void appendToCommandLine(ImmutableCollection.Builder<String> builder);
-
-  /**
-   * @return a {@link String} representation suitable to use for debugging.
-   */
-  @Override
-  public abstract String toString();
-
-  @Override
-  public abstract boolean equals(Object other);
-
-  @Override
-  public abstract int hashCode();
-
-  public static Function<Arg, ImmutableCollection<BuildRule>> getDepsFunction(
-      final SourcePathResolver resolver) {
-    return new Function<Arg, ImmutableCollection<BuildRule>>() {
-      @Override
-      public ImmutableCollection<BuildRule> apply(Arg arg) {
-        return arg.getDeps(resolver);
-      }
-    };
+  static Optional<String> flattenToSpaceSeparatedString(
+      Optional<Arg> arg, SourcePathResolver pathResolver) {
+    return arg.map((input1) -> stringifyList(input1, pathResolver))
+        .map(input -> Joiner.on(' ').join(input));
   }
 
-  public static Function<Arg, ImmutableCollection<SourcePath>> getInputsFunction() {
-    return GET_INPUTS;
+  /**
+   * Feed the contents of the Arg to the supplied consumer. This call may feed any number of
+   * elements (including zero) into the consumer. This is only ever safe to call when the rule is
+   * running, as it may do things like resolving source paths.
+   */
+  void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver);
+
+  /** @return a {@link String} representation suitable to use for debugging. */
+  @Override
+  String toString();
+
+  @Override
+  boolean equals(Object other);
+
+  @Override
+  int hashCode();
+
+  static ImmutableList<String> stringifyList(Arg input, SourcePathResolver pathResolver) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+    input.appendToCommandLine(builder::add, pathResolver);
+    return builder.build();
   }
 
-  public static Function<Arg, ImmutableList<String>> stringListFunction() {
-    return STRINGIFY_LIST;
-  }
-
-  public static ImmutableList<String> stringify(ImmutableCollection<Arg> args) {
+  static ImmutableList<String> stringify(
+      Iterable<? extends Arg> args, SourcePathResolver pathResolver) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
-      arg.appendToCommandLine(builder);
+      // TODO(cjhopman): This should probably use the single-Arg stringify below such that each Arg
+      // expands to one entry in the final list.
+      arg.appendToCommandLine(builder::add, pathResolver);
     }
     return builder.build();
   }
 
-  public static <K> ImmutableMap<K, String> stringify(ImmutableMap<K, Arg> argMap) {
+  /** Converts an Arg to a String by concatting all the command-line appended strings. */
+  static String stringify(Arg arg, SourcePathResolver pathResolver) {
+    StringBuilder builder = new StringBuilder();
+    arg.appendToCommandLine(builder::append, pathResolver);
+    return builder.toString();
+  }
+
+  static <K> ImmutableMap<K, String> stringify(
+      ImmutableMap<K, ? extends Arg> argMap, SourcePathResolver pathResolver) {
     ImmutableMap.Builder<K, String> stringMap = ImmutableMap.builder();
-    for (Map.Entry<K, Arg> ent : argMap.entrySet()) {
+    for (Map.Entry<K, ? extends Arg> ent : argMap.entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      ent.getValue().appendToCommandLine(builder);
+      ent.getValue().appendToCommandLine(builder::add, pathResolver);
       stringMap.put(ent.getKey(), Joiner.on(" ").join(builder.build()));
     }
     return stringMap.build();
   }
-
 }

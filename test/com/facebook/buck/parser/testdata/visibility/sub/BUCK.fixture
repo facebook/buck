@@ -1,0 +1,9 @@
+java_library(
+    name = "sub",
+    visibility = ["//:should_pass"],
+)
+
+java_library(
+    name = "sub_pub",
+    visibility = ["PUBLIC"],
+)

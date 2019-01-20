@@ -1,11 +1,11 @@
 apple_library(
-  name = 'TestLibrary',
-  srcs = ['lib.m'],
-  exported_headers = ['lib.h'],
-  frameworks = [
-  	'$SDKROOT/System/Library/Frameworks/CoreFoundation.framework',
-  	'$SDKROOT/System/Library/Frameworks/Foundation.framework',
-    '$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework',
-  ],
-  visibility = ['//Apps/...'],
+    name = "TestLibrary",
+    srcs = ["lib.m"],
+    exported_headers = ["lib.h"],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/CoreFoundation.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    visibility = ["//Apps/..."],
 )

@@ -1,0 +1,8 @@
+apple_library(
+    name = "library",
+    srcs = [
+        "LibFile1.m",
+        "LibFile2.m",
+    ],
+    precompiled_header = "secondary//pch:pch",
+)

@@ -1,0 +1,22 @@
+apple_library(
+    name = "Lib",
+    srcs = ["Lib/Lib.m"],
+    exported_headers = ["Lib/Lib.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    tests = [":LibTest"],
+)
+
+apple_test(
+    name = "LibTest",
+    srcs = ["Test/LibTest.swift"],
+    bridging_header = "Test/LibTest-Bridging-Header.h",
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test/LibTest.plist",
+    swift_version = "4",
+    deps = [":Lib"],
+)

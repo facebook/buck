@@ -18,8 +18,7 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.google.common.base.Optional;
-
+import java.util.Optional;
 import org.junit.Test;
 
 public class CxxSourceTest {
@@ -55,14 +54,15 @@ public class CxxSourceTest {
 
     // Preprocessed Objective-C++
     assertEquals(
-        Optional.of(CxxSource.Type.OBJCXX_CPP_OUTPUT),
-        CxxSource.Type.fromExtension("mii"));
+        Optional.of(CxxSource.Type.OBJCXX_CPP_OUTPUT), CxxSource.Type.fromExtension("mii"));
 
     // Assembly
     assertEquals(Optional.of(CxxSource.Type.ASSEMBLER_WITH_CPP), CxxSource.Type.fromExtension("s"));
 
     // Preprocessable assembly
     assertEquals(Optional.of(CxxSource.Type.ASSEMBLER_WITH_CPP), CxxSource.Type.fromExtension("S"));
-  }
 
+    // PCM
+    assertEquals(Optional.of(CxxSource.Type.PCM), CxxSource.Type.fromExtension("pcm"));
+  }
 }

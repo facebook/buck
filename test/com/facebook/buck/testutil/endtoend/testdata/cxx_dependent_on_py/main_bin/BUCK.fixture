@@ -1,0 +1,10 @@
+cxx_binary(
+    name = "main_bin",
+    srcs = ["main_bin.cpp"],
+    headers = [],
+    link_style = "static",
+    deps = [
+        "//output_fixed:output_fixed",
+        "//output_generated:output_generated",
+    ],
+)

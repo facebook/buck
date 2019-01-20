@@ -16,11 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
-
 import java.nio.file.Path;
 
 public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T> {
@@ -35,11 +33,6 @@ public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T>
   }
 
   @Override
-  public Optional<ImmutableSet<T>> getOptionalValue() {
-    return Optional.of(ImmutableSet.<T>of());
-  }
-
-  @Override
   public ImmutableSet<T> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
@@ -47,12 +40,7 @@ public class SetTypeCoercer<T> extends CollectionTypeCoercer<ImmutableSet<T>, T>
       Object object)
       throws CoerceFailedException {
     ImmutableSet.Builder<T> builder = ImmutableSet.builder();
-    fill(
-        cellRoots,
-        filesystem,
-        pathRelativeToProjectRoot,
-        builder,
-        object);
+    fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return builder.build();
   }
 }

@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "toolchain",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/apple/platform_type:type",
+        "//src/com/facebook/buck/apple/toolchain:toolchain",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -1,0 +1,1 @@
+main.o: main.cpp

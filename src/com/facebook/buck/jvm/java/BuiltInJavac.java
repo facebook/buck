@@ -20,8 +20,7 @@ package com.facebook.buck.jvm.java;
  * Which of the built in {@link com.facebook.buck.jvm.java.Jsr199Javac} implementations to use for
  * compilation.
  */
-enum BuiltInJavac {
+public enum BuiltInJavac {
   /** Equivalent to {@link javax.tools.ToolProvider#getSystemJavaCompiler()} */
   DEFAULT
 }
-

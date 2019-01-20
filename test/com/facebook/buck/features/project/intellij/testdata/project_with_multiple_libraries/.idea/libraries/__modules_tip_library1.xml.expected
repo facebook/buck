@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="//modules/tip:library1">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/modules/tip/library1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="http://company.com/library1/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/modules/tip/librarysrc1.jar!/" />
+    </SOURCES>
+  </library>
+</component>

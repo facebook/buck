@@ -1,0 +1,6 @@
+load("//python/native_in_extension_bzl:extension.bzl", "java_maker")
+
+java_maker(
+    name = "main",
+    srcs = ["Main.java"],
+)

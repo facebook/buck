@@ -1,0 +1,7 @@
+go_library(
+    name = "printer",
+    srcs = [
+        "printer.go",
+    ],
+    visibility = ["PUBLIC"],
+)

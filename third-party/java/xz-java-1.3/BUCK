@@ -1,9 +1,0 @@
-prebuilt_jar(
-  name = 'xz',
-  binary_jar = 'xz-1.3.jar',
-  source_jar = 'xz-1.3-sources.jar',
-  licenses = [
-    'COPYING',
-  ],
-  visibility = ['PUBLIC'],
-)

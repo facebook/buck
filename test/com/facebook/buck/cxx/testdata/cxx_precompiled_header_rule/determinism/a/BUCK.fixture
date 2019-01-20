@@ -1,0 +1,13 @@
+cxx_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    compiler_flags = ["-fPIC"],
+    precompiled_header = "//determinism/lib:pch",
+    deps = [":foo"],
+)
+
+cxx_library(
+    name = "foo",
+    srcs = ["foo.cpp"],
+    exported_headers = ["foo.h"],
+)

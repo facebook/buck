@@ -16,45 +16,65 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.rules.coercer.SourceSet;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import java.util.Optional;
 
-import java.util.List;
-
-/**
- * Same as a Genrule, but marked as a binary.
- */
+/** Same as a Genrule, but marked as a binary. */
 public class GenruleBinary extends Genrule implements BinaryBuildRule {
   protected GenruleBinary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      BuildRuleResolver resolver,
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      List<SourcePath> srcs,
+      SourceSet srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe,
+      Optional<String> type,
       String out,
-      ImmutableSortedSet<BuildTarget> tests) {
-    super(params, resolver, srcs, cmd, bash, cmdExe, out, tests);
+      boolean isCacheable,
+      Optional<String> environmentExpansionSeparator,
+      Optional<AndroidPlatformTarget> androidPlatformTarget,
+      Optional<AndroidNdk> androidNdk,
+      Optional<AndroidSdkLocation> androidSdkLocation,
+      boolean noRemote) {
+    super(
+        buildTarget,
+        projectFilesystem,
+        resolver,
+        params,
+        sandboxExecutionStrategy,
+        srcs,
+        cmd,
+        bash,
+        cmdExe,
+        type,
+        out,
+        false,
+        isCacheable,
+        environmentExpansionSeparator,
+        androidPlatformTarget,
+        androidNdk,
+        androidSdkLocation,
+        noRemote);
   }
 
   @Override
   public Tool getExecutableCommand() {
-    return new CommandTool.Builder()
-        .addArg(
-            new SourcePathArg(
-                getResolver(),
-                new BuildTargetSourcePath(getBuildTarget(), getPathToOutput())))
-        .build();
+    return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
   }
-
 }

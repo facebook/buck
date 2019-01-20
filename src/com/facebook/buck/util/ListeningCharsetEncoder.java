@@ -18,40 +18,35 @@ package com.facebook.buck.util;
 
 import com.zaxxer.nuprocess.codec.NuCharsetEncoder;
 import com.zaxxer.nuprocess.codec.NuCharsetEncoderHandler;
-
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetEncoder;
-import java.nio.charset.CoderResult;
-
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CoderResult;
 
 public final class ListeningCharsetEncoder {
   private final NuCharsetEncoder encoder;
 
   public interface EncoderListener {
     boolean onStdinReady(CharBuffer buffer);
+
     void onEncoderError(CoderResult result);
   }
 
-  public ListeningCharsetEncoder(EncoderListener listener, Charset charset) {
-    this(listener, charset.newEncoder());
-  }
+  public ListeningCharsetEncoder(EncoderListener listener, CharsetEncoder charsetEncoder) {
+    this.encoder =
+        new NuCharsetEncoder(
+            new NuCharsetEncoderHandler() {
+              @Override
+              public boolean onStdinReady(CharBuffer buffer) {
+                return listener.onStdinReady(buffer);
+              }
 
-  public ListeningCharsetEncoder(final EncoderListener listener, CharsetEncoder charsetEncoder) {
-    this.encoder = new NuCharsetEncoder(
-        new NuCharsetEncoderHandler() {
-          @Override
-          public boolean onStdinReady(CharBuffer buffer) {
-            return listener.onStdinReady(buffer);
-          }
-
-          @Override
-          public void onEncoderError(CoderResult result) {
-            listener.onEncoderError(result);
-          }
-        },
-        charsetEncoder);
+              @Override
+              public void onEncoderError(CoderResult result) {
+                listener.onEncoderError(result);
+              }
+            },
+            charsetEncoder);
   }
 
   public boolean onStdinReady(ByteBuffer buffer) {

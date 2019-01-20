@@ -16,16 +16,25 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 
-public class ApkGenruleBuilder extends AbstractNodeBuilder<ApkGenruleDescription.Arg> {
+public class ApkGenruleBuilder
+    extends AbstractNodeBuilder<
+        ApkGenruleDescriptionArg.Builder,
+        ApkGenruleDescriptionArg,
+        ApkGenruleDescription,
+        ApkGenrule> {
 
   private ApkGenruleBuilder(BuildTarget target) {
-    super(new ApkGenruleDescription(), target);
+    super(
+        new ApkGenruleDescription(
+            new ToolchainProviderBuilder().build(), new NoSandboxExecutionStrategy()),
+        target);
   }
 
   public static ApkGenruleBuilder create(BuildTarget target) {
@@ -33,33 +42,22 @@ public class ApkGenruleBuilder extends AbstractNodeBuilder<ApkGenruleDescription
   }
 
   public ApkGenruleBuilder setOut(String out) {
-    arg.out = out;
-    return this;
-  }
-
-  public ApkGenruleBuilder setBash(String bash) {
-    arg.bash = Optional.of(bash);
+    getArgForPopulating().setOut(out);
     return this;
   }
 
   public ApkGenruleBuilder setCmd(String cmd) {
-    arg.cmd = Optional.of(cmd);
+    getArgForPopulating().setCmd(StringWithMacrosUtils.format(cmd));
     return this;
   }
 
-  public ApkGenruleBuilder setCmdExe(String cmdExe) {
-    arg.cmdExe = Optional.of(cmdExe);
-    return this;
-  }
-
-  public ApkGenruleBuilder setSrcs(ImmutableList<SourcePath> srcs) {
-    arg.srcs = Optional.of(srcs);
+  public ApkGenruleBuilder setCmd(StringWithMacros cmd) {
+    getArgForPopulating().setCmd(cmd);
     return this;
   }
 
   public ApkGenruleBuilder setApk(BuildTarget apk) {
-    arg.apk = apk;
+    getArgForPopulating().setApk(apk);
     return this;
   }
-
 }

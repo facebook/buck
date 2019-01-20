@@ -16,14 +16,13 @@
 
 package com.facebook.buck.util.concurrent;
 
-import com.facebook.buck.log.Logger;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.util.log.Logger;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Makes it simple to assert that access to a piece of code should be done from one thread
- * at a time in a non-reentrant manner.
+ * Makes it simple to assert that access to a piece of code should be done from one thread at a time
+ * in a non-reentrant manner.
  */
 public class AssertScopeExclusiveAccess {
   private static final Logger LOG = Logger.get(AssertScopeExclusiveAccess.class);
@@ -33,30 +32,25 @@ public class AssertScopeExclusiveAccess {
 
   public AssertScopeExclusiveAccess() {
     inScope = new AtomicBoolean();
-    inScopeStack = Optional.absent();
+    inScopeStack = Optional.empty();
   }
 
   public Scope scope() {
-    final boolean firstOneInScope = inScope.compareAndSet(false, true);
+    boolean firstOneInScope = inScope.compareAndSet(false, true);
     if (firstOneInScope && LOG.isVerboseEnabled()) {
       inScopeStack = Optional.of(new Throwable());
     }
 
     if (!firstOneInScope) {
-      LOG.verbose(
-          inScopeStack.get(),
-          "Indicating previous access to single threaded scope.");
+      LOG.verbose(inScopeStack.get(), "Indicating previous access to single threaded scope.");
 
       throw new IllegalStateException(
           "More than one thread attempting access to single-threaded scope.");
     }
 
-    return new Scope() {
-      @Override
-      public void close() {
-        if (firstOneInScope) {
-          inScope.set(false);
-        }
+    return () -> {
+      if (firstOneInScope) {
+        inScope.set(false);
       }
     };
   }

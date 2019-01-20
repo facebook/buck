@@ -17,11 +17,11 @@
 package com.example.broken;
 
 import com.facebook.buck.junit.testdata.test_selectors_annotated_with_runwith.src.FeelingDifferentRunner;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(FeelingDifferentRunner.class)
 public class TestA {
-  @Test public void test() {}
+  @Test
+  public void test() {}
 }

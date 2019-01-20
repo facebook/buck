@@ -1,0 +1,11 @@
+android_resource(
+    name = "override",
+    package = "com.sample",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/base:base",
+    ],
+)

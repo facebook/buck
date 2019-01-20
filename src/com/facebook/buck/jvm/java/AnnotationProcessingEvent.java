@@ -16,17 +16,14 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.base.CaseFormat;
 
-/**
- * Base class for events about Java annotation processing.
- */
-public abstract class AnnotationProcessingEvent
-    extends AbstractBuckEvent
+/** Base class for events about Java annotation processing. */
+public abstract class AnnotationProcessingEvent extends AbstractBuckEvent
     implements WorkAdvanceEvent {
 
   public enum Operation {
@@ -85,9 +82,9 @@ public abstract class AnnotationProcessingEvent
   }
 
   public String getCategory() {
-    return annotationProcessorName +
-        "." +
-        CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, operation.toString());
+    return annotationProcessorName
+        + "."
+        + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, operation.toString());
   }
 
   public static Started started(
@@ -131,6 +128,16 @@ public abstract class AnnotationProcessingEvent
           started.getOperation(),
           started.getRound(),
           started.isLastRound());
+    }
+
+    public Finished(
+        EventKey eventKey,
+        BuildTarget buildTarget,
+        String annotationProcessorName,
+        Operation operation,
+        int round,
+        boolean isLastRound) {
+      super(eventKey, buildTarget, annotationProcessorName, operation, round, isLastRound);
     }
 
     @Override

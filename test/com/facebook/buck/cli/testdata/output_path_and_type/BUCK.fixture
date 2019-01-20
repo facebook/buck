@@ -1,0 +1,8 @@
+java_library(
+    name = "java_lib",
+    srcs = ["A.java"],
+)
+
+export_file(
+    name = "exported.txt",
+)

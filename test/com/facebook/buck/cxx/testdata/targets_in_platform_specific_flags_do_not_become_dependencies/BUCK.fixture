@@ -1,0 +1,50 @@
+# If the binary ends up with a build time dep on the genrule, the command
+# would fail.
+
+cxx_binary(
+    name = "bin",
+    srcs = ["main.cpp"],
+    platform_compiler_flags = [
+        [
+            "not-a-real-platform",
+            ["$(location :file)"],
+        ],
+    ],
+    platform_deps = [
+        [
+            "not-a-real-platform",
+            [":file"],
+        ],
+    ],
+    platform_headers = [
+        [
+            "not-a-real-platform",
+            [":file"],
+        ],
+    ],
+    platform_linker_flags = [
+        [
+            "not-a-real-platform",
+            ["$(location :file)"],
+        ],
+    ],
+    platform_preprocessor_flags = [
+        [
+            "not-a-real-platform",
+            ["$(location :file)"],
+        ],
+    ],
+    platform_srcs = [
+        [
+            "not-a-real-platform",
+            [":file"],
+        ],
+    ],
+)
+
+genrule(
+    name = "file",
+    out = "file.txt",
+    bash = """exit 1""",
+    cmd_exe = """exit /B 1""",
+)

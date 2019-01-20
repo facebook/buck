@@ -16,9 +16,9 @@
 
 package com.android.dx.dex.file;
 
-import com.android.dex.DexException;
 import com.android.dex.DexFormat;
 import com.android.dex.DexIndexOverflowException;
+import com.android.dx.command.dexer.Main;
 import com.android.dx.rop.cst.Constant;
 import com.android.dx.rop.cst.CstType;
 import com.android.dx.rop.type.Type;
@@ -86,7 +86,8 @@ public final class TypeIdsSection extends UniformItemSection {
 
         if (sz > DexFormat.MAX_TYPE_IDX + 1) {
             throw new DexIndexOverflowException("Too many type references: " + sz +
-                    "; max is " + (DexFormat.MAX_TYPE_IDX + 1) + ".\n");
+                    "; max is " + (DexFormat.MAX_TYPE_IDX + 1) + ".\n" +
+                    Main.getTooManyIdsErrorMessage());
         }
 
         if (out.annotates()) {
@@ -104,7 +105,7 @@ public final class TypeIdsSection extends UniformItemSection {
      * @param type {@code non-null;} the type to intern
      * @return {@code non-null;} the interned reference
      */
-    public TypeIdItem intern(Type type) {
+    public synchronized TypeIdItem intern(Type type) {
         if (type == null) {
             throw new NullPointerException("type == null");
         }

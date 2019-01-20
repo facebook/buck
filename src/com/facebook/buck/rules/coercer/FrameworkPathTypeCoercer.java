@@ -18,19 +18,17 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Function;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
+import java.util.Optional;
 
 public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
 
@@ -56,13 +54,13 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
   }
 
   @Override
-  public void traverse(FrameworkPath object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, FrameworkPath object, Traversal traversal) {
     switch (object.getType()) {
       case SOURCE_TREE_PATH:
         traversal.traverse(object.getSourceTreePath().get());
         break;
       case SOURCE_PATH:
-        sourcePathTypeCoercer.traverse(object.getSourcePath().get(), traversal);
+        sourcePathTypeCoercer.traverse(cellRoots, object.getSourcePath().get(), traversal);
         break;
       default:
         throw new RuntimeException("Unhandled type: " + object.getType());
@@ -70,21 +68,17 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
   }
 
   @Override
-  public Optional<FrameworkPath> getOptionalValue() {
-    return Optional.absent();
-  }
-
-  @Override
   public FrameworkPath coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof String) {
       Path path = Paths.get((String) object);
 
       String firstElement =
-          Preconditions.checkNotNull(Iterables.getFirst(path, Paths.get(""))).toString();
+          Objects.requireNonNull(Iterables.getFirst(path, Paths.get(""))).toString();
 
       if (firstElement.startsWith("$")) { // NOPMD - length() > 0 && charAt(0) == '$' is ridiculous
         Optional<PBXReference.SourceTree> sourceTree =
@@ -93,43 +87,30 @@ public class FrameworkPathTypeCoercer implements TypeCoercer<FrameworkPath> {
           int nameCount = path.getNameCount();
           if (nameCount < 2) {
             throw new HumanReadableException(
-                "Invalid source tree path: '%s'. Should have at least one path component after" +
-                    "'%s'.",
-                path,
-                firstElement);
+                "Invalid source tree path: '%s'. Should have at least one path component after"
+                    + "'%s'.",
+                path, firstElement);
           }
           return FrameworkPath.ofSourceTreePath(
               new SourceTreePath(
-                  sourceTree.get(),
-                  path.subpath(1, path.getNameCount()),
-                  Optional.<String>absent()));
+                  sourceTree.get(), path.subpath(1, path.getNameCount()), Optional.empty()));
         } else {
           throw new HumanReadableException(
               "Unknown SourceTree: '%s'. Should be one of: %s",
               firstElement,
-              Joiner.on(", ").join(
-                  Iterables.transform(
-                      ImmutableList.copyOf(PBXReference.SourceTree.values()),
-                      new Function<PBXReference.SourceTree, String>() {
-                        @Override
-                        public String apply(PBXReference.SourceTree input) {
-                          return "$" + input.toString();
-                        }
-                      })));
+              Joiner.on(", ")
+                  .join(
+                      Iterables.transform(
+                          ImmutableList.copyOf(PBXReference.SourceTree.values()),
+                          input -> "$" + input)));
         }
       } else {
         return FrameworkPath.ofSourcePath(
-            sourcePathTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                object));
+            sourcePathTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
       }
     }
 
     throw CoerceFailedException.simple(
-        object,
-        getOutputClass(),
-        "input should be either a source tree path or a source path");
+        object, getOutputClass(), "input should be either a source tree path or a source path");
   }
 }

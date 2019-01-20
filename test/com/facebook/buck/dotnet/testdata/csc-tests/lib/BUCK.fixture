@@ -1,8 +1,0 @@
-prebuilt_dotnet_library(
-  name = 'log4net',
-  assembly = 'log4net.dll',
-  visibility = [
-    '//src/...',
-  ],
-)
-

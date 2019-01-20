@@ -18,38 +18,45 @@ package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
-
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.text.ParseException;
+import java.util.Optional;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
-/**
- * Utility class to parse Info.plist from an Apple bundle.
- */
+/** Utility class to parse Info.plist from an Apple bundle. */
 public class AppleInfoPlistParsing {
 
   // Utility class, do not instantiate.
-  private AppleInfoPlistParsing() { }
+  private AppleInfoPlistParsing() {}
 
-  /**
-   * Extracts the bundle ID (CFBundleIdentifier) from an Info.plist, returning it if present.
-   */
-  public static Optional<String> getBundleIdFromPlistStream(InputStream inputStream)
-    throws IOException {
+  /** Extracts the bundle ID (CFBundleIdentifier) from an Info.plist, returning it if present. */
+  public static Optional<String> getBundleIdFromPlistStream(Path plistPath, InputStream inputStream)
+      throws IOException {
     NSDictionary infoPlist;
     try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
       try {
         infoPlist = (NSDictionary) PropertyListParser.parse(bufferedInputStream);
-      } catch (Exception e) {
+      } catch (PropertyListFormatException
+          | ParseException
+          | ParserConfigurationException
+          | SAXException
+          | UnsupportedOperationException e) {
         throw new IOException(e);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        throw new HumanReadableException(
+            plistPath + ": the content of the plist is invalid or empty.");
       }
     }
     NSObject bundleId = infoPlist.objectForKey("CFBundleIdentifier");
     if (bundleId == null) {
-      return Optional.absent();
+      return Optional.empty();
     } else {
       return Optional.of(bundleId.toString());
     }

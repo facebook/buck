@@ -15,57 +15,54 @@
  */
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 class RegisterDebugSymbolsStep implements Step {
 
-  private final BuildRule binaryBuildRule;
+  private final SourcePath binary;
   private final Tool lldb;
   private final SourcePathResolver resolver;
-  private final Path location;
+  private final Path dsymPath;
 
   public RegisterDebugSymbolsStep(
-      BuildRule binaryBuildRule,
-      Tool lldb,
-      SourcePathResolver resolver,
-      Path location) {
-    this.binaryBuildRule = binaryBuildRule;
+      SourcePath binary, Tool lldb, SourcePathResolver resolver, Path dsymPath) {
+    this.binary = binary;
     this.lldb = lldb;
     this.resolver = resolver;
-    this.location = location;
+    this.dsymPath = dsymPath;
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     ImmutableList<String> lldbCommandPrefix = lldb.getCommandPrefix(resolver);
-    ProcessExecutorParams params = ProcessExecutorParams
-        .builder()
-        .addCommand(lldbCommandPrefix.toArray(new String[lldbCommandPrefix.size()]))
-        .build();
-    return StepExecutionResult.of(context.getProcessExecutor().launchAndExecute(
-        params,
-        ImmutableSet.<ProcessExecutor.Option>of(),
-        Optional.of(
-            String.format("target create %s\ntarget symbols add %s",
-                binaryBuildRule.getPathToOutput(),
-                location)),
-        Optional.<Long>absent(),
-        Optional.<Function<Process, Void>>absent()).getExitCode());
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .addCommand(lldbCommandPrefix.toArray(new String[0]))
+            .build();
+    return StepExecutionResult.of(
+        context
+            .getProcessExecutor()
+            .launchAndExecute(
+                params,
+                ImmutableSet.of(),
+                Optional.of(
+                    String.format(
+                        "target create %s\ntarget symbols add %s",
+                        resolver.getAbsolutePath(binary), dsymPath)),
+                Optional.empty(),
+                Optional.empty()));
   }
 
   @Override
@@ -76,8 +73,6 @@ class RegisterDebugSymbolsStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     return String.format(
-        "register debug symbols for binary '%s': '%s'",
-        binaryBuildRule.getPathToOutput(),
-        location);
+        "register debug symbols for binary '%s': '%s'", resolver.getRelativePath(binary), dsymPath);
   }
 }

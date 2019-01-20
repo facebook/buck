@@ -23,29 +23,30 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.artifact_cache.CacheResult;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleStatus;
-import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.rules.Sha1HashCode;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BuckBuildLog {
 
   private static final Pattern BUILD_LOG_FINISHED_RULE_REGEX =
-      Pattern.compile(".*BuildRuleFinished\\((?<BuildTarget>[^\\)]+)\\): (?<Status>\\S+) " +
-              "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)" +
-              "(?: I(?<InputRuleKey>\\S+))?");
+      Pattern.compile(
+          ".*BuildRuleFinished\\((?<BuildTarget>[^\\)]+)\\): (?<Status>\\S+) "
+              + "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)"
+              + "(?: I(?<InputRuleKey>\\S+))?");
 
   private final Path root;
   private final Map<BuildTarget, BuildLogEntry> buildLogEntries;
@@ -60,10 +61,23 @@ public class BuckBuildLog {
   }
 
   public void assertNotTargetBuiltLocally(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
-    assertNotEquals(BuildRuleSuccessType.BUILT_LOCALLY, logEntry.successType.get());
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
+    assertNotEquals(
+        String.format(
+            "Build target %s should not have been built locally, but it was", buildTargetRaw),
+        BuildRuleSuccessType.BUILT_LOCALLY,
+        logEntry.successType.get());
   }
 
+  public void assertTargetIsAbsent(String buildTargetRaw) {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    if (buildLogEntries.containsKey(buildTarget)) {
+      fail(
+          String.format(
+              "Build target %s was not expected in log, but found result: %s",
+              buildTargetRaw, buildLogEntries.get(buildTarget)));
+    }
+  }
 
   public void assertTargetWasFetchedFromCache(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.FETCHED_FROM_CACHE);
@@ -81,31 +95,27 @@ public class BuckBuildLog {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY);
   }
 
-  public void assertTargetHadMatchingDepsAbi(String buildTargetRaw) {
-    assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_ABI_RULE_KEY);
-  }
-
   public void assertTargetHadMatchingRuleKey(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_RULE_KEY);
   }
 
   public void assertTargetFailed(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertEquals(BuildRuleStatus.FAIL, logEntry.status);
   }
 
   public void assertTargetCanceled(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertEquals(BuildRuleStatus.CANCELED, logEntry.status);
   }
 
   public Sha1HashCode getRuleKey(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     return logEntry.ruleKeyHashCode;
   }
 
   public ImmutableSet<BuildTarget> getAllTargets() {
-    return ImmutableSet.copyOf(buildLogEntries.keySet());
+    return ImmutableSortedSet.copyOf(buildLogEntries.keySet());
   }
 
   public static BuckBuildLog fromLogContents(Path root, List<String> logContents) {
@@ -137,17 +147,38 @@ public class BuckBuildLog {
         successType = BuildRuleSuccessType.valueOf(successTypeRaw);
       }
 
-      builder.put(buildTarget, new BuildLogEntry(
-              status,
-              Optional.fromNullable(successType),
-              Optional.fromNullable(cacheResult),
-              ruleKey));
+      builder.put(
+          buildTarget,
+          new BuildLogEntry(
+              status, Optional.ofNullable(successType), Optional.ofNullable(cacheResult), ruleKey));
     }
 
     return new BuckBuildLog(root, builder.build());
   }
 
-  private BuildLogEntry getLogEntryOrFail(String buildTargetRaw) {
+  private void assertBuildSuccessType(String buildTargetRaw, BuildRuleSuccessType expectedType) {
+    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
+    assertThat(
+        String.format("%s should have succeeded", buildTargetRaw),
+        logEntry.getStatus(),
+        is(BuildRuleStatus.SUCCESS));
+    assertThat(
+        String.format("%s has %s", buildTargetRaw, logEntry),
+        logEntry.successType.get(),
+        is(expectedType));
+  }
+
+  public void assertNoLogEntry(String buildTargetRaw) {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
+    if (buildLogEntries.containsKey(buildTarget)) {
+      fail(
+          String.format(
+              "Was expecting no log entry for %s, but found: %s",
+              buildTargetRaw, buildLogEntries.get(buildTarget)));
+    }
+  }
+
+  public BuildLogEntry getLogEntry(String buildTargetRaw) {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(root, buildTargetRaw);
     if (!buildLogEntries.containsKey(buildTarget)) {
       fail(String.format("There was no build log entry for target %s", buildTargetRaw));
@@ -156,21 +187,8 @@ public class BuckBuildLog {
     return buildLogEntries.get(buildTarget);
   }
 
-  private void assertBuildSuccessType(String buildTargetRaw, BuildRuleSuccessType expectedType) {
-    BuildLogEntry logEntry = getLogEntryOrFail(buildTargetRaw);
-    assertThat(
-        String.format("%s should have succeeded", buildTargetRaw),
-        logEntry.getStatus(), is(BuildRuleStatus.SUCCESS));
-    assertThat(
-        String.format(
-            "%s has %s",
-            buildTargetRaw,
-            logEntry),
-        logEntry.successType.get(), is(expectedType));
-  }
-
   public BuildLogEntry getLogEntry(BuildTarget target) {
-    return getLogEntryOrFail(target.toString());
+    return getLogEntry(target.toString());
   }
 
   public static class BuildLogEntry {
@@ -199,10 +217,6 @@ public class BuckBuildLog {
       return successType;
     }
 
-    public Optional<CacheResult> getCacheResult() {
-      return cacheResult;
-    }
-
     public Sha1HashCode getRuleKey() {
       return ruleKeyHashCode;
     }
@@ -216,7 +230,5 @@ public class BuckBuildLog {
           .add("ruleKeyHashCode", ruleKeyHashCode)
           .toString();
     }
-
   }
-
 }

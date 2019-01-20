@@ -16,11 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.google.common.base.Optional;
+import com.facebook.buck.core.cell.CellPathResolver;
 
-/**
- * Superclass of coercers for non-collection/map types.
- */
+/** Superclass of coercers for non-collection/map types. */
 public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
 
   @Override
@@ -34,12 +32,7 @@ public abstract class LeafTypeCoercer<T> implements TypeCoercer<T> {
   }
 
   @Override
-  public void traverse(Object object, Traversal traversal) {
+  public void traverse(CellPathResolver cellPathResolver, Object object, Traversal traversal) {
     traversal.traverse(object);
-  }
-
-  @Override
-  public Optional<T> getOptionalValue() {
-    return Optional.absent();
   }
 }

@@ -16,31 +16,28 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
-import com.google.common.base.Optional;
-
-import org.junit.rules.TemporaryFolder;
-
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * A {@link com.facebook.buck.maven.Publisher}, that does not send real PUT requests, instead
  * recording their paths
  *
- * Use {@link #getPutRequestsHandler}.getPutRequestsPaths to get the paths of PUT requests invoked
+ * <p>Use {@link #getPutRequestsHandler}.getPutRequestsPaths to get the paths of PUT requests
+ * invoked
  */
 public class TestPublisher extends Publisher implements AutoCloseable {
 
   private HttpdForTests httpd;
   private HttpdForTests.DummyPutRequestsHandler putRequestsHandler;
 
-  public static TestPublisher create(TemporaryFolder tmpDir) throws Exception {
-    return create(tmpDir.newFolder().toPath());
+  public static TestPublisher create(TemporaryPaths tmpDir) throws Exception {
+    return create(tmpDir.newFolder());
   }
 
-  /**
-   * @param pseudoLocalRepo typically {@link org.junit.rules.TemporaryFolder#newFolder}
-   */
+  /** @param pseudoLocalRepo typically {@link org.junit.rules.TemporaryFolder#newFolder} */
   public static TestPublisher create(Path pseudoLocalRepo) throws Exception {
     HttpdForTests.DummyPutRequestsHandler putRequestsHandler =
         new HttpdForTests.DummyPutRequestsHandler();
@@ -53,8 +50,14 @@ public class TestPublisher extends Publisher implements AutoCloseable {
   private TestPublisher(
       Path pseudoLocalRepo,
       HttpdForTests httpd,
-      HttpdForTests.DummyPutRequestsHandler putRequestsHandler) throws Exception {
-    super(pseudoLocalRepo, Optional.of(httpd.getRootUri().toURL()), /* dryRun */ false);
+      HttpdForTests.DummyPutRequestsHandler putRequestsHandler)
+      throws Exception {
+    super(
+        pseudoLocalRepo,
+        httpd.getRootUri().toURL(),
+        /* username */ Optional.empty(),
+        /* password */ Optional.empty(),
+        /* dryRun */ false);
     this.httpd = httpd;
     this.putRequestsHandler = putRequestsHandler;
   }

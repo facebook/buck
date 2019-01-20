@@ -16,38 +16,44 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.config.AliasConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.ConsoleEvent;
-
+import com.facebook.buck.util.ExitCode;
+import java.util.Map;
 import org.kohsuke.args4j.Option;
-
-import java.io.IOException;
 
 public class AuditAliasCommand extends AbstractCommand {
 
-  @Option(
-      name = "--list",
-      usage = "List known build target aliases.")
+  @Option(name = "--list", usage = "List known build target aliases.")
   private boolean listAliases = false;
 
-  boolean isListAliases() {
-    return listAliases;
-  }
-
-  Iterable<String> getAliases(BuckConfig buckConfig) {
-    return buckConfig.getAliases();
-  }
+  @Option(
+      name = "--list-map",
+      usage = "List known build target aliases with their mappings to build targets.")
+  private boolean listAliasesMap = false;
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (isListAliases()) {
-      for (String alias : getAliases(params.getBuckConfig())) {
-        params.getConsole().getStdOut().println(alias);
+  public ExitCode runWithoutHelp(CommandRunnerParams params) {
+    AliasConfig aliasConfig = AliasConfig.from(params.getBuckConfig());
+    if (listAliasesMap) {
+      for (Map.Entry<String, BuildTarget> entry : aliasConfig.getAliases().entries()) {
+        params
+            .getConsole()
+            .getStdOut()
+            .println(entry.getKey() + " = " + entry.getValue().getFullyQualifiedName());
       }
-      return 0;
+      return ExitCode.SUCCESS;
+    }
+    if (listAliases) {
+      for (Map.Entry<String, BuildTarget> entry : aliasConfig.getAliases().entries()) {
+        params.getConsole().getStdOut().println(entry.getKey());
+      }
+      return ExitCode.SUCCESS;
     }
 
     params.getBuckEventBus().post(ConsoleEvent.severe("No query supplied."));
-    return 1;
+    return ExitCode.NOTHING_TO_DO;
   }
 
   @Override

@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "filesystem",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/watchman:capability",
+        "//src/com/facebook/buck/util:constants",
+        "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//third-party/java/guava:guava",
+    ],
+)

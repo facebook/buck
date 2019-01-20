@@ -16,67 +16,97 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.jvm.java.Keystore;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.jvm.java.KeystoreBuilder;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import com.google.common.util.concurrent.MoreExecutors;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class AndroidInstrumentationApkDescriptionTest {
 
   @Test
-  public void testNoDxRulesBecomeFirstOrderDeps() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-
+  public void testNoDxRulesBecomeFirstOrderDeps() {
     // Build up the original APK rule.
-    BuildRule transitiveDep =
+    TargetNode<?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
-    BuildRule dep =
+            .build();
+    TargetNode<?> dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
-            .addDep(transitiveDep.getBuildTarget())
-            .build(ruleResolver);
-    Keystore keystore =
-        ruleResolver.addToIndex(
-            new Keystore(
-                new FakeBuildRuleParamsBuilder("//:keystore").build(),
-                pathResolver,
-                new FakeSourcePath("store"),
-                new FakeSourcePath("properties")));
-    AndroidBinary androidBinary =
-        (AndroidBinary) AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
-            .setManifest(new FakeSourcePath("manifest.xml"))
+            .addDep(transitiveDepNode.getBuildTarget())
+            .build();
+    TargetNode<?> keystore =
+        KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//:keystore"))
+            .setStore(FakeSourcePath.of("store"))
+            .setProperties(FakeSourcePath.of("properties"))
+            .build();
+    TargetNode<?> androidBinary =
+        AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:apk"))
+            .setManifest(FakeSourcePath.of("manifest.xml"))
             .setKeystore(keystore.getBuildTarget())
-            .setNoDx(ImmutableSet.of(transitiveDep.getBuildTarget()))
+            .setNoDx(ImmutableSet.of(transitiveDepNode.getBuildTarget()))
             .setOriginalDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
-            .build(ruleResolver);
-
+            .build();
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    AndroidInstrumentationApk androidInstrumentationApk =
-        (AndroidInstrumentationApk) AndroidInstrumentationApkBuilder.createBuilder(target)
-            .setManifest(new FakeSourcePath("manifest.xml"))
+    TargetNode<?> androidInstrumentationApk =
+        AndroidInstrumentationApkBuilder.createBuilder(target)
+            .setManifest(FakeSourcePath.of("manifest.xml"))
             .setApk(androidBinary.getBuildTarget())
-            .build(ruleResolver);
-    assertThat(androidInstrumentationApk.getDeps(), Matchers.hasItem(transitiveDep));
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            transitiveDepNode, dep, keystore, androidBinary, androidInstrumentationApk);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
+            targetGraph, createToolchainProviderForAndroidInstrumentationApk());
+    BuildRule transitiveDep = graphBuilder.requireRule(transitiveDepNode.getBuildTarget());
+    graphBuilder.requireRule(target);
+    BuildRule nonPredexedRule =
+        graphBuilder.requireRule(
+            target.withFlavors(AndroidBinaryGraphEnhancer.NON_PREDEXED_DEX_BUILDABLE_FLAVOR));
+    assertThat(nonPredexedRule.getBuildDeps(), Matchers.hasItem(transitiveDep));
   }
 
+  public static ToolchainProvider createToolchainProviderForAndroidInstrumentationApk() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
+        .withToolchain(
+            DxToolchain.DEFAULT_NAME, DxToolchain.of(MoreExecutors.newDirectExecutorService()))
+        .withToolchain(
+            JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+        .withToolchain(
+            AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
+        .withToolchain(
+            JavaOptionsProvider.DEFAULT_NAME,
+            JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+        .withToolchain(
+            JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+        .build();
+  }
 }

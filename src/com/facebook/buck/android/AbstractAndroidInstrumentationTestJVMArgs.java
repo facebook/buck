@@ -16,15 +16,15 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.JacocoConstants;
 import com.facebook.buck.jvm.java.runner.FileClassPathRunner;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Optional;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -34,22 +34,48 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
       "com.facebook.buck.testrunner.InstrumentationMain";
 
   abstract String getPathToAdbExecutable();
+
   abstract Optional<Path> getDirectoryForTestResults();
+
   abstract String getTestPackage();
+
   abstract String getTestRunner();
+
   abstract String getDdmlibJarPath();
+
   abstract String getKxmlJarPath();
-  abstract Optional<String> getDeviceSerial();
-  abstract Optional<Path> getInstrumentationApkPath();
-  abstract Optional<Path> getApkUnderTestPath();
+
+  abstract String getGuavaJarPath();
 
   /**
-   * @return The filesystem path to the compiled Buck test runner classes.
+   * @return If true, suspend the JVM to allow a debugger to attach after launch. Defaults to false.
    */
+  @Value.Default
+  boolean isDebugEnabled() {
+    return false;
+  }
+
+  /** @return If true, code coverage is enabled */
+  @Value.Default
+  boolean isCodeCoverageEnabled() {
+    return false;
+  }
+
+  abstract String getAndroidToolsCommonJarPath();
+
+  abstract Optional<String> getDeviceSerial();
+
+  abstract Optional<Path> getInstrumentationApkPath();
+
+  abstract Optional<Path> getApkUnderTestPath();
+
+  abstract Optional<String> getTestFilter();
+
+  /** @return The filesystem path to the compiled Buck test runner classes. */
   abstract Path getTestRunnerClasspath();
 
   public void formatCommandLineArgsToList(
-      ImmutableList.Builder<String> args) {
+      ProjectFilesystem filesystem, ImmutableList.Builder<String> args) {
     // NOTE(agallagher): These propbably don't belong here, but buck integration tests need
     // to find the test runner classes, so propagate these down via the relevant properties.
     args.add(String.format("-Dbuck.testrunner_classes=%s", getTestRunnerClasspath()));
@@ -60,9 +86,15 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
     args.add(
         "-classpath",
-        getTestRunnerClasspath().toString() + File.pathSeparator +
-            this.getDdmlibJarPath() + File.pathSeparator +
-            this.getKxmlJarPath());
+        getTestRunnerClasspath()
+            + File.pathSeparator
+            + this.getDdmlibJarPath()
+            + File.pathSeparator
+            + this.getKxmlJarPath()
+            + File.pathSeparator
+            + this.getGuavaJarPath()
+            + File.pathSeparator
+            + this.getAndroidToolsCommonJarPath());
     args.add(FileClassPathRunner.class.getName());
     args.add(INSTRUMENTATION_TEST_RUNNER);
 
@@ -77,6 +109,10 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
     args.add("--test-runner", getTestRunner());
     args.add("--adb-executable-path", getPathToAdbExecutable());
 
+    if (getTestFilter().isPresent()) {
+      args.add("--extra-instrumentation-argument", "class=" + getTestFilter().get());
+    }
+
     if (getApkUnderTestPath().isPresent()) {
       args.add("--apk-under-test-path", getApkUnderTestPath().get().toFile().getAbsolutePath());
     }
@@ -84,6 +120,20 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
       args.add(
           "--instrumentation-apk-path",
           getInstrumentationApkPath().get().toFile().getAbsolutePath());
+    }
+
+    if (isDebugEnabled()) {
+      args.add("--debug");
+    }
+
+    if (isCodeCoverageEnabled()) {
+      args.add("--code-coverage");
+      String codeCoverageOutputFile =
+          String.format(
+              "%s/%s",
+              JacocoConstants.getJacocoOutputDir(filesystem),
+              JacocoConstants.JACOCO_EXEC_COVERAGE_FILE);
+      args.add("--code-coverage-output-file", codeCoverageOutputFile);
     }
   }
 }

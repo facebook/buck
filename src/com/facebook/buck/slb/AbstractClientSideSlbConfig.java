@@ -16,17 +16,13 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
-import com.squareup.okhttp.OkHttpClient;
-
-import org.immutables.value.Value;
-
 import java.net.URI;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
@@ -41,15 +37,18 @@ abstract class AbstractClientSideSlbConfig {
   public static final int ERROR_CHECK_TIME_RANGE_MILLIS = (int) TimeUnit.MINUTES.toMillis(5);
   public static final float MAX_ERROR_PERCENTAGE = 0.1f;
 
-  public static final int LATENCY_CHECK_TIME_RANGE_MILLIS =
-      ERROR_CHECK_TIME_RANGE_MILLIS;
-  public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);;
+  public static final int LATENCY_CHECK_TIME_RANGE_MILLIS = ERROR_CHECK_TIME_RANGE_MILLIS;
+  public static final int MAX_ACCEPTABLE_LATENCY_MILLIS = (int) TimeUnit.SECONDS.toMillis(1);
+
+  public static final int MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE = 1;
 
   public abstract Clock getClock();
-  public abstract ScheduledExecutorService getSchedulerService();
+
   public abstract ImmutableList<URI> getServerPool();
-  public abstract OkHttpClient getPingHttpClient();
+
   public abstract BuckEventBus getEventBus();
+
+  public abstract String getServerPoolName();
 
   @Value.Default
   public int getErrorCheckTimeRangeMillis() {
@@ -84,5 +83,10 @@ abstract class AbstractClientSideSlbConfig {
   @Value.Default
   public float getMaxErrorPercentage() {
     return MAX_ERROR_PERCENTAGE;
+  }
+
+  @Value.Default
+  public int getMinSamplesToReportError() {
+    return MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
   }
 }

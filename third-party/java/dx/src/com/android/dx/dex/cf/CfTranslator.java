@@ -24,6 +24,7 @@ import com.android.dx.cf.iface.Field;
 import com.android.dx.cf.iface.FieldList;
 import com.android.dx.cf.iface.Method;
 import com.android.dx.cf.iface.MethodList;
+import com.android.dx.command.dexer.DxContext;
 import com.android.dx.dex.DexOptions;
 import com.android.dx.dex.code.DalvCode;
 import com.android.dx.dex.code.PositionList;
@@ -80,18 +81,18 @@ public class CfTranslator {
      * Takes a {@code byte[]}, interprets it as a Java classfile, and
      * translates it into a {@link ClassDefItem}.
      *
+     * @param context
      * @param cf {@code non-null;} the class file
      * @param bytes {@code non-null;} contents of the file
      * @param cfOptions options for class translation
      * @param dexOptions options for dex output
      * @param dexFile {@code non-null;} dex output
-     * @param optimizerOptions options for the optimizer
      * @return {@code non-null;} the translated class
      */
-    public static ClassDefItem translate(DirectClassFile cf, byte[] bytes,
-            CfOptions cfOptions, DexOptions dexOptions, OptimizerOptions optimizerOptions, DexFile dexFile) {
+    public static ClassDefItem translate(DxContext context, DirectClassFile cf, byte[] bytes,
+                                         CfOptions cfOptions, DexOptions dexOptions, DexFile dexFile) {
         try {
-            return translate0(cf, bytes, cfOptions, dexOptions, optimizerOptions, dexFile);
+            return translate0(context, cf, bytes, cfOptions, dexOptions, dexFile);
         } catch (RuntimeException ex) {
             String msg = "...while processing " + cf.getFilePath();
             throw ExceptionWithContext.withContext(ex, msg);
@@ -103,18 +104,19 @@ public class CfTranslator {
      * from {@link #translate} just to keep things a bit simpler in
      * terms of exception handling.
      *
+     *
+     * @param context
      * @param cf {@code non-null;} the class file
      * @param bytes {@code non-null;} contents of the file
      * @param cfOptions options for class translation
      * @param dexOptions options for dex output
      * @param dexFile {@code non-null;} dex output
-     * @param optimizerOptions options for the optimizer
      * @return {@code non-null;} the translated class
      */
-    private static ClassDefItem translate0(DirectClassFile cf, byte[] bytes,
-            CfOptions cfOptions, DexOptions dexOptions, OptimizerOptions optimizerOptions, DexFile dexFile) {
+    private static ClassDefItem translate0(DxContext context, DirectClassFile cf, byte[] bytes,
+                                           CfOptions cfOptions, DexOptions dexOptions, DexFile dexFile) {
 
-        optimizerOptions.loadOptimizeLists(cfOptions.optimizeListFile,
+        context.optimizerOptions.loadOptimizeLists(cfOptions.optimizeListFile,
                 cfOptions.dontOptimizeListFile);
 
         // Build up a class to output.
@@ -136,7 +138,7 @@ public class CfTranslator {
         FieldIdsSection fieldIdsSection = dexFile.getFieldIds();
         MethodIdsSection methodIdsSection = dexFile.getMethodIds();
         processFields(cf, out, dexFile);
-        processMethods(cf, cfOptions, dexOptions, optimizerOptions, out, dexFile);
+        processMethods(context, cf, cfOptions, dexOptions, out, dexFile);
 
         // intern constant pool method, field and type references
         ConstantPool constantPool = cf.getConstantPool();
@@ -241,14 +243,15 @@ public class CfTranslator {
     /**
      * Processes the methods of the given class.
      *
+     * @param context
      * @param cf {@code non-null;} class being translated
      * @param cfOptions {@code non-null;} options for class translation
      * @param dexOptions {@code non-null;} options for dex output
      * @param out {@code non-null;} output class
      * @param dexFile {@code non-null;} dex output
      */
-    private static void processMethods(DirectClassFile cf, CfOptions cfOptions,
-            DexOptions dexOptions, OptimizerOptions optimizerOptions, ClassDefItem out, DexFile dexFile) {
+    private static void processMethods(DxContext context, DirectClassFile cf, CfOptions cfOptions,
+                                       DexOptions dexOptions, ClassDefItem out, DexFile dexFile) {
         CstType thisClass = cf.getThisClass();
         MethodList methods = cf.getMethods();
         int sz = methods.size();
@@ -290,22 +293,22 @@ public class CfTranslator {
                                 + "." + one.getName().getString();
 
                     if (cfOptions.optimize &&
-                            optimizerOptions.shouldOptimize(canonicalName)) {
+                            context.optimizerOptions.shouldOptimize(canonicalName)) {
                         if (DEBUG) {
                             System.err.println("Optimizing " + canonicalName);
                         }
 
                         nonOptRmeth = rmeth;
-                        rmeth = new Optimizer().optimize(rmeth,
+                        rmeth = Optimizer.optimize(rmeth,
                                 paramSize, isStatic, cfOptions.localInfo, advice);
 
                         if (DEBUG) {
-                            OptimizerOptions.compareOptimizerStep(nonOptRmeth,
+                            context.optimizerOptions.compareOptimizerStep(nonOptRmeth,
                                     paramSize, isStatic, cfOptions, advice, rmeth);
                         }
 
                         if (cfOptions.statistics) {
-                            cfOptions.codeStatistics.updateRopStatistics(
+                            context.codeStatistics.updateRopStatistics(
                                     nonOptRmeth, rmeth);
                         }
                     }
@@ -320,7 +323,7 @@ public class CfTranslator {
                             locals, paramSize, dexOptions);
 
                     if (cfOptions.statistics && nonOptRmeth != null) {
-                        updateDexStatistics(cfOptions, dexOptions, rmeth, nonOptRmeth, locals,
+                        updateDexStatistics(context, cfOptions, dexOptions, rmeth, nonOptRmeth, locals,
                                 paramSize, concrete.getCode().size());
                     }
                 }
@@ -376,9 +379,9 @@ public class CfTranslator {
     /**
      * Helper that updates the dex statistics.
      */
-    private static void updateDexStatistics(CfOptions cfOptions, DexOptions dexOptions,
-            RopMethod optRmeth, RopMethod nonOptRmeth,
-            LocalVariableInfo locals, int paramSize, int originalByteCount) {
+    private static void updateDexStatistics(DxContext context, CfOptions cfOptions, DexOptions dexOptions,
+                                            RopMethod optRmeth, RopMethod nonOptRmeth,
+                                            LocalVariableInfo locals, int paramSize, int originalByteCount) {
         /*
          * Run rop->dex again on optimized vs. non-optimized method to
          * collect statistics. We have to totally convert both ways,
@@ -408,7 +411,7 @@ public class CfTranslator {
         optCode.assignIndices(callback);
         nonOptCode.assignIndices(callback);
 
-        cfOptions.codeStatistics.updateDexStatistics(nonOptCode, optCode);
-        cfOptions.codeStatistics.updateOriginalByteCount(originalByteCount);
+        context.codeStatistics.updateDexStatistics(nonOptCode, optCode);
+        context.codeStatistics.updateOriginalByteCount(originalByteCount);
     }
 }

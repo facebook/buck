@@ -16,29 +16,36 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * An interface that represents a {@link com.facebook.buck.rules.BuildRule} which can contribute
- * components (e.g. header files, preprocessor macros) to the preprocessing of some top-level
- * file (e.g. a C++ source from a C++ library rule).
+ * An interface that represents a {@link BuildRule} which can contribute components (e.g. header
+ * files, preprocessor macros) to the preprocessing of some top-level file (e.g. a C++ source from a
+ * C++ library rule).
  */
-public interface CxxPreprocessorDep extends HasBuildTarget {
+public interface CxxPreprocessorDep {
 
-  Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform);
+  BuildTarget getBuildTarget();
 
-  Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform);
+  Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver);
 
+  /**
+   * Returns the preprocessor input that represents this rule's public (exported) declarations. This
+   * includes any exported preprocessor flags, headers, etc.
+   */
   CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
+  /**
+   * Returns all transitive preprocessor inputs for this library. This includes public headers (and
+   * exported preprocessor flags) of all exported dependencies.
+   */
   ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException;
-
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 }

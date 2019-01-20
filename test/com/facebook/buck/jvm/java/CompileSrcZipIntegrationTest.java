@@ -16,25 +16,22 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class CompileSrcZipIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testJavaLibraryRuleAcceptsZipFileOfJavaSourceCodeAsInput() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "src_zip", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "src_zip", tmp);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:lib", "-v", "2");

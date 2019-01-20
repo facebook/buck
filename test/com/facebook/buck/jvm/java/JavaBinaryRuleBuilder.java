@@ -16,36 +16,92 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.cxx.DefaultCxxPlatforms;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 
-public class JavaBinaryRuleBuilder extends AbstractNodeBuilder<JavaBinaryDescription.Args> {
+public class JavaBinaryRuleBuilder
+    extends AbstractNodeBuilder<
+        JavaBinaryDescriptionArg.Builder,
+        JavaBinaryDescriptionArg,
+        JavaBinaryDescription,
+        JavaBinary> {
 
-  public JavaBinaryRuleBuilder(BuildTarget target) {
+  private JavaBinaryRuleBuilder(
+      BuildTarget target,
+      JavaOptions javaOptions,
+      JavacOptions javacOptions,
+      JavaBuckConfig javaBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
     super(
         new JavaBinaryDescription(
-            DEFAULT_JAVA_OPTIONS,
-            DEFAULT_JAVAC_OPTIONS,
-            DefaultCxxPlatforms.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))),
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+                .withToolchain(
+                    JavaCxxPlatformProvider.DEFAULT_NAME,
+                    JavaCxxPlatformProvider.of(defaultCxxPlatform))
+                .withToolchain(
+                    JavaOptionsProvider.DEFAULT_NAME,
+                    JavaOptionsProvider.of(javaOptions, javaOptions))
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(javacOptions))
+                .withToolchain(
+                    JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
+                .build(),
+            javaBuckConfig),
         target);
   }
 
+  public JavaBinaryRuleBuilder(
+      BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
+    this(
+        target,
+        DEFAULT_JAVA_OPTIONS,
+        DEFAULT_JAVAC_OPTIONS,
+        JavaBuckConfig.of(FakeBuckConfig.builder().build()),
+        defaultCxxPlatform,
+        cxxPlatforms);
+  }
+
+  public JavaBinaryRuleBuilder(BuildTarget target) {
+    this(target, CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS);
+  }
+
   public JavaBinaryRuleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public JavaBinaryRuleBuilder setMainClass(String mainClass) {
-    arg.mainClass = Optional.of(mainClass);
+    getArgForPopulating().setMainClass(Optional.of(mainClass));
+    return this;
+  }
+
+  public JavaBinaryRuleBuilder addTest(BuildTarget test) {
+    getArgForPopulating().addTests(test);
+    return this;
+  }
+
+  public JavaBinaryRuleBuilder setDefaultCxxPlatform(Flavor flavor) {
+    getArgForPopulating().setDefaultCxxPlatform(flavor);
     return this;
   }
 }
-

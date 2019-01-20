@@ -16,29 +16,28 @@
 
 package com.facebook.buck.testutil.integration;
 
-import com.google.common.base.Optional;
-import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.martiansoftware.nailgun.NGContext;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
-
-import javax.tools.ToolProvider;
+import java.util.Map;
+import org.ini4j.Ini;
 
 /**
  * Utility to locate the {@code testdata} directory relative to an integration test.
- * <p>
- * Integration tests will often have a sample project layout in a directory under a directory named
- * {@code testdata}. The name of the directory should correspond to the scenario being tested.
+ *
+ * <p>Integration tests will often have a sample project layout in a directory under a directory
+ * named {@code testdata}. The name of the directory should correspond to the scenario being tested.
  */
 public class TestDataHelper {
 
@@ -51,28 +50,27 @@ public class TestDataHelper {
   /** Utility class: do not instantiate. */
   private TestDataHelper() {}
 
-
   public static Path getTestDataDirectory(Object testCase) {
     return getTestDataDirectory(testCase.getClass());
   }
 
   public static Path getTestDataDirectory(Class<?> testCaseClass) {
     String javaPackage = testCaseClass.getPackage().getName();
-    List<String> parts = Lists.newArrayList();
+    List<String> parts = new ArrayList<>();
     for (String component : JAVA_PACKAGE_SPLITTER.split(javaPackage)) {
       parts.add(component);
     }
 
     parts.add(TESTDATA_DIRECTORY_NAME);
     String[] directories = parts.toArray(new String[0]);
-    Path result =  FileSystems.getDefault().getPath(TEST_DIRECTORY, directories);
+    Path result = FileSystems.getDefault().getPath(TEST_DIRECTORY, directories);
 
     // If we're running this test in IJ, then this path doesn't exist. Fall back to one that does
     if (!Files.exists(result)) {
-      result = Paths
-          .get("test")
-          .resolve(testCaseClass.getPackage().getName().replace(".", "/"))
-          .resolve("testdata");
+      result =
+          Paths.get("test")
+              .resolve(testCaseClass.getPackage().getName().replace('.', '/'))
+              .resolve("testdata");
     }
     return result;
   }
@@ -82,65 +80,43 @@ public class TestDataHelper {
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenario(
-      Object testCase,
-      String scenario,
-      TemporaryPaths temporaryFolder) {
+      Object testCase, String scenario, TemporaryPaths temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
-    return new CacheClearingProjectWorkspace(templateDir, temporaryFolder.getRoot());
+    return new ProjectWorkspace(templateDir, temporaryRoot.getRoot());
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenario(
-      Object testCase,
-      String scenario,
-      DebuggableTemporaryFolder temporaryFolder) {
+      Object testCase, String scenario, Path temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
-    return new CacheClearingProjectWorkspace(templateDir, temporaryFolder.getRoot().toPath());
+    return new ProjectWorkspace(templateDir, temporaryRoot);
   }
 
-  private static class CacheClearingProjectWorkspace extends ProjectWorkspace {
-    public CacheClearingProjectWorkspace(Path templateDir, Path targetFolder) {
-      super(templateDir, targetFolder);
-    }
+  public static ProjectWorkspace createProjectWorkspaceForScenarioWithoutDefaultCell(
+      Object testCase, String scenario, TemporaryPaths temporaryRoot) {
+    Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
+    return new ProjectWorkspace(templateDir, temporaryRoot.getRoot(), false);
+  }
 
-    @Override
-    public ProcessResult runBuckCommandWithEnvironmentAndContext(
-        Path repoRoot,
-        Optional<NGContext> context,
-        Optional<ImmutableMap<String, String>> env,
-        String... args) throws IOException {
-      ProcessResult result = super.runBuckCommandWithEnvironmentAndContext(
-          repoRoot,
-          context,
-          env,
-          args);
+  public static ProjectWorkspace createProjectWorkspaceForScenarioWithoutDefaultCell(
+      Object testCase, String scenario, Path temporaryRoot) {
+    Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
+    return new ProjectWorkspace(templateDir, temporaryRoot, false);
+  }
 
-      // javac has a global cache of zip/jar file content listings. It determines the validity of
-      // a given cache entry based on the modification time of the zip file in question. In normal
-      // usage, this is fine. However, in tests, we often will do a build, change something, and
-      // then rapidly do another build. If this happens quickly, javac can be operating from
-      // incorrect information when reading a jar file, resulting in "bad class file" or
-      // "corrupted zip file" errors. We work around this for testing purposes by reaching inside
-      // the compiler and clearing the cache.
-      try {
-        Class<?> cacheClass = Class.forName(
-            "com.sun.tools.javac.file.ZipFileIndexCache",
-            false,
-            ToolProvider.getSystemToolClassLoader());
-
-        Method getSharedInstanceMethod = cacheClass.getMethod("getSharedInstance");
-        Method clearCacheMethod = cacheClass.getMethod("clearCache");
-
-        Object cache = getSharedInstanceMethod.invoke(cacheClass);
-        clearCacheMethod.invoke(cache);
-
-        return result;
-      } catch (
-          ClassNotFoundException |
-          IllegalAccessException |
-          InvocationTargetException |
-          NoSuchMethodException e) {
-        throw new RuntimeException(e);
+  public static void overrideBuckconfig(
+      ProjectWorkspace projectWorkspace,
+      Map<String, ? extends Map<String, String>> buckconfigOverrides)
+      throws IOException {
+    String config = projectWorkspace.getFileContents(".buckconfig");
+    Ini ini = new Ini(new StringReader(config));
+    for (Map.Entry<String, ? extends Map<String, String>> section :
+        buckconfigOverrides.entrySet()) {
+      for (Map.Entry<String, String> entry : section.getValue().entrySet()) {
+        ini.put(section.getKey(), entry.getKey(), entry.getValue());
       }
     }
+    StringWriter writer = new StringWriter();
+    ini.store(writer);
+    Files.write(projectWorkspace.getPath(".buckconfig"), writer.toString().getBytes(UTF_8));
   }
 }

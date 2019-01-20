@@ -16,21 +16,32 @@
 
 package com.facebook.buck.apple;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.model.HasTests;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.swift.SwiftCommonArg;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-/**
- * Arguments common to Apple targets.
- */
-@SuppressFieldNotInitialized
-public class AppleNativeTargetDescriptionArg extends CxxLibraryDescription.Arg implements HasTests {
-  public Optional<ImmutableSortedMap<String, ImmutableMap<String, String>>> configs;
-  public Optional<ImmutableList<SourcePath>> extraXcodeSources;
-  public Optional<String> headerPathPrefix;
+/** Arguments common to Apple targets. */
+public interface AppleNativeTargetDescriptionArg
+    extends CxxLibraryDescription.CommonArg, SwiftCommonArg {
+  @Value.NaturalOrder
+  ImmutableSortedMap<String, ImmutableMap<String, String>> getConfigs();
+
+  Optional<String> getHeaderPathPrefix();
+
+  @Value.Default
+  default boolean isModular() {
+    return false;
+  }
+
+  @Value.Check
+  default void checkModularUsage() {
+    if (isModular() && getBridgingHeader().isPresent()) {
+      throw new HumanReadableException(
+          "Cannot be modular=True and have a bridging_header in the same rule");
+    }
+  }
 }

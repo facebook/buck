@@ -18,52 +18,52 @@ package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.io.IOException;
-
 public class JavaFileParserTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static final String JAVA_CODE_WITH_MANY_CLASSES = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "public class Example {",
-      "  public static int variablesNotCaptured, maybeLater;",
-      "",
-      "  private Example() {}",
-      "",
-      "  public static void functionsNotCapturedEither() {",
-      "  }",
-      "",
-      "  public enum InnerEnum {",
-      "    foo;",
-      "",
-      "    public class InnerClass {",
-      "    }",
-      "  }",
-      "",
-      "  interface InnerInterface {",
-      "  }",
-      "}",
-      "",
-      "class AnotherOuterClass {",
-      "}");
+  private static final String JAVA_CODE_WITH_MANY_CLASSES =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class Example {",
+              "  public static int variablesNotCaptured, maybeLater;",
+              "",
+              "  private Example() {}",
+              "",
+              "  public static void functionsNotCapturedEither() {",
+              "  }",
+              "",
+              "  public enum InnerEnum {",
+              "    foo;",
+              "",
+              "    public class InnerClass {",
+              "    }",
+              "  }",
+              "",
+              "  interface InnerInterface {",
+              "  }",
+              "}",
+              "",
+              "class AnotherOuterClass {",
+              "}");
 
   @Test
-  public void testJavaFileParsing() throws IOException {
+  public void testJavaFileParsing() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
-    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
-        JAVA_CODE_WITH_MANY_CLASSES);
+    ImmutableSortedSet<String> symbols =
+        parser.getExportedSymbolsFromString(JAVA_CODE_WITH_MANY_CLASSES);
 
     assertEquals(
         "getExportedSymbolsFromString should extract both top-level and inner symbols as provided",
@@ -76,28 +76,30 @@ public class JavaFileParserTest {
         symbols);
   }
 
-  private static final String JAVA_CODE_WITH_LOCAL_CLASS_IN_ANONYMOUS_CLASS = Joiner.on('\n').join(
-      "package com.example;",
-      "public class NonlocalClass {",
-      "  @Override",
-      "  Iterator<Entry<K, V>> entryIterator() {",
-      "    return new Itr<Entry<K, V>>() {",
-      "      @Override",
-      "      Entry<K, V> output(BiEntry<K, V> entry) {",
-      "        return new MapEntry(entry);",
-      "      }",
-      "",
-      "      class MapEntry  {}",
-      "    };",
-      "  }",
-      "}");
+  private static final String JAVA_CODE_WITH_LOCAL_CLASS_IN_ANONYMOUS_CLASS =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "public class NonlocalClass {",
+              "  @Override",
+              "  Iterator<Entry<K, V>> entryIterator() {",
+              "    return new Itr<Entry<K, V>>() {",
+              "      @Override",
+              "      Entry<K, V> output(BiEntry<K, V> entry) {",
+              "        return new MapEntry(entry);",
+              "      }",
+              "",
+              "      class MapEntry  {}",
+              "    };",
+              "  }",
+              "}");
 
   @Test
-  public void testJavaFileParsingWithLocalClassInAnonymousClass() throws IOException {
+  public void testJavaFileParsingWithLocalClassInAnonymousClass() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
-    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
-        JAVA_CODE_WITH_LOCAL_CLASS_IN_ANONYMOUS_CLASS);
+    ImmutableSortedSet<String> symbols =
+        parser.getExportedSymbolsFromString(JAVA_CODE_WITH_LOCAL_CLASS_IN_ANONYMOUS_CLASS);
 
     assertEquals(
         "getExportedSymbolsFromString should not consider non-local classes to be provided",
@@ -105,21 +107,23 @@ public class JavaFileParserTest {
         symbols);
   }
 
-  private static final String JAVA_CODE_WITH_LOCAL_CLASS = Joiner.on('\n').join(
-      "package com.example;",
-      "public class NonlocalClass {",
-      "  public static void exampleMethod() {",
-      "    class LocalClass {",
-      "    }",
-      "  }",
-      "}");
+  private static final String JAVA_CODE_WITH_LOCAL_CLASS =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "public class NonlocalClass {",
+              "  public static void exampleMethod() {",
+              "    class LocalClass {",
+              "    }",
+              "  }",
+              "}");
 
   @Test
-  public void testJavaFileParsingWithLocalClass() throws IOException {
+  public void testJavaFileParsingWithLocalClass() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
-    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
-        JAVA_CODE_WITH_LOCAL_CLASS);
+    ImmutableSortedSet<String> symbols =
+        parser.getExportedSymbolsFromString(JAVA_CODE_WITH_LOCAL_CLASS);
 
     assertEquals(
         "getExportedSymbolsFromString should not consider non-local classes to be provided",
@@ -130,11 +134,11 @@ public class JavaFileParserTest {
   private static final String JAVA_CODE_WITH_NO_PACKAGE = "public class NoPackageExample { }";
 
   @Test
-  public void testJavaFileParsingWithNoPackage() throws IOException {
+  public void testJavaFileParsingWithNoPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
-    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
-        JAVA_CODE_WITH_NO_PACKAGE);
+    ImmutableSortedSet<String> symbols =
+        parser.getExportedSymbolsFromString(JAVA_CODE_WITH_NO_PACKAGE);
 
     assertEquals(
         "getExportedSymbolsFromString should be able to extract package-less classes as provided",
@@ -146,11 +150,11 @@ public class JavaFileParserTest {
       "public @interface ExampleAnnotationType { }";
 
   @Test
-  public void testJavaFileParsingWithAnnotationType() throws IOException {
+  public void testJavaFileParsingWithAnnotationType() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
-    ImmutableSortedSet<String> symbols = parser.getExportedSymbolsFromString(
-        JAVA_CODE_WITH_ANNOTATION_TYPE);
+    ImmutableSortedSet<String> symbols =
+        parser.getExportedSymbolsFromString(JAVA_CODE_WITH_ANNOTATION_TYPE);
 
     assertEquals(
         "getExportedSymbolsFromString should be able to extract symbols with annotations",
@@ -158,33 +162,32 @@ public class JavaFileParserTest {
         symbols);
   }
 
-  private static final String JAVA_CODE_WITH_IMPORTS = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "import java.util.Map;",
-      "",
-      "public class AnExample {",
-      "",
-      "  public void doStuff(Map map) {",
-      "",
-      "  }",
-      "}"
-  );
+  private static final String JAVA_CODE_WITH_IMPORTS =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import java.util.Map;",
+              "",
+              "public class AnExample {",
+              "",
+              "  public void doStuff(Map map) {",
+              "",
+              "  }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbols() throws IOException {
+  public void testExtractingRequiredSymbols() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
 
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_WITH_IMPORTS);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_IMPORTS);
 
     assertEquals(
         "extractFeaturesFromJavaCode should be able to find a top-level class",
         ImmutableSortedSet.of("com.example.AnExample"),
         features.providedSymbols);
-    assertEquals(
-        ImmutableSortedSet.of(),
-        features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of(), features.requiredSymbols);
     assertEquals(
         "extractFeaturesFromJavaCode should be able to find an ordinary import",
         ImmutableSortedSet.of("java.util.Map"),
@@ -192,23 +195,24 @@ public class JavaFileParserTest {
   }
 
   private static final String JAVA_CODE_WITH_IMPORTS_THAT_DO_NOT_FOLLOW_THE_NAMING_CONVENTIONS =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "import com.facebook.buck.nsOuter.nsInner;",
-          "",
-          "import org.mozilla.intl.chardet.nsDetector;",
-          "import org.mozilla.intl.chardet.nsICharsetDetectionObserver;",
-          "import org.mozilla.intl.chardet.nsPSMDetector;",
-          "",
-          "public class AnExample {}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import com.facebook.buck.nsOuter.nsInner;",
+              "",
+              "import org.mozilla.intl.chardet.nsDetector;",
+              "import org.mozilla.intl.chardet.nsICharsetDetectionObserver;",
+              "import org.mozilla.intl.chardet.nsPSMDetector;",
+              "",
+              "public class AnExample {}");
 
   @Test
   public void testExtractingRequiredSymbolsWithImportsThatDoNotFollowTheNamingConventions() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_WITH_IMPORTS_THAT_DO_NOT_FOLLOW_THE_NAMING_CONVENTIONS);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(
+            JAVA_CODE_WITH_IMPORTS_THAT_DO_NOT_FOLLOW_THE_NAMING_CONVENTIONS);
 
     assertEquals(
         ImmutableSortedSet.of(
@@ -217,95 +221,89 @@ public class JavaFileParserTest {
             "org.mozilla.intl.chardet.nsICharsetDetectionObserver",
             "org.mozilla.intl.chardet.nsPSMDetector"),
         features.requiredSymbols);
-    assertEquals(
-        ImmutableSortedSet.of(),
-        features.exportedSymbols);
+    assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
   private static final String JAVA_CODE_WITH_IMPORTS_THAT_HAVE_NO_CAPITAL_LETTERS =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "import com.facebook.buck.badactor;",
-          "",
-          "public class AnExample {}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import com.facebook.buck.badactor;",
+              "",
+              "public class AnExample {}");
 
   /**
    * Verifies that an import that completely violates the expectations around naming conventions
-   * will result in an exception being thrown.
+   * will still be added. Although we can police this in our own code, we have no control over what
+   * third-party libraries do.
    */
   @Test
   public void testExtractingRequiredSymbolsWithImportsThatHaveNoCapitalLetters() {
-    thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("No component with a capital letter in fully qualified name: " +
-        "com.facebook.buck.badactor");
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_IMPORTS_THAT_HAVE_NO_CAPITAL_LETTERS);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_IMPORTS_THAT_HAVE_NO_CAPITAL_LETTERS);
+
+    assertEquals(ImmutableSortedSet.of("com.facebook.buck.badactor"), features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.AnExample"), features.providedSymbols);
   }
 
-  private static final String JAVA_CODE_WITH_FULLY_QUALIFIED_REFERENCES = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "import java.util.Map;",
-      "",
-      "public class AnExample {",
-      "",
-      "  public int getMeaningOfLife() {",
-      "    String meaningOfLife = ClassInThisPackage.MEANING_OF_LIFE;",
-      "    return java.lang.Integer.valueOf(meaningOfLife, 10);",
-      "  }",
-      "}"
-  );
+  private static final String JAVA_CODE_WITH_FULLY_QUALIFIED_REFERENCES =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import java.util.Map;",
+              "",
+              "public class AnExample {",
+              "",
+              "  public int getMeaningOfLife() {",
+              "    String meaningOfLife = ClassInThisPackage.MEANING_OF_LIFE;",
+              "    return java.lang.Integer.valueOf(meaningOfLife, 10);",
+              "  }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithFullyQualifiedReference() throws IOException {
+  public void testExtractingRequiredSymbolsWithFullyQualifiedReference() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_WITH_FULLY_QUALIFIED_REFERENCES);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_FULLY_QUALIFIED_REFERENCES);
 
     assertEquals(
         "extractFeaturesFromJavaCode should be able to find a top-level class",
         ImmutableSortedSet.of("com.example.AnExample"),
         features.providedSymbols);
     assertEquals(
-        "extractFeaturesFromJavaCode should be able to make appropriate inferences about: " +
-            "(1) unqualified references to types in the same package " +
-            "(2) fully-qualified references to types",
+        "extractFeaturesFromJavaCode should be able to make appropriate inferences about: "
+            + "(1) unqualified references to types in the same package "
+            + "(2) fully-qualified references to types",
         ImmutableSortedSet.of(
-            "java.util.Map",
-            "com.example.ClassInThisPackage",
-            "java.lang.Integer"),
+            "java.util.Map", "com.example.ClassInThisPackage", "java.lang.Integer"),
         features.requiredSymbols);
-    assertEquals(
-        ImmutableSortedSet.of(),
-        features.exportedSymbols);
+    assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
-  private static final String JAVA_CODE_WITH_STATIC_IMPORT = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;",
-      "",
-      "public class AnExample {",
-      "  public void executor() { listeningDecorator(null); }",
-      "}"
-  );
+  private static final String JAVA_CODE_WITH_STATIC_IMPORT =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;",
+              "",
+              "public class AnExample {",
+              "  public void executor() { listeningDecorator(null); }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithStaticImport() throws IOException {
+  public void testExtractingRequiredSymbolsWithStaticImport() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_WITH_STATIC_IMPORT);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_STATIC_IMPORT);
 
     assertEquals(
-        ImmutableSortedSet.of(
-            "com.google.common.util.concurrent.MoreExecutors"
-        ),
+        ImmutableSortedSet.of("com.google.common.util.concurrent.MoreExecutors"),
         features.requiredSymbols);
-    assertEquals(
-        ImmutableSortedSet.of(),
-        features.exportedSymbols);
+    assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
   /**
@@ -313,84 +311,77 @@ public class JavaFileParserTest {
    * required symbols via {@link JavaFileParser}; however, there is some hardcoded support for
    * common wildcards, such as {@code import java.util.*}.
    */
-  private static final String JAVA_CODE_WITH_SUPPORTED_WILDCARD_IMPORT = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "import java.util.*;",
-      "",
-      "public class AnExample {",
-      "  public Map newInstance() { return new HashMap(); }",
-      "}"
-  );
+  private static final String JAVA_CODE_WITH_SUPPORTED_WILDCARD_IMPORT =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import java.util.*;",
+              "",
+              "public class AnExample {",
+              "  public Map newInstance() { return new HashMap(); }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithSupportedWildcardImport() throws IOException {
+  public void testExtractingRequiredSymbolsWithSupportedWildcardImport() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_WITH_SUPPORTED_WILDCARD_IMPORT);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_SUPPORTED_WILDCARD_IMPORT);
 
-    assertEquals(
-        ImmutableSortedSet.of("com.example.AnExample"),
-        features.providedSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.AnExample"), features.providedSymbols);
     assertEquals(ImmutableSortedSet.of("java.util.HashMap"), features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of("java.util.Map"), features.exportedSymbols);
   }
 
-  private static final String JAVA_CODE_WITH_UNSUPPORTED_WILDCARD_IMPORT = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "import com.example.things.Thinger;",
-      "import com.mystery.*;",
-      "",
-      "import java.util.*;",
-      "",
-      "public class AnExample extends FooBar {",
-      "  public Map newInstance() { return new HashMap(); }",
-      "  public SomeExample newThinger() { return Thinger.createSomeExample(); }",
-      "}"
-  );
+  private static final String JAVA_CODE_WITH_UNSUPPORTED_WILDCARD_IMPORT =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import com.example.things.Thinger;",
+              "import com.mystery.*;",
+              "",
+              "import java.util.*;",
+              "",
+              "public class AnExample extends FooBar {",
+              "  public Map newInstance() { return new HashMap(); }",
+              "  public SomeExample newThinger() { return Thinger.createSomeExample(); }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithUnsupportedWildcardImport() throws IOException {
+  public void testExtractingRequiredSymbolsWithUnsupportedWildcardImport() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_WITH_UNSUPPORTED_WILDCARD_IMPORT);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_WITH_UNSUPPORTED_WILDCARD_IMPORT);
 
+    assertEquals(ImmutableSortedSet.of("com.example.AnExample"), features.providedSymbols);
     assertEquals(
-        ImmutableSortedSet.of("com.example.AnExample"),
-        features.providedSymbols);
-    assertEquals(
-        "Should be restricted to explicit imports because the wildcard import makes it " +
-            "impossible for JavaFileParser to know things such as whether it is " +
-            "com.example.FooBar or com.mystery.FooBar " +
-            "(this is also true for Map and HashMap, as things are implemented today).",
-        ImmutableSortedSet.of(
-            "com.example.things.Thinger"
-        ),
+        "Should be restricted to explicit imports because the wildcard import makes it "
+            + "impossible for JavaFileParser to know things such as whether it is "
+            + "com.example.FooBar or com.mystery.FooBar "
+            + "(this is also true for Map and HashMap, as things are implemented today).",
+        ImmutableSortedSet.of("com.example.things.Thinger"),
         features.requiredSymbols);
     assertEquals(
         "Currently contains some items, but ideally would be empty.",
-        ImmutableSortedSet.of(
-            "java.util.Map",
-            "com.example.FooBar",
-            "com.example.SomeExample"
-        ),
+        ImmutableSortedSet.of("java.util.Map", "com.example.FooBar", "com.example.SomeExample"),
         features.exportedSymbols);
   }
 
-  private static final String JAVA_CODE_THROWS_FULLY_QUALIFIED_EXCEPTION = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "public class AnExample {",
-      "  public void read() throws java.io.IOException {}",
-      "}"
-  );
+  private static final String JAVA_CODE_THROWS_FULLY_QUALIFIED_EXCEPTION =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public void read() throws java.io.IOException {}",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithFullyQualifiedThrows() throws IOException {
+  public void testExtractingRequiredSymbolsWithFullyQualifiedThrows() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_THROWS_FULLY_QUALIFIED_EXCEPTION);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_THROWS_FULLY_QUALIFIED_EXCEPTION);
 
     assertEquals(
         "extractFeaturesFromJavaCode should be able to find a top-level class",
@@ -400,19 +391,20 @@ public class JavaFileParserTest {
     assertEquals(ImmutableSortedSet.of("java.io.IOException"), features.exportedSymbols);
   }
 
-  private static final String JAVA_CODE_INSTANTIATES_CLASS_IN_PACKAGE = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "public class AnExample {",
-      "  public Widget create() { return new Widget(); }",
-      "}"
-  );
+  private static final String JAVA_CODE_INSTANTIATES_CLASS_IN_PACKAGE =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public Widget create() { return new Widget(); }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithNewTypeInPackage() throws IOException {
+  public void testExtractingRequiredSymbolsWithNewTypeInPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_INSTANTIATES_CLASS_IN_PACKAGE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_INSTANTIATES_CLASS_IN_PACKAGE);
 
     assertEquals(
         "extractFeaturesFromJavaCode should be able to find a top-level class",
@@ -423,227 +415,203 @@ public class JavaFileParserTest {
   }
 
   private static final String JAVA_CODE_CREATES_IN_PACKAGE_TYPE_WITHIN_PACKAGE_TYPE =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "public class AnExample {",
-          "  public Widget create() { return new Widget(new Woojet()); }",
-          "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public Widget create() { return new Widget(new Woojet()); }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsRecursesIntoNewCall() throws IOException {
+  public void testExtractingRequiredSymbolsRecursesIntoNewCall() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_CREATES_IN_PACKAGE_TYPE_WITHIN_PACKAGE_TYPE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_CREATES_IN_PACKAGE_TYPE_WITHIN_PACKAGE_TYPE);
 
     assertEquals(ImmutableSortedSet.of("com.example.Woojet"), features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of("com.example.Widget"), features.exportedSymbols);
   }
 
   private static final String JAVA_CODE_DOES_INSTANCEOF_CHECK_FOR_TYPE_WITHIN_PACKAGE =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "public class AnExample {",
-          "  public boolean isWoojet(Object widget) { return widget instanceof Woojet; }",
-          "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public boolean isWoojet(Object widget) { return widget instanceof Woojet; }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithInstanceofCheckInPackage() throws IOException {
+  public void testExtractingRequiredSymbolsWithInstanceofCheckInPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_DOES_INSTANCEOF_CHECK_FOR_TYPE_WITHIN_PACKAGE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_DOES_INSTANCEOF_CHECK_FOR_TYPE_WITHIN_PACKAGE);
 
-    assertEquals(
-        ImmutableSortedSet.of(
-            "com.example.Woojet"
-        ),
-        features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.Woojet"), features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
   private static final String JAVA_CODE_DOES_CAST_FOR_TYPE_WITHIN_PACKAGE =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "public class AnExample {",
-          "  public void castToWidget(Object widget) { Object obj = (Widget) widget; }",
-          "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public void castToWidget(Object widget) { Object obj = (Widget) widget; }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithCastToTypeInPackage() throws IOException {
+  public void testExtractingRequiredSymbolsWithCastToTypeInPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_DOES_CAST_FOR_TYPE_WITHIN_PACKAGE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_DOES_CAST_FOR_TYPE_WITHIN_PACKAGE);
 
-    assertEquals(
-        ImmutableSortedSet.of(
-            "com.example.Widget"
-        ),
-        features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.Widget"), features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
   private static final String JAVA_CODE_DOES_CAST_FOR_TYPE_WITHIN_PACKAGE_IN_METHOD_INVOCATION =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "public class AnExample {",
-          "  public Object createWidget() { return create((Widget) null); }",
-          "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public Object createWidget() { return create((Widget) null); }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithCastToTypeInPackageWithinMethodInvocation()
-      throws IOException {
+  public void testExtractingRequiredSymbolsWithCastToTypeInPackageWithinMethodInvocation() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_DOES_CAST_FOR_TYPE_WITHIN_PACKAGE_IN_METHOD_INVOCATION);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(
+            JAVA_CODE_DOES_CAST_FOR_TYPE_WITHIN_PACKAGE_IN_METHOD_INVOCATION);
 
-    assertEquals(
-        ImmutableSortedSet.of(
-            "com.example.Widget"
-        ),
-        features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.Widget"), features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
   private static final String JAVA_CODE_SPECIFIES_PARAM_FOR_TYPE_WITHIN_PACKAGE =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "public class AnExample {",
-          "  public void printWidget(Widget widget) { System.out.println(widget); }",
-          "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public void printWidget(Widget widget) { System.out.println(widget); }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithParamInPackage() throws IOException {
+  public void testExtractingRequiredSymbolsWithParamInPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_SPECIFIES_PARAM_FOR_TYPE_WITHIN_PACKAGE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_SPECIFIES_PARAM_FOR_TYPE_WITHIN_PACKAGE);
 
     assertEquals(ImmutableSortedSet.of(), features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of("com.example.Widget"), features.exportedSymbols);
   }
 
   private static final String JAVA_CODE_SPECIFIES_STATIC_METHOD_IN_PACKAGE =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "public class AnExample {",
-          "  public Object createWidget() { return Widget.newInstance(); }",
-          "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public Object createWidget() { return Widget.newInstance(); }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithStaticMethodAccess() throws IOException {
+  public void testExtractingRequiredSymbolsWithStaticMethodAccess() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_SPECIFIES_STATIC_METHOD_IN_PACKAGE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_SPECIFIES_STATIC_METHOD_IN_PACKAGE);
 
-    assertEquals(
-        ImmutableSortedSet.of(
-            "com.example.Widget"
-        ),
-        features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.Widget"), features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
   private static final String JAVA_CODE_SPECIFIES_TYPE_IN_PACKAGE =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "public class AnExample {",
-          "  public void createWidget() {",
-          "    Widget widget = WidgetFactory.newInstance();",
-          "  }",
-          "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample {",
+              "  public void createWidget() {",
+              "    Widget widget = WidgetFactory.newInstance();",
+              "  }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithTypeOnlyReferencedAsLocalVariable()
-      throws IOException {
+  public void testExtractingRequiredSymbolsWithTypeOnlyReferencedAsLocalVariable() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_CODE_SPECIFIES_TYPE_IN_PACKAGE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_CODE_SPECIFIES_TYPE_IN_PACKAGE);
 
     assertEquals(
-        ImmutableSortedSet.of(
-            "com.example.Widget",
-            "com.example.WidgetFactory"
-        ),
+        ImmutableSortedSet.of("com.example.Widget", "com.example.WidgetFactory"),
         features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
-  private static final String PROPERTY_LOOKUP_EXPRESSION = Joiner.on('\n').join(
-      "package com.example;",
-      "",
-      "import java.util.*;",
-      "",
-      "public class AnExample {",
-      "  public static void main(String[] args) {",
-      "    int numArgs = args.length;",
-      "    List<String> asArray = new ArrayList(numArgs);",
-      "  }",
-      "}"
-  );
+  private static final String PROPERTY_LOOKUP_EXPRESSION =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import java.util.*;",
+              "",
+              "public class AnExample {",
+              "  public static void main(String[] args) {",
+              "    int numArgs = args.length;",
+              "    List<String> asArray = new ArrayList(numArgs);",
+              "  }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithPropertyLookupExpression()
-      throws IOException {
+  public void testExtractingRequiredSymbolsWithPropertyLookupExpression() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        PROPERTY_LOOKUP_EXPRESSION);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(PROPERTY_LOOKUP_EXPRESSION);
 
     assertEquals(
         "args.length should not appear in features.requiredSymbols.",
-        ImmutableSortedSet.of(
-            "java.util.ArrayList",
-            "java.util.List"
-        ),
+        ImmutableSortedSet.of("java.util.ArrayList", "java.util.List"),
         features.requiredSymbols);
     assertEquals(ImmutableSortedSet.of(), features.exportedSymbols);
   }
 
   private static final String JAVA_FULL_FEATURED_EXAMPLE =
-      Joiner.on('\n').join(
-        "package com.example;",
-        "",
-        "public class AnExample extends AnotherExample implements IExample {",
-        "  private MyField myField;",
-        "",
-        "  @AnnotationWithArgs(str = MoarConstants.COMPILE_TIME_CONSTANT)",
-        "  @ChecksMeaning(42)",
-        "  @Edible",
-        "  public static MyExample createFrom(Foo foo, Bar bar) throws MyException {",
-        "    FooAndBar foobar = new FooAndBarSubclass(foo, bar);",
-        "    foobar.init(Thinger.class, com.otherexample.Thinger.class);",
-        "    int meaningOfLife = foobar.someMethod().otherMethod().okLastMethod();",
-        "    if (meaningOfLife == Constants.MEANING_OF_LIFE) {",
-        "      return MyExampleFactory.newInstance(meaningOfLife);",
-        "    } else {",
-        "      Object[] unused = new MyArray[42];",
-        "      Object[] unused2 = new MyArray2[] { null };",
-        "      try {",
-        "        unused2.toString();",
-        "      } catch (BizarreCheckedException e) {}",
-        "      return null;",
-        "    }",
-        "  }",
-        "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample extends AnotherExample implements IExample {",
+              "  private MyField myField;",
+              "",
+              "  @AnnotationWithArgs(str = MoarConstants.COMPILE_TIME_CONSTANT)",
+              "  @ChecksMeaning(42)",
+              "  @Edible",
+              "  public static MyExample createFrom(Foo foo, Bar bar) throws MyException {",
+              "    FooAndBar foobar = new FooAndBarSubclass(foo, bar);",
+              "    foobar.init(Thinger.class, com.otherexample.Thinger.class);",
+              "    int meaningOfLife = foobar.someMethod().otherMethod().okLastMethod();",
+              "    if (meaningOfLife == Constants.MEANING_OF_LIFE) {",
+              "      return MyExampleFactory.newInstance(meaningOfLife);",
+              "    } else {",
+              "      Object[] unused = new MyArray[42];",
+              "      Object[] unused2 = new MyArray2[] { null };",
+              "      try {",
+              "        unused2.toString();",
+              "      } catch (BizarreCheckedException e) {}",
+              "      return null;",
+              "    }",
+              "  }",
+              "}");
 
   @Test
-  public void testExtractingRequiredSymbolsWithNonTrivialJavaLogic()
-      throws IOException {
+  public void testExtractingRequiredSymbolsWithNonTrivialJavaLogic() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        JAVA_FULL_FEATURED_EXAMPLE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(JAVA_FULL_FEATURED_EXAMPLE);
 
     assertEquals(
         ImmutableSortedSet.of(
@@ -657,8 +625,7 @@ public class JavaFileParserTest {
             "com.example.MyExampleFactory",
             "com.example.MyField",
             "com.example.Thinger",
-            "com.otherexample.Thinger"
-        ),
+            "com.otherexample.Thinger"),
         features.requiredSymbols);
     assertEquals(
         ImmutableSortedSet.of(
@@ -670,46 +637,45 @@ public class JavaFileParserTest {
             "com.example.Foo",
             "com.example.IExample",
             "com.example.MyExample",
-            "com.example.MyException"
-        ),
+            "com.example.MyException"),
         features.exportedSymbols);
   }
 
   private static final String EXPORTED_TYPES_EXAMPLE =
-      Joiner.on('\n').join(
-        "package com.example;",
-        "",
-        "public class AnExample extends SuperExample implements IExample1, IExample2 {",
-        "  public PublicField publicField;",
-        "  protected ProtectedField protectedField;",
-        "  PackagePrivateField packagePrivateField;",
-        "  private PrivateField privateField;",
-        "",
-        "  public static PublicReturnType createFrom(PublicParam p) throws PublicException {",
-        "    return null;",
-        "  }",
-        "",
-        "  protected static ProtectedReturnType createFrom(ProtectedParam p) ",
-        "      throws ProtectedException {",
-        "    return null;",
-        "  }",
-        "",
-        "  static PackagePrivateReturnType createFrom(PackagePrivateParam p) ",
-        "      throws PackagePrivateException {",
-        "    return null;",
-        "  }",
-        "",
-        "  private static PrivateReturnType createFrom(PrivateParam p) throws PrivateException {",
-        "    return null;",
-        "  }",
-        "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "public class AnExample extends SuperExample implements IExample1, IExample2 {",
+              "  public PublicField publicField;",
+              "  protected ProtectedField protectedField;",
+              "  PackagePrivateField packagePrivateField;",
+              "  private PrivateField privateField;",
+              "",
+              "  public static PublicReturnType createFrom(PublicParam p) throws PublicException {",
+              "    return null;",
+              "  }",
+              "",
+              "  protected static ProtectedReturnType createFrom(ProtectedParam p) ",
+              "      throws ProtectedException {",
+              "    return null;",
+              "  }",
+              "",
+              "  static PackagePrivateReturnType createFrom(PackagePrivateParam p) ",
+              "      throws PackagePrivateException {",
+              "    return null;",
+              "  }",
+              "",
+              "  private static PrivateReturnType createFrom(PrivateParam p) throws PrivateException {",
+              "    return null;",
+              "  }",
+              "}");
 
   @Test
-  public void testExtractingExportedTypes() throws IOException {
+  public void testExtractingExportedTypes() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        EXPORTED_TYPES_EXAMPLE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(EXPORTED_TYPES_EXAMPLE);
     assertEquals(
         ImmutableSortedSet.of(
             "com.example.IExample1",
@@ -726,62 +692,93 @@ public class JavaFileParserTest {
             "com.example.PackagePrivateField",
             "com.example.PackagePrivateParam",
             "com.example.PackagePrivateReturnType",
-            "com.example.SuperExample"
-        ),
+            "com.example.SuperExample"),
         features.exportedSymbols);
   }
 
   private static final String EXPORTED_TYPES_INTERFACE_EXAMPLE =
-      Joiner.on('\n').join(
-        "package com.example;",
-        "",
-        "import com.example.interfaces.IExample;",
-        "",
-        "public interface Example extends IExample {",
-        "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import com.example.interfaces.IExample;",
+              "",
+              "public interface Example extends IExample {",
+              "}");
 
   @Test
-  public void testExtractingExportedTypesFromInterfaceThatExtendsInterfaceFromAnotherPackage()
-      throws IOException {
+  public void testExtractingExportedTypesFromInterfaceThatExtendsInterfaceFromAnotherPackage() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        EXPORTED_TYPES_INTERFACE_EXAMPLE);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(EXPORTED_TYPES_INTERFACE_EXAMPLE);
+    assertEquals(ImmutableSortedSet.of(), features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.Example"), features.providedSymbols);
     assertEquals(
-        ImmutableSortedSet.of(),
-        features.requiredSymbols);
-    assertEquals(
-        ImmutableSortedSet.of("com.example.Example"),
-        features.providedSymbols);
-    assertEquals(
-        ImmutableSortedSet.of("com.example.interfaces.IExample"),
-        features.exportedSymbols);
+        ImmutableSortedSet.of("com.example.interfaces.IExample"), features.exportedSymbols);
   }
 
   private static final String EXPORTED_TYPES_SUPERCLASS_WITH_GENERIC =
-      Joiner.on('\n').join(
-          "package com.example;",
-          "",
-          "import com.example.interfaces.IExample;",
-          "",
-          "public class Example<T> extends IExample<T> {",
-          "}"
-      );
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import com.example.interfaces.IExample;",
+              "",
+              "public class Example<T> extends IExample<T> {",
+              "}");
 
   @Test
-  public void testExtractingExportedTypesFromSuperclassWithAGeneric()
-      throws IOException {
+  public void testExtractingExportedTypesFromSuperclassWithAGeneric() {
     JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
-    JavaFileParser.JavaFileFeatures features = parser.extractFeaturesFromJavaCode(
-        EXPORTED_TYPES_SUPERCLASS_WITH_GENERIC);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(EXPORTED_TYPES_SUPERCLASS_WITH_GENERIC);
+    assertEquals(ImmutableSortedSet.of(), features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.Example"), features.providedSymbols);
     assertEquals(
-        ImmutableSortedSet.of(),
-        features.requiredSymbols);
+        ImmutableSortedSet.of("com.example.interfaces.IExample"), features.exportedSymbols);
+  }
+
+  private static final String EXPORTED_TYPES_WITH_CLASS_THAT_LOOKS_LIKE_A_GENERIC =
+      Joiner.on('\n')
+          .join(
+              "package com.example;",
+              "",
+              "import com.google.common.base.Function;",
+              "import org.stringtemplate.v4.ST;",
+              "",
+              "public class Example {",
+              "  public StringTemplateStep(Function<ST, ST> configure) {}",
+              "}");
+
+  /** This is a case that we ran into in Buck's own source code. */
+  @Test
+  public void testExtractingExportedTypesWithClassThatLooksLikeAGeneric() {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    JavaFileParser.JavaFileFeatures features =
+        parser.extractFeaturesFromJavaCode(EXPORTED_TYPES_WITH_CLASS_THAT_LOOKS_LIKE_A_GENERIC);
+    assertEquals(ImmutableSortedSet.of(), features.requiredSymbols);
+    assertEquals(ImmutableSortedSet.of("com.example.Example"), features.providedSymbols);
     assertEquals(
-        ImmutableSortedSet.of("com.example.Example"),
-        features.providedSymbols);
-    assertEquals(
-        ImmutableSortedSet.of("com.example.interfaces.IExample"),
+        ImmutableSortedSet.of("com.google.common.base.Function", "org.stringtemplate.v4.ST"),
         features.exportedSymbols);
+  }
+
+  @Test
+  public void testPackageParsingWithoutRestOfFile() {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    final Optional<String> packageNameFromSource =
+        parser.getPackageNameFromSource("package com.domain.subdomain;");
+    assertTrue(packageNameFromSource.isPresent());
+    assertEquals("com.domain.subdomain", packageNameFromSource.get());
+  }
+
+  @Test
+  public void testPackageParsingWithMisleadingComments() {
+    JavaFileParser parser = JavaFileParser.createJavaFileParser(DEFAULT_JAVAC_OPTIONS);
+    final Optional<String> packageNameFromSource =
+        parser.getPackageNameFromSource(
+            "/**\n" + "package misleading;\n" + "*/\n" + "package com.domain.subdomain;");
+    assertTrue(packageNameFromSource.isPresent());
+    assertEquals("com.domain.subdomain", packageNameFromSource.get());
   }
 }

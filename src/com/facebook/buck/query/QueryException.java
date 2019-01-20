@@ -16,8 +16,9 @@
 
 package com.facebook.buck.query;
 
-@SuppressWarnings("serial")
-public class QueryException extends Exception {
+import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
+
+public class QueryException extends Exception implements ExceptionWithHumanReadableMessage {
 
   public QueryException(String message) {
     super(message);
@@ -27,7 +28,16 @@ public class QueryException extends Exception {
     this(String.format(humanReadableFormatString, args));
   }
 
+  public QueryException(Throwable cause, String message) {
+    super(message, cause);
+  }
+
   public QueryException(Throwable cause, String humanReadableFormatString, Object... args) {
     super(String.format(humanReadableFormatString, args), cause);
+  }
+
+  @Override
+  public String getHumanReadableErrorMessage() {
+    return getLocalizedMessage();
   }
 }

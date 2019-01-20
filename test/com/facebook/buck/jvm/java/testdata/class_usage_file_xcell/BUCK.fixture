@@ -1,0 +1,9 @@
+java_library(
+    name = "biz",
+    srcs = [
+        "SeriousBusiness.java",
+    ],
+    deps = [
+        "away_cell//util:util",
+    ],
+)

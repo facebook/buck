@@ -17,78 +17,76 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.android.AndroidDirectoryResolver;
 import com.facebook.buck.android.AndroidResourceBuilder;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
+import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.AppleTestBuilder;
+import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.JavaTestDescription;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.FakeOutputStream;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.TargetGraphFactory;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.kohsuke.args4j.CmdLineException;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.Executors;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class TargetsCommandTest {
 
@@ -96,55 +94,48 @@ public class TargetsCommandTest {
   private ProjectWorkspace workspace;
   private TargetsCommand targetsCommand;
   private CommandRunnerParams params;
-  private ObjectMapper objectMapper;
   private ProjectFilesystem filesystem;
   private ListeningExecutorService executor;
+  private CapturingConsoleEventListener capturingConsoleEventListener;
 
-  private SortedMap<String, TargetNode<?>> buildTargetNodes(
-      ProjectFilesystem filesystem,
-      String buildTarget) {
-    SortedMap<String, TargetNode<?>> buildRules = Maps.newTreeMap();
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem, buildTarget);
-    TargetNode<?> node = JavaLibraryBuilder
-        .createBuilder(target)
-        .build();
-    buildRules.put(buildTarget, node);
+  private SortedSet<TargetNode<?>> buildTargetNodes(
+      ProjectFilesystem filesystem, String buildTarget) {
+    SortedSet<TargetNode<?>> buildRules = new TreeSet<>();
+    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget);
+    TargetNode<?> node = JavaLibraryBuilder.createBuilder(target).build();
+    buildRules.add(node);
     return buildRules;
   }
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     console = new TestConsole();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-      this, "target_command", tmp
-    );
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "target_command", tmp);
     workspace.setUp();
 
-    filesystem = new ProjectFilesystem(workspace.getDestPath().toRealPath().normalize());
-    Cell cell = new TestCellBuilder()
-        .setFilesystem(filesystem)
-        .build();
-    AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
+    filesystem =
+        TestProjectFilesystems.createProjectFilesystem(
+            workspace.getDestPath().toRealPath().normalize());
+    Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
     ArtifactCache artifactCache = new NoopArtifactCache();
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
-    objectMapper = ObjectMappers.newDefaultInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+    capturingConsoleEventListener = new CapturingConsoleEventListener();
+    eventBus.register(capturingConsoleEventListener);
 
     targetsCommand = new TargetsCommand();
-    params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
-        console,
-        cell,
-        androidDirectoryResolver,
-        artifactCache,
-        eventBus,
-        FakeBuckConfig.builder().build(),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        objectMapper,
-        Optional.<WebServer>absent());
+    params =
+        CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
+            console,
+            cell,
+            artifactCache,
+            eventBus,
+            FakeBuckConfig.builder().build(),
+            Platform.detect(),
+            EnvVariablesProvider.getSystemEnv(),
+            new FakeJavaPackageFinder(),
+            Optional.empty());
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }
 
@@ -154,79 +145,87 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testJsonOutputForBuildTarget()
-      throws IOException, BuildFileParseException, InterruptedException {
+  public void testJsonOutputForBuildTarget() throws IOException, BuildFileParseException {
     // run `buck targets` on the build file and parse the observed JSON.
-    SortedMap<String, TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
+    SortedSet<TargetNode<?>> nodes = buildTargetNodes(filesystem, "//:test-library");
 
     targetsCommand.printJsonForTargets(
-        params,
-        executor,
-        nodes,
-        ImmutableMap.<BuildTarget, ShowOptions>of());
+        params, executor, nodes, ImmutableMap.of(), ImmutableSet.of());
     String observedOutput = console.getTextWrittenToStdOut();
-    JsonNode observed = objectMapper.readTree(
-        objectMapper.getFactory().createParser(observedOutput));
+    JsonNode observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(observedOutput));
 
     // parse the expected JSON.
     String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson1.js");
-    JsonNode expected = objectMapper.readTree(
-      objectMapper.getFactory().createParser(expectedJson)
-        .enable(Feature.ALLOW_COMMENTS)
-    );
+    JsonNode expected =
+        ObjectMappers.READER.readTree(
+            ObjectMappers.createParser(expectedJson).enable(Feature.ALLOW_COMMENTS));
 
     assertEquals("Output from targets command should match expected JSON.", expected, observed);
-    assertEquals(
-      "Nothing should be printed to stderr.",
-        "",
-        console.getTextWrittenToStdErr());
+    assertEquals("Nothing should be printed to stderr.", "", console.getTextWrittenToStdErr());
   }
 
   @Test
   public void testJsonOutputWithDirectDependencies() throws IOException {
     // Run Buck targets command on a case where the deps and direct_dependencies differ
-    ProcessResult result = workspace.runBuckCommand(
-      "targets", "--json", "//:B");
+    ProcessResult result = workspace.runBuckCommand("targets", "--json", "//:B");
 
     // Parse the observed JSON.
-    JsonNode observed = objectMapper.readTree(
-      objectMapper.getFactory().createParser(result.getStdout())
-        .enable(Feature.ALLOW_COMMENTS)
-    );
+    JsonNode observed =
+        ObjectMappers.READER.readTree(
+            ObjectMappers.createParser(result.getStdout()).enable(Feature.ALLOW_COMMENTS));
 
     // Parse the expected JSON.
     String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson2.js");
-    JsonNode expected = objectMapper.readTree(
-      objectMapper.getFactory().createParser(expectedJson)
-        .enable(Feature.ALLOW_COMMENTS)
-    );
+    JsonNode expected =
+        ObjectMappers.READER.readTree(
+            ObjectMappers.createParser(expectedJson).enable(Feature.ALLOW_COMMENTS));
 
     assertThat(
-        "Output from targets command should match expected JSON.",
-        observed,
-        is(equalTo(expected)));
+        "Output from targets command should match expected JSON.", observed, is(equalTo(expected)));
     assertThat(
-      "Nothing should be printed to stderr.",
-        console.getTextWrittenToStdErr(),
-        is(equalTo("")));
+        "Nothing should be printed to stderr.", console.getTextWrittenToStdErr(), is(equalTo("")));
   }
 
   @Test
-  public void testJsonOutputForMissingBuildTarget()
-      throws BuildFileParseException, IOException, InterruptedException {
+  public void testJsonOutputWithOutputAttributes() throws IOException {
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "targets",
+            "--json",
+            "//:B",
+            "--output-attributes",
+            "buck.direct_dependencies",
+            "fully_qualified_name");
+
+    // Parse the observed JSON.
+    JsonNode observed =
+        ObjectMappers.READER.readTree(
+            ObjectMappers.createParser(result.getStdout()).enable(Feature.ALLOW_COMMENTS));
+
+    // Parse the expected JSON.
+    String expectedJson = workspace.getFileContents("TargetsCommandTestBuckJson2Filtered.js");
+    JsonNode expected =
+        ObjectMappers.READER.readTree(
+            ObjectMappers.createParser(expectedJson).enable(Feature.ALLOW_COMMENTS));
+
+    assertThat(
+        "Output from targets command should match expected JSON.", observed, is(equalTo(expected)));
+    assertThat(
+        "Nothing should be printed to stderr.", console.getTextWrittenToStdErr(), is(equalTo("")));
+  }
+
+  @Test
+  public void testJsonOutputForMissingBuildTarget() throws BuildFileParseException {
     // nonexistent target should not exist.
-    SortedMap<String, TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
+    SortedSet<TargetNode<?>> buildRules = buildTargetNodes(filesystem, "//:nonexistent");
     targetsCommand.printJsonForTargets(
-        params,
-        executor,
-        buildRules,
-        ImmutableMap.<BuildTarget, ShowOptions>of());
+        params, executor, buildRules, ImmutableMap.of(), ImmutableSet.of());
 
     String output = console.getTextWrittenToStdOut();
-    assertEquals("[\n]\n", output);
-    assertEquals(
-        "unable to find rule for target //:nonexistent\n",
-        console.getTextWrittenToStdErr());
+    assertEquals("[" + System.lineSeparator() + "]" + System.lineSeparator(), output);
+    assertThat(
+        capturingConsoleEventListener.getLogMessages(),
+        contains("unable to find rule for target //:nonexistent"));
   }
 
   @Test
@@ -240,31 +239,29 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testGetMatchingBuildTargets() throws CmdLineException, IOException {
+  public void testGetMatchingBuildTargets() {
     BuildTarget prebuiltJarTarget = BuildTargetFactory.newInstance("//empty:empty");
-    TargetNode<?> prebuiltJarNode = PrebuiltJarBuilder
-        .createBuilder(prebuiltJarTarget)
-        .setBinaryJar(Paths.get("spoof"))
-        .build();
+    TargetNode<?> prebuiltJarNode =
+        PrebuiltJarBuilder.createBuilder(prebuiltJarTarget)
+            .setBinaryJar(Paths.get("spoof"))
+            .build();
 
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//javasrc:java-library");
-    TargetNode<?> javaLibraryNode = JavaLibraryBuilder
-        .createBuilder(javaLibraryTarget)
-        .addSrc(Paths.get("javasrc/JavaLibrary.java"))
-        .addDep(prebuiltJarTarget)
-        .build();
+    TargetNode<?> javaLibraryNode =
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(Paths.get("javasrc/JavaLibrary.java"))
+            .addDep(prebuiltJarTarget)
+            .build();
 
     BuildTarget javaTestTarget = BuildTargetFactory.newInstance("//javatest:test-java-library");
-    TargetNode<?> javaTestNode = JavaTestBuilder
-        .createBuilder(javaTestTarget)
-        .addSrc(Paths.get("javatest/TestJavaLibrary.java"))
-        .addDep(javaLibraryTarget)
-        .build();
+    TargetNode<?> javaTestNode =
+        JavaTestBuilder.createBuilder(javaTestTarget)
+            .addSrc(Paths.get("javatest/TestJavaLibrary.java"))
+            .addDep(javaLibraryTarget)
+            .build();
 
-    ImmutableSet<TargetNode<?>>nodes = ImmutableSet.of(
-        prebuiltJarNode,
-        javaLibraryNode,
-        javaTestNode);
+    ImmutableSet<TargetNode<?>> nodes =
+        ImmutableSet.of(prebuiltJarNode, javaLibraryNode, javaTestNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
@@ -276,8 +273,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -288,13 +285,11 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of("//javatest:test-java-library"),
-        matchingBuildRules.keySet());
+    assertEquals(ImmutableSet.of("//javatest:test-java-library"), matchingBuildRules.keySet());
 
     // The test-android-library target indirectly depends on the referenced file,
     // while test-java-library target directly depends on the referenced file.
@@ -303,8 +298,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -312,14 +307,13 @@ public class TargetsCommandTest {
         matchingBuildRules.keySet());
 
     // Verify that BUCK files show up as referenced files.
-    referencedFiles = ImmutableSet.of(
-        Paths.get("javasrc/BUCK"));
+    referencedFiles = ImmutableSet.of(Paths.get("javasrc/BUCK"));
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -327,77 +321,61 @@ public class TargetsCommandTest {
         matchingBuildRules.keySet());
 
     // Output target only need to depend on one referenced file.
-    referencedFiles = ImmutableSet.of(
-        Paths.get("javatest/TestJavaLibrary.java"),
-        Paths.get("othersrc/CannotFind.java"));
+    referencedFiles =
+        ImmutableSet.of(
+            Paths.get("javatest/TestJavaLibrary.java"), Paths.get("othersrc/CannotFind.java"));
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(referencedFiles),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of("//javatest:test-java-library"),
-        matchingBuildRules.keySet());
+    assertEquals(ImmutableSet.of("//javatest:test-java-library"), matchingBuildRules.keySet());
 
     // If no referenced file, means this filter is disabled, we can find all targets.
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
-            targetGraph,
-            Optional.<ImmutableSet<Path>>absent(),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
-            false,
-            "BUCK");
+            targetGraph, Optional.empty(), Optional.empty(), Optional.empty(), false, "BUCK");
     assertEquals(
-        ImmutableSet.of(
-            "//javatest:test-java-library",
-            "//javasrc:java-library",
-            "//empty:empty"),
+        ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library", "//empty:empty"),
         matchingBuildRules.keySet());
 
     // Specify java_test, java_library as type filters.
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.<ImmutableSet<Path>>absent(),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.of(ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE)),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(ImmutableSet.of(JavaTestDescription.class, JavaLibraryDescription.class)),
             false,
             "BUCK");
     assertEquals(
-        ImmutableSet.of(
-            "//javatest:test-java-library",
-            "//javasrc:java-library"),
+        ImmutableSet.of("//javatest:test-java-library", "//javasrc:java-library"),
         matchingBuildRules.keySet());
-
 
     // Specify java_test, java_library, and a rule name as type filters.
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.<ImmutableSet<Path>>absent(),
+            Optional.empty(),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-            Optional.of(ImmutableSet.of(JavaTestDescription.TYPE, JavaLibraryDescription.TYPE)),
+            Optional.of(ImmutableSet.of(JavaTestDescription.class, JavaLibraryDescription.class)),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
+    assertEquals(ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
     // Only filter by BuildTarget
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.<ImmutableSet<Path>>absent(),
+            Optional.empty(),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
-
+    assertEquals(ImmutableSet.of("//javasrc:java-library"), matchingBuildRules.keySet());
 
     // Filter by BuildTarget and Referenced Files
     matchingBuildRules =
@@ -405,25 +383,22 @@ public class TargetsCommandTest {
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("javatest/TestJavaLibrary.java"))),
             Optional.of(ImmutableSet.of(BuildTargetFactory.newInstance("//javasrc:java-library"))),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.<String>of(), matchingBuildRules.keySet());
-
+    assertEquals(ImmutableSet.<String>of(), matchingBuildRules.keySet());
   }
 
   @Test
-  public void testGetMatchingAppleLibraryBuildTarget() throws CmdLineException, IOException {
+  public void testGetMatchingAppleLibraryBuildTarget() {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?> libraryNode = AppleLibraryBuilder
-        .createBuilder(libraryTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
-        .build();
+    TargetNode<?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/foo.m"))))
+            .build();
 
-    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.<TargetNode<?>>of(libraryNode);
+    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
@@ -432,8 +407,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -443,34 +418,29 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/foo.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of("//foo:lib"),
-        matchingBuildRules.keySet());
+    assertEquals(ImmutableSet.of("//foo:lib"), matchingBuildRules.keySet());
   }
 
   @Test
-  public void testGetMatchingAppleTestBuildTarget() throws CmdLineException, IOException {
+  public void testGetMatchingAppleTestBuildTarget() {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
-    TargetNode<?> libraryNode = AppleLibraryBuilder
-        .createBuilder(libraryTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
-        .build();
+    TargetNode<?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/foo.m"))))
+            .build();
 
     BuildTarget testTarget = BuildTargetFactory.newInstance("//foo:xctest");
-    TargetNode<?> testNode = AppleTestBuilder
-        .createBuilder(testTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
-        .build();
+    TargetNode<?> testNode =
+        AppleTestBuilder.createBuilder(testTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/testfoo.m"))))
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .build();
 
     ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(libraryNode, testNode);
 
@@ -481,8 +451,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -492,42 +462,39 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/foo.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of("//foo:lib", "//foo:xctest"),
-        matchingBuildRules.keySet());
+    assertEquals(ImmutableSet.of("//foo:lib", "//foo:xctest"), matchingBuildRules.keySet());
 
     // The test AppleLibrary, AppleBundle and AppleTest match the referenced file.
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of("//foo:xctest"),
-        matchingBuildRules.keySet());
+    assertEquals(ImmutableSet.of("//foo:xctest"), matchingBuildRules.keySet());
   }
 
   @Test
-  public void testPathsUnderDirectories() throws CmdLineException, IOException {
+  public void testPathsUnderDirectories() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     Path resDir = Paths.get("some/resources/dir");
     BuildTarget androidResourceTarget = BuildTargetFactory.newInstance("//:res");
-    TargetNode<?> androidResourceNode = AndroidResourceBuilder.createBuilder(androidResourceTarget)
-        .setRes(resDir)
-        .build();
+    TargetNode<?> androidResourceNode =
+        AndroidResourceBuilder.createBuilder(androidResourceTarget).setRes(resDir).build();
 
     Path genSrc = resDir.resolve("foo.txt");
     BuildTarget genTarget = BuildTargetFactory.newInstance("//:gen");
-    TargetNode<?> genNode = GenruleBuilder.newGenruleBuilder(genTarget)
-        .setSrcs(ImmutableList.<SourcePath>of(new PathSourcePath(projectFilesystem, genSrc)))
-        .build();
+    TargetNode<?> genNode =
+        GenruleBuilder.newGenruleBuilder(genTarget)
+            .setSrcs(ImmutableList.of(FakeSourcePath.of(projectFilesystem, genSrc)))
+            .setOut("out")
+            .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(androidResourceNode, genNode);
 
@@ -538,24 +505,20 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(resDir.resolve("some_resource.txt"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of(androidResourceTarget.toString()),
-        matchingBuildRules.keySet());
+    assertEquals(ImmutableSet.of(androidResourceTarget.toString()), matchingBuildRules.keySet());
 
     // Specifying a resource with the same string-like common prefix, but not under the above
     // resource dir, should not trigger a match.
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
-            Optional.of(
-                ImmutableSet.of(
-                    Paths.get(resDir.toString() + "_extra").resolve("some_resource.txt"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.of(ImmutableSet.of(Paths.get(resDir + "_extra").resolve("some_resource.txt"))),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -566,8 +529,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(genSrc)),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             false,
             "BUCK");
     assertEquals(
@@ -576,64 +539,53 @@ public class TargetsCommandTest {
   }
 
   @Test
-  public void testDetectTestChanges() throws CmdLineException, IOException {
+  public void testDetectTestChanges() {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo:lib");
     BuildTarget libraryTestTarget1 = BuildTargetFactory.newInstance("//foo:xctest1");
     BuildTarget libraryTestTarget2 = BuildTargetFactory.newInstance("//foo:xctest2");
     BuildTarget testLibraryTarget = BuildTargetFactory.newInstance("//testlib:testlib");
     BuildTarget testLibraryTestTarget = BuildTargetFactory.newInstance("//testlib:testlib-xctest");
 
-    TargetNode<?> libraryNode = AppleLibraryBuilder
-        .createBuilder(libraryTarget)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/foo.m")))))
-        .setTests(Optional.of(ImmutableSortedSet.of(libraryTestTarget1, libraryTestTarget2)))
-        .build();
+    TargetNode<?> libraryNode =
+        AppleLibraryBuilder.createBuilder(libraryTarget)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/foo.m"))))
+            .setTests(ImmutableSortedSet.of(libraryTestTarget1, libraryTestTarget2))
+            .build();
 
-    TargetNode<?> libraryTestNode1 = AppleTestBuilder
-        .createBuilder(libraryTestTarget1)
-        .setExtension(AppleBundleExtension.XCTEST)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo1.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(libraryTarget)))
-        .build();
+    TargetNode<?> libraryTestNode1 =
+        AppleTestBuilder.createBuilder(libraryTestTarget1)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/testfoo1.m"))))
+            .setDeps(ImmutableSortedSet.of(libraryTarget))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .build();
 
-    TargetNode<?> libraryTestNode2 = AppleTestBuilder
-        .createBuilder(libraryTestTarget2)
-        .setExtension(AppleBundleExtension.XCTEST)
-        .setSrcs(
-            Optional.of(
-                ImmutableSortedSet.of(SourceWithFlags.of(new FakeSourcePath("foo/testfoo2.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))
-        .build();
+    TargetNode<?> libraryTestNode2 =
+        AppleTestBuilder.createBuilder(libraryTestTarget2)
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo/testfoo2.m"))))
+            .setDeps(ImmutableSortedSet.of(testLibraryTarget))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .build();
 
-    TargetNode<?> testLibraryNode = AppleLibraryBuilder
-        .createBuilder(testLibraryTarget)
-        .setSrcs(Optional.of(ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("testlib/testlib.m")))))
-        .setTests(Optional.of(ImmutableSortedSet.of(testLibraryTestTarget)))
-        .build();
+    TargetNode<?> testLibraryNode =
+        AppleLibraryBuilder.createBuilder(testLibraryTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("testlib/testlib.m"))))
+            .setTests(ImmutableSortedSet.of(testLibraryTestTarget))
+            .build();
 
-    TargetNode<?> testLibraryTestNode = AppleTestBuilder
-        .createBuilder(testLibraryTestTarget)
-        .setExtension(AppleBundleExtension.XCTEST)
-        .setSrcs(
-            Optional.of(
+    TargetNode<?> testLibraryTestNode =
+        AppleTestBuilder.createBuilder(testLibraryTestTarget)
+            .setSrcs(
                 ImmutableSortedSet.of(
-                    SourceWithFlags.of(
-                        new FakeSourcePath("testlib/testlib-test.m")))))
-        .setDeps(Optional.of(ImmutableSortedSet.of(testLibraryTarget)))
-        .build();
+                    SourceWithFlags.of(FakeSourcePath.of("testlib/testlib-test.m"))))
+            .setDeps(ImmutableSortedSet.of(testLibraryTarget))
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .build();
 
-    ImmutableSet<TargetNode<?>> nodes = ImmutableSet.of(
-        libraryNode,
-        libraryTestNode1,
-        libraryTestNode2,
-        testLibraryNode,
-        testLibraryTestNode);
+    ImmutableSet<TargetNode<?>> nodes =
+        ImmutableSet.of(
+            libraryNode, libraryTestNode1, libraryTestNode2, testLibraryNode, testLibraryTestNode);
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
 
@@ -642,8 +594,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/bar.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertTrue(matchingBuildRules.isEmpty());
@@ -653,21 +605,19 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo1.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
-    assertEquals(
-        ImmutableSet.of("//foo:lib", "//foo:xctest1"),
-        matchingBuildRules.keySet());
+    assertEquals(ImmutableSet.of("//foo:lib", "//foo:xctest1"), matchingBuildRules.keySet());
 
     // Test1, test2 and the library depend on the referenced file.
     matchingBuildRules =
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("foo/testfoo2.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertEquals(
@@ -679,8 +629,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("testlib/testlib.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertEquals(
@@ -697,8 +647,8 @@ public class TargetsCommandTest {
         targetsCommand.getMatchingNodes(
             targetGraph,
             Optional.of(ImmutableSet.of(Paths.get("testlib/testlib-test.m"))),
-            Optional.<ImmutableSet<BuildTarget>>absent(),
-            Optional.<ImmutableSet<BuildRuleType>>absent(),
+            Optional.empty(),
+            Optional.empty(),
             true,
             "BUCK");
     assertEquals(

@@ -1,0 +1,32 @@
+android_binary(
+    name = "app",
+    keystore = ":keystore",
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "other_repo//java/com/sample/lib:lib",
+    ],
+)
+
+keystore(
+    name = "keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
+)
+
+android_binary(
+    name = "app_with_main_lib",
+    keystore = ":keystore",
+    manifest = "AndroidManifest.xml",
+    use_split_dex = True,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "other_repo//java/com/sample/lib:lib",
+        "//java/com/sample/mainlib:mainlib",
+    ],
+)

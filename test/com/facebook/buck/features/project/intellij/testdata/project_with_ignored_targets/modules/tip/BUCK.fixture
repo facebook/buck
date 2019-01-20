@@ -1,0 +1,9 @@
+java_library(
+    name = "tip",
+    srcs = [
+        "Test.java",
+    ],
+    deps = [
+        "buck//third-party/java/guava:guava",
+    ],
+)

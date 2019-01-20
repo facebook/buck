@@ -29,5 +29,4 @@ public class ClassWithMultipleConstructors {
   }
 
   protected Object value;
-
 }

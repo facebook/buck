@@ -1,43 +1,45 @@
-
 java_binary(
-  name = 'binary',
-  deps = [
-    ':library',
-  ],
+    name = "binary",
+    deps = [
+        ":library",
+    ],
 )
 
 java_library(
-  name = 'library',
-  srcs = [ 'Example.java' ],
-  deps = [ ':guava' ],
-  provided_deps = [ ':junit' ],
+    name = "library",
+    srcs = ["Example.java"],
+    provided_deps = [":junit"],
+    deps = [":guava"],
 )
 
 prebuilt_jar(
-  name = 'guava',
-  binary_jar = 'guava.jar',
+    name = "guava",
+    binary_jar = "guava.jar",
 )
 
 prebuilt_jar(
-  name = 'junit',
-  binary_jar = 'junit.jar',
+    name = "junit",
+    binary_jar = "junit.jar",
 )
 
 java_library(
-  name = 'library_2',
-  srcs = [ 'Example.java' ],
-  deps = [ ':guava', ':junit_provided' ],
+    name = "library_2",
+    srcs = ["Example.java"],
+    deps = [
+        ":guava",
+        ":junit_provided",
+    ],
 )
 
 java_binary(
-  name = 'binary_2',
-  deps = [
-    ':library_2',
-  ],
+    name = "binary_2",
+    deps = [
+        ":library_2",
+    ],
 )
 
 prebuilt_jar(
-  name = 'junit_provided',
-  binary_jar = 'junit.jar',
-  provided = True,
+    name = "junit_provided",
+    binary_jar = "junit.jar",
+    provided = True,
 )

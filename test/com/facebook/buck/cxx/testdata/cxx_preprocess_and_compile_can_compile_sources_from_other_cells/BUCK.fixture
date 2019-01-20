@@ -1,0 +1,7 @@
+cxx_binary(
+    name = "binary",
+    srcs = ["main.c"],
+    deps = [
+        "cell1//:library",
+    ],
+)

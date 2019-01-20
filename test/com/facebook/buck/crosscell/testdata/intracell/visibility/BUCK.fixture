@@ -1,9 +1,8 @@
-
 genrule(
-  name = 'top',
-  out = 'foo.txt',
-  cmd = 'echo "Hello" > $OUT',
-  visibility = [
-    '//...',
-  ],
+    name = "top",
+    out = "foo.txt",
+    cmd = "echo \"Hello\" > $OUT",
+    visibility = [
+        "//...",
+    ],
 )

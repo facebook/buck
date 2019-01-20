@@ -16,9 +16,8 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 @BuckStyleImmutable
@@ -41,5 +40,4 @@ abstract class AbstractQueryBuildTarget implements QueryTarget {
   public String toString() {
     return getBuildTarget().toString();
   }
-
 }

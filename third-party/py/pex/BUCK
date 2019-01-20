@@ -1,17 +1,17 @@
 python_library(
-  name = 'pex',
-  base_module = '',
-  srcs = glob(['pex/**/*.py']),
-  deps = [
-    # Although the twitter sources actually import `pkg_resources`, we
-    # intentionally avoid a dependency here, as our custom PEX-builder
-    # frontend manually finds the `pkg_resources` locations.
-    #'//third-party/py/setuptools:pkg_resources',
-  ],
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "pex",
+    srcs = glob(["pex/**/*.py"]),
+    base_module = "",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        # Although the twitter sources actually import `pkg_resources`, we
+        # intentionally avoid a dependency here, as our custom PEX-builder
+        # frontend manually finds the `pkg_resources` locations.
+        #'//third-party/py/setuptools:pkg_resources',
+    ],
 )

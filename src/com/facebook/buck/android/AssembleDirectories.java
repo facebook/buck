@@ -16,47 +16,68 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 
 public class AssembleDirectories extends AbstractBuildRule {
 
+  private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
   private final Path destinationDirectory;
-  @AddToRuleKey
-  private final ImmutableCollection<SourcePath> originalDirectories;
+  @AddToRuleKey private final ImmutableCollection<SourcePath> originalDirectories;
 
   public AssembleDirectories(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       ImmutableCollection<SourcePath> directories) {
-    super(buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem);
     this.originalDirectories = directories;
-    this.destinationDirectory = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        buildRuleParams.getBuildTarget(),
-        "__assembled_%s__");
+    this.destinationDirectory =
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__assembled_%s__");
+    this.buildDepsSupplier =
+        MoreSuppliers.memoize(
+            () ->
+                BuildableSupport.deriveDeps(this, ruleFinder)
+                    .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 
   @Override
-  public ImmutableList<Step> getBuildSteps(BuildContext context,
-      BuildableContext buildableContext) {
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), destinationDirectory));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), destinationDirectory)));
     for (SourcePath directory : originalDirectories) {
-      Path resolvedPath = getResolver().getAbsolutePath(directory);
+      Path resolvedPath = context.getSourcePathResolver().getAbsolutePath(directory);
       steps.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
@@ -69,8 +90,7 @@ public class AssembleDirectories extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return destinationDirectory;
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), destinationDirectory);
   }
-
 }

@@ -1,0 +1,12 @@
+java_test(
+    name = "darwin",
+    srcs = glob(["*.java"]),
+    resources = [
+        "sandbox_profile.in",
+    ],
+    deps = [
+        "//src/com/facebook/buck/sandbox/darwin:darwin",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

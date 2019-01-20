@@ -16,172 +16,279 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
-
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.CalculateClassAbi;
+import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
+import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
-import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
+import com.facebook.buck.jvm.java.TestType;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Supplier;
+import org.immutables.value.Value;
 
-import java.nio.file.Path;
+public class RobolectricTestDescription
+    implements DescriptionWithTargetGraph<RobolectricTestDescriptionArg>,
+        ImplicitDepsInferringDescription<RobolectricTestDescriptionArg> {
 
-public class RobolectricTestDescription implements Description<RobolectricTestDescription.Arg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("robolectric_test");
-
-  private final JavaOptions javaOptions;
-  private final JavacOptions templateOptions;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
-  private final CxxPlatform cxxPlatform;
-  private final Optional<Path> testTempDirOverride;
+  private final ToolchainProvider toolchainProvider;
+  private final JavaBuckConfig javaBuckConfig;
+  private final AndroidLibraryCompilerFactory compilerFactory;
+  private final Supplier<JavaOptions> javaOptionsForTests;
+  private final Supplier<JavacOptions> defaultJavacOptions;
+  private final JavacFactory javacFactory;
 
   public RobolectricTestDescription(
-      JavaOptions javaOptions,
-      JavacOptions templateOptions,
-      Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform,
-      Optional<Path> testTempDirOverride) {
-    this.javaOptions = javaOptions;
-    this.templateOptions = templateOptions;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-    this.cxxPlatform = cxxPlatform;
-    this.testTempDirOverride = testTempDirOverride;
+      ToolchainProvider toolchainProvider,
+      JavaBuckConfig javaBuckConfig,
+      AndroidLibraryCompilerFactory compilerFactory) {
+    this.toolchainProvider = toolchainProvider;
+    this.javaBuckConfig = javaBuckConfig;
+    this.compilerFactory = compilerFactory;
+    this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.defaultJavacOptions =
+        MoreSuppliers.memoize(
+            () ->
+                toolchainProvider
+                    .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                    .getJavacOptions());
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<RobolectricTestDescriptionArg> getConstructorArgType() {
+    return RobolectricTestDescriptionArg.class;
+  }
+
+  private CxxPlatform getCxxPlatform(RobolectricTestDescriptionArg args) {
+    return args.getDefaultCxxPlatform()
+        .map(
+            toolchainProvider
+                    .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                    .getCxxPlatforms()
+                ::getValue)
+        .orElse(
+            toolchainProvider
+                .getByName(JavaCxxPlatformProvider.DEFAULT_NAME, JavaCxxPlatformProvider.class)
+                .getDefaultJavaCxxPlatform());
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> RobolectricTest createBuildRule(
-      TargetGraph targetGraph,
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    ImmutableList<String> vmArgs = args.vmArgs.get();
+      RobolectricTestDescriptionArg args) {
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
+    if (JavaAbis.isClassAbiTarget(buildTarget)) {
+      Preconditions.checkArgument(
+          !buildTarget.getFlavors().contains(AndroidLibraryGraphEnhancer.DUMMY_R_DOT_JAVA_FLAVOR));
+      BuildTarget testTarget = JavaAbis.getLibraryTarget(buildTarget);
+      BuildRule testRule = graphBuilder.requireRule(testTarget);
+      return CalculateClassAbi.of(
+          buildTarget,
+          ruleFinder,
+          projectFilesystem,
+          params,
+          Objects.requireNonNull(testRule.getSourcePathToOutput()));
+    }
 
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(
-            templateOptions,
-            params,
-            resolver,
-            pathResolver,
-            args);
+        JavacOptionsFactory.create(defaultJavacOptions.get(), buildTarget, graphBuilder, args);
 
-    AndroidLibraryGraphEnhancer graphEnhancer = new AndroidLibraryGraphEnhancer(
-        params.getBuildTarget(),
-        params.copyWithExtraDeps(
-            Suppliers.ofInstance(resolver.getAllRules(args.exportedDeps.get()))),
-        javacOptions,
-        DependencyMode.TRANSITIVE,
-        /* forceFinalResourceIds */ true,
-        Optional.<String>absent());
-    Optional<DummyRDotJava> dummyRDotJava = graphEnhancer.getBuildableForAndroidResources(
-        resolver,
-        /* createBuildableIfEmpty */ true);
+    AndroidLibraryGraphEnhancer graphEnhancer =
+        new AndroidLibraryGraphEnhancer(
+            buildTarget,
+            projectFilesystem,
+            ImmutableSortedSet.copyOf(
+                Iterables.concat(
+                    params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
+            javacFactory.create(ruleFinder, args),
+            javacOptions,
+            DependencyMode.TRANSITIVE,
+            args.isForceFinalResourceIds(),
+            args.getResourceUnionPackage(),
+            /* rName */ Optional.empty(),
+            args.isUseOldStyleableFormat(),
+            /* skipNonUnionRDotJava */ false);
 
-    ImmutableSet<Path> additionalClasspathEntries = ImmutableSet.of();
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(context.getCellPathResolver())
+            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
+            .build();
+    ImmutableList<Arg> vmArgs =
+        ImmutableList.copyOf(
+            Lists.transform(
+                args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)));
+
+
+    Optional<DummyRDotJava> dummyRDotJava =
+        graphEnhancer.getBuildableForAndroidResources(
+            graphBuilder, /* createBuildableIfEmpty */ true);
+    RobolectricTestDescriptionArg testLibraryArgs = args;
+
     if (dummyRDotJava.isPresent()) {
-      additionalClasspathEntries = ImmutableSet.of(dummyRDotJava.get().getPathToOutput());
-      ImmutableSortedSet<BuildRule> newExtraDeps = ImmutableSortedSet.<BuildRule>naturalOrder()
-          .addAll(params.getExtraDeps().get())
-          .add(dummyRDotJava.get())
-          .build();
-      params = params.copyWithExtraDeps(Suppliers.ofInstance(newExtraDeps));
+      ImmutableSortedSet<BuildRule> newDeclaredDeps =
+          ImmutableSortedSet.<BuildRule>naturalOrder()
+              .addAll(params.getDeclaredDeps().get())
+              .add(dummyRDotJava.get())
+              .build();
+      params = params.withDeclaredDeps(newDeclaredDeps);
+      testLibraryArgs =
+          testLibraryArgs.withDeps(
+              Iterables.concat(
+                  args.getDeps(), Collections.singletonList(dummyRDotJava.get().getBuildTarget())));
     }
 
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
+            buildTarget,
+            projectFilesystem,
             params,
-            args.useCxxLibraries,
-            resolver,
-            pathResolver,
-            cxxPlatform);
+            args.getUseCxxLibraries(),
+            args.getCxxLibraryWhitelist(),
+            graphBuilder,
+            ruleFinder,
+            getCxxPlatform(args));
     params = cxxLibraryEnhancement.updatedParams;
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    BuildTarget testLibraryBuildTarget =
+        buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
+    CellPathResolver cellRoots = context.getCellPathResolver();
 
-    RobolectricTest test =
-        resolver.addToIndex(
-            new RobolectricTest(
-                params.appendExtraDeps(
-                    Iterables.concat(
-                        BuildRules.getExportedRules(
-                            Iterables.concat(
-                                params.getDeclaredDeps().get(),
-                                resolver.getAllRules(args.providedDeps.get()))),
-                        pathResolver.filterBuildRuleInputs(
-                            javacOptions.getInputs(pathResolver)))),
-                pathResolver,
-                args.srcs.get(),
-                validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources.get()),
-                args.labels.get(),
-                args.contacts.get(),
-                args.proguardConfig.transform(
-                    SourcePaths.toSourcePath(params.getProjectFilesystem())),
-                new BuildTargetSourcePath(abiJarTarget),
-                additionalClasspathEntries,
-                javacOptions,
-                javaOptions,
-                vmArgs,
-                cxxLibraryEnhancement.nativeLibsEnvironment,
-                JavaTestDescription.validateAndGetSourcesUnderTest(
-                    args.sourceUnderTest.get(),
-                    params.getBuildTarget(),
-                    resolver),
-                args.resourcesRoot,
-                args.mavenCoords,
-                dummyRDotJava,
-                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-                args.getRunTestSeparately(),
-                args.stdOutLogLevel,
-                args.stdErrLogLevel,
-                testTempDirOverride));
+    JavaLibrary testsLibrary =
+        graphBuilder.addToIndex(
+            DefaultJavaLibrary.rulesBuilder(
+                    testLibraryBuildTarget,
+                    projectFilesystem,
+                    context.getToolchainProvider(),
+                    params,
+                    graphBuilder,
+                    cellRoots,
+                    compilerFactory.getCompiler(
+                        args.getLanguage().orElse(AndroidLibraryDescription.JvmLanguage.JAVA),
+                        javacFactory),
+                    javaBuckConfig,
+                    testLibraryArgs)
+                .setJavacOptions(javacOptions)
+                .build()
+                .buildLibrary());
 
-    resolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
-            pathResolver,
-            params,
-            new BuildTargetSourcePath(test.getBuildTarget())));
+    AndroidPlatformTarget androidPlatformTarget =
+        toolchainProvider.getByName(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
 
-    return test;
+    return new RobolectricTest(
+        buildTarget,
+        projectFilesystem,
+        params.copyAppendingExtraDeps(ImmutableSortedSet.of(testsLibrary)),
+        androidPlatformTarget,
+        testsLibrary,
+        args.getLabels(),
+        args.getContacts(),
+        TestType.JUNIT,
+        vmArgs,
+        cxxLibraryEnhancement.nativeLibsEnvironment,
+        dummyRDotJava,
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
+        args.getTestCaseTimeoutMs(),
+        ImmutableMap.copyOf(
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
+        args.getRunTestSeparately(),
+        args.getForkMode(),
+        args.getStdOutLogLevel(),
+        args.getStdErrLogLevel(),
+        args.getUnbundledResourcesRoot(),
+        args.getRobolectricRuntimeDependency(),
+        args.getRobolectricManifest(),
+        javaBuckConfig
+            .getDelegate()
+            .getBooleanValue("test", "pass_robolectric_directories_in_file", false),
+        javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder));
   }
 
-  @SuppressFieldNotInitialized
-  public class Arg extends JavaTestDescription.Arg {
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      RobolectricTestDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    if (constructorArg.getUseCxxLibraries().orElse(false)) {
+      targetGraphOnlyDepsBuilder.addAll(
+          CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
+    }
+    javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable(copy = true)
+  interface AbstractRobolectricTestDescriptionArg
+      extends JavaTestDescription.CoreArg, AndroidKotlinCoreArg {
+
+    Optional<SourcePath> getRobolectricRuntimeDependency();
+
+    Optional<SourcePath> getRobolectricManifest();
+
+    Optional<String> getResourceUnionPackage();
+
+    @Value.Default
+    default boolean isUseOldStyleableFormat() {
+      return false;
+    }
+
+    @Value.Default
+    default boolean isForceFinalResourceIds() {
+      return true;
+    }
+
   }
 }

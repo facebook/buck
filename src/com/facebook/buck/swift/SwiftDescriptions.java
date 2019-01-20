@@ -16,60 +16,79 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.apple.AppleCxxPlatform;
-import com.facebook.buck.apple.ApplePlatforms;
-import com.facebook.buck.apple.MultiarchFileInfo;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage.STATIC;
+import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPANION_FLAVOR;
+
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.io.file.MorePaths;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 
 public class SwiftDescriptions {
+
+  static final String SWIFT_HEADER_SUFFIX = "-Swift";
+  static final String SWIFT_MAIN_FILENAME = "main.swift";
+  public static final String SWIFT_EXTENSION = "swift";
+
   /** Utility class: do not instantiate. */
   private SwiftDescriptions() {}
 
-  @SuppressWarnings("unused")
-  static BuildRule createSwiftModule(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
-      TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxPlatform platform,
-      String moduleName,
-      ImmutableSortedSet<SourcePath> sources,
-      ImmutableList<String> compilerFlags,
-      ImmutableSortedSet<FrameworkPath> frameworks,
-      ImmutableSortedSet<FrameworkPath> libraries,
-      boolean enableObjcInterop) {
-    AppleCxxPlatform appleCxxPlatform = ApplePlatforms.getAppleCxxPlatformForBuildTarget(
-        cxxPlatformFlavorDomain,
-        defaultCxxPlatform,
-        appleCxxPlatformFlavorDomain,
-        params.getBuildTarget(),
-        Optional.<MultiarchFileInfo>absent());
-    Optional<Tool> swiftCompiler = appleCxxPlatform.getSwift();
-    if (!swiftCompiler.isPresent()) {
-      throw new HumanReadableException("Platform %s is missing swift compiler", appleCxxPlatform);
+  public static boolean isSwiftSource(
+      SourceWithFlags source, SourcePathResolver sourcePathResolver) {
+    return MorePaths.getFileExtension(sourcePathResolver.getAbsolutePath(source.getSourcePath()))
+        .equalsIgnoreCase(SWIFT_EXTENSION);
+  }
+
+  static ImmutableSortedSet<SourcePath> filterSwiftSources(
+      SourcePathResolver sourcePathResolver, ImmutableSet<SourceWithFlags> srcs) {
+    ImmutableSortedSet.Builder<SourcePath> swiftSrcsBuilder = ImmutableSortedSet.naturalOrder();
+    for (SourceWithFlags source : srcs) {
+      if (isSwiftSource(source, sourcePathResolver)) {
+        swiftSrcsBuilder.add(source.getSourcePath());
+      }
     }
-    return new SwiftCompile(
-        params,
-        new SourcePathResolver(resolver),
-        swiftCompiler.get(),
-        moduleName,
-        BuildTargets.getGenPath(params.getProjectFilesystem(), params.getBuildTarget(), "%s"),
-        sources);
+    return swiftSrcsBuilder.build();
+  }
+
+  public static void populateSwiftLibraryDescriptionArg(
+      SwiftBuckConfig swiftBuckConfig,
+      SourcePathResolver sourcePathResolver,
+      SwiftLibraryDescriptionArg.Builder output,
+      CxxLibraryDescription.CommonArg args,
+      BuildTarget buildTarget) {
+
+    output.setName(args.getName());
+    output.setSrcs(filterSwiftSources(sourcePathResolver, args.getSrcs()));
+    if (args instanceof SwiftCommonArg) {
+      Optional<String> swiftVersion = ((SwiftCommonArg) args).getSwiftVersion();
+      if (!swiftVersion.isPresent()) {
+        swiftVersion = swiftBuckConfig.getVersion();
+      }
+      output.setCompilerFlags(((SwiftCommonArg) args).getSwiftCompilerFlags());
+      output.setVersion(swiftVersion);
+    } else {
+      output.setCompilerFlags(args.getCompilerFlags());
+    }
+    output.setFrameworks(args.getFrameworks());
+    output.setLibraries(args.getLibraries());
+    output.setDeps(args.getDeps());
+    output.setSupportedPlatformsRegex(args.getSupportedPlatformsRegex());
+    output.setModuleName(
+        args.getModuleName().map(Optional::of).orElse(Optional.of(buildTarget.getShortName())));
+    output.setEnableObjcInterop(true);
+    output.setBridgingHeader(args.getBridgingHeader());
+
+    boolean isCompanionTarget = buildTarget.getFlavors().contains(SWIFT_COMPANION_FLAVOR);
+    output.setPreferredLinkage(
+        isCompanionTarget ? Optional.of(STATIC) : args.getPreferredLinkage());
+  }
+
+  static String toSwiftHeaderName(String moduleName) {
+    return moduleName + SWIFT_HEADER_SUFFIX;
   }
 }

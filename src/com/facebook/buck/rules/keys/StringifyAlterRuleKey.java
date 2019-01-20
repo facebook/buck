@@ -16,37 +16,27 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 
-class StringifyAlterRuleKey extends AbstractAlterRuleKey {
+class StringifyAlterRuleKey implements AlterRuleKey {
 
   private static final Logger LOG = Logger.get(StringifyAlterRuleKey.class);
 
-  private static final Function<Object, Iterable<Path>> FIND_ABSOLUTE_PATHS =
-      new Function<Object, Iterable<Path>>() {
-        @Override
-        public Iterable<Path> apply(Object val) {
-          return findAbsolutePaths(val);
-        }
-      };
+  private final ValueExtractor valueExtractor;
 
-  public StringifyAlterRuleKey(Field field) {
-    super(field);
+  StringifyAlterRuleKey(ValueExtractor valueExtractor) {
+    this.valueExtractor = valueExtractor;
   }
 
   @VisibleForTesting
@@ -60,12 +50,12 @@ class StringifyAlterRuleKey extends AbstractAlterRuleKey {
       return findAbsolutePaths(((PathSourcePath) val).getRelativePath());
     } else if (val instanceof Iterable) {
       return FluentIterable.from((Iterable<?>) val)
-          .transformAndConcat(FIND_ABSOLUTE_PATHS);
+          .transformAndConcat(StringifyAlterRuleKey::findAbsolutePaths);
     } else if (val instanceof Map) {
       Map<?, ?> map = (Map<?, ?>) val;
       Iterable<?> allSubValues = Iterables.concat(map.keySet(), map.values());
       return FluentIterable.from(allSubValues)
-          .transformAndConcat(FIND_ABSOLUTE_PATHS);
+          .transformAndConcat(StringifyAlterRuleKey::findAbsolutePaths);
     } else if (val instanceof Optional) {
       Optional<?> optional = (Optional<?>) val;
       if (optional.isPresent()) {
@@ -77,19 +67,17 @@ class StringifyAlterRuleKey extends AbstractAlterRuleKey {
   }
 
   @Override
-  public void amendKey(RuleKeyObjectSink sink, BuildRule rule) {
-    Object val = getValue(field, rule);
-    sink.setReflectively(
-        field.getName(),
-        val == null ? null : String.valueOf(val));
+  public void amendKey(RuleKeyObjectSink sink, Object addsToRuleKey) {
+    Object val = valueExtractor.getValue(addsToRuleKey);
+    String stringVal = (val == null) ? null : String.valueOf(val);
+    sink.setReflectively(valueExtractor.getName(), stringVal);
 
     if (val != null) {
       Iterable<Path> absolutePaths = findAbsolutePaths(val);
       if (!Iterables.isEmpty(absolutePaths)) {
         LOG.warn(
-            "Field %s contains absolute paths %s and it is included in a rule key.",
-            field.getName(),
-            ImmutableSet.copyOf(absolutePaths));
+            "Value %s contains absolute paths %s and it is included in a rule key.",
+            valueExtractor.getFullyQualifiedName(), ImmutableSet.copyOf(absolutePaths));
       }
     }
   }

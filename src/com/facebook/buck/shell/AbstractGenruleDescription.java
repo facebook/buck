@@ -16,173 +16,221 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.HasTests;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.SourceSet;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
+import com.facebook.buck.rules.macros.ClasspathAbiMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
+import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryPathsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.macros.WorkerMacro;
+import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import com.facebook.buck.util.Optionals;
+import com.facebook.buck.util.RichStream;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Comparator;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import org.immutables.value.Value;
 
+public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.CommonArg>
+    implements DescriptionWithTargetGraph<T> {
 
-public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescription.Arg>
-    implements Description<T>, ImplicitDepsInferringDescription<T> {
+  protected final ToolchainProvider toolchainProvider;
+  protected final SandboxExecutionStrategy sandboxExecutionStrategy;
+  protected final boolean enableSandbox;
 
-  public static final MacroHandler MACRO_HANDLER = new MacroHandler(
-      ImmutableMap.<String, MacroExpander>builder()
-          .put("classpath", new ClasspathMacroExpander())
-          .put("exe", new ExecutableMacroExpander())
-          .put("worker", new WorkerMacroExpander())
-          .put("location", new LocationMacroExpander())
-          .put("maven_coords", new MavenCoordinatesMacroExpander())
-          .build());
-
-  protected <A extends T> BuildRule createBuildRule(
-      final BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      A args,
-      ImmutableList<SourcePath> srcs,
-      Optional<com.facebook.buck.rules.args.Arg> cmd,
-      Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out) {
-    return new Genrule(
-        params,
-        new SourcePathResolver(resolver),
-        srcs,
-        cmd,
-        bash,
-        cmdExe,
-        out,
-        args.tests.get());
+  protected AbstractGenruleDescription(
+      ToolchainProvider toolchainProvider,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      boolean enableSandbox) {
+    this.toolchainProvider = toolchainProvider;
+    this.sandboxExecutionStrategy = sandboxExecutionStrategy;
+    this.enableSandbox = enableSandbox;
   }
 
-  protected MacroHandler getMacroHandlerForParseTimeDeps() {
-    return MACRO_HANDLER;
-  }
+  protected abstract BuildRule createBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
+      T args,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe);
 
-  @SuppressWarnings("unused")
-  protected <A extends AbstractGenruleDescription.Arg> MacroHandler getMacroHandler(
+  protected BuildRule createBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       BuildRuleResolver resolver,
-      A args) {
-    return MACRO_HANDLER;
-  }
-
-  @Override
-  public <A extends T> BuildRule createBuildRule(
-      final TargetGraph targetGraph,
-      final BuildRuleParams params,
-      final BuildRuleResolver resolver,
-      final A args)
-      throws NoSuchBuildTargetException {
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    Function<String, com.facebook.buck.rules.args.Arg> macroArgFunction =
-        MacroArg.toMacroArgFunction(
-            getMacroHandler(params, resolver, args),
-            params.getBuildTarget(),
-            params.getCellRoots(),
-            resolver);
-    final Optional<com.facebook.buck.rules.args.Arg> cmd = args.cmd.transform(macroArgFunction);
-    final Optional<com.facebook.buck.rules.args.Arg> bash = args.bash.transform(macroArgFunction);
-    final Optional<com.facebook.buck.rules.args.Arg> cmdExe =
-        args.cmdExe.transform(macroArgFunction);
-    return createBuildRule(
-        params.copyWithExtraDeps(
-            new Supplier<ImmutableSortedSet<BuildRule>>() {
-              @Override
-              public ImmutableSortedSet<BuildRule> get() {
-                return ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(pathResolver.filterBuildRuleInputs(args.srcs.get()))
-                    // Attach any extra dependencies found from macro expansion.
-                    .addAll(
-                        FluentIterable
-                            .from(Optional.presentInstances(ImmutableList.of(cmd, bash, cmdExe)))
-                            .transformAndConcat(
-                                com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)))
-                    .build();
-              }
-            }),
+      T args,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe,
+      String outputFileName) {
+    return new Genrule(
+        buildTarget,
+        projectFilesystem,
         resolver,
-        args,
-        args.srcs.get(),
+        params,
+        sandboxExecutionStrategy,
+        args.getSrcs(),
         cmd,
         bash,
         cmdExe,
-        args.out);
+        args.getType(),
+        outputFileName,
+        args.getEnableSandbox().orElse(enableSandbox),
+        args.getCacheable().orElse(true),
+        args.getEnvironmentExpansionSeparator(),
+        toolchainProvider.getByNameIfPresent(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
+        toolchainProvider.getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+        false);
+  }
+
+  /**
+   * @return the {@link com.facebook.buck.rules.macros.MacroExpander}s which apply to the macros in
+   *     this description.
+   */
+  protected Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> getMacroHandler(
+      @SuppressWarnings("unused") BuildTarget buildTarget,
+      @SuppressWarnings("unused") ProjectFilesystem filesystem,
+      @SuppressWarnings("unused") BuildRuleResolver resolver,
+      TargetGraph targetGraph,
+      @SuppressWarnings("unused") T args) {
+    return Optional.of(
+        ImmutableList.of(
+            new ClasspathMacroExpander(),
+            new ClasspathAbiMacroExpander(),
+            new ExecutableMacroExpander(),
+            new WorkerMacroExpander(),
+            new LocationMacroExpander(),
+            new MavenCoordinatesMacroExpander(),
+            new QueryTargetsMacroExpander(Optional.of(targetGraph)),
+            new QueryOutputsMacroExpander(Optional.of(targetGraph)),
+            new QueryPathsMacroExpander(Optional.of(targetGraph)),
+            new QueryTargetsAndOutputsMacroExpander(Optional.of(targetGraph))));
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      T constructorArg) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    if (constructorArg.bash.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.bash.get(), targets);
+      BuildRuleParams params,
+      T args) {
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> maybeExpanders =
+        getMacroHandler(
+            buildTarget,
+            context.getProjectFilesystem(),
+            graphBuilder,
+            context.getTargetGraph(),
+            args);
+    if (maybeExpanders.isPresent()) {
+      ImmutableList<AbstractMacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+      StringWithMacrosConverter converter =
+          StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), expanders);
+      Function<StringWithMacros, Arg> toArg =
+          str -> {
+            Arg arg = converter.convert(str, graphBuilder);
+            if (RichStream.from(str.getMacros())
+                .map(MacroContainer::getMacro)
+                .anyMatch(WorkerMacro.class::isInstance)) {
+              arg = WorkerMacroArg.fromStringWithMacros(arg, buildTarget, graphBuilder, str);
+            }
+            return arg;
+          };
+      Optional<Arg> cmd = args.getCmd().map(toArg);
+      Optional<Arg> bash = args.getBash().map(toArg);
+      Optional<Arg> cmdExe = args.getCmdExe().map(toArg);
+      return createBuildRule(
+          buildTarget,
+          context.getProjectFilesystem(),
+          params.withExtraDeps(
+              Stream.concat(
+                      ruleFinder.filterBuildRuleInputs(args.getSrcs().getPaths()).stream(),
+                      Stream.of(cmd, bash, cmdExe)
+                          .flatMap(Optionals::toStream)
+                          .flatMap(input -> BuildableSupport.getDeps(input, ruleFinder)))
+                  .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()))),
+          graphBuilder,
+          args,
+          cmd,
+          bash,
+          cmdExe);
     }
-    if (constructorArg.cmd.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmd.get(), targets);
-    }
-    if (constructorArg.cmdExe.isPresent()) {
-      addDepsFromParam(buildTarget, cellRoots, constructorArg.cmdExe.get(), targets);
-    }
-    return targets.build();
-  }
-
-  private void addDepsFromParam(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      String paramValue,
-      ImmutableSet.Builder<BuildTarget> targets) {
-    try {
-      targets.addAll(
-          getMacroHandlerForParseTimeDeps().extractParseTimeDeps(target, cellNames, paramValue));
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
-    }
+    return createBuildRule(
+        buildTarget,
+        context.getProjectFilesystem(),
+        params,
+        graphBuilder,
+        args,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg implements HasTests {
-    public String out;
-    public Optional<String> bash;
-    public Optional<String> cmd;
-    public Optional<String> cmdExe;
-    public Optional<ImmutableList<SourcePath>> srcs;
+  public interface CommonArg extends CommonDescriptionArg, HasTests {
+    Optional<StringWithMacros> getBash();
 
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    Optional<StringWithMacros> getCmd();
 
-    @Override
-    public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
+    Optional<StringWithMacros> getCmdExe();
+
+    Optional<String> getType();
+
+    @Value.Default
+    default SourceSet getSrcs() {
+      return SourceSet.EMPTY;
     }
-  }
 
+    Optional<Boolean> getEnableSandbox();
+
+    Optional<String> getEnvironmentExpansionSeparator();
+
+    /**
+     * This functionality only exists to get around the lack of extensibility in our current build
+     * rule / build file apis. It may go away at some point. Also, make sure that you understand
+     * what {@link BuildRule.isCacheable} does with respect to caching if you decide to use this
+     * attribute
+     */
+    Optional<Boolean> getCacheable();
+  }
 }

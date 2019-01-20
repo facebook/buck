@@ -1,0 +1,13 @@
+python_library(
+    name = "argparse",
+    srcs = [
+        "argparse.py",
+    ],
+    base_module = "",
+    licenses = [
+        "LICENSE.txt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

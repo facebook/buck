@@ -16,83 +16,253 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
+import com.facebook.buck.android.AndroidLibraryDescription.CoreArg;
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.java.CalculateSourceAbi;
+import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.JavaLibraryDeps;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.jvm.java.UnusedDependenciesFinderFactory;
+import com.facebook.buck.util.DependencyMode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
-import java.util.Set;
+import com.google.common.collect.Iterables;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.SortedSet;
+import javax.annotation.Nullable;
 
 public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackageable {
+  public static Builder builder(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ToolchainProvider toolchainProvider,
+      BuildRuleParams params,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellPathResolver,
+      JavaBuckConfig javaBuckConfig,
+      JavacFactory javacFactory,
+      JavacOptions javacOptions,
+      CoreArg args,
+      ConfiguredCompilerFactory compilerFactory) {
+    return new Builder(
+        buildTarget,
+        projectFilesystem,
+        toolchainProvider,
+        params,
+        graphBuilder,
+        cellPathResolver,
+        javaBuckConfig,
+        javacFactory,
+        javacOptions,
+        args,
+        compilerFactory);
+  }
 
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
+  @VisibleForTesting
+  AndroidLibrary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      JarBuildStepsFactory jarBuildStepsFactory,
+      SourcePathRuleFinder ruleFinder,
+      Optional<SourcePath> proguardConfig,
+      SortedSet<BuildRule> fullJarDeclaredDeps,
+      ImmutableSortedSet<BuildRule> fullJarExportedDeps,
+      ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
+      ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+      @Nullable BuildTarget abiJar,
+      @Nullable BuildTarget sourceOnlyAbiJar,
+      Optional<String> mavenCoords,
+      Optional<SourcePath> manifestFile,
+      ImmutableSortedSet<BuildTarget> tests,
+      boolean requiredForSourceOnlyAbi,
+      UnusedDependenciesAction unusedDependenciesAction,
+      Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
+      @Nullable CalculateSourceAbi sourceAbi,
+      boolean isDesugarEnabled,
+      boolean isInterfaceMethodsDesugarEnabled) {
+    super(
+        buildTarget,
+        projectFilesystem,
+        jarBuildStepsFactory,
+        ruleFinder,
+        proguardConfig,
+        fullJarDeclaredDeps,
+        fullJarExportedDeps,
+        fullJarProvidedDeps,
+        fullJarExportedProvidedDeps,
+        abiJar,
+        sourceOnlyAbiJar,
+        mavenCoords,
+        tests,
+        requiredForSourceOnlyAbi,
+        unusedDependenciesAction,
+        unusedDependenciesFinderFactory,
+        sourceAbi,
+        isDesugarEnabled,
+        isInterfaceMethodsDesugarEnabled);
+    this.manifestFile = manifestFile;
+  }
 
   /**
    * Manifest to associate with this rule. Ultimately, this will be used with the upcoming manifest
    * generation logic.
    */
-  @AddToRuleKey
   private final Optional<SourcePath> manifestFile;
-
-  @VisibleForTesting
-  public AndroidLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
-      Set<? extends SourcePath> srcs,
-      Set<? extends SourcePath> resources,
-      Optional<SourcePath> proguardConfig,
-      ImmutableList<String> postprocessClassesCommands,
-      ImmutableSortedSet<BuildRule> exportedDeps,
-      ImmutableSortedSet<BuildRule> providedDeps,
-      SourcePath abiJar,
-      ImmutableSet<Path> additionalClasspathEntries,
-      JavacOptions javacOptions,
-      Optional<Path> resourcesRoot,
-      Optional<String> mavenCoords,
-      Optional<SourcePath> manifestFile,
-      ImmutableSortedSet<BuildTarget> tests) {
-    super(
-        params,
-        resolver,
-        srcs,
-        resources,
-        javacOptions.getGeneratedSourceFolderName(),
-        proguardConfig,
-        postprocessClassesCommands,
-        exportedDeps,
-        providedDeps,
-        abiJar,
-        javacOptions.trackClassUsage(),
-        additionalClasspathEntries,
-        new JavacToJarStepFactory(javacOptions, new BootClasspathAppender()),
-        resourcesRoot,
-        mavenCoords,
-        tests);
-    this.manifestFile = manifestFile;
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
-  }
 
   public Optional<SourcePath> getManifestFile() {
     return manifestFile;
   }
 
+  @Override
+  public void addToCollector(AndroidPackageableCollector collector) {
+    super.addToCollector(collector);
+    if (manifestFile.isPresent()) {
+      collector.addManifestPiece(this.getBuildTarget(), manifestFile.get());
+    }
+  }
+
+  public static class Builder {
+    private final ActionGraphBuilder graphBuilder;
+    private final DefaultJavaLibraryRules delegate;
+    private final AndroidLibraryGraphEnhancer graphEnhancer;
+
+    protected Builder(
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        ToolchainProvider toolchainProvider,
+        BuildRuleParams params,
+        ActionGraphBuilder graphBuilder,
+        CellPathResolver cellPathResolver,
+        JavaBuckConfig javaBuckConfig,
+        JavacFactory javacFactory,
+        JavacOptions javacOptions,
+        CoreArg args,
+        ConfiguredCompilerFactory compilerFactory) {
+      this.graphBuilder = graphBuilder;
+      DefaultJavaLibraryRules.Builder delegateBuilder =
+          new DefaultJavaLibraryRules.Builder(
+              buildTarget,
+              projectFilesystem,
+              toolchainProvider,
+              params,
+              graphBuilder,
+              cellPathResolver,
+              compilerFactory,
+              javaBuckConfig,
+              args);
+      delegateBuilder.setConstructor(
+          new DefaultJavaLibraryRules.DefaultJavaLibraryConstructor() {
+            @Override
+            public DefaultJavaLibrary newInstance(
+                BuildTarget buildTarget,
+                ProjectFilesystem projectFilesystem,
+                JarBuildStepsFactory jarBuildStepsFactory,
+                SourcePathRuleFinder ruleFinder,
+                Optional<SourcePath> proguardConfig,
+                SortedSet<BuildRule> firstOrderPackageableDeps,
+                ImmutableSortedSet<BuildRule> fullJarExportedDeps,
+                ImmutableSortedSet<BuildRule> fullJarProvidedDeps,
+                ImmutableSortedSet<BuildRule> fullJarExportedProvidedDeps,
+                @Nullable BuildTarget abiJar,
+                @Nullable BuildTarget sourceOnlyAbiJar,
+                Optional<String> mavenCoords,
+                ImmutableSortedSet<BuildTarget> tests,
+                boolean requiredForSourceOnlyAbi,
+                UnusedDependenciesAction unusedDependenciesAction,
+                Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
+                @Nullable CalculateSourceAbi sourceAbi,
+                boolean isDesugarEnabled,
+                boolean isInterfaceMethodsDesugarEnabled) {
+              return new AndroidLibrary(
+                  buildTarget,
+                  projectFilesystem,
+                  jarBuildStepsFactory,
+                  ruleFinder,
+                  proguardConfig,
+                  firstOrderPackageableDeps,
+                  fullJarExportedDeps,
+                  fullJarProvidedDeps,
+                  fullJarExportedProvidedDeps,
+                  abiJar,
+                  sourceOnlyAbiJar,
+                  mavenCoords,
+                  args.getManifest(),
+                  tests,
+                  requiredForSourceOnlyAbi,
+                  unusedDependenciesAction,
+                  unusedDependenciesFinderFactory,
+                  sourceAbi,
+                  isDesugarEnabled,
+                  isInterfaceMethodsDesugarEnabled);
+            }
+          });
+      delegateBuilder.setJavacOptions(javacOptions);
+      delegateBuilder.setTests(args.getTests());
+
+      JavaLibraryDeps deps = Objects.requireNonNull(delegateBuilder.getDeps());
+      BuildTarget libraryTarget =
+          JavaAbis.isLibraryTarget(buildTarget)
+              ? buildTarget
+              : JavaAbis.getLibraryTarget(buildTarget);
+      graphEnhancer =
+          new AndroidLibraryGraphEnhancer(
+              libraryTarget,
+              projectFilesystem,
+              ImmutableSortedSet.copyOf(Iterables.concat(deps.getDeps(), deps.getProvidedDeps())),
+              javacFactory.create(new SourcePathRuleFinder(graphBuilder), args),
+              javacOptions,
+              DependencyMode.FIRST_ORDER,
+              /* forceFinalResourceIds */ false,
+              args.getResourceUnionPackage(),
+              args.getFinalRName(),
+              /* useOldStyleableFormat */ false,
+              args.isSkipNonUnionRDotJava());
+
+      getDummyRDotJava()
+          .ifPresent(
+              dummyRDotJava -> {
+                delegateBuilder.setDeps(
+                    new JavaLibraryDeps.Builder(graphBuilder)
+                        .from(JavaLibraryDeps.newInstance(args, graphBuilder, compilerFactory))
+                        .addDepTargets(dummyRDotJava.getBuildTarget())
+                        .build());
+              });
+
+      delegate = delegateBuilder.build();
+    }
+
+    public AndroidLibrary build() {
+      return (AndroidLibrary) delegate.buildLibrary();
+    }
+
+    public BuildRule buildAbi() {
+      return delegate.buildAbi();
+    }
+
+    public DummyRDotJava buildDummyRDotJava() {
+      return graphEnhancer.getBuildableForAndroidResources(graphBuilder, true).get();
+    }
+
+    public Optional<DummyRDotJava> getDummyRDotJava() {
+      return graphEnhancer.getBuildableForAndroidResources(graphBuilder, false);
+    }
+  }
 }

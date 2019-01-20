@@ -1,0 +1,19 @@
+python_library(
+    name = "util",
+    srcs = [
+        "util.py",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+python_test(
+    name = "test",
+    srcs = [
+        "util_test.py",
+    ],
+    deps = [
+        ":util",
+    ],
+)

@@ -1,0 +1,8 @@
+apple_library(
+    name = "TestLibrary",
+    srcs = ["TestClass.m"],
+    #headers = ['TestClass.h'],
+    exported_headers = ["TestClass.h"],
+    header_path_prefix = "",
+    visibility = ["//Libraries/TestLibrary2:TestLibrary2"],
+)

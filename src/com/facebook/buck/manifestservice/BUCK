@@ -1,0 +1,22 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "manifestservice",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/counters:counters",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/timing:timing",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/okhttp:okhttp",
+        "//third-party/java/thrift:libthrift",
+    ],
+)

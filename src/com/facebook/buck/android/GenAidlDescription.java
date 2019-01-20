@@ -16,54 +16,54 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
-public class GenAidlDescription implements Description<GenAidlDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("gen_aidl");
+public class GenAidlDescription implements DescriptionWithTargetGraph<GenAidlDescriptionArg> {
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<GenAidlDescriptionArg> getConstructorArgType() {
+    return GenAidlDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> GenAidl createBuildRule(
-      TargetGraph targetGraph,
+  public GenAidl createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+      GenAidlDescriptionArg args) {
     return new GenAidl(
+        buildTarget,
+        context.getProjectFilesystem(),
+        context.getToolchainProvider(),
         params,
-        new SourcePathResolver(resolver),
-        args.aidl,
-        args.importPath);
+        args.getAidl(),
+        args.getImportPath(),
+        args.getAidlSrcs());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath aidl;
+  @BuckStyleImmutable
+  @Value.Immutable
+  abstract static class AbstractGenAidlDescriptionArg
+      implements CommonDescriptionArg, HasDeclaredDeps {
+    abstract SourcePath getAidl();
 
     // import_path is an anomaly: it is a path that is relative to the project root rather than
     // relative to the build file directory.
-    public String importPath;
+    abstract String getImportPath();
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    // Imported *.aidl files.
+    @Value.Default
+    ImmutableSortedSet<SourcePath> getAidlSrcs() {
+      return ImmutableSortedSet.of();
+    }
   }
 }

@@ -34,9 +34,12 @@ public class HasBeforeClassFailure {
     throw new RuntimeException("BOOM!");
   }
 
-  @Test public void shouldA() {}
+  @Test
+  public void shouldA() {}
 
-  @Test public void shouldB() {}
+  @Test
+  public void shouldB() {}
 
-  @Test public void shouldC() {}
+  @Test
+  public void shouldC() {}
 }

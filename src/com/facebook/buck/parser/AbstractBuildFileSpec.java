@@ -16,35 +16,36 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.Watchman;
-import com.facebook.buck.io.WatchmanClient;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.Cell;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.io.watchman.ProjectWatch;
+import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanClient;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-
-import org.immutables.value.Value;
-
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.concurrent.TimeUnit;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import org.immutables.value.Value;
 
-/**
- * A specification used by the parser, via {@link TargetNodeSpec}, to match build files.
- */
+/** A specification used by the parser, via {@link TargetNodeSpec}, to match build files. */
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractBuildFileSpec {
@@ -77,78 +78,18 @@ abstract class AbstractBuildFileSpec {
     return fromPath(target.getBasePath(), target.getCellPath());
   }
 
-  /**
-   * Find all build in the given {@link ProjectFilesystem}, and pass each to the given callable.
-   */
-  public void forEachBuildFile(
-      ProjectFilesystem filesystem,
-      String buildFileName,
-      ParserConfig.BuildFileSearchMethod buildFileSearchMethod,
-      Watchman watchman,
-      Function<Path, Void> function)
-      throws IOException, InterruptedException {
-
-    // If non-recursive, we just want the build file in the target spec's given base dir.
-    if (!isRecursive()) {
-      function.apply(filesystem.resolve(getBasePath().resolve(buildFileName)));
-      return;
-    }
-
-    long walkStartTimeNanos = System.nanoTime();
-
-    // Otherwise, we need to do a recursive walk to find relevant build files.
-    boolean tryWatchman =
-        buildFileSearchMethod == ParserConfig.BuildFileSearchMethod.WATCHMAN &&
-        watchman.getWatchmanClient().isPresent() &&
-        watchman.getWatchRoot().isPresent();
-    boolean walkComplete = false;
-    if (tryWatchman) {
-      LOG.debug(
-          "Searching for %s files (watch root %s, project prefix %s, base path %s) with Watchman",
-          buildFileName,
-          watchman.getWatchRoot().get(),
-          watchman.getProjectPrefix(),
-          getBasePath());
-      walkComplete = forEachBuildFileWatchman(
-          filesystem,
-          watchman.getWatchmanClient().get(),
-          watchman.getWatchRoot().get(),
-          watchman.getProjectPrefix(),
-          getBasePath(),
-          buildFileName,
-          function);
-    } else {
-      LOG.debug(
-          "Not using Watchman (search method %s, client present %s, root present %s)",
-          buildFileSearchMethod,
-          watchman.getWatchmanClient().isPresent(),
-          watchman.getWatchRoot().isPresent());
-    }
-
-    if (!walkComplete) {
-      LOG.debug(
-          "Searching for %s files under %s using physical filesystem crawl (note: this is slow)",
-          buildFileName,
-          filesystem.getRootPath());
-      forEachBuildFileFilesystem(filesystem, buildFileName, function);
-    }
-
-    long walkTimeNanos = System.nanoTime() - walkStartTimeNanos;
-    LOG.debug("Completed search in %d ms.", TimeUnit.NANOSECONDS.toMillis(walkTimeNanos));
-  }
-
   @SuppressWarnings("unchecked")
-  private static boolean forEachBuildFileWatchman(
-      ProjectFilesystem filesystem,
+  private static ImmutableSet<Path> findBuildFilesUsingWatchman(
+      ProjectFilesystemView filesystemView,
       WatchmanClient watchmanClient,
       String watchRoot,
       Optional<String> projectPrefix,
       Path basePath,
       String buildFileName,
-      Function<Path, Void> function)
-    throws IOException, InterruptedException {
+      ImmutableSet<PathMatcher> ignoredPaths)
+      throws IOException, InterruptedException {
 
-    List<Object> query = Lists.<Object>newArrayList("query", watchRoot);
+    List<Object> query = Lists.newArrayList("query", watchRoot);
     Map<String, Object> params = new LinkedHashMap<>();
     if (projectPrefix.isPresent()) {
       params.put("relative_root", projectPrefix.get());
@@ -157,10 +98,15 @@ abstract class AbstractBuildFileSpec {
     // Get the current state of the filesystem instead of waiting for a fence.
     params.put("sync_timeout", 0);
 
-    Optional<Path> relativeBasePath = filesystem.getPathRelativeToProjectRoot(basePath);
-    Preconditions.checkState(relativeBasePath.isPresent());
+    Path relativeBasePath;
+    if (basePath.isAbsolute()) {
+      Preconditions.checkState(filesystemView.isSubdirOf(basePath));
+      relativeBasePath = filesystemView.relativize(basePath);
+    } else {
+      relativeBasePath = basePath;
+    }
     // This should be a relative path from watchRoot/projectPrefix.
-    params.put("path", Lists.newArrayList(relativeBasePath.get().toString()));
+    params.put("path", Lists.newArrayList(relativeBasePath.toString()));
 
     // We only care about the paths to each of the files.
     params.put("fields", Lists.newArrayList("name"));
@@ -180,12 +126,10 @@ abstract class AbstractBuildFileSpec {
 
     query.add(params);
     Optional<? extends Map<String, ? extends Object>> queryResponse =
-        watchmanClient.queryWithTimeout(
-            WATCHMAN_QUERY_TIMEOUT_NANOS,
-            query.toArray());
+        watchmanClient.queryWithTimeout(WATCHMAN_QUERY_TIMEOUT_NANOS, query.toArray());
     if (!queryResponse.isPresent()) {
-      LOG.warn("Timed out after %d ns for Watchman query %s", WATCHMAN_QUERY_TIMEOUT_NANOS, query);
-      return false;
+      throw new IOException(
+          "Timed out after " + WATCHMAN_QUERY_TIMEOUT_NANOS + " ns for Watchman query " + query);
     }
 
     Map<String, ? extends Object> response = queryResponse.get();
@@ -199,98 +143,150 @@ abstract class AbstractBuildFileSpec {
       LOG.warn("Watchman warning from query %s: %s", query, warning);
     }
 
-    List<String> files = (List<String>) response.get("files");
+    List<String> files = (List<String>) Objects.requireNonNull(response.get("files"));
     LOG.verbose("Query %s -> files %s", query, files);
+
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builderWithExpectedSize(files.size());
 
     for (String file : files) {
       Path relativePath = Paths.get(file);
-      if (!filesystem.isIgnored(relativePath)) {
+
+      if (!filesystemView.isIgnored(relativePath)
+          && !matchesIgnoredPath(relativePath, ignoredPaths)) {
         // To avoid an extra stat() and realpath(), we assume we have no symlinks here
         // (since Watchman doesn't follow them anyway), and directly resolve the path
         // instead of using ProjectFilesystem.resolve().
-        function.apply(filesystem.getRootPath().resolve(relativePath));
+        builder.add(filesystemView.resolve(relativePath));
       }
     }
 
-    return true;
+    return builder.build();
   }
 
-  private void forEachBuildFileFilesystem(
-      final ProjectFilesystem filesystem,
-      final String buildFileName,
-      final Function<Path, Void> function)
+  private static boolean matchesIgnoredPath(
+      Path relativePath, ImmutableSet<PathMatcher> ignoredPaths) {
+    for (PathMatcher matcher : ignoredPaths) {
+      if (matcher.matches(relativePath)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private ImmutableSet<Path> findBuildFilesUsingFilesystemCrawl(
+      ProjectFilesystemView filesystemView,
+      String buildFileName,
+      ImmutableSet<PathMatcher> ignoredPaths)
       throws IOException {
-    filesystem.walkRelativeFileTree(
+    if (!filesystemView.isDirectory(getBasePath())) {
+      throw new HumanReadableException(
+          "The folder %s could not be found.\n"
+              + "Please check that you spelled the name of the buck target correctly.",
+          getBasePath());
+    }
+
+    Path buildFile = Paths.get(buildFileName);
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+
+    filesystemView.walkFileTree(
         getBasePath(),
-        new FileVisitor<Path>() {
+        EnumSet.of(FileVisitOption.FOLLOW_LINKS),
+        new SimpleFileVisitor<Path>() {
           @Override
-          public FileVisitResult preVisitDirectory(
-              Path dir,
-              BasicFileAttributes attrs)
-              throws IOException {
-            // Skip sub-dirs that we should ignore.
-            if (filesystem.isIgnored(dir)) {
+          public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+            // Filter ignoredPaths here in preVisitDirectory
+            // It is faster than filtering with ProjectFileSystemView, because the latter also
+            // applies filtering PathMatchers to all files, which is unnecessary
+            Path relativePath = filesystemView.relativize(dir);
+            if (matchesIgnoredPath(relativePath, ignoredPaths)) {
               return FileVisitResult.SKIP_SUBTREE;
             }
             return FileVisitResult.CONTINUE;
           }
 
           @Override
-          public FileVisitResult visitFile(
-              Path file,
-              BasicFileAttributes attrs)
-              throws IOException {
-            if (buildFileName.equals(file.getFileName().toString()) &&
-                !filesystem.isIgnored(file)) {
-              function.apply(filesystem.resolve(file));
-            }
-            return FileVisitResult.CONTINUE;
-          }
-
-          @Override
-          public FileVisitResult visitFileFailed(
-              Path file, IOException exc) throws IOException {
-            throw exc;
-          }
-
-          @Override
-          public FileVisitResult postVisitDirectory(
-              Path dir,
-              IOException exc)
-              throws IOException {
-            if (exc != null) {
-              throw exc;
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
+            if (file.getFileName().equals(buildFile)
+                && !matchesIgnoredPath(filesystemView.relativize(file), ignoredPaths)) {
+              builder.add(filesystemView.resolve(file));
+              // TODO(buck_team): switch to custom FileVisitResult so we can skip sibling files
+              // but not sibling dirs. This would save some time checking other files in the same
+              // dir to be build files
+              // return FileVisitResult.SKIP_SIBLING_FILES;
             }
             return FileVisitResult.CONTINUE;
           }
         });
+
+    return builder.build();
   }
 
-  /**
-   * @return paths to build files that this spec match in the given {@link ProjectFilesystem}.
-   */
+  /** @return paths to build files that this spec match in the given {@link ProjectFilesystem}. */
   public ImmutableSet<Path> findBuildFiles(
-      Cell cell,
-      ParserConfig.BuildFileSearchMethod buildFileSearchMethod)
-        throws IOException, InterruptedException {
-    final ImmutableSet.Builder<Path> buildFiles = ImmutableSet.builder();
+      String buildFileName,
+      ProjectFilesystemView filesystemView,
+      Watchman watchman,
+      ParserConfig.BuildFileSearchMethod buildFileSearchMethod,
+      ImmutableSet<PathMatcher> ignoredPaths)
+      throws IOException, InterruptedException {
 
-    LOG.debug("Finding build files for %s under %s...", getBasePath(), cell.getRoot());
+    // If non-recursive, we just want the build file in the target spec's given base dir.
+    if (!isRecursive()) {
+      Path buildFile = filesystemView.resolve(getBasePath().resolve(buildFileName));
+      return ImmutableSet.of(buildFile);
+    }
 
-    forEachBuildFile(
-        cell.getFilesystem(),
-        cell.getBuildFileName(),
-        buildFileSearchMethod,
-        cell.getWatchman(),
-        new Function<Path, Void>() {
-          @Override
-          public Void apply(Path buildFile) {
-            buildFiles.add(buildFile);
-            return null;
-          }
-        });
+    LOG.debug(
+        "Finding build files for %s under %s...", getBasePath(), filesystemView.getRootPath());
 
-    return buildFiles.build();
+    long walkStartTimeNanos = System.nanoTime();
+    try {
+      // Otherwise, we need to do a recursive walk to find relevant build files.
+      boolean tryWatchman =
+          buildFileSearchMethod == ParserConfig.BuildFileSearchMethod.WATCHMAN
+              && watchman.getTransportPath().isPresent()
+              && watchman.getProjectWatches().containsKey(filesystemView.getRootPath());
+
+      if (tryWatchman) {
+        ProjectWatch projectWatch =
+            Objects.requireNonNull(watchman.getProjectWatches().get(filesystemView.getRootPath()));
+        LOG.debug(
+            "Searching for %s files (watch root %s, project prefix %s, base path %s) with Watchman",
+            buildFileName,
+            projectWatch.getWatchRoot(),
+            projectWatch.getProjectPrefix(),
+            getBasePath());
+        try (WatchmanClient watchmanClient = watchman.createClient()) {
+          return findBuildFilesUsingWatchman(
+              filesystemView,
+              watchmanClient,
+              projectWatch.getWatchRoot(),
+              projectWatch.getProjectPrefix(),
+              getBasePath(),
+              buildFileName,
+              ignoredPaths);
+        } catch (IOException ex) {
+          // Watchman failed, warn and fallback to filesystem crawl
+          LOG.warn(
+              ex, "Watchman failed to search for build files, falling back to filesystem crawl");
+        }
+      } else {
+        LOG.debug(
+            "Not using Watchman (search method %s, socket path %s, root present %s)",
+            buildFileSearchMethod,
+            watchman.getTransportPath().isPresent(),
+            watchman.getProjectWatches().containsKey(filesystemView.getRootPath()));
+      }
+
+      LOG.debug(
+          "Searching for %s files under %s using physical filesystem crawl (note: this is slow)",
+          buildFileName, filesystemView.getRootPath());
+
+      return findBuildFilesUsingFilesystemCrawl(filesystemView, buildFileName, ignoredPaths);
+
+    } finally {
+      long walkTimeNanos = System.nanoTime() - walkStartTimeNanos;
+      LOG.debug("Completed search in %d ms.", TimeUnit.NANOSECONDS.toMillis(walkTimeNanos));
+    }
   }
-
 }

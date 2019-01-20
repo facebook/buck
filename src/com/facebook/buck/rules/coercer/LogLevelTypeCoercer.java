@@ -15,9 +15,8 @@
  */
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
-
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 import java.util.logging.Level;
 
@@ -32,7 +31,8 @@ public class LogLevelTypeCoercer extends LeafTypeCoercer<Level> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof String) {
       try {
         return Level.parse((String) object);

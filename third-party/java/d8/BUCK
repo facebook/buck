@@ -1,0 +1,17 @@
+prebuilt_jar(
+    name = "d8",
+    binary_jar = "d8.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/asm:asm",
+        "//third-party/java/commons-compress:commons-compress",
+        "//third-party/java/fastutil:fastutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jopt-simple:jopt-simple",
+        "//third-party/java/json-simple:json-simple",
+        "//third-party/java/kotlinx-metadata-jvm:kotlinx-metadata-jvm",
+    ],
+)

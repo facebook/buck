@@ -1,0 +1,17 @@
+prebuilt_jar(
+    name = "rt-stub",
+    binary_jar = "rt-stub.jar",
+)
+
+android_library(
+    name = "lib8",
+    srcs = glob(["*.java"]),
+    provided_deps = [
+        ":rt-stub",
+    ],
+    source = "8",
+    target = "8",
+    visibility = [
+        "PUBLIC",
+    ],
+)

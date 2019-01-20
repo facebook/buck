@@ -16,116 +16,51 @@
 
 package com.facebook.buck.jvm.java;
 
-
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.BgProcessKiller;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
+import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.zip.Unzip;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
-import com.google.common.base.Strings;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.io.ByteArrayOutputStream;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
+/** javac implemented in a separate binary. */
 public class ExternalJavac implements Javac {
+  @AddToRuleKey private final Supplier<Tool> javac;
+  private final String shortName;
 
-  private static final JavacVersion DEFAULT_VERSION = JavacVersion.of("unknown version");
-
-  private final Path pathToJavac;
-  private final Supplier<JavacVersion> version;
-
-  public ExternalJavac(final Path pathToJavac) {
-    this.pathToJavac = pathToJavac;
-
-    this.version = Suppliers.memoize(
-        new Supplier<JavacVersion>() {
-          @Override
-          public JavacVersion get() {
-            ProcessExecutorParams params = ProcessExecutorParams.builder()
-                .setCommand(ImmutableList.of(pathToJavac.toString(), "-version"))
-                .build();
-            ProcessExecutor.Result result;
-            try (
-                PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
-                PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
-              result = createProcessExecutor(stdout, stderr).launchAndExecute(params);
-            } catch (InterruptedException | IOException e) {
-              throw new RuntimeException(e);
-            }
-            Optional<String> stderr = result.getStderr();
-            String output = stderr.or("").trim();
-            if (Strings.isNullOrEmpty(output)) {
-              return DEFAULT_VERSION;
-            } else {
-              return JavacVersion.of(output);
-            }
-          }
-        });
-  }
-
-  @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return ImmutableSortedSet.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableSortedSet.of();
+  public ExternalJavac(Supplier<Tool> javac, String shortName) {
+    this.javac = MoreSuppliers.memoize(javac);
+    this.shortName = shortName;
   }
 
   @Override
   public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-    return ImmutableList.<String>builder().add(pathToJavac.toString()).build();
+    return javac.get().getCommandPrefix(resolver);
   }
 
   @Override
   public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    return ImmutableMap.of();
-  }
-
-  public static Javac createJavac(Path pathToJavac) {
-    return new ExternalJavac(pathToJavac);
-  }
-
-  @Override
-  public JavacVersion getVersion() {
-    return version.get();
-  }
-
-  @VisibleForTesting
-  ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
-    return new ProcessExecutor(
-              new Console(
-                  Verbosity.SILENT,
-                  stdout,
-                  stderr,
-                  Ansi.withoutTty()));
+    return javac.get().getEnvironment(resolver);
   }
 
   @Override
@@ -133,7 +68,7 @@ public class ExternalJavac implements Javac {
       ImmutableList<String> options,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList) {
-    StringBuilder builder = new StringBuilder(pathToJavac.toString());
+    StringBuilder builder = new StringBuilder(getShortName());
     builder.append(" ");
     Joiner.on(" ").appendTo(builder, options);
     builder.append(" ");
@@ -144,94 +79,126 @@ public class ExternalJavac implements Javac {
 
   @Override
   public String getShortName() {
-    return pathToJavac.toString();
+    return shortName;
   }
 
   @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    if (DEFAULT_VERSION.equals(getVersion())) {
-      // What we really want to do here is use a VersionedTool, however, this will suffice for now.
-      sink.setReflectively("javac", pathToJavac.toString());
-    } else {
-      sink.setReflectively("javac.version", getVersion().toString());
-    }
-  }
-
-  public Path getPath() {
-    return pathToJavac;
-  }
-
-  @Override
-  public int buildWithClasspath(
-      ExecutionContext context,
-      ProjectFilesystem filesystem,
-      SourcePathResolver resolver,
+  public Invocation newBuildInvocation(
+      JavacExecutionContext context,
+      SourcePathResolver sourcePathResolver,
       BuildTarget invokingRule,
       ImmutableList<String> options,
-      ImmutableSet<String> safeAnnotationProcessors,
+      ImmutableList<JavacPluginJsr199Fields> pluginFields,
       ImmutableSortedSet<Path> javaSourceFilePaths,
       Path pathToSrcsList,
-      Optional<Path> workingDirectory,
-      ClassUsageFileWriter usedClassesFileWriter,
-      Optional<StandardJavaFileManagerFactory> fileManagerFactory) throws InterruptedException {
-    ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.add(pathToJavac.toString());
-    command.addAll(options);
+      Path workingDirectory,
+      boolean trackClassUsage,
+      boolean trackJavacPhaseEvents,
+      @Nullable JarParameters abiJarParaameters,
+      @Nullable JarParameters libraryJarParameters,
+      AbiGenerationMode abiGenerationMode,
+      AbiGenerationMode abiCompatibilityMode,
+      @Nullable SourceOnlyAbiRuleInfoFactory ruleInfoFactory) {
+    Preconditions.checkArgument(abiJarParaameters == null);
+    Preconditions.checkArgument(libraryJarParameters == null);
 
-    ImmutableList<Path> expandedSources;
-    try {
-      expandedSources = getExpandedSourcePaths(
-          filesystem,
-          invokingRule,
-          javaSourceFilePaths,
-          workingDirectory);
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          "Unable to expand sources for %s into %s",
-          invokingRule,
-          workingDirectory);
-    }
-    try {
-      filesystem.writeLinesToPath(
-          FluentIterable.from(expandedSources)
-              .transform(Functions.toStringFunction())
-              .transform(ARGFILES_ESCAPER),
-          pathToSrcsList);
-      command.add("@" + pathToSrcsList);
-    } catch (IOException e) {
-      context.logError(
-          e,
-          "Cannot write list of .java files to compile to %s file! Terminating compilation.",
-          pathToSrcsList);
-      return 1;
-    }
+    return new Invocation() {
+      @Override
+      public int buildSourceOnlyAbiJar() {
+        throw new UnsupportedOperationException(
+            "Cannot build source-only ABI jar with external javac.");
+      }
 
-    ProcessBuilder processBuilder = new ProcessBuilder(command.build());
+      @Override
+      public int buildSourceAbiJar() {
+        throw new UnsupportedOperationException("Cannot build source ABI jar with external javac.");
+      }
 
-    Map<String, String> env = processBuilder.environment();
-    env.clear();
-    env.putAll(context.getEnvironment());
+      @Override
+      public int buildClasses() throws InterruptedException {
+        Preconditions.checkArgument(
+            abiGenerationMode == AbiGenerationMode.CLASS,
+            "Cannot compile ABI jars with external javac");
+        ImmutableList<Path> expandedSources;
+        try {
+          expandedSources =
+              getExpandedSourcePaths(
+                  context.getProjectFilesystem(),
+                  context.getProjectFilesystemFactory(),
+                  javaSourceFilePaths,
+                  workingDirectory);
+        } catch (IOException e) {
+          throw new HumanReadableException(
+              "Unable to expand sources for %s into %s", invokingRule, workingDirectory);
+        }
 
-    processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
-    // Run the command
-    int exitCode = -1;
-    try {
-      Process p = BgProcessKiller.startProcess(processBuilder);
-      ProcessExecutor.Result result = context.getProcessExecutor().execute(p);
-      exitCode = result.getExitCode();
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return exitCode;
-    }
+        // For consistency with javax.tools.JavaCompiler, if no sources are specified, then do
+        // nothing. Although it seems reasonable to treat this case as an error, we have a situation
+        // in KotlincToJarStepFactory where we need to categorically add a JavacStep in the event
+        // that an annotation processor for the kotlin_library() dynamically generates some .java
+        // files that need to be compiled. Often, the annotation processors will do no such thing
+        // and the JavacStep that was added will have no work to do.
+        if (expandedSources.isEmpty()) {
+          return 0;
+        }
 
-    return exitCode;
+        ImmutableList.Builder<String> command = ImmutableList.builder();
+        command.addAll(javac.get().getCommandPrefix(sourcePathResolver));
+
+        try {
+          FluentIterable<String> escapedPaths =
+              FluentIterable.from(expandedSources)
+                  .transform(Object::toString)
+                  .transform(ARGFILES_ESCAPER::apply);
+          FluentIterable<String> escapedArgs =
+              FluentIterable.from(options).transform(ARGFILES_ESCAPER::apply);
+
+          context
+              .getProjectFilesystem()
+              .writeLinesToPath(Iterables.concat(escapedArgs, escapedPaths), pathToSrcsList);
+          command.add("@" + pathToSrcsList);
+        } catch (IOException e) {
+          context
+              .getEventSink()
+              .reportThrowable(
+                  e,
+                  "Cannot write list of args/sources to compile to %s file! Terminating compilation.",
+                  pathToSrcsList);
+          return 1;
+        }
+
+        // Run the command
+        int exitCode = -1;
+        try {
+          ProcessExecutorParams params =
+              ProcessExecutorParams.builder()
+                  .setCommand(command.build())
+                  .setEnvironment(context.getEnvironment())
+                  .setDirectory(context.getProjectFilesystem().getRootPath().toAbsolutePath())
+                  .build();
+          ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
+          exitCode = result.getExitCode();
+        } catch (IOException e) {
+          e.printStackTrace(context.getStdErr());
+          return exitCode;
+        }
+
+        return exitCode;
+      }
+
+      @Override
+      public void close() {
+        // Nothing to do
+      }
+    };
   }
 
   private ImmutableList<Path> getExpandedSourcePaths(
       ProjectFilesystem projectFilesystem,
-      BuildTarget invokingRule,
+      ProjectFilesystemFactory projectFilesystemFactory,
       ImmutableSet<Path> javaSourceFilePaths,
-      Optional<Path> workingDirectory) throws IOException {
+      Path workingDirectory)
+      throws InterruptedException, IOException {
 
     // Add sources file or sources list to command
     ImmutableList.Builder<Path> sources = ImmutableList.builder();
@@ -240,27 +207,17 @@ public class ExternalJavac implements Javac {
       if (pathString.endsWith(".java")) {
         sources.add(path);
       } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
-        if (!workingDirectory.isPresent()) {
-          throw new HumanReadableException(
-              "Attempting to compile target %s which specified a .src.zip input %s but no " +
-                  "working directory was specified.",
-              invokingRule.toString(),
-              path);
-        }
         // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ImmutableList<Path> zipPaths = Unzip.extractZipFile(
-            projectFilesystem.resolve(path),
-            projectFilesystem.resolve(workingDirectory.get()),
-            Unzip.ExistingFileMode.OVERWRITE);
+        ImmutableList<Path> zipPaths =
+            ArchiveFormat.ZIP
+                .getUnarchiver()
+                .extractArchive(
+                    projectFilesystemFactory,
+                    projectFilesystem.resolve(path),
+                    projectFilesystem.resolve(workingDirectory),
+                    ExistingFileMode.OVERWRITE);
         sources.addAll(
-            FluentIterable.from(zipPaths)
-                .filter(
-                    new Predicate<Path>() {
-                      @Override
-                      public boolean apply(Path input) {
-                        return input.toString().endsWith(".java");
-                      }
-                    }));
+            zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());
       }
     }
     return sources.build();

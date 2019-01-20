@@ -1,0 +1,8 @@
+cxx_library(
+    name = "library",
+    srcs = [
+        "LibFile1.cpp",
+        "LibFile2.cpp",
+    ],
+    precompiled_header = "other//pch:pch",
+)

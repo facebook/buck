@@ -1,0 +1,3 @@
+load("@a//:lib.bzl", "foo")
+
+export_file(name = "lib2.bzl")

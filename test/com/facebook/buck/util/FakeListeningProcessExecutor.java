@@ -16,32 +16,31 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.timing.SettableFakeClock;
-
-import com.google.common.base.Function;
+import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.base.Functions;
 import com.google.common.collect.Multimap;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
-/**
- * Fake implementation of {@link ListeningProcessExecutor} for tests.
- */
+/** Fake implementation of {@link ListeningProcessExecutor} for tests. */
 public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
   private final Function<ProcessExecutorParams, Collection<FakeListeningProcessState>>
-    processStatesFunction;
+      processStatesFunction;
   private final SettableFakeClock clock;
+  private final List<LaunchedProcess> launchedProcesses;
 
   public FakeListeningProcessExecutor(
       Multimap<ProcessExecutorParams, FakeListeningProcessState> processStates) {
-    this(Functions.forMap(processStates.asMap()), new SettableFakeClock(0, 0));
+    this(Functions.forMap(processStates.asMap()), SettableFakeClock.DO_NOT_CARE);
   }
 
   public FakeListeningProcessExecutor(
@@ -51,17 +50,11 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
   }
 
   public FakeListeningProcessExecutor(
-      Function<ProcessExecutorParams, Collection<FakeListeningProcessState>>
-        processStatesFunction) {
-    this(processStatesFunction, new SettableFakeClock(0, 0));
-  }
-
-  public FakeListeningProcessExecutor(
-      Function<ProcessExecutorParams, Collection<FakeListeningProcessState>>
-        processStatesFunction,
+      Function<ProcessExecutorParams, Collection<FakeListeningProcessState>> processStatesFunction,
       SettableFakeClock clock) {
     this.processStatesFunction = processStatesFunction;
     this.clock = clock;
+    this.launchedProcesses = new ArrayList<>();
   }
 
   private static class FakeLaunchedProcessImpl implements LaunchedProcess {
@@ -172,7 +165,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
           processTimeNanos += stateWaitTime;
           break;
         case EXIT:
-          exitCode = state.getExitCode().get();
+          exitCode = state.getExitCode().getAsInt();
           ByteBuffer empty = ByteBuffer.allocate(0);
           listener.onStdout(empty, true);
           listener.onStderr(empty, true);
@@ -217,9 +210,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
   }
 
   @Override
-  public LaunchedProcess launchProcess(
-      ProcessExecutorParams params,
-      final ProcessListener listener) {
+  public LaunchedProcess launchProcess(ProcessExecutorParams params, ProcessListener listener) {
     Collection<FakeListeningProcessState> fakeProcessStates = processStatesFunction.apply(params);
     long processExecTimeNanos = 0;
     for (FakeListeningProcessState state : fakeProcessStates) {
@@ -227,18 +218,16 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
         processExecTimeNanos += state.getWaitNanos().get();
       }
     }
-    FakeLaunchedProcessImpl process = new FakeLaunchedProcessImpl(
-        listener,
-        processStatesFunction.apply(params).iterator(),
-        clock,
-        processExecTimeNanos);
+    FakeLaunchedProcessImpl process =
+        new FakeLaunchedProcessImpl(
+            listener, processStatesFunction.apply(params).iterator(), clock, processExecTimeNanos);
     listener.onStart(process);
+    launchedProcesses.add(process);
     return process;
   }
 
   @Override
-  public int waitForProcess(LaunchedProcess process, long timeout, TimeUnit timeUnit)
-    throws InterruptedException {
+  public int waitForProcess(LaunchedProcess process, long timeout, TimeUnit timeUnit) {
     FakeLaunchedProcessImpl processImpl = (FakeLaunchedProcessImpl) process;
     clock.advanceTimeNanos(Math.min(processImpl.processExecTimeNanos, timeUnit.toNanos(timeout)));
     processImpl.processAllStates();
@@ -256,5 +245,11 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
       processImpl.states.next();
     }
     processImpl.currentState = null;
+  }
+
+  public void waitForAllLaunchedProcesses() throws IOException, InterruptedException {
+    for (LaunchedProcess launchedProcess : launchedProcesses) {
+      waitForProcess(launchedProcess);
+    }
   }
 }

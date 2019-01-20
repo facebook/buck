@@ -1,0 +1,3 @@
+[cxx#platform]
+  cpp=//:cxx
+  cpp_type=gcc

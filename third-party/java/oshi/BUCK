@@ -1,0 +1,12 @@
+prebuilt_jar(
+    name = "oshi-core",
+    binary_jar = "oshi-core-3.3-SNAPSHOT.jar",
+    licenses = [
+        "LICENSE.html",
+    ],
+    source_jar = "oshi-core-3.3-SNAPSHOT-sources.jar",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/jna:jna",
+    ],
+)

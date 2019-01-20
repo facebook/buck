@@ -1,0 +1,10 @@
+cxx_library(
+    name = "library",
+    srcs = [
+        "cell2//:exported_file.c",
+    ],
+    exported_headers = {
+        "library/exported_file.h": "cell2//:exported_file.h",
+    },
+    visibility = ["PUBLIC"],
+)

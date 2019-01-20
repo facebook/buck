@@ -1,0 +1,14 @@
+android_binary(
+    name = "app_with_cross_cell_android_lib",
+    dex_compression = "jar",
+    keystore = "//keystores:debug",
+    manifest = "AndroidManifest.xml",
+    primary_dex_patterns = [
+        "/MyApplication^",
+    ],
+    use_split_dex = True,
+    deps = [
+        "//java/com/sample/app:app",
+        "//java/com/sample/lib:lib",
+    ],
+)

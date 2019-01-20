@@ -21,7 +21,5 @@ import org.junit.Test;
 public class Subtest2 {
 
   @Test
-  public void shouldBeExecutedWithinTheSuite() {
-  }
-
+  public void shouldBeExecutedWithinTheSuite() {}
 }

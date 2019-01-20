@@ -1,41 +1,59 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 PLATFORM_SRCS = [
-  'Architecture.java',
-  'Platform.java',
+    "Architecture.java",
+    "Platform.java",
+    "PlatformType.java",
 ]
 
 java_library(
-  name = 'platform',
-  srcs = PLATFORM_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
-)
-
-FILTER_SRCS = [
-  'EnvironmentFilter.java',
-]
-
-java_library(
-  name = 'env-filter',
-  srcs = FILTER_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "platform",
+    srcs = PLATFORM_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    # This library is deep in the dependency tree, keep its dependency list small.
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
 )
 
 java_immutables_library(
-  name = 'environment',
-  srcs = glob(['*.java'], excludes = FILTER_SRCS + PLATFORM_SRCS),
-  immutable_types = [
-    'BuildEnvironmentDescription',
-  ],
-  tests = [
-    '//test/com/facebook/buck/util/environment:environment',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "environment",
+    srcs = glob(
+        ["*.java"],
+        exclude = PLATFORM_SRCS,
+    ),
+    tests = [
+        "//test/com/facebook/buck/util/environment:environment",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/watchman:transport",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/network/hostname:hostname",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//third-party/java/ObjCBridge:ObjCBridge",
+        "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

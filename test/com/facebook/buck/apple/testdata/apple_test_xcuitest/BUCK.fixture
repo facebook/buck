@@ -1,0 +1,67 @@
+apple_test(
+    name = "LogicTest",
+    srcs = ["FooXCTest.m"],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test.plist",
+)
+
+apple_resource(
+    name = "TestHostAppResources",
+    dirs = [],
+    files = glob(["host_app/*.png"]),
+)
+
+apple_binary(
+    name = "TestHostBinary",
+    srcs = ["host_app/TestHostApp.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = ["host_app/TestHostApp.h"],
+)
+
+apple_bundle(
+    name = "TestHostApp",
+    binary = ":TestHostBinary",
+    extension = "app",
+    info_plist = "host_app/TestHostApp.plist",
+    deps = [":TestHostAppResources"],
+)
+
+apple_bundle(
+    name = "TestTargetApp",
+    binary = ":TestHostBinary",
+    extension = "app",
+    info_plist = "host_app/TestHostApp.plist",
+)
+
+apple_test(
+    name = "UITestLegacy",
+    srcs = ["test/AppTest.m"],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    info_plist = "test/AppTest.plist",
+    is_ui_test = True,
+    test_host_app = ":TestHostApp",
+)
+
+apple_test(
+    name = "UITest",
+    srcs = ["test/AppTest.m"],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    info_plist = "test/AppTest.plist",
+    is_ui_test = True,
+    test_host_app = ":TestHostApp",
+    ui_test_target_app = ":TestTargetApp",
+)

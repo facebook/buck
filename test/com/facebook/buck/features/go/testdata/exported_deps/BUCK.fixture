@@ -1,0 +1,28 @@
+go_binary(
+    name = "main",
+    srcs = [
+        "main.go",
+    ],
+    deps = [
+        ":a",
+    ],
+)
+
+go_library(
+    name = "a",
+    package_name = "a",
+    srcs = [
+        "a/a.go",
+    ],
+    exported_deps = [
+        ":b",
+    ],
+)
+
+go_library(
+    name = "b",
+    package_name = "b",
+    srcs = [
+        "b/b.go",
+    ],
+)

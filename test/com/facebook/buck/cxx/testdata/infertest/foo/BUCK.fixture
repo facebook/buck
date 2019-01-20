@@ -1,139 +1,139 @@
 cxx_binary(
-    name='simple',
-    srcs=[
-        'simple.cpp',
+    name = "simple",
+    srcs = [
+        "simple.cpp",
     ],
 )
 
 cxx_binary(
-    name='binary_with_deps',
-    srcs=[
-        'src_with_deps.c',
+    name = "binary_with_deps",
+    srcs = [
+        "src_with_deps.c",
     ],
-    deps=[
-        ':dep_one',
-        ':dep_two',
-    ],
-)
-
-cxx_library(
-    name='dep_one',
-    srcs=[
-        'dep_one.c',
-    ],
-    exported_headers=[
-        'dep_one.h'
+    deps = [
+        ":dep_one",
+        ":dep_two",
     ],
 )
 
 cxx_library(
-    name='dep_two',
-    srcs=[
-        'dep_two.c',
+    name = "dep_one",
+    srcs = [
+        "dep_one.c",
     ],
-    exported_headers=[
-        'dep_two.h'
+    exported_headers = [
+        "dep_one.h",
+    ],
+)
+
+cxx_library(
+    name = "dep_two",
+    srcs = [
+        "dep_two.c",
+    ],
+    exported_headers = [
+        "dep_two.h",
     ],
 )
 
 cxx_binary(
-    name='binary_with_chain_deps',
-    srcs=[
-        'top_chain.c',
+    name = "binary_with_chain_deps",
+    srcs = [
+        "top_chain.c",
     ],
-    deps=[
-        ':chain_dep_one',
-    ],
-)
-
-cxx_library(
-    name='chain_dep_one',
-    srcs=[
-        'chain_dep_one.c',
-    ],
-    exported_headers=[
-        'chain_dep_one.h'
-    ],
-    deps=[
-        ':chain_dep_two',
+    deps = [
+        ":chain_dep_one",
     ],
 )
 
 cxx_library(
-    name='chain_dep_two',
-    srcs=[
-        'chain_dep_two.c',
+    name = "chain_dep_one",
+    srcs = [
+        "chain_dep_one.c",
     ],
-    exported_headers=[
-        'chain_dep_two.h'
+    exported_headers = [
+        "chain_dep_one.h",
+    ],
+    deps = [
+        ":chain_dep_two",
+    ],
+)
+
+cxx_library(
+    name = "chain_dep_two",
+    srcs = [
+        "chain_dep_two.c",
+    ],
+    exported_headers = [
+        "chain_dep_two.h",
     ],
 )
 
 cxx_binary(
-    name='binary_with_diamond_deps',
-    srcs=[
-            'src_with_deps.c',
-        ],
-    deps=[
-        ':diamond_dep_one',
-        ':diamond_dep_two',
+    name = "binary_with_diamond_deps",
+    srcs = [
+        "src_with_deps.c",
+    ],
+    deps = [
+        ":diamond_dep_one",
+        ":diamond_dep_two",
     ],
 )
 
 cxx_library(
-    name='diamond_dep_one',
-    srcs=[
-        'dep_one.c',
+    name = "diamond_dep_one",
+    srcs = [
+        "dep_one.c",
     ],
-    exported_headers=[
-        'dep_one.h'
+    exported_headers = [
+        "dep_one.h",
     ],
-    deps=[
-        ':simple_lib',
-    ],
-)
-
-cxx_library(
-    name='diamond_dep_two',
-    srcs=[
-        'dep_two.c',
-    ],
-    exported_headers=[
-        'dep_two.h'
-    ],
-    deps=[
-        ':simple_lib',
+    deps = [
+        ":simple_lib",
     ],
 )
 
 cxx_library(
-    name='simple_lib',
-    srcs=[
-        'simple.cpp',
+    name = "diamond_dep_two",
+    srcs = [
+        "dep_two.c",
+    ],
+    exported_headers = [
+        "dep_two.h",
+    ],
+    deps = [
+        ":simple_lib",
+    ],
+)
+
+cxx_library(
+    name = "simple_lib",
+    srcs = [
+        "simple.cpp",
     ],
 )
 
 cxx_binary(
-    name='binary_with_unused_header',
-    srcs=[
-        'simple_one.cpp',
+    name = "binary_with_unused_header",
+    srcs = [
+        "simple_one.cpp",
     ],
-    deps=[
-        ':headers_only_lib_2',
-    ],
-)
-
-cxx_library(
-    name='headers_only_lib',
-    exported_headers=[
-        'dep_one.h',
+    deps = [
+        ":headers_only_lib_2",
     ],
 )
 
 cxx_library(
-    name='headers_only_lib_2',
-    exported_headers=[
-        'unused_header.h',
-        'used_header.h'
+    name = "headers_only_lib",
+    exported_headers = [
+        "dep_one.h",
+    ],
+)
+
+cxx_library(
+    name = "headers_only_lib_2",
+    exported_headers = [
+        "unused_header.h",
+        "used_header.h",
     ],
 )

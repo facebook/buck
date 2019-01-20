@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><project version="4">
+    <component name="AndroidLayouts">
+        <shared>
+            <config/>
+        </shared>
+    </component>
+    <component name="ChangeListManager">
+        <list comment="" default="true" id="91878783-7c3a-4372-8d48-5419197454c7" name="Default"/>
+        
+        <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true"/>
+        <option name="TRACKING_ENABLED" value="true"/>
+        <option name="SHOW_DIALOG" value="false"/>
+        <option name="HIGHLIGHT_CONFLICTS" value="true"/>
+        <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false"/>
+        <option name="LAST_RESOLUTION" value="IGNORE"/>
+    </component>
+    <component name="CreatePatchCommitExecutor">
+        <option name="PATCH_PATH" value=""/>
+    </component>
+    <component SELECTED_TARGET="default_target" name="ExecutionTargetManager"/>
+    <component name="FileEditorManager">
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="186"/>
+    </component>
+    <component name="FindInProjectRecents">
+        <findStrings>
+            <find>__buck_helper</find>
+            <find>add_direct_deps_modules_with_resources</find>
+            <find>revert_some_modules</find>
+            <find>read_global_config</find>
+            <find>test_project_tries_to_fetch_invalid_target_from_cache</find>
+        </findStrings>
+    </component>
+    <component name="GradleLocalSettings">
+        <option name="externalProjectsViewState">
+            <projects_view/>
+        </option>
+    </component>
+    <component name="ProjectFrameBounds">
+        <option name="y" value="23"/>
+        <option name="width" value="2556"/>
+        <option name="height" value="1577"/>
+    </component>
+</project>

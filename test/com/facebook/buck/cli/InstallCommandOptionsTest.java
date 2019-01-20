@@ -16,44 +16,41 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.TargetDeviceOptions;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.google.common.base.Joiner;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfigTestUtils;
+import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.step.TargetDeviceOptions;
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.google.common.base.Joiner;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import org.junit.Rule;
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-
 public class InstallCommandOptionsTest {
 
-  @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private InstallCommand getCommand(String... args) throws CmdLineException {
     InstallCommand command = new InstallCommand();
-    new AdditionalOptionsCmdLineParser(command).parseArgument(args);
+    CmdLineParserFactory.create(command).parseArgument(args);
     return command;
   }
 
-  private AdbOptions getAdbOptions(
-      boolean multiInstallModeConfig,
-      String...args) throws CmdLineException, IOException {
-    Reader reader = new StringReader(Joiner.on('\n').join(
-        "[adb]",
-        "multi_install_mode = " + multiInstallModeConfig));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(
-        temporaryFolder,
-        reader);
+  private AdbOptions getAdbOptions(boolean multiInstallModeConfig, String... args)
+      throws CmdLineException, IOException {
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n').join("[adb]", "multi_install_mode = " + multiInstallModeConfig));
+    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
     return getCommand(args).adbOptions(config);
   }
 
@@ -63,38 +60,39 @@ public class InstallCommandOptionsTest {
 
   @Test
   public void testInstallCommandOptionsRun() throws CmdLineException {
-    InstallCommand command = getCommand(
-        InstallCommand.RUN_SHORT_ARG, "katana",
-        VerbosityParser.VERBOSE_SHORT_ARG, "10");
+    InstallCommand command =
+        getCommand(
+            InstallCommand.RUN_SHORT_ARG, "katana",
+            GlobalCliOptions.VERBOSE_SHORT_ARG, "10");
     assertTrue(command.shouldStartActivity());
     assertNull(command.getActivityToStart());
   }
 
   @Test
   public void testInstallCommandOptionsRunAndActivity() throws CmdLineException {
-    InstallCommand command = getCommand(
-        InstallCommand.RUN_SHORT_ARG,
-        VerbosityParser.VERBOSE_SHORT_ARG, "10",
-        "wakizashi",
-        InstallCommand.ACTIVITY_SHORT_ARG, "com.facebook.katana.LoginActivity");
+    InstallCommand command =
+        getCommand(
+            InstallCommand.RUN_SHORT_ARG,
+            GlobalCliOptions.VERBOSE_SHORT_ARG,
+            "10",
+            "wakizashi",
+            InstallCommand.ACTIVITY_SHORT_ARG,
+            "com.facebook.katana.LoginActivity");
     assertTrue(command.shouldStartActivity());
     assertEquals("com.facebook.katana.LoginActivity", command.getActivityToStart());
   }
 
   @Test
   public void testInstallCommandOptionsActivity() throws CmdLineException {
-    InstallCommand command = getCommand(
-        "katana",
-        InstallCommand.ACTIVITY_SHORT_ARG, ".LoginActivity");
+    InstallCommand command =
+        getCommand("katana", InstallCommand.ACTIVITY_SHORT_ARG, ".LoginActivity");
     assertTrue(command.shouldStartActivity());
     assertEquals(".LoginActivity", command.getActivityToStart());
   }
 
   @Test
   public void testInstallCommandOptionsNone() throws CmdLineException {
-    InstallCommand command = getCommand(
-        VerbosityParser.VERBOSE_SHORT_ARG, "10",
-        "katana");
+    InstallCommand command = getCommand(GlobalCliOptions.VERBOSE_SHORT_ARG, "10", "katana");
     assertFalse(command.shouldStartActivity());
     assertNull(command.getActivityToStart());
   }
@@ -118,8 +116,8 @@ public class InstallCommandOptionsTest {
   @Test
   public void testInstallCommandOptionsDeviceMode() throws CmdLineException {
     // Short form.
-    TargetDeviceOptions options = getTargetDeviceOptions(
-        TargetDeviceCommandLineOptions.DEVICE_MODE_SHORT_ARG);
+    TargetDeviceOptions options =
+        getTargetDeviceOptions(TargetDeviceCommandLineOptions.DEVICE_MODE_SHORT_ARG);
     assertTrue(options.isRealDevicesOnlyModeEnabled());
 
     // Long form.
@@ -135,24 +133,24 @@ public class InstallCommandOptionsTest {
   public void testInstallCommandOptionsSerial() throws CmdLineException {
     String serial = "some-random-serial-number";
     // Short form.
-    TargetDeviceOptions options = getTargetDeviceOptions(
-        TargetDeviceCommandLineOptions.SERIAL_NUMBER_SHORT_ARG, serial);
-    assertTrue(options.hasSerialNumber());
-    assertEquals(serial, options.getSerialNumber());
+    TargetDeviceOptions options =
+        getTargetDeviceOptions(TargetDeviceCommandLineOptions.SERIAL_NUMBER_SHORT_ARG, serial);
+    assertTrue(options.getSerialNumber().isPresent());
+    assertEquals(serial, options.getSerialNumber().get());
 
     // Long form.
     options = getTargetDeviceOptions(TargetDeviceCommandLineOptions.SERIAL_NUMBER_LONG_ARG, serial);
-    assertTrue(options.hasSerialNumber());
-    assertEquals(serial, options.getSerialNumber());
+    assertTrue(options.getSerialNumber().isPresent());
+    assertEquals(serial, options.getSerialNumber().get());
 
     // Is off by default.
     options = getTargetDeviceOptions();
-    assertFalse(options.hasSerialNumber());
-    assertEquals(null, options.getSerialNumber());
+    assertFalse(options.getSerialNumber().isPresent());
   }
 
   @Test
-  public void testInstallCommandOptionsMultiInstallMode() throws CmdLineException, IOException {
+  public void testInstallCommandOptionsMultiInstallMode()
+      throws CmdLineException, InterruptedException, IOException {
     // Short form.
     AdbOptions options = getAdbOptions(false, AdbCommandLineOptions.MULTI_INSTALL_MODE_SHORT_ARG);
     assertTrue(options.isMultiInstallModeEnabled());
@@ -167,7 +165,8 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testInstallCommandOptionsAdbThreads() throws CmdLineException, IOException {
+  public void testInstallCommandOptionsAdbThreads()
+      throws CmdLineException, InterruptedException, IOException {
     // Short form.
     AdbOptions options = getAdbOptions(false, AdbCommandLineOptions.ADB_THREADS_SHORT_ARG, "4");
     assertEquals(4, options.getAdbThreadCount());
@@ -182,7 +181,8 @@ public class InstallCommandOptionsTest {
   }
 
   @Test
-  public void testMultiInstallModeFromBuckConfig() throws CmdLineException, IOException {
+  public void testMultiInstallModeFromBuckConfig()
+      throws CmdLineException, InterruptedException, IOException {
     AdbOptions options = getAdbOptions(true);
     assertTrue(options.isMultiInstallModeEnabled());
 

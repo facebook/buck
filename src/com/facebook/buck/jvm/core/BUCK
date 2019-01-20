@@ -1,26 +1,31 @@
 java_library(
-  name = 'classhash',
-  srcs = [
-    'HasJavaClassHashes.java',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "core",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        ":packagefinder",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
+        "//third-party/java/guava:guava",
+        "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
 
 java_library(
-  name = 'packagefinder',
-  srcs = [
-    'JavaPackageFinder.java',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
-)
-
-java_library(
-  name = 'suggestbuildrules',
-  srcs = [
-    'SuggestBuildRules.java',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "packagefinder",
+    srcs = [
+        "JavaPackageFinder.java",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/core/build/context:context",
+        "//src/com/facebook/buck/rules/modern/builders/...",
+        "//src/com/facebook/buck/step:step",
+    ],
+    deps = ["//src/com/facebook/buck/core/model:model"],
 )

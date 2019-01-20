@@ -16,42 +16,32 @@
 
 package com.facebook.buck.zip;
 
-import static com.facebook.buck.zip.ZipOutputStreams.HandleDuplicates.OVERWRITE_EXISTING;
+import static com.facebook.buck.util.zip.ZipOutputStreams.HandleDuplicates.THROW_EXCEPTION;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Optional;
+import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.zip.CustomZipEntry;
+import com.facebook.buck.util.zip.CustomZipOutputStream;
+import com.facebook.buck.util.zip.Zip;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
+import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.hash.Hashing;
-import com.google.common.io.ByteSource;
-import com.google.common.io.ByteStreams;
-
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.FileVisitor;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.zip.ZipEntry;
+import java.util.TreeMap;
 
-/**
- * A {@link com.facebook.buck.step.Step} that creates a ZIP archive..
- */
+/** A {@link com.facebook.buck.step.Step} that creates a ZIP archive.. */
 @SuppressWarnings("PMD.AvoidUsingOctalValues")
 public class ZipStep implements Step {
-
-  private static final Logger LOG = Logger.get(ZipStep.class);
 
   private final ProjectFilesystem filesystem;
   private final Path pathToZipFile;
@@ -60,20 +50,20 @@ public class ZipStep implements Step {
   private final ZipCompressionLevel compressionLevel;
   private final Path baseDir;
 
-
   /**
    * Create a {@link ZipStep} to create or update a zip archive.
    *
-   * Note that paths added to the archive are always relative to the working directory.<br>
-   * For example, if you're in {@code /dir} and you add {@code file.txt}, you get
-   * an archive containing just the file. If you were in {@code /} and added
-   * {@code dir/file.txt}, you would get an archive containing the file within a directory.
+   * <p>Note that paths added to the archive are always relative to the working directory.<br>
+   * For example, if you're in {@code /dir} and you add {@code file.txt}, you get an archive
+   * containing just the file. If you were in {@code /} and added {@code dir/file.txt}, you would
+   * get an archive containing the file within a directory.
    *
+   * @param filesystem project filesystem based in current working directory.
    * @param pathToZipFile path to archive to create, relative to project root.
-   * @param paths a set of files to work on. The entire working directory is assumed if this set
-   *    is empty.
+   * @param paths a set of files to work on. The entire working directory is assumed if this set is
+   *     empty.
    * @param junkPaths if {@code true}, the relative paths of added archive entries are discarded,
-   *    i.e. they are all placed in the root of the archive.
+   *     i.e. they are all placed in the root of the archive.
    * @param compressionLevel between 0 (store) and 9.
    * @param baseDir working directory for {@code zip} command.
    */
@@ -93,109 +83,26 @@ public class ZipStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     if (filesystem.exists(pathToZipFile)) {
       context.postEvent(
           ConsoleEvent.severe("Attempting to overwrite an existing zip: %s", pathToZipFile));
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
 
-    // Since filesystem traversals can be non-deterministic, sort the entries we find into
-    // a tree map before writing them out.
-    final Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = Maps.newTreeMap();
+    Map<String, Pair<CustomZipEntry, Optional<Path>>> entries = new TreeMap<>();
 
-    FileVisitor<Path> pathFileVisitor = new SimpleFileVisitor<Path>() {
-      private boolean isSkipFile(Path file) {
-        return !paths.isEmpty() && !paths.contains(file);
-      }
-
-      private String getEntryName(Path path) {
-        Path relativePath = junkPaths ? path.getFileName() : baseDir.relativize(path);
-        return MorePaths.pathWithUnixSeparators(relativePath);
-      }
-
-      private CustomZipEntry getZipEntry(
-          String entryName,
-          final Path path,
-          BasicFileAttributes attr) throws IOException {
-        boolean isDirectory = filesystem.isDirectory(path);
-        if (isDirectory) {
-          entryName += "/";
-        }
-
-        CustomZipEntry entry = new CustomZipEntry(entryName);
-        // We want deterministic ZIPs, so avoid mtimes.
-        entry.setFakeTime();
-        entry.setCompressionLevel(
-            isDirectory ?
-                ZipCompressionLevel.MIN_COMPRESSION_LEVEL.getValue() :
-                compressionLevel.getValue());
-        // If we're using STORED files, we must manually set the CRC, size, and compressed size.
-        if (entry.getMethod() == ZipEntry.STORED && !isDirectory) {
-          entry.setSize(attr.size());
-          entry.setCompressedSize(attr.size());
-          entry.setCrc(
-              new ByteSource() {
-                @Override
-                public InputStream openStream() throws IOException {
-                  return filesystem.newFileInputStream(path);
-                }
-              }.hash(Hashing.crc32()).padToLong());
-        }
-
-        long externalAttributes = filesystem.getFileAttributesForZipEntry(path);
-        LOG.verbose(
-            "Setting mode for entry %s path %s to 0x%08X",
-            entryName, path, externalAttributes);
-        entry.setExternalAttributes(externalAttributes);
-        return entry;
-      }
-
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-          throws IOException {
-        if (!isSkipFile(file)) {
-          CustomZipEntry entry = getZipEntry(getEntryName(file), file, attrs);
-          entries.put(entry.getName(), new Pair<>(entry, Optional.of(file)));
-        }
-        return FileVisitResult.CONTINUE;
-      }
-      @Override
-      public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-          throws IOException {
-        if (!dir.equals(baseDir) && !isSkipFile(dir)) {
-          CustomZipEntry entry = getZipEntry(getEntryName(dir), dir, attrs);
-          entries.put(entry.getName(), new Pair<>(entry, Optional.<Path>absent()));
-        }
-        return FileVisitResult.CONTINUE;
-      }
-    };
-
-    try (
-      BufferedOutputStream baseOut =
-          new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
-      CustomZipOutputStream out =
-          ZipOutputStreams.newOutputStream(baseOut, OVERWRITE_EXISTING)) {
-
-      filesystem.walkRelativeFileTree(baseDir, pathFileVisitor);
-
-      // Write the entries out using the iteration order of the tree map above.
-      for (Pair<CustomZipEntry, Optional<Path>> entry : entries.values()) {
-        out.putNextEntry(entry.getFirst());
-        if (entry.getSecond().isPresent()) {
-          try (InputStream input = filesystem.newFileInputStream(entry.getSecond().get())) {
-            ByteStreams.copy(input, out);
-          }
-        }
-        out.closeEntry();
-      }
-
-    } catch (IOException e) {
-      context.logError(e, "Error creating zip file %s", pathToZipFile);
-      return StepExecutionResult.ERROR;
+    try (BufferedOutputStream baseOut =
+            new BufferedOutputStream(filesystem.newFileOutputStream(pathToZipFile));
+        CustomZipOutputStream out = ZipOutputStreams.newOutputStream(baseOut, THROW_EXCEPTION)) {
+      /* TODO: Make this logic to avoid using exceptions.
+       * If walking the file directory throws, then an empty jar file is still created.
+       */
+      Zip.walkBaseDirectoryToCreateEntries(
+          filesystem, entries, baseDir, paths, junkPaths, compressionLevel);
+      Zip.writeEntriesToZip(filesystem, out, entries);
     }
-
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
@@ -211,13 +118,13 @@ public class ZipStep implements Step {
     // compression level
     args.append("-").append(compressionLevel).append(" ");
 
-    // unk paths
+    // junk paths
     if (junkPaths) {
       args.append("-j ");
     }
 
     // destination archive
-    args.append(pathToZipFile.toString()).append(" ");
+    args.append(pathToZipFile).append(" ");
 
     // files to add to archive
     if (paths.isEmpty()) {
@@ -227,7 +134,7 @@ public class ZipStep implements Step {
     } else {
       // Add specified paths, relative to workingDirectory.
       for (Path path : paths) {
-        args.append(path.toString()).append(" ");
+        args.append(path).append(" ");
       }
     }
 
@@ -238,5 +145,4 @@ public class ZipStep implements Step {
   public String getShortName() {
     return "zip";
   }
-
 }

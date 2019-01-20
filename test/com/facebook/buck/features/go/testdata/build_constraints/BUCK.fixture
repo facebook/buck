@@ -1,0 +1,4 @@
+go_binary(
+    name = "family",
+    srcs = glob(["*.go"]),
+)

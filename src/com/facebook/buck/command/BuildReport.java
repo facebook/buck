@@ -16,80 +16,112 @@
 
 package com.facebook.buck.command;
 
-import com.facebook.buck.rules.BuildResult;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleSuccessType;
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
+
+import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.ErrorLogger;
+import com.facebook.buck.util.ErrorLogger.LogImpl;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
-
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 @VisibleForTesting
 public class BuildReport {
+  private static final Logger LOG = Logger.get(BuildReport.class);
 
   private final BuildExecutionResult buildExecutionResult;
+  private final SourcePathResolver pathResolver;
 
   /**
    * @param buildExecutionResult the build result to generate the report for.
+   * @param pathResolver source path resolver which can be used for the result.
    */
-  public BuildReport(BuildExecutionResult buildExecutionResult) {
+  public BuildReport(BuildExecutionResult buildExecutionResult, SourcePathResolver pathResolver) {
     this.buildExecutionResult = buildExecutionResult;
+    this.pathResolver = pathResolver;
   }
 
   public String generateForConsole(Console console) {
     Ansi ansi = console.getAnsi();
-    Map<BuildRule, Optional<BuildResult>> ruleToResult =
-        buildExecutionResult.getResults();
+    Map<BuildRule, Optional<BuildResult>> ruleToResult = buildExecutionResult.getResults();
 
     StringBuilder report = new StringBuilder();
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccessType> success = Optional.absent();
+      Optional<BuildRuleSuccessType> success = Optional.empty();
       Optional<BuildResult> result = entry.getValue();
       if (result.isPresent()) {
-        success = Optional.fromNullable(result.get().getSuccess());
+        success = result.get().getSuccessOptional();
       }
 
       String successIndicator;
       String successType;
-      Path outputFile;
+      SourcePath outputFile;
       if (success.isPresent()) {
         successIndicator = ansi.asHighlightedSuccessText("OK  ");
         successType = success.get().name();
-        outputFile = rule.getPathToOutput();
+        outputFile = rule.getSourcePathToOutput();
       } else {
         successIndicator = ansi.asHighlightedFailureText("FAIL");
         successType = null;
         outputFile = null;
       }
 
-      report.append(String.format(
-              "%s %s%s%s\n",
+      report.append(
+          String.format(
+              "%s %s%s%s",
               successIndicator,
               rule.getBuildTarget(),
               successType != null ? " " + successType : "",
-              outputFile != null ? " " + outputFile : ""));
+              outputFile != null ? " " + pathResolver.getRelativePath(outputFile) : ""));
+      report.append(System.lineSeparator());
     }
 
-    if (!buildExecutionResult.getFailures().isEmpty() &&
-        console.getVerbosity().shouldPrintCommand()) {
-      report.append("\n ** Summary of failures encountered during the build **\n");
+    if (!buildExecutionResult.getFailures().isEmpty()
+        && console.getVerbosity().shouldPrintStandardInformation()) {
+      report.append(linesToText("", " ** Summary of failures encountered during the build **", ""));
       for (BuildResult failureResult : buildExecutionResult.getFailures()) {
-        Throwable failure = Preconditions.checkNotNull(failureResult.getFailure());
-        report.append(String.format(
-                "Rule %s FAILED because %s.\n",
-                failureResult.getRule().getFullyQualifiedName(),
-                failure.getMessage()));
+        Throwable failure = Objects.requireNonNull(failureResult.getFailure());
+        new ErrorLogger(
+                new ErrorLogger.LogImpl() {
+                  @Override
+                  public void logUserVisible(String message) {
+                    report.append(
+                        String.format(
+                            "Rule %s FAILED because %s.",
+                            failureResult.getRule().getFullyQualifiedName(), message));
+                  }
+
+                  @Override
+                  public void logUserVisibleInternalError(String message) {
+                    logUserVisible(message);
+                  }
+
+                  @Override
+                  public void logVerbose(Throwable e) {
+                    LOG.debug(
+                        e,
+                        "Error encountered while building %s.",
+                        failureResult.getRule().getFullyQualifiedName());
+                  }
+                },
+                new HumanReadableExceptionAugmentor(ImmutableMap.of()))
+            .setSuppressStackTraces(true)
+            .logException(failure);
       }
     }
 
@@ -97,19 +129,18 @@ public class BuildReport {
   }
 
   public String generateJsonBuildReport() throws IOException {
-    Map<BuildRule, Optional<BuildResult>> ruleToResult =
-        buildExecutionResult.getResults();
-    LinkedHashMap<String, Object> results = Maps.newLinkedHashMap();
-    LinkedHashMap<String, Object> failures = Maps.newLinkedHashMap();
+    Map<BuildRule, Optional<BuildResult>> ruleToResult = buildExecutionResult.getResults();
+    LinkedHashMap<String, Object> results = new LinkedHashMap<>();
+    LinkedHashMap<String, Object> failures = new LinkedHashMap<>();
     boolean isOverallSuccess = true;
     for (Map.Entry<BuildRule, Optional<BuildResult>> entry : ruleToResult.entrySet()) {
       BuildRule rule = entry.getKey();
-      Optional<BuildRuleSuccessType> success = Optional.absent();
+      Optional<BuildRuleSuccessType> success = Optional.empty();
       Optional<BuildResult> result = entry.getValue();
       if (result.isPresent()) {
-        success = Optional.fromNullable(result.get().getSuccess());
+        success = result.get().getSuccessOptional();
       }
-      Map<String, Object> value = Maps.newLinkedHashMap();
+      Map<String, Object> value = new LinkedHashMap<>();
 
       boolean isSuccess = success.isPresent();
       value.put("success", isSuccess);
@@ -119,23 +150,44 @@ public class BuildReport {
 
       if (isSuccess) {
         value.put("type", success.get().name());
-        Path outputFile = rule.getPathToOutput();
-        value.put("output", outputFile != null ? outputFile.toString() : null);
+        SourcePath outputFile = rule.getSourcePathToOutput();
+        value.put(
+            "output",
+            outputFile != null ? pathResolver.getRelativePath(outputFile).toString() : null);
       }
       results.put(rule.getFullyQualifiedName(), value);
     }
 
     for (BuildResult failureResult : buildExecutionResult.getFailures()) {
-      Throwable failure = Preconditions.checkNotNull(failureResult.getFailure());
-      failures.put(failureResult.getRule().getFullyQualifiedName(), failure.getMessage());
+      Throwable failure = Objects.requireNonNull(failureResult.getFailure());
+      StringBuilder messageBuilder = new StringBuilder();
+      new ErrorLogger(
+              new LogImpl() {
+                @Override
+                public void logUserVisible(String message) {
+                  messageBuilder.append(message);
+                }
+
+                @Override
+                public void logUserVisibleInternalError(String message) {
+                  messageBuilder.append(message);
+                }
+
+                @Override
+                public void logVerbose(Throwable e) {}
+              },
+              new HumanReadableExceptionAugmentor(ImmutableMap.of()))
+          .setSuppressStackTraces(true)
+          .logException(failure);
+      failures.put(failureResult.getRule().getFullyQualifiedName(), messageBuilder.toString());
     }
 
-    Map<String, Object> report = Maps.newLinkedHashMap();
+    Map<String, Object> report = new LinkedHashMap<>();
     report.put("success", isOverallSuccess);
     report.put("results", results);
     report.put("failures", failures);
-    ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-    return objectMapper.writeValueAsString(report);
+    return ObjectMappers.WRITER
+        .withFeatures(SerializationFeature.INDENT_OUTPUT)
+        .writeValueAsString(report);
   }
 }

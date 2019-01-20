@@ -1,0 +1,14 @@
+java_library(
+    name = "exceptions",
+    srcs = glob([
+        "*.java",
+    ]),
+    exported_deps = ["//src/com/facebook/buck/util:exceptions"],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/guava:guava",
+    ],
+)

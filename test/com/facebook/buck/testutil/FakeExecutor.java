@@ -23,21 +23,19 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 public class FakeExecutor implements ScheduledExecutorService {
   private final List<AnnotatedRunnable> runnableList =
       Collections.synchronizedList(new ArrayList<AnnotatedRunnable>());
   private final CountDownLatch latch = new CountDownLatch(1);
-  private final IdentityHashMap<ScheduledFuture<?>, ScheduledFuture<?>>
-  outstandingTasks = new IdentityHashMap<ScheduledFuture<?>, ScheduledFuture<?>>();
+  private final IdentityHashMap<ScheduledFuture<?>, ScheduledFuture<?>> outstandingTasks =
+      new IdentityHashMap<ScheduledFuture<?>, ScheduledFuture<?>>();
 
   private volatile boolean rejectSubmission = false;
   private volatile boolean isShutdown = false;
@@ -72,36 +70,24 @@ public class FakeExecutor implements ScheduledExecutorService {
   }
 
   @Override
-  public ScheduledFuture<?> schedule(final Runnable command, long delay, TimeUnit unit) {
-    if (rejectSubmission) {
-      throw new RejectedExecutionException();
-    }
-
-    runnableList.add(new AnnotatedRunnable(command, delay, -1, unit));
-
-    return new FakeScheduledFuture<Void>(toCallable(command));
+  public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
+    return schedule(toCallable(command), delay, unit);
   }
 
-  private <T> Callable<T> toCallable(final Runnable runnable, final T result) {
-    return new Callable<T>() {
-      @Override
-      public T call() throws Exception {
-        runnable.run();
+  private <T> Callable<T> toCallable(Runnable runnable, T result) {
+    return () -> {
+      runnable.run();
 
-        return result;
-      }
+      return result;
     };
-
   }
 
   private Callable<Void> toCallable(Runnable runnable) {
-    return toCallable(new AnnotatedRunnable(runnable), (Void) null);
+    return toCallable(new AnnotatedRunnable(runnable), null);
   }
 
   @Override
-  public <V> ScheduledFuture<V> schedule(
-      Callable<V> callable, long delay, TimeUnit unit
-  ) {
+  public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
     if (rejectSubmission) {
       throw new RejectedExecutionException();
     }
@@ -118,20 +104,17 @@ public class FakeExecutor implements ScheduledExecutorService {
 
   @Override
   public ScheduledFuture<?> scheduleAtFixedRate(
-      Runnable command, long initialDelay, long period, TimeUnit unit
-  ) {
+      Runnable command, long initialDelay, long period, TimeUnit unit) {
     if (rejectSubmission) {
       throw new RejectedExecutionException();
     }
 
-    AnnotatedRunnable runnable =
-        new AnnotatedRunnable(command, initialDelay, period, unit);
+    AnnotatedRunnable runnable = new AnnotatedRunnable(command, initialDelay, period, unit, true);
 
     runnableList.add(runnable);
 
-    FakeScheduledFuture<Void> future = new FakeScheduledFuture<Void>(
-        Executors.<Void>callable(runnable, (Void) null)
-    );
+    FakeScheduledFuture<Void> future =
+        new FakeScheduledFuture<Void>(Executors.callable(runnable, null));
 
     runnable.setFuture(future);
     outstandingTasks.put(future, future);
@@ -141,19 +124,16 @@ public class FakeExecutor implements ScheduledExecutorService {
 
   @Override
   public ScheduledFuture<?> scheduleWithFixedDelay(
-      Runnable command, long initialDelay, long delay, TimeUnit unit
-  ) {
+      Runnable command, long initialDelay, long delay, TimeUnit unit) {
     if (rejectSubmission) {
       throw new RejectedExecutionException();
     }
-    AnnotatedRunnable runnable =
-        new AnnotatedRunnable(command, initialDelay, delay, unit);
+    AnnotatedRunnable runnable = new AnnotatedRunnable(command, initialDelay, delay, unit, true);
 
     runnableList.add(runnable);
 
-    FakeScheduledFuture<Void> future = new FakeScheduledFuture<Void>(
-        Executors.<Void>callable(runnable, (Void) null)
-    );
+    FakeScheduledFuture<Void> future =
+        new FakeScheduledFuture<Void>(Executors.callable(runnable, null));
 
     runnable.setFuture(future);
     outstandingTasks.put(future, future);
@@ -177,8 +157,7 @@ public class FakeExecutor implements ScheduledExecutorService {
 
   private void cancelPendingTasks() {
     for (IdentityHashMap.Entry<ScheduledFuture<?>, ScheduledFuture<?>> entry :
-             outstandingTasks.entrySet()
-        ) {
+        outstandingTasks.entrySet()) {
       entry.getValue().cancel(false);
     }
   }
@@ -194,23 +173,21 @@ public class FakeExecutor implements ScheduledExecutorService {
   }
 
   @Override
-  public boolean awaitTermination(long timeout, TimeUnit unit)
-    throws InterruptedException {
+  public boolean awaitTermination(long timeout, TimeUnit unit) {
     return true;
   }
 
   @Override
-  public <T> Future<T> submit(final Callable<T> task) {
-    runnableList.add(new AnnotatedRunnable(new Runnable() {
-        @Override
-        public void run() {
-          try {
-            task.call();
-          } catch (Exception e) {
-            throw new RuntimeException(e);
-          }
-        }
-      }));
+  public <T> Future<T> submit(Callable<T> task) {
+    runnableList.add(
+        new AnnotatedRunnable(
+            () -> {
+              try {
+                task.call();
+              } catch (Exception e) {
+                throw new RuntimeException(e);
+              }
+            }));
 
     return new FakeScheduledFuture<T>(task);
   }
@@ -230,28 +207,23 @@ public class FakeExecutor implements ScheduledExecutorService {
   }
 
   @Override
-  public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
-    throws InterruptedException {
+  public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public <T> List<Future<T>> invokeAll(
-      Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit
-  ) throws InterruptedException {
+      Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
-    throws InterruptedException, ExecutionException {
+  public <T> T invokeAny(Collection<? extends Callable<T>> tasks) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public <T> T invokeAny(
-      Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit
-  ) throws InterruptedException, ExecutionException, TimeoutException {
+  public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) {
     throw new UnsupportedOperationException();
   }
 
@@ -260,18 +232,28 @@ public class FakeExecutor implements ScheduledExecutorService {
     schedule(command, 0, TimeUnit.SECONDS);
   }
 
-  /**
-   * runs all tasks in the executor in the current thread
-   */
+  /** runs all tasks in the executor in the current thread */
   public void drain() {
-    while (getNumPendingTasks() > 0) {
-      removeHead().run();
-    }
+    drain(Integer.MAX_VALUE);
   }
 
   public void drain(int maxTasks) {
+    List<AnnotatedRunnable> rescheduleList = new ArrayList<>();
+
     for (int i = 0; i < maxTasks && getNumPendingTasks() > 0; i++) {
-      removeHead().run();
+      AnnotatedRunnable runnable = removeHead();
+      runnable.run();
+      if (runnable.shouldReschedule()) {
+        rescheduleList.add(runnable);
+      }
+    }
+
+    for (AnnotatedRunnable runnable : rescheduleList) {
+      FakeScheduledFuture<Void> future =
+          new FakeScheduledFuture<Void>(Executors.callable(runnable, null));
+      runnable.setFuture(future);
+      runnableList.add(runnable);
+      outstandingTasks.put(runnable.getFuture(), runnable.getFuture());
     }
   }
 }

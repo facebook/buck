@@ -3,6 +3,9 @@
 #include "mid.h"
 #include "bot.h"
 
+int preservedTop() {
+  return 2;
+}
 int unused(int) {
   return 1;
 }

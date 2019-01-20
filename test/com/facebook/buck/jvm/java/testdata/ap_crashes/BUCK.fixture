@@ -1,0 +1,16 @@
+java_library(
+    name = "main",
+    srcs = ["Test.java"],
+    plugins = [":processor"],
+)
+
+java_annotation_processor(
+    name = "processor",
+    processor_class = "com.example.buck.AnnotationProcessor",
+    deps = [":processor-lib"],
+)
+
+java_library(
+    name = "processor-lib",
+    srcs = ["AnnotationProcessor.java"],
+)

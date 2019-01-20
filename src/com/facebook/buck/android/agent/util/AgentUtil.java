@@ -25,24 +25,20 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
- * Non-instantiable class for holding functionality that runs both on the host
- * and in the android agent.
+ * Non-instantiable class for holding functionality that runs both on the host and in the android
+ * agent.
  */
 public final class AgentUtil {
   private AgentUtil() {}
 
   // These must match the values in the agent manifest.
   public static final String AGENT_PACKAGE_NAME = "com.facebook.buck.android.agent";
-  public static final String AGENT_VERSION_CODE = "3";
+  public static final String AGENT_VERSION_CODE = "9";
 
-  /**
-   * Size in bytes of the binary data use to generate the secret key for receive-file.
-   */
+  /** Size in bytes of the binary data use to generate the secret key for receive-file. */
   public static final int BINARY_SECRET_KEY_SIZE = 16;
 
-  /**
-   * Size of the text version of the receive-file secret key.
-   */
+  /** Size of the text version of the receive-file secret key. */
   public static final int TEXT_SECRET_KEY_SIZE = 32;
 
   public static final String TEMP_PREFIX = "exopackage_temp-";
@@ -62,10 +58,7 @@ public final class AgentUtil {
 
         BufferedReader sigContents = null;
         try {
-          sigContents =
-              new BufferedReader(
-                  new InputStreamReader(
-                      packageZip.getInputStream(entry)));
+          sigContents = new BufferedReader(new InputStreamReader(packageZip.getInputStream(entry)));
           // For each line in the signature file.
           while (true) {
             String line = sigContents.readLine();
@@ -73,9 +66,12 @@ public final class AgentUtil {
               throw new IllegalArgumentException(
                   "Failed to find manifest digest in " + entry.getName());
             }
-            String prefix = "SHA1-Digest-Manifest: ";
-            if (line.startsWith(prefix)) {
-              return line.substring(prefix.length());
+            String prefix_sha1 = "SHA1-Digest-Manifest: ";
+            String prefix_sha256 = "SHA-256-Digest-Manifest: ";
+            if (line.startsWith(prefix_sha1)) {
+              return line.substring(prefix_sha1.length());
+            } else if (line.startsWith(prefix_sha256)) {
+              return line.substring(prefix_sha256.length());
             }
           }
         } finally {

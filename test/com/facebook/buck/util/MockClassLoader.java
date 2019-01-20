@@ -15,6 +15,7 @@
  */
 
 package com.facebook.buck.util;
+
 import com.google.common.collect.ImmutableMap;
 
 public class MockClassLoader extends ClassLoader {

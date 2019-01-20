@@ -18,23 +18,21 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertFalse;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class MultipleResourcePackageIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
 
@@ -43,23 +41,24 @@ public class MultipleResourcePackageIntegrationTest {
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
-    filesystem = new ProjectFilesystem(workspace.getDestPath());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
   }
 
   @Test
-  public void testRDotJavaFilesPerPackage() throws IOException {
+  public void testRDotJavaFilesPerPackage() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_with_multiple_rdot_java_packages").assertSuccess();
 
-    Path uberRDotJavaDir = AaptPackageResources.getPathToGeneratedRDotJavaSrcFiles(
-        BuildTargetFactory.newInstance(
-            "//apps/sample:app_with_multiple_rdot_java_packages#aapt_package"),
-        filesystem);
+    Path uberRDotJavaDir =
+        GenerateRDotJava.getPathToGeneratedRDotJavaSrcFiles(
+            BuildTargetFactory.newInstance("//apps/sample:app_with_multiple_rdot_java_packages")
+                .withFlavors(AndroidBinaryResourcesGraphEnhancer.GENERATE_RDOT_JAVA_FLAVOR),
+            filesystem);
 
-    String sampleRJava = workspace.getFileContents(
-        uberRDotJavaDir.resolve("com/sample/R.java").toString());
-    String sample2RJava = workspace.getFileContents(
-        uberRDotJavaDir.resolve("com/sample2/R.java").toString());
+    String sampleRJava =
+        workspace.getFileContents(uberRDotJavaDir.resolve("com/sample/R.java").toString());
+    String sample2RJava =
+        workspace.getFileContents(uberRDotJavaDir.resolve("com/sample2/R.java").toString());
 
     assertFalse(sampleRJava.contains("sample2_string"));
 

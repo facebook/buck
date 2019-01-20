@@ -16,48 +16,47 @@
 
 package com.facebook.buck.cxx;
 
-
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.google.common.collect.ImmutableList;
 
-/**
- * Utilities for working with C-like source types.
- */
+/** Utilities for working with C-like source types. */
 public class CxxSourceTypes {
   // Utility class; do not instantiate.
-  private CxxSourceTypes() { }
+  private CxxSourceTypes() {}
 
-  /**
-   * Returns true for source types which can be run through the C preprocessor.
-   */
+  /** Returns true for source types which can be run through the C preprocessor. */
   public static boolean isPreprocessableType(CxxSource.Type sourceType) {
-    return
-        sourceType == CxxSource.Type.C ||
-        sourceType == CxxSource.Type.CXX ||
-        sourceType == CxxSource.Type.ASSEMBLER_WITH_CPP ||
-        sourceType == CxxSource.Type.OBJC ||
-        sourceType == CxxSource.Type.OBJCXX ||
-        sourceType == CxxSource.Type.CUDA ||
-        sourceType == CxxSource.Type.ASM_WITH_CPP;
+    return sourceType == CxxSource.Type.C
+        || sourceType == CxxSource.Type.CXX
+        || sourceType == CxxSource.Type.ASSEMBLER_WITH_CPP
+        || sourceType == CxxSource.Type.OBJC
+        || sourceType == CxxSource.Type.OBJCXX
+        || sourceType == CxxSource.Type.CUDA
+        || sourceType == CxxSource.Type.HIP
+        || sourceType == CxxSource.Type.ASM_WITH_CPP
+        || sourceType == CxxSource.Type.PCM;
   }
 
   /**
    * Returns true for source types which can be built with the C compiler without a preprocessor.
    */
   public static boolean isCompilableType(CxxSource.Type sourceType) {
-    return
-        sourceType == CxxSource.Type.C_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.CXX_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.ASSEMBLER ||
-        sourceType == CxxSource.Type.OBJC_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.OBJCXX_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.CUDA_CPP_OUTPUT ||
-        sourceType == CxxSource.Type.ASM;
+    return sourceType == CxxSource.Type.C_CPP_OUTPUT
+        || sourceType == CxxSource.Type.CXX_CPP_OUTPUT
+        || sourceType == CxxSource.Type.ASSEMBLER
+        || sourceType == CxxSource.Type.OBJC_CPP_OUTPUT
+        || sourceType == CxxSource.Type.OBJCXX_CPP_OUTPUT
+        || sourceType == CxxSource.Type.CUDA_CPP_OUTPUT
+        || sourceType == CxxSource.Type.HIP_CPP_OUTPUT
+        || sourceType == CxxSource.Type.ASM
+        || sourceType == CxxSource.Type.PCM;
   }
 
-  /**
-   * @return the appropriate {@link com.facebook.buck.rules.Tool} representing the preprocessor.
-   */
+  /** @return the appropriate {@link Tool} representing the preprocessor. */
   public static PreprocessorProvider getPreprocessor(CxxPlatform cxxPlatform, CxxSource.Type type) {
     PreprocessorProvider preprocessor;
 
@@ -69,6 +68,7 @@ public class CxxSourceTypes {
         preprocessor = cxxPlatform.getCpp();
         break;
       case CXX:
+      case PCM:
         preprocessor = cxxPlatform.getCxxpp();
         break;
       case OBJC:
@@ -83,13 +83,19 @@ public class CxxSourceTypes {
         }
         preprocessor = cxxPlatform.getCudapp().get();
         break;
+      case HIP:
+        if (!cxxPlatform.getHippp().isPresent()) {
+          throw new HumanReadableException("%s: no hip preprocessor set", cxxPlatform.getFlavor());
+        }
+        preprocessor = cxxPlatform.getHippp().get();
+        break;
       case ASM_WITH_CPP:
         if (!cxxPlatform.getAsmpp().isPresent()) {
           throw new HumanReadableException("%s: no asm preprocessor set", cxxPlatform.getFlavor());
         }
         preprocessor = cxxPlatform.getAsmpp().get();
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
@@ -97,12 +103,9 @@ public class CxxSourceTypes {
     return preprocessor;
   }
 
-  /**
-   * @return the platform-specific preprocessor flags for the given {@link CxxPlatform}.
-   */
+  /** @return the platform-specific preprocessor flags for the given {@link CxxPlatform}. */
   public static ImmutableList<String> getPlatformPreprocessFlags(
-      CxxPlatform cxxPlatform,
-      CxxSource.Type type) {
+      CxxPlatform cxxPlatform, CxxSource.Type type) {
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
 
@@ -114,6 +117,7 @@ public class CxxSourceTypes {
         flags.addAll(cxxPlatform.getCppflags());
         break;
       case CXX:
+      case PCM:
         flags.addAll(cxxPlatform.getCxxppflags());
         break;
       case OBJC:
@@ -125,10 +129,13 @@ public class CxxSourceTypes {
       case CUDA:
         flags.addAll(cxxPlatform.getCudappflags());
         break;
+      case HIP:
+        flags.addAll(cxxPlatform.getHipppflags());
+        break;
       case ASM_WITH_CPP:
         flags.addAll(cxxPlatform.getAsmppflags());
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
@@ -136,9 +143,7 @@ public class CxxSourceTypes {
     return flags.build();
   }
 
-  /**
-   * @return the type produces from preprocessing the given input source type.
-   */
+  /** @return the type produces from preprocessing the given input source type. */
   public static CxxSource.Type getPreprocessorOutputType(CxxSource.Type type) {
     CxxSource.Type outputType;
 
@@ -161,10 +166,16 @@ public class CxxSourceTypes {
       case CUDA:
         outputType = CxxSource.Type.CUDA_CPP_OUTPUT;
         break;
+      case HIP:
+        outputType = CxxSource.Type.HIP_CPP_OUTPUT;
+        break;
       case ASM_WITH_CPP:
         outputType = CxxSource.Type.ASM;
         break;
-      // $CASES-OMITTED$
+      case PCM:
+        outputType = CxxSource.Type.PCM;
+        break;
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
@@ -172,9 +183,12 @@ public class CxxSourceTypes {
     return outputType;
   }
 
-  /**
-   * @return the appropriate compiler for the given language type.
-   */
+  /** @return whether this source type supports dep files. */
+  public static boolean supportsDepFiles(CxxSource.Type type) {
+    return type != CxxSource.Type.PCM;
+  }
+
+  /** @return the appropriate compiler for the given language type. */
   public static CompilerProvider getCompiler(CxxPlatform cxxPlatform, CxxSource.Type type) {
     CompilerProvider compiler;
 
@@ -186,6 +200,7 @@ public class CxxSourceTypes {
         compiler = cxxPlatform.getCc();
         break;
       case CXX_CPP_OUTPUT:
+      case PCM:
         compiler = cxxPlatform.getCxx();
         break;
       case OBJC_CPP_OUTPUT:
@@ -200,13 +215,19 @@ public class CxxSourceTypes {
         }
         compiler = cxxPlatform.getCuda().get();
         break;
+      case HIP_CPP_OUTPUT:
+        if (!cxxPlatform.getHip().isPresent()) {
+          throw new HumanReadableException("%s: no hip compiler set", cxxPlatform.getFlavor());
+        }
+        compiler = cxxPlatform.getHip().get();
+        break;
       case ASM:
         if (!cxxPlatform.getAsm().isPresent()) {
           throw new HumanReadableException("%s: no asm compiler set", cxxPlatform.getFlavor());
         }
         compiler = cxxPlatform.getAsm().get();
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
@@ -214,12 +235,9 @@ public class CxxSourceTypes {
     return compiler;
   }
 
-  /**
-   * @return the platform-specific compiler flags for the given {@link CxxPlatform}.
-   */
+  /** @return the platform-specific compiler flags for the given {@link CxxPlatform}. */
   public static ImmutableList<String> getPlatformCompilerFlags(
-      CxxPlatform cxxPlatform,
-      CxxSource.Type type) {
+      CxxPlatform cxxPlatform, CxxSource.Type type) {
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
 
@@ -231,6 +249,7 @@ public class CxxSourceTypes {
         flags.addAll(cxxPlatform.getCflags());
         break;
       case CXX_CPP_OUTPUT:
+      case PCM:
         flags.addAll(cxxPlatform.getCxxflags());
         break;
       case OBJC_CPP_OUTPUT:
@@ -242,15 +261,17 @@ public class CxxSourceTypes {
       case CUDA_CPP_OUTPUT:
         flags.addAll(cxxPlatform.getCudaflags());
         break;
+      case HIP_CPP_OUTPUT:
+        flags.addAll(cxxPlatform.getHipflags());
+        break;
       case ASM:
         flags.addAll(cxxPlatform.getAsmflags());
         break;
-      // $CASES-OMITTED$
+        // $CASES-OMITTED$
       default:
         throw new IllegalStateException(String.format("unexpected type: %s", type));
     }
 
     return flags.build();
   }
-
 }

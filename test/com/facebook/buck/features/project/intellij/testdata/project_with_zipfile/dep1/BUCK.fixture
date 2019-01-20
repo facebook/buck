@@ -1,0 +1,21 @@
+genrule(
+    name = "copyfile",
+    srcs = ["A.java"],
+    out = ".",
+    cmd = "cp $SRCS $OUT",
+)
+
+zip_file(
+    name = "dep.src.zip",
+    srcs = [":copyfile"],
+    out = "dep.src.zip",
+)
+
+java_library(
+    name = "zipdep",
+    srcs = [
+        "C.java",
+        ":dep.src.zip",
+    ],
+    visibility = ["PUBLIC"],
+)

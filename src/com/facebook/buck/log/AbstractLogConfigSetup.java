@@ -16,19 +16,32 @@
 
 package com.facebook.buck.log;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.BuckConstant;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractLogConfigSetup {
+  // Total maximum amount of logs stored.
+  public static final int DEFAULT_MAX_COUNT = 25;
+
+  // Total minimum amount of logs stored.
+  public static final int DEFAULT_MIN_COUNT = 3;
+
+  // Total maximum disk space used for all logs.
+  public static final long DEFAULT_MAX_LOG_SIZE_BYTES = 1024 * 1024 * 1024;
+
   private static final String DEFAULT_LOG_FILE_PREFIX = "buck-";
 
-  public static final LogConfigSetup DEFAULT_SETUP = LogConfigSetup.builder().build();
+  // At this point we can't guarantee that CWD is writeable so our logs go into the system's
+  // temporary directory.
+  public static final LogConfigSetup DEFAULT_SETUP =
+      LogConfigSetup.builder().setLogDir(BuckConstant.getBuckOutputPath().resolve("log")).build();
+
+  @Value.Parameter
+  public abstract Path getLogDir();
 
   @Value.Default
   public boolean getRotateLog() {
@@ -37,7 +50,12 @@ abstract class AbstractLogConfigSetup {
 
   @Value.Default
   public int getCount() {
-    return 25;
+    return DEFAULT_MAX_COUNT;
+  }
+
+  @Value.Default
+  public long getMaxLogSizeBytes() {
+    return DEFAULT_MAX_LOG_SIZE_BYTES;
   }
 
   @Value.Default
@@ -46,6 +64,6 @@ abstract class AbstractLogConfigSetup {
   }
 
   public Path getLogFilePath() {
-    return BuckConstant.getLogPath().resolve(getLogFilePrefix() + "%g.log");
+    return getLogDir().resolve(getLogFilePrefix() + "%g.log");
   }
 }

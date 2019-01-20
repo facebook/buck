@@ -17,38 +17,19 @@
 package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-
+import java.util.Optional;
 import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
-
-import java.io.IOException;
 
 public class ServerCommand extends AbstractContainerCommand {
 
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
-      @SubCommand(name = "status", impl = ServerStatusCommand.class),
+    @SubCommand(name = "status", impl = ServerStatusCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;
-
-  @Option(
-      name = "--help",
-      usage = "Shows this screen and exits.")
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private boolean helpScreen;
-
-  @Override
-  public int run(CommandRunnerParams params) throws IOException, InterruptedException {
-    if (subcommand == null) {
-      printUsage(params.getConsole().getStdErr());
-      return 1;
-    }
-    return subcommand.run(params);
-  }
 
   @Override
   public boolean isReadOnly() {
@@ -67,7 +48,6 @@ public class ServerCommand extends AbstractContainerCommand {
 
   @Override
   public Optional<Command> getSubcommand() {
-    return Optional.fromNullable(subcommand);
+    return Optional.ofNullable(subcommand);
   }
-
 }

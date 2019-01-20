@@ -17,32 +17,32 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.model.Pair;
-import com.google.common.base.Functions;
+import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 import java.net.URI;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class ServerHealthManager {
+  public static final int CACHE_TIME_MS = 1000;
 
   private static final Comparator<Pair<URI, Long>> LATENCY_COMPARATOR =
-      new Comparator<Pair<URI, Long>>() {
-        @Override
-        public int compare(
-            Pair<URI, Long> o1, Pair<URI, Long> o2) {
-          return (int) (o1.getSecond() - o2.getSecond());
-        }
-      };
+      (o1, o2) -> (int) (o1.getSecond() - o2.getSecond());
 
   // TODO(ruibm): It could be useful to preserve this state across runs in the local fs.
   private final ConcurrentHashMap<URI, ServerHealthState> servers;
@@ -51,48 +51,101 @@ public class ServerHealthManager {
   private final float maxErrorPercentage;
   private final int errorCheckTimeRangeMillis;
   private final BuckEventBus eventBus;
+  private final LoadingCache<Object, Optional<URI>> getBestServerCache;
+  private final String serverPoolName;
+
+  private final Clock clock;
 
   public ServerHealthManager(
+      String serverPoolName,
       ImmutableList<URI> servers,
       int errorCheckTimeRangeMillis,
       float maxErrorPercentage,
       int latencyCheckTimeRangeMillis,
       int maxAcceptableLatencyMillis,
-      BuckEventBus eventBus) {
+      int minSamplesToReportError,
+      BuckEventBus eventBus,
+      Clock clock) {
+    this.serverPoolName = serverPoolName;
     this.errorCheckTimeRangeMillis = errorCheckTimeRangeMillis;
     this.maxErrorPercentage = maxErrorPercentage;
     this.latencyCheckTimeRangeMillis = latencyCheckTimeRangeMillis;
     this.maxAcceptableLatencyMillis = maxAcceptableLatencyMillis;
+    this.clock = clock;
     this.servers = new ConcurrentHashMap<>();
     for (URI server : servers) {
-      this.servers.put(server, new ServerHealthState(server));
+      this.servers.put(server, new ServerHealthState(server, minSamplesToReportError));
     }
     this.eventBus = eventBus;
+    this.getBestServerCache =
+        CacheBuilder.newBuilder()
+            .expireAfterWrite(CACHE_TIME_MS, TimeUnit.MILLISECONDS)
+            .build(
+                new CacheLoader<Object, Optional<URI>>() {
+                  @Override
+                  public Optional<URI> load(Object key) {
+                    return calculateBestServer();
+                  }
+                });
   }
 
-  public void reportPingLatency(URI server, long epochMillis, long latencyMillis) {
+  public void reportPingLatency(URI server, long latencyMillis) {
     Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
-    servers.get(server).reportPingLatency(epochMillis, latencyMillis);
+    servers.get(server).reportPingLatency(clock.currentTimeMillis(), latencyMillis);
+    if (latencyMillis > maxAcceptableLatencyMillis) {
+      getBestServerCache.refresh(this);
+    }
   }
 
-  public void reportRequestError(URI server, long epochMillis) {
+  public void reportRequestError(URI server) {
     Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
-    servers.get(server).reportRequestError(epochMillis);
+    // Invalidate the best server on any error.
+    servers.get(server).reportRequestError(clock.currentTimeMillis());
+    getBestServerCache.refresh(this);
   }
 
-  public void reportRequestSuccess(URI server, long epochMillis) {
+  public void reportRequestSuccess(URI server) {
     Preconditions.checkState(servers.containsKey(server), "Unknown server [%s]", server);
-    servers.get(server).reportRequestSuccess(epochMillis);
+    servers.get(server).reportRequestSuccess(clock.currentTimeMillis());
   }
 
-  public URI getBestServer(long epochMillis) throws NoHealthyServersException {
-    ServerHealthManagerEventData.Builder data = ServerHealthManagerEventData.builder();
-    Map<URI, PerServerData.Builder> allPerServerData = Maps.newHashMap();
+  public URI getBestServer() throws NoHealthyServersException {
     try {
-      // TODO(ruibm): Computations in this method could be cached and only refreshed
-      // every 10 seconds to avoid call bursts causing unnecessary CPU consumption.
+      Optional<URI> server = getBestServerCache.get(this);
+      if (server.isPresent()) {
+        return server.get();
+      }
+      throw new NoHealthyServersException(
+          String.format(
+              "No servers available. High latency/errors reported: [%s]",
+              Joiner.on(", ")
+                  .join(
+                      servers
+                          .entrySet()
+                          .stream()
+                          .map(
+                              e ->
+                                  String.format(
+                                      "%s (%d ms limit: %dms, error %.2f in last %d requests",
+                                      e.getKey().toString(),
+                                      e.getValue().getLastReportedLatency(),
+                                      maxAcceptableLatencyMillis,
+                                      e.getValue().getLastReportedErrorPercentage(),
+                                      e.getValue().getLastReportedSamples()))
+                          .sorted()
+                          .collect(Collectors.toList()))));
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
-      List<Pair<URI, Long>> serverLatencies = Lists.newArrayList();
+  private Optional<URI> calculateBestServer() {
+    ServerHealthManagerEventData.Builder data =
+        ServerHealthManagerEventData.builder().setServerPoolName(serverPoolName);
+    Map<URI, PerServerData.Builder> allPerServerData = new HashMap<>();
+    try {
+      long epochMillis = clock.currentTimeMillis();
+      List<Pair<URI, Long>> serverLatencies = new ArrayList<>();
       for (ServerHealthState state : servers.values()) {
         URI server = state.getServer();
         PerServerData.Builder perServerData = PerServerData.builder().setServer(server);
@@ -107,18 +160,15 @@ public class ServerHealthManager {
         }
       }
 
-      if (serverLatencies.size() == 0) {
+      if (serverLatencies.isEmpty()) {
         data.setNoHealthyServersAvailable(true);
-        throw new NoHealthyServersException(String.format(
-            "No servers available. Too many errors reported by all servers in the pool: [%s]",
-            Joiner.on(", ").join(FluentIterable.from(servers.keySet()).transform(
-                Functions.toStringFunction()))));
+        return Optional.empty();
       }
 
-      Collections.sort(serverLatencies, LATENCY_COMPARATOR);
+      serverLatencies.sort(LATENCY_COMPARATOR);
       URI bestServer = serverLatencies.get(0).getFirst();
-      Preconditions.checkNotNull(allPerServerData.get(bestServer)).setBestServer(true);
-      return bestServer;
+      Objects.requireNonNull(allPerServerData.get(bestServer)).setBestServer(true);
+      return Optional.of(bestServer);
     } finally {
       for (PerServerData.Builder builder : allPerServerData.values()) {
         data.addPerServerData(builder.build());
@@ -127,12 +177,13 @@ public class ServerHealthManager {
     }
   }
 
-  public String toString(long epochMillis) {
+  @Override
+  public String toString() {
     StringBuilder builder = new StringBuilder("ServerHealthManager{\n");
     for (ServerHealthState server : servers.values()) {
-      builder.append(String.format(
-          "  %s\n",
-          server.toString(epochMillis, latencyCheckTimeRangeMillis)));
+      builder.append(
+          String.format(
+              "  %s\n", server.toString(clock.currentTimeMillis(), latencyCheckTimeRangeMillis)));
     }
 
     builder.append("}");

@@ -16,12 +16,18 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.model.Pair;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.versions.TargetNodeTranslator;
+import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
-
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
-public class PatternMatchedCollection<T> {
+public class PatternMatchedCollection<T>
+    implements TargetTranslatable<PatternMatchedCollection<T>> {
 
   private final ImmutableList<Pair<Pattern, T>> values;
 
@@ -51,8 +57,57 @@ public class PatternMatchedCollection<T> {
     return vals.build();
   }
 
+  @Override
+  public Optional<PatternMatchedCollection<T>> translateTargets(
+      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+    Optional<ImmutableList<Pair<Pattern, T>>> translatedValues =
+        translator.translate(cellPathResolver, targetBaseName, values);
+    return translatedValues.map(PatternMatchedCollection::new);
+  }
+
   public static <T> PatternMatchedCollection<T> of() {
-    return new PatternMatchedCollection<>(ImmutableList.<Pair<Pattern, T>>of());
+    return new PatternMatchedCollection<>(ImmutableList.of());
+  }
+
+  public <V> PatternMatchedCollection<V> map(Function<T, V> func) {
+    return new PatternMatchedCollection<>(
+        RichStream.from(values)
+            .map(p -> new Pair<>(p.getFirst(), func.apply(p.getSecond())))
+            .toImmutableList());
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof PatternMatchedCollection)) {
+      return false;
+    }
+
+    PatternMatchedCollection<?> that = (PatternMatchedCollection<?>) o;
+
+    return values.equals(that.values);
+  }
+
+  @Override
+  public int hashCode() {
+    return values.hashCode();
+  }
+
+  /**
+   * @return a single {@link PatternMatchedCollection} formed by combining the given input {@link
+   *     PatternMatchedCollection}s.
+   */
+  public static <T> PatternMatchedCollection<T> concat(
+      Iterable<PatternMatchedCollection<T>> collections) {
+    PatternMatchedCollection.Builder<T> builder = PatternMatchedCollection.builder();
+    collections.forEach(
+        collection ->
+            collection
+                .getPatternsAndValues()
+                .forEach(pair -> builder.add(pair.getFirst(), pair.getSecond())));
+    return builder.build();
   }
 
   public static <T> Builder<T> builder() {

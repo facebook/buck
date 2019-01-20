@@ -1,0 +1,42 @@
+cxx_library(
+    name = "dep",
+    srcs = [
+        "dep.cpp",
+    ],
+)
+
+cxx_library(
+    name = "cxx_library",
+    srcs = ["library.cpp"],
+    exported_deps = [
+        ":dep",
+    ],
+)
+
+platform = read_config("cxx", "platform")
+
+prebuilt_cxx_library(
+    name = "prebuilt_cxx_library",
+    exported_deps = [
+        ":dep",
+    ],
+    shared_lib = ":cxx_library#shared,{}".format(platform),
+    static_lib = ":cxx_library#static,{}".format(platform),
+    supports_shared_library_interface = True,
+)
+
+for library in ('cxx_library', 'prebuilt_cxx_library'):
+
+  cxx_binary(
+    name = 'shared_binary_' + library,
+    deps = [':' + library],
+    srcs = [ 'binary.cpp' ],
+    link_style = 'shared',
+  )
+
+  cxx_binary(
+    name = 'static_binary_' + library,
+    deps = [':' + library],
+    srcs = [ 'binary.cpp' ],
+    link_style = 'static',
+  )

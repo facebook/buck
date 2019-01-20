@@ -16,18 +16,18 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Objects;
-import com.google.common.base.Supplier;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.function.Supplier;
 
 public class GenerateBuildConfigStep implements Step {
 
@@ -57,20 +57,13 @@ public class GenerateBuildConfigStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    String java = BuildConfigs.generateBuildConfigDotJava(
-        source,
-        javaPackage,
-        useConstantExpressions,
-        fields.get());
-    try {
-      filesystem.writeContentsToPath(java, outBuildConfigPath);
-    } catch (IOException e) {
-      context.logError(e, "Error writing BuildConfig.java: %s", outBuildConfigPath);
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    String java =
+        BuildConfigs.generateBuildConfigDotJava(
+            source, javaPackage, useConstantExpressions, fields.get());
+    filesystem.writeContentsToPath(java, outBuildConfigPath);
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
@@ -90,18 +83,14 @@ public class GenerateBuildConfigStep implements Step {
     }
 
     GenerateBuildConfigStep that = (GenerateBuildConfigStep) obj;
-    return Objects.equal(this.javaPackage, that.javaPackage) &&
-        this.useConstantExpressions == that.useConstantExpressions &&
-        Objects.equal(this.fields, that.fields) &&
-        Objects.equal(this.outBuildConfigPath, that.outBuildConfigPath);
+    return Objects.equal(this.javaPackage, that.javaPackage)
+        && this.useConstantExpressions == that.useConstantExpressions
+        && Objects.equal(this.fields, that.fields)
+        && Objects.equal(this.outBuildConfigPath, that.outBuildConfigPath);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hashCode(
-        javaPackage,
-        useConstantExpressions,
-        fields,
-        outBuildConfigPath);
+    return Objects.hashCode(javaPackage, useConstantExpressions, fields, outBuildConfigPath);
   }
 }

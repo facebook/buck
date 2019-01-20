@@ -30,62 +30,80 @@
 
 package com.facebook.buck.query;
 
-import com.google.common.util.concurrent.ListeningExecutorService;
-
+import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * Base class for expressions in the Buck query language.
  *
  * <p>All queries return a set of targets that match the query expression.
  *
- * <p>All queries must ensure that sufficient graph edges are created in the
- * QueryEnvironment so that all nodes in the result are correctly ordered
- * according to the type of query.  For example, "deps" queries require that
- * all the nodes in the transitive closure of its argument set are correctly
- * ordered w.r.t. each other algebraic set operations such as intersect and
- * union are inherently unordered.
+ * <p>All queries must ensure that sufficient graph edges are created in the QueryEnvironment so
+ * that all nodes in the result are correctly ordered according to the type of query. For example,
+ * "deps" queries require that all the nodes in the transitive closure of its argument set are
+ * correctly ordered w.r.t. each other algebraic set operations such as intersect and union are
+ * inherently unordered.
  *
  * <h2>Package overview</h2>
  *
- * <p>This package consists of two basic class hierarchies.  The first, {@code
- * QueryExpression}, is the set of different query expressions in the language,
- * and the {@link #eval} method of each defines the semantics.  The result of
- * evaluating a query is set of Buck {@code QueryTarget}s (a file or build
- * target).  The set may be interpreted as either a set or as nodes of a DAG,
- * depending on the context.
+ * <p>This package consists of two basic class hierarchies. The first, {@code QueryExpression}, is
+ * the set of different query expressions in the language, and the {@link #eval} method of each
+ * defines the semantics. The result of evaluating a query is set of Buck {@code QueryTarget}s (a
+ * file or build target). The set may be interpreted as either a set or as nodes of a DAG, depending
+ * on the context.
  */
 public abstract class QueryExpression {
 
-  /**
-   * Scan and parse the specified query expression.
-   */
-  public static QueryExpression parse(String query, QueryEnvironment<?> env)
-      throws QueryException {
+  /** Scan and parse the specified query expression. */
+  public static QueryExpression parse(String query, QueryEnvironment env) throws QueryException {
     return QueryParser.parse(query, env);
   }
 
   protected QueryExpression() {}
 
   /**
-   * Evaluates this query in the specified environment, and returns a
-   * (possibly-immutable) set of targets.
+   * Evaluates this query in the specified environment, and returns a (possibly-immutable) set of
+   * targets.
    *
-   * Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
+   * <p>Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  public abstract <T> Set<T> eval(QueryEnvironment<T> env, ListeningExecutorService executor)
-      throws QueryException, InterruptedException;
+  abstract ImmutableSet<QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
+      throws QueryException;
 
   /**
-   * Collects all target patterns that are referenced anywhere within this
-   * query expression and adds them to the given collection, which must be mutable.
+   * Collects all target patterns that are referenced anywhere within this query expression and adds
+   * them to the given collection, which must be mutable.
+   *
+   * <p>This is intended to accumulate patterns from multiple expressions for preloading at once.
    */
-  public abstract void collectTargetPatterns(Collection<String> literals);
+  public void collectTargetPatterns(Collection<String> literals) {
+    traverse(new TargetPatternCollector(literals));
+  }
 
-  /**
-   * Returns this query expression pretty-printed.
-   */
+  /** Accepts and applies the given visitor. */
+  public abstract void traverse(Visitor visitor);
+
+  /** Returns a set of all targets referenced from literals within this query expression. */
+  public ImmutableSet<QueryTarget> getTargets(QueryEnvironment env) {
+    QueryTargetCollector collector = new QueryTargetCollector(env);
+    traverse(collector);
+    return collector.getTargets();
+  }
+
+  /** Returns this query expression pretty-printed. */
   @Override
   public abstract String toString();
+
+  /**
+   * Visits a query expression, and returns whether the traversal should continue downwards or stop
+   * and ignore any subexpressions.
+   */
+  interface Visitor {
+    VisitResult visit(QueryExpression exp);
+  }
+
+  enum VisitResult {
+    CONTINUE,
+    SKIP_SUBTREE
+  }
 }

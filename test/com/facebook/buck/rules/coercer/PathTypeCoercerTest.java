@@ -16,24 +16,26 @@
 
 package com.facebook.buck.rules.coercer;
 
-import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-
-import org.junit.Before;
-import org.junit.Test;
-
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class PathTypeCoercerTest {
 
   private ProjectFilesystem filesystem;
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
@@ -45,10 +47,7 @@ public class PathTypeCoercerTest {
     String invalidPath = "";
     try {
       pathTypeCoercer.coerce(
-          createCellRoots(filesystem),
-          filesystem,
-          pathRelativeToProjectRoot,
-          invalidPath);
+          createCellRoots(filesystem), filesystem, pathRelativeToProjectRoot, invalidPath);
       fail("expected to throw when");
     } catch (CoerceFailedException e) {
       assertEquals("invalid path", e.getMessage());
@@ -56,20 +55,9 @@ public class PathTypeCoercerTest {
   }
 
   @Test
-  public void coercingMissingFileThrowsException() {
+  public void coercingMissingFileDoesNotThrow() throws Exception {
     String missingPath = "hello";
-    try {
-      pathTypeCoercer.coerce(
-          createCellRoots(filesystem),
-          filesystem,
-          pathRelativeToProjectRoot,
-          missingPath);
-      fail("expected to throw");
-    } catch (CoerceFailedException e) {
-      assertEquals(
-          String.format("no such file or directory '%s'", missingPath),
-          e.getMessage());
-    }
+    new PathTypeCoercer()
+        .coerce(createCellRoots(filesystem), filesystem, pathRelativeToProjectRoot, missingPath);
   }
-
 }

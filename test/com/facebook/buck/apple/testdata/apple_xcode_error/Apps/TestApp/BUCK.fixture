@@ -1,4 +1,4 @@
 apple_binary(
-  name = 'TestApp',
-  srcs = ['main.c'],
+    name = "TestApp",
+    srcs = ["main.c"],
 )

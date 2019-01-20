@@ -16,148 +16,128 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.MacroArg;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasContacts;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.arg.HasTestTimeout;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.util.Optionals;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
-
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.stream.Stream;
+import org.immutables.value.Value;
 
-public class ShTestDescription implements
-    Description<ShTestDescription.Arg>,
-    ImplicitDepsInferringDescription<ShTestDescription.Arg> {
+public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescriptionArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("sh_test");
+  private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
+      MACRO_EXPANDERS =
+          ImmutableList.of(
+              new LocationMacroExpander(),
+              new ClasspathMacroExpander(),
+              new ExecutableMacroExpander());
 
-  private static final MacroHandler MACRO_HANDLER =
-      new MacroHandler(
-          ImmutableMap.<String, MacroExpander>of(
-              "location", new LocationMacroExpander(),
-              "classpath", new ClasspathMacroExpander(),
-              "exe", new ExecutableMacroExpander()));
+  private final BuckConfig buckConfig;
 
-  private final Optional<Long> defaultTestRuleTimeoutMs;
-
-  public ShTestDescription(
-      Optional<Long> defaultTestRuleTimeoutMs) {
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
+  public ShTestDescription(BuckConfig buckConfig) {
+    this.buckConfig = buckConfig;
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<ShTestDescriptionArg> getConstructorArgType() {
+    return ShTestDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> ShTest createBuildRule(
-      TargetGraph targetGraph,
+  public ShTest createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    final SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    Function<String, com.facebook.buck.rules.args.Arg> toArg =
-        MacroArg.toMacroArgFunction(
-            MACRO_HANDLER,
-            params.getBuildTarget(),
-            params.getCellRoots(),
-            resolver);
-    final ImmutableList<com.facebook.buck.rules.args.Arg> testArgs =
-        FluentIterable.from(args.args.or(ImmutableList.<String>of()))
-            .transform(toArg)
-            .toList();
-    final ImmutableMap<String, com.facebook.buck.rules.args.Arg> testEnv =
+      ShTestDescriptionArg args) {
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), MACRO_EXPANDERS);
+    ImmutableList<Arg> testArgs =
+        Stream.concat(
+                Optionals.toStream(args.getTest()).map(SourcePathArg::of),
+                args.getArgs().stream().map(x -> macrosConverter.convert(x, graphBuilder)))
+            .collect(ImmutableList.toImmutableList());
+    ImmutableMap<String, Arg> testEnv =
         ImmutableMap.copyOf(
-            Maps.transformValues(
-                args.env.or(ImmutableMap.<String, String>of()),
-                toArg));
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
     return new ShTest(
-        params.appendExtraDeps(
-            new Supplier<Iterable<? extends BuildRule>>() {
-              @Override
-              public Iterable<? extends BuildRule> get() {
-                return FluentIterable.from(testArgs)
+        buildTarget,
+        projectFilesystem,
+        params.copyAppendingExtraDeps(
+            () ->
+                FluentIterable.from(testArgs)
                     .append(testEnv.values())
                     .transformAndConcat(
-                        com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver));
-              }
-            }),
-        pathResolver,
-        args.test,
+                        arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))),
         testArgs,
         testEnv,
-        FluentIterable.from(args.resources.or(ImmutableSortedSet.<Path>of()))
-            .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
+        FluentIterable.from(args.getResources())
+            .transform(p -> PathSourcePath.of(projectFilesystem, p))
             .toSortedSet(Ordering.natural()),
-        args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-        args.labels.get());
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(buckConfig.getDefaultTestRuleTimeoutMs()),
+        args.getRunTestSeparately(),
+        args.getLabels(),
+        args.getType(),
+        args.getContacts());
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
-      BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
 
-    // Add parse time deps for any macros.
-    for (String blob :
-         Iterables.concat(
-             constructorArg.args.or(ImmutableList.<String>of()),
-             constructorArg.env.or(ImmutableMap.<String, String>of()).values())) {
-      try {
-        deps.addAll(MACRO_HANDLER.extractParseTimeDeps(buildTarget, cellRoots, blob));
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
-      }
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractShTestDescriptionArg
+      extends CommonDescriptionArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
+    Optional<SourcePath> getTest();
+
+    ImmutableList<StringWithMacros> getArgs();
+
+    Optional<String> getType();
+
+    @Value.Default
+    default boolean getRunTestSeparately() {
+      return false;
     }
 
-    return deps.build();
-  }
+    @Value.NaturalOrder
+    ImmutableSortedSet<Path> getResources();
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath test;
-    public Optional<ImmutableList<String>> args;
-    public Optional<ImmutableSortedSet<Label>> labels;
-    public Optional<Long> testRuleTimeoutMs;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<ImmutableSortedSet<Path>> resources;
-    public Optional<ImmutableMap<String, String>> env;
+    ImmutableMap<String, StringWithMacros> getEnv();
   }
-
 }

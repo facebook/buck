@@ -16,34 +16,39 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.rules.args.SanitizedArg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import com.google.common.hash.HashCode;
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.io.File;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collection;
 
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 @RunWith(Enclosed.class)
@@ -55,38 +60,30 @@ public class PreprocessorFlagsTest {
 
     @Parameterized.Parameters(name = "field: {0} shouldAffectRuleKey: {2}")
     public static Collection<Object[]> data() {
-      return Arrays.asList(new Object[][]{
-          {
+      return Arrays.asList(
+          new Object[][] {
+            {
               "otherFlags (platform)",
-              defaultFlags.withOtherFlags(CxxToolFlags.explicitBuilder()
-                  .addPlatformFlags("-DFOO")
-                  .build()),
+              defaultFlags.withOtherFlags(
+                  CxxToolFlags.explicitBuilder().addPlatformFlags(StringArg.of("-DFOO")).build()),
               true,
-          },
-          {
+            },
+            {
               "otherFlags (rule)",
-              defaultFlags.withOtherFlags(CxxToolFlags.explicitBuilder()
-                  .addRuleFlags("-DFOO")
-                  .build()),
+              defaultFlags.withOtherFlags(
+                  CxxToolFlags.explicitBuilder().addRuleFlags(StringArg.of("-DFOO")).build()),
               true,
-          },
-          {
-              "systemIncludePaths",
-              defaultFlags.withSystemIncludePaths(Paths.get("different")),
-              false,
-          },
-          {
+            },
+            {
               "frameworkPaths",
               defaultFlags.withFrameworkPaths(
-                  FrameworkPath.ofSourcePath(new FakeSourcePath("different"))),
+                  FrameworkPath.ofSourcePath(FakeSourcePath.of("different"))),
               true,
-          },
-          {
-              "prefixHeader",
-              defaultFlags.withPrefixHeader(new FakeSourcePath("different")),
-              true,
-          }
-      });
+            },
+            {
+              "prefixHeader", defaultFlags.withPrefixHeader(FakeSourcePath.of("different")), true,
+            }
+          });
     }
 
     @Parameterized.Parameter(0)
@@ -100,28 +97,26 @@ public class PreprocessorFlagsTest {
 
     @Test
     public void shouldAffectRuleKey() {
-      SourcePathResolver pathResolver =
-          new SourcePathResolver(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer()));
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       FakeFileHashCache hashCache =
-          FakeFileHashCache.createFromStrings(ImmutableMap.of(
-              "different", Strings.repeat("d", 40)
-          ));
-      BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
+          FakeFileHashCache.createFromStrings(
+              ImmutableMap.of("different", Strings.repeat("d", 40)));
+      BuildRule fakeBuildRule = new FakeBuildRule(target);
 
-      RuleKeyBuilder<RuleKey> builder;
-      builder = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver)
-          .newInstance(fakeBuildRule);
-      defaultFlags.appendToRuleKey(builder, CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
-      RuleKey defaultRuleKey = builder.build();
+      DefaultRuleKeyFactory.Builder<HashCode> builder;
+      builder =
+          new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+              .newBuilderForTesting(fakeBuildRule);
+      builder.setReflectively("flags", defaultFlags);
+      RuleKey defaultRuleKey = builder.build(RuleKey::new);
 
-      builder = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver)
-          .newInstance(fakeBuildRule);
-      alteredFlags.appendToRuleKey(builder, CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
-      RuleKey alteredRuleKey = builder.build();
+      builder =
+          new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+              .newBuilderForTesting(fakeBuildRule);
+      builder.setReflectively("flags", alteredFlags);
+      RuleKey alteredRuleKey = builder.build(RuleKey::new);
 
       if (shouldDiffer) {
         Assert.assertNotEquals(defaultRuleKey, alteredRuleKey);
@@ -134,35 +129,39 @@ public class PreprocessorFlagsTest {
   public static class OtherTests {
     @Test
     public void flagsAreSanitized() {
-      final SourcePathResolver pathResolver =
-          new SourcePathResolver(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer()));
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-      final FakeFileHashCache hashCache =
-          FakeFileHashCache.createFromStrings(ImmutableMap.<String, String>of());
-      final BuildRule fakeBuildRule = new FakeBuildRule(target, pathResolver);
+      FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
+      BuildRule fakeBuildRule = new FakeBuildRule(target);
 
       class TestData {
         public RuleKey generate(String prefix) {
-          DebugPathSanitizer sanitizer = new DebugPathSanitizer(
-              10,
-              File.separatorChar,
-              Paths.get("PWD"),
-              ImmutableBiMap.of(Paths.get(prefix), Paths.get("A")));
+          DebugPathSanitizer sanitizer =
+              new MungingDebugPathSanitizer(
+                  10,
+                  File.separatorChar,
+                  Paths.get("PWD"),
+                  ImmutableBiMap.of(Paths.get(prefix), "A"));
 
-          CxxToolFlags flags = CxxToolFlags.explicitBuilder()
-              .addPlatformFlags("-I" + prefix + "/foo")
-              .addRuleFlags("-I" + prefix + "/bar")
-              .build();
+          CxxToolFlags flags =
+              CxxToolFlags.explicitBuilder()
+                  .addAllPlatformFlags(
+                      SanitizedArg.from(
+                          sanitizer.sanitize(Optional.empty()),
+                          ImmutableList.of("-I" + prefix + "/foo")))
+                  .addAllRuleFlags(
+                      SanitizedArg.from(
+                          sanitizer.sanitize(Optional.empty()),
+                          ImmutableList.of("-I" + prefix + "/bar")))
+                  .build();
 
-          RuleKeyBuilder<RuleKey> builder =
-              new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver)
-                  .newInstance(fakeBuildRule);
-          PreprocessorFlags.builder().setOtherFlags(flags).build()
-              .appendToRuleKey(builder, sanitizer);
-          return builder.build();
+          DefaultRuleKeyFactory.Builder<HashCode> builder =
+              new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+                  .newBuilderForTesting(fakeBuildRule);
+          builder.setReflectively(
+              "flags", PreprocessorFlags.builder().setOtherFlags(flags).build());
+          return builder.build(RuleKey::new);
         }
       }
 

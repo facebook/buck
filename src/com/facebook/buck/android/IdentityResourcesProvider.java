@@ -16,25 +16,42 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
+import java.util.Optional;
 
 public class IdentityResourcesProvider implements FilteredResourcesProvider {
 
-  private final ImmutableList<Path> resDirectories;
+  private final ImmutableList<SourcePath> resDirectories;
 
-  public IdentityResourcesProvider(ImmutableList<Path> resDirectories) {
+  public IdentityResourcesProvider(ImmutableList<SourcePath> resDirectories) {
     this.resDirectories = resDirectories;
   }
 
   @Override
-  public ImmutableList<Path> getResDirectories() {
+  public ImmutableList<SourcePath> getResDirectories() {
     return resDirectories;
   }
 
   @Override
   public ImmutableList<Path> getStringFiles() {
     return ImmutableList.of();
+  }
+
+  @Override
+  public Optional<BuildRule> getResourceFilterRule() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<SourcePath> getOverrideSymbolsPath() {
+    return Optional.empty();
+  }
+
+  @Override
+  public boolean hasResources() {
+    return !resDirectories.isEmpty();
   }
 }

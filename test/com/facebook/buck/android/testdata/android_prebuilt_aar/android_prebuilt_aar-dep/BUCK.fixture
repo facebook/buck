@@ -1,30 +1,30 @@
 android_prebuilt_aar(
-  name = 'aar',
-  aar = '//:gen_aar',
-  deps = [
-    ':aar-with-libs',
-  ],
+    name = "aar",
+    aar = "//:gen_aar",
+    deps = [
+        ":aar-with-libs",
+    ],
 )
 
 android_prebuilt_aar(
-  name = 'aar-with-libs',
-  aar = '//:gen_aar-with-jsr',
+    name = "aar-with-libs",
+    aar = "//:gen_aar-with-jsr",
 )
 
 android_prebuilt_aar(
-  name = 'aar-extra-res-entry',
-  aar = '//:gen_aar-with-extra-res-entry',
-  visibility = [ 'PUBLIC' ],
+    name = "aar-extra-res-entry",
+    aar = "//:gen_aar-with-extra-res-entry",
+    visibility = ["PUBLIC"],
 )
 
 android_prebuilt_aar(
-  name = 'aar-no-classes-dot-jar',
-  aar = '//:gen_aar-no-classes-dot-jar',
-  visibility = [ 'PUBLIC' ],
+    name = "aar-no-classes-dot-jar",
+    aar = "//:gen_aar-no-classes-dot-jar",
+    visibility = ["PUBLIC"],
 )
 
 android_library(
-  name = 'lib',
-  srcs = [ 'ExampleActivity.java' ],
-  deps = [ ':aar' ],
+    name = "lib",
+    srcs = ["ExampleActivity.java"],
+    deps = [":aar"],
 )

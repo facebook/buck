@@ -16,36 +16,28 @@
 
 package com.facebook.buck.jvm.java;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Functions;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
-import org.junit.Assume;
-import org.junit.Test;
-
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import org.hamcrest.Matcher;
+import org.junit.Test;
 
 public class JavacOptionsTest {
 
@@ -57,10 +49,15 @@ public class JavacOptionsTest {
   }
 
   @Test
+  public void spoolModeToDiskByDefault() {
+    JavacOptions options = createStandardBuilder().build();
+
+    assertThat(options.getSpoolMode(), is(JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK));
+  }
+
+  @Test
   public void productionBuildsCanBeEnabled() {
-    JavacOptions options = createStandardBuilder()
-        .setProductionBuild(true)
-        .build();
+    JavacOptions options = createStandardBuilder().setProductionBuild(true).build();
 
     assertOptionFlags(options, not(hasItem("g")));
   }
@@ -74,152 +71,129 @@ public class JavacOptionsTest {
 
   @Test
   public void canSetBootclasspath() {
-    JavacOptions options = createStandardBuilder()
-        .setBootclasspath("foo:bar")
-        .build();
+    JavacOptions options = createStandardBuilder().setBootclasspath("foo:bar").build();
 
     assertOptionsHasKeyValue(options, "bootclasspath", "foo:bar");
   }
 
   @Test
   public void shouldSetTheAnnotationSource() {
-    AnnotationProcessingParams params = new AnnotationProcessingParams.Builder()
-        .addAllProcessors(Collections.singleton("processor"))
-        .setProcessOnly(true)
-        .build();
+    AnnotationProcessingParams params =
+        AnnotationProcessingParams.builder()
+            .setLegacyAnnotationProcessorNames(Collections.singleton("processor"))
+            .setProcessOnly(true)
+            .build();
 
-    JavacOptions options = createStandardBuilder()
-        .setAnnotationProcessingParams(params)
-        .build();
+    JavacOptions options = createStandardBuilder().setAnnotationProcessingParams(params).build();
 
     assertOptionFlags(options, hasItem("proc:only"));
   }
 
   @Test
   public void shouldAddAllAddedAnnotationProcessors() {
-    AnnotationProcessingParams params = new AnnotationProcessingParams.Builder()
-        .addAllProcessors(Lists.newArrayList("myproc", "theirproc"))
-        .setProcessOnly(true)
-        .build();
+    AnnotationProcessingParams params =
+        AnnotationProcessingParams.builder()
+            .setLegacyAnnotationProcessorNames(Lists.newArrayList("myproc", "theirproc"))
+            .setProcessOnly(true)
+            .build();
 
-    JavacOptions options = createStandardBuilder()
-        .setAnnotationProcessingParams(params)
-        .build();
+    JavacOptions options = createStandardBuilder().setAnnotationProcessingParams(params).build();
 
     assertOptionsHasKeyValue(options, "processor", "myproc,theirproc");
   }
 
   @Test
+  public void shouldDisableAnnotationProcessingIfNoProcessorsSpecified() {
+    JavacOptions options = createStandardBuilder().build();
+    assertOptionFlags(options, hasItem("proc:none"));
+  }
+
+  @Test
+  public void sourceAndTarget7ByDefault() {
+    JavacOptions options = createStandardBuilder().build();
+
+    assertOptionsHasKeyValue(options, "source", "7");
+    assertOptionsHasKeyValue(options, "target", "7");
+  }
+
+  @Test
   public void shouldSetSourceAndTargetLevels() {
-    JavacOptions original = createStandardBuilder()
-        .setSourceLevel("7")
-        .setTargetLevel("5")
-        .build();
+    JavacOptions original = createStandardBuilder().setSourceLevel("8").setTargetLevel("5").build();
 
     JavacOptions copy = JavacOptions.builder(original).build();
-    assertOptionsHasKeyValue(copy, "source", "7");
+    assertOptionsHasKeyValue(copy, "source", "8");
     assertOptionsHasKeyValue(copy, "target", "5");
   }
 
   @Test
   public void shouldAddABootClasspathIfTheMapContainsOne() {
-    JavacOptions options = createStandardBuilder()
-        .setSourceLevel("5")
-        .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
-        .build();
+    JavacOptions options =
+        createStandardBuilder()
+            .setSourceLevel("5")
+            .putSourceToBootclasspath(
+                "5",
+                ImmutableList.of(
+                    FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
+            .build();
 
-    assertOptionsHasKeyValue(options, "bootclasspath", "some-magic.jar:also.jar");
+    assertOptionsHasKeyValue(
+        options, "bootclasspath", String.format("some-magic.jar%salso.jar", File.pathSeparator));
   }
 
   @Test
   public void shouldNotOverrideTheBootclasspathIfOneIsSet() {
-    String expectedBootClasspath = "some-magic.jar:also.jar";
-    JavacOptions options = createStandardBuilder()
-        .setBootclasspath(expectedBootClasspath)
-        .setSourceLevel("5")
-        .putSourceToBootclasspath("5", "not-the-right-path.jar")
-        .build();
+    String expectedBootClasspath = String.format("some-magic.jar%salso.jar", File.pathSeparator);
+    JavacOptions options =
+        createStandardBuilder()
+            .setBootclasspath(expectedBootClasspath)
+            .setSourceLevel("5")
+            .putSourceToBootclasspath(
+                "5", ImmutableList.of(FakeSourcePath.of("not-the-right-path.jar")))
+            .build();
 
     assertOptionsHasKeyValue(options, "bootclasspath", expectedBootClasspath);
   }
 
   @Test
   public void shouldNotOverrideTheBootclasspathIfSourceLevelHasNoMapping() {
-    JavacOptions options = createStandardBuilder()
-        .setBootclasspath("cake.jar")
-        .setSourceLevel("6")
-        .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
-        .build();
+    JavacOptions options =
+        createStandardBuilder()
+            .setBootclasspath("cake.jar")
+            .setSourceLevel("6")
+            .putSourceToBootclasspath(
+                "5",
+                ImmutableList.of(
+                    FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
+            .build();
 
     assertOptionsHasKeyValue(options, "bootclasspath", "cake.jar");
   }
 
   @Test
   public void shouldCopyMapOfSourceLevelToBootclassPathWhenBuildingNewJavacOptions() {
-    JavacOptions original = createStandardBuilder()
-        .setSourceLevel("5")
-        .putSourceToBootclasspath("5", "some-magic.jar:also.jar")
-        .build();
+    JavacOptions original =
+        createStandardBuilder()
+            .setSourceLevel("5")
+            .putSourceToBootclasspath(
+                "5",
+                ImmutableList.of(
+                    FakeSourcePath.of("some-magic.jar"), FakeSourcePath.of("also.jar")))
+            .build();
 
     JavacOptions copy = JavacOptions.builder(original).build();
-    assertOptionsHasKeyValue(copy, "bootclasspath", "some-magic.jar:also.jar");
+    assertOptionsHasKeyValue(
+        copy, "bootclasspath", String.format("some-magic.jar%salso.jar", File.pathSeparator));
   }
 
   @Test
   public void shouldIncoporateExtraOptionsInOutput() {
-    JavacOptions options = createStandardBuilder()
-        .addExtraArguments("-Xfoobar")
-        .build();
+    JavacOptions options = createStandardBuilder().addExtraArguments("-Xfoobar").build();
 
     assertOptionsHasExtra(options, "-Xfoobar");
   }
 
-  @Test
-  public void externalJavacVersionIsReadFromStderrBecauseThatIsWhereJavacWritesIt()
-      throws IOException {
-    Platform current = Platform.detect();
-    Assume.assumeTrue(current != Platform.WINDOWS && current != Platform.UNKNOWN);
-
-    Path tempPath = Files.createTempFile("javac", "spoof");
-    File tempFile = tempPath.toFile();
-    tempFile.deleteOnExit();
-    assertTrue(tempFile.setExecutable(true));
-    // We could use the "-n" syntax, but that doesn't work on all variants of echo. Play it safe.
-    Files.write(tempPath, "echo \"cover-version\" 1>&2".getBytes(UTF_8));
-
-    JavacOptions options = createStandardBuilder()
-        .setJavacPath(tempPath)
-        .build();
-
-    Javac javac = options.getJavac();
-    assertTrue(javac instanceof ExternalJavac);
-
-    JavacVersion seen = javac.getVersion();
-    assertEquals(seen.toString(), JavacVersion.of("cover-version"), seen);
-  }
-
-  @Test
-  public void getInputs() {
-    Path javacPath = Paths.get("javac");
-    FakeSourcePath javacJarPath = new FakeSourcePath("javac_jar");
-
-    JavacOptions options = createStandardBuilder()
-        .setJavacPath(javacPath)
-        .setJavacJarPath(javacJarPath)
-        .build();
-
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
-    assertThat(
-        options.getInputs(resolver),
-        Matchers.<SourcePath>containsInAnyOrder(javacJarPath));
-  }
-
   private JavacOptions.Builder createStandardBuilder() {
-    return JavacOptions.builderForUseInJavaBuckConfig()
-        .setSourceLevel("5")
-        .setTargetLevel("5");
+    return JavacOptions.builderForUseInJavaBuckConfig();
   }
 
   private void assertOptionFlags(JavacOptions options, Matcher<Iterable<? super String>> matcher) {
@@ -228,7 +202,27 @@ public class JavacOptionsTest {
 
   private OptionAccumulator visitOptions(JavacOptions options) {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
-    options.appendOptionsTo(optionsConsumer, Functions.<Path>identity());
+    options.appendOptionsTo(
+        optionsConsumer,
+        new AbstractSourcePathResolver() {
+          @Override
+          protected SourcePath resolveDefaultBuildTargetSourcePath(
+              DefaultBuildTargetSourcePath targetSourcePath) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+            throw new UnsupportedOperationException();
+          }
+
+          @Override
+          protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+              BuildTargetSourcePath sourcePath) {
+            throw new UnsupportedOperationException();
+          }
+        },
+        TestProjectFilesystems.createProjectFilesystem(Paths.get("").toAbsolutePath()));
     return optionsConsumer;
   }
 
@@ -241,9 +235,7 @@ public class JavacOptionsTest {
   }
 
   private void assertOptionsHasKeyValue(
-      JavacOptions options,
-      String optionName,
-      String optionValue) {
+      JavacOptions options, String optionName, String optionValue) {
     assertThat(visitOptions(options).keyVals, hasEntry(optionName, optionValue));
   }
 }

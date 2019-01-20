@@ -18,18 +18,22 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeTestRule;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.impl.FakeTestRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -37,20 +41,16 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.selectors.TestSelectorList;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.Callable;
+import org.junit.Test;
 
 public class CxxTestTest {
 
@@ -58,81 +58,82 @@ public class CxxTestTest {
 
   private abstract static class FakeCxxTest extends CxxTest {
 
+    private static final BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
+
     private static BuildRuleParams createBuildParams() {
-      BuildTarget target = BuildTargetFactory.newInstance("//:target");
-      return new FakeBuildRuleParamsBuilder(target).build();
+      return TestBuildRuleParams.create();
     }
 
     public FakeCxxTest() {
       super(
+          buildTarget,
+          new FakeProjectFilesystem(),
           createBuildParams(),
-          new SourcePathResolver(
-              new BuildRuleResolver(
-                  TargetGraph.EMPTY,
-                  new DefaultTargetNodeToBuildRuleTransformer())),
-          ImmutableMap.<String, String>of(),
-          Suppliers.ofInstance(ImmutableMap.<String, String>of()),
-          Suppliers.ofInstance(ImmutableList.<String>of()),
-          ImmutableSortedSet.<SourcePath>of(),
-          Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-          ImmutableSet.<Label>of(),
-          ImmutableSet.<String>of(),
-          ImmutableSet.<BuildRule>of(),
+          new CommandTool.Builder().build(),
+          ImmutableMap.of(),
+          ImmutableList.of(),
+          ImmutableSortedSet.of(),
+          ImmutableSet.of(),
+          unused2 -> ImmutableSortedSet.of(),
+          ImmutableSet.of(),
+          ImmutableSet.of(),
           /* runTestSeparately */ false,
           TEST_TIMEOUT_MS);
     }
 
     @Override
-    protected ImmutableList<String> getShellCommand(Path output) {
+    protected ImmutableList<String> getShellCommand(SourcePathResolver resolver, Path output) {
       return ImmutableList.of();
     }
 
     @Override
     protected ImmutableList<TestResultSummary> parseResults(
-        Path exitCode,
-        Path output,
-        Path results)
-        throws Exception {
+        Path exitCode, Path output, Path results) {
       return ImmutableList.of();
     }
-
   }
 
   @Test
   public void runTests() {
-    final ImmutableList<String> command = ImmutableList.of("hello", "world");
+    ImmutableList<String> command = ImmutableList.of("hello", "world");
 
     FakeCxxTest cxxTest =
         new FakeCxxTest() {
 
           @Override
-          public Path getPathToOutput() {
-            return Paths.get("output");
+          public SourcePath getSourcePathToOutput() {
+            return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("output"));
           }
 
           @Override
-          protected ImmutableList<String> getShellCommand(Path output) {
+          protected ImmutableList<String> getShellCommand(
+              SourcePathResolver resolver, Path output) {
             return command;
           }
 
+          @Override
+          public Tool getExecutableCommand() {
+            CommandTool.Builder builder = new CommandTool.Builder();
+            command.forEach(builder::addArg);
+            return builder.build();
+          }
         };
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     TestRunningOptions options =
-        TestRunningOptions.builder()
-            .setDryRun(false)
-            .setTestSelectorList(TestSelectorList.empty())
-            .build();
-    ImmutableList<Step> actualSteps = cxxTest.runTests(
-        executionContext,
-        options,
-        FakeTestRule.NOOP_REPORTING_CALLBACK);
+        TestRunningOptions.builder().setTestSelectorList(TestSelectorList.empty()).build();
+    ImmutableList<Step> actualSteps =
+        cxxTest.runTests(
+            executionContext,
+            options,
+            FakeBuildContext.NOOP_CONTEXT,
+            FakeTestRule.NOOP_REPORTING_CALLBACK);
 
     CxxTestStep cxxTestStep =
         new CxxTestStep(
             new FakeProjectFilesystem(),
             command,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             cxxTest.getPathToTestExitCode(),
             cxxTest.getPathToTestOutput(),
             TEST_TIMEOUT_MS);
@@ -142,16 +143,17 @@ public class CxxTestTest {
 
   @Test
   public void interpretResults() throws Exception {
-    final Path expectedExitCode = Paths.get("output");
-    final Path expectedOutput = Paths.get("output");
-    final Path expectedResults = Paths.get("results");
+    Path expectedExitCode = Paths.get("output");
+    Path expectedOutput = Paths.get("output");
+    Path expectedResults = Paths.get("results");
 
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeCxxTest cxxTest =
         new FakeCxxTest() {
 
           @Override
-          public Path getPathToOutput() {
-            return Paths.get("output");
+          public SourcePath getSourcePathToOutput() {
+            return ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("output"));
           }
 
           @Override
@@ -171,24 +173,21 @@ public class CxxTestTest {
 
           @Override
           protected ImmutableList<TestResultSummary> parseResults(
-              Path exitCode,
-              Path output,
-              Path results)
-              throws Exception {
+              Path exitCode, Path output, Path results) {
             assertEquals(expectedExitCode, exitCode);
             assertEquals(expectedOutput, output);
             assertEquals(expectedResults, results);
             return ImmutableList.of();
           }
-
         };
+    graphBuilder.addToIndex(cxxTest);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    Callable<TestResults> result = cxxTest.interpretTestResults(
-        executionContext,
-        /* isUsingTestSelectors */ false,
-        /* isDryRun */ false);
+    Callable<TestResults> result =
+        cxxTest.interpretTestResults(
+            executionContext,
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
+            /* isUsingTestSelectors */ false);
     result.call();
   }
-
 }

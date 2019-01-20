@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace rust_library}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'rust_library()' /}
+    {param navid: 'rule_rust_library' /}
     {param prettify: true /}
     {param description}
       A rust_library() rule builds a native Rust library.
@@ -16,6 +32,9 @@
 <p>
   A rust_library() rule builds a native library from the supplied set of Rust source files
   and dependencies.
+</p>
+<p>
+  {call rust_common.check_flavor /}
 </p>
 <p>
   {call rust_common.supported_language_version /}
@@ -38,6 +57,14 @@
 {call rust_common.features_arg /}
 
 {call rust_common.rustc_flags_arg /}
+
+{call rust_common.crate /}
+
+{call rust_common.crate_root /}
+
+{call native_common.preferred_linkage /}
+
+{call buck.tests_arg /}
 
 {/param} // close args
 

@@ -16,14 +16,11 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
-
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
-/**
- * Coerces numbers with rounding/truncation/extension.
- */
+/** Coerces numbers with rounding/truncation/extension. */
 public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
   private final Class<T> type;
 
@@ -51,9 +48,7 @@ public class NumberTypeCoercer<T extends Number> extends LeafTypeCoercer<T> {
     throw CoerceFailedException.simple(object, getOutputClass());
   }
 
-  /**
-   * Cast the number to the correct subtype.
-   */
+  /** Cast the number to the correct subtype. */
   private Number castNumber(Number number) {
     if (Integer.class.equals(type)) {
       return number.intValue();

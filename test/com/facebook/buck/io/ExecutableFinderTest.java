@@ -20,22 +20,23 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.google.common.base.Optional;
+import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.CreateSymlinksForTests;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
+import org.junit.Assume;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ExecutableFinderTest {
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testSearchPathsFileFoundReturnsPath() throws IOException {
@@ -48,13 +49,14 @@ public class ExecutableFinderTest {
         Optional.of(file),
         new ExecutableFinder()
             .getOptionalExecutable(
-                Paths.get("blech"),
-                ImmutableList.of(dir1, dir2, dir3),
-                ImmutableList.<String>of()));
+                Paths.get("blech"), ImmutableList.of(dir1, dir2, dir3), ImmutableList.of()));
   }
 
   @Test
   public void testSearchPathsNonExecutableFileIsIgnored() throws IOException {
+    // file.canExecute() always true for Windows
+    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+
     Path dir1 = tmp.newFolder("foo");
     // Note this is not executable.
     tmp.newFile("foo/blech");
@@ -64,10 +66,9 @@ public class ExecutableFinderTest {
 
     assertEquals(
         Optional.of(file),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3),
-            ImmutableList.<String>of()));
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("blech"), ImmutableList.of(dir1, dir2, dir3), ImmutableList.of()));
   }
 
   @Test
@@ -80,10 +81,9 @@ public class ExecutableFinderTest {
 
     assertEquals(
         Optional.of(file),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("foo"),
-            ImmutableList.of(dir1, dir2),
-            ImmutableList.<String>of()));
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("foo"), ImmutableList.of(dir1, dir2), ImmutableList.of()));
   }
 
   @Test
@@ -96,10 +96,9 @@ public class ExecutableFinderTest {
 
     assertEquals(
         Optional.of(file1),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3),
-            ImmutableList.<String>of()));
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("blech"), ImmutableList.of(dir1, dir2, dir3), ImmutableList.of()));
   }
 
   @Test
@@ -107,14 +106,12 @@ public class ExecutableFinderTest {
     Path dir2 = tmp.newFolder("bar");
     createExecutable("bar/blech_target");
     Path file1 = dir2.resolve("blech");
-    Files.createSymbolicLink(file1, Paths.get("blech_target"));
+    CreateSymlinksForTests.createSymLink(file1, Paths.get("blech_target"));
 
     assertEquals(
         Optional.of(file1),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("blech"),
-            ImmutableList.of(dir2),
-            ImmutableList.<String>of()));
+        new ExecutableFinder()
+            .getOptionalExecutable(Paths.get("blech"), ImmutableList.of(dir2), ImmutableList.of()));
   }
 
   @Test
@@ -125,14 +122,13 @@ public class ExecutableFinderTest {
     tmp.newFolder("unsearched");
     Path binary = createExecutable("unsearched/binary");
     Path file1 = dir2.resolve("blech");
-    Files.createSymbolicLink(file1, binary);
+    CreateSymlinksForTests.createSymLink(file1, binary);
 
     assertEquals(
         Optional.of(file1),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3),
-            ImmutableList.<String>of()));
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("blech"), ImmutableList.of(dir1, dir2, dir3), ImmutableList.of()));
   }
 
   @Test
@@ -142,25 +138,24 @@ public class ExecutableFinderTest {
     Path dir3 = tmp.newFolder("baz");
 
     assertEquals(
-        Optional.<Path>absent(),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("blech"),
-            ImmutableList.of(dir1, dir2, dir3),
-            ImmutableList.<String>of()));
+        Optional.empty(),
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("blech"), ImmutableList.of(dir1, dir2, dir3), ImmutableList.of()));
   }
 
   @Test
-  public void testSearchPathsEmptyReturnsAbsent() throws IOException {
+  public void testSearchPathsEmptyReturnsAbsent() {
     assertEquals(
-        Optional.<Path>absent(),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("blech"),
-            ImmutableList.<Path>of(),
-            ImmutableList.<String>of()));
+        Optional.empty(),
+        new ExecutableFinder()
+            .getOptionalExecutable(Paths.get("blech"), ImmutableList.of(), ImmutableList.of()));
   }
 
   @Test
   public void testSearchPathsWithIsExecutableFunctionFailure() throws IOException {
+    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+
     // Path to search
     Path baz = tmp.newFolder("baz");
 
@@ -170,11 +165,9 @@ public class ExecutableFinderTest {
     assertTrue(bar.toFile().setExecutable(false));
 
     assertEquals(
-        Optional.<Path>absent(),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("bar"),
-            ImmutableList.of(baz),
-            ImmutableList.<String>of()));
+        Optional.empty(),
+        new ExecutableFinder()
+            .getOptionalExecutable(Paths.get("bar"), ImmutableList.of(baz), ImmutableList.of()));
   }
 
   @Test
@@ -184,10 +177,9 @@ public class ExecutableFinderTest {
 
     assertEquals(
         Optional.of(file),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("bar"),
-            ImmutableList.of(dir),
-            ImmutableList.of(".BAT", ".EXE")));
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("bar"), ImmutableList.of(dir), ImmutableList.of(".BAT", ".EXE")));
   }
 
   @Test
@@ -196,11 +188,10 @@ public class ExecutableFinderTest {
     createExecutable("foo/bar.COM");
 
     assertEquals(
-        Optional.absent(),
-        new ExecutableFinder().getOptionalExecutable(
-            Paths.get("bar"),
-            ImmutableList.of(dir),
-            ImmutableList.of(".BAT", ".EXE")));
+        Optional.empty(),
+        new ExecutableFinder()
+            .getOptionalExecutable(
+                Paths.get("bar"), ImmutableList.of(dir), ImmutableList.of(".BAT", ".EXE")));
   }
 
   @Test
@@ -210,15 +201,29 @@ public class ExecutableFinderTest {
     Files.createDirectories(exe);
 
     assertEquals(
-        Optional.absent(),
-        new ExecutableFinder().getOptionalExecutable(
-            exe.toAbsolutePath(),
-            ImmutableMap.<String, String>of()));
+        Optional.empty(),
+        new ExecutableFinder().getOptionalExecutable(exe.toAbsolutePath(), ImmutableMap.of()));
+  }
+
+  @Test
+  public void testThatDirectoryWithSwiftExecutableDoesHaveSwiftTool() throws IOException {
+    Path dir = tmp.newFolder("foo");
+    createExecutable("foo/swift");
+
+    assertEquals(
+        Optional.of(dir.resolve("swift")),
+        new ExecutableFinder().getOptionalToolPath("swift", ImmutableList.of(dir)));
+  }
+
+  @Test
+  public void testThatEmptyDirectoryDoesNotHaveSwift() {
+    assertEquals(
+        Optional.empty(), new ExecutableFinder().getOptionalToolPath("swift", ImmutableList.of()));
   }
 
   private Path createExecutable(String executablePath) throws IOException {
     Path file = tmp.newFile(executablePath);
-    MoreFiles.makeExecutable(file);
+    MostFiles.makeExecutable(file);
     return file;
   }
 }

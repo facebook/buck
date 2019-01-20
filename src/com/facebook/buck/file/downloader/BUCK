@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_library(
+    name = "downloader",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/toolchain:toolchain",
+        "//src/com/facebook/buck/event:interfaces",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)

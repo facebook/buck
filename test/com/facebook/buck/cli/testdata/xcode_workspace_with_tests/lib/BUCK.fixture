@@ -1,6 +1,6 @@
 apple_library(
-  name='lib',
-  srcs=glob(['*.m']),
-  tests=['//test:test'],
-  visibility=['PUBLIC'],
+    name = "lib",
+    srcs = glob(["*.m"]),
+    tests = ["//test:test"],
+    visibility = ["PUBLIC"],
 )

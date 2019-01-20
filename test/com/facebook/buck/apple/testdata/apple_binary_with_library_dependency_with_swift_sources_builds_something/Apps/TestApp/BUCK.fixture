@@ -1,0 +1,8 @@
+apple_binary(
+    name = "TestApp",
+    srcs = ["main.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    deps = ["//Apps/TestLibrary:TestLibrary"],
+)

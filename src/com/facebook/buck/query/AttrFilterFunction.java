@@ -20,17 +20,13 @@ import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.ListeningExecutorService;
-
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.function.Predicate;
 
 /**
- * A attrfilter(attribute, value, argument) filter expression, which computes the subset
- * of nodes in 'argument' whose 'attribute' contains the given value.
+ * A attrfilter(attribute, value, argument) filter expression, which computes the subset of nodes in
+ * 'argument' whose 'attribute' contains the given value.
  *
  * <pre>expr ::= ATTRFILTER '(' WORD ',' WORD ',' expr ')'</pre>
  */
@@ -39,8 +35,7 @@ public class AttrFilterFunction implements QueryFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.WORD, ArgumentType.EXPRESSION);
 
-  public AttrFilterFunction() {
-  }
+  public AttrFilterFunction() {}
 
   @Override
   public String getName() {
@@ -58,30 +53,22 @@ public class AttrFilterFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+      throws QueryException {
     QueryExpression argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
-    final String attrValue = args.get(1).getWord();
-    final Predicate<Object> predicate = new Predicate<Object>() {
-      @Override
-      public boolean apply(Object input) {
-        return attrValue.equals(input.toString());
-      }
-    };
+    String attrValue = args.get(1).getWord();
+    Predicate<Object> predicate = input -> attrValue.equals(input.toString());
 
-    Set<T> result = new LinkedHashSet<>();
-    for (T target : argument.eval(env, executor)) {
+    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
+    for (QueryTarget target : evaluator.eval(argument, env)) {
       ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);
       }
     }
-    return result;
+    return result.build();
   }
-
 }

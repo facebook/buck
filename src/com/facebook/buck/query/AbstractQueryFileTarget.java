@@ -16,18 +16,16 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
-
-import java.nio.file.Path;
 
 @BuckStyleImmutable
 @Value.Immutable
 abstract class AbstractQueryFileTarget implements QueryTarget {
 
   @Value.Parameter
-  abstract Path getPath();
+  abstract SourcePath getPath();
 
   @Override
   public int compareTo(QueryTarget other) {

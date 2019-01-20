@@ -1,0 +1,4 @@
+[repositories]
+
+cell1 = .
+cell2 = ../cell2

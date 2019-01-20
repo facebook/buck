@@ -1,0 +1,25 @@
+java_library(
+    name = "plugin",
+    srcs = glob(["*.java"]),
+    resources = [
+        ":javac-plugin",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_binary(
+    name = "javac-plugin",
+    deps = [
+        "//src/com/facebook/buck/jvm/java/abi/source:source",
+        "//src/com/facebook/buck/jvm/java/plugin/adapter:adapter",
+    ],
+)

@@ -16,98 +16,47 @@
 
 package com.facebook.buck.jvm.java.autodeps;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaFileParser;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
-import com.google.common.io.Files;
-
-import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
 
 final class JavaLibrarySymbolsFinder implements JavaSymbolsRule.SymbolsFinder {
-
-  private static final Predicate<String> NOT_A_BUILT_IN_SYMBOL = new Predicate<String>() {
-    @Override
-    public boolean apply(String symbol) {
-      // We can ignore things in java.*, but not javax.*, unfortunately since sometimes those are
-      // provided by JSRs.
-      return !symbol.startsWith("java.");
-    }
-  };
-
-  private static final Predicate<Object> IS_PATH_SOURCE_PATH =
-      Predicates.instanceOf(PathSourcePath.class);
-
-  private final ImmutableSortedSet<SourcePath> srcs;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
 
   private final JavaFileParser javaFileParser;
 
-  private final boolean shouldRecordRequiredSymbols;
-
-  JavaLibrarySymbolsFinder(
-      ImmutableSortedSet<SourcePath> srcs,
-      JavaFileParser javaFileParser,
-      boolean shouldRecordRequiredSymbols) {
+  JavaLibrarySymbolsFinder(ImmutableSortedSet<SourcePath> srcs, JavaFileParser javaFileParser) {
     // Avoid all the construction in the common case where all srcs are instances of PathSourcePath.
-    this.srcs = Iterables.all(srcs, IS_PATH_SOURCE_PATH)
-        ? srcs
-        : FluentIterable.from(srcs).filter(IS_PATH_SOURCE_PATH).toSortedSet(Ordering.natural());
+    this.srcs =
+        Iterables.all(srcs, PathSourcePath.class::isInstance)
+            ? srcs
+            : srcs.stream()
+                .filter(PathSourcePath.class::isInstance)
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     this.javaFileParser = javaFileParser;
-    this.shouldRecordRequiredSymbols = shouldRecordRequiredSymbols;
   }
 
   @Override
   public Symbols extractSymbols() {
-    Set<String> providedSymbols = new HashSet<>();
-    Set<String> requiredSymbols = new HashSet<>();
-    Set<String> exportedSymbols = new HashSet<>();
-
-    for (SourcePath src : srcs) {
-      // This should be enforced by the constructor.
-      Preconditions.checkState(src instanceof PathSourcePath);
-
-      PathSourcePath sourcePath = (PathSourcePath) src;
-      ProjectFilesystem filesystem = sourcePath.getFilesystem();
-      Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
-      String code;
-      try {
-        code = Files.toString(absolutePath.toFile(), Charsets.UTF_8);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-
-      JavaFileParser.JavaFileFeatures features = javaFileParser
-          .extractFeaturesFromJavaCode(code);
-      if (shouldRecordRequiredSymbols) {
-        requiredSymbols.addAll(features.requiredSymbols);
-        exportedSymbols.addAll(features.exportedSymbols);
-      }
-
-      providedSymbols.addAll(features.providedSymbols);
-    }
-
-    return new Symbols(
-        providedSymbols,
-        FluentIterable.from(requiredSymbols).filter(NOT_A_BUILT_IN_SYMBOL),
-        FluentIterable.from(exportedSymbols).filter(NOT_A_BUILT_IN_SYMBOL));
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("srcs", srcs)
-        .setReflectively("recordRequires", shouldRecordRequiredSymbols);
+    ImmutableSortedSet<Path> absolutePaths =
+        srcs.stream()
+            .map(
+                src -> {
+                  // This should be enforced by the constructor.
+                  Preconditions.checkState(src instanceof PathSourcePath);
+                  PathSourcePath sourcePath = (PathSourcePath) src;
+                  ProjectFilesystem filesystem = sourcePath.getFilesystem();
+                  Path absolutePath = filesystem.resolve(sourcePath.getRelativePath());
+                  return absolutePath;
+                })
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+    return SymbolExtractor.extractSymbols(javaFileParser, absolutePaths);
   }
 }

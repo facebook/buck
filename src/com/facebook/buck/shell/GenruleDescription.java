@@ -16,68 +16,121 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxConfig;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import com.facebook.buck.versions.VersionRoot;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-public class GenruleDescription extends AbstractGenruleDescription<GenruleDescription.Arg> {
+public class GenruleDescription extends AbstractGenruleDescription<GenruleDescriptionArg>
+    implements VersionRoot<GenruleDescriptionArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("genrule");
+  private final BuckConfig buckConfig;
 
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public GenruleDescription(
+      ToolchainProvider toolchainProvider,
+      BuckConfig buckConfig,
+      SandboxExecutionStrategy sandboxExecutionStrategy) {
+    super(toolchainProvider, sandboxExecutionStrategy, false);
+    this.buckConfig = buckConfig;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<GenruleDescriptionArg> getConstructorArgType() {
+    return GenruleDescriptionArg.class;
   }
 
   @Override
-  protected <A extends GenruleDescription.Arg> BuildRule createBuildRule(
+  protected BuildRule createBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args,
-      ImmutableList<SourcePath> srcs,
-      Optional<com.facebook.buck.rules.args.Arg> cmd,
-      Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out) {
-    if (!args.executable.or(false)) {
+      ActionGraphBuilder graphBuilder,
+      GenruleDescriptionArg args,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe) {
+    Optional<AndroidPlatformTarget> androidPlatformTarget =
+        toolchainProvider.getByNameIfPresent(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+    Optional<AndroidNdk> androidNdk =
+        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+    Optional<AndroidSdkLocation> androidSdkLocation =
+        toolchainProvider.getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+
+    if (!args.getExecutable().orElse(false)) {
+      SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
       return new Genrule(
+          buildTarget,
+          projectFilesystem,
+          graphBuilder,
           params,
-          new SourcePathResolver(resolver),
-          srcs,
+          sandboxExecutionStrategy,
+          args.getSrcs(),
           cmd,
           bash,
           cmdExe,
-          out,
-          args.tests.get()
-      );
+          args.getType(),
+          args.getOut(),
+          sandboxConfig.isSandboxEnabledForCurrentPlatform()
+              && args.getEnableSandbox().orElse(sandboxConfig.isGenruleSandboxEnabled()),
+          args.getCacheable().orElse(true),
+          args.getEnvironmentExpansionSeparator(),
+          androidPlatformTarget,
+          androidNdk,
+          androidSdkLocation,
+          args.getNoRemote().orElse(false));
     } else {
       return new GenruleBinary(
+          buildTarget,
+          projectFilesystem,
+          sandboxExecutionStrategy,
+          graphBuilder,
           params,
-          new SourcePathResolver(resolver),
-          srcs,
+          args.getSrcs(),
           cmd,
           bash,
           cmdExe,
-          out,
-          args.tests.get()
-      );
+          args.getType(),
+          args.getOut(),
+          args.getCacheable().orElse(true),
+          args.getEnvironmentExpansionSeparator(),
+          androidPlatformTarget,
+          androidNdk,
+          androidSdkLocation,
+          args.getNoRemote().orElse(false));
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractGenruleDescription.Arg {
-    public Optional<Boolean> executable;
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
   }
 
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
+    String getOut();
+
+    Optional<Boolean> getExecutable();
+
+    /**
+     * This functionality only exists to facilitate migration of projects to distributed building.
+     * It will likely go away in the future.
+     */
+    Optional<Boolean> getNoRemote();
+  }
 }

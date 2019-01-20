@@ -17,22 +17,18 @@
 package com.facebook.buck.android;
 
 import com.google.common.collect.ImmutableMap;
-
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Parser for ProGuard-generated mapping files.  Currently only handles class mapping.
- */
+/** Parser for ProGuard-generated mapping files. Currently only handles class mapping. */
 public class ProguardMapping {
 
   /** Utility class: do not instantiate. */
   private ProguardMapping() {}
 
-  private static final Pattern CLASS_LINE_PATTERN = Pattern.compile("([\\w.$]+) -> ([\\w.$]+):");
+  private static final Pattern CLASS_LINE_PATTERN = Pattern.compile("([-\\w.$]+) -> ([-\\w.$]+):");
 
-  public static Map<String, String> readClassMapping(Iterable<String> lines) {
+  public static ImmutableMap<String, String> readClassMapping(Iterable<String> lines) {
     ImmutableMap.Builder<String, String> classMappingBuilder = ImmutableMap.builder();
 
     for (String line : lines) {

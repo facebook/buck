@@ -15,7 +15,8 @@
  */
 package com.facebook.buck.util.network;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.Threads;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
@@ -24,7 +25,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +32,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
@@ -52,56 +51,52 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
   private int timeoutMillis;
   private final ListeningExecutorService requestService;
   private static final ThreadFactory threadFactory =
-      new ThreadFactoryBuilder().setNameFormat(BlockingHttpEndpoint.class.getSimpleName() + "-%d")
+      new ThreadFactoryBuilder()
+          .setNameFormat(BlockingHttpEndpoint.class.getSimpleName() + "-%d")
           .build();
 
-  public BlockingHttpEndpoint(
-      String url,
-      int maxParallelRequests,
-      int timeoutMillis) throws MalformedURLException {
+  public BlockingHttpEndpoint(String url, int maxParallelRequests, int timeoutMillis)
+      throws MalformedURLException {
     this.url = new URL(url);
     this.timeoutMillis = timeoutMillis;
 
     // Create an ExecutorService that blocks after N requests are in flight.  Taken from
     // http://www.springone2gx.com/blog/billy_newport/2011/05/there_s_more_to_configuring_threadpools_than_thread_pool_size
     LinkedBlockingQueue<Runnable> workQueue = new LinkedBlockingQueue<>(maxParallelRequests);
-    ExecutorService executor = new ThreadPoolExecutor(
-        maxParallelRequests,
-        maxParallelRequests,
-        2L,
-        TimeUnit.MINUTES,
-        workQueue,
-        threadFactory,
-        new ThreadPoolExecutor.CallerRunsPolicy());
+    ExecutorService executor =
+        new ThreadPoolExecutor(
+            maxParallelRequests,
+            maxParallelRequests,
+            2L,
+            TimeUnit.MINUTES,
+            workQueue,
+            threadFactory,
+            new ThreadPoolExecutor.CallerRunsPolicy());
     requestService = MoreExecutors.listeningDecorator(executor);
   }
 
   @Override
-  public ListenableFuture<HttpResponse> post(final String content) {
+  public ListenableFuture<HttpResponse> post(String content) {
     return requestService.submit(
-        new Callable<HttpResponse>() {
-          @Override
-          public HttpResponse call() {
-            try {
-              HttpURLConnection connection = buildConnection("POST");
-              connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-              return send(connection, content);
-            } catch (IOException e) {
-              throw new RuntimeException(e);
-            }
+        () -> {
+          try {
+            HttpURLConnection connection = buildConnection("POST");
+            connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            return send(connection, content);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
           }
         });
   }
 
   @VisibleForTesting
-  HttpResponse send(final HttpURLConnection connection, final String content) throws IOException {
+  HttpResponse send(HttpURLConnection connection, String content) throws IOException {
     try (DataOutputStream out = new DataOutputStream(connection.getOutputStream())) {
       out.writeBytes(content);
       out.flush();
       out.close();
       InputStream inputStream = connection.getInputStream();
-      String response = CharStreams.toString(
-          new InputStreamReader(inputStream, Charsets.UTF_8));
+      String response = CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
       return new HttpResponse(response);
     } finally {
       connection.disconnect();
@@ -127,15 +122,17 @@ public class BlockingHttpEndpoint implements HttpEndpoint {
     requestService.shutdown();
     try {
       if (!requestService.awaitTermination(timeoutMillis, TimeUnit.MILLISECONDS)) {
-        LOG.warn(Joiner.on(System.lineSeparator()).join(
-            "A BlockingHttpEndpoint failed to shut down within the standard timeout.",
-            "Your build might have succeeded, but some requests made to ",
-            this.url + " were probably lost.",
-            "Here's some debugging information:",
-            requestService.toString()));
+        LOG.warn(
+            Joiner.on(System.lineSeparator())
+                .join(
+                    "A BlockingHttpEndpoint failed to shut down within the standard timeout.",
+                    "Your build might have succeeded, but some requests made to ",
+                    this.url + " were probably lost.",
+                    "Here's some debugging information:",
+                    requestService.toString()));
       }
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
     }
   }
 }

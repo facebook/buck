@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "macros",
+    deps = [
+        "//src/com/facebook/buck/core/macros:macros",
+        "//src/com/facebook/buck/rules/macros:macros",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

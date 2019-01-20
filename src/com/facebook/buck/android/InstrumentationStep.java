@@ -16,27 +16,27 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaRuntimeLauncher;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
-
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 
 public class InstrumentationStep extends ShellStep {
 
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  private final ProjectFilesystem filesystem;
+  private final ImmutableList<String> javaRuntimeLauncher;
   private final AndroidInstrumentationTestJVMArgs jvmArgs;
 
   private Optional<Long> testRuleTimeoutMs;
 
   public InstrumentationStep(
       ProjectFilesystem filesystem,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      ImmutableList<String> javaRuntimeLauncher,
       AndroidInstrumentationTestJVMArgs jvmArgs,
       Optional<Long> testRuleTimeoutMs) {
     super(filesystem.getRootPath());
+    this.filesystem = filesystem;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.jvmArgs = jvmArgs;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
@@ -45,9 +45,13 @@ public class InstrumentationStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add(javaRuntimeLauncher.getCommand());
+    args.addAll(javaRuntimeLauncher);
 
-    jvmArgs.formatCommandLineArgsToList(args);
+    jvmArgs.formatCommandLineArgsToList(filesystem, args);
+
+    if (jvmArgs.isDebugEnabled()) {
+      warnUser(context, "Debugging. Suspending JVM. Connect android debugger to proceed.");
+    }
 
     return args.build();
   }
@@ -60,5 +64,9 @@ public class InstrumentationStep extends ShellStep {
   @Override
   protected Optional<Long> getTimeout() {
     return testRuleTimeoutMs;
+  }
+
+  private void warnUser(ExecutionContext context, String message) {
+    context.getStdErr().println(context.getAnsi().asWarningText(message));
   }
 }

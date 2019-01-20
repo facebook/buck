@@ -16,49 +16,52 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.google.common.base.Optional.fromNullable;
-
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.DefaultFieldInputs;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
-import org.immutables.value.Value;
-
+import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.immutables.value.Value;
 
 /**
  * Represents the command line options that should be passed to javac. Note that the options do not
  * include either the classpath or the directory for storing class files.
  */
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
-abstract class AbstractJavacOptions implements RuleKeyAppendable {
+abstract class AbstractJavacOptions implements AddsToRuleKey {
 
-  /**
-   * The method in which the compiler output is spooled.
-   */
+  // Default combined source and target level.
+  public static final String TARGETED_JAVA_VERSION = "7";
+
+  /** The method in which the compiler output is spooled. */
   public enum SpoolMode {
     /**
      * Writes the compiler output directly to a .jar file while retaining the intermediate .class
-     * files in memory.
-     * If {@link com.facebook.buck.jvm.java.JavaLibraryDescription.Arg} postprocessClassesCommands
-     * are present, the builder will resort to writing .class files to disk by necessity.
+     * files in memory. If {@link
+     * com.facebook.buck.jvm.java.JavaLibraryDescription.AbstractJavaLibraryDescriptionArg}
+     * postprocessClassesCommands are present, the builder will resort to writing .class files to
+     * disk by necessity.
      */
     DIRECT_TO_JAR,
 
@@ -69,92 +72,102 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     INTERMEDIATE_TO_DISK,
   }
 
-  public enum JavacSource {
-    /** Shell out to the javac in the JDK */
-    EXTERNAL,
-    /** Run javac in-process, loading it from a jar specified in .buckconfig. */
-    JAR,
-    /** Run javac in-process, loading it from the JRE in which Buck is running. */
-    JDK,
-  }
-
-  protected abstract Optional<Path> getJavacPath();
-  protected abstract Optional<SourcePath> getJavacJarPath();
-
   @Value.Default
+  @AddToRuleKey
   protected SpoolMode getSpoolMode() {
     return SpoolMode.INTERMEDIATE_TO_DISK;
   }
 
   @Value.Default
+  @AddToRuleKey
   protected boolean isProductionBuild() {
     return false;
   }
 
   @Value.Default
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
   protected boolean isVerbose() {
     return false;
   }
 
-  public abstract String getSourceLevel();
+  @Value.Default
+  @AddToRuleKey
+  public String getSourceLevel() {
+    return TARGETED_JAVA_VERSION;
+  }
+
   @VisibleForTesting
-  abstract String getTargetLevel();
+  @Value.Default
+  @AddToRuleKey
+  public String getTargetLevel() {
+    return TARGETED_JAVA_VERSION;
+  }
 
   @Value.Default
+  @AddToRuleKey
   public AnnotationProcessingParams getAnnotationProcessingParams() {
     return AnnotationProcessingParams.EMPTY;
   }
 
-  public abstract Set<String> getSafeAnnotationProcessors();
-
+  @AddToRuleKey
   public abstract List<String> getExtraArguments();
-  protected abstract Optional<String> getBootclasspath();
-  protected abstract Map<String, String> getSourceToBootclasspath();
 
+  // TODO(cjhopman): This should use SourcePaths
+  @AddToRuleKey
+  protected abstract Optional<String> getBootclasspath();
+
+  // TODO(cjhopman): This should be resolved to the appropriate source.
+  // TODO(cjhopman): Should this be added to the rulekey?
+  @CustomFieldBehavior({DefaultFieldInputs.class, DefaultFieldSerialization.class})
+  protected abstract Map<String, ImmutableList<PathSourcePath>> getSourceToBootclasspath();
+
+  @AddToRuleKey
   protected boolean isDebug() {
     return !isProductionBuild();
   }
 
   @Value.Default
-  boolean getTrackClassUsageNotDisabled() {
-    return true;
-  }
-
+  @AddToRuleKey
   public boolean trackClassUsage() {
-    final JavacSource javacSource = getJavacSource();
-    return getTrackClassUsageNotDisabled() &&
-        (javacSource == JavacSource.JAR || javacSource == JavacSource.JDK);
+    return false;
   }
 
-  public JavacSource getJavacSource() {
-    if (getJavacPath().isPresent()) {
-      return JavacSource.EXTERNAL;
-    } else if (getJavacJarPath().isPresent()) {
-      return JavacSource.JAR;
-    } else {
-      return JavacSource.JDK;
+  @Value.Default
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
+  protected boolean trackJavacPhaseEvents() {
+    return false;
+  }
+
+  public void validateOptions(Function<String, Boolean> classpathChecker) throws IOException {
+    if (getBootclasspath().isPresent()) {
+      String bootclasspath = getBootclasspath().get();
+      try {
+        if (!classpathChecker.apply(bootclasspath)) {
+          throw new IOException(
+              String.format("Bootstrap classpath %s contains no valid entries", bootclasspath));
+        }
+      } catch (UncheckedIOException e) {
+        throw e.getCause();
+      }
     }
   }
 
-  @Value.Lazy
-  public Javac getJavac() {
-    final JavacSource javacSource = getJavacSource();
-    switch (javacSource) {
-      case EXTERNAL:
-        return ExternalJavac.createJavac(getJavacPath().get());
-      case JAR:
-        return new JarBackedJavac(
-            "com.sun.tools.javac.api.JavacTool",
-            ImmutableSet.of(getJavacJarPath().get()));
-      case JDK:
-        return new JdkProvidedInMemoryJavac();
+  public JavacOptions withBootclasspathFromContext(ExtraClasspathProvider extraClasspathProvider) {
+    String extraClasspath =
+        Joiner.on(File.pathSeparator).join(extraClasspathProvider.getExtraClasspath());
+    JavacOptions options = (JavacOptions) this;
+
+    if (!extraClasspath.isEmpty()) {
+      return options.withBootclasspath(extraClasspath);
     }
-    throw new AssertionError("Unknown javac source: " + javacSource);
+
+    return options;
   }
 
   public void appendOptionsTo(
       OptionsConsumer optionsConsumer,
-      final Function<Path, Path> pathRelativizer) {
+      SourcePathResolver pathResolver,
+      ProjectFilesystem filesystem) {
 
     // Add some standard options.
     optionsConsumer.addOptionValue("source", getSourceLevel());
@@ -175,91 +188,70 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     if (getBootclasspath().isPresent()) {
       optionsConsumer.addOptionValue("bootclasspath", getBootclasspath().get());
     } else {
-      String bcp = getSourceToBootclasspath().get(getSourceLevel());
-      if (bcp != null) {
+      ImmutableList<PathSourcePath> bootclasspath =
+          getSourceToBootclasspath().get(getSourceLevel());
+      if (bootclasspath != null) {
+        String bcp =
+            bootclasspath
+                .stream()
+                .map(pathResolver::getAbsolutePath)
+                .map(filesystem::relativize)
+                .map(Path::toString)
+                .collect(Collectors.joining(File.pathSeparator));
         optionsConsumer.addOptionValue("bootclasspath", bcp);
       }
     }
 
     // Add annotation processors.
-    if (!getAnnotationProcessingParams().isEmpty()) {
-      // Specify where to generate sources so IntelliJ can pick them up.
-      Path generateTo = getAnnotationProcessingParams().getGeneratedSourceFolderName();
-      if (generateTo != null) {
-        //noinspection ConstantConditions
-        optionsConsumer.addOptionValue("s", pathRelativizer.apply(generateTo).toString());
-      }
+    AnnotationProcessingParams annotationProcessingParams = getAnnotationProcessingParams();
+    if (!annotationProcessingParams.isEmpty()) {
+      ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
+          annotationProcessingParams.getModernProcessors();
 
       // Specify processorpath to search for processors.
-      optionsConsumer.addOptionValue("processorpath",
-          Joiner.on(File.pathSeparator).join(
-              FluentIterable.from(getAnnotationProcessingParams().getSearchPathElements())
-                  .transform(pathRelativizer)
-                  .transform(Functions.toStringFunction())));
+      optionsConsumer.addOptionValue(
+          "processorpath",
+          annotationProcessors
+              .stream()
+              .map(properties -> properties.getClasspath(pathResolver, filesystem))
+              .flatMap(Arrays::stream)
+              .distinct()
+              .map(
+                  url -> {
+                    try {
+                      return url.toURI();
+                    } catch (URISyntaxException e) {
+                      throw new RuntimeException(e);
+                    }
+                  })
+              .map(Paths::get)
+              .map(Path::toString)
+              .collect(Collectors.joining(File.pathSeparator)));
 
       // Specify names of processors.
-      if (!getAnnotationProcessingParams().getNames().isEmpty()) {
-        optionsConsumer.addOptionValue(
-            "processor",
-            Joiner.on(',').join(getAnnotationProcessingParams().getNames()));
-      }
+      optionsConsumer.addOptionValue(
+          "processor",
+          annotationProcessors
+              .stream()
+              .map(ResolvedJavacPluginProperties::getProcessorNames)
+              .flatMap(Collection::stream)
+              .collect(Collectors.joining(",")));
 
       // Add processor parameters.
-      for (String parameter : getAnnotationProcessingParams().getParameters()) {
+      for (String parameter : annotationProcessingParams.getParameters()) {
         optionsConsumer.addFlag("A" + parameter);
       }
 
-      if (getAnnotationProcessingParams().getProcessOnly()) {
+      if (annotationProcessingParams.getProcessOnly()) {
         optionsConsumer.addFlag("proc:only");
       }
+    } else {
+      // Disable automatic annotation processor lookup
+      optionsConsumer.addFlag("proc:none");
     }
 
     // Add extra arguments.
     optionsConsumer.addExtras(getExtraArguments());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("sourceLevel", getSourceLevel())
-        .setReflectively("targetLevel", getTargetLevel())
-        .setReflectively("extraArguments", Joiner.on(',').join(getExtraArguments()))
-        .setReflectively("debug", isDebug())
-        .setReflectively("bootclasspath", getBootclasspath())
-        .setReflectively("javac", getJavac())
-        .setReflectively("annotationProcessingParams", getAnnotationProcessingParams())
-        .setReflectively("spoolMode", getSpoolMode())
-        .setReflectively("trackClassUsage", trackClassUsage());
-  }
-
-  public ImmutableSortedSet<SourcePath> getInputs(SourcePathResolver resolver) {
-    ImmutableSortedSet.Builder<SourcePath> builder = ImmutableSortedSet.<SourcePath>naturalOrder()
-        .addAll(getAnnotationProcessingParams().getInputs());
-
-    Optional<SourcePath> javacJarPath = getJavacJarPath();
-    if (javacJarPath.isPresent()) {
-      SourcePath sourcePath = javacJarPath.get();
-
-      // Add the original rule regardless of what happens next.
-      builder.add(sourcePath);
-
-      Optional<BuildRule> possibleRule = resolver.getRule(sourcePath);
-
-      if (possibleRule.isPresent()) {
-        BuildRule rule = possibleRule.get();
-
-        // And now include any transitive deps that contribute to the classpath.
-        if (rule instanceof JavaLibrary) {
-          builder.addAll(
-              FluentIterable.from(((JavaLibrary) rule).getDepsForTransitiveClasspathEntries())
-                  .transform(SourcePaths.getToBuildTargetSourcePath())
-                  .toList());
-        } else {
-          builder.add(sourcePath);
-        }
-      }
-    }
-
-    return builder.build();
   }
 
   static JavacOptions.Builder builderForUseInJavaBuckConfig() {
@@ -270,9 +262,5 @@ abstract class AbstractJavacOptions implements RuleKeyAppendable {
     JavacOptions.Builder builder = JavacOptions.builder();
 
     return builder.from(options);
-  }
-
-  public final Optional<Path> getGeneratedSourceFolderName() {
-    return fromNullable(getAnnotationProcessingParams().getGeneratedSourceFolderName());
   }
 }

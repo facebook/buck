@@ -16,8 +16,7 @@
 
 package com.android.dex;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -65,13 +64,13 @@ public final class TableOfContents {
         signature = new byte[20];
     }
 
-    public void readFrom(Dex dex) throws IOException {
+    public void readFrom(Dex dex) {
         readHeader(dex.open(0));
         readMap(dex.open(mapList.off));
         computeSizesFromOffsets();
     }
 
-    private void readHeader(Dex.Section headerIn) throws UnsupportedEncodingException {
+    private void readHeader(Dex.Section headerIn) {
         byte[] magic = headerIn.readByteArray(8);
         int apiTarget = DexFormat.magicToApi(magic);
 
@@ -112,7 +111,7 @@ public final class TableOfContents {
         dataOff = headerIn.readInt();
     }
 
-    private void readMap(Dex.Section in) throws IOException {
+    private void readMap(Dex.Section in) {
         int mapSize = in.readInt();
         Section previous = null;
         for (int i = 0; i < mapSize; i++) {
@@ -163,8 +162,9 @@ public final class TableOfContents {
         throw new IllegalArgumentException("No such map item: " + type);
     }
 
-    public void writeHeader(Dex.Section out) throws IOException {
-        out.write(DexFormat.apiToMagic(DexFormat.API_NO_EXTENDED_OPCODES).getBytes("UTF-8"));
+    public void writeHeader(Dex.Section out) {
+        out.write(DexFormat.apiToMagic(DexFormat.API_NO_EXTENDED_OPCODES).getBytes(
+            StandardCharsets.UTF_8));
         out.writeInt(checksum);
         out.write(signature);
         out.writeInt(fileSize);
@@ -189,7 +189,7 @@ public final class TableOfContents {
         out.writeInt(dataOff);
     }
 
-    public void writeMap(Dex.Section out) throws IOException {
+    public void writeMap(Dex.Section out) {
         int count = 0;
         for (Section section : sections) {
             if (section.exists()) {

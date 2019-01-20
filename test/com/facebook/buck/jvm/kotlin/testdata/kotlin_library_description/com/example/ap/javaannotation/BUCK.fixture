@@ -1,0 +1,9 @@
+java_library(
+    name = "annotation-lib",
+    srcs = [
+        "JavaAnnotation.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

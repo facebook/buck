@@ -1,0 +1,4 @@
+go_test(
+    name = "all_tests",
+    srcs = glob(["*_test.go"]),
+)

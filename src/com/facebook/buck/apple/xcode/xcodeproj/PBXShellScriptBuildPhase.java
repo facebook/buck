@@ -19,18 +19,16 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.dd.plist.NSArray;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * Build phase which represents running a shell script.
- */
+/** Build phase which represents running a shell script. */
 public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   private List<String> inputPaths;
+  private List<String> inputFileListPaths;
   private List<String> outputPaths;
+  private List<String> outputFileListPaths;
   @Nullable private String shellPath;
   @Nullable private String shellScript;
 
@@ -38,8 +36,10 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   private static final NSString DEFAULT_SHELL_SCRIPT = new NSString("");
 
   public PBXShellScriptBuildPhase() {
-    this.inputPaths = Lists.newArrayList();
-    this.outputPaths = Lists.newArrayList();
+    this.inputPaths = new ArrayList<>();
+    this.inputFileListPaths = new ArrayList<>();
+    this.outputPaths = new ArrayList<>();
+    this.outputFileListPaths = new ArrayList<>();
   }
 
   @Override
@@ -48,49 +48,54 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   }
 
   /**
-   * Returns the list (possibly empty) of files passed as input to the shell script.
-   * May not be actual paths, because they can have variable interpolations.
+   * Returns the list (possibly empty) of files passed as input to the shell script. May not be
+   * actual paths, because they can have variable interpolations.
    */
   public List<String> getInputPaths() {
     return inputPaths;
   }
 
+  /** Returns the list (possibly empty) of .xcfilelist files that contain inputs for the script */
+  public List<String> getInputFileListPaths() {
+    return inputFileListPaths;
+  }
+
   /**
-   * Returns the list (possibly empty) of files created as output of the shell script.
-   * May not be actual paths, because they can have variable interpolations.
+   * Returns the list (possibly empty) of files created as output of the shell script. May not be
+   * actual paths, because they can have variable interpolations.
    */
   public List<String> getOutputPaths() {
     return outputPaths;
   }
 
+  /** Returns the list (possibly empty) of .xcfilelist files that contain inputs for the script */
+  public List<String> getOutputFileListPaths() {
+    return outputFileListPaths;
+  }
+
   /**
-   * Returns the path to the shell under which the script is to be executed.
-   * Defaults to "/bin/sh".
+   * Returns the path to the shell under which the script is to be executed. Defaults to "/bin/sh".
    */
   @Nullable
   public String getShellPath() {
     return shellPath;
   }
 
-  /**
-   * Sets the path to the shell under which the script is to be executed.
-   */
+  /** Sets the path to the shell under which the script is to be executed. */
   public void setShellPath(String shellPath) {
     this.shellPath = shellPath;
   }
 
   /**
-   * Gets the contents of the shell script to execute under the shell
-   * returned by {@link #getShellPath()}.
+   * Gets the contents of the shell script to execute under the shell returned by {@link
+   * #getShellPath()}.
    */
   @Nullable
   public String getShellScript() {
     return shellScript;
   }
 
-  /**
-   * Sets the contents of the script to execute.
-   */
+  /** Sets the contents of the script to execute. */
   public void setShellScript(String shellScript) {
     this.shellScript = shellScript;
   }
@@ -99,17 +104,15 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    NSArray inputPathsArray = new NSArray(inputPaths.size());
-    for (int i = 0; i < inputPaths.size(); i++) {
-      inputPathsArray.setValue(i, new NSString(inputPaths.get(i)));
+    s.addField("inputPaths", serializeStringList(inputPaths));
+    if (inputFileListPaths.size() > 0) {
+      s.addField("inputFileListPaths", serializeStringList(inputFileListPaths));
     }
-    s.addField("inputPaths", inputPathsArray);
 
-    NSArray outputPathsArray = new NSArray(outputPaths.size());
-    for (int i = 0; i < outputPaths.size(); i++) {
-      outputPathsArray.setValue(i, new NSString(outputPaths.get(i)));
+    s.addField("outputPaths", serializeStringList(outputPaths));
+    if (outputFileListPaths.size() > 0) {
+      s.addField("outputFileListPaths", serializeStringList(outputFileListPaths));
     }
-    s.addField("outputPaths", outputPathsArray);
 
     NSString shellPathString;
     if (shellPath == null) {
@@ -126,5 +129,14 @@ public class PBXShellScriptBuildPhase extends PBXBuildPhase {
       shellScriptString = new NSString(shellScript);
     }
     s.addField("shellScript", shellScriptString);
+  }
+
+  /** Converts List of Strings into NSArray of NSStrings */
+  protected NSArray serializeStringList(List<String> list) {
+    NSArray result = new NSArray(list.size());
+    for (int i = 0; i < list.size(); i++) {
+      result.setValue(i, new NSString(list.get(i)));
+    }
+    return result;
   }
 }

@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "json",
+    deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/cache/json:json",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/junit:junit",
+    ],
+)

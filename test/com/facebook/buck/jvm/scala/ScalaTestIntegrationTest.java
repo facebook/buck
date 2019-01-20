@@ -20,37 +20,36 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class ScalaTestIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
   public ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "scala_test", tmp);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "scala_test", tmp);
     workspace.setUp();
   }
 
-  @Test
+  @Test(timeout = (2 * 60 * 1000))
   public void testTest() throws IOException {
     // This test should pass.
-    ProjectWorkspace.ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success");
+    ProcessResult result1 = workspace.runBuckCommand("test", "//:test-success");
     result1.assertSuccess();
     workspace.resetBuildLogFile();
 
     // This test should fail.
-    ProjectWorkspace.ProcessResult result2 = workspace.runBuckCommand("test", "//:test-failure");
+    ProcessResult result2 = workspace.runBuckCommand("test", "//:test-failure");
     result2.assertTestFailure();
     assertThat(
         "`buck test` should fail because `not work` failed.",
@@ -58,12 +57,11 @@ public class ScalaTestIntegrationTest {
         containsString("not work"));
   }
 
-  @Test
+  @Test(timeout = (2 * 60 * 1000))
   public void testTestTimeout() throws IOException {
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    ProcessResult result = workspace.runBuckCommand("test", "//:test-spinning");
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertTrue(stderr, stderr.contains("test timed out before generating results file"));
   }
-
 }

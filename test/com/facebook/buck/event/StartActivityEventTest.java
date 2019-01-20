@@ -16,28 +16,26 @@
 
 package com.facebook.buck.event;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.model.BuildTargetFactory;
-
+import com.facebook.buck.core.model.BuildTargetFactory;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class StartActivityEventTest {
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     StartActivityEvent.Started started =
-        configureTestEvent(StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
-            "com.foo.bar"));
+        configureTestEvent(
+            StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"), "com.foo.bar"));
     StartActivityEvent.Started startedTwo =
-        configureTestEvent(StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"),
-            "com.foo.bar"));
-    StartActivityEvent finished =
-        configureTestEvent(StartActivityEvent.finished(started, false));
+        configureTestEvent(
+            StartActivityEvent.started(BuildTargetFactory.newInstance("//foo:bar"), "com.foo.bar"));
+    StartActivityEvent finished = configureTestEvent(StartActivityEvent.finished(started, false));
     StartActivityEvent finishedTwo =
         configureTestEvent(StartActivityEvent.finished(started, false));
     StartActivityEvent finishedSucceed =

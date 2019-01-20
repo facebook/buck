@@ -1,0 +1,141 @@
+java_library(
+    name = "lib_c",
+    srcs = [
+        "C.java",
+        "D.java",
+    ],
+)
+
+android_library(
+    name = "lib_a",
+    srcs = ["A.java"],
+)
+
+android_library(
+    name = "lib_b",
+    srcs = ["B.java"],
+    annotation_processor_params = [
+        #annotation_placeholder
+    ],
+    deps = [":lib_c"],
+)
+
+android_resource(
+    name = "res",
+    package = "com.example",
+    res = "res",
+)
+
+android_resource(
+    name = "res_with_deps",
+    package = "com.example",
+    res = "res",
+    deps = [
+        ":lib_b",
+    ],
+)
+
+android_library(
+    name = "needs_b_has_res",
+    srcs = [
+        "NeedsB.java",
+    ],
+    deps_query = "classpath($declared_deps, 1)",
+    deps = [
+        ":res_with_deps",
+    ],
+)
+
+android_library(
+    name = "needs_c_has_res",
+    srcs = [
+        "NeedsC.java",
+    ],
+    deps_query = "classpath($declared_deps, 1)",
+    deps = [
+        ":res_with_deps",
+    ],
+)
+
+android_library(
+    name = "top_level",
+    srcs = ["TopLevel.java"],
+    deps = [
+        ":lib_b",
+        ":res",
+        #placeholder
+    ],
+)
+
+android_library(
+    name = "android_libraries",
+    deps_query = "kind(android_library, deps($declared_deps))",
+    deps = [":top_level"],
+)
+
+android_library(
+    name = "android_resources",
+    deps_query = "kind(android_resource, deps($declared_deps))",
+    deps = [":top_level"],
+)
+
+android_library(
+    name = "has_proc_params",
+    deps_query = "attrfilter(annotation_processor_params, \"example.foo=True\", deps($declared_deps))",
+    deps = [":top_level"],
+)
+
+android_library(
+    name = "java_libraries",
+    srcs = ["UsesC.java"],
+    deps_query = "kind(java_library, deps($declared_deps))",
+    deps = [":top_level"],
+)
+
+android_library(
+    name = "resources_from_query",
+    srcs = [
+        "UsesR.java",
+    ],
+    deps_query = "kind(android_resource, deps($declared_deps))",
+    deps = [
+        ":top_level",
+    ],
+)
+
+android_library(
+    name = "has_lib_c_from_provided_query",
+    srcs = [
+        "UsesC.java",
+    ],
+    provided_deps = [
+        ":top_level",
+    ],
+    provided_deps_query = "kind(java_library, deps($declared))",
+)
+
+android_library(
+    name = "provided_only",
+    srcs = ["UsesC.java"],
+    provided_deps = [":lib_c"],
+)
+
+android_library(
+    name = "no_provided_deps",
+    srcs = ["UsesC.java"],
+    deps_query = "classpath($declared_deps)",
+    deps = [":provided_only"],
+)
+
+java_binary(
+    name = "does_not_package_lib_c",
+    deps = [
+        ":has_lib_c_from_provided_query",
+    ],
+)
+
+genrule(
+    name = "check_output_of_does_not_package_lib_c",
+    out = "out",
+    cmd = "echo `unzip -l $(location :does_not_package_lib_c)` > $OUT",
+)

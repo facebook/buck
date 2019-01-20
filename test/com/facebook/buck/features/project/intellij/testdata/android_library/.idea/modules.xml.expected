@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/lib/lib.iml" filepath="$PROJECT_DIR$/lib/lib.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/lib_with_non_default_manifest/lib_with_non_default_manifest.iml" filepath="$PROJECT_DIR$/lib_with_non_default_manifest/lib_with_non_default_manifest.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/lib_with_variant_named_buildrule/lib_with_variant_named_buildrule.iml" filepath="$PROJECT_DIR$/lib_with_variant_named_buildrule/lib_with_variant_named_buildrule.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/lib_without_manifest/lib_without_manifest.iml" filepath="$PROJECT_DIR$/lib_without_manifest/lib_without_manifest.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
+    </modules>
+  </component>
+</project>

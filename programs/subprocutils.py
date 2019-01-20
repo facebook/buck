@@ -1,33 +1,19 @@
+# Copyright 2018-present Facebook, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import os
-import subprocess
 import sys
-
-
-# Backport of the Python 2.7 subprocess.CalledProcessError, including
-# an `output` attribute.
-class CalledProcessError(subprocess.CalledProcessError):
-    def __init__(self, returncode, cmd, output=None):
-        super(CalledProcessError, self).__init__(returncode, cmd)
-        self.output = output
-
-
-# Backport of the Python 2.7 subprocess.check_output. Taken from
-# http://hg.python.org/cpython/file/71cb8f605f77/Lib/subprocess.py
-# Copyright (c) 2003-2005 by Peter Astrand <astrand@lysator.liu.se>
-# Licensed to PSF under a Contributor Agreement.
-# See http://www.python.org/2.4/license for licensing details.
-def check_output(*popenargs, **kwargs):
-    if 'stdout' in kwargs:
-        raise ValueError('stdout argument not allowed, it will be overridden.')
-    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-    output, unused_err = process.communicate()
-    retcode = process.poll()
-    if retcode:
-        cmd = kwargs.get("args")
-        if cmd is None:
-            cmd = popenargs[0]
-        raise CalledProcessError(retcode, cmd, output=output)
-    return output
 
 
 #
@@ -47,8 +33,7 @@ def which(cmd, mode=os.F_OK | os.X_OK, path=None):
     # Additionally check that `file` is not a directory, as on Windows
     # directories pass the os.access check.
     def _access_check(fn, mode):
-        return (os.path.exists(fn) and os.access(fn, mode)
-                and not os.path.isdir(fn))
+        return os.path.exists(fn) and os.access(fn, mode) and not os.path.isdir(fn)
 
     # If we're given a path with a directory part, look it up directly rather
     # than referring to PATH directories. This includes checking relative to

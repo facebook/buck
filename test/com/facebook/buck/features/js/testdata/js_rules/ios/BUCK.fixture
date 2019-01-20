@@ -1,0 +1,64 @@
+apple_resource(
+    name = "DemoAppResources",
+    #dirs = ['Images'],
+    dirs = [],
+    files = glob(["*.png"]),
+)
+
+apple_bundle(
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_binary(
+    name = "DemoAppBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":DemoAppResources",
+        "//js:fruit-salad-in-a-bundle#ios",
+    ],
+)
+
+apple_bundle(
+    name = "DemoAppWithJsBundleGenrule",
+    binary = ":DemoAppWithJsBundleGenruleBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_binary(
+    name = "DemoAppWithJsBundleGenruleBinary",
+    srcs = glob([
+        "*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "*.h",
+    ]),
+    libraries = [
+        "$SDKROOT/usr/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+    deps = [
+        ":DemoAppResources",
+        "//js:genrule-outer#ios",
+    ],
+)

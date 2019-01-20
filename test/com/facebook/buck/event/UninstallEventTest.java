@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
@@ -27,7 +27,7 @@ import org.junit.Test;
 
 public class UninstallEventTest {
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     UninstallEvent.Started started = configureTestEvent(UninstallEvent.started("com.foo.bar"));
     UninstallEvent.Started startedTwo = configureTestEvent(UninstallEvent.started("com.foo.bar"));
     UninstallEvent finished = configureTestEvent(UninstallEvent.finished(started, true));

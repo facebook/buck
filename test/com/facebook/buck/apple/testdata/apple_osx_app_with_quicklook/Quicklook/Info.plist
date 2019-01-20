@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleDocumentTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeRole</key>
+      <string>QLGenerator</string>
+      <key>LSItemContentTypes</key>
+      <array>
+        <string>com.facebook.buck.apple_osx_app_with_quicklook.composition</string>
+      </array>
+    </dict>
+  </array>
+  <key>CFBundleExecutable</key>
+  <string>$(EXECUTABLE_NAME)</string>
+  <key>CFBundleIdentifier</key>
+  <string>com.facebook.buck.apple_osx_app_with_quicklook</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>QuickLook</string>
+  <key>CFBundleShortVersionString</key>
+  <string>1.0</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>CFPlugInDynamicRegisterFunction</key>
+  <string></string>
+  <key>CFPlugInDynamicRegistration</key>
+  <string>NO</string>
+  <key>CFPlugInFactories</key>
+  <dict>
+    <key>C71FC47E-B5DC-4FC8-AFA1-7404A1A36049</key>
+    <string>QuickLookGeneratorPluginFactory</string>
+  </dict>
+  <key>CFPlugInTypes</key>
+  <dict>
+    <key>5E2D9680-5022-40FA-B806-43349622E5B9</key>
+    <array>
+      <string>C71FC47E-B5DC-4FC8-AFA1-7404A1A36049</string>
+    </array>
+  </dict>
+  <key>CFPlugInUnloadFunction</key>
+  <string></string>
+  <key>NSHumanReadableCopyright</key>
+  <string>Copyright © 2013-present Facebook. All rights reserved.</string>
+  <key>QLNeedsToBeRunInMainThread</key>
+  <true/>
+  <key>QLPreviewHeight</key>
+  <real>667</real>
+  <key>QLPreviewWidth</key>
+  <real>375</real>
+   <key>QLSupportsConcurrentRequests</key>
+  <false/>
+  <key>QLThumbnailMinimumSize</key>
+  <real>17</real>
+</dict>
+</plist>

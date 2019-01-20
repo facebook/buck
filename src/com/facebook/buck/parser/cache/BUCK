@@ -1,0 +1,22 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "cache",
+    srcs = glob([
+        "*.java",
+    ]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/counters:counters",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/parser/cache/json:json",
+        "//src/com/facebook/buck/util/config:config",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+    ],
+)

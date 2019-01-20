@@ -1,0 +1,7 @@
+include_defs("secondary//included_by_primary.py", "defs")
+
+genrule(
+    name = "rule",
+    out = "out.txt",
+    cmd = "echo {0} > $OUT".format(defs.flavor),
+)

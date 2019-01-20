@@ -1,0 +1,17 @@
+export_file(
+    name = "scripts",
+    src = ".",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "echo.sh",
+    src = "echo.sh",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "echo.bat",
+    src = "echo.bat",
+    visibility = ["PUBLIC"],
+)

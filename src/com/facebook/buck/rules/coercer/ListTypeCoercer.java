@@ -16,15 +16,19 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.concat.Concatable;
+import com.facebook.buck.rules.coercer.concat.ImmutableListConcatable;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 
-public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, T> {
-  ListTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
+public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, T>
+    implements Concatable<ImmutableList<T>> {
+
+  private final ImmutableListConcatable<T> concatable = new ImmutableListConcatable<>();
+
+  public ListTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
   }
 
@@ -35,23 +39,19 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
   }
 
   @Override
-  public Optional<ImmutableList<T>> getOptionalValue() {
-    return Optional.of(ImmutableList.<T>of());
-  }
-
-  @Override
   public ImmutableList<T> coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     ImmutableList.Builder<T> builder = ImmutableList.builder();
-    fill(
-        cellRoots,
-        filesystem,
-        pathRelativeToProjectRoot,
-        builder,
-        object);
+    fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
     return builder.build();
+  }
+
+  @Override
+  public ImmutableList<T> concat(Iterable<ImmutableList<T>> elements) {
+    return concatable.concat(elements);
   }
 }

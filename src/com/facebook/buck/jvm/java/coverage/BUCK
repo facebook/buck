@@ -1,20 +1,28 @@
-standard_java_library(
-  visibility = [], # Only visible to this build file.
+java_library(
+    name = "coverage",
+    srcs = glob(["*.java"]),
+    visibility = [],  # Only visible to this build file.
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/jacoco:jacoco",
+        "//third-party/java/plexus:plexus-utils",
+    ],
 )
 
 java_binary(
-  name = 'report-generator',
-  main_class = 'com.facebook.buck.jvm.java.coverage.ReportGenerator',
-  blacklist = [
-    '.*SF',
-    '.*RSA',
-  ],
-  deps = [
-    ':coverage',
-  ],
-  visibility = [
-    '//programs:bucklib',
-    '//programs:bucklib-no-nailgun',
-    '//src/com/facebook/buck/jvm/java:steps',
-  ]
+    name = "report-generator",
+    blacklist = [
+        ".*SF",
+        ".*RSA",
+    ],
+    main_class = "com.facebook.buck.jvm.java.coverage.ReportGenerator",
+    visibility = [
+        "//programs:bucklib",
+        "//programs:bucklib-no-nailgun",
+        "//src/com/facebook/buck/jvm/java:steps",
+        "//test/com/facebook/buck/cli:cli",
+    ],
+    deps = [
+        ":coverage",
+    ],
 )

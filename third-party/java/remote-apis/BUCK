@@ -1,0 +1,34 @@
+genrule(
+    name = "proto-gen",
+    srcs = glob(["**/*.proto"]),
+    out = "remote-apis.src.zip",
+    cmd = "for f in `find . -name '*.proto'`; do protoc -I . $f --plugin=protoc-gen-grpc-java=$(location //third-party/java/grpc:protobuf-plugin) --grpc-java_out=$TMP --java_out=$TMP; done; cd $TMP; jar cf $OUT .",
+)
+
+DEPS = [
+    "//third-party/java/protobuf:protobuf",
+    "//third-party/java/grpc:grpc-core",
+    "//third-party/java/grpc:grpc-stub",
+    "//third-party/java/grpc:grpc-protobuf",
+]
+
+java_library(
+    name = "bundle",
+    srcs = [":proto-gen"],
+    deps = DEPS,
+)
+
+prebuilt_jar(
+    name = "prebuilt",
+    binary_jar = "remote-apis.jar",
+    licenses = ["LICENSE"],
+    source_jar = "remote-apis.src.jar",
+)
+
+# prebuild_jar doesn't support exported_deps, so just wrap it in a java_library with no sources.
+java_library(
+    name = "remote-apis",
+    srcs = [],
+    exported_deps = [":prebuilt"] + DEPS,
+    visibility = ["PUBLIC"],
+)

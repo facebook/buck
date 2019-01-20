@@ -16,98 +16,108 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidPlatformTarget;
-import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.apple.AppleBundle;
+import com.facebook.buck.apple.AppleDsym;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.command.LocalBuildExecutor;
+import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.type.BuildType;
+import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.config.AliasConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
+import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildConfig;
-import com.facebook.buck.distributed.DistBuildService;
-import com.facebook.buck.distributed.DistributedBuild;
-import com.facebook.buck.distributed.DistributedBuildState;
-import com.facebook.buck.distributed.thrift.BuildJobState;
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.BuildEngine;
-import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
+import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.step.TargetDeviceOptions;
-import com.facebook.buck.timing.Clock;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
-import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Functions;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ListeningExecutorService;
-
-import org.apache.thrift.TException;
-import org.apache.thrift.protocol.TProtocol;
-import org.apache.thrift.protocol.TTupleProtocol;
-import org.apache.thrift.transport.TIOStreamTransport;
-import org.apache.thrift.transport.TTransport;
-import org.apache.thrift.transport.TZlibTransport;
+import com.google.common.util.concurrent.SettableFuture;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.TreeMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
+import org.immutables.value.Value;
+import org.immutables.value.Value.Immutable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Nullable;
-
 public class BuildCommand extends AbstractCommand {
+
+  private static final Logger LOG = Logger.get(BuildCommand.class);
 
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
   private static final String BUILD_REPORT_LONG_ARG = "--build-report";
   private static final String JUST_BUILD_LONG_ARG = "--just-build";
   private static final String DEEP_LONG_ARG = "--deep";
+  private static final String OUT_LONG_ARG = "--out";
   private static final String POPULATE_CACHE_LONG_ARG = "--populate-cache";
   private static final String SHALLOW_LONG_ARG = "--shallow";
   private static final String REPORT_ABSOLUTE_PATHS = "--report-absolute-paths";
   private static final String SHOW_OUTPUT_LONG_ARG = "--show-output";
+  private static final String SHOW_FULL_OUTPUT_LONG_ARG = "--show-full-output";
+  private static final String SHOW_JSON_OUTPUT_LONG_ARG = "--show-json-output";
+  private static final String SHOW_FULL_JSON_OUTPUT_LONG_ARG = "--show-full-json-output";
+  private static final String SHOW_RULEKEY_LONG_ARG = "--show-rulekey";
+  private static final String LOCAL_BUILD_LONG_ARG = "--local";
   private static final String DISTRIBUTED_LONG_ARG = "--distributed";
-  private static final String DISTRIBUTED_STATE_DUMP_LONG_ARG = "--distributed-state-dump";
+  static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
+  private static final String RULEKEY_LOG_PATH_LONG_ARG = "--rulekeys-log-path";
 
-  @Option(
-      name = KEEP_GOING_LONG_ARG,
-      usage = "Keep going when some targets can't be made.")
+  @Option(name = KEEP_GOING_LONG_ARG, usage = "Keep going when some targets can't be made.")
   private boolean keepGoing = false;
 
-  @Option(
-      name = BUILD_REPORT_LONG_ARG,
-      usage = "File where build report will be written.")
+  @Option(name = BUILD_REPORT_LONG_ARG, usage = "File where build report will be written.")
   @Nullable
   private Path buildReport = null;
 
@@ -121,62 +131,94 @@ public class BuildCommand extends AbstractCommand {
   @Option(
       name = DEEP_LONG_ARG,
       usage =
-          "Perform a \"deep\" build, which makes the output of all transitive dependencies" +
-          " available.",
+          "Perform a \"deep\" build, which makes the output of all transitive dependencies"
+              + " available.",
       forbids = SHALLOW_LONG_ARG)
   private boolean deepBuild = false;
 
   @Option(
       name = POPULATE_CACHE_LONG_ARG,
       usage =
-          "Performs a cache population, which makes the output of all unchanged " +
-              "transitive dependencies available (if these outputs are available " +
-              "in the remote cache). Does not build changed or unavailable dependencies locally.",
+          "Performs a cache population, which makes the output of all unchanged "
+              + "transitive dependencies available (if these outputs are available "
+              + "in the remote cache). Does not build changed or unavailable dependencies locally.",
       forbids = {SHALLOW_LONG_ARG, DEEP_LONG_ARG})
   private boolean populateCacheOnly = false;
 
   @Option(
       name = SHALLOW_LONG_ARG,
       usage =
-          "Perform a \"shallow\" build, which only makes the output of all explicitly listed" +
-          " targets available.",
+          "Perform a \"shallow\" build, which only makes the output of all explicitly listed"
+              + " targets available.",
       forbids = DEEP_LONG_ARG)
   private boolean shallowBuild = false;
 
   @Option(
       name = REPORT_ABSOLUTE_PATHS,
-      usage =
-          "Reports errors using absolute paths to the source files instead of relative paths.")
+      usage = "Reports errors using absolute paths to the source files instead of relative paths.")
   private boolean shouldReportAbsolutePaths = false;
 
   @Option(
       name = SHOW_OUTPUT_LONG_ARG,
-      usage = "Print the absolute path to the output for each of the built rules.")
+      usage = "Print the path to the output for each of the built rules relative to the cell.")
   private boolean showOutput;
+
+  @Option(name = OUT_LONG_ARG, usage = "Copies the output of the lone build target to this path.")
+  @Nullable
+  private Path outputPathForSingleBuildTarget;
+
+  @Option(
+      name = SHOW_FULL_OUTPUT_LONG_ARG,
+      usage = "Print the absolute path to the output for each of the built rules.")
+  private boolean showFullOutput;
+
+  @Option(name = SHOW_JSON_OUTPUT_LONG_ARG, usage = "Show output in JSON format.")
+  private boolean showJsonOutput;
+
+  @Option(name = SHOW_FULL_JSON_OUTPUT_LONG_ARG, usage = "Show full output in JSON format.")
+  private boolean showFullJsonOutput;
+
+  @Option(name = SHOW_RULEKEY_LONG_ARG, usage = "Print the rulekey for each of the built rules.")
+  private boolean showRuleKey;
+
+  @Option(
+      name = LOCAL_BUILD_LONG_ARG,
+      usage = "Disable distributed build (overrides --distributed).")
+  private boolean forceDisableDistributedBuild = false;
 
   @Option(
       name = DISTRIBUTED_LONG_ARG,
       usage = "Whether to run in distributed build mode. (experimental)",
       hidden = true)
-  private boolean useDistributedBuild = false;
+  private boolean useDistributedBuild = false; // Must be accessed via the getter method.
 
   @Nullable
   @Option(
-      name = DISTRIBUTED_STATE_DUMP_LONG_ARG,
-      usage = "Dump/load distributed build state to/from a file. (experimental).",
+      name = DistBuildRunCommand.BUILD_STATE_FILE_ARG_NAME,
+      usage = DistBuildRunCommand.BUILD_STATE_FILE_ARG_USAGE,
       hidden = true)
   private String distributedBuildStateFile = null;
 
-  @Argument
-  private List<String> arguments = Lists.newArrayList();
+  @Nullable
+  @Option(
+      name = BUCK_BINARY_STRING_ARG,
+      usage = "Buck binary to use on a distributed build instead of the current git version.",
+      hidden = true)
+  private String buckBinary = null;
 
-  private boolean buildTargetsHaveBeenCalculated;
+  @Nullable
+  @Option(
+      name = RULEKEY_LOG_PATH_LONG_ARG,
+      usage = "If set, log a binary representation of rulekeys to this file.")
+  private String ruleKeyLogPath = null;
+
+  @Argument private List<String> arguments = new ArrayList<>();
+
+  @Nullable private DistBuildCommandDelegate distBuildCommandDelegate;
 
   public List<String> getArguments() {
     return arguments;
   }
-
-  private boolean isArtifactCacheDisabled = false;
 
   public boolean isCodeCoverageEnabled() {
     return false;
@@ -187,33 +229,25 @@ public class BuildCommand extends AbstractCommand {
   }
 
   public BuildCommand() {
-    this(ImmutableList.<String>of());
+    this(ImmutableList.of());
   }
 
   public BuildCommand(List<String> arguments) {
     this.arguments.addAll(arguments);
   }
 
-  public Optional<CachingBuildEngine.BuildMode> getBuildEngineMode() {
-    Optional<CachingBuildEngine.BuildMode> mode = Optional.absent();
+  public Optional<BuildType> getBuildEngineMode() {
+    Optional<BuildType> mode = Optional.empty();
     if (deepBuild) {
-      mode = Optional.of(CachingBuildEngine.BuildMode.DEEP);
+      mode = Optional.of(BuildType.DEEP);
     }
     if (populateCacheOnly) {
-      mode = Optional.of(CachingBuildEngine.BuildMode.POPULATE_FROM_REMOTE_CACHE);
+      mode = Optional.of(BuildType.POPULATE_FROM_REMOTE_CACHE);
     }
     if (shallowBuild) {
-      mode = Optional.of(CachingBuildEngine.BuildMode.SHALLOW);
+      mode = Optional.of(BuildType.SHALLOW);
     }
     return mode;
-  }
-
-  public void setArtifactCacheDisabled(boolean value) {
-    isArtifactCacheDisabled = value;
-  }
-
-  public boolean isArtifactCacheDisabled() {
-    return isArtifactCacheDisabled;
   }
 
   public boolean isKeepGoing() {
@@ -228,311 +262,526 @@ public class BuildCommand extends AbstractCommand {
     this.keepGoing = keepGoing;
   }
 
+  /** Whether this build is using stampede or not. */
+  public boolean isUsingDistributedBuild() {
+    if (forceDisableDistributedBuild) {
+      useDistributedBuild = false;
+    }
+
+    return useDistributedBuild;
+  }
+
+  @Nullable
+  public DistBuildCommandDelegate getDistBuildCommandDelegate() {
+    if (isUsingDistributedBuild()) {
+      if (distBuildCommandDelegate == null) {
+        distBuildCommandDelegate =
+            new DistBuildCommandDelegate(
+                distributedBuildStateFile, buckBinary, localRuleKeyCalculator, keepGoing);
+      }
+      return distBuildCommandDelegate;
+    }
+    return null;
+  }
+
   /**
-   * @return an absolute path or {@link Optional#absent()}.
+   * Mark this build as being automatically converted to stampede.
+   *
+   * @param config to retrieve the message (if any) to be shown to the user.
+   * @return true if the build was converted to stampede.
    */
+  public boolean tryConvertingToStampede(DistBuildConfig config) {
+    if (forceDisableDistributedBuild) {
+      LOG.warn(
+          String.format(
+              "%s has been specified. Will not auto-convert build to stampede.",
+              LOCAL_BUILD_LONG_ARG));
+
+      useDistributedBuild = false; // Make sure
+      return false;
+    }
+
+    useDistributedBuild = true;
+
+    Objects.requireNonNull(getDistBuildCommandDelegate()).tryConvertingToStampede(config);
+
+    return true;
+  }
+
+  /** @return an absolute path or {@link Optional#empty()}. */
   public Optional<Path> getPathToBuildReport(BuckConfig buckConfig) {
-    return Optional.fromNullable(
+    return Optional.ofNullable(
         buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(buildReport));
   }
 
-  Build createBuild(
-      BuckConfig buckConfig,
-      ActionGraph graph,
-      BuildRuleResolver ruleResolver,
-      Supplier<AndroidPlatformTarget> androidPlatformTargetSupplier,
-      BuildEngine buildEngine,
-      ArtifactCache artifactCache,
-      Console console,
-      BuckEventBus eventBus,
-      Optional<TargetDevice> targetDevice,
-      Platform platform,
-      ImmutableMap<String, String> environment,
-      ObjectMapper objectMapper,
-      Clock clock,
-      Optional<AdbOptions> adbOptions,
-      Optional<TargetDeviceOptions> targetDeviceOptions,
-      Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors) {
-    if (console.getVerbosity() == Verbosity.ALL) {
-      console.getStdErr().printf("Creating a build with %d threads.\n", buckConfig.getNumThreads());
-    }
-    return new Build(
-        graph,
-        ruleResolver,
-        targetDevice,
-        androidPlatformTargetSupplier,
-        buildEngine,
-        artifactCache,
-        buckConfig.createDefaultJavaPackageFinder(),
-        console,
-        buckConfig.getDefaultTestTimeoutMillis(),
-        isCodeCoverageEnabled(),
-        isDebugEnabled(),
-        shouldReportAbsolutePaths(),
-        eventBus,
-        platform,
-        environment,
-        objectMapper,
-        clock,
-        getConcurrencyLimit(buckConfig),
-        adbOptions,
-        targetDeviceOptions,
-        executors);
-  }
-
-  @Nullable private Build lastBuild;
-
-  private ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of();
+  private final AtomicReference<Build> lastBuild = new AtomicReference<>(null);
+  private final SettableFuture<ParallelRuleKeyCalculator<RuleKey>> localRuleKeyCalculator =
+      SettableFuture.create();
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    int exitCode = checkArguments(params);
-    if (exitCode != 0) {
-      return exitCode;
-    }
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+    assertArguments(params);
 
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Build",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
-        getConcurrencyLimit(params.getBuckConfig()))) {
-      return run(params, pool.getExecutor(), ImmutableSet.<String>of());
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
+    try (CommandThreadManager pool =
+            new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()));
+        BuildPrehook prehook =
+            new BuildPrehook(
+                processExecutor,
+                params.getCell(),
+                params.getBuckEventBus(),
+                params.getBuckConfig(),
+                params.getEnvironment(),
+                getArguments())) {
+      prehook.startPrehookScript();
+      return run(params, pool, ImmutableSet.of()).getExitCode();
     }
   }
 
-  protected int checkArguments(CommandRunnerParams params) {
-    if (getArguments().isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least one build target.");
-
+  /** @throw CommandLineException if arguments provided are incorrect */
+  protected void assertArguments(CommandRunnerParams params) {
+    if (!getArguments().isEmpty()) {
+      return;
+    }
+    String message =
+        "Must specify at least one build target. See https://buckbuild.com/concept/build_target_pattern.html";
+    ImmutableSet<String> aliases = AliasConfig.from(params.getBuckConfig()).getAliases().keySet();
+    if (!aliases.isEmpty()) {
       // If there are aliases defined in .buckconfig, suggest that the user
       // build one of them. We show the user only the first 10 aliases.
-      ImmutableSet<String> aliases = params.getBuckConfig().getAliases();
-      if (!aliases.isEmpty()) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
-            "Try building one of the following targets:\n%s",
-            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)))));
-      }
-      return 1;
+      message +=
+          String.format(
+              "%nTry building one of the following targets:%n%s",
+              Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)));
     }
-    return 0;
+    throw new CommandLineException(message);
   }
 
-  protected int run(
+  protected BuildRunResult run(
       CommandRunnerParams params,
-      WeightedListeningExecutorService executorService,
-      ImmutableSet<String> additionalTargets) throws IOException, InterruptedException {
-    if (!additionalTargets.isEmpty()){
+      CommandThreadManager commandThreadManager,
+      ImmutableSet<String> additionalTargets)
+      throws Exception {
+    if (!additionalTargets.isEmpty()) {
       this.arguments.addAll(additionalTargets);
     }
-
-    // Post the build started event, setting it to the Parser recorded start time if appropriate.
-    BuildEvent.Started started = BuildEvent.started(getArguments(), useDistributedBuild);
-    if (params.getParser().getParseStartTime().isPresent()) {
-      params.getBuckEventBus().post(
-          started,
-          params.getParser().getParseStartTime().get());
-    } else {
-      params.getBuckEventBus().post(started);
+    BuildEvent.Started started = postBuildStartedEvent(params);
+    BuildRunResult result = ImmutableBuildRunResult.of(ExitCode.BUILD_ERROR, ImmutableList.of());
+    try {
+      result = executeBuildAndProcessResult(params, commandThreadManager);
+    } catch (ActionGraphCreationException e) {
+      params.getConsole().printBuildFailure(e.getMessage());
+      result = ImmutableBuildRunResult.of(ExitCode.PARSE_ERROR, ImmutableList.of());
+    } finally {
+      params.getBuckEventBus().post(BuildEvent.finished(started, result.getExitCode()));
     }
 
-    int exitCode;
-    if (useDistributedBuild) {
-      exitCode = executeDistributedBuild(params);
-    } else {
-      // Parse the build files to create a ActionGraph.
-      ActionGraphAndResolver actionGraphAndResolver =
-          createActionGraphAndResolver(params, executorService);
-      if (actionGraphAndResolver == null) {
-        return 1;
-      }
-      exitCode = executeLocalBuild(params, actionGraphAndResolver, executorService);
-      if (exitCode == 0 && showOutput) {
-        showOutputs(params, actionGraphAndResolver);
-      }
-    }
-    params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
-
-    return exitCode;
+    return result;
   }
 
-  private int executeDistributedBuild(CommandRunnerParams params) throws IOException {
-    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+  private BuildEvent.Started postBuildStartedEvent(CommandRunnerParams params) {
+    BuildEvent.Started started = BuildEvent.started(getArguments());
+    params.getBuckEventBus().post(started);
+    return started;
+  }
 
-    if (distributedBuildStateFile != null) {
-      Path stateDumpPath = Paths.get(distributedBuildStateFile);
-      TTransport transport;
-      boolean loading = Files.exists(stateDumpPath);
-      if (loading) {
-        transport = new TIOStreamTransport(filesystem.newFileInputStream(stateDumpPath));
-      } else {
-        transport = new TIOStreamTransport(filesystem.newFileOutputStream(stateDumpPath));
+  GraphsAndBuildTargets createGraphsAndTargets(
+      CommandRunnerParams params,
+      ListeningExecutorService executorService,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger)
+      throws ActionGraphCreationException, IOException, InterruptedException {
+    TargetGraphAndBuildTargets unversionedTargetGraph =
+        createUnversionedTargetGraph(params, executorService);
+
+    Optional<TargetGraphAndBuildTargets> versionedTargetGraph = Optional.empty();
+    try {
+      if (params.getBuckConfig().getBuildVersions()) {
+        versionedTargetGraph = Optional.of(toVersionedTargetGraph(params, unversionedTargetGraph));
       }
-      transport = new TZlibTransport(transport);
-      TProtocol protocol = new TTupleProtocol(transport);
+    } catch (VersionException e) {
+      throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
+    }
 
-      try {
-        if (loading) {
-          DistributedBuildState state = DistributedBuildState.load(protocol);
-          BuckConfig buckConfig = state.createBuckConfig(filesystem);
-          params.getBuckEventBus().post(
-              ConsoleEvent.info(
-                  "Done loading state. Aliases: %s",
-                  buckConfig.getAliases()));
-        } else {
-          BuckConfig buckConfig = params.getBuckConfig();
-          BuildJobState jobState = DistributedBuildState.dump(buckConfig);
-          jobState.write(protocol);
-          transport.flush();
+    TargetGraphAndBuildTargets targetGraphForLocalBuild =
+        ActionAndTargetGraphs.getTargetGraphForLocalBuild(
+            unversionedTargetGraph, versionedTargetGraph);
+    checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
+    ActionGraphAndBuilder actionGraph =
+        createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
+
+    ImmutableSet<BuildTarget> buildTargets =
+        getBuildTargets(params, actionGraph, targetGraphForLocalBuild, justBuildTarget);
+
+    ActionAndTargetGraphs actionAndTargetGraphs =
+        ActionAndTargetGraphs.builder()
+            .setUnversionedTargetGraph(unversionedTargetGraph)
+            .setVersionedTargetGraph(versionedTargetGraph)
+            .setActionGraphAndBuilder(actionGraph)
+            .build();
+
+    return ImmutableGraphsAndBuildTargets.of(actionAndTargetGraphs, buildTargets);
+  }
+
+  private void checkSingleBuildTargetSpecifiedForOutBuildMode(
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets) {
+    // Ideally, we would error out of this before we build the entire graph, but it is possible
+    // that `getArguments().size()` is 1 but `targetGraphAndBuildTargets.getBuildTargets().size()`
+    // is greater than 1 if the lone argument is a wildcard build target that ends in "...".
+    // As such, we have to get the result of createTargetGraph() before we can do this check.
+    if (outputPathForSingleBuildTarget != null
+        && targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
+      throw new CommandLineException(
+          String.format(
+              "When using %s you must specify exactly one build target, but you specified %s",
+              OUT_LONG_ARG, targetGraphAndBuildTargets.getBuildTargets()));
+    }
+  }
+
+  private BuildRunResult executeBuildAndProcessResult(
+      CommandRunnerParams params, CommandThreadManager commandThreadManager) throws Exception {
+    ExitCode exitCode = ExitCode.SUCCESS;
+    GraphsAndBuildTargets graphsAndBuildTargets;
+    if (isUsingDistributedBuild()) {
+      return Objects.requireNonNull(getDistBuildCommandDelegate())
+          .executeBuildAndProcessResult(params, commandThreadManager, this);
+    } else {
+      try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
+        Optional<ThriftRuleKeyLogger> optionalRuleKeyLogger = Optional.ofNullable(ruleKeyLogger);
+        graphsAndBuildTargets =
+            createGraphsAndTargets(
+                params, commandThreadManager.getListeningExecutorService(), optionalRuleKeyLogger);
+        try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+            getDefaultRuleKeyCacheScope(
+                params, graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder())) {
+          exitCode =
+              executeLocalBuild(
+                  params,
+                  graphsAndBuildTargets,
+                  commandThreadManager.getWeightedListeningExecutorService(),
+                  optionalRuleKeyLogger,
+                  new NoOpRemoteBuildRuleCompletionWaiter(),
+                  false,
+                  Optional.empty(),
+                  ruleKeyCacheScope,
+                  lastBuild);
+          if (exitCode == ExitCode.SUCCESS) {
+            exitCode = processSuccessfulBuild(params, graphsAndBuildTargets, ruleKeyCacheScope);
+          }
         }
-      } catch (TException e) {
-        throw new RuntimeException(e);
-      } finally {
-        transport.close();
       }
     }
 
-    // TODO(ruibm): Add here distributed build magic.
-    DistributedBuild build = new DistributedBuild(
-        new DistBuildService(new DistBuildConfig(params.getBuckConfig()), params.getBuckEventBus())
-    );
-    return build.executeAndPrintFailuresToEventBus();
+    return ImmutableBuildRunResult.of(exitCode, graphsAndBuildTargets.getBuildTargets());
+  }
+
+  /**
+   * Create a {@link ThriftRuleKeyLogger} depending on whether {@link BuildCommand#ruleKeyLogPath}
+   * is set or not
+   */
+  private Optional<ThriftRuleKeyLogger> createRuleKeyLogger() throws IOException {
+    if (ruleKeyLogPath == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(ThriftRuleKeyLogger.create(Paths.get(ruleKeyLogPath)));
+    }
+  }
+
+  ExitCode processSuccessfulBuild(
+      CommandRunnerParams params,
+      GraphsAndBuildTargets graphsAndBuildTargets,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
+      throws IOException {
+    if (params.getBuckConfig().createBuildOutputSymLinksEnabled()) {
+      symLinkBuildResults(params, graphsAndBuildTargets);
+    }
+    ActionAndTargetGraphs graphs = graphsAndBuildTargets.getGraphs();
+    if (showOutput || showFullOutput || showJsonOutput || showFullJsonOutput || showRuleKey) {
+      showOutputs(params, graphsAndBuildTargets, ruleKeyCacheScope);
+    }
+    if (outputPathForSingleBuildTarget != null) {
+      BuildTarget loneTarget =
+          Iterables.getOnlyElement(graphs.getTargetGraphForLocalBuild().getBuildTargets());
+      BuildRule rule =
+          graphs.getActionGraphAndBuilder().getActionGraphBuilder().getRule(loneTarget);
+      if (!rule.outputFileCanBeCopied()) {
+        params
+            .getConsole()
+            .printErrorText(
+                String.format(
+                    "%s does not have an output that is compatible with `buck build --out`",
+                    loneTarget));
+        return ExitCode.BUILD_ERROR;
+      } else {
+        SourcePath output =
+            Preconditions.checkNotNull(
+                rule.getSourcePathToOutput(),
+                "%s specified a build target that does not have an output file: %s",
+                OUT_LONG_ARG,
+                loneTarget);
+
+        ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
+        SourcePathResolver pathResolver =
+            DefaultSourcePathResolver.from(
+                new SourcePathRuleFinder(
+                    graphs.getActionGraphAndBuilder().getActionGraphBuilder()));
+
+        Path outputPath;
+        if (Files.isDirectory(outputPathForSingleBuildTarget)) {
+          Path outputDir = outputPathForSingleBuildTarget.normalize();
+          Path outputFilename = pathResolver.getAbsolutePath(output).getFileName();
+          outputPath = outputDir.resolve(outputFilename);
+        } else {
+          outputPath = outputPathForSingleBuildTarget;
+        }
+
+        projectFilesystem.copyFile(pathResolver.getAbsolutePath(output), outputPath);
+      }
+    }
+    return ExitCode.SUCCESS;
+  }
+
+  private void symLinkBuildRuleResult(
+      SourcePathResolver pathResolver,
+      BuckConfig buckConfig,
+      Path lastOutputDirPath,
+      BuildRule rule)
+      throws IOException {
+    Optional<Path> outputPath =
+        TargetsCommand.getUserFacingOutputPath(
+            pathResolver, rule, buckConfig.getBuckOutCompatLink());
+    if (outputPath.isPresent()) {
+      Path absolutePath = outputPath.get();
+      Path destPath = lastOutputDirPath.relativize(absolutePath);
+      Path linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
+      // Don't overwrite existing symlink in case there are duplicate names.
+      if (!Files.exists(linkPath, LinkOption.NOFOLLOW_LINKS)) {
+        ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
+        projectFilesystem.createSymLink(linkPath, destPath, false);
+      }
+    }
+  }
+
+  private void symLinkBuildResults(
+      CommandRunnerParams params, GraphsAndBuildTargets graphsAndBuildTargets) throws IOException {
+    // Clean up last buck-out/last.
+    Path lastOutputDirPath =
+        params.getCell().getFilesystem().getBuckPaths().getLastOutputDir().toAbsolutePath();
+    MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
+    Files.createDirectories(lastOutputDirPath);
+
+    ActionGraphBuilder graphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
+      BuildRule rule = graphBuilder.requireRule(buildTarget);
+      // If it's an apple bundle, we'd like to also link the dSYM file over here.
+      if (rule instanceof AppleBundle) {
+        AppleBundle bundle = (AppleBundle) rule;
+        Optional<AppleDsym> dsym = bundle.getAppleDsym();
+        if (dsym.isPresent()) {
+          symLinkBuildRuleResult(
+              pathResolver, params.getBuckConfig(), lastOutputDirPath, dsym.get());
+        }
+      }
+      symLinkBuildRuleResult(pathResolver, params.getBuckConfig(), lastOutputDirPath, rule);
+    }
   }
 
   private void showOutputs(
       CommandRunnerParams params,
-      ActionGraphAndResolver actionGraphAndResolver) {
-    params.getConsole().getStdOut().println("The outputs are:");
-    for (BuildTarget buildTarget : buildTargets) {
-      try {
-        BuildRule rule = actionGraphAndResolver.getResolver().requireRule(buildTarget);
-        Optional<Path> outputPath = TargetsCommand.getUserFacingOutputPath(rule);
-        params.getConsole().getStdOut().printf(
-            "%s %s\n",
-            rule.getFullyQualifiedName(),
-            outputPath.transform(Functions.toStringFunction()).or(""));
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
+      GraphsAndBuildTargets graphsAndBuildTargets,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
+      throws IOException {
+    TreeMap<String, String> sortedJsonOutputs = new TreeMap<String, String>();
+    Optional<DefaultRuleKeyFactory> ruleKeyFactory = Optional.empty();
+    ActionGraphBuilder graphBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    if (showRuleKey) {
+      RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(params.getRuleKeyConfiguration());
+      ruleKeyFactory =
+          Optional.of(
+              new DefaultRuleKeyFactory(
+                  fieldLoader,
+                  params.getFileHashCache(),
+                  pathResolver,
+                  ruleFinder,
+                  ruleKeyCacheScope.getCache(),
+                  Optional.empty()));
+    }
+    for (BuildTarget buildTarget : graphsAndBuildTargets.getBuildTargets()) {
+      BuildRule rule = graphBuilder.requireRule(buildTarget);
+      Optional<Path> outputPath =
+          TargetsCommand.getUserFacingOutputPath(
+                  pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
+              .map(
+                  path ->
+                      showFullOutput || showFullJsonOutput
+                          ? path
+                          : params.getCell().getFilesystem().relativize(path));
+
+      params.getConsole().getStdOut().flush();
+      if (showJsonOutput || showFullJsonOutput) {
+        sortedJsonOutputs.put(
+            rule.getFullyQualifiedName(), outputPath.map(Object::toString).orElse(""));
+      } else {
+        params
+            .getConsole()
+            .getStdOut()
+            .printf(
+                "%s%s%s\n",
+                rule.getFullyQualifiedName(),
+                showRuleKey ? " " + ruleKeyFactory.get().build(rule) : "",
+                showOutput || showFullOutput
+                    ? " " + outputPath.map(Object::toString).orElse("")
+                    : "");
       }
+    }
+
+    if (showJsonOutput || showFullJsonOutput) {
+      // Print the build rule information as JSON.
+      StringWriter stringWriter = new StringWriter();
+      ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(stringWriter, sortedJsonOutputs);
+      String output = stringWriter.getBuffer().toString();
+      params.getConsole().getStdOut().println(output);
     }
   }
 
-  @Nullable
-  public ActionGraphAndResolver createActionGraphAndResolver(
-      CommandRunnerParams params,
-      ListeningExecutorService executor)
-      throws IOException, InterruptedException {
-    if (getArguments().isEmpty()) {
-      params.getConsole().printBuildFailure("Must specify at least one build target.");
-
-      // If there are aliases defined in .buckconfig, suggest that the user
-      // build one of them. We show the user only the first 10 aliases.
-      ImmutableSet<String> aliases = params.getBuckConfig().getAliases();
-      if (!aliases.isEmpty()) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(String.format(
-            "Try building one of the following targets:\n%s",
-            Joiner.on(' ').join(Iterators.limit(aliases.iterator(), 10)))));
-      }
-      return null;
-    }
-
+  private TargetGraphAndBuildTargets createUnversionedTargetGraph(
+      CommandRunnerParams params, ListeningExecutorService executor)
+      throws IOException, InterruptedException, ActionGraphCreationException {
     // Parse the build files to create a ActionGraph.
-    ActionGraphAndResolver actionGraphAndResolver;
+    ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     try {
-      TargetGraphAndBuildTargets result = params.getParser()
-          .buildTargetGraphForTargetNodeSpecs(
-              params.getBuckEventBus(),
+      return params
+          .getParser()
+          .buildTargetGraphWithoutConfigurationTargets(
               params.getCell(),
               getEnableParserProfiling(),
               executor,
               parseArgumentsAsTargetNodeSpecs(
-                  params.getBuckConfig(),
-                  getArguments()),
-              /* ignoreBuckAutodepsFiles */ false,
-              Parser.ApplyDefaultFlavorsMode.ENABLED);
-      buildTargets = result.getBuildTargets();
-      buildTargetsHaveBeenCalculated = true;
-      actionGraphAndResolver = Preconditions.checkNotNull(
-          params.getActionGraphCache().getActionGraph(
-              params.getBuckEventBus(),
-              BuildIdSampler.apply(
-                  params.getBuckConfig().getActionGraphCacheCheckSampleRate(),
-                  params.getBuckEventBus().getBuildId()),
-              result.getTargetGraph(),
-              params.getBuckConfig().getKeySeed()));
-    } catch (BuildTargetException | BuildFileParseException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return null;
+                  params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments()),
+              getExcludeIncompatibleTargets(),
+              parserConfig.getDefaultFlavorsMode());
+    } catch (BuildTargetException e) {
+      throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
+    }
+  }
+
+  private static ActionGraphAndBuilder createActionGraphAndResolver(
+      CommandRunnerParams params,
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
+    return params
+        .getActionGraphProvider()
+        .getActionGraph(
+            new DefaultTargetNodeToBuildRuleTransformer(),
+            targetGraphAndBuildTargets.getTargetGraph(),
+            ruleKeyLogger);
+  }
+
+  private static ImmutableSet<BuildTarget> getBuildTargets(
+      CommandRunnerParams params,
+      ActionGraphAndBuilder actionGraphAndBuilder,
+      TargetGraphAndBuildTargets targetGraph,
+      @Nullable String justBuildTarget)
+      throws ActionGraphCreationException {
+    ImmutableSet<BuildTarget> buildTargets = targetGraph.getBuildTargets();
+    if (justBuildTarget == null) {
+      return buildTargets;
     }
 
     // If the user specified an explicit build target, use that.
-    if (justBuildTarget != null) {
-      BuildTarget explicitTarget = BuildTargetParser.INSTANCE.parse(
-          justBuildTarget,
-          BuildTargetPatternParser.fullyQualified(),
-          params.getCell().getCellRoots());
-      Iterable<BuildRule> actionGraphRules =
-          Preconditions.checkNotNull(actionGraphAndResolver.getActionGraph().getNodes());
-      ImmutableSet<BuildTarget> actionGraphTargets =
-          ImmutableSet.copyOf(Iterables.transform(actionGraphRules, HasBuildTarget.TO_TARGET));
-      if (!actionGraphTargets.contains(explicitTarget)) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            "Targets specified via `--just-build` must be a subset of action graph."));
-        return null;
-      }
-      buildTargets = ImmutableSet.of(explicitTarget);
+    BuildTarget explicitTarget =
+        BuildTargetParser.INSTANCE.parseFullyQualified(
+            params.getCell().getCellPathResolver(), justBuildTarget);
+    Iterable<BuildRule> actionGraphRules =
+        Objects.requireNonNull(actionGraphAndBuilder.getActionGraph().getNodes());
+    ImmutableSet<BuildTarget> actionGraphTargets =
+        ImmutableSet.copyOf(Iterables.transform(actionGraphRules, BuildRule::getBuildTarget));
+    if (!actionGraphTargets.contains(explicitTarget)) {
+      throw new ActionGraphCreationException(
+          "Targets specified via `--just-build` must be a subset of action graph.");
     }
-
-    return actionGraphAndResolver;
+    return ImmutableSet.of(explicitTarget);
   }
 
-  protected int executeLocalBuild(
+  protected ExitCode executeLocalBuild(
       CommandRunnerParams params,
-      ActionGraphAndResolver actionGraphAndResolver,
-      WeightedListeningExecutorService executor)
-      throws IOException, InterruptedException {
+      GraphsAndBuildTargets graphsAndBuildTargets,
+      WeightedListeningExecutorService executor,
+      Optional<ThriftRuleKeyLogger> ruleKeyLogger,
+      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
+      boolean isDownloadHeavyBuild,
+      Optional<CountDownLatch> initializeBuildLatch,
+      RuleKeyCacheScope<RuleKey> ruleKeyCacheScope,
+      AtomicReference<Build> buildReference)
+      throws Exception {
 
-    ArtifactCache artifactCache = params.getArtifactCache();
-    if (isArtifactCacheDisabled()) {
-      artifactCache = new NoopArtifactCache();
-    }
-
-    try (Build build = createBuild(
-        params.getBuckConfig(),
-        actionGraphAndResolver.getActionGraph(),
-        actionGraphAndResolver.getResolver(),
-        params.getAndroidPlatformTargetSupplier(),
-        new CachingBuildEngine(
+    ActionGraphAndBuilder actionGraphAndBuilder =
+        graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
+    LocalBuildExecutor builder =
+        new LocalBuildExecutor(
+            params.createBuilderArgs(),
+            getExecutionContext(),
+            actionGraphAndBuilder,
+            new LocalCachingBuildEngineDelegate(params.getFileHashCache()),
             executor,
-            params.getFileHashCache(),
-            getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
-            params.getBuckConfig().getDependencySchedulingOrder(),
-            params.getBuckConfig().getBuildDepFiles(),
-            params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-            params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
-            params.getObjectMapper(),
-            actionGraphAndResolver.getResolver(),
-            Preconditions.checkNotNull(
-                params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)),
-            params.getBuckConfig().getKeySeed()),
-        artifactCache,
-        params.getConsole(),
-        params.getBuckEventBus(),
-        Optional.<TargetDevice>absent(),
-        params.getPlatform(),
-        params.getEnvironment(),
-        params.getObjectMapper(),
-        params.getClock(),
-        Optional.<AdbOptions>absent(),
-        Optional.<TargetDeviceOptions>absent(),
-        params.getExecutors())) {
-      lastBuild = build;
-      return build.executeAndPrintFailuresToEventBus(
-          buildTargets,
-          isKeepGoing(),
-          params.getBuckEventBus(),
-          params.getConsole(),
-          getPathToBuildReport(params.getBuckConfig()));
+            isKeepGoing(),
+            isUsingDistributedBuild(),
+            isDownloadHeavyBuild,
+            ruleKeyCacheScope,
+            getBuildEngineMode(),
+            ruleKeyLogger,
+            remoteBuildRuleCompletionWaiter,
+            params.getMetadataProvider());
+
+    // TODO(buck_team): use try-with-resources instead
+    try {
+      buildReference.set(builder.getBuild());
+      // TODO(alisdair): ensure that all Stampede local builds re-use same calculator
+      localRuleKeyCalculator.set(builder.getCachingBuildEngine().getRuleKeyCalculator());
+
+      if (initializeBuildLatch.isPresent()) {
+        // Signal to other threads that lastBuild has now been set.
+        initializeBuildLatch.get().countDown();
+      }
+
+      Iterable<BuildTarget> targets =
+          FluentIterable.concat(
+              graphsAndBuildTargets.getBuildTargets(),
+              getAdditionalTargetsToBuild(graphsAndBuildTargets));
+
+      return builder.buildTargets(targets, getPathToBuildReport(params.getBuckConfig()));
+    } finally {
+      builder.shutdown();
     }
+  }
+
+  RuleKeyCacheScope<RuleKey> getDefaultRuleKeyCacheScope(
+      CommandRunnerParams params, ActionGraphAndBuilder actionGraphAndBuilder) {
+    return getDefaultRuleKeyCacheScope(
+        params,
+        new RuleKeyCacheRecycler.SettingsAffectingCache(
+            params.getBuckConfig().getKeySeed(), actionGraphAndBuilder.getActionGraph()));
+  }
+
+  @Override
+  protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    return super.getExecutionContextBuilder(params)
+        .setTargetDevice(Optional.empty())
+        .setCodeCoverageEnabled(isCodeCoverageEnabled())
+        .setDebugEnabled(isDebugEnabled())
+        .setShouldReportAbsolutePaths(shouldReportAbsolutePaths());
+  }
+
+  @SuppressWarnings("unused")
+  protected Iterable<BuildTarget> getAdditionalTargetsToBuild(
+      GraphsAndBuildTargets graphsAndBuildTargets) {
+    return ImmutableList.of();
   }
 
   @Override
@@ -540,14 +789,13 @@ public class BuildCommand extends AbstractCommand {
     return false;
   }
 
-  Build getBuild() {
-    Preconditions.checkNotNull(lastBuild);
-    return lastBuild;
+  @Override
+  public boolean isSourceControlStatsGatheringEnabled() {
+    return true;
   }
 
-  public ImmutableList<BuildTarget> getBuildTargets() {
-    Preconditions.checkState(buildTargetsHaveBeenCalculated);
-    return ImmutableList.copyOf(buildTargets);
+  Build getBuild() {
+    return Objects.requireNonNull(lastBuild.get());
   }
 
   @Override
@@ -556,23 +804,42 @@ public class BuildCommand extends AbstractCommand {
   }
 
   @Override
-  protected ImmutableList<String> getOptions() {
-    ImmutableList.Builder<String> builder = ImmutableList.builder();
-    builder.addAll(super.getOptions());
-    if (keepGoing) {
-      builder.add(KEEP_GOING_LONG_ARG);
+  public Iterable<BuckEventListener> getEventListeners(
+      Map<ExecutorPool, ListeningExecutorService> executorPool,
+      ScheduledExecutorService scheduledExecutorService) {
+    if (isUsingDistributedBuild()) {
+      return Objects.requireNonNull(getDistBuildCommandDelegate()).getEventListeners();
+    } else {
+      return ImmutableList.of();
     }
-    if (buildReport != null) {
-      builder.add(BUILD_REPORT_LONG_ARG);
-      builder.add(buildReport.toString());
+  }
+
+  public static class ActionGraphCreationException extends Exception {
+    public ActionGraphCreationException(String message) {
+      super(message);
     }
-    if (justBuildTarget != null) {
-      builder.add(JUST_BUILD_LONG_ARG);
-      builder.add(justBuildTarget);
-    }
-    if (shouldReportAbsolutePaths) {
-      builder.add(REPORT_ABSOLUTE_PATHS);
-    }
-    return builder.build();
+  }
+
+  @Override
+  public boolean performsBuild() {
+    return true;
+  }
+
+  @Immutable(builder = false, copy = false)
+  interface GraphsAndBuildTargets {
+    @Value.Parameter
+    ActionAndTargetGraphs getGraphs();
+
+    @Value.Parameter
+    ImmutableSet<BuildTarget> getBuildTargets();
+  }
+
+  @Immutable(builder = false, copy = false)
+  interface BuildRunResult {
+    @Value.Parameter
+    ExitCode getExitCode();
+
+    @Value.Parameter
+    ImmutableSet<BuildTarget> getBuildTargets();
   }
 }

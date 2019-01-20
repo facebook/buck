@@ -16,55 +16,65 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
-
-import com.facebook.buck.maven.AetherUtil;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Flavored;
-import com.facebook.buck.model.HasTests;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.arg.HasProvidedDeps;
+import com.facebook.buck.core.description.arg.HasSrcs;
+import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.HasSources;
+import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.maven.aether.AetherUtil;
+import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-public class JavaLibraryDescription implements Description<JavaLibraryDescription.Arg>, Flavored {
+public class JavaLibraryDescription
+    implements DescriptionWithTargetGraph<JavaLibraryDescriptionArg>,
+        Flavored,
+        VersionPropagator<JavaLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<JavaLibraryDescriptionArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("java_library");
-  public static final ImmutableSet<Flavor> SUPPORTED_FLAVORS = ImmutableSet.of(
-      JavaLibrary.SRC_JAR,
-      JavaLibrary.MAVEN_JAR);
+  private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
+      ImmutableSet.of(
+          Javadoc.DOC_JAR,
+          JavaLibrary.SRC_JAR,
+          JavaLibrary.MAVEN_JAR,
+          JavaAbis.CLASS_ABI_FLAVOR,
+          JavaAbis.SOURCE_ABI_FLAVOR,
+          JavaAbis.SOURCE_ONLY_ABI_FLAVOR,
+          JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR);
 
-  @VisibleForTesting
-  final JavacOptions defaultOptions;
+  private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
 
-  public JavaLibraryDescription(JavacOptions defaultOptions) {
-    this.defaultOptions = defaultOptions;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public JavaLibraryDescription(
+      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+    this.javaBuckConfig = javaBuckConfig;
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
@@ -73,191 +83,182 @@ public class JavaLibraryDescription implements Description<JavaLibraryDescriptio
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<JavaLibraryDescriptionArg> getConstructorArgType() {
+    return JavaLibraryDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> BuildRule createBuildRule(
-      TargetGraph targetGraph,
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    BuildTarget target = params.getBuildTarget();
-
+      JavaLibraryDescriptionArg args) {
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
 
-    ImmutableSortedSet<Flavor> flavors = target.getFlavors();
-    BuildRuleParams paramsWithMavenFlavor = null;
+    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
+    if (flavors.contains(Javadoc.DOC_JAR)) {
+      BuildTarget unflavored = buildTarget.withoutFlavors();
+      BuildRule baseLibrary = graphBuilder.requireRule(unflavored);
+
+      JarShape shape =
+          buildTarget.getFlavors().contains(JavaLibrary.MAVEN_JAR)
+              ? JarShape.MAVEN
+              : JarShape.SINGLE;
+
+      JarShape.Summary summary = shape.gatherDeps(baseLibrary);
+      ImmutableSet<SourcePath> sources =
+          summary
+              .getPackagedRules()
+              .stream()
+              .filter(HasSources.class::isInstance)
+              .map(rule -> ((HasSources) rule).getSources())
+              .flatMap(Collection::stream)
+              .collect(ImmutableSet.toImmutableSet());
+
+      // In theory, the only deps we need are the ones that contribute to the sourcepaths. However,
+      // javadoc wants to have classes being documented have all their deps be available somewhere.
+      // Ideally, we'd not build everything, but then we're not able to document any classes that
+      // rely on auto-generated classes, such as those created by the Immutables library. Oh well.
+      // Might as well add them as deps. *sigh*
+      ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
+      // Sourcepath deps
+      deps.addAll(ruleFinder.filterBuildRuleInputs(sources));
+      // Classpath deps
+      deps.add(baseLibrary);
+      deps.addAll(
+          summary
+              .getClasspath()
+              .stream()
+              .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
+              .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
+              .iterator());
+      BuildRuleParams emptyParams = params.withDeclaredDeps(deps.build()).withoutExtraDeps();
+
+      return new Javadoc(
+          buildTarget,
+          projectFilesystem,
+          emptyParams,
+          args.getMavenCoords(),
+          args.getMavenPomTemplate(),
+          summary.getMavenDeps(),
+          sources);
+    }
+
+    BuildTarget buildTargetWithMavenFlavor = buildTarget;
     if (flavors.contains(JavaLibrary.MAVEN_JAR)) {
-      paramsWithMavenFlavor = params;
 
       // Maven rules will depend upon their vanilla versions, so the latter have to be constructed
       // without the maven flavor to prevent output-path conflict
-      params = params.copyWithBuildTarget(
-          params.getBuildTarget().withoutFlavors(ImmutableSet.of(JavaLibrary.MAVEN_JAR)));
+      buildTarget = buildTarget.withoutFlavors(JavaLibrary.MAVEN_JAR);
     }
 
     if (flavors.contains(JavaLibrary.SRC_JAR)) {
-      args.mavenCoords = args.mavenCoords.transform(
-          new Function<String, String>() {
-            @Override
-            public String apply(String input) {
-              return AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES);
-            }
-          });
+      Optional<String> mavenCoords =
+          args.getMavenCoords()
+              .map(input -> AetherUtil.addClassifier(input, AetherUtil.CLASSIFIER_SOURCES));
 
       if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
         return new JavaSourceJar(
-            params,
-            pathResolver,
-            args.srcs.get(),
-            args.mavenCoords);
+            buildTarget, projectFilesystem, params, args.getSrcs(), mavenCoords);
       } else {
         return MavenUberJar.SourceJar.create(
-            Preconditions.checkNotNull(paramsWithMavenFlavor),
-            pathResolver,
-            args.srcs.get(),
-            args.mavenCoords);
+            buildTargetWithMavenFlavor,
+            projectFilesystem,
+            params,
+            args.getSrcs(),
+            mavenCoords,
+            args.getMavenPomTemplate());
       }
     }
 
-    JavacOptions javacOptions = JavacOptionsFactory.create(
-        defaultOptions,
-        params,
-        resolver,
-        pathResolver,
-        args
-    );
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(
+            context
+                .getToolchainProvider()
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            graphBuilder,
+            args);
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    DefaultJavaLibraryRules defaultJavaLibraryRules =
+        DefaultJavaLibrary.rulesBuilder(
+                buildTarget,
+                projectFilesystem,
+                context.getToolchainProvider(),
+                params,
+                graphBuilder,
+                context.getCellPathResolver(),
+                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
+                javaBuckConfig,
+                args)
+            .setJavacOptions(javacOptions)
+            .setToolchainProvider(context.getToolchainProvider())
+            .build();
 
-    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
-    DefaultJavaLibrary defaultJavaLibrary =
-        resolver.addToIndex(
-            new DefaultJavaLibrary(
-                params.appendExtraDeps(
-                    Iterables.concat(
-                        BuildRules.getExportedRules(
-                            Iterables.concat(
-                                params.getDeclaredDeps().get(),
-                                exportedDeps,
-                                resolver.getAllRules(args.providedDeps.get()))),
-                        pathResolver.filterBuildRuleInputs(
-                            javacOptions.getInputs(pathResolver)))),
-                pathResolver,
-                args.srcs.get(),
-                validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources.get()),
-                javacOptions.getGeneratedSourceFolderName(),
-                args.proguardConfig.transform(
-                    SourcePaths.toSourcePath(params.getProjectFilesystem())),
-                args.postprocessClassesCommands.get(),
-                exportedDeps,
-                resolver.getAllRules(args.providedDeps.get()),
-                new BuildTargetSourcePath(abiJarTarget),
-                javacOptions.trackClassUsage(),
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-                args.resourcesRoot,
-                args.mavenCoords,
-                args.tests.get()));
+    if (JavaAbis.isAbiTarget(buildTarget)) {
+      return defaultJavaLibraryRules.buildAbi();
+    }
 
-    resolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
-            pathResolver,
-            params,
-            new BuildTargetSourcePath(defaultJavaLibrary.getBuildTarget())));
-
-    addGwtModule(
-        resolver,
-        pathResolver,
-        params,
-        args);
+    DefaultJavaLibrary defaultJavaLibrary = defaultJavaLibraryRules.buildLibrary();
 
     if (!flavors.contains(JavaLibrary.MAVEN_JAR)) {
       return defaultJavaLibrary;
     } else {
+      graphBuilder.addToIndex(defaultJavaLibrary);
       return MavenUberJar.create(
           defaultJavaLibrary,
-          Preconditions.checkNotNull(paramsWithMavenFlavor),
-          pathResolver,
-          args.mavenCoords);
+          buildTargetWithMavenFlavor,
+          projectFilesystem,
+          params,
+          args.getMavenCoords(),
+          args.getMavenPomTemplate());
     }
   }
 
-  /**
-   * Creates a {@link BuildRule} with the {@link JavaLibrary#GWT_MODULE_FLAVOR}, if appropriate.
-   * <p>
-   * If {@code arg.srcs} or {@code arg.resources} is non-empty, then the return value will not be
-   * absent.
-   */
-  @VisibleForTesting
-  static Optional<GwtModule> addGwtModule(
-      BuildRuleResolver resolver,
-      SourcePathResolver pathResolver,
-      BuildRuleParams javaLibraryParams,
-      Arg arg) {
-    BuildTarget libraryTarget = javaLibraryParams.getBuildTarget();
-
-    if (arg.srcs.get().isEmpty() &&
-        arg.resources.get().isEmpty() &&
-        !libraryTarget.isFlavored()) {
-      return Optional.absent();
-    }
-
-    BuildTarget gwtModuleBuildTarget = BuildTarget.of(
-        libraryTarget.getUnflavoredBuildTarget(),
-        ImmutableSet.of(JavaLibrary.GWT_MODULE_FLAVOR));
-    ImmutableSortedSet<SourcePath> filesForGwtModule = ImmutableSortedSet
-        .<SourcePath>naturalOrder()
-        .addAll(arg.srcs.get())
-        .addAll(arg.resources.get())
-        .build();
-
-    // If any of the srcs or resources are BuildTargetSourcePaths, then their respective BuildRules
-    // must be included as deps.
-    ImmutableSortedSet<BuildRule> deps =
-        ImmutableSortedSet.copyOf(pathResolver.filterBuildRuleInputs(filesForGwtModule));
-    GwtModule gwtModule = new GwtModule(
-        javaLibraryParams.copyWithChanges(
-            gwtModuleBuildTarget,
-            Suppliers.ofInstance(deps),
-            /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of())),
-        pathResolver,
-        filesForGwtModule);
-    resolver.addToIndex(gwtModule);
-    return Optional.of(gwtModule);
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      JavaLibraryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends JvmLibraryArg implements HasTests {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableSortedSet<SourcePath>> resources;
+  public interface CoreArg
+      extends JvmLibraryArg, HasDeclaredDeps, HasProvidedDeps, HasSrcs, HasTests {
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getResources();
 
-    public Optional<Path> proguardConfig;
-    public Optional<ImmutableList<String>> postprocessClassesCommands;
+    Optional<SourcePath> getProguardConfig();
+
+    ImmutableList<String> getPostprocessClassesCommands();
 
     @Hint(isInput = false)
-    public Optional<Path> resourcesRoot;
-    public Optional<String> mavenCoords;
+    Optional<Path> getResourcesRoot();
 
-    public Optional<Boolean> autodeps;
-    public Optional<ImmutableSortedSet<String>> generatedSymbols;
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    Optional<SourcePath> getUnbundledResourcesRoot();
 
-    @Hint(isDep = false) public Optional<ImmutableSortedSet<BuildTarget>> tests;
+    Optional<SourcePath> getManifestFile();
 
-    @Override
-    public ImmutableSortedSet<BuildTarget> getTests() {
-      return tests.get();
-    }
+    Optional<String> getMavenCoords();
+
+    Optional<SourcePath> getMavenPomTemplate();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getExportedDeps();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getSourceOnlyAbiDeps();
   }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractJavaLibraryDescriptionArg extends CoreArg {}
 }

@@ -1,0 +1,12 @@
+scala_library(
+    name = "foo",
+    srcs = glob(["*.scala"]),
+    maven_coords = "com.example:foo:1.0",
+    resources = [
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

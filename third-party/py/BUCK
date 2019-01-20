@@ -1,0 +1,19 @@
+load("//tools/build_rules:file_alias.bzl", "file_alias")
+
+python_library(
+    name = "typing",
+    srcs = {"typing.py": "typing/python2/typing.py"},
+    base_module = "",
+    visibility = ["PUBLIC"],
+)
+
+zip_file(
+    name = "typing-archive",
+    srcs = [":typing.py"],
+    visibility = ["PUBLIC"],
+)
+
+file_alias(
+    name = "typing.py",
+    source = "typing/python2/typing.py",
+)

@@ -23,24 +23,25 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.ZipArchive;
+import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
+import com.facebook.buck.util.unarchive.ExistingFileMode;
+import com.facebook.buck.util.zip.OverwritingZipOutputStreamImpl;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
+import com.facebook.buck.util.zip.ZipConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
-
-import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
-import org.apache.commons.compress.archivers.zip.ZipFile;
-import org.apache.commons.compress.archivers.zip.ZipUtil;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -52,21 +53,26 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ZipFile;
+import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class ZipStepTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
 
   @Before
   public void setUp() {
-    filesystem = new ProjectFilesystem(tmp.getRoot());
+    filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
   }
 
   @Test
-  public void shouldCreateANewZipFileFromScratch() throws IOException {
+  public void shouldCreateANewZipFileFromScratch() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -75,22 +81,24 @@ public class ZipStepTest {
     Files.createFile(toZip.resolve("file2.txt"));
     Files.createFile(toZip.resolve("file3.txt"));
 
-    ZipStep step = new ZipStep(
-        filesystem,
-        Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
-        false,
-        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep/output.zip"),
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.DEFAULT,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file1.txt", "file2.txt", "file3.txt"), zip.getFileNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(
+          ImmutableSet.of("file1.txt", "file2.txt", "file3.txt"), zipArchive.getFileNames());
     }
   }
 
   @Test
-  public void willOnlyIncludeEntriesInThePathsArgumentIfAnyAreSet() throws IOException {
+  public void willOnlyIncludeEntriesInThePathsArgumentIfAnyAreSet() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -100,22 +108,23 @@ public class ZipStepTest {
     Files.createFile(toZip.resolve("file2.txt"));
     Files.createFile(toZip.resolve("file3.txt"));
 
-    ZipStep step = new ZipStep(
-        filesystem,
-        Paths.get("zipstep/output.zip"),
-        ImmutableSet.of(Paths.get("zipdir/file2.txt")),
-        false,
-        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep/output.zip"),
+            ImmutableSet.of(Paths.get("zipdir/file2.txt")),
+            false,
+            ZipCompressionLevel.DEFAULT,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file2.txt"), zip.getFileNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("file2.txt"), zipArchive.getFileNames());
     }
   }
 
   @Test
-  public void willRecurseIntoSubdirectories() throws IOException {
+  public void willRecurseIntoSubdirectories() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -124,28 +133,29 @@ public class ZipStepTest {
     Files.createDirectories(toZip.resolve("child"));
     Files.createFile(toZip.resolve("child/file2.txt"));
 
-    ZipStep step = new ZipStep(
-        filesystem,
-        Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
-        false,
-        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep/output.zip"),
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.DEFAULT,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Make sure we have the right attributes.
-    try (ZipFile zip = new ZipFile(out.toFile())) {
-      ZipArchiveEntry entry = zip.getEntry("child/");
-      assertNotEquals(entry.getUnixMode() & ProjectFilesystem.S_IFDIR, 0);
+    try (ZipFile zipFile = new ZipFile(out.toFile())) {
+      ZipArchiveEntry entry = zipFile.getEntry("child/");
+      assertNotEquals(entry.getUnixMode() & MostFiles.S_IFDIR, 0);
     }
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file1.txt", "child/file2.txt"), zip.getFileNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("file1.txt", "child/file2.txt"), zipArchive.getFileNames());
     }
   }
 
   @Test
-  public void mustIncludeTheContentsOfFilesThatAreSymlinked() throws IOException {
+  public void mustIncludeTheContentsOfFilesThatAreSymlinked() throws Exception {
     // Symlinks on Windows are _hard_. Let's go shopping.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
@@ -156,53 +166,48 @@ public class ZipStepTest {
 
     Path toZip = tmp.newFolder("zipdir");
     Path path = toZip.resolve("file.txt");
-    Files.createSymbolicLink(path, target);
+    CreateSymlinksForTests.createSymLink(path, target);
 
-    ZipStep step = new ZipStep(
-        filesystem,
-        Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
-        false,
-        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep/output.zip"),
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.DEFAULT,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    // Make sure we have the right attributes.
-    try (ZipFile zip = new ZipFile(out.toFile())) {
-      ZipArchiveEntry entry = zip.getEntry("file.txt");
-      assertTrue(entry.isUnixSymlink());
-    }
-
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file.txt"), zip.getFileNames());
-      byte[] contents = zip.readFully("file.txt");
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("file.txt"), zipArchive.getFileNames());
+      byte[] contents = zipArchive.readFully("file.txt");
 
       assertArrayEquals("example content".getBytes(), contents);
     }
   }
 
   @Test
-  public void overwritingAnExistingZipFileIsAnError() throws IOException {
+  public void overwritingAnExistingZipFileIsAnError() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
-    try (Zip zip = new Zip(out, true)) {
-      zip.add("file1.txt", "");
+    try (ZipArchive zipArchive = new ZipArchive(out, true)) {
+      zipArchive.add("file1.txt", "");
     }
 
-
-    ZipStep step = new ZipStep(
-        filesystem,
-        Paths.get("zipstep"),
-        ImmutableSet.<Path>of(),
-        false,
-        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep"),
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.DEFAULT,
+            Paths.get("zipdir"));
     assertEquals(1, step.execute(TestExecutionContext.newInstance()).getExitCode());
   }
 
   @Test
-  public void shouldBeAbleToJunkPaths() throws IOException {
+  public void shouldBeAbleToJunkPaths() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -210,22 +215,23 @@ public class ZipStepTest {
     Files.createDirectories(toZip.resolve("child"));
     Files.createFile(toZip.resolve("child/file1.txt"));
 
-    ZipStep step = new ZipStep(
-        filesystem,
-        Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
-        true,
-        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep/output.zip"),
+            ImmutableSet.of(),
+            true,
+            ZipCompressionLevel.DEFAULT,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("file1.txt"), zip.getFileNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("file1.txt"), zipArchive.getFileNames());
     }
   }
 
   @Test
-  public void zipWithEmptyDir() throws IOException {
+  public void zipWithEmptyDir() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -233,17 +239,18 @@ public class ZipStepTest {
     tmp.newFolder("zipdir/foo/");
     tmp.newFolder("zipdir/bar/");
 
-    ZipStep step = new ZipStep(
-        filesystem,
-        Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
-        true,
-        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep/output.zip"),
+            ImmutableSet.of(),
+            true,
+            ZipCompressionLevel.DEFAULT,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (Zip zip = new Zip(out, false)) {
-      assertEquals(ImmutableSet.of("", "foo/", "bar/"), zip.getDirNames());
+    try (ZipArchive zipArchive = new ZipArchive(out, false)) {
+      assertEquals(ImmutableSet.of("", "foo/", "bar/"), zipArchive.getDirNames());
     }
 
     // Directories should be stored, not deflated as this sometimes causes issues
@@ -256,13 +263,12 @@ public class ZipStepTest {
   }
 
   /**
-   * Tests a couple bugs:
-   *     1) {@link com.facebook.buck.zip.OverwritingZipOutputStream} was writing uncompressed zip
-   *        entries incorrectly.
-   *     2) {@link ZipStep} wasn't setting the output size when writing uncompressed entries.
+   * Tests a couple bugs: 1) {@link OverwritingZipOutputStreamImpl} was writing uncompressed zip
+   * entries incorrectly. 2) {@link ZipStep} wasn't setting the output size when writing
+   * uncompressed entries.
    */
   @Test
-  public void minCompressionWritesCorrectZipFile() throws IOException {
+  public void minCompressionWritesCorrectZipFile() throws Exception {
     Path parent = tmp.newFolder("zipstep");
     Path out = parent.resolve("output.zip");
 
@@ -272,30 +278,31 @@ public class ZipStepTest {
     Files.write(toZip.resolve("file2.txt"), contents);
     Files.write(toZip.resolve("file3.txt"), contents);
 
-    ZipStep step = new ZipStep(
-        filesystem,
-        Paths.get("zipstep/output.zip"),
-        ImmutableSet.<Path>of(),
-        false,
-        ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            Paths.get("zipstep/output.zip"),
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.NONE,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Use apache's common-compress to parse the zip file, since it reads the central
     // directory and will verify it's valid.
-    try (ZipFile zip = new ZipFile(out.toFile())) {
-      Enumeration<ZipArchiveEntry> entries = zip.getEntries();
+    try (ZipFile zipFile = new ZipFile(out.toFile())) {
+      Enumeration<ZipArchiveEntry> entries = zipFile.getEntries();
       ZipArchiveEntry entry1 = entries.nextElement();
-      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry1)));
+      assertArrayEquals(contents, ByteStreams.toByteArray(zipFile.getInputStream(entry1)));
       ZipArchiveEntry entry2 = entries.nextElement();
-      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry2)));
+      assertArrayEquals(contents, ByteStreams.toByteArray(zipFile.getInputStream(entry2)));
       ZipArchiveEntry entry3 = entries.nextElement();
-      assertArrayEquals(contents, ByteStreams.toByteArray(zip.getInputStream(entry3)));
+      assertArrayEquals(contents, ByteStreams.toByteArray(zipFile.getInputStream(entry3)));
     }
   }
 
   @Test
-  public void timesAreSanitized() throws IOException {
+  public void timesAreSanitized() throws Exception {
     Path parent = tmp.newFolder("zipstep");
 
     // Create a zip file with a file and a directory.
@@ -303,13 +310,14 @@ public class ZipStepTest {
     Files.createDirectories(toZip.resolve("child"));
     Files.createFile(toZip.resolve("child/file.txt"));
     Path outputZip = parent.resolve("output.zip");
-    ZipStep step = new ZipStep(
-        filesystem,
-        outputZip,
-        ImmutableSet.<Path>of(),
-        false,
-        ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            outputZip,
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.DEFAULT,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
@@ -323,7 +331,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void zipMaintainsExecutablePermissions() throws IOException {
+  public void zipMaintainsExecutablePermissions() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     Path parent = tmp.newFolder("zipstep");
@@ -336,26 +344,32 @@ public class ZipStepTest {
             PosixFilePermission.OWNER_EXECUTE,
             PosixFilePermission.GROUP_READ,
             PosixFilePermission.OTHERS_READ);
-    Files.createFile(
-        file,
-        PosixFilePermissions.asFileAttribute(filePermissions));
+    Files.createFile(file, PosixFilePermissions.asFileAttribute(filePermissions));
     Path outputZip = parent.resolve("output.zip");
-    ZipStep step = new ZipStep(
-        filesystem,
-        outputZip,
-        ImmutableSet.<Path>of(),
-        false,
-        ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
-        Paths.get("zipdir"));
+    ZipStep step =
+        new ZipStep(
+            filesystem,
+            outputZip,
+            ImmutableSet.of(),
+            false,
+            ZipCompressionLevel.NONE,
+            Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     Path destination = tmp.newFolder("output");
-    Unzip.extractZipFile(outputZip, destination, Unzip.ExistingFileMode.OVERWRITE);
+
+    ArchiveFormat.ZIP
+        .getUnarchiver()
+        .extractArchive(
+            new DefaultProjectFilesystemFactory(),
+            outputZip,
+            destination,
+            ExistingFileMode.OVERWRITE);
     assertTrue(Files.isExecutable(destination.resolve("foo.sh")));
   }
 
   @Test
-  public void zipEntryOrderingIsFilesystemAgnostic() throws IOException {
+  public void zipEntryOrderingIsFilesystemAgnostic() throws Exception {
     Path output = Paths.get("output");
     Path zipdir = Paths.get("zipdir");
 
@@ -366,13 +380,7 @@ public class ZipStepTest {
     filesystem.touch(zipdir.resolve("file1"));
     filesystem.touch(zipdir.resolve("file2"));
     ZipStep step =
-        new ZipStep(
-            filesystem,
-            output,
-            ImmutableSet.<Path>of(),
-            false,
-            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
-            zipdir);
+        new ZipStep(filesystem, output, ImmutableSet.of(), false, ZipCompressionLevel.NONE, zipdir);
     assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries1 = getEntries(filesystem, output);
 
@@ -383,13 +391,7 @@ public class ZipStepTest {
     filesystem.touch(zipdir.resolve("file2"));
     filesystem.touch(zipdir.resolve("file1"));
     step =
-        new ZipStep(
-            filesystem,
-            output,
-            ImmutableSet.<Path>of(),
-            false,
-            ZipCompressionLevel.MIN_COMPRESSION_LEVEL,
-            zipdir);
+        new ZipStep(filesystem, output, ImmutableSet.of(), false, ZipCompressionLevel.NONE, zipdir);
     assertEquals(0, step.execute(context).getExitCode());
     ImmutableList<String> entries2 = getEntries(filesystem, output);
 
@@ -406,5 +408,4 @@ public class ZipStepTest {
     }
     return entries.build();
   }
-
 }

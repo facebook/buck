@@ -1,0 +1,19 @@
+cxx_library(
+    name = "lib",
+    exported_headers = ["lib.h"],
+)
+
+cxx_precompiled_header(
+    name = "pch",
+    src = "pch.h",
+    deps = [
+        ":lib",
+        "//deps_test/other/path:lib2",
+    ],
+)
+
+cxx_binary(
+    name = "bin",
+    srcs = ["bin.cpp"],
+    precompiled_header = ":pch",
+)

@@ -16,14 +16,18 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import java.util.Set;
 
-public class AppleResourceBuilder extends AbstractNodeBuilder<AppleResourceDescription.Arg> {
+public class AppleResourceBuilder
+    extends AbstractNodeBuilder<
+        AppleResourceDescriptionArg.Builder,
+        AppleResourceDescriptionArg,
+        AppleResourceDescription,
+        BuildRule> {
 
   protected AppleResourceBuilder(BuildTarget target) {
     super(new AppleResourceDescription(), target);
@@ -34,18 +38,17 @@ public class AppleResourceBuilder extends AbstractNodeBuilder<AppleResourceDescr
   }
 
   public AppleResourceBuilder setDirs(Set<SourcePath> dirs) {
-    arg.dirs = dirs;
+    getArgForPopulating().setDirs(dirs);
     return this;
   }
 
   public AppleResourceBuilder setFiles(Set<SourcePath> files) {
-    arg.files = files;
+    getArgForPopulating().setFiles(files);
     return this;
   }
 
-  public AppleResourceBuilder setVariants(Optional<Set<SourcePath>> variants) {
-    arg.variants = variants;
+  public AppleResourceBuilder setVariants(Set<SourcePath> variants) {
+    getArgForPopulating().setVariants(variants);
     return this;
   }
-
 }

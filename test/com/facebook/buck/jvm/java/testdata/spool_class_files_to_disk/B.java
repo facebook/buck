@@ -1,2 +1,1 @@
-public class B {
-}
+public class B {}

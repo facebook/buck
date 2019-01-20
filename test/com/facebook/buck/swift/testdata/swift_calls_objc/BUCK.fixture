@@ -1,0 +1,21 @@
+apple_binary(
+    name = "SwiftCallsObjC",
+    srcs = [
+        "main.swift",
+    ],
+    bridging_header = "bridging-header.h",
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    deps = [":Greeter"],
+)
+
+apple_library(
+    name = "Greeter",
+    srcs = [
+        "Greeter.m",
+    ],
+    headers = [
+        "Greeter.h",
+    ],
+)

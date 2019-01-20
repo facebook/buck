@@ -16,103 +16,290 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.nio.file.Path;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.function.Supplier;
+import java.util.logging.Level;
 
-/**
- * A java-specific "view" of BuckConfig.
- */
-public class JavaBuckConfig {
-  // Default combined source and target level.
-  public static final String TARGETED_JAVA_VERSION = "7";
+/** A java-specific "view" of BuckConfig. */
+public class JavaBuckConfig implements ConfigView<BuckConfig> {
+
+  public static final String SECTION = "java";
+  public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
+  public static final CommandTool DEFAULT_JAVA_TOOL =
+      new CommandTool.Builder().addArg("java").build();
+  static final JavaOptions DEFAULT_JAVA_OPTIONS =
+      JavaOptions.of(new ConstantToolProvider(DEFAULT_JAVA_TOOL));
+
   private final BuckConfig delegate;
+  private final Supplier<JavacSpec> javacSpecSupplier;
 
-  public JavaBuckConfig(BuckConfig delegate) {
+  // Interface for reflection-based ConfigView to instantiate this class.
+  public static JavaBuckConfig of(BuckConfig delegate) {
+    return new JavaBuckConfig(delegate);
+  }
+
+  private JavaBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
+    this.javacSpecSupplier =
+        MoreSuppliers.memoize(
+            () ->
+                JavacSpec.builder()
+                    .setJavacPath(getJavacPath())
+                    .setJavacJarPath(getJavacJarPath())
+                    .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
+                    .build());
+  }
+
+  @Override
+  public BuckConfig getDelegate() {
+    return delegate;
   }
 
   public JavaOptions getDefaultJavaOptions() {
-    return JavaOptions
-        .builder()
-        .setJavaPath(getPathToExecutable("java"))
-        .build();
+    return getToolForExecutable("java")
+        .map(ConstantToolProvider::new)
+        .map(JavaOptions::of)
+        .orElse(DEFAULT_JAVA_OPTIONS);
+  }
+
+  public JavaOptions getDefaultJavaOptionsForTests() {
+    return getToolForExecutable("java_for_tests")
+        .map(ConstantToolProvider::new)
+        .map(JavaOptions::of)
+        .orElseGet(this::getDefaultJavaOptions);
   }
 
   public JavacOptions getDefaultJavacOptions() {
-    Optional<String> sourceLevel = delegate.getValue("java", "source_level");
-    Optional<String> targetLevel = delegate.getValue("java", "target_level");
-    ImmutableList<String> extraArguments = delegate.getListWithoutComments(
-        "java",
-        "extra_arguments");
+    JavacOptions.Builder builder = JavacOptions.builderForUseInJavaBuckConfig();
 
-    ImmutableList<String> safeAnnotationProcessors = delegate.getListWithoutComments(
-        "java",
-        "safe_annotation_processors");
+    Optional<String> sourceLevel = delegate.getValue(SECTION, "source_level");
+    if (sourceLevel.isPresent()) {
+      builder.setSourceLevel(sourceLevel.get());
+    }
 
-    AbstractJavacOptions.SpoolMode spoolMode = delegate
-        .getEnum("java", "jar_spool_mode", AbstractJavacOptions.SpoolMode.class)
-        .or(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK);
+    Optional<String> targetLevel = delegate.getValue(SECTION, "target_level");
+    if (targetLevel.isPresent()) {
+      builder.setTargetLevel(targetLevel.get());
+    }
 
-    // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
-    // and can be removed when we're sure class usage tracking and dep-based keys for Java
-    // work fine.
-    boolean trackClassUsage = delegate.getBooleanValue("java", "track_class_usage", true);
+    ImmutableList<String> extraArguments =
+        delegate.getListWithoutComments(SECTION, "extra_arguments");
 
-    ImmutableMap<String, String> allEntries = delegate.getEntriesForSection("java");
-    ImmutableMap.Builder<String, String> bootclasspaths = ImmutableMap.builder();
+    builder.setTrackClassUsage(trackClassUsage());
+    Optional<Boolean> trackJavacPhaseEvents =
+        delegate.getBoolean(SECTION, "track_javac_phase_events");
+    if (trackJavacPhaseEvents.isPresent()) {
+      builder.setTrackJavacPhaseEvents(trackJavacPhaseEvents.get());
+    }
+
+    Optional<AbstractJavacOptions.SpoolMode> spoolMode =
+        delegate.getEnum(SECTION, "jar_spool_mode", AbstractJavacOptions.SpoolMode.class);
+    if (spoolMode.isPresent()) {
+      builder.setSpoolMode(spoolMode.get());
+    }
+
+    ImmutableMap<String, String> allEntries = delegate.getEntriesForSection(SECTION);
+    ImmutableMap.Builder<String, ImmutableList<PathSourcePath>> bootclasspaths =
+        ImmutableMap.builder();
     for (Map.Entry<String, String> entry : allEntries.entrySet()) {
-      if (entry.getKey().startsWith("bootclasspath-")) {
-        bootclasspaths.put(entry.getKey().substring("bootclasspath-".length()), entry.getValue());
+      String key = entry.getKey();
+      if (key.startsWith("bootclasspath-")) {
+        String[] values = entry.getValue().split(File.pathSeparator);
+        ImmutableList.Builder<PathSourcePath> pathsBuilder =
+            ImmutableList.builderWithExpectedSize(values.length);
+        for (String value : values) {
+          Preconditions.checkState(value != null);
+          pathsBuilder.add(PathSourcePath.of(delegate.getFilesystem(), Paths.get(value)));
+        }
+
+        bootclasspaths.put(key.substring("bootclasspath-".length()), pathsBuilder.build());
       }
     }
 
-    return JavacOptions.builderForUseInJavaBuckConfig()
-        .setJavacPath(getJavacPath())
-        .setJavacJarPath(getJavacJarPath())
-        .setSourceLevel(sourceLevel.or(TARGETED_JAVA_VERSION))
-        .setTargetLevel(targetLevel.or(TARGETED_JAVA_VERSION))
-        .setSpoolMode(spoolMode)
+    return builder
         .putAllSourceToBootclasspath(bootclasspaths.build())
         .addAllExtraArguments(extraArguments)
-        .setSafeAnnotationProcessors(safeAnnotationProcessors)
-        .setTrackClassUsageNotDisabled(trackClassUsage)
         .build();
   }
 
-  @VisibleForTesting
-  Optional<Path> getJavacPath() {
-    return getPathToExecutable("javac");
+  public AbiGenerationMode getAbiGenerationMode() {
+    return delegate
+        .getEnum(SECTION, "abi_generation_mode", AbiGenerationMode.class)
+        .orElse(AbiGenerationMode.CLASS);
   }
 
-  private Optional<Path> getPathToExecutable(String executableName) {
-    Optional<String> path = delegate.getValue("tools", executableName);
-    if (path.isPresent()) {
-      File file = new File(path.get());
-      if (!file.exists()) {
-        throw new HumanReadableException(executableName + " does not exist: " + file.getPath());
-      }
-      if (!file.canExecute()) {
-        throw new HumanReadableException(executableName + " is not executable: " + file.getPath());
-      }
-      return Optional.of(file.toPath());
+  public ImmutableSet<String> getSrcRoots() {
+    return ImmutableSet.copyOf(delegate.getListWithoutComments(SECTION, "src_roots"));
+  }
+
+  public DefaultJavaPackageFinder createDefaultJavaPackageFinder() {
+    return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(getSrcRoots());
+  }
+
+  public boolean trackClassUsage() {
+    // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
+    // and can be removed when we're sure class usage tracking and dep-based keys for Java
+    // work fine.
+    Optional<Boolean> trackClassUsage = delegate.getBoolean(SECTION, "track_class_usage");
+    if (trackClassUsage.isPresent() && !trackClassUsage.get()) {
+      return false;
     }
-    return Optional.absent();
+
+    Javac.Source javacSource = getJavacSpec().getJavacSource();
+    return (javacSource == Javac.Source.JAR || javacSource == Javac.Source.JDK);
   }
 
-  Optional<SourcePath> getJavacJarPath() {
+  public boolean shouldDesugarInterfaceMethods() {
+    return delegate.getBoolean(SECTION, "desugar_interface_methods").orElse(false);
+  }
+
+  public JavacSpec getJavacSpec() {
+    return javacSpecSupplier.get();
+  }
+
+  @VisibleForTesting
+  Optional<SourcePath> getJavacPath() {
+    Optional<SourcePath> sourcePath = delegate.getSourcePath("tools", "javac");
+    if (sourcePath.isPresent() && sourcePath.get() instanceof PathSourcePath) {
+      PathSourcePath pathSourcePath = (PathSourcePath) sourcePath.get();
+      if (!pathSourcePath.getFilesystem().isExecutable(pathSourcePath.getRelativePath())) {
+        throw new HumanReadableException("javac is not executable: %s", pathSourcePath);
+      }
+    }
+    return sourcePath;
+  }
+
+  private Optional<SourcePath> getJavacJarPath() {
     return delegate.getSourcePath("tools", "javac_jar");
   }
 
-  public boolean getSkipCheckingMissingDeps() {
-    return delegate.getBooleanValue("java", "skip_checking_missing_deps", false);
+  private Optional<Tool> getToolForExecutable(String executableName) {
+    return delegate
+        // Make sure to pass `false` for `isCellRootRelative` so that we get a relative path back,
+        // instead of an absolute one.  Otherwise, we can't preserve the original value.
+        .getPath("tools", executableName, false)
+        .map(
+            path -> {
+              if (!Files.isExecutable(
+                  delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(path))) {
+                throw new HumanReadableException(executableName + " is not executable: " + path);
+              }
+
+              // Build the tool object.  For absolute paths, just add the raw string and avoid
+              // hashing the contents, as this would require all users to have identical system
+              // binaries, when what we probably only care about is the version.
+              return new CommandTool.Builder()
+                  .addArg(
+                      path.isAbsolute()
+                          ? StringArg.of(path.toString())
+                          : SourcePathArg.of(
+                              Objects.requireNonNull(delegate.getPathSourcePath(path))))
+                  .build();
+            });
+  }
+
+  public boolean shouldCacheBinaries() {
+    return delegate.getBooleanValue(SECTION, "cache_binaries", true);
+  }
+
+  public OptionalInt getDxThreadCount() {
+    return delegate.getInteger(SECTION, "dx_threads");
+  }
+
+  /**
+   * Controls a special verification mode that generates ABIs both from source and from class files
+   * and diffs them. This is a test hook for use during development of the source ABI feature. This
+   * only has meaning when {@link #getAbiGenerationMode()} is one of the source modes.
+   */
+  public SourceAbiVerificationMode getSourceAbiVerificationMode() {
+    if (!getAbiGenerationMode().isSourceAbi()) {
+      return SourceAbiVerificationMode.OFF;
+    }
+
+    return delegate
+        .getEnum(SECTION, "source_abi_verification_mode", SourceAbiVerificationMode.class)
+        .orElse(SourceAbiVerificationMode.OFF);
+  }
+
+  public boolean shouldCompileAgainstAbis() {
+    return delegate.getBooleanValue(SECTION, PROPERTY_COMPILE_AGAINST_ABIS, false);
+  }
+
+  public Optional<String> getDefaultCxxPlatform() {
+    return delegate.getValue(SECTION, "default_cxx_platform");
+  }
+
+  public UnusedDependenciesAction getUnusedDependenciesAction() {
+    return delegate
+        .getEnum(SECTION, "unused_dependencies_action", UnusedDependenciesAction.class)
+        .orElse(UnusedDependenciesAction.IGNORE);
+  }
+
+  public Optional<String> getJavaTempDir() {
+    return delegate.getValue("java", "test_temp_dir");
+  }
+
+  public Level getDuplicatesLogLevel() {
+    return delegate
+        .getEnum(SECTION, "duplicates_log_level", DuplicatesLogLevel.class)
+        .orElse(DuplicatesLogLevel.INFO)
+        .getLevel();
+  }
+
+  public enum SourceAbiVerificationMode {
+    /** Don't verify ABI jars. */
+    OFF,
+    /** Generate ABI jars from classes and from source. Log any differences. */
+    LOG,
+    /** Generate ABI jars from classes and from source. Fail on differences. */
+    FAIL,
+  }
+
+  /** An action that is executed when a rule that compiles Java code has unused dependencies. */
+  public enum UnusedDependenciesAction {
+    FAIL,
+    WARN,
+    IGNORE
+  }
+
+  /** Logging level duplicates are reported at */
+  public enum DuplicatesLogLevel {
+    WARN(Level.WARNING),
+    INFO(Level.INFO),
+    FINE(Level.FINE),
+    ;
+
+    private final Level level;
+
+    DuplicatesLogLevel(Level level) {
+      this.level = level;
+    }
+
+    public Level getLevel() {
+      return level;
+    }
   }
 }

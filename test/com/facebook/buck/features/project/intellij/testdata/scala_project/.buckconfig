@@ -1,0 +1,9 @@
+[project]
+  ide = intellij
+
+[scala]
+  compiler = scala-compiler.jar
+  library = //:scala-library
+
+[intellij]
+  keep_module_files_in_module_dirs = true

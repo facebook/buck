@@ -16,18 +16,15 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.io.ProjectFilesystem;
-
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import java.nio.file.Path;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
-
-import java.nio.file.Path;
 
 public class PathDoesNotExistOnProjectFilesystem extends BaseMatcher<ProjectFilesystem> {
   final Path expectedPath;
 
-  public PathDoesNotExistOnProjectFilesystem(
-      Path expectedPath) {
+  public PathDoesNotExistOnProjectFilesystem(Path expectedPath) {
     this.expectedPath = expectedPath;
   }
 

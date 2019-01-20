@@ -1,0 +1,52 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+halide_library(
+    name = "brighter",
+    srcs = ["brighter.c"],
+    compiler_deps = [
+        ":halide-compiler-dep",
+    ],
+    compiler_flags = [],
+    linker_flags = [],
+    deps = [
+        ":halide-dep",
+    ],
+)
+
+cxx_library(
+    name = "halide-compiler-dep",
+    srcs = ["halide-compiler-dep.c"],
+    deps = [],
+)
+
+cxx_library(
+    name = "halide-dep",
+    srcs = ["halide-dep.c"],
+    deps = [],
+)
+
+apple_bundle(
+    name = "TestApp",
+    binary = ":TestAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    deps = [":TestAppBinary"],
+)
+
+apple_binary(
+    name = "TestAppBinary",
+    srcs = ["main.m"],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+        ":brighter",
+    ],
+)
+
+xcode_workspace_config(
+    name = "workspace",
+    src_target = "//Apps:TestApp",
+)

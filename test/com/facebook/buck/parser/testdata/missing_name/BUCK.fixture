@@ -1,0 +1,5 @@
+genrule(
+    # Should have name but doesn't
+    out = "generated",
+    cmd = "touch $OUT",
+)

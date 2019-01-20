@@ -1,0 +1,46 @@
+java_annotation_processor(
+    name = "annotation_processor",
+    processor_class = "com.example.AnnotationProcessor",
+    deps = [
+        ":annotation_processor_lib",
+    ],
+)
+
+java_library(
+    name = "annotation_processor_lib",
+    srcs = [
+        "AnnotationProcessor.java",
+    ],
+)
+
+java_library(
+    name = "main",
+    srcs = [
+        "Main.java",
+    ],
+    plugins = [
+        ":annotation_processor",
+    ],
+    deps = [
+        ":ap",
+        ":util",
+    ],
+)
+
+java_library(
+    name = "ap",
+    srcs = [
+        "AP.java",
+    ],
+)
+
+java_library(
+    name = "util",
+    srcs = [
+        "Util.java",
+    ],
+    resources = [
+        "read_file.txt",
+        "unread_file.txt",
+    ],
+)

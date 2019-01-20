@@ -17,15 +17,11 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * Information for building a specific artifact (a library, binary, or test).
- */
+/** Information for building a specific artifact (a library, binary, or test). */
 public abstract class PBXTarget extends PBXProjectItem {
   private final String name;
   private final List<PBXTargetDependency> dependencies;
@@ -37,8 +33,8 @@ public abstract class PBXTarget extends PBXProjectItem {
 
   public PBXTarget(String name) {
     this.name = name;
-    this.dependencies = Lists.newArrayList();
-    this.buildPhases = Lists.newArrayList();
+    this.dependencies = new ArrayList<>();
+    this.buildPhases = new ArrayList<>();
     this.buildConfigurationList = new XCConfigurationList();
   }
 

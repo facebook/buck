@@ -17,15 +17,12 @@
 package com.facebook.buck.event.external.events;
 
 /**
- * Describes a console event thrown by buck.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes a console event thrown by buck. This type is intended to be used by external
+ * applications (like the Intellij Buck plugin) to deserialize events coming from the webserver.
  */
 public interface ConsoleEventExternalInterface extends BuckEventExternalInterface {
   // Sent when a console event has been found
   String CONSOLE_EVENT = "ConsoleEvent";
-  /**
-   * @return the message of the event that occurred.
-   */
+  /** @return the message of the event that occurred. */
   String getMessage();
 }

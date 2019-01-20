@@ -1,1 +1,34 @@
-standard_java_test()
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+standard_java_test(
+    name = "concurrent",
+    deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//test/com/facebook/buck/util/concurrent:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:hamcrest-junit",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

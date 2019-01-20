@@ -1,0 +1,15 @@
+scala_library(
+    name = "dep1",
+    srcs = ["main/MainSource.scala"],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+scala_test(
+    name = "dep1_test",
+    srcs = ["test/TestSource.scala"],
+    visibility = [
+        "PUBLIC",
+    ],
+)

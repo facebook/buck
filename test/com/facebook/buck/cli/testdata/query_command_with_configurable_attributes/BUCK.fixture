@@ -1,0 +1,79 @@
+genrule(
+    name = "a",
+    out = "a",
+    cmd = "echo a > $OUT",
+)
+
+genrule(
+    name = "b",
+    out = "b",
+    cmd = "echo b > $OUT",
+)
+
+genrule(
+    name = "c",
+    out = "c",
+    cmd = "echo c > $OUT",
+)
+
+config_setting(
+    name = "mode_a",
+    values = {
+        "config.mode": "a",
+    },
+)
+
+config_setting(
+    name = "mode_b",
+    values = {
+        "config.mode": "b",
+    },
+)
+
+genrule(
+    name = "genrule_with_select_in_srcs",
+    srcs = [
+        ":c",
+    ] + select({
+        ":mode_a": [":a"],
+        ":mode_b": [":b"],
+    }),
+    out = "out",
+    cmd = "echo $SRCS > $OUT",
+)
+
+genrule(
+    name = "genrule_with_select_in_cmd",
+    out = "out",
+    cmd = "echo " +
+          select({
+              ":mode_a": "$(location :a)",
+              ":mode_b": "$(location :b)",
+          }) +
+          " > $OUT",
+)
+
+java_test(
+    name = "java_test_with_select_in_timeout",
+    test_case_timeout_ms = 12 +
+                           select({
+                               ":mode_a": 1,
+                               ":mode_b": 2,
+                           }),
+)
+
+java_test(
+    name = "java_test_with_select_in_env",
+    env = {
+              "var1": "val1",
+              "var2": "val2",
+          } +
+          select({
+              ":mode_a": {
+                  "vara": "vala",
+              },
+              ":mode_b": {
+                  "varb": "valb",
+              },
+          }),
+)

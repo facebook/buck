@@ -16,79 +16,78 @@
 
 package com.facebook.buck.swift;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
-import com.facebook.buck.apple.ApplePlatform;
-
+import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
 import java.io.IOException;
-
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class SwiftOSXBinaryIntegrationTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Ignore("t10220393")
   @Test
   public void swiftHelloWorldRunsAndPrintsMessageOnOSX() throws IOException {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "helloworld",
-        tmp);
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "run",
-        ":hello-bin#macosx-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        equalTo("Hello, \uD83C\uDF0E!\n"));
+    assertThat(runResult.getStdout(), equalTo("Hello, \uD83C\uDF0E!\n"));
   }
 
-  @Ignore("t10220393")
   @Test
   public void changingSourceOfSwiftLibraryDepRelinksBinary() throws IOException {
-    assumeThat(
-        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX),
-        is(true));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "helloworld",
-        tmp);
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult runResult = workspace.runBuckCommand(
-        "run",
-        ":hello-bin#macosx-x86_64");
+    ProcessResult runResult = workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     runResult.assertSuccess();
-    assertThat(
-        runResult.getStdout(),
-        equalTo("Hello, \uD83C\uDF0E!\n"));
+    assertThat(runResult.getStdout(), equalTo("Hello, \uD83C\uDF0E!\n"));
 
-    workspace.replaceFileContents("hello.swift", "Hello", "Goodbye");
+    workspace.replaceFileContents("main.swift", "Hello", "Goodbye");
 
-    ProjectWorkspace.ProcessResult secondRunResult = workspace.runBuckCommand(
-        "run",
-        ":hello-bin#macosx-x86_64");
+    ProcessResult secondRunResult = workspace.runBuckCommand("run", ":hello-bin#macosx-x86_64");
     secondRunResult.assertSuccess();
-    assertThat(
-        secondRunResult.getStdout(),
-        equalTo("Goodbye, \uD83C\uDF0E!\n"));
+    assertThat(secondRunResult.getStdout(), equalTo("Goodbye, \uD83C\uDF0E!\n"));
+  }
+
+  @Test
+  public void objcMixedSwiftRunsAndPrintsMessageOnOSX() throws IOException {
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "objc_mix_swift", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("swift", "version", "3");
+
+    ProcessResult runResult = workspace.runBuckCommand("run", ":DemoMix#macosx-x86_64");
+    runResult.assertSuccess();
+    assertThat(runResult.getStdout(), equalTo("Hello Swift\n"));
+  }
+
+  @Test
+  public void swiftCallingObjCRunsAndPrintsMessageOnOSX() throws IOException {
+    assumeThat(AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.MACOSX), is(true));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "swift_calls_objc", tmp);
+    workspace.setUp();
+
+    ProcessResult runResult = workspace.runBuckCommand("run", ":SwiftCallsObjC#macosx-x86_64");
+    runResult.assertSuccess();
+    assertThat(runResult.getStdout(), containsString("Hello ObjC\n"));
   }
 }

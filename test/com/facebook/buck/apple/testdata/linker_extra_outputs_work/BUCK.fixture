@@ -1,0 +1,36 @@
+# This binary manually specifies the linker map flags and linker map output.
+apple_binary(
+    name = "bin",
+    srcs = ["main.cpp"],
+    linker_extra_outputs = ["extra"],
+    linker_flags = [
+        "-Xlinker",
+        "-map",
+        "-Xlinker",
+        "$(output extra)",
+    ],
+)
+
+# Ditto with shared libraries.
+apple_library(
+    name = "lib",
+    srcs = ["lib.cpp"],
+    linker_extra_outputs = ["extra"],
+    linker_flags = [
+        "-Xlinker",
+        "-map",
+        "-Xlinker",
+        "$(output extra)",
+    ],
+)
+
+# This genrule builds the binary without the implicit linkermap.
+genrule(
+    name = "map-extractor",
+    out = "result",
+    bash = """
+  mkdir -p $OUT
+  cp $(location :bin#macosx-x86_64,no-linkermap[extra]) $OUT/bin
+  cp $(location :lib#macosx-x86_64,no-linkermap,shared[extra]) $OUT/shared_lib
+  """,
+)

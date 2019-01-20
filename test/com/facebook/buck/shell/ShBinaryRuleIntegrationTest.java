@@ -16,63 +16,59 @@
 
 package com.facebook.buck.shell;
 
-import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
-import com.facebook.buck.util.environment.ExecutionEnvironment;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.martiansoftware.nailgun.NGContext;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 public class ShBinaryRuleIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testTrivialShBinaryRule() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "sh_binary_trivial", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_trivial", temporaryFolder);
     workspace.setUp();
 
     Path outputFile = workspace.buildAndReturnOutput("//:run_example");
 
     // Verify contents of example_out.txt
-    String output = new String(Files.readAllBytes(outputFile), US_ASCII);
+    String output = new String(Files.readAllBytes(outputFile), UTF_8);
     assertEquals("arg1\narg2\n", output);
   }
 
   @Test
-  public void testExecutableFromCache() throws IOException, InterruptedException {
+  public void testExecutableFromCache() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "sh_binary_with_caching", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_caching", temporaryFolder);
     workspace.setUp();
+    workspace.enableDirCache();
 
     // First build only the sh_binary rule itself.
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:example_sh", "-v", "2");
@@ -85,8 +81,7 @@ public class ShBinaryRuleIntegrationTest {
     assertTrue("Output file must be executable.", Files.isExecutable(output));
 
     // Now delete the buck-out directory (but not buck-cache).
-    Path buckOutDir = workspace.getPath("buck-out");
-    MoreFiles.deleteRecursivelyIfExists(buckOutDir);
+    workspace.runBuckCommand("clean", "--keep-cache");
 
     // Now run the genrule that depends on the sh_binary above. This will force buck to fetch the
     // sh_binary output from cache. If the executable flag is lost somewhere along the way, this
@@ -94,30 +89,79 @@ public class ShBinaryRuleIntegrationTest {
     buildResult = workspace.runBuckCommand("build", "//:run_example", "-v", "2");
     buildResult.assertSuccess("Build failed when rerunning sh_binary from cache.");
 
+    // verify it's actually fetched from cache
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//:example_sh");
+
     // In addition to running the build, explicitly check that the output file is still executable.
     assertTrue(
-        "Output file must be retrieved from cache at '" + outputPath + ".",
-        Files.exists(output));
+        "Output file must be retrieved from cache at '" + outputPath + ".", Files.exists(output));
     assertTrue("Output file retrieved from cache must be executable.", Files.isExecutable(output));
+  }
+
+  @Test
+  public void testShBinaryWithMappedResources() throws IOException {
+    List<String> lines = testMappedResources("same_cell");
+    String expectedPlatform = Platform.detect().getPrintableName();
+    List<String> expected = ImmutableList.of(expectedPlatform, "arg1 arg2", "stuff", "fluff");
+    assertEquals(expected, lines);
+  }
+
+  @Test
+  public void testShBinaryWithMappedResourcesDifferentCell() throws IOException {
+    List<String> lines = testMappedResources("different_cell");
+    String expectedPlatform = Platform.detect().getPrintableName();
+    List<String> expected = ImmutableList.of(expectedPlatform, "arg1 arg2", "stuff", "fluff");
+    assertEquals(expected, lines);
+  }
+
+  @Test
+  public void testShBinaryWithMappedResourcesConflicting() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_mapped_resources", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult buildResult = workspace.runBuckBuild("//app:create_output_conflicting_resources");
+    assertEquals(ExitCode.BUILD_ERROR, buildResult.getExitCode());
+
+    assertTrue(
+        buildResult
+            .getStderr()
+            .contains(
+                "Duplicate resource link path '__default__/node/resource1' "
+                    + "(Resolves to both '//node:resource1' and 'node/resource1')"));
+  }
+
+  private List<String> testMappedResources(String testCase) throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_mapped_resources", temporaryFolder);
+    workspace.setUp();
+
+    Path outputFile = workspace.buildAndReturnOutput("//app:create_output_" + testCase);
+
+    // Verify contents of output.txt
+    return Files.readAllLines(outputFile, UTF_8);
   }
 
   @Test
   public void testShBinaryWithResources() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "sh_binary_with_resources", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_resources", temporaryFolder);
     workspace.setUp();
 
     Path outputFile = workspace.buildAndReturnOutput("//app:create_output_using_node");
 
     // Verify contents of output.txt
-    List<String> lines = Files.readAllLines(outputFile, US_ASCII);
-    ExecutionEnvironment executionEnvironment =
-        new DefaultExecutionEnvironment(
-            ImmutableMap.copyOf(System.getenv()),
-            System.getProperties());
-    String expectedPlatform = executionEnvironment.getPlatform().getPrintableName();
+    List<String> lines = Files.readAllLines(outputFile, UTF_8);
+    String expectedPlatform = Platform.detect().getPrintableName();
     assertEquals(expectedPlatform, lines.get(0));
     assertEquals("arg1 arg2", lines.get(1));
   }
@@ -126,8 +170,9 @@ public class ShBinaryRuleIntegrationTest {
   public void testShBinaryCannotOverwriteResource() throws IOException {
     // sh_binary is not available on Windows. Ignore this test on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "sh_binary_with_overwrite_violation", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_overwrite_violation", temporaryFolder);
     workspace.setUp();
 
     ProcessResult buildResult = workspace.runBuckCommand("build", "//:overwrite");
@@ -142,25 +187,59 @@ public class ShBinaryRuleIntegrationTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this,
-            "sh_binary_pwd",
-            temporaryFolder);
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sh_binary_pwd", temporaryFolder);
     workspace.setUp();
 
-    String alteredPwd = workspace.getDestPath().toString() + "////////";
-    Map<String, String> env = new HashMap<>();
-    env.putAll(System.getenv());
-    env.put("PWD", alteredPwd);
+    String alteredPwd = workspace.getDestPath() + "////////";
     ProcessResult buildResult =
-        workspace.runBuckCommandWithEnvironmentAndContext(
+        workspace.runBuckCommandWithEnvironmentOverridesAndContext(
             workspace.getDestPath(),
-            Optional.<NGContext>absent(),
-            Optional.of(ImmutableMap.copyOf(env)),
+            Optional.empty(),
+            ImmutableMap.of("PWD", alteredPwd),
             "run",
             "//:pwd");
     buildResult.assertSuccess();
     assertThat(buildResult.getStdout(), Matchers.equalTo(alteredPwd));
   }
 
+  @Test
+  public void testShBinaryWithCells() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_cells", temporaryFolder);
+    workspace.setUp();
+
+    workspace.buildAndReturnOutput("//:create_output_using_node");
+  }
+
+  @Test
+  public void testShBinaryWithEmbeddedCells() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_with_cells", temporaryFolder);
+    workspace.setUp();
+
+    workspace.buildAndReturnOutput(
+        "--config", "project.embedded_cell_buck_out_enabled=true", "//:create_output_using_node");
+  }
+
+  @Test
+  public void testShBinaryWithBuckoutOutsideRoot() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "sh_binary_trivial", temporaryFolder);
+    workspace.setUp();
+
+    // symlink the buck-out to be outside the project root
+    Path tempBuckOut = Files.createTempDirectory("buck-out");
+    Files.createSymbolicLink(temporaryFolder.getRoot().resolve("buck-out"), tempBuckOut);
+
+    workspace.buildAndReturnOutput("//:run_example");
+  }
 }

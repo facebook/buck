@@ -18,77 +18,80 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.ExopackageInfo;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.shell.Genrule;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.rules.macros.ClasspathMacro;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
-
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class ApkGenruleDescriptionTest {
 
   @Test
-  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-    InstallableApk installableApk =
-        ruleResolver.addToIndex(
-            new FakeInstallable(BuildTargetFactory.newInstance("//:installable"), pathResolver));
-    BuildRule transitiveDep =
+  public void testClasspathTransitiveDepsBecomeFirstOrderDeps() {
+    BuildTarget installableApkTarget = BuildTargetFactory.newInstance("//:installable");
+    TargetNode<?> installableApkNode =
+        FakeTargetNodeBuilder.build(new FakeInstallable(installableApkTarget));
+    TargetNode<?> transitiveDepNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:dep"))
             .addSrc(Paths.get("Dep.java"))
-            .build(ruleResolver);
-    BuildRule dep =
+            .build();
+    TargetNode<?> depNode =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//exciting:target"))
             .addSrc(Paths.get("Other.java"))
-            .addDep(transitiveDep.getBuildTarget())
-            .build(ruleResolver);
-    Genrule genrule =
-        (Genrule) ApkGenruleBuilder.create(BuildTargetFactory.newInstance("//:rule"))
+            .addDep(transitiveDepNode.getBuildTarget())
+            .build();
+    TargetNode<?> genruleNode =
+        ApkGenruleBuilder.create(BuildTargetFactory.newInstance("//:rule"))
             .setOut("out")
-            .setCmd("$(classpath //exciting:target)")
-            .setApk(installableApk.getBuildTarget())
-            .build(ruleResolver);
-    assertThat(genrule.getDeps(), Matchers.hasItems(dep, transitiveDep));
+            .setCmd(StringWithMacrosUtils.format("%s", ClasspathMacro.of(depNode.getBuildTarget())))
+            .setApk(installableApkTarget)
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(installableApkNode, transitiveDepNode, depNode, genruleNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    BuildRule transitiveDep = graphBuilder.requireRule(transitiveDepNode.getBuildTarget());
+    BuildRule dep = graphBuilder.requireRule(depNode.getBuildTarget());
+    BuildRule genrule = graphBuilder.requireRule(genruleNode.getBuildTarget());
+
+    assertThat(genrule.getBuildDeps(), Matchers.hasItems(dep, transitiveDep));
   }
 
-  private static class FakeInstallable extends FakeBuildRule implements InstallableApk {
+  private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
-    public FakeInstallable(
-        BuildTarget buildTarget,
-        SourcePathResolver resolver) {
-      super(buildTarget, resolver);
+    SourcePath apkPath =
+        ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("buck-out", "app.apk"));
+
+    public FakeInstallable(BuildTarget buildTarget) {
+      super(buildTarget);
     }
 
     @Override
-    public Path getManifestPath() {
-      return Paths.get("nothing");
+    public ApkInfo getApkInfo() {
+      return ApkInfo.builder()
+          .setApkPath(apkPath)
+          .setManifestPath(FakeSourcePath.of("nothing"))
+          .build();
     }
 
     @Override
-    public Path getApkPath() {
-      return Paths.get("buck-out/app.apk");
+    public SourcePath getSourcePathToOutput() {
+      return apkPath;
     }
-
-    @Override
-    public Optional<ExopackageInfo> getExopackageInfo() {
-      return Optional.absent();
-    }
-
   }
-
 }

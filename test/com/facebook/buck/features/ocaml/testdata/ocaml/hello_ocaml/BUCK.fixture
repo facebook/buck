@@ -1,0 +1,28 @@
+ocaml_binary(
+    name = "hello_ocaml",
+    srcs = [
+        "amodule.ml",
+        "bmodule.ml",
+        "cmodule.ml",
+        "hello_ocaml.ml",
+    ],
+    deps = [
+        ":ocamllib",
+    ],
+)
+
+ocaml_library(
+    name = "ocamllib",
+    srcs = [
+        "ocamllib/m1.ml",
+        "ocamllib/m1.mli",
+        "ocamllib/m2.ml",
+        "ocamllib/m3.ml",
+        "ocamllib/mmain.mli",
+        "ocamllib/mmain.ml",
+        #INSERT_POINT
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

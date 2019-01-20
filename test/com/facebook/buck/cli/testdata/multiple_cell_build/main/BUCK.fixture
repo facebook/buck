@@ -1,0 +1,13 @@
+cxx_library(
+    name = "TestCxx",
+    deps = [
+        "cxx//:cxx",
+    ],
+)
+
+java_library(
+    name = "TestJava",
+    deps = [
+        "java//:java",
+    ],
+)

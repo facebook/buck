@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.query_cheat_sheet}
 
 /**
@@ -24,11 +39,19 @@
 {template .soyweb}
   {call buck.page}
     {param title: 'Buck query - Cheat Sheet' /}
+    {param navid: 'article_query_cheat_sheet' /}
     {param prettify: true /}
     {param description}
       Most common use cases of buck query.
     {/param}
     {param content}
+
+<p>
+<b>Note</b>: For a complete description of the <code>buck query</code> language with
+many additional examples, see the {call buck.cmd_query /} reference page.
+</p>
+
+<hr/>
 
 <p>
 <ul style="line-height:0.5em">
@@ -119,7 +142,7 @@
     <p><pre class="prettyprint lang-js">
 {literal}
 buck query "deps('//foo:bar')"
-buck query "deps('//foo:bar', 1)"
+buck query "deps('//foo:bar', 1, first_order_deps())"
 buck query "deps(set('//foo:bar' '//foo:lib' '//foo/baz:util'))"
 {/literal}
     </pre></p>

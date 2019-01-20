@@ -16,33 +16,33 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.InstallableApk;
+import com.facebook.buck.android.exopackage.AndroidDevice;
+import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-
-import com.android.ddmlib.IDevice;
+import com.facebook.buck.step.StepExecutionResults;
 
 public class ApkInstallStep implements Step {
 
-  private final InstallableApk installableApk;
+  private final SourcePathResolver pathResolver;
+  private final HasInstallableApk hasInstallableApk;
 
-  public ApkInstallStep(
-      InstallableApk apk) {
-    this.installableApk = apk;
+  public ApkInstallStep(SourcePathResolver pathResolver, HasInstallableApk apk) {
+    this.pathResolver = pathResolver;
+    this.hasInstallableApk = apk;
   }
 
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-    AdbHelper adbHelper = AdbHelper.get(context, true);
+    AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
     if (adbHelper.getDevices(true).isEmpty()) {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
 
-    if (!adbHelper.installApk(installableApk, false, true)) {
-      return StepExecutionResult.ERROR;
-    }
-    return StepExecutionResult.SUCCESS;
+    adbHelper.installApk(pathResolver, hasInstallableApk, false, true, null);
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
@@ -54,20 +54,16 @@ public class ApkInstallStep implements Step {
   public String getDescription(ExecutionContext context) {
     StringBuilder builder = new StringBuilder();
 
-    try {
-      AdbHelper adbHelper = AdbHelper.get(context, true);
-      for (IDevice device : adbHelper.getDevices(true)) {
-        if (builder.length() != 0) {
-          builder.append("\n");
-        }
-        builder.append("adb -s ");
-        builder.append(device.getSerialNumber());
-        builder.append(" install ");
-        builder.append(installableApk.getApkPath().toString());
+    AndroidDevicesHelper adbHelper = context.getAndroidDevicesHelper().get();
+    for (AndroidDevice device : adbHelper.getDevices(true)) {
+      if (builder.length() != 0) {
+        builder.append("\n");
       }
-    } catch (InterruptedException e) {
+      builder.append("adb -s ");
+      builder.append(device.getSerialNumber());
+      builder.append(" install ");
+      builder.append(hasInstallableApk.getApkInfo().getApkPath());
     }
     return builder.toString();
   }
-
 }

@@ -16,45 +16,33 @@
 
 package com.facebook.buck.apple.simulator;
 
-import static org.junit.Assert.assertThat;
-
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
-import java.util.Map;
-
 import java.util.AbstractMap.SimpleImmutableEntry;
-
+import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Unit tests for {@link AppleSimulatorController}.
- */
+/** Unit tests for {@link AppleSimulatorController}. */
 public class AppleSimulatorControllerTest {
   private static final Path SIMCTL_PATH = Paths.get("path/to/simctl");
   private static final Path IOS_SIMULATOR_PATH = Paths.get("path/to/iOS Simulator.app");
   private static final ProcessExecutorParams SIMCTL_LIST_PARAMS =
       ProcessExecutorParams.builder()
-          .setCommand(
-              ImmutableList.of(
-                  SIMCTL_PATH.toString(),
-                  "list"))
+          .setCommand(ImmutableList.of(SIMCTL_PATH.toString(), "list"))
           .build();
 
   @Before
@@ -63,8 +51,7 @@ public class AppleSimulatorControllerTest {
   }
 
   @Test
-  public void canStartSimulatorWhenNoSimulatorBooted()
-      throws IOException, InterruptedException {
+  public void canStartSimulatorWhenNoSimulatorBooted() throws IOException, InterruptedException {
     ImmutableList.Builder<Map.Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
         ImmutableList.builder();
     fakeProcessesBuilder.add(
@@ -72,15 +59,12 @@ public class AppleSimulatorControllerTest {
             SIMCTL_LIST_PARAMS,
             new FakeProcess(
                 0,
-                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)\n" +
-                "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Shutdown)\n",
+                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)\n"
+                    + "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Shutdown)\n",
                 "")));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
 
     assertThat(
         appleSimulatorController.canStartSimulator("45BD7164-686C-474F-8C68-3730432BC5F2"),
@@ -97,15 +81,12 @@ public class AppleSimulatorControllerTest {
             SIMCTL_LIST_PARAMS,
             new FakeProcess(
                 0,
-                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Booted)\n" +
-                "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Shutdown)\n",
+                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Booted)\n"
+                    + "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Shutdown)\n",
                 "")));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
 
     assertThat(
         appleSimulatorController.canStartSimulator("45BD7164-686C-474F-8C68-3730432BC5F2"),
@@ -122,15 +103,12 @@ public class AppleSimulatorControllerTest {
             SIMCTL_LIST_PARAMS,
             new FakeProcess(
                 0,
-                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Booted)\n" +
-                "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Shutdown)\n",
+                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Booted)\n"
+                    + "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Shutdown)\n",
                 "")));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
 
     assertThat(
         appleSimulatorController.canStartSimulator("70200ED8-EEF1-4BDB-BCCF-3595B137D67D"),
@@ -161,20 +139,16 @@ public class AppleSimulatorControllerTest {
             SIMCTL_LIST_PARAMS,
             new FakeProcess(
                 0,
-                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)\n" +
-                "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Booted)\n",
+                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)\n"
+                    + "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Booted)\n",
                 "")));
 
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
 
-    Optional<Long> result = appleSimulatorController.startSimulator(
-        "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
-        1000);
+    Optional<Long> result =
+        appleSimulatorController.startSimulator("70200ED8-EEF1-4BDB-BCCF-3595B137D67D", 1000);
 
     assertThat(result, is(Optional.of(0L)));
   }
@@ -189,8 +163,8 @@ public class AppleSimulatorControllerTest {
             SIMCTL_LIST_PARAMS,
             new FakeProcess(
                 0,
-                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)\n" +
-                "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Booted)\n",
+                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)\n"
+                    + "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Booted)\n",
                 "")));
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(
@@ -210,20 +184,16 @@ public class AppleSimulatorControllerTest {
             SIMCTL_LIST_PARAMS,
             new FakeProcess(
                 0,
-                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)\n" +
-                "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Booted)\n",
+                "    iPhone 5 (45BD7164-686C-474F-8C68-3730432BC5F2) (Shutdown)\n"
+                    + "    iPhone 5s (70200ED8-EEF1-4BDB-BCCF-3595B137D67D) (Booted)\n",
                 "")));
 
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        fakeProcessesBuilder.build());
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
+    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
 
-    Optional<Long> result = appleSimulatorController.startSimulator(
-        "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
-        1000);
+    Optional<Long> result =
+        appleSimulatorController.startSimulator("70200ED8-EEF1-4BDB-BCCF-3595B137D67D", 1000);
 
     assertThat(result, is(Optional.of(0L)));
   }
@@ -240,15 +210,13 @@ public class AppleSimulatorControllerTest {
                     "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
                     "Path/To/MyNeatApp.app"))
             .build();
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(fakeSimctlInstallParams, fakeSimctlInstallProcess));
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
-    boolean installed = appleSimulatorController.installBundleInSimulator(
-        "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
-        Paths.get("Path/To/MyNeatApp.app"));
+    FakeProcessExecutor fakeProcessExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(fakeSimctlInstallParams, fakeSimctlInstallProcess));
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
+    boolean installed =
+        appleSimulatorController.installBundleInSimulator(
+            "70200ED8-EEF1-4BDB-BCCF-3595B137D67D", Paths.get("Path/To/MyNeatApp.app"));
     assertThat(installed, is(true));
   }
 
@@ -264,23 +232,22 @@ public class AppleSimulatorControllerTest {
                     "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
                     "com.facebook.MyNeatApp"))
             .build();
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(fakeSimctlLaunchParams, fakeSimctlLaunchProcess));
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
-    Optional<Long> launchedPID = appleSimulatorController.launchInstalledBundleInSimulator(
-        "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
-        "com.facebook.MyNeatApp",
-        AppleSimulatorController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER,
-        ImmutableList.<String>of());
+    FakeProcessExecutor fakeProcessExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(fakeSimctlLaunchParams, fakeSimctlLaunchProcess));
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
+    Optional<Long> launchedPID =
+        appleSimulatorController.launchInstalledBundleInSimulator(
+            "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
+            "com.facebook.MyNeatApp",
+            AppleSimulatorController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER,
+            ImmutableList.of());
     assertThat(launchedPID, is(equalTo(Optional.of(42L))));
   }
 
   @Test
   public void launchingInstalledBundleWaitingForDebuggerWorks()
-        throws IOException, InterruptedException {
+      throws IOException, InterruptedException {
     FakeProcess fakeSimctlLaunchProcess = new FakeProcess(0, "com.facebook.MyNeatApp: 42", "");
     ProcessExecutorParams fakeSimctlLaunchParams =
         ProcessExecutorParams.builder()
@@ -292,17 +259,16 @@ public class AppleSimulatorControllerTest {
                     "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
                     "com.facebook.MyNeatApp"))
             .build();
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(fakeSimctlLaunchParams, fakeSimctlLaunchProcess));
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
-    Optional<Long> launchedPID = appleSimulatorController.launchInstalledBundleInSimulator(
-          "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
-          "com.facebook.MyNeatApp",
-          AppleSimulatorController.LaunchBehavior.WAIT_FOR_DEBUGGER,
-        ImmutableList.<String>of());
+    FakeProcessExecutor fakeProcessExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(fakeSimctlLaunchParams, fakeSimctlLaunchProcess));
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
+    Optional<Long> launchedPID =
+        appleSimulatorController.launchInstalledBundleInSimulator(
+            "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
+            "com.facebook.MyNeatApp",
+            AppleSimulatorController.LaunchBehavior.WAIT_FOR_DEBUGGER,
+            ImmutableList.of());
 
     assertThat(launchedPID, is(equalTo(Optional.of(42L))));
   }
@@ -322,17 +288,16 @@ public class AppleSimulatorControllerTest {
                     "arg1",
                     "arg2"))
             .build();
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(
-        ImmutableMap.of(fakeSimctlLaunchParams, fakeSimctlLaunchProcess));
-    AppleSimulatorController appleSimulatorController = new AppleSimulatorController(
-        fakeProcessExecutor,
-        SIMCTL_PATH,
-        IOS_SIMULATOR_PATH);
-    Optional<Long> launchedPID = appleSimulatorController.launchInstalledBundleInSimulator(
-        "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
-        "com.facebook.MyNeatApp",
-        AppleSimulatorController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER,
-        ImmutableList.<String>of("arg1", "arg2"));
+    FakeProcessExecutor fakeProcessExecutor =
+        new FakeProcessExecutor(ImmutableMap.of(fakeSimctlLaunchParams, fakeSimctlLaunchProcess));
+    AppleSimulatorController appleSimulatorController =
+        new AppleSimulatorController(fakeProcessExecutor, SIMCTL_PATH, IOS_SIMULATOR_PATH);
+    Optional<Long> launchedPID =
+        appleSimulatorController.launchInstalledBundleInSimulator(
+            "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
+            "com.facebook.MyNeatApp",
+            AppleSimulatorController.LaunchBehavior.DO_NOT_WAIT_FOR_DEBUGGER,
+            ImmutableList.of("arg1", "arg2"));
     assertThat(launchedPID, is(equalTo(Optional.of(42L))));
   }
 }

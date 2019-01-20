@@ -1,0 +1,5 @@
+package mainapk;
+class MainJava {{
+  // Put the data in the identifier name so it's easier to extract with dexdump.
+  public static String data__{data}__ = "{data}";
+}}

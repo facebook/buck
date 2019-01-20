@@ -16,47 +16,66 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.cxx.StripStep;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.common.BuildableSupport.DepsSupplier;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
+import java.util.SortedSet;
 
 public class StripLinkable extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final Tool stripTool;
+  @AddToRuleKey private final Tool stripTool;
 
-  @AddToRuleKey
-  private final SourcePath sourcePathToStrip;
+  @AddToRuleKey private final SourcePath sourcePathToStrip;
 
-  @AddToRuleKey
-  private final String strippedObjectName;
+  @AddToRuleKey private final String strippedObjectName;
 
   private final Path resultDir;
+  private final DepsSupplier depsSupplier;
 
   public StripLinkable(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
       Tool stripTool,
       SourcePath sourcePathToStrip,
       String strippedObjectName) {
-    super(buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem);
     this.stripTool = stripTool;
     this.strippedObjectName = strippedObjectName;
     this.sourcePathToStrip = sourcePathToStrip;
-    this.resultDir =
-        BuildTargets.getGenPath(getProjectFilesystem(), buildRuleParams.getBuildTarget(), "%s");
+    this.resultDir = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s");
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver pathResolver) {
+    depsSupplier.updateRuleFinder(ruleFinder);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return depsSupplier.get();
   }
 
   @Override
@@ -65,23 +84,28 @@ public class StripLinkable extends AbstractBuildRule {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new MkdirStep(getProjectFilesystem(), resultDir));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), resultDir)));
+    Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     steps.add(
         new StripStep(
             getProjectFilesystem().getRootPath(),
-            stripTool.getEnvironment(getResolver()),
-            stripTool.getCommandPrefix(getResolver()),
+            stripTool.getEnvironment(context.getSourcePathResolver()),
+            stripTool.getCommandPrefix(context.getSourcePathResolver()),
             ImmutableList.of("--strip-unneeded"),
-            getResolver().getAbsolutePath(sourcePathToStrip),
-            getPathToOutput()));
+            context.getSourcePathResolver().getAbsolutePath(sourcePathToStrip),
+            output));
 
-    buildableContext.recordArtifact(getPathToOutput());
+    buildableContext.recordArtifact(output);
 
     return steps.build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return resultDir.resolve(strippedObjectName);
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(), resultDir.resolve(strippedObjectName));
   }
 }

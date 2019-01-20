@@ -1,0 +1,21 @@
+android_library(
+    name = "dep2",
+    srcs = glob(["src/**/*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//modules/dep1:dep1",
+    ],
+)
+
+android_library(
+    name = "dep3",
+    srcs = [],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//modules/dep1:dep1",
+    ],
+)

@@ -16,11 +16,13 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 
-public class KeystoreBuilder extends AbstractNodeBuilder<KeystoreDescription.Arg> {
+public class KeystoreBuilder
+    extends AbstractNodeBuilder<
+        KeystoreDescriptionArg.Builder, KeystoreDescriptionArg, KeystoreDescription, Keystore> {
 
   private KeystoreBuilder(BuildTarget target) {
     super(new KeystoreDescription(), target);
@@ -31,17 +33,17 @@ public class KeystoreBuilder extends AbstractNodeBuilder<KeystoreDescription.Arg
   }
 
   public KeystoreBuilder setStore(SourcePath store) {
-    arg.store = store;
+    getArgForPopulating().setStore(store);
     return this;
   }
 
   public KeystoreBuilder setProperties(SourcePath properties) {
-    arg.properties = properties;
+    getArgForPopulating().setProperties(properties);
     return this;
   }
 
   public KeystoreBuilder addDep(BuildTarget dep) {
-    arg.deps = amend(arg.deps, dep);
+    getArgForPopulating().addDeps(dep);
     return this;
   }
 }

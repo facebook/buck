@@ -16,7 +16,7 @@
 
 package com.facebook.buck.test;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 
 public class TestConfig {
   public static final String TEST_SUMMARY_SECTION_NAME = "test_summary";
@@ -29,14 +29,12 @@ public class TestConfig {
   }
 
   public TestResultSummaryVerbosity getResultSummaryVerbosity() {
-    boolean includeStdErr = delegate.getBooleanValue(
-        TEST_SUMMARY_SECTION_NAME,
-        "include_std_err",
-        DEFAULT_SUMMARY_INCLUDE_STDERR);
-    boolean includeStdOut = delegate.getBooleanValue(
-        TEST_SUMMARY_SECTION_NAME,
-        "include_std_out",
-        DEFAULT_SUMMARY_INCLUDE_STDOUT);
+    boolean includeStdErr =
+        delegate.getBooleanValue(
+            TEST_SUMMARY_SECTION_NAME, "include_std_err", DEFAULT_SUMMARY_INCLUDE_STDERR);
+    boolean includeStdOut =
+        delegate.getBooleanValue(
+            TEST_SUMMARY_SECTION_NAME, "include_std_out", DEFAULT_SUMMARY_INCLUDE_STDOUT);
 
     return TestResultSummaryVerbosity.of(includeStdErr, includeStdOut);
   }

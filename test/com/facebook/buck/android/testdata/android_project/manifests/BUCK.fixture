@@ -1,0 +1,20 @@
+android_library(
+    name = "lib1",
+    manifest = "Manifest1.xml",
+    visibility = ["PUBLIC"],
+)
+
+android_library(
+    name = "lib2",
+    manifest = "Manifest2.xml",
+    visibility = ["PUBLIC"],
+)
+
+android_manifest(
+    name = "manifest",
+    skeleton = "Skeleton.xml",
+    deps = [
+        ":lib1",
+        ":lib2",
+    ],
+)

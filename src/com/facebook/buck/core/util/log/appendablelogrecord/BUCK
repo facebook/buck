@@ -1,0 +1,9 @@
+java_library(
+    name = "appendablelogrecord",
+    srcs = glob(["*java"]),
+    visibility = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/log:",
+        "//src/com/facebook/buck/testrunner:junit",
+    ],
+)

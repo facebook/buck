@@ -1,0 +1,249 @@
+sh_binary(
+    name = "packager_worker_exe",
+    main = "packager_worker.sh",
+    resources = ["pixel.gif"],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+worker_tool(
+    name = "packager_worker",
+    exe = ":packager_worker_exe",
+    visibility = ["PUBLIC"],
+)
+
+js_library(
+    name = "fruit",
+    srcs = [
+        "apple.js",
+        "banana.js",
+        "pear.js",
+    ],
+    worker = ":packager_worker",
+)
+
+js_library(
+    name = "extras",
+    srcs = glob(["extras/*.js"]),
+    extra_json = "{\"arbitrary\":\"extra\",\"json\":1}",
+    worker = ":packager_worker",
+)
+
+js_library(
+    name = "fruit-salad",
+    srcs = ["fruit-salad.js"],
+    worker = ":packager_worker",
+    deps = [
+        ":extras",
+        ":fruit",
+    ],
+)
+
+js_library(
+    name = "build-target-output",
+    srcs = ["//external:exported.js"],
+    worker = ":packager_worker",
+)
+
+js_library(
+    name = "replace-build-target-prefix",
+    srcs = ["//external:exported.js"],
+    base_path = "node_modules/exported.js",
+    worker = ":packager_worker",
+)
+
+js_library(
+    name = "node_modules",
+    srcs = [
+        ("//external:node-modules-installation", "a.js"),
+        ("//external:node-modules-installation", "b/index.js"),
+        ("//external:node-modules-installation", "c/c.js"),
+        ("//external:node-modules-installation", "c/package.json"),
+    ],
+    base_path = "node_modules",
+    worker = ":packager_worker",
+)
+
+js_library(
+    name = "lib-depending-on-lib-with-generated-sources",
+    srcs = ["apple.js"],
+    worker = ":packager_worker",
+    deps = [":node_modules"],
+)
+
+js_bundle(
+    name = "fruit-salad-in-a-bundle",
+    android_package = "com.sample",
+    entry = "fruit-salad",
+    extra_json = """{"a":[1,2,3],"b":true,"s":"hello $(location :empty)!"}""",
+    visibility = ["PUBLIC"],
+    worker = ":packager_worker",
+    deps = [":fruit-salad"],
+)
+
+js_bundle(
+    name = "fruit-with-extras",
+    android_package = "com.sample",
+    bundle_name = "some-fruit-with-delicious-extras.js",
+    entry = [
+        "yoghurt",
+        "banana",
+        "apple",
+    ],
+    worker = ":packager_worker",
+    deps = [
+        ":extras",
+        ":fruit",
+    ],
+)
+
+js_bundle(
+    name = "bundle_with_extra_json",
+    entry = "pear",
+    extra_json = """{"a":[1,2,3],"b":true,"s":"hello $(location :empty)!"}""",
+    worker = ":packager_worker",
+    deps = [":fruit"],
+)
+
+genrule(
+    name = "a-genrule",
+    out = "arbitrary",
+    cmd = "echo",
+)
+
+js_bundle(
+    name = "bundle-with-genrule-dep",
+    entry = "arbitrary",
+    worker = ":packager_worker",
+    deps = [":a-genrule"],
+)
+
+js_bundle(
+    name = "bundle-with-generated-sources",
+    entry = "arbitrary",
+    worker = ":packager_worker",
+    deps = [
+        ":build-target-output",
+        ":node_modules",
+    ],
+)
+
+android_library(
+    name = "the-android-lib",
+    deps = [":fruit-salad"],
+)
+
+js_bundle(
+    name = "bundle-with-android-lib",
+    android_package = "com.sample",
+    bundle_name_for_flavor = [
+        ("android", "android-bundle.js"),
+    ],
+    entry = "fruit-salad",
+    visibility = ["PUBLIC"],
+    worker = ":packager_worker",
+    deps = [":the-android-lib"],
+)
+
+js_library(
+    name = "lib-with-deps-query",
+    deps_query = "deps(//js/native-js:widgets)",
+    worker = ":packager_worker",
+    deps = [":build-target-output"],
+)
+
+js_bundle_genrule(
+    name = "genrule-inner",
+    bash = """
+        set -e
+        echo "CP STEP" >&2
+        cp "$JS_DIR/$JS_BUNDLE_NAME" "$OUT/$JS_BUNDLE_NAME_OUT"
+        ls "$OUT" >&2
+        echo "ECHO STEP" >&2
+        echo postprocessed >> "$OUT/$JS_BUNDLE_NAME_OUT"
+    """,
+    bundle_name = "renamed.bundle",
+    js_bundle = ":fruit-with-extras",
+)
+
+sh_binary(
+    name = "cp-and-append",
+    main = "cp-and-append.sh",
+)
+
+js_bundle_genrule(
+    name = "genrule-outer",
+    bash = """$(exe :cp-and-append) "$JS_DIR/$JS_BUNDLE_NAME" "$OUT/postprocessed.txt" "postprocessed again" """,
+    js_bundle = ":genrule-inner",
+    visibility = ["PUBLIC"],
+)
+
+js_bundle_genrule(
+    name = "sourcemap-genrule",
+    bash = """
+        set -e
+        echo "bundle" > "$OUT/bundle.txt"
+        sed 's/}/, "postprocessed": true}/' < "$SOURCEMAP" > "$SOURCEMAP_OUT"
+    """,
+    js_bundle = ":bundle-with-genrule-dep",
+    rewrite_sourcemap = True,
+)
+
+js_bundle_genrule(
+    name = "misc-genrule",
+    bash = """
+        set -e
+        echo "bundle" > "$OUT/bundle.txt"
+        echo "misc" > "$MISC_OUT/misc.txt"
+    """,
+    js_bundle = ":bundle-with-genrule-dep",
+    rewrite_misc = True,
+)
+
+js_bundle_genrule(
+    name = "deps-file-genrule",
+    bash = """
+        set -e
+        echo "bundle" > "$OUT/bundle.txt"
+        cat "$DEPENDENCIES" > "$DEPENDENCIES_OUT"
+        printf "\npostprocessed\n" >> "$DEPENDENCIES_OUT"
+    """,
+    js_bundle = ":fruit-with-extras",
+    rewrite_deps_file = True,
+)
+
+js_library(
+    name = "fruit_with_tests",
+    srcs = [
+        "apple.js",
+        "banana.js",
+        "pear.js",
+    ],
+    tests = [":test_for_fruit"],
+    worker = ":packager_worker",
+)
+
+sh_test(
+    name = "test_for_fruit",
+    args = [],
+    test = "test_for_fruit.sh",
+)
+
+genrule(
+    name = "genrule-using-only-sourcemap",
+    out = "out",
+    bash = "cp $(location :fruit-with-extras#source_map) $OUT",
+)
+
+genrule(
+    name = "genrule-using-only-sourcemap-of-bundle-genrule",
+    out = "out",
+    bash = "cp $(location :sourcemap-genrule#source_map) $OUT",
+)
+
+export_file(
+    name = "empty",
+    mode = "reference",
+    visibility = ["PUBLIC"],
+)

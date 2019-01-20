@@ -16,27 +16,33 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.util.exportedfiles.Nullable;
-
 import java.util.List;
+import javax.annotation.Nullable;
 
 /**
- * An interface for tracing the phases of compilation in Oracle's javac. This interface is loaded
- * in the system class loader so that it is common to both Buck and compiler plugins.
+ * An interface for tracing the phases of compilation in Oracle's javac. This interface is loaded in
+ * the system class loader so that it is common to both Buck and compiler plugins.
  */
 public interface JavacPhaseTracer {
   void beginParse(@Nullable String filename);
+
   void endParse();
 
   void beginEnter();
+
   void endEnter(List<String> filenames);
 
+  void setIsLastRound(boolean isLastRound);
+
   void beginAnnotationProcessingRound();
+
   void endAnnotationProcessingRound();
 
-  void beginAnalyze(@Nullable String filename, @Nullable String typename);
-  void endAnalyze();
+  void beginAnalyze();
+
+  void endAnalyze(List<String> filenames, List<String> typenames);
 
   void beginGenerate(@Nullable String filename, @Nullable String typename);
+
   void endGenerate();
 }

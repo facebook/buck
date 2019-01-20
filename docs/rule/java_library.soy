@@ -1,23 +1,40 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace java_library}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'java_library()' /}
+    {param navid: 'rule_java_library' /}
     {param prettify: true /}
     {param description}
-      A rule that is used to define a set of Java files that can be compiled
-      together.
+      A rule that is used to define a set of Java files that can be
+      compiled together.
     {/param}
     {param content}
 
 {call buck.rule}
 {param status: 'FROZEN' /}
 {param overview}
-A <code>java_library()</code> rule is used to define a set of Java
+A <code>java_library()</code> rule defines a set of Java
 files that can be compiled together. The main output of a
 {sp}<code>java_library()</code> rule is a single JAR file containing all
-of the compiled class files and resources.
+of the compiled class files, as well as the static files specified in
+the <code>resources</code> argument.
 {/param}
 
 {param args}
@@ -31,7 +48,7 @@ of the compiled class files and resources.
 
 {call buck.arg}
   {param name: 'srcs' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   The set of <code>.java</code> files to compile for this rule.
   If any of the files in this list end in <code>.src.zip</code>,
@@ -42,40 +59,11 @@ of the compiled class files and resources.
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'resources' /}
-  {param default : '[]' /}
-  {param desc}
-  Static files to include among the compiled <code>.class</code>
-  {sp}files. These files can be loaded via <a
-  href="http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getResource(java.lang.String)"
-  target="_blank">Class.getResource()</a>.
-  <p>
-  <strong>Note:</strong> If <code>resources_root</code> isn't set, Buck uses
-  the <code>src_roots</code> property in <a
-  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> to help
-  determine where resources should be placed within the generated JAR file.
-  <p>
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'resources_root' /}
-  {param default : 'None' /}
-  {param desc}
-  The path that resources are resolved against. For example, if{sp}
-  <code>resources_root</code> is <code>"res"</code> and
-  {sp}<code>resources</code>{sp} contains the file{sp}
-  <code>"res/com/example/foo.txt"</code>, that file will end up as{sp}
-  <code>"com/example/foo.txt"</code> in the output JAR. This parameter
-  overrides the <code>src_roots</code> property in <a
-  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
-  {/param}
-{/call}
+{call jvm_common.resources_arg /}
 
 {call buck.arg}
   {param name: 'deps' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   Rules (usually other <code>java_library</code> rules) that are used to
   generate the classpath required to compile this <code>java_library</code>.
@@ -83,53 +71,8 @@ of the compiled class files and resources.
 {/call}
 
 {call buck.arg}
-  {param name: 'autodeps' /}
-  {param default : 'False' /}
-  {param desc}
-  Should be set to <code>True</code> when using {call buck.cmd_autodeps /} to
-  generate the <code>deps</code> for this rule.
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'generated_symbols' /}
-  {param default : '[]' /}
-  {param desc}
-  When using {call buck.cmd_autodeps /}, it may be necessary to declare types
-  or symbols that are provided by this rule that cannot be statically inferred
-  from the <code>srcs</code> alone. This is most common when you include
-  generated files among the <code>srcs</code>.
-  <p>
-  For example, when generating a <code>.java</code> file via a{sp}
-  {call buck.genrule /} that is wrapped in a {call buck.java_library /},
-  you would want to declare the type of the generated file in
-  the <code>generated_symbols</code> of the {call buck.java_library /}.
-{literal}<pre class="prettyprint lang-py">
-genrule(
-  name = 'make_java',
-  cmd = 'createJavaClass > $OUT',
-  # Creates this file in the package com.example.
-  out = 'CreatedClass.java',
-)
-
-java_library(
-  name = 'created',
-  srcs = [ ':make_java' ],
-  generated_symbols = [
-    'com.example.CreatedClass',
-  ],
-)
-</pre>{/literal}
-  In this way, if <code>buck autodeps</code> sees a reference to{sp}
-  <code>com.example.CreatedClass</code> in the{sp}
-  <code>srcs</code> of another {call buck.java_library /} rule, it would know
-  to add <code>:created</code> to that rule's <code>deps</code>.
-  {/param}
-{/call}
-
-{call buck.arg}
   {param name: 'source' /}
-  {param default : '<global value>' /}
+  {param default: '<global value>' /}
   {param desc}
   Specifies the version of Java (as a string) to interpret source
   files as.
@@ -141,7 +84,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'target' /}
-  {param default : '<global value>' /}
+  {param default: '<global value>' /}
   {param desc}
   Specifies the version of Java (as a string) for which to
   generate code.
@@ -163,7 +106,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'javac' /}
-  {param default : '<global value>' /}
+  {param default: '<global value>' /}
   {param desc}
   Specifies the Java compiler program to use for this rule.
   The value is a source path (e.g., //foo/bar:bar).
@@ -176,7 +119,7 @@ java_library(
 
 {call buck.arg}
   {param name: 'javac_jar' /}
-  {param default : '<global value>' /}
+  {param default: '<global value>' /}
   {param desc}
   Specifies the Java compiler program to use for this rule.
   The value is a source path (e.g., //foo/bar:bar).
@@ -187,9 +130,11 @@ java_library(
   {/param}
 {/call}
 
+{call jvm_common.compiler_class_name_arg /}
+
 {call buck.arg}
   {param name: 'extra_arguments' /}
-  {param default : '[]' /}
+  {param default: '[]' /}
   {param desc}
   List of additional arguments to pass into the Java compiler.  These
   arguments follow the ones specified in <a
@@ -197,32 +142,25 @@ java_library(
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name: 'exported_deps' /}
-  {param default : '[]' /}
-  {param desc}
-  Other <code>java_library</code> rules that depend on this rule will also
-  include its <code>exported_deps</code> in their classpaths. This is useful
-  when the public API of a rule has return types or checked exceptions that are
-  defined in another rule, which would otherwise require callers to add an
-  extra dependency. It's also useful for exposing e.g. a collection of
-  {sp}<code>prebuilt_jar</code> rules as a single target for callers to depend
-  on. Targets in <code>exported_deps</code> are implicitly included in the
-  {sp}<code>deps</code> of this rule, so they don't need to be repeated there.
-  {/param}
+{call jvm_common.remove_classes_arg /}
+
+{call jvm_common.exported_deps}
+  {param library: 'java_library' /}
 {/call}
 
-{call buck.arg}
-  {param name: 'provided_deps' /}
-  {param default : '[]' /}
-  {param desc}
-  These represent dependencies that are known to be provided at run
-  time, but are required in order for the code to compile. Examples of
-  {sp}<code>provided_deps</code> include the JEE servlet APIs. When this
-  rule is included in a <code>java_binary</code>, the
-  {sp}<code>provided_deps</code> will not be packaged into the output.
-  {/param}
+{call jvm_common.provided_deps}
+  {param binary: 'java_library' /}
 {/call}
+
+{call jvm_common.exported_provided_deps /}
+
+{call jvm_common.abi_generation_mode /}
+
+{call jvm_common.source_only_abi_deps /}
+
+{call jvm_common.required_for_source_only_abi /}
+
+{call jvm_common.on_unused_dependencies /}
 
 {call buck.tests_arg /}
 

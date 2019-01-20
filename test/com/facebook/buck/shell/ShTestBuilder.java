@@ -16,45 +16,41 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
-public class ShTestBuilder extends AbstractNodeBuilder<ShTestDescription.Arg> {
+public class ShTestBuilder
+    extends AbstractNodeBuilder<
+        ShTestDescriptionArg.Builder, ShTestDescriptionArg, ShTestDescription, ShTest> {
 
   public ShTestBuilder(BuildTarget target) {
-    super(new ShTestDescription(Optional.<Long>absent()), target);
+    super(new ShTestDescription(FakeBuckConfig.builder().build()), target);
   }
 
   public ShTestBuilder setTest(SourcePath path) {
-    arg.test = path;
+    getArgForPopulating().setTest(path);
     return this;
   }
 
-  public ShTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+  public ShTestBuilder setArgs(ImmutableList<StringWithMacros> args) {
+    getArgForPopulating().setArgs(args);
     return this;
   }
 
-  public ShTestBuilder setArgs(ImmutableList<String> args) {
-    arg.args = Optional.of(args);
-    return this;
-  }
-
-  public ShTestBuilder setEnv(ImmutableMap<String, String> env) {
-    arg.env = Optional.of(env);
+  public ShTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {
+    getArgForPopulating().setEnv(env);
     return this;
   }
 
   public ShTestBuilder setResources(ImmutableSortedSet<Path> resources) {
-    arg.resources = Optional.of(resources);
+    getArgForPopulating().setResources(resources);
     return this;
   }
-
 }

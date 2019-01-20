@@ -1,0 +1,5 @@
+genrule(
+    name = "c",
+    out = "c",
+    cmd = "cp $(location //symlinks/a:a) $OUT",
+)

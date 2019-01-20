@@ -18,54 +18,82 @@ package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeExportDependenciesRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
-public class JavaLibraryDescriptionTest {
+public class JavaLibraryDescriptionTest extends AbiCompilationModeTest {
 
-  private FakeExportDependenciesRule exportingRule;
-  private BuildRuleResolver resolver;
-  private FakeBuildRule exportedRule;
+  private BuildRule exportingRule;
+  private ActionGraphBuilder graphBuilder;
+  private BuildRule exportedRule;
+  private JavaBuckConfig javaBuckConfig;
 
   @Before
-  public void setUp() {
-    resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void setUp() throws NoSuchBuildTargetException {
+    javaBuckConfig = getJavaBuckConfigWithCompilationMode();
 
-    exportedRule = resolver.addToIndex(new FakeBuildRule("//:exported_rule", pathResolver));
-    exportingRule = resolver.addToIndex(
-       new FakeExportDependenciesRule("//:exporting_rule", pathResolver, exportedRule));
+    TargetNode<?> exportedNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exported_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exported_rule/foo.java"))
+            .build();
+    TargetNode<?> exportingNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//:exporting_rule"), javaBuckConfig)
+            .addSrc(Paths.get("java/src/com/exporting_rule/bar.java"))
+            .addExportedDep(exportedNode.getBuildTarget())
+            .build();
+
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(exportedNode, exportingNode);
+
+    graphBuilder = new TestActionGraphBuilder(targetGraph);
+
+    exportedRule = graphBuilder.requireRule(exportedNode.getBuildTarget());
+    exportingRule = graphBuilder.requireRule(exportingNode.getBuildTarget());
   }
 
   @Test
-  public void rulesExportedFromDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromDepsBecomeFirstOrderDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target)
-        .addDep(exportingRule.getBuildTarget())
-        .build(resolver);
+    BuildRule javaLibrary =
+        JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
+            .addDep(exportingRule.getBuildTarget())
+            .build(graphBuilder);
 
-    assertThat(javaLibrary.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    // First order deps should become CalculateAbi rules if we're compiling against ABIs
+    if (compileAgainstAbis.equals(TRUE)) {
+      exportedRule = graphBuilder.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+    }
+
+    assertThat(javaLibrary.getBuildDeps(), Matchers.hasItem(exportedRule));
   }
 
   @Test
-  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() throws Exception {
+  public void rulesExportedFromProvidedDepsBecomeFirstOrderDeps() {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule javaLibrary = JavaLibraryBuilder.createBuilder(target)
-        .addProvidedDep(exportingRule.getBuildTarget())
-        .build(resolver);
+    BuildRule javaLibrary =
+        JavaLibraryBuilder.createBuilder(target, javaBuckConfig)
+            .addProvidedDep(exportingRule.getBuildTarget())
+            .build(graphBuilder);
 
-    assertThat(javaLibrary.getDeps(), Matchers.<BuildRule>hasItem(exportedRule));
+    // First order deps should become CalculateAbi rules if we're compiling against ABIs
+    if (compileAgainstAbis.equals(TRUE)) {
+      exportedRule = graphBuilder.getRule(((JavaLibrary) exportedRule).getAbiJar().get());
+    }
+
+    assertThat(javaLibrary.getBuildDeps(), Matchers.hasItem(exportedRule));
   }
 }

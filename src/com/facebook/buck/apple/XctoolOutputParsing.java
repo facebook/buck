@@ -16,187 +16,196 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonStreamParser;
-
+import com.facebook.buck.util.LenientBooleanJsonDeserializer;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-
 import javax.annotation.Nullable;
 
-/**
- * Utility class to parse the output from {@code xctool -reporter json-stream}.
- */
+/** Utility class to parse the output from {@code xctool -reporter json-stream}. */
 class XctoolOutputParsing {
 
   private static final Logger LOG = Logger.get(XctoolOutputParsing.class);
+  private static final String XCTOOL_CRASH_REPORT_KEY = "CRASH REPORT:";
 
   // Utility class; do not instantiate.
-  private XctoolOutputParsing() { }
+  private XctoolOutputParsing() {}
 
-  // Checkstyle thinks any class named "*Exception" is an exception and
-  // must only have final fields..
-  @SuppressWarnings("checkstyle:mutableexception")
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class TestException {
-    @Nullable
-    public String filePathInProject = null;
+    @Nullable public String filePathInProject = null;
     public int lineNumber = -1;
-    @Nullable
-    public String reason = null;
+    @Nullable public String reason = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class BeginOcunitEvent {
     public double timestamp = -1;
-    public String targetName = null;
+    @Nullable public String targetName = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class EndOcunitEvent {
     public double timestamp = -1;
-    @Nullable
-    public String message = null;
+    @Nullable public String message = null;
+
+    @JsonDeserialize(using = LenientBooleanJsonDeserializer.class)
     public boolean succeeded = false;
-    public String targetName = null;
+
+    @Nullable public String targetName = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class StatusEvent {
     public double timestamp = -1;
-    @Nullable
-    public String message = null;
-    @Nullable
-    public String level = null;
+    @Nullable public String message = null;
+    @Nullable public String level = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class BeginTestSuiteEvent {
     public double timestamp = -1;
-    @Nullable
-    public String suite = null;
+    @Nullable public String suite = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class EndTestSuiteEvent {
     public double timestamp = -1;
     public double totalDuration = -1;
     public double testDuration = -1;
-    @Nullable
-    public String suite = null;
+    @Nullable public String suite = null;
     public int testCaseCount = -1;
     public int totalFailureCount = -1;
     public int unexpectedExceptionCount = -1;
+
+    @JsonDeserialize(using = LenientBooleanJsonDeserializer.class)
     public boolean succeeded = false;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class BeginTestEvent {
     public double timestamp = -1;
-    @Nullable
-    public String test = null;
-    @Nullable
-    public String className = null;
-    @Nullable
-    public String methodName = null;
+    @Nullable public String test = null;
+    @Nullable public String className = null;
+    @Nullable public String methodName = null;
   }
 
+  @JsonIgnoreProperties(ignoreUnknown = true)
   public static class EndTestEvent {
     public double totalDuration = -1;
     public double timestamp = -1;
-    @Nullable
-    public String test = null;
-    @Nullable
-    public String className = null;
-    @Nullable
-    public String methodName = null;
-    @Nullable
-    public String output = null;
+    @Nullable public String test = null;
+    @Nullable public String className = null;
+    @Nullable public String methodName = null;
+    @Nullable public String output = null;
+
+    @JsonDeserialize(using = LenientBooleanJsonDeserializer.class)
     public boolean succeeded = false;
+
     public List<TestException> exceptions = new ArrayList<>();
   }
 
-  /**
-   * Callbacks invoked with events emitted by {@code xctool -reporter json-stream}.
-   */
+  /** Callbacks invoked with events emitted by {@code xctool -reporter json-stream}. */
   public interface XctoolEventCallback {
     void handleBeginOcunitEvent(BeginOcunitEvent event);
+
     void handleEndOcunitEvent(EndOcunitEvent event);
+
     void handleBeginStatusEvent(StatusEvent event);
+
     void handleEndStatusEvent(StatusEvent event);
+
     void handleBeginTestSuiteEvent(BeginTestSuiteEvent event);
+
     void handleEndTestSuiteEvent(EndTestSuiteEvent event);
+
     void handleBeginTestEvent(BeginTestEvent event);
+
     void handleEndTestEvent(EndTestEvent event);
   }
 
   /**
-   * Decodes a stream of JSON objects as produced by {@code xctool -reporter json-stream}
-   * and invokes the callbacks in {@code eventCallback} with each event in the stream.
+   * Decodes a stream of JSON objects as produced by {@code xctool -reporter json-stream} and
+   * invokes the callbacks in {@code eventCallback} with each event in the stream.
    */
-  public static void streamOutputFromReader(
-      Reader reader,
-      XctoolEventCallback eventCallback) {
-    Gson gson = new Gson();
-    JsonStreamParser streamParser = new JsonStreamParser(reader);
+  public static void streamOutputFromReader(Reader reader, XctoolEventCallback eventCallback) {
     try {
-      while (streamParser.hasNext()) {
-        dispatchEventCallback(gson, streamParser.next(), eventCallback);
+      MappingIterator<ImmutableMap<String, Object>> it =
+          ObjectMappers.READER
+              .forType(new TypeReference<ImmutableMap<String, Object>>() {})
+              .readValues(reader);
+      while (it.hasNext()) {
+        ImmutableMap<String, Object> element;
+        try {
+          element = it.next();
+        } catch (RuntimeJsonMappingException e) {
+          LOG.warn(e, "Couldn't parse JSON object from xctool event");
+          continue;
+        }
+        dispatchEventCallback(element, eventCallback);
       }
-    } catch (JsonParseException e) {
+    } catch (IOException e) {
       LOG.warn(e, "Couldn't parse xctool JSON stream");
     }
   }
 
   private static void dispatchEventCallback(
-      Gson gson,
-      JsonElement element,
-      XctoolEventCallback eventCallback)
-        throws JsonParseException {
-    LOG.debug("Parsing xctool event: %s", element);
-    if (!element.isJsonObject()) {
-      LOG.warn("Couldn't parse JSON object from xctool event: %s", element);
+      ImmutableMap<String, Object> object, XctoolEventCallback eventCallback) {
+    LOG.debug("Parsing xctool event: %s", object);
+    if (!object.containsKey("event")) {
+      LOG.warn("Couldn't parse JSON event from xctool event: %s", object);
       return;
     }
-    JsonObject object = element.getAsJsonObject();
-    if (!object.has("event")) {
-      LOG.warn("Couldn't parse JSON event from xctool event: %s", element);
+    Object event = object.get("event");
+    if (!(event instanceof String)) {
+      LOG.warn("Couldn't parse event field from xctool event: %s", object);
       return;
     }
-    JsonElement event = object.get("event");
-    if (event == null || !event.isJsonPrimitive()) {
-      LOG.warn("Couldn't parse event field from xctool event: %s", element);
-      return;
-    }
-    switch (event.getAsString()) {
+    switch ((String) event) {
       case "begin-ocunit":
-        eventCallback.handleBeginOcunitEvent(gson.fromJson(element, BeginOcunitEvent.class));
+        eventCallback.handleBeginOcunitEvent(
+            ObjectMappers.convertValue(object, BeginOcunitEvent.class));
         break;
       case "end-ocunit":
-        eventCallback.handleEndOcunitEvent(gson.fromJson(element, EndOcunitEvent.class));
+        eventCallback.handleEndOcunitEvent(
+            ObjectMappers.convertValue(object, EndOcunitEvent.class));
         break;
       case "begin-status":
-        eventCallback.handleBeginStatusEvent(gson.fromJson(element, StatusEvent.class));
+        eventCallback.handleBeginStatusEvent(ObjectMappers.convertValue(object, StatusEvent.class));
         break;
       case "end-status":
-        eventCallback.handleEndStatusEvent(gson.fromJson(element, StatusEvent.class));
+        eventCallback.handleEndStatusEvent(ObjectMappers.convertValue(object, StatusEvent.class));
         break;
       case "begin-test-suite":
-        eventCallback.handleBeginTestSuiteEvent(gson.fromJson(element, BeginTestSuiteEvent.class));
+        eventCallback.handleBeginTestSuiteEvent(
+            ObjectMappers.convertValue(object, BeginTestSuiteEvent.class));
         break;
       case "end-test-suite":
-        eventCallback.handleEndTestSuiteEvent(gson.fromJson(element, EndTestSuiteEvent.class));
+        eventCallback.handleEndTestSuiteEvent(
+            ObjectMappers.convertValue(object, EndTestSuiteEvent.class));
         break;
       case "begin-test":
-        eventCallback.handleBeginTestEvent(gson.fromJson(element, BeginTestEvent.class));
+        eventCallback.handleBeginTestEvent(
+            ObjectMappers.convertValue(object, BeginTestEvent.class));
         break;
       case "end-test":
-        eventCallback.handleEndTestEvent(gson.fromJson(element, EndTestEvent.class));
+        eventCallback.handleEndTestEvent(ObjectMappers.convertValue(object, EndTestEvent.class));
         break;
     }
   }
@@ -205,7 +214,7 @@ class XctoolOutputParsing {
       StatusEvent statusEvent) {
     if (statusEvent.message == null || statusEvent.level == null) {
       LOG.warn("Ignoring invalid status (message or level is null): %s", statusEvent);
-      return Optional.absent();
+      return Optional.empty();
     }
     Level level;
     switch (statusEvent.level) {
@@ -226,7 +235,7 @@ class XctoolOutputParsing {
         break;
       default:
         LOG.warn("Ignoring invalid status (unknown level %s)", statusEvent.level);
-        return Optional.absent();
+        return Optional.empty();
     }
     long timeMillis = (long) (statusEvent.timestamp * TimeUnit.SECONDS.toMillis(1));
     return Optional.of(TestStatusMessage.of(statusEvent.message, level, timeMillis));
@@ -234,24 +243,24 @@ class XctoolOutputParsing {
 
   public static TestResultSummary testResultSummaryForEndTestEvent(EndTestEvent endTestEvent) {
     long timeMillis = (long) (endTestEvent.totalDuration * TimeUnit.SECONDS.toMillis(1));
-    TestResultSummary testResultSummary = new TestResultSummary(
-        Preconditions.checkNotNull(endTestEvent.className),
-        Preconditions.checkNotNull(endTestEvent.test),
-        endTestEvent.succeeded ? ResultType.SUCCESS : ResultType.FAILURE,
-        timeMillis,
-        formatTestMessage(endTestEvent),
-        null, // stackTrace,
-        formatTestStdout(endTestEvent),
-        null // stdErr
-    );
+    TestResultSummary testResultSummary =
+        new TestResultSummary(
+            Objects.requireNonNull(endTestEvent.className),
+            Objects.requireNonNull(endTestEvent.test),
+            endTestEvent.succeeded ? ResultType.SUCCESS : ResultType.FAILURE,
+            timeMillis,
+            formatTestMessage(endTestEvent),
+            formatTestStackTrace(endTestEvent),
+            formatTestStdout(endTestEvent),
+            null // stdErr
+            );
     LOG.debug("Test result summary: %s", testResultSummary);
     return testResultSummary;
   }
 
   @Nullable
   private static String formatTestMessage(EndTestEvent endTestEvent) {
-    if (endTestEvent.exceptions != null &&
-        !endTestEvent.exceptions.isEmpty()) {
+    if (endTestEvent.exceptions != null && !endTestEvent.exceptions.isEmpty()) {
       StringBuilder exceptionsMessage = new StringBuilder();
       for (TestException testException : endTestEvent.exceptions) {
         if (exceptionsMessage.length() > 0) {
@@ -278,24 +287,35 @@ class XctoolOutputParsing {
     }
   }
 
+  @Nullable
+  private static String formatTestStackTrace(EndTestEvent endTestEvent) {
+    String output = formatTestStdout(endTestEvent);
+    if (!endTestEvent.succeeded && output != null && output.contains(XCTOOL_CRASH_REPORT_KEY)) {
+      return output;
+    } else {
+      return null;
+    }
+  }
+
   public static Optional<TestResultSummary> internalErrorForEndOcunitEvent(
       EndOcunitEvent endOcunitEvent) {
     if (endOcunitEvent.succeeded || endOcunitEvent.message == null) {
       // We only care about failures with a message. (Failures without a message always
       // happen with any random test failure.)
-      return Optional.absent();
+      return Optional.empty();
     }
 
-    TestResultSummary testResultSummary = new TestResultSummary(
-        "Internal error from test runner",
-        "main",
-        ResultType.FAILURE,
-        0L,
-        endOcunitEvent.message,
-        null, // stackTrace,
-        null, // stdOut
-        null // stdErr
-    );
+    TestResultSummary testResultSummary =
+        new TestResultSummary(
+            "Internal error from test runner",
+            "main",
+            ResultType.FAILURE,
+            0L,
+            endOcunitEvent.message,
+            null, // stackTrace,
+            null, // stdOut
+            null // stdErr
+            );
     LOG.debug("OCUnit/XCTest internal failure: %s", testResultSummary);
     return Optional.of(testResultSummary);
   }

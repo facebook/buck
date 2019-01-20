@@ -16,11 +16,10 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.CellPathResolver;
-
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
 public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
@@ -34,9 +33,10 @@ public class FlavorTypeCoercer extends LeafTypeCoercer<Flavor> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof String) {
-      return ImmutableFlavor.of((String) object);
+      return InternalFlavor.of((String) object);
     }
     throw CoerceFailedException.simple(object, getOutputClass());
   }

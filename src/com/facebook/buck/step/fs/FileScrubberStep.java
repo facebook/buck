@@ -16,21 +16,21 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.FileScrubber;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.FileAttributesScrubber;
+import com.facebook.buck.io.file.FileContentsScrubber;
+import com.facebook.buck.io.file.FileScrubber;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 
-/**
- * Scrub any non-deterministic meta-data from the given file (e.g. timestamp, UID, GID).
- */
+/** Scrub any non-deterministic meta-data from the given file (e.g. timestamp, UID, GID). */
 public class FileScrubberStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -38,9 +38,7 @@ public class FileScrubberStep implements Step {
   private final ImmutableList<FileScrubber> scrubbers;
 
   public FileScrubberStep(
-      ProjectFilesystem filesystem,
-      Path input,
-      ImmutableList<FileScrubber> scrubbers) {
+      ProjectFilesystem filesystem, Path input, ImmutableList<FileScrubber> scrubbers) {
     this.filesystem = filesystem;
     this.input = input;
     this.scrubbers = scrubbers;
@@ -51,19 +49,23 @@ public class FileScrubberStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Path filePath = filesystem.resolve(input);
     try {
       for (FileScrubber scrubber : scrubbers) {
         try (FileChannel channel = readWriteChannel(filePath)) {
-          scrubber.scrubFile(channel);
+          if (scrubber instanceof FileContentsScrubber) {
+            ((FileContentsScrubber) scrubber).scrubFile(channel);
+          } else if (scrubber instanceof FileAttributesScrubber) {
+            ((FileAttributesScrubber) scrubber).scrubFileWithPath(filePath);
+          }
         }
       }
-    } catch (IOException | FileScrubber.ScrubException e) {
+    } catch (FileContentsScrubber.ScrubException e) {
       context.logError(e, "Error scrubbing non-deterministic metadata from %s", filePath);
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.ERROR;
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
@@ -75,5 +77,4 @@ public class FileScrubberStep implements Step {
   public String getDescription(ExecutionContext context) {
     return "file-scrub";
   }
-
 }

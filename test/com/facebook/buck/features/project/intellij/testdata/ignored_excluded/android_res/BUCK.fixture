@@ -1,0 +1,8 @@
+android_resource(
+    name = "android_res",
+    package = "com.test",
+    res = subdir_glob([("res", "**")]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -1,0 +1,35 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/util/config:config",
+    ],
+)
+
+standard_java_test(
+    name = "filesystem",
+    deps = [
+        "//src/com/facebook/buck/io/watchman:capability",
+        "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/io:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

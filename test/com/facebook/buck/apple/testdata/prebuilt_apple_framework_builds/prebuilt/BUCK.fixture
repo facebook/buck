@@ -1,0 +1,6 @@
+prebuilt_apple_framework(
+    name = "BuckTest",
+    framework = "BuckTest.framework",
+    preferred_linkage = "shared",
+    visibility = ["PUBLIC"],
+)

@@ -189,7 +189,7 @@ public final class MixedItemSection extends Section {
      * @param item {@code non-null;} the item to intern
      * @return {@code non-null;} the equivalent interned instance
      */
-    public <T extends OffsettedItem> T intern(T item) {
+    public synchronized <T extends OffsettedItem> T intern(T item) {
         throwIfPrepared();
 
         OffsettedItem result = interns.get(item);
@@ -301,6 +301,8 @@ public final class MixedItemSection extends Section {
                 Collections.sort(items, TYPE_SORTER);
                 break;
             }
+            default:
+                // fall out
         }
 
         int sz = items.size();

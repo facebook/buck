@@ -22,19 +22,16 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableSet;
-
+import java.util.Optional;
 import org.junit.Test;
 
-/**
- * Unit test for {@link Optionals}.
- */
+/** Unit test for {@link Optionals}. */
 public class OptionalsTest {
 
   @Test
   public void testAbsentItemNotAdded() {
-    Optional<String> absent = Optional.absent();
+    Optional<String> absent = Optional.empty();
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     Optionals.addIfPresent(absent, builder);
@@ -54,12 +51,10 @@ public class OptionalsTest {
 
   @Test
   public void testCompare() {
-    assertThat(
-        Optionals.compare(Optional.<Integer>absent(), Optional.<Integer>absent()),
-        equalTo(0));
+    assertThat(Optionals.<Integer>compare(Optional.empty(), Optional.empty()), equalTo(0));
 
-    assertThat(Optionals.compare(Optional.<Integer>absent(), Optional.of(1)), lessThan(0));
-    assertThat(Optionals.compare(Optional.of(1), Optional.<Integer>absent()), greaterThan(0));
+    assertThat(Optionals.compare(Optional.empty(), Optional.of(1)), lessThan(0));
+    assertThat(Optionals.compare(Optional.of(1), Optional.empty()), greaterThan(0));
     assertThat(Optionals.compare(Optional.of(1), Optional.of(2)), lessThan(0));
     assertThat(Optionals.compare(Optional.of(2), Optional.of(1)), greaterThan(0));
   }

@@ -1,0 +1,4 @@
+bazel_deploy.jar was built by running `update.sh` script.
+
+NOTE: this is not an official public API and is a subject to change, so the
+process described above might have to be updated.

@@ -16,34 +16,30 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
-import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
-import com.facebook.buck.jvm.java.ClassUsageFileWriter;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import java.util.Optional;
 
-class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
-
-  private final Tool groovyc;
-  private final Optional<ImmutableList<String>> extraArguments;
-  private final JavacOptions javacOptions;
+class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
+  @AddToRuleKey private final Tool groovyc;
+  @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;
+  @AddToRuleKey private final JavacOptions javacOptions;
 
   public GroovycToJarStepFactory(
-      Tool groovyc,
-      Optional<ImmutableList<String>> extraArguments,
-      JavacOptions javacOptions) {
+      Tool groovyc, Optional<ImmutableList<String>> extraArguments, JavacOptions javacOptions) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
@@ -51,38 +47,34 @@ class GroovycToJarStepFactory extends BaseCompileToJarStepFactory {
 
   @Override
   public void createCompileStep(
-      BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
+      BuildContext buildContext,
+      ProjectFilesystem projectFilesystem,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> declaredClasspathEntries,
-      Path outputDirectory,
-      Optional<Path> workingDirectory,
-      Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
-      ClassUsageFileWriter usedClassesFileWriter,
-      /* out params */
-      ImmutableList.Builder<Step> steps,
+      CompilerParameters parameters,
+      /* output params */
+      Builder<Step> steps,
       BuildableContext buildableContext) {
+
+    ImmutableSortedSet<Path> declaredClasspathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Path outputDirectory = parameters.getOutputPaths().getClassesDir();
+    Path pathToSrcsList = parameters.getOutputPaths().getPathToSourcesList();
+
     steps.add(
         new GroovycStep(
             groovyc,
             extraArguments,
             javacOptions,
-            resolver,
+            buildContext.getSourcePathResolver(),
             outputDirectory,
             sourceFilePaths,
             pathToSrcsList,
             declaredClasspathEntries,
-            filesystem));
+            projectFilesystem));
   }
 
   @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    groovyc.appendToRuleKey(sink);
-    sink
-        .setReflectively("extraArguments", extraArguments)
-        .setReflectively("javacOptions", javacOptions);
+  public boolean hasAnnotationProcessing() {
+    return !javacOptions.getAnnotationProcessingParams().isEmpty();
   }
 }

@@ -16,13 +16,14 @@
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.MavenPublishable;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.maven.aether.AetherUtil;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.HashMultimap;
@@ -31,7 +32,16 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import com.google.common.io.Files;
-
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -45,19 +55,11 @@ import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.spi.locator.ServiceLocator;
 import org.eclipse.aether.util.artifact.SubArtifact;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
 public class Publisher {
 
   public static final String MAVEN_CENTRAL_URL = "https://repo1.maven.org/maven2";
-  private static final URL MAVEN_CENTRAL;
+  public static final URL MAVEN_CENTRAL;
+
   static {
     try {
       MAVEN_CENTRAL = new URL(MAVEN_CENTRAL_URL);
@@ -65,6 +67,7 @@ public class Publisher {
       throw new RuntimeException(e);
     }
   }
+
   private static final Logger LOG = Logger.get(Publisher.class);
 
   private final ServiceLocator locator;
@@ -72,32 +75,27 @@ public class Publisher {
   private final RemoteRepository remoteRepo;
   private final boolean dryRun;
 
-  public Publisher(
-      ProjectFilesystem repositoryFilesystem,
-      Optional<URL> remoteRepoUrl,
-      boolean dryRun) {
-    this(repositoryFilesystem.getRootPath(), remoteRepoUrl, dryRun);
-  }
-
   /**
-   * @param localRepoPath Typically obtained as
-   *                      {@link com.facebook.buck.io.ProjectFilesystem#getRootPath}
+   * @param localRepoPath Typically obtained as {@link ProjectFilesystem#getRootPath}
    * @param remoteRepoUrl Canonically {@link #MAVEN_CENTRAL_URL}
    * @param dryRun if true, a dummy {@link DeployResult} will be returned, with the fully
-   *               constructed {@link DeployRequest}. No actual publishing will happen
+   *     constructed {@link DeployRequest}. No actual publishing will happen
    */
   public Publisher(
       Path localRepoPath,
-      Optional<URL> remoteRepoUrl,
+      URL remoteRepoUrl,
+      Optional<String> username,
+      Optional<String> password,
       boolean dryRun) {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
-    this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl.or(MAVEN_CENTRAL));
+    this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl, username, password);
     this.locator = AetherUtil.initServiceLocator();
     this.dryRun = dryRun;
   }
 
   public ImmutableSet<DeployResult> publish(
-      ImmutableSet<MavenPublishable> publishables) throws DeploymentException {
+      SourcePathResolver pathResolver, ImmutableSet<MavenPublishable> publishables)
+      throws DeploymentException {
     ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget> duplicateBuiltinBuileRules =
         checkForDuplicatePackagedDeps(publishables);
     if (duplicateBuiltinBuileRules.size() > 0) {
@@ -113,9 +111,7 @@ public class Publisher {
         sb.append(StandardSystemProperty.LINE_SEPARATOR);
         sb.append(unflavoredBuildTarget.getFullyQualifiedName());
         sb.append(" (referenced by these build targets: ");
-        Joiner.on(", ").appendTo(
-            sb,
-            duplicateBuiltinBuileRules.get(unflavoredBuildTarget));
+        Joiner.on(", ").appendTo(sb, duplicateBuiltinBuileRules.get(unflavoredBuildTarget));
         sb.append(")");
       }
       throw new DeploymentException(sb.toString());
@@ -123,19 +119,19 @@ public class Publisher {
 
     ImmutableSet.Builder<DeployResult> deployResultBuilder = ImmutableSet.builder();
     for (MavenPublishable publishable : publishables) {
-      DefaultArtifact coords = new DefaultArtifact(
-          Preconditions.checkNotNull(
-              publishable.getMavenCoords().get(),
-              "No maven coordinates specified for published rule ",
-              publishable));
-      Path relativePathToOutput = Preconditions.checkNotNull(
-          publishable.getPathToOutput(),
-          "No path to output present in ",
-          publishable);
-      File mainItem = publishable
-          .getProjectFilesystem()
-          .resolve(relativePathToOutput)
-          .toFile();
+      DefaultArtifact coords =
+          new DefaultArtifact(
+              Preconditions.checkNotNull(
+                  publishable.getMavenCoords().get(),
+                  "No maven coordinates specified for published rule ",
+                  publishable));
+      Path relativePathToOutput =
+          pathResolver.getRelativePath(
+              Preconditions.checkNotNull(
+                  publishable.getSourcePathToOutput(),
+                  "No path to output present in ",
+                  publishable));
+      File mainItem = publishable.getProjectFilesystem().resolve(relativePathToOutput).toFile();
 
       if (!coords.getClassifier().isEmpty()) {
         deployResultBuilder.add(publish(coords, ImmutableList.of(mainItem)));
@@ -144,7 +140,7 @@ public class Publisher {
       try {
         // If this is the "main" artifact (denoted by lack of classifier) generate and publish
         // pom alongside
-        File pom = Pom.generatePomFile(publishable).toFile();
+        File pom = Pom.generatePomFile(pathResolver, publishable).toFile();
         deployResultBuilder.add(publish(coords, ImmutableList.of(mainItem, pom)));
       } catch (IOException e) {
         throw new RuntimeException(e);
@@ -156,12 +152,12 @@ public class Publisher {
   /**
    * Checks for any packaged dependencies that exist between more than one of the targets that we
    * are trying to publish.
+   *
    * @return A multimap of dependency build targets and the publishable build targets that have them
-   * included in the final package that will be uploaded.
+   *     included in the final package that will be uploaded.
    */
   private ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget>
-  checkForDuplicatePackagedDeps(
-      ImmutableSet<MavenPublishable> publishables) {
+      checkForDuplicatePackagedDeps(ImmutableSet<MavenPublishable> publishables) {
     // First build the multimap of the builtin dependencies and the publishable targets that use
     // them.
     Multimap<UnflavoredBuildTarget, UnflavoredBuildTarget> builtinDeps = HashMultimap.create();
@@ -184,61 +180,47 @@ public class Publisher {
     return builder.build();
   }
 
-  /**
-   * @param coords Buildr-style artifact reference, e.g. "com.example:foo:1.0"
-   *
-   * @see DefaultArtifact#DefaultArtifact(String)
-   */
-  public DeployResult publish(String coords, List<File> toPublish) throws DeploymentException {
-    return publish(new DefaultArtifact(coords), toPublish);
-  }
-
   public DeployResult publish(
-      String groupId,
-      String artifactId,
-      String version,
-      List<File> toPublish)
+      String groupId, String artifactId, String version, List<File> toPublish)
       throws DeploymentException {
     return publish(new DefaultArtifact(groupId, artifactId, "", version), toPublish);
   }
 
   /**
    * @param descriptor an {@link Artifact}, holding the maven coordinates for the published files
-   *                   less the extension that is to be derived from the files.
-   *                   The {@code descriptor} itself will not be published as is, and the
-   *                   {@link File} attached to it (if any) will be ignored.
+   *     less the extension that is to be derived from the files. The {@code descriptor} itself will
+   *     not be published as is, and the {@link File} attached to it (if any) will be ignored.
    * @param toPublish {@link File}(s) to be published using the given coordinates. The filename
-   *                  extension of each given file will be used as a maven "extension" coordinate
+   *     extension of each given file will be used as a maven "extension" coordinate
    */
   public DeployResult publish(Artifact descriptor, List<File> toPublish)
       throws DeploymentException {
     String providedExtension = descriptor.getExtension();
     if (!providedExtension.isEmpty()) {
       LOG.warn(
-          "Provided extension %s of artifact %s to be published will be ignored. The extensions " +
-              "of the provided file(s) will be used",
-          providedExtension,
-          descriptor);
+          "Provided extension %s of artifact %s to be published will be ignored. The extensions "
+              + "of the provided file(s) will be used",
+          providedExtension, descriptor);
     }
     List<Artifact> artifacts = new ArrayList<>(toPublish.size());
     for (File file : toPublish) {
-      artifacts.add(new SubArtifact(
-          descriptor,
-          descriptor.getClassifier(),
-          Files.getFileExtension(file.getAbsolutePath()),
-          file));
+      artifacts.add(
+          new SubArtifact(
+              descriptor,
+              descriptor.getClassifier(),
+              Files.getFileExtension(file.getAbsolutePath()),
+              file));
     }
     return publish(artifacts);
   }
 
   /**
    * @param toPublish each {@link Artifact} must contain a file, that will be published under maven
-   *                  coordinates in the corresponding {@link Artifact}.
+   *     coordinates in the corresponding {@link Artifact}.
    * @see Artifact#setFile
    */
   public DeployResult publish(List<Artifact> toPublish) throws DeploymentException {
-    RepositorySystem repoSys = Preconditions.checkNotNull(
-        locator.getService(RepositorySystem.class));
+    RepositorySystem repoSys = Objects.requireNonNull(locator.getService(RepositorySystem.class));
 
     DefaultRepositorySystemSession session = MavenRepositorySystemUtils.newSession();
     session.setLocalRepositoryManager(repoSys.newLocalRepositoryManager(session, localRepo));
@@ -259,7 +241,7 @@ public class Publisher {
     DeployRequest deployRequest = new DeployRequest().setRepository(remoteRepo);
     for (Artifact artifact : toPublish) {
       File file = artifact.getFile();
-      Preconditions.checkNotNull(file);
+      Objects.requireNonNull(file);
       Preconditions.checkArgument(file.exists(), "No such file: %s", file.getAbsolutePath());
 
       deployRequest.addArtifact(artifact);

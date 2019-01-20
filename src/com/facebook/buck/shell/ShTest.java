@@ -16,18 +16,24 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.ExternalTestRunnerRule;
-import com.facebook.buck.rules.ExternalTestRunnerTestSpec;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
+import com.facebook.buck.core.test.rule.TestRule;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
@@ -36,114 +42,97 @@ import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 /**
  * Test whose correctness is determined by running a specified shell script. If running the shell
  * script returns a non-zero error code, the test is considered a failure.
  */
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
-public class ShTest
-    extends NoopBuildRule
-    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule {
+public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements TestRule, HasRuntimeDeps, ExternalTestRunnerRule, BinaryBuildRule {
 
-  @AddToRuleKey
-  private final SourcePath test;
-  @AddToRuleKey
   private final ImmutableList<Arg> args;
-  @AddToRuleKey
   private final ImmutableMap<String, Arg> env;
-  @AddToRuleKey
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  private final ImmutableSortedSet<SourcePath> resources;
+  private final Optional<String> type;
+  private final ImmutableSortedSet<? extends SourcePath> resources;
   private final Optional<Long> testRuleTimeoutMs;
-  private final ImmutableSet<Label> labels;
+  private final ImmutableSet<String> contacts;
+  private final boolean runTestSeparately;
+  private final ImmutableSet<String> labels;
 
   protected ShTest(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      SourcePath test,
       ImmutableList<Arg> args,
       ImmutableMap<String, Arg> env,
-      ImmutableSortedSet<SourcePath> resources,
+      ImmutableSortedSet<? extends SourcePath> resources,
       Optional<Long> testRuleTimeoutMs,
-      Set<Label> labels) {
-    super(params, resolver);
-    this.test = test;
+      boolean runTestSeparately,
+      Set<String> labels,
+      Optional<String> type,
+      ImmutableSet<String> contacts) {
+    super(buildTarget, projectFilesystem, params);
     this.args = args;
     this.env = env;
     this.resources = resources;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.runTestSeparately = runTestSeparately;
     this.labels = ImmutableSet.copyOf(labels);
+    this.type = type;
+    this.contacts = contacts;
   }
 
   @Override
-  public ImmutableSet<Label> getLabels() {
+  public ImmutableSet<String> getLabels() {
     return labels;
   }
 
   @Override
   public ImmutableSet<String> getContacts() {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  public ImmutableSet<BuildRule> getSourceUnderTest() {
-    return ImmutableSet.of();
-  }
-
-  @Override
-  public boolean hasTestResultFiles() {
-    // If result.json was not written, then the test needs to be run.
-    return getProjectFilesystem().isFile(getPathToTestOutputResult());
+    return contacts;
   }
 
   @Override
   public ImmutableList<Step> runTests(
       ExecutionContext executionContext,
       TestRunningOptions options,
+      BuildContext buildContext,
       TestReportingCallback testReportingCallback) {
-    if (options.isDryRun()) {
-      // Stop now if we are a dry-run: sh-tests have no concept of dry-run inside the test itself.
-      return ImmutableList.of();
-    }
-
-    Step mkdirClean = new MakeCleanDirectoryStep(
-        getProjectFilesystem(),
-        getPathToTestOutputDirectory());
-
-    // Return a single command that runs an .sh file with no arguments.
-    Step runTest =
-        new RunShTestAndRecordResultStep(
-            getProjectFilesystem(),
-            getResolver().getAbsolutePath(test),
-            Arg.stringify(args),
-            Arg.stringify(env),
-            testRuleTimeoutMs,
-            getBuildTarget().getFullyQualifiedName(),
-            getPathToTestOutputResult());
-
-    return ImmutableList.of(mkdirClean, runTest);
+    return new ImmutableList.Builder<Step>()
+        .addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    buildContext.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    getPathToTestOutputDirectory())))
+        .add(
+            // Return a single command that runs an .sh file with no arguments.
+            new RunShTestAndRecordResultStep(
+                getProjectFilesystem(),
+                Arg.stringify(args, buildContext.getSourcePathResolver()),
+                Arg.stringify(env, buildContext.getSourcePathResolver()),
+                testRuleTimeoutMs,
+                getBuildTarget().getFullyQualifiedName(),
+                getPathToTestOutputResult()))
+        .build();
   }
 
   @Override
   public Path getPathToTestOutputDirectory() {
-    return BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        "__java_test_%s_output__");
+    return BuildTargetPaths.getGenPath(
+        getProjectFilesystem(), getBuildTarget(), "__sh_test_%s_output__");
   }
 
   @VisibleForTesting
@@ -153,57 +142,33 @@ public class ShTest
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      final ExecutionContext context,
-      boolean isUsingTestSelectors,
-      boolean isDryRun) {
-    final ImmutableSet<String> contacts = getContacts();
-
-    if (isDryRun) {
-      // Again, shortcut to returning no results, because sh-tests have no concept of a dry-run.
-      return new Callable<TestResults>() {
-        @Override
-        public TestResults call() throws Exception {
-          return TestResults.of(
-              getBuildTarget(),
-              ImmutableList.<TestCaseSummary>of(),
-              contacts,
-              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
-        }
-      };
-    } else {
-      return new Callable<TestResults>() {
-
-        @Override
-        public TestResults call() throws Exception {
-          Optional<String> resultsFileContents =
-              getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
-          ObjectMapper mapper = context.getObjectMapper();
-          TestResultSummary testResultSummary = mapper.readValue(resultsFileContents.get(),
-              TestResultSummary.class);
-          TestCaseSummary testCaseSummary = new TestCaseSummary(
-              getBuildTarget().getFullyQualifiedName(),
-              ImmutableList.of(testResultSummary));
-          return TestResults.of(
-              getBuildTarget(),
-              ImmutableList.of(testCaseSummary),
-              contacts,
-              FluentIterable.from(labels).transform(Functions.toStringFunction()).toSet());
-        }
-
-      };
-    }
+      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+    return () -> {
+      Optional<String> resultsFileContents =
+          getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
+      TestResultSummary testResultSummary =
+          ObjectMappers.readValue(resultsFileContents.get(), TestResultSummary.class);
+      TestCaseSummary testCaseSummary =
+          new TestCaseSummary(
+              getBuildTarget().getFullyQualifiedName(), ImmutableList.of(testResultSummary));
+      return TestResults.of(
+          getBuildTarget(),
+          ImmutableList.of(testCaseSummary),
+          contacts,
+          labels.stream().map(Object::toString).collect(ImmutableSet.toImmutableSet()));
+    };
   }
 
   @Override
   public boolean runTestSeparately() {
-    return false;
+    return runTestSeparately;
   }
 
   // A shell test has no real build dependencies.  Instead interpret the dependencies as runtime
   // dependencies, as these are always components that the shell test needs available to run.
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return getDeps();
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return getBuildDeps().stream().map(BuildRule::getBuildTarget);
   }
 
   @Override
@@ -212,15 +177,28 @@ public class ShTest
   }
 
   @Override
+  public Tool getExecutableCommand() {
+    CommandTool.Builder builder = new CommandTool.Builder().addInputs(resources);
+
+    for (Arg arg : args) {
+      builder.addArg(arg);
+    }
+    for (ImmutableMap.Entry<String, Arg> envVar : env.entrySet()) {
+      builder.addEnv(envVar.getKey(), envVar.getValue());
+    }
+    return builder.build();
+  }
+
+  @Override
   public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
-      TestRunningOptions testRunningOptions) {
+      TestRunningOptions testRunningOptions,
+      BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
-        .setType("custom")
-        .addCommand(getResolver().getAbsolutePath(test).toString())
-        .addAllCommand(Arg.stringify(args))
-        .setEnv(Arg.stringify(env))
+        .setType(type.orElse("custom"))
+        .addAllCommand(Arg.stringify(args, buildContext.getSourcePathResolver()))
+        .setEnv(Arg.stringify(env, buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
@@ -235,5 +213,4 @@ public class ShTest
   protected ImmutableMap<String, Arg> getEnv() {
     return env;
   }
-
 }

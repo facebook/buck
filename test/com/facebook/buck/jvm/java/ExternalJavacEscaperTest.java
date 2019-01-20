@@ -19,64 +19,63 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.collect.ImmutableMap;
-
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-
+import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
 public class ExternalJavacEscaperTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
     return Arrays.asList(
-        new Object[][]{
-            {"Poundsign", "pound#sign"},
-            {"Whitespace", "space present"},
-            {"SingleQuote", "quote'"},
-            {"DoubleQuote", "double_quote\""}
+        new Object[][] {
+          {"Poundsign", "pound#sign", true},
+          {"Whitespace", "space present", true},
+          {"SingleQuote", "quote'", true},
+          {"DoubleQuote", "double_quote\"", false}
         });
   }
 
-  @Parameterized.Parameter
-  public String name;
+  @Parameterized.Parameter public String name;
 
   @Parameterized.Parameter(value = 1)
   public String badDir;
 
+  @Parameterized.Parameter(value = 2)
+  public boolean runOnWindows;
+
   @Test
   public void testSpecialCharsInSourcePath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "external_javac", tmp);
+    assumeTrue(runOnWindows || Platform.detect() != Platform.WINDOWS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
     workspace.setUp();
 
-    Path javac = new ExecutableFinder().getExecutable(
-        Paths.get("javac"),
-        ImmutableMap.copyOf(System.getenv()));
+    Path javac =
+        new ExecutableFinder()
+            .getExecutable(Paths.get("javac"), EnvVariablesProvider.getSystemEnv());
     assumeTrue(Files.exists(javac));
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toString());
 
     workspace.move("java", badDir);
-    workspace.runBuckCommand("clean").assertSuccess();
-    workspace.runBuckCommand(
-        "build",
-        String.format("//%s/com/example:example", badDir))
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
+    workspace
+        .runBuckCommand("build", String.format("//%s/com/example:example", badDir))
         .assertSuccess();
   }
-
 }

@@ -1,0 +1,9 @@
+cxx_binary(
+    name = "binary_with_dep",
+    srcs = [
+        "foo.cpp",
+    ],
+    deps = [
+        "//dep1:dep1",
+    ],
+)

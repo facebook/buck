@@ -12,17 +12,40 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import glob
 import os
 import platform
 import shutil
 import subprocess
 import sys
 import tempfile
-import unittest
+
+
+def run_buck_process(command, cwd=None):
+    root_directory = os.getcwd()
+    cwd = cwd or root_directory
+    buck_path = os.path.join(root_directory, "buck-out", "gen", "programs", "buck.pex")
+    if platform.system() == "Windows":
+        args = ["python", buck_path] + list(command)
+    else:
+        args = [buck_path] + list(command)
+    # Pass thru our environment, except disabling buckd so that we can be sure the right buck
+    # is run.
+    child_environment = dict(os.environ)
+    child_environment["NO_BUCKD"] = "1"
+
+    return subprocess.Popen(
+        args,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=child_environment,
+    )
 
 
 class ProjectWorkspace(object):
+
+    is_windows = platform.system() == "Windows"
+
     def __init__(self, template_data_directory):
         self._template_data_directory = template_data_directory
         self._temp_dir = tempfile.mkdtemp()
@@ -33,33 +56,22 @@ class ProjectWorkspace(object):
         for root, dirs, files in os.walk(self.test_data_directory):
             for f in files:
                 filename, fileext = os.path.splitext(f)
-                if fileext == '.fixture':
+                if fileext == ".fixture":
                     os.rename(os.path.join(root, f), os.path.join(root, filename))
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        shutil.rmtree(self._temp_dir)
+        if self.is_windows:
+            # We do this due to bug: http://bugs.python.org/issue22022
+            subprocess.call(["rd", "/S", "/Q", self._temp_dir], shell=True)
+        else:
+            shutil.rmtree(self._temp_dir)
+
+    def resolve_path(self, path):
+        return os.path.join(self.test_data_directory, path)
 
     def run_buck(self, *command):
-        """ Tests that the default java.util.logging setup can maintain at least 'a couple'
-            of log files. """
-        root_directory = os.getcwd()
-        if platform.system() == 'Windows':
-            buck_path = os.path.join(root_directory, 'bin', 'buck.bat')
-        else:
-            buck_path = os.path.join(root_directory, 'bin', 'buck')
-        # Pass thru our environment, except disabling buckd so that we can be sure the right buck
-        # is run.
-        child_environment = dict(os.environ)
-        child_environment["NO_BUCKD"] = "1"
-
-        proc = subprocess.Popen(
-            [buck_path] + list(command),
-            cwd=self.test_data_directory,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=child_environment)
-
+        proc = run_buck_process(command, self.test_data_directory)
         stdout, stderr = proc.communicate()
 
         # Copy output through to unittest's output so failures are easy to debug. Can't just

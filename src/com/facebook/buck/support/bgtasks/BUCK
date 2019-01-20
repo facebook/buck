@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "bgtasks",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/support/bgtasks:bgtasks",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+    ],
+)

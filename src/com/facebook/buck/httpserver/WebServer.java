@@ -17,40 +17,42 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
-
-import org.eclipse.jetty.server.Connector;
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * A WebSocket server that reports events of buck.
  *
- * The WebServer can be modeled as:
- *  a) a network listener/dispatcher which sits on the port and listens for incoming http requests.
- *  b) static handlers - list of handlers that are bound to the current process
- *  (list of traces/logs/socket),
- *  c) 'normal' handlers, bound to the daemon state.
+ * <p>The WebServer can be modeled as: a) a network listener/dispatcher which sits on the port and
+ * listens for incoming http requests. b) static handlers - list of handlers that are bound to the
+ * current process (list of traces/logs/socket), c) 'normal' handlers, bound to the daemon state.
  *
- *  We would like the server to go down as infrequently as possible (this makes it simpler for
- *  /ws users who would otherwise need to reconnect and potentially lose state) which is the reason
- *  for section c) above.
+ * <p>We would like the server to go down as infrequently as possible (this makes it simpler for /ws
+ * users who would otherwise need to reconnect and potentially lose state) which is the reason for
+ * section c) above.
  */
 public class WebServer {
+
+  private static final Logger LOG = Logger.get(WebServer.class);
 
   private static final String INDEX_CONTEXT_PATH = "/";
   private static final String ARTIFACTS_CONTEXT_PATH = "/artifacts";
@@ -58,43 +60,28 @@ public class WebServer {
   private static final String TRACE_CONTEXT_PATH = "/trace";
   private static final String TRACES_CONTEXT_PATH = "/traces";
   private static final String TRACE_DATA_CONTEXT_PATH = "/tracedata";
+  private static final Path HTTP_PORT_FILE = Paths.get(".httpport");
 
-  private Optional<Integer> port;
   private final ProjectFilesystem projectFilesystem;
-  private final String staticContentDirectory;
   private final Server server;
   private final StreamingWebSocketServlet streamingWebSocketServlet;
   private final ArtifactCacheHandler artifactCacheHandler;
 
   /**
-   * @param port If 0, then an <a href="http://en.wikipedia.org/wiki/Ephemeral_port">
-   *     ephemeral port</a> will be assigned. Use {@link #getPort()} to find out which port is being
-   *     used.
+   * @param port If 0, then an <a href="http://en.wikipedia.org/wiki/Ephemeral_port">ephemeral
+   *     port</a> will be assigned. Use {@link #getPort()} to find out which port is being used.
    */
-  public WebServer(
-      int port,
-      ProjectFilesystem projectFilesystem,
-      String staticContentDirectory,
-      ObjectMapper objectMapper) {
+  public WebServer(int port, ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
-    this.staticContentDirectory = staticContentDirectory;
-    this.port = Optional.absent();
     this.server = new Server(port);
-    this.streamingWebSocketServlet = new StreamingWebSocketServlet(objectMapper);
+    this.streamingWebSocketServlet = new StreamingWebSocketServlet();
     this.artifactCacheHandler = new ArtifactCacheHandler(projectFilesystem);
   }
 
-  public Optional<Integer> getPort() {
-    if (!port.isPresent()) {
-      for (Connector connector : server.getConnectors()) {
-        if (connector instanceof ServerConnector) {
-          port = Optional.of(((ServerConnector) connector).getLocalPort());
-          break;
-        }
-      }
-    }
-
-    return port;
+  /** @return The port that web server is listening on. */
+  public int getPort() {
+    @Nullable URI uri = server.getURI();
+    return uri != null ? uri.getPort() : -1;
   }
 
   public WebServerBuckEventListener createListener() {
@@ -105,14 +92,19 @@ public class WebServer {
     return streamingWebSocketServlet;
   }
 
+  /** @return Number of clients streaming from webserver */
+  public int getNumActiveConnections() {
+    return streamingWebSocketServlet.getNumActiveConnections();
+  }
+
   /**
    * Update state and start the server if necessary.
    *
    * @param artifactCache cache to serve.
    * @throws WebServerException
    */
-  public synchronized void updateAndStartIfNeeded(
-      Optional<ArtifactCache> artifactCache) throws WebServerException {
+  public synchronized void updateAndStartIfNeeded(Optional<ArtifactCache> artifactCache)
+      throws WebServerException {
     artifactCacheHandler.setArtifactCache(artifactCache);
 
     if (server.isStarted()) {
@@ -121,7 +113,7 @@ public class WebServer {
 
     // Package up all of the handlers into a ContextHandlerCollection to serve as the handler for
     // the server.
-    List<? extends Handler> handlers = createHandlers();
+    ImmutableList<? extends Handler> handlers = createHandlers();
     ContextHandlerCollection contexts = new ContextHandlerCollection();
     contexts.setHandlers(handlers.toArray(new Handler[0]));
     server.setHandler(contexts);
@@ -131,25 +123,34 @@ public class WebServer {
     } catch (Exception e) {
       throw new WebServerException("Cannot start Websocket server.", e);
     }
+
+    int port = getPort();
+    LOG.debug("Web server is started on port %d.", port);
+    // announce web server by creating a file in buck-out
+    Path filePath = this.projectFilesystem.getBuckPaths().getBuckOut().resolve(HTTP_PORT_FILE);
+    try {
+      Files.write(filePath, String.valueOf(port).getBytes(StandardCharsets.UTF_8));
+    } catch (IOException e) {
+      throw new WebServerException("Unable to write to " + HTTP_PORT_FILE, e);
+    }
   }
 
   @VisibleForTesting
-  List<ContextHandler> createHandlers() {
-    Map<String, Handler> contextPathToHandler = Maps.newHashMap();
+  ImmutableList<ContextHandler> createHandlers() {
+    Map<String, Handler> contextPathToHandler = new HashMap<>();
 
     contextPathToHandler.put(INDEX_CONTEXT_PATH, new TemplateHandler(new IndexHandlerDelegate()));
 
-    ResourceHandler resourceHandler = new ResourceHandler();
-    resourceHandler.setResourceBase(staticContentDirectory);
-    contextPathToHandler.put(STATIC_CONTEXT_PATH, resourceHandler);
+    StaticResourcesHandler staticResourcesHandler = new StaticResourcesHandler();
+    contextPathToHandler.put(STATIC_CONTEXT_PATH, staticResourcesHandler);
 
     // Handlers for traces.
-    TracesHelper tracesHelper = new TracesHelper(projectFilesystem);
-    contextPathToHandler.put(TRACE_CONTEXT_PATH, new TemplateHandler(
-        new TraceHandlerDelegate(tracesHelper)));
-    contextPathToHandler.put(TRACES_CONTEXT_PATH, new TemplateHandler(
-        new TracesHandlerDelegate(tracesHelper)));
-    contextPathToHandler.put(TRACE_DATA_CONTEXT_PATH, new TraceDataHandler(tracesHelper));
+    BuildTraces buildTraces = new BuildTraces(projectFilesystem);
+    contextPathToHandler.put(
+        TRACE_CONTEXT_PATH, new TemplateHandler(new TraceHandlerDelegate(buildTraces)));
+    contextPathToHandler.put(
+        TRACES_CONTEXT_PATH, new TemplateHandler(new TracesHandlerDelegate(buildTraces)));
+    contextPathToHandler.put(TRACE_DATA_CONTEXT_PATH, new TraceDataHandler(buildTraces));
     contextPathToHandler.put(ARTIFACTS_CONTEXT_PATH, artifactCacheHandler);
 
     ImmutableList.Builder<ContextHandler> handlers = ImmutableList.builder();
@@ -162,11 +163,12 @@ public class WebServer {
     }
 
     // Create a handler that acts as a WebSocket server.
-    ServletContextHandler servletContextHandler = new ServletContextHandler(
-        /* parent */ server,
-        /* contextPath */ "/ws",
-        /* sessions */ true,
-        /* security */ false);
+    ServletContextHandler servletContextHandler =
+        new ServletContextHandler(
+            /* parent */ server,
+            /* contextPath */ "/ws",
+            /* sessions */ true,
+            /* security */ false);
     servletContextHandler.addServlet(new ServletHolder(streamingWebSocketServlet), "/build");
     handlers.add(servletContextHandler);
     return handlers.build();
@@ -183,7 +185,6 @@ public class WebServer {
     }
   }
 
-  @SuppressWarnings("serial")
   public static class WebServerException extends Exception {
 
     public WebServerException(String message, Exception clause) {

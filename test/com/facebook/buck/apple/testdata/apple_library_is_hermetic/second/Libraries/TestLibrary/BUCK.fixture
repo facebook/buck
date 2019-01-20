@@ -1,5 +1,5 @@
 apple_library(
-  name = 'TestLibrary',
-  compiler_flags = ['-g'],
-  srcs = ['TestClass.m'],
+    name = "TestLibrary",
+    srcs = ["TestClass.m"],
+    compiler_flags = ["-g"],
 )

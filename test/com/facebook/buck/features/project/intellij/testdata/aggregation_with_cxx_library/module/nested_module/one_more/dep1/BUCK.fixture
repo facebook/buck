@@ -1,0 +1,7 @@
+cxx_library(
+    name = "dep1",
+    srcs = glob(["src/**/*.cpp"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

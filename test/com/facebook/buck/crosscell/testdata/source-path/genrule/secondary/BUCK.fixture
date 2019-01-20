@@ -1,0 +1,34 @@
+genrule(
+    name = "lib.cpp",
+    out = "lib.cpp",
+    cmd = "echo 'int _main() { return 0; }' > $OUT",
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "main.cpp",
+    out = "main.cpp",
+    cmd = "echo 'int main() { return 0; }' > $OUT",
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "lib.m",
+    out = "lib.m",
+    cmd = "echo 'int _main() { return 0; }' > $OUT",
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "main.m",
+    out = "main.m",
+    cmd = "echo 'int main() { return 0; }' > $OUT",
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "Main.java",
+    out = "Main.java",
+    cmd = "echo 'package com.example; public class Main { public static void main(String[] args) {} }' > $OUT",
+    visibility = ["PUBLIC"],
+)

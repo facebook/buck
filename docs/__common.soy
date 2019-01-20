@@ -1,17 +1,32 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck}
 
 /**
  * @param title
  * @param? subtitle
  * @param content
- * @param? ishome
+ * @param navid
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
  * @param description the content of the og:description meta tag
  */
 {template .page}
   {call .header}
-    {param ishome: $ishome /}
+    {param navid: $navid /}
     {param title: $title /}
     {param subtitle: $subtitle /}
     {param prettify: $prettify /}
@@ -23,6 +38,7 @@
   </div>
 
   {call .footer}
+    {param navid: $navid /}
     {param prettify: $prettify /}
   {/call}
 {/template}
@@ -30,7 +46,7 @@
 /**
  * @param title
  * @param? subtitle
- * @param? ishome
+ * @param navid
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
  * @param description the content of the og:description meta tag
@@ -70,14 +86,20 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   {/if}
   // List buck.css second to override prettify.
   <link type="text/css" rel="stylesheet" href="{ROOT}static/buck.css">
+  <link type="text/css" rel="stylesheet" href="{ROOT}static/search.css">
+  <link
+    type="text/css"
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css" />
 
-  // TODO(bolinfest): Pass $og_type in as a parameter.
+  // TODO(mbolin): Pass $og_type in as a parameter.
   {let $og_type}
-    {if $ishome}
-      website
-    {else}
-      article
-    {/if}
+    {switch $navid}
+      {case 'home'}
+        website
+      {default}
+        article
+    {/switch}
   {/let}
 
   <meta property="og:locale" content="en_US">
@@ -87,6 +109,18 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   <meta property="og:type" content="{$og_type}">
   <meta property="og:description" content="{$description}">
   <meta property="fb:admins" content="{FB_APP_ID}">
+
+  <script>
+  {literal}
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', 'UA-44373548-18', 'auto');
+    ga('send', 'pageview');
+  {/literal}
+  </script>
 
 </head>
 <body>
@@ -103,20 +137,22 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   <header class='topbar'><nav class='width'>
       <a href='http://buckbuild.com/'><h1>Buck</h1></a>
       <ul class='menu'>
-        <li><a href='{ROOT}setup/quick_start.html'>Get Started</a>
-        <li><a href='https://groups.google.com/forum/#!forum/buck-build'>Group</a>
-        <li><a href='{ROOT}javadoc/'>API</a>
+      <li class="algolia-search-wrapper">
+        <input id="algolia-doc-search" type="search" placeholder="Search docs..." />
+      </li>
+        <li><a href='{ROOT}setup/getting_started.html'>Docs</a>
+        <li><a href='https://github.com/facebook/buck/issues'>Issues</a>
         <li><a href='https://github.com/facebook/buck'>GitHub</a>
       </ul>
 	</nav></header>
 
-{if $ishome}
+{if $navid == 'home'}
   <header class='hero'><div class='width'>
     <hgroup>
       <h1>
         A high-performance build tool
       </h1>
-      <a class='button' href='{ROOT}setup/quick_start.html'>Quick Start</a>&nbsp;
+      <a class='button' href='{ROOT}setup/getting_started.html'>Getting Started</a>&nbsp;
       <a class='button' href='https://github.com/facebook/buck'>GitHub</a>
     </hgroup>
     <aside>
@@ -130,312 +166,55 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 
 	<section class='content'><div class='width'>
 
-  <article>
-
-  {if not $ishome}
+  {if $navid != 'home'}
+    <article id="content">
     <h1>{$title}{if $subtitle}:<div class="subtitle">{$subtitle}</div>{/if}</h1>
+  {else}
+    <landing-page>
   {/if}
 
 {/template}
 
 /**
- * @param platform
- * @param rules
- */
-{template .platformBuildRuleLink}
-    <li><strong>{$platform}</strong></li>
-    {foreach $rule in $rules}
-        <li><a href="{ROOT}rule/{$rule}.html">{$rule}()</a>
-    {/foreach}
-{/template}
-
-/**
- * Consider passing in the path to the URL of the page that the user
- * is currently on and not hyperlinking that item in the table of contents.
- */
-{template .tableOfContents}
-    {let $platformRulesMap: [
-        'android': [
-            'android_aar',
-            'android_binary',
-            'android_build_config',
-            'android_instrumentation_apk',
-            'android_instrumentation_test',
-            'android_library',
-            'android_manifest',
-            'android_prebuilt_aar',
-            'android_resource',
-            'apk_genrule',
-            'cxx_library',
-            'gen_aidl',
-            'keystore',
-            'ndk_library',
-            'prebuilt_cxx_library',
-            'prebuilt_jar',
-            'prebuilt_native_library',
-            'project_config',
-        ],
-        'core': [
-            'export_file',
-            'genrule',
-            'remote_file',
-            'zip_file',
-        ],
-        'cxx': [
-            'cxx_binary',
-            'cxx_library',
-            'cxx_test',
-            'prebuilt_cxx_library',
-        ],
-        'd': [
-            'd_binary',
-            'd_library',
-            'd_test',
-        ],
-        'dotnet': [
-            'csharp_library',
-            'prebuilt_dotnet_library',
-        ],
-        'go': [
-            'go_binary',
-            'go_library',
-            'go_test',
-        ],
-        'groovy': [
-            'groovy_library',
-        ],
-        'halide': [
-            'halide_library',
-        ],
-        'haskell': [
-            'haskell_binary',
-            'haskell_library',
-            'prebuilt_haskell_library',
-        ],
-        'ios': [
-            'apple_asset_catalog',
-            'apple_binary',
-            'apple_bundle',
-            'apple_library',
-            'apple_package',
-            'apple_resource',
-            'apple_test',
-            'prebuilt_cxx_library',
-        ],
-        'java': [
-            'cxx_library',
-            'java_binary',
-            'java_library',
-            'java_test',
-            'prebuilt_jar',
-            'prebuilt_native_library',
-        ],
-        'lua': [
-            'cxx_lua_extension',
-            'lua_binary',
-            'lua_library',
-        ],
-        'python': [
-            'prebuilt_python_library',
-            'python_binary',
-            'python_library',
-            'python_test',
-        ],
-        'rust': [
-            'rust_binary',
-            'rust_library',
-        ],
-    ] /}
-  <h3>Getting Started</h3>
-  <ul>
-    <li><a href="{ROOT}about/overview.html">Overview</a>
-    <li><a href="{ROOT}setup/install.html">Downloading and Installing Buck</a>
-    <li><a href="{ROOT}setup/intellij_plugin_install.html">Installing the IntelliJ Plugin</a>
-    <li><a href="{ROOT}setup/quick_start.html">Quick Start</a>
-    <li><a href="{ROOT}article/exopackage.html">Exopackage</a>
-    <li><a href="{ROOT}article/query_cheat_sheet.html">Buck Query Cheat Sheet</a>
-  </ul>
-  <h3>About</h3>
-  <ul>
-    <li><a href="{ROOT}concept/what_makes_buck_so_fast.html">What Makes Buck so Fast?</a>
-    <li><a href="{ROOT}concept/troubleshooting.html">Troubleshooting</a>
-    <li><a href="{ROOT}about/performance_tuning.html">Performance Tuning</a>
-    <li><a href="{ROOT}concept/faq.html">FAQ</a>
-    <li><a href="{ROOT}presentations/">Learn More (Buck Presentations)</a>
-  </ul>
-  <h3>Concepts</h3>
-  <ul>
-    <li><a href="{ROOT}concept/build_rule.html">Build Rule</a>
-    <li><a href="{ROOT}concept/build_target.html">Build Target</a>
-    <li><a href="{ROOT}concept/build_file.html">Build File</a>
-    <li><a href="{ROOT}concept/buckversion.html">.buckversion</a>
-    <li><a href="{ROOT}concept/nobuckcheck.html">.nobuckcheck</a>
-    <li><a href="{ROOT}concept/buckjavaargs.html">.buckjavaargs</a>
-    <li><a href="{ROOT}concept/buckconfig.html">.buckconfig</a>
-    <li><a href="{ROOT}concept/build_target_pattern.html">Build Target Pattern</a>
-    <li><a href="{ROOT}concept/visibility.html">Visibility</a>
-    <li><a href="{ROOT}concept/http_cache_api.html">HTTP Cache API</a>
-  </ul>
-  <h3>Build Rules</h3>
-  <ul>
-    // Ugh, closure doesn't have the concept of sorting, so we cannot control the order without
-    // listing it ourselves.
-    {call .platformBuildRuleLink}
-        {param platform: 'Core' /}
-        {param rules: $platformRulesMap['core'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Android' /}
-        {param rules: $platformRulesMap['android'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'CXX' /}
-        {param rules: $platformRulesMap['cxx'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'D' /}
-        {param rules: $platformRulesMap['d'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Go' /}
-        {param rules: $platformRulesMap['go'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Groovy' /}
-        {param rules: $platformRulesMap['groovy'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Halide' /}
-        {param rules: $platformRulesMap['halide'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Haskell' /}
-        {param rules: $platformRulesMap['haskell'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Halide' /}
-        {param rules: $platformRulesMap['halide'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'iOS' /}
-        {param rules: $platformRulesMap['ios'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Java' /}
-        {param rules: $platformRulesMap['java'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Lua' /}
-        {param rules: $platformRulesMap['lua'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Python' /}
-        {param rules: $platformRulesMap['python'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'iOS' /}
-        {param rules: $platformRulesMap['ios'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Java' /}
-        {param rules: $platformRulesMap['java'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Lua' /}
-        {param rules: $platformRulesMap['lua'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Python' /}
-        {param rules: $platformRulesMap['python'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: 'Rust' /}
-        {param rules: $platformRulesMap['rust'] /}
-    {/call}
-    {call .platformBuildRuleLink}
-        {param platform: '.Net' /}
-        {param rules: $platformRulesMap['dotnet'] /}
-    {/call}
-  </ul>
-  <h3>Functions</h3>
-  <ul>
-    {foreach $function in [
-        'add_build_file_dep',
-        'glob',
-        'include_defs',
-        'read_config',
-        'subdir_glob',
-        'flatten_dicts',
-        ]}
-      <li><a href="{ROOT}function/{$function}.html">{$function}()</a>
-    {/foreach}
-    <li><a href="{ROOT}function/string_parameter_macros.html">String Parameter Macros</a>
-  </ul>
-  <h3>Commands</h3>
-  <ul>
-    <li><a href="{ROOT}command/common_parameters.html">Common Parameters</a>
-    {foreach $command in [
-        'audit',
-        'autodeps',
-        'build',
-        'clean',
-        'fetch',
-        'install',
-        'project',
-        'query',
-        'quickstart',
-        'repl',
-        'run',
-        'root',
-        'server',
-        'simulate',
-        'targets',
-        'test',
-        'uninstall',
-        ]}
-      <li><a href="{ROOT}command/{$command}.html">buck {$command}</a>
-    {/foreach}
-    <li><a href="{ROOT}command/buckd.html">buckd</a>
-  </ul>
-  <h3>Extending Buck</h3>
-  <ul>
-    <li><a href="{ROOT}extending/macros.html">Custom Macros</a>
-    <li><a href="{ROOT}extending/rules.html">Custom Rules</a>
-  </ul>
-  <h3>Contributing to Buck</h3>
-  <ul>
-    <li><a href="https://groups.google.com/group/buck-build">Discussion Group</a>
-    <li><a href="http://stackoverflow.com/questions/ask?tags=buck">Get Support</a>
-    <li><a href="https://github.com/facebook/buck/issues/new">Report a Bug</a>
-    <li><a href="{ROOT}contributing/tour.html">Tour of the Codebase</a>
-    <li><a href="{ROOT}contributing/development.html">Development Workflow</a>
-    <li><a href="{ROOT}contributing/codestyle.html">Code Style</a>
-    <li><a href="{ROOT}contributing/logging.html">Logging</a>
-    <li><a href="{ROOT}contributing/immutables.html">Immutable Value Types</a>
-    <li><a href="{ROOT}javadoc">API</a>
-    <li><a href="https://github.com/facebook/buck">Browse the Source Code</a>
-  </ul>
-</ul>
-{/template}
-
-/**
+ * @param navid The current page's navigation id.
  * @param? prettify true if https://code.google.com/p/google-code-prettify/
  *     should be used.
  */
 {template .footer}
 
-</article>
-
+{if $navid != 'home'}
+  </article>
   <nav>
-    {call buck.tableOfContents data="all" /}
+    {call table_of_contents.main data="all"}
+      {param navid: $navid /}
+    {/call}
   </nav>
-
+{else}
+  </landing-page>
+{/if}
 
 </div></section>
 
 <footer><div class='width'>
-  &copy; Copyright Facebook, 2013 -
+  &copy; Copyright Facebook, 2013 - 2018
 </div></footer>
+
+<!-- Algolia Search Code -->
+<script
+  type="text/javascript"
+  src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js">
+</script>
+<script>
+{literal}
+docsearch({
+  apiKey: 'c25b7174e8f6161ce5fdd44bb0b95081',
+  indexName: 'buckbuild',
+  inputSelector: '#algolia-doc-search',
+  debug: false // Set debug to true if you want to inspect the dropdown
+});
+{/literal}
+</script>
+<!-- End Algolia Search Code -->
 
 {if hasData() and $prettify}
   <script src="{ROOT}google-code-prettify/prettify.js"></script>
@@ -455,20 +234,33 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
  * @param? default What the default value should be. If null, the argument is
  *     required.
  * @param desc Prose description of the argument.
+ * @param? deprecated Whether this argument has been deprecated
+ * @param? deprecationAlternative An alternative to use rather than this deprecated property
  */
 {template .arg}
-  <li class="{css arg}"><code>{$name}</code>
-
-  {sp}
-  {if isNonnull($default)}
-    (defaults to <code>{$default}</code>)
-  {else}
-    (required)
+<li id="{$name}" class="arg">
+  <h3>
+    <code class="argName">{$name}</code>
+    {sp}
+    <span class="argDefault">
+      {if isNonnull($default)}
+        (defaults to <code>{$default}</code>)
+      {else}
+        (required)
+      {/if}
+    </span>
+    {sp}
+    <a class="inline-link" href="#{$name}">#</a>
+  </h3>
+  {if $deprecated}
+  <p class="warning-banner">
+  This property is deprecated. {if isNonnull($deprecationAlternative)}{$deprecationAlternative|noAutoescape}{/if}
+  </p>
   {/if}
-  {sp}
-
-  {$desc|noAutoescape}
-
+  <p>
+    {$desc|noAutoescape}
+  </p>
+</li>
 {/template}
 
 
@@ -476,7 +268,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
  * @param overview HTML description of the rule.
  * @param status one of FROZEN, UNFROZEN, or DEPRECATED to indicate the
        current level of support for the rule.
- * @param args HTML documentation for each arg for the rule.
+ * @param? args HTML documentation for each arg for the rule.
  *     Should be created using multiple applications of the {buck.arg}
  *     template.
  * @param? flavors HTML documentation for each flavor supported by the rule.
@@ -503,6 +295,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   {$args|noAutoescape}
   {call buck.visibility_arg /}
   {call buck.licenses_arg /}
+  {call buck.labels_arg /}
 </ul>
 
 {if $flavors}
@@ -592,7 +385,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
  * @param overview HTML description of the function.
  * @param status one of FROZEN, UNFROZEN, or DEPRECATED to indicate the
        current level of support for the rule.
- * @param args HTML documentation for each arg for the function.
+ * @param? args HTML documentation for each arg for the function.
  *     Should be created using multiple applications of the {buck.functionArg}
  *     template.
  * @param? examples HTML documentation that shows examples of the function
@@ -611,10 +404,12 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/switch}
 {$overview|noAutoescape}
 
-<h2>Arguments</h2>
-<ul class="{css arglist}">
-  {$args|noAutoescape}
-</ul>
+{if $args}
+  <h2>Arguments</h2>
+  <ul class="{css arglist}">
+    {$args|noAutoescape}
+  </ul>
+{/if}
 
 {if $examples}
   <h2>Examples</h2>
@@ -626,12 +421,40 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/if}
 {/template}
 
-
-/** @param name */
-{template .ruleLink}
-<a href="{ROOT}rule/{$name}.html"><code>{$name}</code></a>
+/**
+ * @param? rendered_text  Optionally, specify the rendered text for the
+ *                        link. If not specified, the rendered text is 
+ *                        "Key Concepts".
+ */
+{template .key_concepts_link}
+  {if $rendered_text}
+    <a href="{ROOT}about/overview.html">{$rendered_text}</a>
+  {else}
+    <a href="{ROOT}about/overview.html">Key Concepts</a>
+  {/if}
 {/template}
 
+/**
+ * @param name
+ * @param? section
+ */
+{template .ruleLink}
+  {if not $section}
+    <a href="{ROOT}rule/{$name}.html"><code>{$name}</code></a>
+  {else}
+    <a href="{ROOT}rule/{$name}.html#{$section}"><code>{$section}</code></a>
+  {/if}
+{/template}
+
+/***/
+{template .abi_rule_keys}
+{call .concept_link_heading}{param page : 'rule_keys' /}{param heading : 'abi_rule_keys' /}{param name : 'ABI rule keys' /}{/call}
+{/template}
+
+/***/
+{template .skylark}
+{call .concept_link_heading}{param page : 'skylark' /}{param heading : 'migration' /}{param name : 'Python DSL to Skylark migration' /}{/call}
+{/template}
 
 /***/
 {template .android_aar}
@@ -719,6 +542,11 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .java_binary}
+{call .ruleLink}{param name : 'java_binary' /}{/call}
+{/template}
+
+/***/
 {template .java_library}
 {call .ruleLink}{param name : 'java_library' /}{/call}
 {/template}
@@ -726,6 +554,16 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /***/
 {template .java_test}
 {call .ruleLink}{param name : 'java_test' /}{/call}
+{/template}
+
+/***/
+{template .kotlin_library}
+{call .ruleLink}{param name : 'kotlin_library' /}{/call}
+{/template}
+
+/***/
+{template .kotlin_test}
+{call .ruleLink}{param name : 'kotlin_test' /}{/call}
 {/template}
 
 /***/
@@ -759,13 +597,13 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
-{template .project_config}
-{call .ruleLink}{param name : 'project_config' /}{/call}
+{template .prebuilt_cxx_library}
+{call .ruleLink}{param name : 'prebuilt_cxx_library' /}{/call}
 {/template}
 
 /***/
-{template .prebuilt_cxx_library}
-{call .ruleLink}{param name : 'prebuilt_cxx_library' /}{/call}
+{template .prebuilt_cxx_library_group}
+{call .ruleLink}{param name : 'prebuilt_cxx_library_group' /}{/call}
 {/template}
 
 /***/
@@ -794,8 +632,47 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .cxx_binary}
+{call .ruleLink}{param name : 'cxx_binary' /}{/call}
+{/template}
+
+/***/
+{template .cxx_genrule}
+{call .ruleLink}{param name : 'cxx_genrule' /}{/call}
+{/template}
+
+/***/
 {template .cxx_library}
 {call .ruleLink}{param name : 'cxx_library' /}{/call}
+{/template}
+
+/***/
+{template .reexport_all_header_dependencies}
+{call .ruleLink}
+  {param name : 'cxx_library' /}
+  {param section : 'reexport_all_header_dependencies' /}
+{/call}
+{/template}
+
+/**
+ * @param name            Specify the name of the function to link to.
+ * @param? rendered_text  Optionally, specify the rendered text for the
+ *                        link. If not specified, the rendered text is 
+ *                        the name of the function.
+ *
+ *   Examples
+ *   
+ *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{/call} 
+ *
+ *   {call buck.function_link}{param name: 'allow_unsafe_import' /}{param rendered_text: 'a bad function' /}{/call} 
+ *
+ */
+{template .function_link}
+  {if $rendered_text}
+    <a href="{ROOT}function/{$name}.html">{$rendered_text}</a>
+  {else}
+    <a href="{ROOT}function/{$name}.html"><code>{$name}()</code></a>
+  {/if}
 {/template}
 
 /***/
@@ -814,8 +691,23 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .fn_load}
+<a href="{ROOT}function/load.html"><code>load()</code></a>
+{/template}
+
+/***/
+{template .fn_get_base_path}
+<a href="{ROOT}function/get_base_path.html"><code>get_base_path()</code></a>
+{/template}
+
+/***/
 {template .fn_read_config}
 <a href="{ROOT}function/read_config.html"><code>read_config()</code></a>
+{/template}
+
+/***/
+{template .fn_host_info}
+<a href="{ROOT}function/host_info.html"><code>host_info()</code></a>
 {/template}
 
 /***/
@@ -832,9 +724,19 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 /**
  * @param page
  * @param name
+ * @param? navid
  */
 {template .concept_link}
-<a href="{ROOT}concept/{$page}.html">{$name}</a>
+<a href="{ROOT}concept/{$page}.html{if isNonnull($navid)}#{$navid}{/if}">{$name|noAutoescape}</a>
+{/template}
+
+/**
+ * @param page
+ * @param name
+ * @param heading
+ */
+{template .concept_link_heading}
+<a href="{ROOT}concept/{$page}.html#{$heading}">{$name}</a>
 {/template}
 
 /***/
@@ -866,20 +768,39 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .macros}
+<a href="{ROOT}extending/macros.html">macros</a>
+{/template}
+
+/***/
 {template .setup_build_intellij_plugin}
 <a href="{ROOT}setup/intellij_plugin_build.html">Building the Buck Intellij Plugin</a>
 {/template}
 
-/**
- * @param name
- */
-{template .cmd_link}
-<a href="{ROOT}command/{$name}.html"><code>buck {$name}</code></a>
+/***/
+{template .buckd}
+<a href="{ROOT}concept/buckd.html"><code>buckd</code></a>
 {/template}
 
-/***/
-{template .cmd_autodeps}
-{call .cmd_link}{param name : 'autodeps' /}{/call}
+/**
+ * @param name
+ * @param? section
+ * @param? rendered_text
+ */
+{template .cmd_link}
+  {if not $section}
+    {if $rendered_text}
+      <a href="{ROOT}command/{$name}.html">{$rendered_text|noAutoescape}</a>
+    {else}
+      <a href="{ROOT}command/{$name}.html"><code>buck {$name}</code></a>
+    {/if}
+  {else}
+    {if $rendered_text}
+      <a href="{ROOT}command/{$name}.html#{$section}">{$rendered_text|noAutoescape}</a>
+    {else}
+      <a href="{ROOT}command/{$name}.html#{$section}"><code>{$section}</code></a>
+    {/if}
+  {/if}
 {/template}
 
 /***/
@@ -898,8 +819,18 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .cmd_fix}
+{call .cmd_link}{param name : 'fix' /}{/call}
+{/template}
+
+/***/
 {template .cmd_install}
 {call .cmd_link}{param name : 'install' /}{/call}
+{/template}
+
+/***/
+{template .cmd_kill}
+{call .cmd_link}{param name : 'kill' /}{/call}
 {/template}
 
 /***/
@@ -908,13 +839,8 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
-{template .cmd_quickstart}
-{call .cmd_link}{param name : 'quickstart' /}{/call}
-{/template}
-
-/***/
-{template .cmd_repl}
-{call .cmd_link}{param name : 'repl' /}{/call}
+{template .cmd_root}
+{call .cmd_link}{param name : 'root' /}{/call}
 {/template}
 
 /***/
@@ -923,8 +849,8 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
-{template .cmd_simulate}
-{call .cmd_link}{param name : 'simulate' /}{/call}
+{template .cmd_targets}
+{call .cmd_link}{param name: 'targets' /}{/call}
 {/template}
 
 /***/
@@ -943,8 +869,65 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
-{template .concept_buckconfig}
-<a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>
+{template .buckconfig_link}
+<a href="{ROOT}files-and-dirs/buckconfig.html"><code>.buckconfig</code></a>
+{/template}
+
+/***/
+{template .deps_query_arg}
+{call buck.arg}
+  {param name: 'deps_query' /}
+  {param default : 'None' /}
+  {param desc}
+  Status: <strong>experimental/unstable</strong>.
+  The deps query takes a query string that accepts the following query functions, and appends the
+  output of the query to the declared deps:
+  {literal}
+  <ul style="line-height:0.5em">
+    <li><code>attrfilter</code></li>
+    <li><code>deps</code></li>
+    <li><code>except</code></li>
+    <li><code>intersect</code></li>
+    <li><code>filter</code></li>
+    <li><code>kind</code></li>
+    <li><code>set</code></li>
+    <li><code>union</code></li>
+  </ul>
+  {/literal}
+
+  The macro <code>$declared_deps</code> may be used anywhere a target literal pattern is expected
+  in order to refer to the explicit deps of this rule as they appear in the rule's definition.
+  For example, if your build rule declares
+  {literal}<pre class="prettyprint lang-py">
+  android_library(
+    name = 'lib',
+    deps = ['//foo:foo'],
+    deps_query = '$declared_deps',
+  )</pre>
+  {/literal}
+  then the macro <code>$declared_deps</code> would be expanded to a
+  literal <code>set(//foo:foo)</code>.
+  Some example queries:
+  {literal}<pre>
+  "filter({name_regex}, $declared_deps)".format(name_regex='//.*')
+  "attrfilter(annotation_processors, com.foo.Processor, $declared_deps)"</pre>
+  {/literal}
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .provided_deps_query_arg}
+{call buck.arg}
+  {param name: 'provided_deps_query' /}
+  {param default : 'None' /}
+  {param desc}
+  Status: <strong>experimental/unstable</strong>.
+  The provided deps query functions in the same way as the deps query, but the referenced deps
+  using <code>$declared</code> are the provided deps of the target, and the results of the query
+  are appended to the declared provided deps.
+  {/param}
+{/call}
 {/template}
 
 /***/
@@ -960,6 +943,18 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .labels_arg}
+{call buck.arg}
+  {param name: 'labels' /}
+  {param default: '[]' /}
+  {param desc}
+  Set of arbitrary strings which allow you to annotate a {call buck.build_rule /} with tags
+  that can be searched for over an entire dependency tree using {call buckquery.attrfilter /}.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .visibility_arg}
 {call buck.arg}
   {param name : 'visibility' /}
@@ -967,7 +962,10 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   {param desc}
   List of <a href="{ROOT}concept/build_target_pattern.html">build
   target patterns</a> that identify the build rules that can include
-  this rule in its <code>deps</code>.
+  this rule as a dependency, for example, by listing it in
+  their <code>deps</code> or <code>exported_deps</code> attributes.
+  For more information,
+  see {call buck.concept_link}{param page: 'visibility' /}{param name: 'visibility' /}{/call}.
   {/param}
 {/call}
 {/template}
@@ -979,7 +977,22 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   {param default : '[]' /}
   {param desc}
   List of <a href="{ROOT}concept/build_target.html">build targets</a> that
-  identify the test rules that exercise this target.
+  identify tests that exercise this target.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .tests_apple_arg}
+{call buck.arg}
+  {param name : 'tests' /}
+  {param default : '[]' /}
+  {param desc}
+  List of <a href="{ROOT}concept/build_target.html">build targets</a> that
+  identify the test rules that exercise this target.  Note that
+  non <a href="{ROOT}rule/apple_test.html"><code>apple_test</code></a> targets
+  will not be included in generated projects due to Xcode's limitations but will still work
+  with <a href="{ROOT}command/test.html"><code>buck test</code></a>.
   {/param}
 {/call}
 {/template}
@@ -1007,7 +1020,7 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
   {param name: 'run_test_separately' /}
   {param default : 'False' /}
   {param desc}
-  If set to <code>true</code>, the test(s) in this rule are run separately
+  If set to <code>True</code>, the test(s) in this rule are run separately
   from all other tests. (This is useful
   for integration tests which access a physical device or other limited
   resource.)
@@ -1017,10 +1030,35 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 {/template}
 
 /***/
+{template .fork_mode}
+{call buck.arg}
+  {param name: 'fork_mode' /}
+  {param default : 'None' /}
+  {param desc}
+  Controls whether tests will all be run in the same process or a process will be
+  started for each set of tests in a class.
+
+  (This is mainly useful when porting Java tests to Buck from Apache Ant which
+  allows JUnit tasks to set a <code>fork="yes"</code> property. It should not be
+  used for new tests since it encourages tests to not cleanup after themselves and
+  increases the tests' computational resources and running time.)
+
+  <dl>
+    <dt><code>none</code></dt>
+    <dd>All tests will run in the same process.</dd>
+    <dt><code>per_test</code></dt>
+    <dd>A process will be started for each test class in which all tests of that test class
+        will run.</dd>
+  </dl>
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .test_rule_timeout_ms}
 {call buck.arg}
   {param name: 'test_rule_timeout_ms' /}
-  {param default: '[]' /}
+  {param default: 'None' /}
   {param desc}
   If set specifies the maximum amount of time (in milliseconds) in which all of the tests in this
   rule should complete. This overrides the default <code>rule_timeout</code> if any has been
@@ -1031,16 +1069,39 @@ src="https://www.facebook.com/tr?id=1637165926500152&ev=PageView&noscript=1"
 
 /**
  * @param? withAlias
+ * @param? isWindows
  */
 {template .installationInstructions}
 {literal}<pre>
 git clone https://github.com/facebook/buck.git
 cd buck
-ant{/literal}{\n}
-{if $withAlias}
+ant{/literal}
+{if $withAlias and not $isWindows}
 sudo ln -s ${lb}PWD{rb}/bin/buck /usr/bin/buck
+{elseif not $isWindows}
+{literal}
+./bin/buck build --show-output buck
+buck-out/gen/programs/buck.pex --help
+{/literal}
 {else}
-./bin/buck --help
+{literal}
+.\bin\buck build --show-output buck
+buck-out\gen\programs\buck.pex --help
+{/literal}
 {/if}
 </pre>
+{/template}
+
+/**
+ * @param newURL
+ */
+{template .redirectTo}
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Redirecting...</title>
+<link rel=canonical href="{$newURL}">
+<meta http-equiv=refresh content="0; url={$newURL}">
+<h1>Redirecting...</h1>
+<a href="{$newURL}">Click here if you are not redirected.</a>
+<script>location="{$newURL}"</script>
 {/template}

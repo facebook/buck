@@ -28,7 +28,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 package com.facebook.buck.query;
 
 import com.facebook.buck.query.QueryEnvironment.Argument;
@@ -36,14 +35,12 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningExecutorService;
-
-import java.util.LinkedHashSet;
+import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 /**
- * A labels(label, argument) expression, which returns the targets in the
- * attribute 'label' of the targets evaluated in the argument
+ * A labels(label, argument) expression, which returns the targets in the attribute 'label' of the
+ * targets evaluated in the argument
  *
  * <pre>expr ::= LABELS '(' WORD ',' expr ')'</pre>
  */
@@ -52,8 +49,7 @@ public class LabelsFunction implements QueryFunction {
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
 
-  public LabelsFunction() {
-  }
+  public LabelsFunction() {}
 
   @Override
   public String getName() {
@@ -71,16 +67,15 @@ public class LabelsFunction implements QueryFunction {
   }
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor) throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+      throws QueryException {
     String label = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
-    Set<T> inputs = args.get(1).getExpression().eval(env, executor);
-    Set<T> result = new LinkedHashSet<>();
-    for (T input : inputs) {
+    Set<QueryTarget> inputs = evaluator.eval(args.get(1).getExpression(), env);
+    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
+    for (QueryTarget input : inputs) {
       result.addAll(env.getTargetsInAttribute(input, label));
     }
-    return result;
+    return result.build();
   }
 }

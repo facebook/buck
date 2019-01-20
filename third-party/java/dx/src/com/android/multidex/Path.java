@@ -48,7 +48,7 @@ class Path {
 
     List<ClassPathElement> elements = new ArrayList<ClassPathElement>();
     private final String definition;
-    private final ByteArrayOutputStream baos = new ByteArrayOutputStream(40 * 1024);
+    private final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(40 * 1024);
     private final byte[] readBuffer = new byte[20 * 1024];
 
     Path(String definition) throws IOException {
@@ -99,8 +99,8 @@ class Path {
             try {
                 InputStream in = element.open(path);
                 try {
-                    byte[] bytes = readStream(in, baos, readBuffer);
-                    baos.reset();
+                    byte[] bytes = readStream(in, byteArrayOutputStream, readBuffer);
+                    byteArrayOutputStream.reset();
                     classFile = new DirectClassFile(bytes, path, false);
                     classFile.setAttributeFactory(StdAttributeFactory.THE_ONE);
                     break;

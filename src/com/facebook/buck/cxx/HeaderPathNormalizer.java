@@ -16,19 +16,21 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-public class HeaderPathNormalizer {
+class HeaderPathNormalizer {
 
   private final SourcePathResolver pathResolver;
 
@@ -44,131 +46,167 @@ public class HeaderPathNormalizer {
    */
   private final ImmutableMap<Path, SourcePath> normalized;
 
+  /** Minimal mappings to translate paths used during compilation to their real locations. */
+  private final ImmutableMap<Path, Path> prefixMap;
+
   protected HeaderPathNormalizer(
       SourcePathResolver pathResolver,
       ImmutableMap<Path, SourcePath> headers,
-      ImmutableMap<Path, SourcePath> normalized) {
+      ImmutableMap<Path, SourcePath> normalized,
+      ImmutableMap<Path, Path> prefixMap) {
     this.pathResolver = pathResolver;
     this.headers = headers;
     this.normalized = normalized;
+    this.prefixMap = prefixMap;
   }
 
   public static HeaderPathNormalizer empty(SourcePathResolver pathResolver) {
     return new HeaderPathNormalizer(
-        pathResolver,
-        ImmutableMap.<Path, SourcePath>of(),
-        ImmutableMap.<Path, SourcePath>of());
+        pathResolver, ImmutableMap.of(), ImmutableMap.of(), ImmutableMap.of());
   }
 
   private static <T> Optional<Map.Entry<Path, T>> pathLookup(Path path, Map<Path, T> map) {
     while (path != null) {
       T res = map.get(path);
       if (res != null) {
-        return Optional.<Map.Entry<Path, T>>of(new AbstractMap.SimpleEntry<>(path, res));
+        return Optional.of(new AbstractMap.SimpleEntry<>(path, res));
       }
       path = path.getParent();
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
   public Optional<Path> getAbsolutePathForUnnormalizedPath(Path unnormalizedPath) {
+    Preconditions.checkArgument(unnormalizedPath.isAbsolute());
     Optional<Map.Entry<Path, SourcePath>> result = pathLookup(unnormalizedPath, normalized);
     if (!result.isPresent()) {
-      return Optional.absent();
+      return Optional.empty();
     }
     return Optional.of(
-        pathResolver.getAbsolutePath(result.get().getValue())
+        pathResolver
+            .getAbsolutePath(result.get().getValue())
             .resolve(result.get().getKey().relativize(unnormalizedPath)));
   }
 
-  /**
-   * @return a normalizer function that can be used to convert paths used by the tooling into paths
-   *    that can cached.
-   */
-  public Optional<Path> getRelativePathForUnnormalizedPath(Path unnormalizedPath) {
-    Optional<Map.Entry<Path, SourcePath>> result = pathLookup(unnormalizedPath, normalized);
-    if (!result.isPresent()) {
-      return Optional.absent();
-    }
-    return Optional.of(
-        pathResolver.getRelativePath(result.get().getValue())
-            .resolve(result.get().getKey().relativize(unnormalizedPath)));
-  }
-
-  /**
-   * @return the {@link SourcePath} which corresponds to the given absolute path.
-   */
+  /** @return the {@link SourcePath} which corresponds to the given absolute path. */
   public SourcePath getSourcePathForAbsolutePath(Path absolutePath) {
     Preconditions.checkArgument(absolutePath.isAbsolute());
     Optional<Map.Entry<Path, SourcePath>> path = pathLookup(absolutePath, headers);
-    Preconditions.checkState(
-        path.isPresent(),
-        "no headers mapped to %s",
-        absolutePath);
+    Preconditions.checkState(path.isPresent(), "no headers mapped to %s", absolutePath);
     return path.get().getValue();
+  }
+
+  /**
+   * @return a map of replacement prefix paths to convert unnormalized paths to their original
+   *     locations.
+   */
+  public ImmutableMap<Path, Path> getPrefixMap() {
+    return prefixMap;
   }
 
   public static class Builder {
 
     private final SourcePathResolver pathResolver;
-    private final Function<Path, Path> pathTransformer;
 
     private final Map<Path, SourcePath> headers = new LinkedHashMap<>();
     private final Map<Path, SourcePath> normalized = new LinkedHashMap<>();
+    private final Map<Path, Path> prefixMap = new LinkedHashMap<>();
 
-    public Builder(
-        SourcePathResolver pathResolver,
-        Function<Path, Path> pathTransformer) {
+    public Builder(SourcePathResolver pathResolver) {
       this.pathResolver = pathResolver;
-      this.pathTransformer = pathTransformer;
     }
 
-    private <K, V> void put(Map<K, V> map, K key, V value) {
-      V previous = map.put(key, value);
-      Preconditions.checkState(previous == null || previous.equals(value));
+    private <V> void put(Map<Path, V> map, Path normalizedKey, V value) {
+      Preconditions.checkArgument(normalizedKey.isAbsolute());
+
+      // Hack: Using dropInternalCaches here because `toString` is called on caches by
+      // PathShortener, and many Paths are constructed and stored due to HeaderPathNormalizer
+      // containing exported headers of all transitive dependencies of a library. This amounts to
+      // large memory usage. See t15541313. Once that is fixed, this hack can be deleted.
+      V previous = map.put(MorePaths.dropInternalCaches(normalizedKey), value);
+      Preconditions.checkState(
+          previous == null || previous.equals(value),
+          "Expected header path to be consistent but key %s mapped to different values: "
+              + "(old: %s, new: %s)",
+          normalizedKey,
+          previous,
+          value);
     }
 
     public Builder addSymlinkTree(SourcePath root, ImmutableMap<Path, SourcePath> headerMap) {
+
+      // Add the headers from the symlink tree.
       Path rootPath = pathResolver.getAbsolutePath(root);
       for (Map.Entry<Path, SourcePath> entry : headerMap.entrySet()) {
         addHeader(entry.getValue(), rootPath.resolve(entry.getKey()));
       }
-      return this;
-    }
 
-    public Builder addHeader(SourcePath sourcePath, Path... unnormalizedPaths) {
-
-      // Map the relative path of the header path to the header, as we serialize the source path
-      // using it's relative path.
-      put(headers, pathResolver.getAbsolutePath(sourcePath), sourcePath);
-
-      // Add a normaliation mapping for the unnormalized absolute path to the relative path.
-      put(normalized,
-          Preconditions.checkNotNull(
-              pathTransformer.apply(pathResolver.getAbsolutePath(sourcePath))),
-          sourcePath);
-
-      // Add a normalization mapping for any unnormalized paths passed in.
-      for (Path unnormalizedPath : unnormalizedPaths) {
-        put(normalized,
-            Preconditions.checkNotNull(pathTransformer.apply(unnormalizedPath)),
-            sourcePath);
+      // If the headers behind the symlink tree match their real paths, other than a different
+      // prefix, add a prefix mapping compilation can use to translate paths to their real
+      // locations.
+      //
+      // TODO(agallagher): Ideally we'd also handle cases when headers behind symlink trees don't
+      // match their true layout.
+      Optional<Pair<Path, ImmutableList<Path>>> keys =
+          MorePaths.splitOnCommonPrefix(headerMap.keySet());
+      Optional<Pair<Path, ImmutableList<Path>>> vals =
+          MorePaths.splitOnCommonPrefix(
+              headerMap
+                  .values()
+                  .stream()
+                  .map(pathResolver::getRelativePath)
+                  .collect(Collectors.toList()));
+      if (keys.isPresent()
+          && vals.isPresent()
+          && keys.get().getSecond().equals(vals.get().getSecond())) {
+        Pair<Path, Path> stripped =
+            MorePaths.stripCommonSuffix(
+                pathResolver.getRelativePath(root).resolve(keys.get().getFirst()),
+                vals.get().getFirst());
+        prefixMap.put(stripped.getFirst(), stripped.getSecond());
       }
 
       return this;
     }
 
-    public Builder addHeaderDir(SourcePath sourcePath, Path... unnormalizedPaths) {
-      return addHeader(sourcePath, unnormalizedPaths);
+    public Builder addHeader(SourcePath sourcePath, Path... unnormalizedPaths) {
+      Path absolutePath = MorePaths.normalize(pathResolver.getAbsolutePath(sourcePath));
+
+      // Map the relative path of the header path to the header, as we serialize the source path
+      // using it's relative path.
+      put(headers, absolutePath, sourcePath);
+
+      // Add a normalization mapping for the absolute path.
+      // We need it for prefix headers and in some rare cases, regular headers will also end up
+      // with an absolute path in the depfile for a reason we ignore.
+      put(normalized, absolutePath, sourcePath);
+
+      // Add a normalization mapping for any unnormalized paths passed in.
+      for (Path unnormalizedPath : unnormalizedPaths) {
+        put(normalized, MorePaths.normalize(unnormalizedPath), sourcePath);
+      }
+
+      return this;
+    }
+
+    public Builder addHeaderDir(SourcePath sourcePath) {
+      return addHeader(sourcePath);
+    }
+
+    public Builder addPrefixHeader(SourcePath sourcePath) {
+      return addHeader(sourcePath);
+    }
+
+    public Builder addBridgingHeader(SourcePath sourcePath) {
+      return addHeader(sourcePath);
     }
 
     public HeaderPathNormalizer build() {
       return new HeaderPathNormalizer(
           pathResolver,
           ImmutableMap.copyOf(headers),
-          ImmutableMap.copyOf(normalized));
+          ImmutableMap.copyOf(normalized),
+          ImmutableMap.copyOf(prefixMap));
     }
-
   }
-
 }

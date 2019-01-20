@@ -1,5 +1,5 @@
 genrule(
-  name = 'genrule',
-  cmd = 'echo something > $OUT',
-  out = '',
+    name = "genrule",
+    out = "",
+    cmd = "echo something > $OUT",
 )

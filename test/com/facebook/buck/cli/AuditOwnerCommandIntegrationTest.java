@@ -15,52 +15,53 @@
  */
 package com.facebook.buck.cli;
 
-import static org.junit.Assert.assertEquals;
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AuditOwnerCommandIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testOwnerOneFile() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_owner", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_owner", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "owner",
-        "example/1.txt");
+    ProcessResult result = workspace.runBuckCommand("audit", "owner", "example/1.txt");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents("stdout-one"), result.getStdout());
+    assertThat(
+        workspace.getFileContents("stdout-one"),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
   public void testTwoFilesJSON() throws IOException {
-    String expectedJson = Platform.detect() == Platform.WINDOWS ?
-        "stdout-one-two-windows.json" : "stdout-one-two.json";
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_owner", tmp);
+    boolean isPlatformWindows = Platform.detect() == Platform.WINDOWS;
+    String expectedJson = isPlatformWindows ? "stdout-one-two-windows.json" : "stdout-one-two.json";
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_owner", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "audit",
-        "owner",
-        "--json",
-        "example/1.txt",
-        "example/lib/2.txt");
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "audit",
+            "owner",
+            "--json",
+            isPlatformWindows ? "example\\1.txt" : "example/1.txt",
+            isPlatformWindows ? "example\\lib\\2.txt" : "example/lib/2.txt");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents(expectedJson), result.getStdout());
+    assertThat(
+        workspace.getFileContents(expectedJson),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 }

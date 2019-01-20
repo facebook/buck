@@ -16,33 +16,30 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import static com.google.common.base.Functions.toStringFunction;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.transform;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.OptionsConsumer;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
+import com.google.common.base.Strings;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
+import java.util.Optional;
 
 class GroovycStep implements Step {
   private final Tool groovyc;
@@ -79,24 +76,15 @@ class GroovycStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    ProcessBuilder processBuilder = new ProcessBuilder(createCommand());
-
-    Map<String, String> env = processBuilder.environment();
-    env.clear();
-    env.putAll(context.getEnvironment());
-
-    processBuilder.directory(filesystem.getRootPath().toAbsolutePath().toFile());
-    int exitCode = -1;
-    try {
-      writePathToSourcesList(sourceFilePaths);
-      ProcessExecutor processExecutor = context.getProcessExecutor();
-      Process p = BgProcessKiller.startProcess(processBuilder);
-      exitCode = processExecutor.execute(p).getExitCode();
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-    }
-
-    return StepExecutionResult.of(exitCode);
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(createCommand())
+            .setEnvironment(context.getEnvironment())
+            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .build();
+    writePathToSourcesList(sourceFilePaths);
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    return StepExecutionResult.of(processExecutor.launchAndExecute(params));
   }
 
   @Override
@@ -110,12 +98,12 @@ class GroovycStep implements Step {
   }
 
   private ImmutableList<String> createCommand() {
-    final ImmutableList.Builder<String> command = ImmutableList.builder();
+    ImmutableList.Builder<String> command = ImmutableList.builder();
 
     command.addAll(groovyc.getCommandPrefix(resolver));
 
     String classpath =
-        Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, toStringFunction()));
+        Joiner.on(File.pathSeparator).join(transform(declaredClasspathEntries, Object::toString));
     command
         .add("-cp")
         .add(classpath.isEmpty() ? "''" : classpath)
@@ -123,7 +111,7 @@ class GroovycStep implements Step {
         .add(outputDirectory.toString());
     addCrossCompilationOptions(command);
 
-    command.addAll(extraArguments.or(ImmutableList.<String>of()));
+    command.addAll(extraArguments.orElse(ImmutableList.of()));
 
     command.add("@" + pathToSrcsList);
 
@@ -133,52 +121,52 @@ class GroovycStep implements Step {
   private void writePathToSourcesList(Iterable<Path> expandedSources) throws IOException {
     filesystem.writeLinesToPath(
         FluentIterable.from(expandedSources)
-            .transform(toStringFunction())
-            .transform(Javac.ARGFILES_ESCAPER),
+            .transform(Object::toString)
+            .transform(Javac.ARGFILES_ESCAPER::apply),
         pathToSrcsList);
   }
 
-  private void addCrossCompilationOptions(final ImmutableList.Builder<String> command) {
+  private void addCrossCompilationOptions(ImmutableList.Builder<String> command) {
     if (shouldCrossCompile()) {
       command.add("-j");
-      javacOptions.appendOptionsTo(new OptionsConsumer() {
-        @Override
-        public void addOptionValue(String option, String value) {
-          // Explicitly disallow the setting of sourcepath in a cross compilation context.
-          // The implementation of `appendOptionsTo` provides a blank default, which
-          // confuses the cross compilation step's javac (it won't find any class files
-          // compiled by groovyc).
-          if (option.equals("sourcepath")) {
-            return;
-          }
-          command.add("-J" + String.format("%s=%s", option, value));
-        }
-
-        @Override
-        public void addFlag(String flagName) {
-          command.add("-F" + flagName);
-        }
-
-        @Override
-        public void addExtras(Collection<String> extras) {
-          for (String extra : extras) {
-            if (extra.startsWith("-")) {
-              addFlag(extra.substring(1));
-            } else {
-              addFlag(extra);
+      javacOptions.appendOptionsTo(
+          new OptionsConsumer() {
+            @Override
+            public void addOptionValue(String option, String value) {
+              // Explicitly disallow the setting of sourcepath in a cross compilation context.
+              // The implementation of `appendOptionsTo` provides a blank default, which
+              // confuses the cross compilation step's javac (it won't find any class files
+              // compiled by groovyc).
+              if (option.equals("sourcepath")) {
+                return;
+              }
+              if (!Strings.isNullOrEmpty(value)) {
+                command.add("-J" + String.format("%s=%s", option, value));
+              }
             }
-          }
-        }
-      }, filesystem.getAbsolutifier());
+
+            @Override
+            public void addFlag(String flagName) {
+              command.add("-F" + flagName);
+            }
+
+            @Override
+            public void addExtras(Collection<String> extras) {
+              for (String extra : extras) {
+                if (extra.startsWith("-")) {
+                  addFlag(extra.substring(1));
+                } else {
+                  addFlag(extra);
+                }
+              }
+            }
+          },
+          resolver,
+          filesystem);
     }
   }
 
   private boolean shouldCrossCompile() {
-    return any(sourceFilePaths, new Predicate<Path>() {
-      @Override
-      public boolean apply(Path input) {
-        return input.toString().endsWith(".java");
-      }
-    });
+    return any(sourceFilePaths, input -> input.toString().endsWith(".java"));
   }
 }

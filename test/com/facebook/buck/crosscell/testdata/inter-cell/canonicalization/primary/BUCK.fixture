@@ -1,0 +1,15 @@
+cxx_binary(
+    name = "a.out",
+    srcs = ["main.c"],
+    deps = [
+        "secondary//:lib",
+        "secondary//:lib2",
+        ":rootlib",
+    ],
+)
+
+cxx_library(
+    name = "rootlib",
+    srcs = ["rootlib.c"],
+    visibility = ["PUBLIC"],
+)

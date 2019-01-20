@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="apksig">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/aosp/apksig.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

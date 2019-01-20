@@ -16,54 +16,53 @@
 
 package com.facebook.buck.httpserver;
 
-import com.facebook.buck.httpserver.TracesHelper.TraceAttributes;
+import com.facebook.buck.util.trace.BuildTraces;
+import com.facebook.buck.util.trace.BuildTraces.TraceAttributes;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
-import com.google.template.soy.data.SoyListData;
-import com.google.template.soy.data.SoyMapData;
-
-import org.eclipse.jetty.server.Request;
-
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Resources;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
+import org.eclipse.jetty.server.Request;
 
-public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
+/** Template and parameters for the /traces page. */
+public class TracesHandlerDelegate implements TemplateHandlerDelegate {
 
-  /**
-   * Regex pattern that can be used as a parameter to {@link Pattern#compile(String)} to match a
-   * valid trace id.
-   */
-  private static final String TRACE_ID_PATTERN_TEXT = "([0-9a-zA-Z-]+)";
+  private static final Pattern TRACE_FILE_NAME_PATTERN =
+      Pattern.compile("build\\.(?:[\\d\\-\\.]+\\.)?" + BuildTraces.TRACE_ID_PATTERN + "\\.trace");
 
-  static final Pattern TRACE_ID_PATTERN = Pattern.compile(TRACE_ID_PATTERN_TEXT);
+  private final BuildTraces buildTraces;
 
-  private static final Pattern TRACE_FILE_NAME_PATTERN = Pattern.compile(
-      "build\\.(?:[\\d\\-\\.]+\\.)?" + TRACE_ID_PATTERN + "\\.trace");
+  TracesHandlerDelegate(BuildTraces buildTraces) {
+    this.buildTraces = buildTraces;
+  }
 
-  private final TracesHelper tracesHelper;
-
-  TracesHandlerDelegate(TracesHelper tracesHelper) {
-    super(ImmutableSet.of("traces.soy"));
-    this.tracesHelper = tracesHelper;
+  @Override
+  public URL getTemplateGroup() {
+    return Resources.getResource(TracesHandlerDelegate.class, "templates.stg");
   }
 
   @Override
   public String getTemplateForRequest(Request baseRequest) {
-    return "buck.trace";
+    return "traces";
   }
 
   @Override
-  public SoyMapData getDataForRequest(Request baseRequest) throws IOException {
-    return new SoyMapData("traces", getTraces());
+  public ImmutableMap<String, Object> getDataForRequest(Request baseRequest) throws IOException {
+    return ImmutableMap.of("traces", getTraces());
   }
 
   @VisibleForTesting
-  SoyListData getTraces() throws IOException {
-    Collection<Path> traceFiles = tracesHelper.listTraceFilesByLastModified();
-    SoyListData traces = new SoyListData();
+  List<TraceAttrs> getTraces() throws IOException {
+    List<Path> traceFiles = buildTraces.listTraceFilesByLastModified();
+
+    List<TraceAttrs> traces = new ArrayList<>();
     for (Path path : traceFiles) {
       String name = path.getFileName().toString();
       Matcher matcher = TRACE_FILE_NAME_PATTERN.matcher(name);
@@ -72,20 +71,29 @@ public class TracesHandlerDelegate extends AbstractTemplateHandlerDelegate {
         continue;
       }
 
-      SoyMapData trace = new SoyMapData();
-      trace.put("name", name);
-      trace.put("id", matcher.group(1));
-
-      TraceAttributes traceAttributes = tracesHelper.getTraceAttributesFor(path);
-      trace.put("dateTime", traceAttributes.getFormattedDateTime());
-      if (traceAttributes.getCommand().isPresent()) {
-        trace.put("command", traceAttributes.getCommand().get());
-      } else {
-        trace.put("command", "");
-      }
-
-      traces.add(trace);
+      TraceAttributes traceAttributes = buildTraces.getTraceAttributesFor(path);
+      traces.add(
+          new TraceAttrs(
+              name,
+              matcher.group(1),
+              traceAttributes.getFormattedDateTime(),
+              traceAttributes.getCommand().orElse(null)));
     }
     return traces;
+  }
+
+  /** Attributes for traces. */
+  public static class TraceAttrs {
+    public final String name;
+    public final String id;
+    public final String dateTime;
+    @Nullable public final String command;
+
+    public TraceAttrs(String name, String id, String dateTime, @Nullable String command) {
+      this.name = name;
+      this.id = id;
+      this.dateTime = dateTime;
+      this.command = command;
+    }
   }
 }

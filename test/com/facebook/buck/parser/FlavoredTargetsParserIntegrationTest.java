@@ -20,35 +20,31 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.MorePaths;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
-import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class FlavoredTargetsParserIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tempFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tempFolder = new TemporaryPaths();
 
   @Test
   public void canBuildAnUnflavoredTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "unflavored_build",
-        tempFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "unflavored_build", tempFolder);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//:example");
@@ -61,10 +57,8 @@ public class FlavoredTargetsParserIntegrationTest {
 
   @Test
   public void canBuildAFlavoredTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "unflavored_build",
-        tempFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "unflavored_build", tempFolder);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//:example#src");
@@ -76,13 +70,11 @@ public class FlavoredTargetsParserIntegrationTest {
   @Test
   public void canBuildBothAFlavoredAndUnflavoredVersionOfTheSameTargetInTheSameBuild()
       throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "unflavored_build",
-        tempFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "unflavored_build", tempFolder);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild("//:example", "//:example#src");
+    ProcessResult result = workspace.runBuckBuild("//:example", "//:example#src");
     result.assertSuccess();
 
     // Verify that both the src zip and the jar were created.
@@ -105,17 +97,18 @@ public class FlavoredTargetsParserIntegrationTest {
 
   @Test
   public void canReferToFlavorsInBuildFiles() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "flavored_build",   // NB: this is not the same as the other tests in this file!
-        tempFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this,
+            "flavored_build", // NB: this is not the same as the other tests in this file!
+            tempFolder);
     workspace.setUp();
 
     Path output = workspace.buildAndReturnOutput("//:example");
 
     // Take a look at the contents of 'output'. It should be a source jar.
-    try (Zip zip = new Zip(output, /* for writing? */ false)) {
-      Set<String> fileNames = zip.getFileNames();
+    try (ZipArchive zipArchive = new ZipArchive(output, /* for writing? */ false)) {
+      Set<String> fileNames = zipArchive.getFileNames();
 
       assertTrue(fileNames.toString(), fileNames.contains("B.java"));
     }

@@ -1,0 +1,18 @@
+export_file(
+    name = "file",
+    src = "file",
+)
+
+java_test(
+    name = "simple",
+    srcs = [
+        "JavaFile.java",
+    ],
+    vm_args = [
+        "-Dtest=$(location //:file)",
+        "-Dfoo=foobaz",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)

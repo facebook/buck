@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace android_aar}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'android_aar()' /}
+    {param navid: 'rule_android_aar' /}
     {param prettify: true /}
     {param description}
           A rule that generates an Android AAR.
@@ -16,7 +32,7 @@
 An <code>android_aar()</code> rule is used to generate an Android AAR.
 <p>
 <p>
-See the <a href="http://tools.android.com/tech-docs/new-build-system/aar-format">
+See the <a href="https://developer.android.com/studio/projects/android-library#aar-contents">
 official Android documentation</a> for details about the <code>.aar</code> format.
 {/param}
 
@@ -38,15 +54,41 @@ official Android documentation</a> for details about the <code>.aar</code> forma
 {/call}
 
 {call buck.arg}
+  {param name : 'build_config_values' /}
+  {param default : '[]' /}
+  {param desc}
+  See the documentation on the <tt>values</tt> argument for {call buck.android_build_config /}.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'include_build_config_class' /}
+  {param default : 'False' /}
+  {param desc}
+  Whether to include the <code>BuildConfig</code> class files in the final .aar file. Needs
+  to be set to <code>True</code> if any <tt>build_config_values</tt> are specified.
+  This is normally only needed if the build tool that is consuming the .aar file does not generate
+  {sp}<code>BuildConfig</code> classes.
+  Note: the AAR format does not specify a way to pass defaults that should be injected into
+  the final <code>BuildConfig</code> class, therefore that information might need to be replicated
+  manually in the build that's consuming the .aar file.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'deps' /}
   {param default : '[]' /}
   {param desc}
   List of build targets whose corresponding compiled Java code,
-  Android resources, and native libraries will be included in the AAR.
+  Android resources, and native libraries will be included in the AAR along with their transitive
+  dependencies. For compile time deps which should not be included in the final AAR,
+  use <code>provided_deps</code> instead.
   <ul>
     <li><code>android_library()</code> Will be included in the final <code>classes.jar</code>
     <li><code>android_resource()</code> Will be included in the final <code>R.txt</code>,
     {sp}<code>res/</code> and <code>assets/</code>
+    <li><code>android_build_config()</code> Will be included in the final <code>classes.jar</code>
+        {sp}if <code>include_build_config_class</code> is True
     <li><code>groovy_library()</code> Will be included in the final <code>classes.jar</code>
     <li><code>java_library()</code> Will be included in the final <code>classes.jar</code>
     <li><code>prebuilt_jar()</code>  Will be included in the final <code>classes.jar</code>

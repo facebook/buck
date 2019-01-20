@@ -16,12 +16,10 @@
 
 package com.facebook.buck.parser;
 
-import com.google.common.base.Preconditions;
-
+import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
 import javax.annotation.Nullable;
 
 /**
@@ -30,43 +28,27 @@ import javax.annotation.Nullable;
  */
 class ConcurrentMapCache<K, V> {
 
-  /**
-   * Resizing is expensive.  This saves us four resizes from the normal default of 16.
-   */
+  /** Resizing is expensive. This saves us four resizes from the normal default of 16. */
   static final int DEFAULT_INITIAL_CAPACITY = 256;
 
-  /**
-   * Taken from {@link ConcurrentMap}.
-   */
+  /** Taken from {@link ConcurrentMap}. */
   static final float DEFAULT_LOAD_FACTOR = 0.75f;
 
   private final ConcurrentMap<K, V> values;
 
   public ConcurrentMapCache(int numThreads) {
-    this.values = new ConcurrentHashMap<>(
-        DEFAULT_INITIAL_CAPACITY,
-        DEFAULT_LOAD_FACTOR,
-        numThreads);
+    this.values =
+        new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, numThreads);
   }
 
-  public V get(K key, V newValue) {
-    V value = values.get(key);
-    if (value != null) {
-      return value;
-    }
-
-    value = Preconditions.checkNotNull(newValue);
-    V seen = values.putIfAbsent(key, value);
-    return seen == null ? value : seen;
+  public V putIfAbsentAndGet(K key, V newValue) {
+    V seen = values.putIfAbsent(key, newValue);
+    return seen == null ? newValue : seen;
   }
 
   @Nullable
   public V getIfPresent(K key) {
     return values.get(key);
-  }
-
-  public boolean containsKey(K key) {
-    return values.containsKey(key);
   }
 
   public void invalidateAll(Set<K> keys) {
@@ -79,11 +61,11 @@ class ConcurrentMapCache<K, V> {
     values.remove(key);
   }
 
-  public void invalidateAll() {
-    values.clear();
+  public Set<K> keySet() {
+    return this.values.keySet();
   }
 
-  public boolean isEmpty() {
-    return values.isEmpty();
+  public Collection<V> values() {
+    return this.values.values();
   }
 }

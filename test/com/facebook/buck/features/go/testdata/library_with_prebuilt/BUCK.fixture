@@ -1,0 +1,29 @@
+go_binary(
+    name = "bin",
+    srcs = ["main.go"],
+    deps = [
+        ":lib",
+    ],
+)
+
+go_library(
+    name = "lib",
+    package_name = "lib",
+    srcs = ["lib.go"],
+    deps = [
+        ":foo",
+    ],
+)
+
+prebuilt_go_library(
+    name = "foo",
+    package_name = "foo",
+    library = ":generated_foo",
+)
+
+genrule(
+    name = "generated_foo",
+    srcs = ["foo.go"],
+    out = "foo.a",
+    cmd = "go build -a -o $OUT -buildmode=archive $SRCS",
+)

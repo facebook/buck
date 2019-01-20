@@ -1,0 +1,15 @@
+[cxx]
+  default_platform = macosx-x86_64
+  cflags = -g -std=c11
+  cxxflags = -g -std=c++14
+
+[alias]
+  app = //:binary
+
+[project]
+  ide = xcode
+  ignore = .buckd, \
+           .hg, \
+           .git, \
+           buck-out, \
+

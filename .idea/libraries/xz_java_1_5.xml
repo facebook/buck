@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="xz-java-1.5">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/xz-java-1.5/xz-1.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/xz-java-1.5/xz-1.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

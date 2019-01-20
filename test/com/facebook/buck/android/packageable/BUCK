@@ -1,0 +1,29 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "packageable",
+    deps = [
+        "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/android/apkmodule:apkmodule",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/jvm/java/toolchain:toolchain",
+        "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/android/toolchain/ndk/impl:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/sourcepath:testutil",
+        "//test/com/facebook/buck/core/toolchain/impl:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/jvm/java:javac-env",
+        "//test/com/facebook/buck/jvm/java:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

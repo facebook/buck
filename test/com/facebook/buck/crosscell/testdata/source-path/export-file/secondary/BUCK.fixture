@@ -1,0 +1,24 @@
+export_file(
+    name = "lib.cpp",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "main.cpp",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "lib.m",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "main.m",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "Main.java",
+    visibility = ["PUBLIC"],
+)

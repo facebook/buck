@@ -16,70 +16,102 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MakeExecutableStep;
+import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
-
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Represents a remote file that needs to be downloaded. Optionally, this class can be prevented
  * from running at build time, requiring a user to run {@code buck fetch} before executing the
  * build.
  */
-public class RemoteFile extends AbstractBuildRule {
+public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+
   @AddToRuleKey(stringify = true)
   private final URI uri;
+
   @AddToRuleKey(stringify = true)
-  private final HashCode sha1;
+  private final FileHash sha1;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
+
   private final Downloader downloader;
 
+  @AddToRuleKey(stringify = true)
+  private final Type type;
+
   public RemoteFile(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       Downloader downloader,
       URI uri,
       HashCode sha1,
-      String out) {
-    super(params, resolver);
+      String out,
+      Type type) {
+    super(buildTarget, projectFilesystem, params);
 
     this.uri = uri;
-    this.sha1 = sha1;
+    this.sha1 = FileHash.ofSha1(sha1);
     this.downloader = downloader;
+    this.type = type;
 
-    output = BuildTargets.getGenPath(
-        getProjectFilesystem(),
-        params.getBuildTarget(),
-        String.format("%%s/%s", out));
+    output = BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s/" + out);
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    Path tempFile =
+        BuildTargetPaths.getScratchPath(
+            getProjectFilesystem(), getBuildTarget(), "%s/" + output.getFileName());
 
-    Path tempFile = BuildTargets.getScratchPath(
-        getProjectFilesystem(),
-        getBuildTarget(),
-        String.format("%%s/%s", output.getFileName()));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), tempFile.getParent())));
+    steps.add(
+        new DownloadStep(
+            getProjectFilesystem(), downloader, uri, ImmutableList.of(), sha1, tempFile));
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), tempFile.getParent()));
-    steps.add(new DownloadStep(getProjectFilesystem(), downloader, uri, sha1, tempFile));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
+    if (type == Type.EXPLODED_ZIP) {
 
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), output.getParent()));
-    steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
+      steps.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), output)));
+      steps.add(new UnzipStep(getProjectFilesystem(), tempFile, output, Optional.empty()));
+    } else {
+      steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
+    }
+    if (type == Type.EXECUTABLE) {
+      steps.add(new MakeExecutableStep(getProjectFilesystem(), output));
+    }
 
     buildableContext.recordArtifact(output);
 
@@ -87,7 +119,22 @@ public class RemoteFile extends AbstractBuildRule {
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    // EXPLODED_ZIP remote files can include many files; hashing the exploded files to compute
+    // an input-based rule key can take a very long time. But we have an ace up our sleeve:
+    // we already have a hash that represents the content in those exploded files!
+    // Just pass that hash along so that RuleKeyBuilder can use it.
+    return ExplicitBuildTargetSourcePath.builder()
+        .setTarget(getBuildTarget())
+        .setResolvedPath(output)
+        .setPrecomputedHash(Optional.of(sha1.getHashCode()))
+        .build();
+  }
+
+  /** Defines how the remote file should be treated when downloaded. */
+  public enum Type {
+    DATA,
+    EXECUTABLE,
+    EXPLODED_ZIP,
   }
 }

@@ -1,0 +1,27 @@
+export_file(
+    name = "beta",
+    src = "beta.txt",
+    out = "beta-file.txt",
+)
+
+# Has no deps
+java_library(
+    name = "example",
+    resources = [
+        "beta.txt",
+        "file with spaces.txt",
+    ],
+    deps = [],
+)
+
+genrule(
+    name = "rules",
+    out = "rules.txt",
+    cmd = "echo $(query_paths 'deps(:beta)') >$OUT",
+)
+
+genrule(
+    name = "files",
+    out = "files.txt",
+    cmd = "echo $(@query_paths 'inputs(deps(:example))') >$OUT",
+)

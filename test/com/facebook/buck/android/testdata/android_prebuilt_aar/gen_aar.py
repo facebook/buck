@@ -17,33 +17,42 @@ import os
 import shutil
 import subprocess
 import zipfile
-
 from optparse import OptionParser
-
 
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("--lib", action="store", dest="lib", default="")
-    parser.add_option("--extra-res-entry", action="store_true", dest="extra_res", default=False)
-    parser.add_option("--no-classes-dot-jar", action="store_true", dest="no_classes_dot_jar", default=False)
+    parser.add_option(
+        "--extra-res-entry", action="store_true", dest="extra_res", default=False
+    )
+    parser.add_option(
+        "--no-classes-dot-jar",
+        action="store_true",
+        dest="no_classes_dot_jar",
+        default=False,
+    )
     (options, args) = parser.parse_args()
     tmp = args[0]
     output = args[1]
 
     # Write out AndroidManifest.xml
     with open(os.path.join(tmp, "AndroidManifest.xml"), "w") as f:
-        f.write("""<manifest
+        f.write(
+            """<manifest
   xmlns:android='http://schemas.android.com/apk/res/android'
   package='com.example'
-/>""")
+/>"""
+        )
 
     # Write out a resource
     os.makedirs(os.path.join(tmp, "res", "values"))
     with open(os.path.join(tmp, "res", "values", "strings.xml"), "w") as f:
-        f.write("""<?xml version='1.0' encoding='utf-8' ?>
+        f.write(
+            """<?xml version='1.0' encoding='utf-8' ?>
 <resources>
   <string name='app_name'>Hello World</string>
-</resources>""")
+</resources>"""
+        )
 
     # Write out R.txt
     with open(os.path.join(tmp, "R.txt"), "w") as f:
@@ -54,19 +63,31 @@ if __name__ == "__main__":
     if not options.no_classes_dot_jar:
         # Include some .class files in classes.jar
         with open(os.path.join(tmp, "Utils.java"), "w") as f:
-            f.write("""package com.example;
+            f.write(
+                """package com.example;
     public class Utils {
       public static String capitalize(String str) {
         return str.substring(0, 1).toUpperCase() + str.substring(1);
       }
-    }""")
+    }"""
+            )
         os.makedirs(os.path.join(tmp, "classes"))
         subprocess.check_call(
-            ["javac", "-source", "1.7", "-target", "1.7", "-d", "classes", "Utils.java"],
-            cwd=tmp)
+            [
+                "javac",
+                "-source",
+                "1.7",
+                "-target",
+                "1.7",
+                "-d",
+                "classes",
+                "Utils.java",
+            ],
+            cwd=tmp,
+        )
         subprocess.check_call(
-            ["jar", "-cf", "classes.jar", "-C", "classes", "."],
-            cwd=tmp)
+            ["jar", "-cf", "classes.jar", "-C", "classes", "."], cwd=tmp
+        )
         os.remove(os.path.join(tmp, "Utils.java"))
         shutil.rmtree(os.path.join(tmp, "classes"))
 
@@ -87,4 +108,7 @@ if __name__ == "__main__":
     with contextlib.closing(zipfile.ZipFile(output, "w")) as z:
         for (dir, _, files) in os.walk(tmp):
             for f in files:
-                z.write(os.path.join(tmp, dir, f), os.path.relpath(os.path.join(dir, f), tmp))
+                z.write(
+                    os.path.join(tmp, dir, f),
+                    os.path.relpath(os.path.join(dir, f), tmp),
+                )

@@ -17,26 +17,26 @@
 package com.facebook.buck.apple.simulator;
 
 public enum AppleSimulatorState {
-    CREATING,
-    SHUTDOWN,
-    BOOTING,
-    BOOTED,
-    SHUTTING_DOWN;
+  CREATING,
+  SHUTDOWN,
+  BOOTING,
+  BOOTED,
+  SHUTTING_DOWN;
 
-    public static AppleSimulatorState fromString(String s) {
-      switch (s) {
-        case "Creating":
-          return CREATING;
-        case "Shutdown":
-          return SHUTDOWN;
-        case "Booting":
-          return BOOTING;
-        case "Booted":
-          return BOOTED;
-        case "Shutting Down":
-          return SHUTTING_DOWN;
-        default:
-          throw new RuntimeException("Unrecognized simulator state: " + s);
-      }
+  public static AppleSimulatorState fromString(String s) {
+    switch (s) {
+      case "Creating":
+        return CREATING;
+      case "Shutdown":
+        return SHUTDOWN;
+      case "Booting":
+        return BOOTING;
+      case "Booted":
+        return BOOTED;
+      case "Shutting Down":
+        return SHUTTING_DOWN;
+      default:
+        throw new RuntimeException("Unrecognized simulator state: " + s);
     }
+  }
 }

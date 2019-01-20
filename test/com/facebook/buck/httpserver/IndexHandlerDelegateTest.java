@@ -19,25 +19,22 @@ package com.facebook.buck.httpserver;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.google.template.soy.data.SoyMapData;
-
+import java.util.Map;
 import org.easymock.EasyMock;
 import org.eclipse.jetty.server.Request;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class IndexHandlerDelegateTest {
 
   @Test
-  public void testIndexHandlerReturnsCorrectTemplateAndData() throws IOException {
+  public void testIndexHandlerReturnsCorrectTemplateAndData() {
     Request baseRequest = EasyMock.createMock(Request.class);
     EasyMock.replay(baseRequest);
 
     IndexHandlerDelegate indexHandlerDelegate = new IndexHandlerDelegate();
-    assertEquals("buck.index", indexHandlerDelegate.getTemplateForRequest(baseRequest));
-    SoyMapData templateData = indexHandlerDelegate.getDataForRequest(baseRequest);
-    assertTrue(templateData.getKeys().isEmpty());
+    assertEquals("index", indexHandlerDelegate.getTemplateForRequest(baseRequest));
+    Map<String, Object> templateData = indexHandlerDelegate.getDataForRequest(baseRequest);
+    assertTrue(templateData.isEmpty());
 
     EasyMock.verify(baseRequest);
   }

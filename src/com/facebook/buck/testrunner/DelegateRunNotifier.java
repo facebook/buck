@@ -16,7 +16,15 @@
 
 package com.facebook.buck.testrunner;
 
+import java.lang.reflect.Field;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.Timeout;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.Runner;
@@ -25,19 +33,12 @@ import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runner.notification.StoppedByUserException;
 import org.junit.runners.ParentRunner;
-import org.junit.runners.model.TestClass;
-
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * {@link RunNotifier} that sets a timer when a test starts. The default timeout specified in
- * {@code .buckconfig} is the length of the timer. When the timer goes off, it checks if the test
- * has finished. If it has not finished, the test is flagged as a failure, and all future updates to
- * the test status are ignored.
+ * {@link RunNotifier} that sets a timer when a test starts. The default timeout specified in {@code
+ * .buckconfig} is the length of the timer. When the timer goes off, it checks if the test has
+ * finished. If it has not finished, the test is flagged as a failure, and all future updates to the
+ * test status are ignored.
  */
 class DelegateRunNotifier extends RunNotifier {
 
@@ -63,7 +64,7 @@ class DelegateRunNotifier extends RunNotifier {
     delegate.addListener(
         new RunListener() {
           @Override
-          public void testRunFinished(Result result) throws Exception {
+          public void testRunFinished(Result result) {
             onTestRunFinished();
           }
         });
@@ -109,13 +110,14 @@ class DelegateRunNotifier extends RunNotifier {
   @Override
   public void fireTestRunFinished(Result result) {
     // This method does not appear to be invoked. Presumably whoever has a reference to the original
-    // delegate is invoking its fireTestRunFinished(Description) method directly.
+    // delegate is invoking its fireTestRunFinished(Description) method
+    // directly.
     timer.cancel();
     delegate.fireTestRunFinished(result);
   }
 
   @Override
-  public void fireTestStarted(final Description description) throws StoppedByUserException {
+  public void fireTestStarted(Description description) throws StoppedByUserException {
     delegate.fireTestStarted(description);
 
     // Do not do apply the default timeout if the test has its own @Test(timeout).
@@ -124,33 +126,36 @@ class DelegateRunNotifier extends RunNotifier {
     }
 
     // Schedule a timer that verifies that the test completed within the specified timeout.
-    TimerTask task = new TimerTask() {
-      @Override
-      public void run() {
-        synchronized (finishedTests) {
-          // If the test already finished, then do nothing.
-          if (finishedTests.contains(description)) {
-            return;
+    TimerTask task =
+        new TimerTask() {
+          @Override
+          public void run() {
+            synchronized (finishedTests) {
+              // If the test already finished, then do nothing.
+              if (finishedTests.contains(description)) {
+                return;
+              }
+
+              hasTestThatExceededTimeout.set(true);
+
+              // Should report the failure. The Exception is modeled after the one created by
+              // org.junit.internal.runners.statements.FailOnTimeout#createTimeoutException(Thread).
+              Exception exception =
+                  new Exception(
+                      String.format(
+                          "test timed out after %d milliseconds", defaultTestTimeoutMillis));
+              Failure failure = new Failure(description, exception);
+              fireTestFailure(failure);
+              fireTestFinished(description);
+
+              if (!finishedTests.contains(description)) {
+                throw new IllegalStateException("fireTestFinished() should update finishedTests.");
+              }
+
+              onTestRunFinished();
+            }
           }
-
-          hasTestThatExceededTimeout.set(true);
-
-          // Should report the failure. The Exception is modeled after the one created by
-          // org.junit.internal.runners.statements.FailOnTimeout#createTimeoutException(Thread).
-          Exception exception = new Exception(String.format(
-              "test timed out after %d milliseconds", defaultTestTimeoutMillis));
-          Failure failure = new Failure(description, exception);
-          fireTestFailure(failure);
-          fireTestFinished(description);
-
-          if (!finishedTests.contains(description)) {
-            throw new IllegalStateException("fireTestFinished() should update finishedTests.");
-          }
-
-          onTestRunFinished();
-        }
-      }
-    };
+        };
     timer.schedule(task, defaultTestTimeoutMillis);
   }
 
@@ -162,22 +167,22 @@ class DelegateRunNotifier extends RunNotifier {
     }
 
     // Do not do apply the default timeout if the test has its own @Rule Timeout.
-    TestClass testClass = getTestClass(description);
-    if (BuckBlockJUnit4ClassRunner.hasTimeoutRule(testClass)) {
-      return true;
-    }
-
-    return false;
-  }
-
-
-  private TestClass getTestClass(Description description) {
     if (runner instanceof ParentRunner) {
-      return ((ParentRunner<?>) runner).getTestClass();
-    } else {
-      Class<?> testClass = description.getTestClass();
-      return new TestClass(testClass);
+      return BuckBlockJUnit4ClassRunner.hasTimeoutRule(((ParentRunner) runner).getTestClass());
     }
+
+    Class<?> clazz = description.getTestClass();
+    while (clazz != null) {
+      for (Field field : clazz.getFields()) {
+        if (field.getAnnotationsByType(Rule.class).length > 0
+            && field.getType().equals(Timeout.class)) {
+          return true;
+        }
+      }
+
+      clazz = clazz.getSuperclass();
+    }
+    return false;
   }
 
   @Override

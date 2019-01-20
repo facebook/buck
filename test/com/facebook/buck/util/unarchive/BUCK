@@ -1,0 +1,19 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "unarchive",
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem/impl:impl",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
+        "//src/com/facebook/buck/util/zip:zip",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//third-party/java/commons-compress:commons-compress",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

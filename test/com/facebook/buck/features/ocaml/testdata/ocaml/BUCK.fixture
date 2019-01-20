@@ -1,0 +1,34 @@
+ocaml_binary(
+    name = "main",
+    srcs = [
+        "main.ml",
+    ],
+    warnings_flags = "-27",
+    deps = [
+        ":plus_lib",
+    ],
+)
+
+ocaml_library(
+    name = "plus_lib",
+    srcs = [
+        "plus/plus.ml",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    warnings_flags = "-27",
+)
+
+ocaml_binary(
+    name = "plus",
+    srcs = [
+        "plus/main.ml",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":plus_lib",
+    ],
+)

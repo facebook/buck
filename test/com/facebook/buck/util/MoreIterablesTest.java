@@ -17,13 +17,14 @@
 package com.facebook.buck.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
 import java.util.List;
 import java.util.Set;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class MoreIterablesTest {
 
@@ -40,18 +41,13 @@ public class MoreIterablesTest {
 
   @Test
   public void testZipAndConcat() {
-    assertEquals(
-        lstV(),
-        lstI(MoreIterables.zipAndConcat()));
-    assertEquals(
-        lstV("a"),
-        lstI(MoreIterables.zipAndConcat(lstV("a"))));
+    assertEquals(lstV(), lstI(MoreIterables.zipAndConcat()));
+    assertEquals(lstV("a"), lstI(MoreIterables.zipAndConcat(lstV("a"))));
     assertEquals(
         lstV("a", "b", "a", "b"),
         lstI(MoreIterables.zipAndConcat(lstV("a", "a", "a"), lstV("b", "b"))));
     assertEquals(
-        lstV("a", "b", "c"),
-        lstI(MoreIterables.zipAndConcat(lstV("a"), lstV("b"), lstV("c"))));
+        lstV("a", "b", "c"), lstI(MoreIterables.zipAndConcat(lstV("a"), lstV("b"), lstV("c"))));
   }
 
   @Test
@@ -64,16 +60,46 @@ public class MoreIterablesTest {
     Set<String> noDupsDeduped = MoreIterables.dedupKeepLast(lstV(noDups));
     assertArrayAndSetEqual("noDups", noDups, noDupsDeduped);
 
-
     List<String> singleDup = lstV("a", "b", "a", "c");
-    String[] singleDedupExpected = new String[]{"b", "a", "c"};
+    String[] singleDedupExpected = new String[] {"b", "a", "c"};
     Set<String> singleDedupActual = MoreIterables.dedupKeepLast(singleDup);
     assertArrayAndSetEqual("singleDup", singleDedupExpected, singleDedupActual);
 
     List<String> onlyDups = lstV("a", "a", "a");
-    String[] onlyDupsDedupExpected = new String[]{"a"};
+    String[] onlyDupsDedupExpected = new String[] {"a"};
     Set<String> onlydupsDedupActual = MoreIterables.dedupKeepLast(onlyDups);
     assertArrayAndSetEqual("onlyDups", onlyDupsDedupExpected, onlydupsDedupActual);
+  }
+
+  @Test
+  public void testForEachPair() {
+    StringBuilder builder = new StringBuilder();
+    MoreIterables.forEachPair(
+        lstV("l1", "l2"),
+        lstV("r1", "r2"),
+        (left, right) -> builder.append("|").append(left).append(",").append(right));
+    assertEquals("|l1,r1|l2,r2", builder.toString());
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testForEachPairLeftSmaller() {
+    MoreIterables.forEachPair(lstV("l1"), lstV("r1", "r2"), (left, right) -> {});
+  }
+
+  @Test(expected = IllegalStateException.class)
+  public void testForEachPairRightSmaller() {
+    MoreIterables.forEachPair(lstV("l1", "l2"), lstV("r1"), (left, right) -> {});
+  }
+
+  @Test
+  public void enumerate() {
+    assertThat(lstI(MoreIterables.enumerate(ImmutableList.of())), Matchers.empty());
+    assertThat(
+        lstI(MoreIterables.enumerate(ImmutableList.of("a"))),
+        Matchers.equalTo(lstV(new Pair<>(0, "a"))));
+    assertThat(
+        lstI(MoreIterables.enumerate(ImmutableList.of("a", "b"))),
+        Matchers.equalTo(lstV(new Pair<>(0, "a"), new Pair<>(1, "b"))));
   }
 
   private static void assertArrayAndSetEqual(String testName, String[] first, Set<String> second) {
@@ -81,9 +107,7 @@ public class MoreIterablesTest {
     int i = 0;
     for (String s : second) {
       assertEquals(
-          String.format("%s failed: Elements at %d are not equal", testName, i),
-          first[i],
-          s);
+          String.format("%s failed: Elements at %d are not equal", testName, i), first[i], s);
       i++;
     }
   }

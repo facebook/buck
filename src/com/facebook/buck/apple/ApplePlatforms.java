@@ -16,28 +16,30 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.FlavorDomainException;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorDomainException;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import java.util.Optional;
 
 public class ApplePlatforms {
   // Utility class, do not instantiate.
-  private ApplePlatforms() { }
+  private ApplePlatforms() {}
 
   /** Only works with thin binaries. */
   static CxxPlatform getCxxPlatformForBuildTarget(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
-      BuildTarget target) {
-    return cxxPlatformFlavorDomain.getValue(target).or(defaultCxxPlatform);
+      CxxPlatformsProvider cxxPlatformsProvider, BuildTarget target) {
+    return cxxPlatformsProvider
+        .getCxxPlatforms()
+        .getValue(target)
+        .orElse(cxxPlatformsProvider.getDefaultCxxPlatform());
   }
 
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
-      FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain,
-      CxxPlatform defaultCxxPlatform,
+      CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       BuildTarget target,
       Optional<MultiarchFileInfo> fatBinaryInfo) {
@@ -45,18 +47,19 @@ public class ApplePlatforms {
     if (fatBinaryInfo.isPresent()) {
       appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
     } else {
-      CxxPlatform cxxPlatform = getCxxPlatformForBuildTarget(
-          cxxPlatformFlavorDomain,
-          defaultCxxPlatform,
-          target);
+      CxxPlatform cxxPlatform = getCxxPlatformForBuildTarget(cxxPlatformsProvider, target);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
       } catch (FlavorDomainException e) {
         throw new HumanReadableException(
             e,
-            "%s: Apple bundle requires an Apple platform, found '%s'",
+            "%s: Apple bundle requires an Apple platform, found '%s'\n\n"
+                + "A common cause of this error is that the required SDK is missing.\n"
+                + "Please check whether it's installed and retry.\n"
+                + "Original exception: %s",
             target,
-            cxxPlatform.getFlavor().getName());
+            cxxPlatform.getFlavor().getName(),
+            e.getMessage());
       }
     }
 

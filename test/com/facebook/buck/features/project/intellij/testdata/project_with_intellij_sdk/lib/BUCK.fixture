@@ -1,0 +1,16 @@
+java_library(
+    name = "idea",
+    provided_deps = [":openapi"],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+prebuilt_jar(
+    name = "openapi",
+    binary_jar = "openapi.jar",
+    provided = True,
+    visibility = [
+        "PUBLIC",
+    ],
+)

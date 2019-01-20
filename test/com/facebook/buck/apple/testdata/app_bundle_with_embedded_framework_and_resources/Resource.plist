@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The contents of this file doesn't really matter, since nothing is done with this plist. -->
+<plist version="1.0">
+<dict>
+	<key>CoolStuffKey</key>
+	<true/>
+</dict>
+</plist>

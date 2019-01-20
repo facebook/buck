@@ -7,3 +7,4 @@
   default_debug_info_format_for_binaries = dwarf_and_dsym
   default_debug_info_format_for_libraries = dwarf_and_dsym
   default_debug_info_format_for_tests = dwarf_and_dsym
+  iphonesimulator_target_sdk_version = 10.0

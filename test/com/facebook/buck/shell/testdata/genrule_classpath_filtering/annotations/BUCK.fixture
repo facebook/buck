@@ -1,0 +1,15 @@
+java_annotation_processor(
+    name = "proc",
+    processor_class = "com.example.annotations.Proc",
+    visibility = ["PUBLIC"],
+    deps = [":proc-lib"],
+)
+
+java_library(
+    name = "proc-lib",
+    srcs = [
+        "Proc.java",
+    ],
+    #placeholder,
+    visibility = ["PUBLIC"],
+)

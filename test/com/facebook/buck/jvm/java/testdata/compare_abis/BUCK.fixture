@@ -1,0 +1,16 @@
+java_library(
+    name = "consumer",
+    srcs = [
+        "Consumer.java",
+    ],
+    deps = [
+        ":producer",
+    ],
+)
+
+java_library(
+    name = "producer",
+    srcs = [
+        "Producer.java",
+    ],
+)

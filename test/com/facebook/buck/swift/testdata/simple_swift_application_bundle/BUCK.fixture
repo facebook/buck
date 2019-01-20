@@ -1,24 +1,24 @@
 apple_bundle(
-  name = 'DemoApp',
-  binary = ':DemoAppBinary',
-  extension = 'app',
-  info_plist = 'Info.plist',
+    name = "DemoApp",
+    binary = ":DemoAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
 )
 
 apple_package(
-  name = 'DemoAppPackage',
-  bundle = ':DemoApp',
+    name = "DemoAppPackage",
+    bundle = ":DemoApp",
 )
 
 swift_library(
-  name = 'DemoAppModule',
-  srcs = glob(['*.swift']),
+    name = "DemoAppModule",
+    srcs = glob(["*.swift"]),
 )
 
 apple_binary(
-  name = 'DemoAppBinary',
-  srcs = [],
-  deps = [
-    ':DemoAppModule',
-  ],
+    name = "DemoAppBinary",
+    srcs = [],
+    deps = [
+        ":DemoAppModule",
+    ],
 )

@@ -1,0 +1,9 @@
+prebuilt_jar(
+    name = "error-prone-annotations",
+    binary_jar = "error_prone_annotations-2.0.19.jar",
+    licenses = [
+        "COPYING",
+    ],
+    source_jar = "error_prone_annotations-2.0.19-sources.jar",
+    visibility = ["PUBLIC"],
+)

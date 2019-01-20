@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.command.test}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'buck test' /}
+    {param navid: 'command_test' /}
     {param description}
       A command that builds and runs the tests for one or more specified
       targets.
@@ -51,8 +67,9 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 {call buck.param}
   {param name: 'debug' /}
   {param desc}
-  If specified, the tests will start suspended with a JDWP debug port of 5005.
-  This means that they will not run until a debugger is attached.
+  If specified, tests will start suspended and will not run until a debugger is attached.
+  Tests compatible with JDWP will be listening on the default port (5005), lldb tests print out
+  a process ID to attach to.
  {/param}
 {/call}
 
@@ -115,23 +132,14 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 
     <pre>buck test --all --test-selectors '!MyTest'  # ...all except MyTest</pre>
 
-    Test selectors can also be read from a file by formatting them as
-    {sp}<code>@/path/to/file</code>.  The file should contain one test selector
+    Test selectors can also be read from a file by formatting the command line argument as
+    {sp}<code>:/path/to/file</code>.  The file should contain one test selector
     per line.
 
     <p>
 
     The first matching selector decides whether to include or exclude a test.
     The full logic is described in the <code>--help</code>.
-  {/param}
-{/call}
-
-{call buck.param}
-  {param name: 'dry-run' /}
-  {param desc}
-  Print the test rules that will be matched by command line arguments such as
-  {sp}<code>--include</code> and <code>--exclude</code>, but exit before
-  building or running tests.
   {/param}
 {/call}
 
@@ -184,7 +192,9 @@ contains a <code>tests = ['...']</code> field to specify its tests.</p>
 
     Currently this only support Apple(ios/osx) tests.
 
-    <pre>buck test --test-runner-env FOO=BAR --test-runner-env BAZ=QUUX //some:target</pre>
+    <pre>
+    {literal}buck test --test-runner-env FOO=BAR --test-runner-env BAZ=QUUX //some:target{/literal}
+    </pre>
   {/param}
 {/call}
 

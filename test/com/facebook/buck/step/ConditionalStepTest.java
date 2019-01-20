@@ -18,54 +18,48 @@ package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.util.TriState;
-import com.google.common.base.Supplier;
-
-import org.easymock.EasyMockSupport;
-import org.junit.Test;
-
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
+import org.junit.Test;
 
-public class ConditionalStepTest extends EasyMockSupport {
+public class ConditionalStepTest {
 
   @Test
   public void testExecuteConditionalStepWhenTrue() throws IOException, InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
-    final AtomicReference<TriState> condition = new AtomicReference<>(
-        TriState.UNSPECIFIED);
-    Supplier<Boolean> conditional = new Supplier<Boolean>() {
-      @Override
-      public Boolean get() {
-        if (!condition.get().isSet()) {
-          throw new IllegalStateException("condition must be satisfied before this is queried.");
-        } else {
-          return condition.get().asBoolean();
-        }
-      }
-    };
+    AtomicReference<Optional<Boolean>> condition = new AtomicReference<>(Optional.empty());
+    Supplier<Boolean> conditional =
+        () -> {
+          if (!condition.get().isPresent()) {
+            throw new IllegalStateException("condition must be satisfied before this is queried.");
+          } else {
+            return condition.get().get();
+          }
+        };
 
     // Create a step to run when the Supplier<Boolean> is true. Exit code is always 37.
-    final AtomicInteger numCalls = new AtomicInteger(0);
-    Step stepToRunWhenSupplierIsTrue = new AbstractExecutionStep("inc") {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context) {
-        numCalls.incrementAndGet();
-        return StepExecutionResult.of(37);
-      }
-    };
+    AtomicInteger numCalls = new AtomicInteger(0);
+    Step stepToRunWhenSupplierIsTrue =
+        new AbstractExecutionStep("inc") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) {
+            numCalls.incrementAndGet();
+            return StepExecutionResult.of(37);
+          }
+        };
 
     // Create and execute the ConditionalStep.
     ConditionalStep conditionalStep = new ConditionalStep(conditional, stepToRunWhenSupplierIsTrue);
-    condition.set(TriState.TRUE);
+    condition.set(Optional.of(true));
     ExecutionContext context = TestExecutionContext.newInstance();
     int exitCode = conditionalStep.execute(context).getExitCode();
     assertEquals("stepToRunWhenSupplierIsTrue should have been run once.", 1, numCalls.get());
-    assertEquals("The exit code of stepToRunWhenSupplierIsTrue should be passed through.",
-        37,
-        exitCode);
+    assertEquals(
+        "The exit code of stepToRunWhenSupplierIsTrue should be passed through.", 37, exitCode);
     assertEquals("inc", conditionalStep.getShortName());
     assertEquals("conditionally: inc", conditionalStep.getDescription(context));
   }
@@ -74,33 +68,31 @@ public class ConditionalStepTest extends EasyMockSupport {
   public void testExecuteConditionalStepWhenFalse() throws IOException, InterruptedException {
     // Create a Supplier<Boolean> that returns a value once an external condition has been
     // satisfied.
-    final AtomicReference<TriState> condition = new AtomicReference<>(
-        TriState.UNSPECIFIED);
-    Supplier<Boolean> conditional = new Supplier<Boolean>() {
-      @Override
-      public Boolean get() {
-        if (!condition.get().isSet()) {
-          throw new IllegalStateException("condition must be satisfied before this is queried.");
-        } else {
-          return condition.get().asBoolean();
-        }
-      }
-    };
+    AtomicReference<Optional<Boolean>> condition = new AtomicReference<>(Optional.empty());
+    Supplier<Boolean> conditional =
+        () -> {
+          if (!condition.get().isPresent()) {
+            throw new IllegalStateException("condition must be satisfied before this is queried.");
+          } else {
+            return condition.get().get();
+          }
+        };
 
     // Create a step to run when the Supplier<Boolean> is true. Because the Supplier<Boolean> will
     // be false, this step should not be run.
-    final AtomicInteger numCalls = new AtomicInteger(0);
-    Step stepToRunWhenSupplierIsTrue = new AbstractExecutionStep("inc") {
-      @Override
-      public StepExecutionResult execute(ExecutionContext context) {
-        numCalls.incrementAndGet();
-        throw new IllegalStateException("This step should not be executed.");
-      }
-    };
+    AtomicInteger numCalls = new AtomicInteger(0);
+    Step stepToRunWhenSupplierIsTrue =
+        new AbstractExecutionStep("inc") {
+          @Override
+          public StepExecutionResult execute(ExecutionContext context) {
+            numCalls.incrementAndGet();
+            throw new IllegalStateException("This step should not be executed.");
+          }
+        };
 
     // Create and execute the ConditionalStep.
     ConditionalStep conditionalStep = new ConditionalStep(conditional, stepToRunWhenSupplierIsTrue);
-    condition.set(TriState.FALSE);
+    condition.set(Optional.of(false));
     ExecutionContext context = TestExecutionContext.newInstance();
     int exitCode = conditionalStep.execute(context).getExitCode();
     assertEquals("stepToRunWhenSupplierIsTrue should not have been run.", 0, numCalls.get());

@@ -17,12 +17,17 @@
 package exotest;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.util.Log;
-
+import buck.exotest.R;
+import com.facebook.buck.android.support.exopackage.DelegatingClassLoader;
 import com.facebook.buck.android.support.exopackage.ExopackageSoLoader;
+import java.io.IOException;
+import java.util.Scanner;
 
 public class LogActivity extends Activity {
 
@@ -38,6 +43,15 @@ public class LogActivity extends Activity {
     Log.i("EXOPACKAGE_TEST", "NATIVE_ONE=" + stringOneFromJNI());
     Log.i("EXOPACKAGE_TEST", "NATIVE_TWO=" + stringTwoFromJNI());
 
+    Log.i("EXOPACKAGE_TEST", "RESOURCE=" + getResourceString());
+    Log.i("EXOPACKAGE_TEST", "IMAGE=" + getImageString());
+    Log.i("EXOPACKAGE_TEST", "ASSET=" + getAssetString());
+    Log.i("EXOPACKAGE_TEST", "ASSET_TWO=" + getExtraAssetString());
+
+    Log.i("EXOPACKAGE_TEST", "MODULE_ONE=" + getModularClassValue());
+
+    Log.i("EXOPACKAGE_TEST", "EXITING");
+
     finish();
   }
 
@@ -51,6 +65,45 @@ public class LogActivity extends Activity {
     }
   }
 
+  public String getResourceString() {
+    String string = getString(R.string.hello);
+    return string;
+  }
+
+  public String getAssetString(String file) {
+    try {
+      return new Scanner(getAssets().open(file)).next();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public String getAssetString() {
+    return getAssetString("asset.txt");
+  }
+
+  public String getExtraAssetString() {
+    return getAssetString("asset2.txt");
+  }
+
+  public String getImageString() {
+    Bitmap bitmap = ((BitmapDrawable) getResources().getDrawable(R.drawable.image)).getBitmap();
+    return "png_" + bitmap.getWidth() + "_" + bitmap.getHeight();
+  }
+
   public native String stringOneFromJNI();
+
   public native String stringTwoFromJNI();
+
+  public String getModularClassValue() {
+    try {
+      return (String)
+          DelegatingClassLoader.getInstance()
+              .loadClass("exotest.Module")
+              .getDeclaredField("VALUE")
+              .get(null);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
 }

@@ -16,18 +16,14 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.types.Pair;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
 
-/**
- * Coerces from a 2-element collection into a pair.
- */
+/** Coerces from a 2-element collection into a pair. */
 public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, SECOND>> {
   private TypeCoercer<FIRST> firstTypeCoercer;
   private TypeCoercer<SECOND> secondTypeCoercer;
@@ -50,14 +46,10 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
   }
 
   @Override
-  public Optional<Pair<FIRST, SECOND>> getOptionalValue() {
-    return Optional.absent();
-  }
-
-  @Override
-  public void traverse(Pair<FIRST, SECOND> object, Traversal traversal) {
-    firstTypeCoercer.traverse(object.getFirst(), traversal);
-    secondTypeCoercer.traverse(object.getSecond(), traversal);
+  public void traverse(
+      CellPathResolver cellRoots, Pair<FIRST, SECOND> object, Traversal traversal) {
+    firstTypeCoercer.traverse(cellRoots, object.getFirst(), traversal);
+    secondTypeCoercer.traverse(cellRoots, object.getSecond(), traversal);
   }
 
   @Override
@@ -71,27 +63,19 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
       Collection<?> collection = (Collection<?>) object;
       if (collection.size() != 2) {
         throw CoerceFailedException.simple(
-            object,
-            getOutputClass(),
-            "input collection should have 2 elements");
+            object, getOutputClass(), "input collection should have 2 elements");
       }
       Iterator<?> iterator = collection.iterator();
-      FIRST first = firstTypeCoercer.coerce(
-          cellRoots,
-          filesystem,
-          pathRelativeToProjectRoot,
-          iterator.next());
-      SECOND second = secondTypeCoercer.coerce(
-          cellRoots,
-          filesystem,
-          pathRelativeToProjectRoot,
-          iterator.next());
+      FIRST first =
+          firstTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, iterator.next());
+      SECOND second =
+          secondTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, iterator.next());
       return new Pair<>(first, second);
     } else {
       throw CoerceFailedException.simple(
-          object,
-          getOutputClass(),
-          "input object should be a 2-element collection");
+          object, getOutputClass(), "input object should be a 2-element collection");
     }
   }
 }

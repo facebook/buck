@@ -16,32 +16,27 @@
 
 package com.facebook.buck.artifact_cache;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.BorrowablePath;
-import com.facebook.buck.io.LazyPath;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.file.BorrowablePath;
+import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.util.concurrent.MoreExecutors;
-
+import com.google.common.util.concurrent.Futures;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Files;
-
 public class TwoLevelArtifactCacheDecoratorTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private static final RuleKey dummyRuleKey =
       new RuleKey("76b1c1beae69428db2d1befb31cf743ac8ce90df");
@@ -49,159 +44,168 @@ public class TwoLevelArtifactCacheDecoratorTest {
       new RuleKey("1111111111111111111111111111111111111111");
 
   @Test
-  public void testCacheFetch() throws InterruptedException, IOException {
+  public void testCacheFetch() throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
-         TwoLevelArtifactCacheDecorator twoLevelCache = new TwoLevelArtifactCacheDecorator(
-             inMemoryArtifactCache,
-             new ProjectFilesystem(tmp.getRoot()),
-             BuckEventBusFactory.newInstance(),
-             MoreExecutors.newDirectExecutorService(),
-             /* performTwoLevelStores */ true,
-             /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {
+        TwoLevelArtifactCacheDecorator twoLevelCache =
+            new TwoLevelArtifactCacheDecorator(
+                inMemoryArtifactCache,
+                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
+                BuckEventBusForTests.newInstance(),
+                /* performTwoLevelStores */ true,
+                /* minimumTwoLevelStoredArtifactSize */ 0L,
+                /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       assertThat(
-          twoLevelCache.fetch(dummyRuleKey, dummyFile).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.MISS));
 
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
       assertThat(
-          twoLevelCache.fetch(dummyRuleKey, dummyFile).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.HIT));
 
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey2),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey2).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
 
       assertThat(
-          twoLevelCache.fetch(dummyRuleKey2, dummyFile).getType(),
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey2, dummyFile)).getType(),
           Matchers.equalTo(CacheResultType.HIT));
-      assertThat(
-          inMemoryArtifactCache.getArtifactCount(),
-          Matchers.equalTo(3));
+      assertThat(inMemoryArtifactCache.getArtifactCount(), Matchers.equalTo(3));
     }
   }
 
-  private void testStoreThresholds(
-      int artifactSize,
-      int expectedArtifactsInCache) throws InterruptedException, IOException {
+  @Test
+  public void testResultDoesntHaveAddedMetadata() throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
-         TwoLevelArtifactCacheDecorator twoLevelCache = new TwoLevelArtifactCacheDecorator(
-             inMemoryArtifactCache,
-             new ProjectFilesystem(tmp.getRoot()),
-             BuckEventBusFactory.newInstance(),
-             MoreExecutors.newDirectExecutorService(),
-             /* performTwoLevelStores */ true,
-             /* minimumTwoLevelStoredArtifactSize */ 5L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.of(10L))) {
+        TwoLevelArtifactCacheDecorator twoLevelCache =
+            new TwoLevelArtifactCacheDecorator(
+                inMemoryArtifactCache,
+                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
+                BuckEventBusForTests.newInstance(),
+                /* performTwoLevelStores */ true,
+                /* minimumTwoLevelStoredArtifactSize */ 0L,
+                /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
+      LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
+      twoLevelCache.store(
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
+          BorrowablePath.notBorrowablePath(dummyFile.get()));
+      CacheResult cacheResult =
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile));
+      assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.HIT));
+      assertThat(
+          cacheResult.getMetadata().keySet(),
+          Matchers.not(Matchers.contains(TwoLevelArtifactCacheDecorator.METADATA_KEY)));
+    }
+  }
+
+  private void testStoreThresholds(int artifactSize, int expectedArtifactsInCache)
+      throws IOException {
+    try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
+        TwoLevelArtifactCacheDecorator twoLevelCache =
+            new TwoLevelArtifactCacheDecorator(
+                inMemoryArtifactCache,
+                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
+                BuckEventBusForTests.newInstance(),
+                /* performTwoLevelStores */ true,
+                /* minimumTwoLevelStoredArtifactSize */ 5L,
+                /* maximumTwoLevelStoredArtifactSize */ Optional.of(10L))) {
 
       LazyPath lazyPath = LazyPath.ofInstance(tmp.newFile());
       Files.write(lazyPath.get(), new byte[artifactSize]);
 
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(lazyPath.get()));
       assertThat(
-          inMemoryArtifactCache.getArtifactCount(),
-          Matchers.equalTo(expectedArtifactsInCache));
+          inMemoryArtifactCache.getArtifactCount(), Matchers.equalTo(expectedArtifactsInCache));
     }
   }
 
   @Test
   public void noTwoLevelStoreWhenFileSizeBelowThreshold() throws Exception {
-    testStoreThresholds(
-        /* artifactSize */ 3,
-        /* expectedArtifactsInCache */ 1);
+    testStoreThresholds(/* artifactSize */ 3, /* expectedArtifactsInCache */ 1);
   }
 
   @Test
   public void twoLeveLStoreWhenFileSizeInRange() throws Exception {
-    testStoreThresholds(
-        /* artifactSize */ 6,
-        /* expectedArtifactsInCache */ 2);
+    testStoreThresholds(/* artifactSize */ 6, /* expectedArtifactsInCache */ 2);
   }
 
   @Test
   public void noTwoLevelStoreWhenFileSizeAboveMax() throws Exception {
-    testStoreThresholds(
-        /* artifactSize */ 11,
-        /* expectedArtifactsInCache */ 1);
+    testStoreThresholds(/* artifactSize */ 11, /* expectedArtifactsInCache */ 1);
   }
 
   @Test
-  public void testMetadataIsNotShared() throws InterruptedException, IOException {
+  public void testMetadataIsNotShared() throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
-         TwoLevelArtifactCacheDecorator twoLevelCache = new TwoLevelArtifactCacheDecorator(
-             inMemoryArtifactCache,
-             new ProjectFilesystem(tmp.getRoot()),
-             BuckEventBusFactory.newInstance(),
-             MoreExecutors.newDirectExecutorService(),
-             /* performTwoLevelStores */ true,
-             /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {
+        TwoLevelArtifactCacheDecorator twoLevelCache =
+            new TwoLevelArtifactCacheDecorator(
+                inMemoryArtifactCache,
+                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
+                BuckEventBusForTests.newInstance(),
+                /* performTwoLevelStores */ true,
+                /* minimumTwoLevelStoredArtifactSize */ 0L,
+                /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
-      final String testMetadataKey = "testMetaKey";
+      String testMetadataKey = "testMetaKey";
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey),
-          ImmutableMap.of(testMetadataKey, "value1"),
+          ArtifactInfo.builder()
+              .addRuleKeys(dummyRuleKey)
+              .setMetadata(ImmutableMap.of(testMetadataKey, "value1"))
+              .build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey2),
-          ImmutableMap.of(testMetadataKey, "value2"),
+          ArtifactInfo.builder()
+              .addRuleKeys(dummyRuleKey2)
+              .setMetadata(ImmutableMap.of(testMetadataKey, "value2"))
+              .build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
 
-      CacheResult fetch1 = twoLevelCache.fetch(dummyRuleKey, dummyFile);
-      CacheResult fetch2 = twoLevelCache.fetch(dummyRuleKey2, dummyFile);
-      // Content hashes should be the same
-      assertEquals(
-          fetch1.getMetadata().get(TwoLevelArtifactCacheDecorator.METADATA_KEY),
-          fetch2.getMetadata().get(TwoLevelArtifactCacheDecorator.METADATA_KEY));
-      // But the metadata shouldn't be shared
+      CacheResult fetch1 =
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile));
+      CacheResult fetch2 =
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey2, dummyFile));
+      // The metadata shouldn't be shared
       assertNotEquals(
-          fetch1.getMetadata().get(testMetadataKey),
-          fetch2.getMetadata().get(testMetadataKey));
-
+          fetch1.getMetadata().get(testMetadataKey), fetch2.getMetadata().get(testMetadataKey));
     }
   }
 
   @Test
-  public void testCanRead2LStoresIfStoresDisabled() throws InterruptedException, IOException {
+  public void testCanRead2LStoresIfStoresDisabled() throws IOException {
     try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
-         TwoLevelArtifactCacheDecorator twoLevelCache = new TwoLevelArtifactCacheDecorator(
-             inMemoryArtifactCache,
-             new ProjectFilesystem(tmp.getRoot()),
-             BuckEventBusFactory.newInstance(),
-             MoreExecutors.newDirectExecutorService(),
-             /* performTwoLevelStores */ true,
-             /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent());
-      TwoLevelArtifactCacheDecorator twoLevelCacheNoStore = new TwoLevelArtifactCacheDecorator(
-          inMemoryArtifactCache,
-          new ProjectFilesystem(tmp.getRoot()),
-          BuckEventBusFactory.newInstance(),
-          MoreExecutors.newDirectExecutorService(),
-             /* performTwoLevelStores */ false,
-             /* minimumTwoLevelStoredArtifactSize */ 0L,
-             /* maximumTwoLevelStoredArtifactSize */ Optional.<Long>absent())) {
+        TwoLevelArtifactCacheDecorator twoLevelCache =
+            new TwoLevelArtifactCacheDecorator(
+                inMemoryArtifactCache,
+                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
+                BuckEventBusForTests.newInstance(),
+                /* performTwoLevelStores */ true,
+                /* minimumTwoLevelStoredArtifactSize */ 0L,
+                /* maximumTwoLevelStoredArtifactSize */ Optional.empty());
+        TwoLevelArtifactCacheDecorator twoLevelCacheNoStore =
+            new TwoLevelArtifactCacheDecorator(
+                inMemoryArtifactCache,
+                TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
+                BuckEventBusForTests.newInstance(),
+                /* performTwoLevelStores */ false,
+                /* minimumTwoLevelStoredArtifactSize */ 0L,
+                /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
       LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
 
       twoLevelCache.store(
-          ImmutableSet.of(dummyRuleKey),
-          ImmutableMap.<String, String>of(),
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
           BorrowablePath.notBorrowablePath(dummyFile.get()));
-      assertThat(
-          inMemoryArtifactCache.getArtifactCount(),
-          Matchers.equalTo(2));
+      assertThat(inMemoryArtifactCache.getArtifactCount(), Matchers.equalTo(2));
 
       assertThat(
-          twoLevelCacheNoStore.fetch(dummyRuleKey, dummyFile).getType(),
+          Futures.getUnchecked(twoLevelCacheNoStore.fetchAsync(null, dummyRuleKey, dummyFile))
+              .getType(),
           Matchers.equalTo(CacheResultType.HIT));
     }
   }

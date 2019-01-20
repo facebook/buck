@@ -17,29 +17,52 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.cxx.CxxBuckConfig;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.android.toolchain.DxToolchain;
+import com.facebook.buck.android.toolchain.ndk.impl.TestNdkCxxPlatformsProviderFactory;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.JavaCompilationConstants;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class AndroidInstrumentationApkBuilder
-    extends AbstractNodeBuilder<AndroidInstrumentationApkDescription.Arg> {
+    extends AbstractNodeBuilder<
+        AndroidInstrumentationApkDescriptionArg.Builder,
+        AndroidInstrumentationApkDescriptionArg,
+        AndroidInstrumentationApkDescription,
+        AndroidInstrumentationApk> {
 
   private AndroidInstrumentationApkBuilder(BuildTarget target) {
     super(
         new AndroidInstrumentationApkDescription(
+            DEFAULT_JAVA_CONFIG,
             new ProGuardConfig(FakeBuckConfig.builder().build()),
-            ANDROID_JAVAC_OPTIONS,
-            ImmutableMap.<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform>of(),
-            MoreExecutors.newDirectExecutorService(),
-            new CxxBuckConfig(new FakeBuckConfig.Builder().build())),
-        target);
+            new CxxBuckConfig(new FakeBuckConfig.Builder().build()),
+            new DxConfig(FakeBuckConfig.builder().build()),
+            createToolchainProviderForAndroidInstrumentationApk()),
+        target,
+        new FakeProjectFilesystem(),
+        createToolchainProviderForAndroidInstrumentationApk());
+  }
+
+  public static ToolchainProvider createToolchainProviderForAndroidInstrumentationApk() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(TestNdkCxxPlatformsProviderFactory.createDefaultNdkPlatformsProvider())
+        .withToolchain(
+            DxToolchain.DEFAULT_NAME, DxToolchain.of(MoreExecutors.newDirectExecutorService()))
+        .withToolchain(
+            JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
+        .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
+        .build();
   }
 
   public static AndroidInstrumentationApkBuilder createBuilder(BuildTarget buildTarget) {
@@ -47,18 +70,12 @@ public class AndroidInstrumentationApkBuilder
   }
 
   public AndroidInstrumentationApkBuilder setManifest(SourcePath manifest) {
-    arg.manifest = manifest;
-    return this;
-  }
-
-  public AndroidInstrumentationApkBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    getArgForPopulating().setManifest(manifest);
     return this;
   }
 
   public AndroidInstrumentationApkBuilder setApk(BuildTarget apk) {
-    arg.apk = apk;
+    getArgForPopulating().setApk(apk);
     return this;
   }
-
 }

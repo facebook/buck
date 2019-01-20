@@ -22,15 +22,15 @@ import java.net.URL;
 
 public class HelloWorld {
 
-    private HelloWorld() {}
+  private HelloWorld() {}
 
-    public static void main(String... args) throws IOException {
-        URL url = HelloWorld.class.getResource("res/helloworld.txt");
-        try (InputStream inputStream = url.openStream()) {
-            int ch;
-            while ((ch = inputStream.read()) != -1) {
-                System.out.print((char) ch);
-            }
-        }
+  public static void main(String... args) throws IOException {
+    URL url = HelloWorld.class.getResource("res/helloworld.txt");
+    try (InputStream inputStream = url.openStream()) {
+      int ch;
+      while ((ch = inputStream.read()) != -1) {
+        System.out.print((char) ch);
+      }
     }
+  }
 }

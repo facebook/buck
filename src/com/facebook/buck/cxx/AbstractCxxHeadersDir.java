@@ -16,54 +16,34 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import java.util.Optional;
 import org.immutables.value.Value;
 
-/**
- * Wraps a header directory to add to the preprocessors search path.
- */
+/** Wraps a header directory to add to the preprocessors search path. */
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractCxxHeadersDir extends CxxHeaders {
-
+  // TODO(cjhopman): This should probably be adding more to its rulekey.
   @Override
   @Value.Parameter
+  @AddToRuleKey
   public abstract CxxPreprocessables.IncludeType getIncludeType();
 
   @Override
   @Value.Parameter
+  @AddToRuleKey
   public abstract SourcePath getRoot();
 
   @Override
-  public SourcePath getIncludeRoot() {
-    return getRoot();
-  }
-
-  @Override
   public Optional<SourcePath> getHeaderMap() {
-    return Optional.absent();
+    return Optional.empty();
   }
 
   @Override
   public void addToHeaderPathNormalizer(HeaderPathNormalizer.Builder builder) {
     builder.addHeaderDir(getRoot());
   }
-
-  @Override
-  public Iterable<BuildRule> getDeps(SourcePathResolver resolver) {
-    return resolver.filterBuildRuleInputs(getRoot());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("type", getIncludeType());
-    sink.setReflectively("root", getRoot());
-  }
-
 }

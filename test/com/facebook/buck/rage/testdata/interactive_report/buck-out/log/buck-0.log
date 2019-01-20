@@ -1,1 +1,0 @@
-[2016-02-19 17:58:38.574][debug][command:620713dc-9694-4645-9959-a152b8c2daa1][tid:1128][com.facebook.buck.cli.Main] Starting up (build date 2016-02-19 11:26:55 +0000, rev 23c27ff9c6129852d621bedaf02428b6c1bbcd9a), args: [test, test/com/facebook/buck/rage/...]

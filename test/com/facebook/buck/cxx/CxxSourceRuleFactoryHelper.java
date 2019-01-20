@@ -16,14 +16,17 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
 
 public class CxxSourceRuleFactoryHelper {
@@ -31,40 +34,50 @@ public class CxxSourceRuleFactoryHelper {
   private CxxSourceRuleFactoryHelper() {}
 
   public static CxxSourceRuleFactory of(
-      Path cellRoot,
-      BuildTarget target,
-      CxxPlatform cxxPlatform) {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform) {
+    return of(cellRoot, target, cxxPlatform, CxxPlatformUtils.DEFAULT_CONFIG);
+  }
+
+  public static CxxSourceRuleFactory of(
+      Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform, CxxBuckConfig cxxBuckConfig) {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxSourceRuleFactory.builder()
-        .setParams(new FakeBuildRuleParamsBuilder(target)
-                .setProjectFilesystem(new FakeProjectFilesystem(cellRoot.toFile()))
-                .build())
-        .setResolver(resolver)
-        .setPathResolver(new SourcePathResolver(resolver))
-        .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
+        .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
+        .setBaseBuildTarget(target)
+        .setActionGraphBuilder(graphBuilder)
+        .setPathResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
+        .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
-        .setPicType(CxxSourceRuleFactory.PicType.PDC)
+        .setPicType(PicType.PDC)
         .build();
+  }
+
+  public static CxxSourceRuleFactory of(
+      Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform, PicType picType) {
+    return of(cellRoot, target, cxxPlatform, CxxPlatformUtils.DEFAULT_CONFIG, picType);
   }
 
   public static CxxSourceRuleFactory of(
       Path cellRoot,
       BuildTarget target,
       CxxPlatform cxxPlatform,
-      CxxSourceRuleFactory.PicType picType) {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+      CxxBuckConfig cxxBuckConfig,
+      PicType picType) {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxSourceRuleFactory.builder()
-        .setParams(new FakeBuildRuleParamsBuilder(target)
-            .setProjectFilesystem(new FakeProjectFilesystem(cellRoot.toFile()))
-            .build())
-        .setResolver(resolver)
-        .setPathResolver(new SourcePathResolver(resolver))
-        .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
+        .setBaseBuildTarget(target)
+        .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
+        .setActionGraphBuilder(graphBuilder)
+        .setPathResolver(pathResolver)
+        .setRuleFinder(ruleFinder)
+        .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
         .setPicType(picType)
         .build();
   }
-
 }

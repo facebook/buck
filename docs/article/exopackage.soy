@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.exopackage}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'Exopackage' /}
+    {param navid: 'article_exopackage' /}
     {param subtitle: 'A technique for fast, iterative Android development.' /}
     {param prettify: true /}
     {param description}
@@ -176,7 +192,7 @@ This ensures that builds are <em>reproducible</em> and <em>hermetic</em>.
 For AntennaPod, we ran <code>./gradlew --debug assembleDebug</code> and inspected the
 output to figure out which third party JAR files Gradle was using to build the app.
 As a result, we ended up adding the following files to the <code>libs</code> directory,
-which also includes an <a href="http://tools.android.com/tech-docs/new-build-system/aar-format">AAR</a>{sp}
+which also includes an <a href="https://developer.android.com/studio/projects/android-library#aar-contents">AAR</a>{sp}
 file for the Android support library for v7 compatibility.
 
 <pre>{literal}
@@ -260,9 +276,6 @@ you can leverage your IDE to automate this refactoring.
 In Buck, build rules are defined in build files named <code>BUCK</code>. In this step,
 we create a <code>BUCK</code> file and add the build rules necessary to build the
 AntennaPod APK using Buck without touching any other files in the AntennaPod repository.
-(Note that if you are creating a new Android project from scratch rather than retrofitting
-an existing project, you may want to use {call buck.cmd_quickstart /} to create your project
-and then skip ahead to <a href="#build-buck-support-library">Step 5</a>.)
 
 <p>
 
@@ -488,19 +501,18 @@ from your checkout of Buck as follows:
 
 <pre>{literal}
 <strong># Run this from the root of your checkout of Buck, not from AntennaPod.</strong>
-buck build buck-android-support
+buck build --out buck-android-support.jar buck-android-support
 {/literal}</pre>
 
 <p>
 
-Once you have built it, copy it over to AntennaPod's <code>libs</code> directory,
+Once you have built it, move it over to AntennaPod's <code>libs</code> directory,
 just like the other third party JAR files:
 
 <p>
 
 <pre>{literal}
-cp `buck targets --show-output buck-android-support | awk '{print $2}'` \
-    path/to/AntennaPod/libs
+mv buck-android-support.jar path/to/AntennaPod/libs
 {/literal}</pre>
 
 <h2 id="use-exopackage">Step 6: Modify AntennaPod to use exopackage</h2>
@@ -690,7 +702,7 @@ As such, these patterns match the transitive deps of <code>:application-lib</cod
 
 <p>
 
-Setting <code>exopackage = ['secondary_dex']</code> is what ensures that
+Setting <code>exopackage_modes = ['secondary_dex']</code> is what ensures that
 {sp}<code>BuildConfig.EXOPACKAGE_FLAGS</code> will be set correctly, in
 addition to the other packaging changes that Buck makes to support exopackage.
 This must used with <code>use_split_dex = True</code> because using

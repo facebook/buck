@@ -1,0 +1,11 @@
+prebuilt_jar(
+    name = "json-simple",
+    binary_jar = "json-simple-1.1.1.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    source_jar = "json-simple-1.1.1-sources.jar",
+    visibility = [
+        "//third-party/java/d8/...",
+    ],
+)

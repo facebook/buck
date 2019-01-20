@@ -16,51 +16,45 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
 
-/**
- * Base class for events about the phases of compilation within javac.
- */
+/** Base class for events about the phases of compilation within javac. */
 public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkAdvanceEvent {
   public enum Phase {
-    /**
-     * Parsing a single source file. Filename will be in the args.
-     */
-    PARSE("parse"),
+    /** Parsing a single source file. Filename will be in the args. */
+    PARSE(Constants.PARSE),
     /**
      * Entering all parse trees into the compiler's symbol tables. All filenames will be in the
      * args.
      */
-    ENTER("enter"),
-    /**
-     * Overall annotation processing phase, including all rounds. No args.
-     */
-    ANNOTATION_PROCESSING("annotation processing"),
+    ENTER(Constants.ENTER),
+    /** Overall annotation processing phase, including all rounds. No args. */
+    ANNOTATION_PROCESSING(Constants.ANNOTATION_PROCESSING),
     /**
      * A single round of annotation processing, including running the relevant processors, parsing
      * any source files they create, then re-entering all previously parsed files into new symbol
      * tables. Round number and whether it's the last round will be in the args.
      */
-    ANNOTATION_PROCESSING_ROUND("annotation processing round"),
+    ANNOTATION_PROCESSING_ROUND(Constants.ANNOTATION_PROCESSING_ROUND),
     /**
-     * Just running the annotation processors that are relevant to the sources being compiled.
-     * No args.
+     * Just running the annotation processors that are relevant to the sources being compiled. No
+     * args.
      */
-    RUN_ANNOTATION_PROCESSORS("run annotation processors"),
+    RUN_ANNOTATION_PROCESSORS(Constants.RUN_ANNOTATION_PROCESSORS),
     /**
      * Analyze and transform the AST for a single type to prepare for code generation. Source file
      * and type being analyzed will be in the args.
      */
-    ANALYZE("analyze"),
+    ANALYZE(Constants.ANALYZE),
     /**
      * Generate a class file for a single type. Source file and type being generated will be in the
      * args.
      */
-    GENERATE("generate");
+    GENERATE(Constants.GENERATE);
 
     private final String name;
 
@@ -68,6 +62,27 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
       this.name = name;
     }
 
+    public static Phase fromString(String value) {
+      switch (value) {
+        case Constants.PARSE:
+          return PARSE;
+        case Constants.ENTER:
+          return ENTER;
+        case Constants.ANNOTATION_PROCESSING:
+          return ANNOTATION_PROCESSING;
+        case Constants.ANNOTATION_PROCESSING_ROUND:
+          return ANNOTATION_PROCESSING_ROUND;
+        case Constants.RUN_ANNOTATION_PROCESSORS:
+          return RUN_ANNOTATION_PROCESSORS;
+        case Constants.ANALYZE:
+          return ANALYZE;
+        case Constants.GENERATE:
+          return GENERATE;
+        default:
+          throw new IllegalArgumentException(
+              Phase.class.getName() + " cannot be created from value " + value);
+      }
+    }
 
     @Override
     public String toString() {
@@ -75,15 +90,22 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
     }
   }
 
+  public static class Constants {
+    public static final String PARSE = "parse";
+    public static final String ENTER = "enter";
+    public static final String ANNOTATION_PROCESSING = "annotation processing";
+    public static final String ANNOTATION_PROCESSING_ROUND = "annotation processing round";
+    public static final String RUN_ANNOTATION_PROCESSORS = "run annotation processors";
+    public static final String ANALYZE = "analyze";
+    public static final String GENERATE = "generate";
+  }
+
   private final BuildTarget buildTarget;
   private final Phase phase;
   private final ImmutableMap<String, String> args;
 
   protected JavacPhaseEvent(
-      EventKey eventKey,
-      BuildTarget buildTarget,
-      Phase phase,
-      ImmutableMap<String, String> args) {
+      EventKey eventKey, BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
     super(eventKey);
     this.buildTarget = buildTarget;
     this.phase = phase;
@@ -108,23 +130,16 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
   }
 
   public static Started started(
-      BuildTarget buildTarget,
-      Phase phase,
-      ImmutableMap<String, String> args) {
+      BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
     return new Started(buildTarget, phase, args);
   }
 
-  public static Finished finished(
-      Started startedEvent,
-      ImmutableMap<String, String> args) {
+  public static Finished finished(Started startedEvent, ImmutableMap<String, String> args) {
     return new Finished(startedEvent, args);
   }
 
   public static class Started extends JavacPhaseEvent {
-    public Started(
-        BuildTarget buildTarget,
-        Phase phase,
-        ImmutableMap<String, String> args) {
+    public Started(BuildTarget buildTarget, Phase phase, ImmutableMap<String, String> args) {
       super(EventKey.unique(), buildTarget, phase, args);
     }
 
@@ -135,13 +150,9 @@ public abstract class JavacPhaseEvent extends AbstractBuckEvent implements WorkA
   }
 
   public static class Finished extends JavacPhaseEvent {
-    public Finished(
-        Started startedEvent,
-        ImmutableMap<String, String> args) {
-      super(startedEvent.getEventKey(),
-          startedEvent.getBuildTarget(),
-          startedEvent.getPhase(),
-          args);
+    public Finished(Started startedEvent, ImmutableMap<String, String> args) {
+      super(
+          startedEvent.getEventKey(), startedEvent.getBuildTarget(), startedEvent.getPhase(), args);
     }
 
     @Override

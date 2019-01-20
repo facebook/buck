@@ -15,26 +15,30 @@
  */
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.distributed.thrift.BuildStatus;
-import com.facebook.buck.distributed.thrift.LogRecord;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.distributed.thrift.BuildJob;
+import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
-
+import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import org.immutables.value.Value;
-
-import java.util.List;
 
 public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
+  private final BuildJob job;
   private final DistBuildStatus status;
 
-  public DistBuildStatusEvent(DistBuildStatus status) {
+  public DistBuildStatusEvent(BuildJob job, DistBuildStatus status) {
     super(EventKey.unique());
+    this.job = job;
     this.status = status;
+  }
+
+  public BuildJob getJob() {
+    return job;
   }
 
   public DistBuildStatus getStatus() {
@@ -60,24 +64,10 @@ public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent
   @BuckStyleImmutable
   @Value.Immutable
   abstract static class AbstractDistBuildStatus {
-    /**
-     * @return get ETA in millis
-     */
-    abstract long getETAMillis();
+    /** @return dist-build status */
+    abstract Optional<String> getStatus();
 
-    /**
-     * @return dist-build status
-     */
-    abstract BuildStatus getStatus();
-
-    /**
-     * @return the message to display
-     */
-    abstract Optional<String> getMessage();
-
-    /**
-     * @return the debug info received
-     */
-    abstract Optional<List<LogRecord>> getLogBook();
+    /** @return the status of each build slave */
+    abstract ImmutableList<BuildSlaveStatus> getSlaveStatuses();
   }
 }

@@ -1,0 +1,54 @@
+d_test(
+    name = "failing_test",
+    srcs = [
+        "failing_test.d",
+    ],
+    deps = [
+        ":lib",
+    ],
+)
+
+d_test(
+    name = "passing_test",
+    srcs = [
+        "passing_test.d",
+    ],
+    deps = [
+        ":lib",
+    ],
+)
+
+d_test(
+    name = "test-spinning",
+    srcs = [
+        "test_spinning.d",
+    ],
+    test_rule_timeout_ms = 500,
+    deps = [
+        ":lib",
+    ],
+)
+
+d_test(
+    name = "with_cxx",
+    srcs = [
+        "with_cxx.d",
+    ],
+    deps = [
+        ":quus",
+    ],
+)
+
+d_library(
+    name = "lib",
+    srcs = [
+        "lib.d",
+    ],
+)
+
+cxx_library(
+    name = "quus",
+    srcs = [
+        "quus.cpp",
+    ],
+)

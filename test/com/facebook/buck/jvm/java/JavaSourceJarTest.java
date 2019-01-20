@@ -19,94 +19,93 @@ package com.facebook.buck.jvm.java;
 import static org.easymock.EasyMock.anyObject;
 import static org.easymock.EasyMock.createNiceMock;
 import static org.easymock.EasyMock.expect;
+import static org.hamcrest.Matchers.endsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.ActionGraph;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.easymock.EasyMock;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
+import org.easymock.EasyMock;
+import org.junit.Test;
 
 public class JavaSourceJarTest {
 
   @Test
   public void outputNameShouldIndicateThatTheOutputIsASrcJar() {
-    JavaSourceJar rule = new JavaSourceJar(
-        new FakeBuildRuleParamsBuilder("//example:target").build(),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        ImmutableSortedSet.<SourcePath>of(),
-        Optional.<String>absent());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//example:target");
 
-    Path output = rule.getPathToOutput();
+    JavaSourceJar rule =
+        new JavaSourceJar(
+            buildTarget,
+            new FakeProjectFilesystem(),
+            TestBuildRuleParams.create(),
+            ImmutableSortedSet.of(),
+            Optional.empty());
+    graphBuilder.addToIndex(rule);
+
+    SourcePath output = rule.getSourcePathToOutput();
 
     assertNotNull(output);
-    assertTrue(output.toString().endsWith(Javac.SRC_JAR));
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    assertThat(pathResolver.getRelativePath(output).toString(), endsWith(Javac.SRC_JAR));
   }
 
   @Test
   public void shouldOnlyIncludePathBasedSources() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    SourcePath fileBased = new FakeSourcePath("some/path/File.java");
-    SourcePath ruleBased = new BuildTargetSourcePath(
-        BuildTargetFactory.newInstance("//cheese:cake"));
+    SourcePath fileBased = FakeSourcePath.of("some/path/File.java");
+    SourcePath ruleBased =
+        DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//cheese:cake"));
 
     JavaPackageFinder finderStub = createNiceMock(JavaPackageFinder.class);
-    expect(finderStub.findJavaPackageFolder((Path) anyObject()))
-        .andStubReturn(Paths.get("cheese"));
+    expect(finderStub.findJavaPackageFolder(anyObject())).andStubReturn(Paths.get("cheese"));
     expect(finderStub.findJavaPackage((Path) anyObject())).andStubReturn("cheese");
 
     // No need to verify. It's a stub. I don't care about the interactions.
     EasyMock.replay(finderStub);
 
-    JavaSourceJar rule = new JavaSourceJar(
-        new FakeBuildRuleParamsBuilder("//example:target").build(),
-        pathResolver,
-        ImmutableSortedSet.of(fileBased, ruleBased),
-        Optional.<String>absent());
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//example:target");
+    JavaSourceJar rule =
+        new JavaSourceJar(
+            buildTarget,
+            new FakeProjectFilesystem(),
+            TestBuildRuleParams.create(),
+            ImmutableSortedSet.of(fileBased, ruleBased),
+            Optional.empty());
 
-    BuildContext buildContext = FakeBuildContext.newBuilder()
-        .setActionGraph(new ActionGraph(ImmutableList.<BuildRule>of()))
-        .setJavaPackageFinder(finderStub)
-        .build();
-    ImmutableList<Step> steps = rule.getBuildSteps(
-        buildContext,
-        new FakeBuildableContext());
+    BuildContext buildContext =
+        FakeBuildContext.withSourcePathResolver(
+                DefaultSourcePathResolver.from(
+                    new SourcePathRuleFinder(new TestActionGraphBuilder())))
+            .withJavaPackageFinder(finderStub);
+    ImmutableList<Step> steps = rule.getBuildSteps(buildContext, new FakeBuildableContext());
 
     // There should be a CopyStep per file being copied. Count 'em.
-    int copyStepsCount = FluentIterable.from(steps)
-        .filter(Predicates.instanceOf(CopyStep.class))
-        .size();
+    int copyStepsCount = FluentIterable.from(steps).filter(CopyStep.class::isInstance).size();
 
     assertEquals(1, copyStepsCount);
   }

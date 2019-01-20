@@ -24,22 +24,13 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-/**
- * Unit test for {@link VersionStringComparator}.
- */
+/** Unit test for {@link VersionStringComparator}. */
 public class VersionStringComparatorTest {
 
   @Test
   public void testIsValidVersionString() {
     String[] validVersions = {
-        "4",
-        "4.2",
-        "4.2.2",
-        "4_rc1",
-        "4.2_rc1",
-        "4.2.2_rc1",
-        "r9c",
-        "r10e-rc4"
+      "4", "4.2", "4.2.2", "4_rc1", "4.2_rc1", "4.2.2_rc1", "r9c", "r10e-rc4"
     };
 
     for (String validVersion : validVersions) {
@@ -53,21 +44,21 @@ public class VersionStringComparatorTest {
 
     // array of pairs of lower/higher strings
     String[][] testPairs = {
-        {"4", "4.2.2"},
-        {"4", "5"},
-        {"4.2.2", "4.2.2.2"},
-        {"4.2.3", "4.3.2"},
-        {"17.0.0-rc2", "17.0.0"},
-        {"4_rc1", "4"},
-        {"4.2.2_rc5", "4.3.2_rc3"},
-        {"4.2.2_rc1", "4.2.2_rc2"},
-        {"4.2.2_rc1", "4.2.2_rc2-preview"},
-        // Android NDK versions
-        {"r9c", "r10e"},
-        {"r9c", "r10e-rc4"},
-        {"r10e-rc4", "r10e"},
-        {"r10e-rc3", "r10e-rc4"},
-        {"r10ab-rc3", "r10ae-rc4"}
+      {"4", "4.2.2"},
+      {"4", "5"},
+      {"4.2.2", "4.2.2.2"},
+      {"4.2.3", "4.3.2"},
+      {"17.0.0-rc2", "17.0.0"},
+      {"4_rc1", "4"},
+      {"4.2.2_rc5", "4.3.2_rc3"},
+      {"4.2.2_rc1", "4.2.2_rc2"},
+      {"4.2.2_rc1", "4.2.2_rc2-preview"},
+      // Android NDK versions
+      {"r9c", "r10e"},
+      {"r9c", "r10e-rc4"},
+      {"r10e-rc4", "r10e"},
+      {"r10e-rc3", "r10e-rc4"},
+      {"r10ab-rc3", "r10ae-rc4"}
     };
 
     VersionStringComparator comparator = new VersionStringComparator();
@@ -76,22 +67,12 @@ public class VersionStringComparatorTest {
       String lower = testPair[0];
       String higher = testPair[1];
 
+      assertThat(lower + " not equal to self", comparator.compare(lower, lower), equalTo(0));
+      assertThat(higher + " not equal to self", comparator.compare(higher, higher), equalTo(0));
       assertThat(
-          lower + " not equal to self",
-          comparator.compare(lower, lower), equalTo(0)
-      );
+          lower + " not less than " + higher, comparator.compare(lower, higher), lessThan(0));
       assertThat(
-          higher + " not equal to self",
-          comparator.compare(higher, higher), equalTo(0)
-      );
-      assertThat(
-          lower + " not less than " + higher,
-          comparator.compare(lower, higher), lessThan(0)
-      );
-      assertThat(
-          higher + " not higher than " + lower,
-          comparator.compare(higher, lower), greaterThan(0)
-      );
+          higher + " not higher than " + lower, comparator.compare(higher, lower), greaterThan(0));
     }
   }
 

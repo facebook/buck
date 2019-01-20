@@ -1,0 +1,8 @@
+java_library(
+    name = "exceptions",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+    ],
+)

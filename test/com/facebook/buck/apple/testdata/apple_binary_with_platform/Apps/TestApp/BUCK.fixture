@@ -1,8 +1,8 @@
 apple_binary(
-  name = 'TestApp',
-  info_plist = 'Info.plist',
-  srcs = ['main.c'],
-  defaults = {
-    'platform': 'iphoneos-arm64',
-  },
+    name = "TestApp",
+    srcs = ["main.c"],
+    defaults = {
+        "platform": "iphoneos-arm64",
+    },
+    info_plist = "Info.plist",
 )

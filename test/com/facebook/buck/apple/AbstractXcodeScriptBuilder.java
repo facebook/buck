@@ -16,44 +16,50 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSortedSet;
 
-public abstract class AbstractXcodeScriptBuilder<T extends AbstractXcodeScriptBuilder<T>>
-    extends AbstractNodeBuilder<XcodeScriptDescriptionArg> {
+public abstract class AbstractXcodeScriptBuilder<
+        T extends AbstractXcodeScriptBuilder<T, U>,
+        U extends DescriptionWithTargetGraph<XcodeScriptDescriptionArg>>
+    extends AbstractNodeBuilder<
+        XcodeScriptDescriptionArg.Builder, XcodeScriptDescriptionArg, U, BuildRule> {
 
-  public AbstractXcodeScriptBuilder(
-      Description<XcodeScriptDescriptionArg> description,
-      BuildTarget target) {
+  public AbstractXcodeScriptBuilder(U description, BuildTarget target) {
     super(description, target);
   }
 
-  public T setSrcs(Optional<ImmutableSortedSet<SourcePath>> srcs) {
-    arg.srcs = srcs;
-    return getThis();
-  }
-
   public T setSrcs(ImmutableSortedSet<SourcePath> srcs) {
-    arg.srcs = Optional.of(srcs);
+    getArgForPopulating().setSrcs(srcs);
     return getThis();
   }
 
-  public T setOutputs(Optional<ImmutableSortedSet<String>> outputs) {
-    arg.outputs = outputs;
+  public T setInputs(ImmutableSortedSet<String> inputs) {
+    getArgForPopulating().setInputs(inputs);
+    return getThis();
+  }
+
+  public T setInputFileLists(ImmutableSortedSet<String> inputFileLists) {
+    getArgForPopulating().setInputFileLists(inputFileLists);
     return getThis();
   }
 
   public T setOutputs(ImmutableSortedSet<String> outputs) {
-    arg.outputs = Optional.of(outputs);
+    getArgForPopulating().setOutputs(outputs);
+    return getThis();
+  }
+
+  public T setOutputFileLists(ImmutableSortedSet<String> outputFileLists) {
+    getArgForPopulating().setOutputFileLists(outputFileLists);
     return getThis();
   }
 
   public T setCmd(String cmd) {
-    arg.cmd = cmd;
+    getArgForPopulating().setCmd(cmd);
     return getThis();
   }
 

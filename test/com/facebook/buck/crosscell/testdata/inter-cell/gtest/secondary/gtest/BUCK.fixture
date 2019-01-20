@@ -1,0 +1,15 @@
+cxx_library(
+    name = "gtest",
+    srcs = [
+        "gtest.cpp",
+    ],
+    compiler_flags = [
+        "-g",
+        "-std=c++11",
+    ],
+    exported_headers = [
+        "gtest.h",
+    ],
+    header_namespace = "gtest",
+    visibility = ["PUBLIC"],
+)

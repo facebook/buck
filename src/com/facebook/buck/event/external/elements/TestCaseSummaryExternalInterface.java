@@ -19,39 +19,27 @@ package com.facebook.buck.event.external.elements;
 import com.google.common.collect.ImmutableList;
 
 /**
- * Describes the results of a set of tests contained in a single file.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes the results of a set of tests contained in a single file. This type is intended to be
+ * used by external applications (like the Intellij Buck plugin) to deserialize events coming from
+ * the webserver.
  */
 public interface TestCaseSummaryExternalInterface<T> {
-  /**
-   * @return the test case name
-   */
+  /** @return the test case name */
   String getTestCaseName();
-  /**
-   * @return the total running time of the tests in milliseconds.
-   */
+  /** @return the total running time of the tests in milliseconds. */
   long getTotalTime();
   /**
-   * @return the test results as a list of TestResultSummaryExternalInterface for external
-   * and TestResultSummary for Buck.
+   * @return the test results as a list of TestResultSummaryExternalInterface for external and
+   *     TestResultSummary for Buck.
    * @see TestResultSummaryExternalInterface
    */
   ImmutableList<T> getTestResults();
-  /**
-   * @return the number of skipped tests.
-   */
+  /** @return the number of skipped tests. */
   int getSkippedCount();
-  /**
-   * @return the number of failed tests.
-   */
+  /** @return the number of failed tests. */
   int getFailureCount();
-  /**
-   * @return the final status of the tests.
-   */
+  /** @return the final status of the tests. */
   boolean isSuccess();
-  /**
-   * @return if any of the tests has an assumption violation.
-   */
+  /** @return if any of the tests has an assumption violation. */
   boolean hasAssumptionViolations();
 }

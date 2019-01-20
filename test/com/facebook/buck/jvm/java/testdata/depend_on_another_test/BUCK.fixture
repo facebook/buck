@@ -1,0 +1,16 @@
+java_test(
+    name = "a",
+    srcs = ["A.java"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        ":b",
+    ],
+)
+
+java_test(
+    name = "b",
+    srcs = ["B.java"],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)

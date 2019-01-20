@@ -18,32 +18,23 @@ package com.facebook.buck.io;
 
 import static com.facebook.buck.util.concurrent.MostExecutors.newSingleThreadExecutor;
 
-import com.facebook.buck.log.Logger;
-
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.file.MostFiles;
 import com.google.common.annotations.VisibleForTesting;
-
 import java.io.IOException;
-
 import java.nio.file.Path;
-
+import java.util.EnumSet;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.EnumSet;
 
-/**
- * Asynchronously cleans the contents of a directory.
- */
+/** Asynchronously cleans the contents of a directory. */
 public class AsynchronousDirectoryContentsCleaner {
   private static final Logger LOG = Logger.get(AsynchronousDirectoryContentsCleaner.class);
 
-  private final Path pathToClean;
   private final Executor executor;
 
-  /**
-   * A ThreadFactory which ensures the spawned threads do not keep the JVM alive at
-   * exit time.
-   */
+  /** A ThreadFactory which ensures the spawned threads do not keep the JVM alive at exit time. */
   private static class DaemonThreadFactory implements ThreadFactory {
 
     private final String threadName;
@@ -61,43 +52,35 @@ public class AsynchronousDirectoryContentsCleaner {
     }
   }
 
-  public AsynchronousDirectoryContentsCleaner(Path pathToClean) {
-    this(
-        pathToClean,
-        newSingleThreadExecutor(
-            new DaemonThreadFactory(
-                "AsynchronousDirectoryContentsCleaner-" + pathToClean.toString())));
+  public AsynchronousDirectoryContentsCleaner() {
+    this(newSingleThreadExecutor(new DaemonThreadFactory("AsynchronousDirectoryContentsCleaner")));
   }
 
   @VisibleForTesting
-  AsynchronousDirectoryContentsCleaner(Path pathToClean, Executor executor) {
-    this.pathToClean = pathToClean;
+  AsynchronousDirectoryContentsCleaner(Executor executor) {
     this.executor = executor;
   }
 
   /**
    * Starts cleaning the configured directory in the background.
    *
-   * Multiple calls to this method will be serialized, so only one
-   * instance of directory cleaning will occur at a time.
+   * <p>Multiple calls to this method will be serialized, so only one instance of directory cleaning
+   * will occur at a time.
    */
-  public void startCleaningDirectory() {
+  public void startCleaningDirectory(Path pathToClean) {
     executor.execute(
-        new Runnable() {
-          @Override
-          public void run() {
-            LOG.debug("Starting to clean %s", pathToClean);
-            try {
-              MoreFiles.deleteRecursivelyWithOptions(
-                  pathToClean,
-                  EnumSet.of(
-                      MoreFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION,
-                      MoreFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
-            } catch (IOException e) {
-              LOG.warn(e, "I/O error cleaning trash");
-            } finally {
-              LOG.debug("Done cleaning %s", pathToClean);
-            }
+        () -> {
+          LOG.debug("Starting to clean %s", pathToClean);
+          try {
+            MostFiles.deleteRecursivelyWithOptions(
+                pathToClean,
+                EnumSet.of(
+                    MostFiles.DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION,
+                    MostFiles.DeleteRecursivelyOptions.DELETE_CONTENTS_ONLY));
+          } catch (IOException e) {
+            LOG.warn(e, "I/O error cleaning trash");
+          } finally {
+            LOG.debug("Done cleaning %s", pathToClean);
           }
         });
   }

@@ -18,7 +18,6 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -69,5 +68,4 @@ public class ChunkAccumulator {
   public ImmutableList<String> getChunks() {
     return ImmutableList.copyOf(chunks);
   }
-
 }

@@ -18,10 +18,7 @@ package com.facebook.buck.slb;
 
 import java.io.IOException;
 
-/**
- * Thrown when the load balancer cannot find any healthy servers to make the request to.
- */
-@SuppressWarnings("serial")
+/** Thrown when the load balancer cannot find any healthy servers to make the request to. */
 public class NoHealthyServersException extends IOException {
   public NoHealthyServersException(String message) {
     super(message);

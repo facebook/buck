@@ -16,28 +16,25 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
-
 import org.immutables.value.Value;
 
-/**
- * Matches all {@link TargetNode} objects in a repository that match the given {@link Predicate}.
- */
+/** Matches all {@link TargetNode} objects in a repository that match the specification. */
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
 
-  @Value.Parameter
-  public abstract Predicate<? super TargetNode<?>> getPredicate();
-
   @Override
   @Value.Parameter
   public abstract BuildFileSpec getBuildFileSpec();
+
+  @Value.Default
+  public boolean onlyTests() {
+    return false;
+  }
 
   @Override
   public TargetType getTargetType() {
@@ -45,17 +42,15 @@ abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
   }
 
   @Override
-  public ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes) {
-    ImmutableMap.Builder<BuildTarget, Optional<TargetNode<?>>> resultBuilder =
-        ImmutableMap.builder();
+  public ImmutableMap<BuildTarget, TargetNode<?>> filter(Iterable<TargetNode<?>> nodes) {
+    ImmutableMap.Builder<BuildTarget, TargetNode<?>> resultBuilder = ImmutableMap.builder();
 
     for (TargetNode<?> node : nodes) {
-      if (getPredicate().apply(node)) {
-        resultBuilder.put(node.getBuildTarget(), Optional.<TargetNode<?>>of(node));
+      if (!onlyTests() || node.getRuleType().isTestRule()) {
+        resultBuilder.put(node.getBuildTarget(), node);
       }
     }
 
     return resultBuilder.build();
   }
-
 }

@@ -16,32 +16,273 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.isEmptyString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Joiner;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.util.FakeProcess;
+import com.facebook.buck.util.FakeProcessExecutor;
+import com.google.common.base.Functions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.File;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class JavacStepTest {
 
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
   @Test
-  public void findFailedImports() throws Exception {
-    String lineSeperator = System.getProperty("line.separator");
+  public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
+    FakeJavac fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavacOptions javacOptions =
+        JavacOptions.builder().setSourceLevel("8.0").setTargetLevel("8.0").build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
 
-    String stderrOutput = Joiner.on(lineSeperator).join(
-        ImmutableList.of(
-            "java/com/foo/bar.java:5: package javax.annotation.concurrent does not exist",
-            "java/com/foo/bar.java:99: error: cannot access com.facebook.Raz",
-            "java/com/foo/bar.java:142: cannot find symbol: class ImmutableSet",
-            "java/com/foo/bar.java:999: you are a clown"));
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    JavacStep step =
+        new JavacStep(
+            fakeJavac,
+            javacOptions,
+            target,
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            null,
+            null);
 
-    ImmutableSet<String> missingImports =
-        JavacStep.findFailedImports(stderrOutput);
-    assertEquals(
-        ImmutableSet.of("javax.annotation.concurrent", "com.facebook.Raz", "ImmutableSet"),
-        missingImports);
+    FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
+
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
+    executionContext.getBuckEventBus().register(listener);
+    StepExecutionResult result = step.execute(executionContext);
+
+    // Note that we don't include stderr in the step result on success.
+    assertThat(result, equalTo(StepExecutionResults.SUCCESS));
+    assertThat(listener.getLogMessages(), empty());
   }
 
+  @Test
+  public void failedCompileSendsStdoutAndStderrToConsole() throws Exception {
+    FakeJavac fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavacOptions javacOptions =
+        JavacOptions.builder().setSourceLevel("8.0").setTargetLevel("8.0").build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
+
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    JavacStep step =
+        new JavacStep(
+            fakeJavac,
+            javacOptions,
+            target,
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            null,
+            null);
+
+    FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
+
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
+    executionContext.getBuckEventBus().register(listener);
+    StepExecutionResult result = step.execute(executionContext);
+
+    // JavacStep itself writes stdout to the console on error; we expect the Build class to write
+    // the stderr stream returned in the StepExecutionResult
+    assertThat(result, equalTo(StepExecutionResult.of(1, Optional.of("javac stderr\n"))));
+    assertThat(listener.getLogMessages(), equalTo(ImmutableList.of("javac stdout\n")));
+  }
+
+  @Test
+  public void existingBootclasspathDirSucceeds() throws Exception {
+    FakeJavac fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavacOptions javacOptions =
+        JavacOptions.builder()
+            .setSourceLevel("8.0")
+            .setTargetLevel("8.0")
+            .setBootclasspath("/this-totally-exists")
+            .build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
+
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    JavacStep step =
+        new JavacStep(
+            fakeJavac,
+            javacOptions,
+            target,
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            null,
+            null);
+
+    FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
+
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
+    executionContext.getBuckEventBus().register(listener);
+    StepExecutionResult result = step.execute(executionContext);
+
+    assertThat(result, equalTo(StepExecutionResults.SUCCESS));
+    assertThat(listener.getLogMessages(), empty());
+  }
+
+  @Test
+  public void bootclasspathResolvedToAbsolutePath() {
+    FakeJavac fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavacOptions javacOptions =
+        JavacOptions.builder()
+            .setSourceLevel("8.0")
+            .setTargetLevel("8.0")
+            .setBootclasspath("/this-totally-exists:relative-path")
+            .build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> true, file -> false, (path, glob) -> ImmutableSet.of());
+
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    JavacStep step =
+        new JavacStep(
+            fakeJavac,
+            javacOptions,
+            target,
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            null,
+            null);
+
+    FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
+
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+
+    String description = step.getDescription(executionContext);
+    List<String> options =
+        Splitter.on(",")
+            .trimResults()
+            .splitToList(Splitter.on("Delimiter").splitToList(description).get(0));
+    assertThat(options, hasItem("-bootclasspath"));
+    int bootclasspathIndex = options.indexOf("-bootclasspath");
+    String bootclasspath = options.get(bootclasspathIndex + 1);
+    assertThat(bootclasspath, not(isEmptyString()));
+    for (String path : Splitter.on(File.pathSeparator).split(bootclasspath)) {
+      assertTrue(Paths.get(path).isAbsolute());
+    }
+  }
+
+  @Test
+  public void missingBootclasspathDirFailsWithError() throws Exception {
+    FakeJavac fakeJavac = new FakeJavac();
+    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    JavacOptions javacOptions =
+        JavacOptions.builder()
+            .setSourceLevel("8.0")
+            .setTargetLevel("8.0")
+            .setBootclasspath("/no-such-dir")
+            .build();
+    ClasspathChecker classpathChecker =
+        new ClasspathChecker(
+            "/", ":", Paths::get, dir -> false, file -> false, (path, glob) -> ImmutableSet.of());
+
+    BuildTarget target = BuildTargetFactory.newInstance(fakeFilesystem.getRootPath(), "//foo:bar");
+    JavacStep step =
+        new JavacStep(
+            fakeJavac,
+            javacOptions,
+            target,
+            sourcePathResolver,
+            fakeFilesystem,
+            classpathChecker,
+            CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
+            null,
+            null);
+
+    FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
+
+    ExecutionContext executionContext =
+        TestExecutionContext.newBuilder()
+            .setProcessExecutor(
+                new FakeProcessExecutor(Functions.constant(fakeJavacProcess), new TestConsole()))
+            .build();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
+    executionContext.getBuckEventBus().register(listener);
+    thrown.expectMessage("Bootstrap classpath /no-such-dir contains no valid entries");
+    step.execute(executionContext);
+  }
 }

@@ -21,67 +21,68 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class SymlinkFilesIntoDirectoryStepIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   /**
    * Verifies that {@link SymlinkFilesIntoDirectoryStep} works correctly by symlinking files at
    * various depth levels into an empty output directory.
    */
   @Test
-  public void testSymlinkFilesIntoDirectory() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "symlink_files_into_directory", tmp);
+  public void testSymlinkFilesIntoDirectory() throws InterruptedException, IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "symlink_files_into_directory", tmp);
     workspace.setUp();
 
-    File outputFolder = tmp.newFolder("output");
+    Path outputFolder = tmp.newFolder("output");
 
-    ProjectFilesystem projectFilesystem = new ProjectFilesystem(tmp.getRoot().toPath());
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     ExecutionContext executionContext = TestExecutionContext.newInstance();
-    SymlinkFilesIntoDirectoryStep symlinkStep = new SymlinkFilesIntoDirectoryStep(
-        projectFilesystem,
-        tmp.getRoot().toPath(),
-        ImmutableSet.of(Paths.get("a.txt"), Paths.get("foo/b.txt"), Paths.get("foo/bar/c.txt")),
-        outputFolder.toPath());
+    SymlinkFilesIntoDirectoryStep symlinkStep =
+        new SymlinkFilesIntoDirectoryStep(
+            projectFilesystem,
+            tmp.getRoot(),
+            ImmutableSet.of(Paths.get("a.txt"), Paths.get("foo/b.txt"), Paths.get("foo/bar/c.txt")),
+            outputFolder);
     int exitCode = symlinkStep.execute(executionContext).getExitCode();
     assertEquals(0, exitCode);
 
     // The remainder of the checks assert that we've created symlinks, which we may not have done
     // on certain operating systems.
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    Path symlinkToADotTxt = new File(tmp.getRoot(), "output/a.txt").toPath();
+    Path symlinkToADotTxt = tmp.getRoot().resolve("output/a.txt");
     assertTrue(Files.isSymbolicLink(symlinkToADotTxt));
-    assertEquals(projectFilesystem.resolve(Paths.get("a.txt")),
-        Files.readSymbolicLink(symlinkToADotTxt));
+    assertEquals(
+        projectFilesystem.resolve(Paths.get("a.txt")), Files.readSymbolicLink(symlinkToADotTxt));
 
-    Path symlinkToBDotTxt = new File(tmp.getRoot(), "output/foo/b.txt").toPath();
+    Path symlinkToBDotTxt = tmp.getRoot().resolve("output/foo/b.txt");
     assertTrue(Files.isSymbolicLink(symlinkToBDotTxt));
-    assertEquals(projectFilesystem.resolve(Paths.get("foo/b.txt")),
+    assertEquals(
+        projectFilesystem.resolve(Paths.get("foo/b.txt")),
         Files.readSymbolicLink(symlinkToBDotTxt));
 
-    Path symlinkToCDotTxt = new File(tmp.getRoot(), "output/foo/bar/c.txt").toPath();
+    Path symlinkToCDotTxt = tmp.getRoot().resolve("output/foo/bar/c.txt");
     assertTrue(Files.isSymbolicLink(symlinkToCDotTxt));
-    assertEquals(projectFilesystem.resolve(Paths.get("foo/bar/c.txt")),
+    assertEquals(
+        projectFilesystem.resolve(Paths.get("foo/bar/c.txt")),
         Files.readSymbolicLink(symlinkToCDotTxt));
   }
 }

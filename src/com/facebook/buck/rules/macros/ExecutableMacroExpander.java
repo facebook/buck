@@ -16,22 +16,23 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.Escaper;
-import com.google.common.base.Joiner;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.ToolArg;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
-/**
- * Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}.
- */
-public class ExecutableMacroExpander extends BuildTargetMacroExpander {
+/** Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}. */
+public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
+  @Override
+  public Class<ExecutableMacro> getInputClass() {
+    return ExecutableMacro.class;
+  }
 
   protected Tool getTool(BuildRule rule) throws MacroException {
     if (!(rule instanceof BinaryBuildRule)) {
@@ -44,31 +45,15 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander {
   }
 
   @Override
-  protected ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildRuleResolver resolver,
-      BuildRule rule)
+  protected ExecutableMacro parse(
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
-    return ImmutableList.copyOf(getTool(rule).getDeps(new SourcePathResolver(resolver)));
+    return ExecutableMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule)
+  protected Arg expand(SourcePathResolver resolver, ExecutableMacro ignored, BuildRule rule)
       throws MacroException {
-    // TODO(mikekap): Pass environment variables through.
-    return Joiner.on(' ').join(
-        Iterables.transform(
-            getTool(rule).getCommandPrefix(resolver),
-            Escaper.SHELL_ESCAPER));
+    return ToolArg.of(getTool(rule));
   }
-
-  @Override
-  public Object extractRuleKeyAppendables(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String input)
-      throws MacroException {
-    return getTool(resolve(target, cellNames, resolver, input));
-  }
-
 }

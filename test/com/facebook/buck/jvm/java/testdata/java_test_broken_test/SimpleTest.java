@@ -22,5 +22,4 @@ public class SimpleTest {
   public void test() {
     System.exit(1);
   }
-
 }

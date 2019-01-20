@@ -1,0 +1,19 @@
+cxx_binary(
+    name = "bin",
+    srcs = ["bin.c"],
+    headers = ["bin.h"],
+    deps = [":lib1"],
+)
+
+cxx_library(
+    name = "lib1",
+    srcs = ["lib1.c"],
+    exported_headers = [":lib1header"],
+    header_namespace = "lib1",
+)
+
+genrule(
+    name = "lib1header",
+    out = "lib1.h",
+    cmd = "touch \"$OUT\"",
+)

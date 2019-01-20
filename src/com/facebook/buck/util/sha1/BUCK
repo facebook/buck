@@ -1,0 +1,9 @@
+java_library(
+    name = "sha1",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/util/sha1:sha1",
+    ],
+    visibility = ["PUBLIC"],
+    deps = ["//third-party/java/guava:guava"],
+)

@@ -16,110 +16,74 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.AliasConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.exceptions.MissingBuildFileException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ListeningExecutorService;
-
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
-
 import javax.annotation.Nullable;
 
-/**
- * Helper class with functionality to resolve alias in `targets` command.
- */
+/** Helper class with functionality to resolve alias in `targets` command. */
 public class ResolveAliasHelper {
-  private ResolveAliasHelper() {
-  }
+  private ResolveAliasHelper() {}
 
   /**
-   * Assumes each argument passed to this command is an alias defined in .buckconfig,
-   * or a fully qualified (non-alias) target to be verified by checking the build files.
-   * Prints the build target that each alias maps to on its own line to standard out.
+   * Assumes each argument passed to this command is an alias defined in .buckconfig, or a fully
+   * qualified (non-alias) target to be verified by checking the build files. Prints the build
+   * target that each alias maps to on its own line to standard out.
    */
-  public static int resolveAlias(
-      CommandRunnerParams params,
-      ListeningExecutorService executor,
-      boolean enableProfiling,
-      List<String> aliases)
-      throws IOException, InterruptedException {
+  public static void resolveAlias(
+      CommandRunnerParams params, PerBuildState parserState, List<String> aliases) {
 
-    List<String> resolvedAliases = Lists.newArrayList();
+    List<String> resolvedAliases = new ArrayList<>();
     for (String alias : aliases) {
-      String buildTarget;
-      if (alias.startsWith("//")) {
-        buildTarget = validateBuildTargetForFullyQualifiedTarget(
-            params,
-            executor,
-            enableProfiling,
-            alias,
-            params.getParser());
+      ImmutableSet<String> buildTargets;
+      if (alias.contains("//")) {
+        String buildTarget = validateBuildTargetForFullyQualifiedTarget(params, alias, parserState);
         if (buildTarget == null) {
           throw new HumanReadableException("%s is not a valid target.", alias);
         }
+        buildTargets = ImmutableSet.of(buildTarget);
       } else {
-        buildTarget = getBuildTargetForAlias(params.getBuckConfig(), alias);
-        if (buildTarget == null) {
+        buildTargets = getBuildTargetForAlias(params.getBuckConfig(), alias);
+        if (buildTargets.isEmpty()) {
           throw new HumanReadableException("%s is not an alias.", alias);
         }
       }
-      resolvedAliases.add(buildTarget);
+      resolvedAliases.addAll(buildTargets);
     }
 
     for (String resolvedAlias : resolvedAliases) {
       params.getConsole().getStdOut().println(resolvedAlias);
     }
-
-    return 0;
   }
 
-  /**
-   * Verify that the given target is a valid full-qualified (non-alias) target.
-   */
+  /** Verify that the given target is a valid full-qualified (non-alias) target. */
   @Nullable
   static String validateBuildTargetForFullyQualifiedTarget(
-      CommandRunnerParams params,
-      ListeningExecutorService executor,
-      boolean enableProfiling,
-      String target,
-      Parser parser)
-      throws IOException, InterruptedException {
+      CommandRunnerParams params, String target, PerBuildState parserState) {
 
-    BuildTarget buildTarget;
-    try {
-      buildTarget = getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);
-    } catch (NoSuchBuildTargetException e) {
-      return null;
-    }
+    BuildTarget buildTarget = getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);
 
     Cell owningCell = params.getCell().getCell(buildTarget);
     Path buildFile;
     try {
       buildFile = owningCell.getAbsolutePathToBuildFile(buildTarget);
-    } catch (Cell.MissingBuildFileException e) {
+    } catch (MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }
 
     // Get all valid targets in our target directory by reading the build file.
-    ImmutableSet<TargetNode<?>> targetNodes;
-    try {
-      targetNodes = parser.getAllTargetNodes(
-          params.getBuckEventBus(),
-          owningCell,
-          enableProfiling,
-          executor,
-          buildFile);
-    } catch (BuildFileParseException e) {
-      throw new HumanReadableException(e);
-    }
+    ImmutableList<TargetNode<?>> targetNodes =
+        params.getParser().getAllTargetNodes(parserState, owningCell, buildFile);
 
     // Check that the given target is a valid target.
     for (TargetNode<?> candidate : targetNodes) {
@@ -130,17 +94,14 @@ public class ResolveAliasHelper {
     return null;
   }
 
-  /** @return the name of the build target identified by the specified alias or {@code null}. */
-  @Nullable
-  private static String getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
-    return buckConfig.getBuildTargetForAliasAsString(alias);
+  /** @return the name of the build target identified by the specified alias or an empty set. */
+  private static ImmutableSet<String> getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
+    return AliasConfig.from(buckConfig).getBuildTargetForAliasAsString(alias);
   }
 
   /** @return the build target identified by the specified full path or {@code null}. */
   private static BuildTarget getBuildTargetForFullyQualifiedTarget(
-      BuckConfig buckConfig,
-      String target)
-      throws NoSuchBuildTargetException {
+      BuckConfig buckConfig, String target) {
     return buckConfig.getBuildTargetForFullyQualifiedTarget(target);
   }
 }

@@ -16,106 +16,39 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.zip.JarBuilder;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.regex.Pattern;
 
-import javax.annotation.Nullable;
-
-/**
- * Creates a JAR file from a collection of directories/ZIP/JAR files.
- */
+/** Creates a JAR file from a collection of directories/ZIP/JAR files. */
 public class JarDirectoryStep implements Step {
 
   private final ProjectFilesystem filesystem;
 
-  /** Where to write the new JAR file. */
-  private final Path pathToOutputFile;
-
-  /** A collection of directories/ZIP/JAR files to include in the generated JAR file. */
-  private final ImmutableSortedSet<Path> entriesToJar;
-
-  /** If specified, the Main-Class to list in the manifest of the generated JAR file. */
-  @Nullable
-  private final String mainClass;
-
-  /** If specified, the Manifest file to use for the generated JAR file.  */
-  @Nullable
-  private final Path manifestFile;
-  /** Indicates that manifest merging should occur. Defaults to true. */
-  private final boolean mergeManifests;
-  /** Set of regex blacklist of whiched matched files will not be included in generated JAR. */
-  private final ImmutableSet<Pattern> blacklist;
-
-  public JarDirectoryStep(
-      ProjectFilesystem filesystem,
-      Path pathToOutputFile,
-      ImmutableSortedSet<Path> entriesToJar,
-      @Nullable String mainClass,
-      @Nullable Path manifestFile) {
-    this(
-        filesystem,
-        pathToOutputFile,
-        entriesToJar,
-        mainClass,
-        manifestFile,
-        true,
-        ImmutableSet.<String>of());
-  }
+  private final JarParameters parameters;
 
   /**
    * Creates a JAR from the specified entries (most often, classpath entries).
-   * <p>
-   * If an entry is a directory, then its files are traversed and added to the generated JAR.
-   * <p>
-   * If an entry is a file, then it is assumed to be a ZIP/JAR file, and its entries will be read
-   * and copied to the generated JAR.
-   * @param pathToOutputFile The directory that contains this path must exist before this command is
-   *     executed.
-   * @param entriesToJar Paths to directories/ZIP/JAR files.
-   * @param mainClass If specified, the value for the Main-Class attribute in the manifest of the
-   *     generated JAR.
-   * @param manifestFile If specified, the path to the manifest file to use with this JAR.
+   *
+   * <p>If an entry is a directory, then its files are traversed and added to the generated JAR.
+   *
+   * <p>If an entry is a file, then it is assumed to be a ZIP/JAR file, and its entries will be read
+   * and copied to the generated JAR. @Param parameters the parameters that describe how to create
+   * the jar.
    */
-  public JarDirectoryStep(
-      ProjectFilesystem filesystem,
-      Path pathToOutputFile,
-      ImmutableSortedSet<Path> entriesToJar,
-      @Nullable String mainClass,
-      @Nullable Path manifestFile,
-      boolean mergeManifests,
-      Set<String> blacklist) {
+  public JarDirectoryStep(ProjectFilesystem filesystem, JarParameters parameters) {
     this.filesystem = filesystem;
-    this.pathToOutputFile = pathToOutputFile;
-    this.entriesToJar = entriesToJar;
-    this.mainClass = mainClass;
-    this.manifestFile = manifestFile;
-    this.mergeManifests = mergeManifests;
-    this.blacklist = convertRegexesToPatterns(blacklist);
-  }
-
-  private ImmutableSet<Pattern> convertRegexesToPatterns(Set<String> regexes) {
-    Set<Pattern> patterns = new HashSet<>();
-    for (String regex : regexes) {
-      patterns.add(Pattern.compile(regex));
-    }
-    return ImmutableSet.copyOf(patterns);
+    this.parameters = parameters;
   }
 
   private String getJarArgs() {
     String result = "cf";
-    if (manifestFile != null) {
+    if (parameters.getManifestFile().isPresent()) {
       result += "m";
     }
     return result;
@@ -128,28 +61,31 @@ public class JarDirectoryStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return String.format("jar %s %s %s %s",
+    return String.format(
+        "jar %s %s %s %s",
         getJarArgs(),
-        pathToOutputFile,
-        manifestFile != null ? manifestFile : "",
-        Joiner.on(' ').join(entriesToJar));
+        parameters.getJarPath(),
+        parameters.getManifestFile().map(Path::toString).orElse(""),
+        Joiner.on(' ').join(parameters.getEntriesToJar()));
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      return StepExecutionResult.of(JarDirectoryStepHelper.createJarFile(
-          filesystem,
-          pathToOutputFile,
-          entriesToJar,
-          Optional.fromNullable(mainClass),
-          Optional.fromNullable(manifestFile),
-          mergeManifests,
-          blacklist,
-          context));
-    } catch (IOException e) {
-      e.printStackTrace(context.getStdErr());
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+
+    JavacEventSinkToBuckEventBusBridge eventSink =
+        new JavacEventSinkToBuckEventBusBridge(context.getBuckEventBus());
+    LoggingJarBuilderObserver loggingObserver =
+        new LoggingJarBuilderObserver(eventSink, parameters.getDuplicatesLogLevel());
+    return StepExecutionResult.of(
+        new JarBuilder()
+            .setObserver(loggingObserver)
+            .setEntriesToJar(parameters.getEntriesToJar().stream().map(filesystem::resolve))
+            .setMainClass(parameters.getMainClass().orElse(null))
+            .setManifestFile(parameters.getManifestFile().map(filesystem::resolve).orElse(null))
+            .setShouldMergeManifests(parameters.getMergeManifests())
+            .setShouldDisallowAllDuplicates(parameters.getDisallowAllDuplicates())
+            .setShouldHashEntries(parameters.getHashEntries())
+            .setRemoveEntryPredicate(parameters.getRemoveEntryPredicate())
+            .createJarFile(filesystem.resolve(parameters.getJarPath())));
   }
 }

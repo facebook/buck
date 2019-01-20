@@ -16,27 +16,27 @@
 
 package com.facebook.buck.jvm.scala;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class ScalaBuckConfig {
   private static final String SECTION = "scala";
 
   private final BuckConfig delegate;
 
-  public ScalaBuckConfig(final BuckConfig delegate) {
+  public ScalaBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
   }
 
@@ -44,7 +44,7 @@ public class ScalaBuckConfig {
     CommandTool.Builder scalac = new CommandTool.Builder(findScalac(resolver));
 
     // Add some standard options.
-    scalac.addArg("-target:" + delegate.getValue(SECTION, "target_level").or("jvm-1.7"));
+    scalac.addArg("-target:" + delegate.getValue(SECTION, "target_level").orElse("jvm-1.7"));
 
     if (delegate.getBooleanValue(SECTION, "optimize", false)) {
       scalac.addArg("-optimize");
@@ -53,37 +53,45 @@ public class ScalaBuckConfig {
     return scalac.build();
   }
 
-  BuildTarget getScalaLibraryTarget() {
+  public BuildTarget getScalaLibraryTarget() {
     return delegate.getRequiredBuildTarget(SECTION, "library");
   }
 
-  Optional<BuildTarget> getScalacTarget() {
+  public Iterable<BuildTarget> getCompilerPlugins() {
+    return delegate.getBuildTargetList(SECTION, "compiler_plugins");
+  }
+
+  public Optional<BuildTarget> getScalacTarget() {
     return delegate.getMaybeBuildTarget(SECTION, "compiler");
   }
 
-  ImmutableList<String> getCompilerFlags() {
+  public ImmutableList<String> getCompilerFlags() {
     return ImmutableList.copyOf(
-        Splitter.on(" ").omitEmptyStrings().split(
-            delegate.getValue(SECTION, "compiler_flags").or("")));
+        Splitter.on(" ")
+            .omitEmptyStrings()
+            .split(delegate.getValue(SECTION, "compiler_flags").orElse("")));
   }
 
   private Tool findScalac(BuildRuleResolver resolver) {
-    Optional<Tool> configScalac = delegate.getTool(SECTION, "compiler", resolver);
+    Optional<Tool> configScalac =
+        delegate.getView(ToolConfig.class).getTool(SECTION, "compiler", resolver);
     if (configScalac.isPresent()) {
       return configScalac.get();
     }
 
-    Optional<Path> externalScalac = new ExecutableFinder().getOptionalExecutable(
-        Paths.get("scalac"), delegate.getEnvironment());
+    Optional<Path> externalScalac =
+        new ExecutableFinder()
+            .getOptionalExecutable(Paths.get("scalac"), delegate.getEnvironment());
+
     if (externalScalac.isPresent()) {
-      return new HashedFileTool(externalScalac.get());
+      return new HashedFileTool(() -> delegate.getPathSourcePath(externalScalac.get()));
     }
 
     String scalaHome = delegate.getEnvironment().get("SCALA_HOME");
     if (scalaHome != null) {
       Path scalacInHomePath = Paths.get(scalaHome, "bin", "scalac");
       if (scalacInHomePath.toFile().exists()) {
-        return new HashedFileTool(scalacInHomePath);
+        return new HashedFileTool(() -> delegate.getPathSourcePath(scalacInHomePath));
       }
       throw new HumanReadableException("Could not find scalac at $SCALA_HOME/bin/scalac.");
     }

@@ -1,0 +1,43 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Benchmark.java",
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    deps = ["//src/com/facebook/buck/util/shutdown:shutdown"],
+)
+
+standard_java_test(
+    name = "shutdown",
+)
+
+java_binary(
+    name = "shutdown_binary",
+    main_class = "com.facebook.buck.util.shutdown.NonReentrantSystemExitDemo",
+    deps = [
+        ":shutdown_library",
+    ],
+)
+
+java_library(
+    name = "shutdown_library",
+    srcs = [
+        "NonReentrantSystemExitDemo.java",
+    ],
+    deps = ["//src/com/facebook/buck/util/shutdown:shutdown"],
+)
+
+sh_test(
+    name = "shutdown_test",
+    args = [
+        "$(exe :shutdown_binary)",
+    ],
+    test = "shutdown_test.sh",
+    test_rule_timeout_ms = 600000,
+)

@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
@@ -27,8 +27,8 @@ import java.util.zip.ZipFile;
 
 /**
  * This step writes the size of a .dex.jar file and the uncompressed size of its contained
- * classes.dex to the given metadata file.  We use this information during
- * dex file loading to estimate the amount of disk space we'll need.
+ * classes.dex to the given metadata file. We use this information during dex file loading to
+ * estimate the amount of disk space we'll need.
  */
 class DexJarAnalysisStep implements Step {
 
@@ -43,7 +43,7 @@ class DexJarAnalysisStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
 
     try (ZipFile zf = new ZipFile(filesystem.resolve(dexPath).toFile())) {
       ZipEntry classesDexEntry = zf.getEntry("classes.dex");
@@ -57,16 +57,10 @@ class DexJarAnalysisStep implements Step {
       }
 
       filesystem.writeContentsToPath(
-          String.format(
-              "jar:%s dex:%s",
-              filesystem.getFileSize(dexPath),
-              uncompressedSize),
+          String.format("jar:%s dex:%s", filesystem.getFileSize(dexPath), uncompressedSize),
           dexMetaPath);
 
-      return StepExecutionResult.SUCCESS;
-    } catch (IOException e) {
-      context.logError(e, "There was an error in smart dexing step.");
-      return StepExecutionResult.ERROR;
+      return StepExecutionResults.SUCCESS;
     }
   }
 

@@ -1,0 +1,14 @@
+python_binary(
+    name = "find_duplicate_classes_in_jars",
+    main = "find_duplicate_classes_in_jars.py",
+)
+
+sh_test(
+    name = "find_duplicate_classes_in_jars_test",
+    args = [
+        "$(location //programs:buck)",
+        "programs/buck_server",
+        "programs/buck-modules/.*.jar",
+    ],
+    test = ":find_duplicate_classes_in_jars",
+)

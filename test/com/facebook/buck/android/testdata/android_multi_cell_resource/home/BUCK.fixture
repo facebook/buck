@@ -1,0 +1,20 @@
+android_binary(
+    name = "apk",
+    keystore = ":keystore",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "away_cell//:res",
+    ],
+)
+
+keystore(
+    name = "keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+)
+
+genrule(
+    name = "list_outputs",
+    out = "list_of_outputs.txt",
+    cmd = "unzip -l $(location :apk) > $OUT",
+)

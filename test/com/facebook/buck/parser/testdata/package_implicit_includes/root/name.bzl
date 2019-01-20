@@ -1,0 +1,3 @@
+""" IGNORED DOCSTRING """
+
+NAME = "root"

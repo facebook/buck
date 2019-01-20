@@ -16,20 +16,16 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.event.api.BuckTracingInterface;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
 import com.google.common.collect.ImmutableMap;
-
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
 
-/**
- * Bridges the {@link BuckTracing} API (in the system ClassLoader)
- * with {@link BuckEventBus}.
- */
+/** Bridges the {@link BuckTracing} API (in the system ClassLoader) with {@link BuckEventBus}. */
 public class BuckTracingEventBusBridge implements BuckTracingInterface {
   private static final Logger LOG = Logger.get(BuckTracingEventBusBridge.class);
 
@@ -43,15 +39,10 @@ public class BuckTracingEventBusBridge implements BuckTracingInterface {
   }
 
   @Override
-  public void begin(
-      final String pluginName,
-      final String eventName,
-      final Map<String, String> args) {
-    final CompilerPluginDurationEvent.Started startedEvent = CompilerPluginDurationEvent.started(
-        buildTarget,
-        pluginName,
-        eventName,
-        ImmutableMap.copyOf(args));
+  public void begin(String pluginName, String eventName, Map<String, String> args) {
+    CompilerPluginDurationEvent.Started startedEvent =
+        CompilerPluginDurationEvent.started(
+            buildTarget, pluginName, eventName, ImmutableMap.copyOf(args));
 
     eventStack.push(startedEvent);
 
@@ -59,15 +50,14 @@ public class BuckTracingEventBusBridge implements BuckTracingInterface {
   }
 
   @Override
-  public void end(final Map<String, String> args) {
+  public void end(Map<String, String> args) {
     if (eventStack.isEmpty()) {
       LOG.warn(new Throwable(), "Compiler plugin event stack underflow.");
       return;
     }
 
-    final CompilerPluginDurationEvent.Finished finishedEvent = CompilerPluginDurationEvent.finished(
-        eventStack.pop(),
-        ImmutableMap.copyOf(args));
+    CompilerPluginDurationEvent.Finished finishedEvent =
+        CompilerPluginDurationEvent.finished(eventStack.pop(), ImmutableMap.copyOf(args));
 
     eventBus.post(finishedEvent);
   }

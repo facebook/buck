@@ -1,10 +1,11 @@
 prebuilt_jar(
-  name = 'aopalliance',
-  binary_jar = 'aopalliance.jar',
-  licenses = [
-    'LICENSE',
-  ],
-  visibility = [
-    '//third-party/java/guice:assisted-inject',
-  ],
+    name = "aopalliance",
+    binary_jar = "aopalliance.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/testutil/integration/testlibs/...",
+        "//third-party/java/guice:assisted-inject",
+    ],
 )

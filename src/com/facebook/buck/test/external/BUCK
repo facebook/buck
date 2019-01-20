@@ -1,0 +1,23 @@
+java_library(
+    name = "events",
+    srcs = [
+        "ExternalTestRunEvent.java",
+        "ExternalTestSpecCalculationEvent.java",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/event:event",
+        "//test/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/test/external:external",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/test/selectors:selectors",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
+)

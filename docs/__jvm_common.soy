@@ -1,0 +1,221 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+{namespace jvm_common}
+
+/***/
+{template .test_env}
+{call buck.arg}
+  {param name: 'env' /}
+  {{param default : '{}' /}}
+  {param desc}
+  A map of environment names and values to set when running the test.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .compiler_class_name_arg}
+{call buck.arg}
+  {param name: 'compiler_class_name' /}
+  {param default : '<global value>' /}
+  {param desc}
+  Specifies the Java compiler class name to use in tandem with javac_jar.
+  Overrides the value in <a
+  href="{ROOT}concept/buckconfig.html#tools.compiler_class_name"><code>.buckconfig</code></a>.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .resources_arg}
+{call buck.arg}
+  {param name: 'resources' /}
+  {param default: '[]' /}
+  {param desc}
+  <p>
+    Static files to include with the compiled <code>.class</code> {sp}files. 
+    These files can be loaded 
+    via <a href="http://docs.oracle.com/javase/7/docs/api/java/lang/Class.html#getResource(java.lang.String)" target="_blank">Class.getResource()</a>.
+  </p>
+
+  <p>
+    <strong>Note:</strong> If <code>resources_root</code> isn't set,
+    Buck uses the <code>{call buckconfig.java_src_roots /}</code>
+    property in <a href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a> to
+    determine where resources should be placed within the generated JAR
+    file.
+  <p>
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'resources_root' /}
+  {param default: 'None' /}
+  {param desc}
+  The path that resources are resolved against. For example, if{sp}
+  <code>resources_root</code> is <code>"res"</code> and
+  {sp}<code>resources</code>{sp} contains the file{sp}
+  <code>"res/com/example/foo.txt"</code>, that file will end up as{sp}
+  <code>"com/example/foo.txt"</code> in the output JAR. This parameter
+  overrides the <code>{call buckconfig.java_src_roots /}</code> property in <a
+  href="{ROOT}concept/buckconfig.html"><code>.buckconfig</code></a>.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .remove_classes_arg}
+{call buck.arg}
+  {param name: 'remove_classes' /}
+  {param default: '[]' /}
+  {param desc}
+  Specifies a list of <code>Patterns</code> that are used to exclude
+  <code>classes</code> from the <code>JAR</code>. The pattern matching is
+  based on the name of the class. This can be used to exclude a member
+  class or delete a local view of a class that will be replaced during
+  a later stage of the build.
+  {/param}
+{/call}
+{/template}
+
+/**
+ * @param binary the binary target name
+ */
+{template .provided_deps}
+{call buck.arg}
+  {param name: 'provided_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  These represent dependencies that are known to be provided at run
+  time, but are required in order for the code to compile. Examples of
+  {sp}<code>provided_deps</code> include the JEE servlet APIs. When this
+  rule is included in a <code>{$binary}</code>, the
+  {sp}<code>provided_deps</code> will not be packaged into the output.
+  {/param}
+{/call}
+{/template}
+
+/**
+ * @param library the library target name
+ */
+{template .exported_deps}
+{call buck.arg}
+  {param name: 'exported_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  Other <code>{$library}</code> rules that depend on this rule will also
+  include its <code>exported_deps</code> in their classpaths. This is useful
+  when the public API of a rule has return types or checked exceptions that are
+  defined in another rule, which would otherwise require callers to add an
+  extra dependency. It's also useful for exposing e.g. a collection of
+  {sp}<code>prebuilt_jar</code> rules as a single target for callers to depend
+  on. Targets in <code>exported_deps</code> are implicitly included in the
+  {sp}<code>deps</code> of this rule, so they don't need to be repeated there.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .exported_provided_deps}
+{call buck.arg}
+  {param name: 'exported_provided_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  This is a combination of <code>provided_deps</code> and <code>exported_deps</code>. Rules listed
+  in this parameter will be added to classpath of rules that depend on this rule, but they will not
+  be included in a binary if binary depends on a such target.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .source_only_abi_deps}
+{call buck.arg}
+  {param name: 'source_only_abi_deps' /}
+  {param default: '[]' /}
+  {param desc}
+  <p>
+    These are dependencies that must be present during&nbsp;
+    {call buck.concept_link}{param page: 'java_abis' /}{param name: 'source-only ABI generation' /}{/call}.
+    Typically such dependencies are added when some property of the code in this rule prevents source-only ABI
+    generation from being correct without these dependencies being present.
+  </p>
+  <p>
+    Having <code>source_only_abi_deps</code> prevents Buck from
+    completely flattening the build graph, thus reducing the performance win from source-only
+    ABI generation. They should be avoided when possible. Often only a small code change is needed to avoid them.
+    For more information on such code changes, read about&nbsp;
+    {call buck.concept_link}{param page: 'java_abis' /}{param name: 'source-only ABI generation' /}{/call}.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .abi_generation_mode}
+{call buck.arg}
+  {param name: 'abi_generation_mode' /}
+  {param default: 'None' /}
+  {param desc}
+  Overrides {call buckconfig.java_abi_generation_mode /} for this rule.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .required_for_source_only_abi}
+{call buck.arg}
+  {param name: 'required_for_source_only_abi' /}
+  {param default: 'False' /}
+  {param desc}
+  <p>
+    Indicates that this rule must be present on the classpath during&nbsp;
+    {call buck.concept_link}{param page: 'java_abis' /}{param name: 'source-only ABI generation' /}{/call}&nbsp;
+    of any rule that depends on it. Typically this is done when a rule contains annotations,
+    enums, constants, or interfaces.
+  </p>
+  <p>
+    Having rules present on the classpath during source-only ABI generation prevents Buck from
+    completely flattening the build graph, thus reducing the performance win from source-only
+    ABI generation. These rules should be kept small (ideally just containing annotations,
+    constants, enums, and interfaces) and with minimal dependencies of their own.
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .on_unused_dependencies}
+{call buck.arg}
+  {param name: 'on_unused_dependencies' /}
+  {param default: 'ignore' /}
+  {param desc}
+     <p>Action performed when Buck detects that some dependencies are not used during Java compilation.</p>
+     <p>Note that this feature is experimental and does not handle runtime dependencies.</p>
+     <p>The valid values are:
+       <ul>
+         <li><code>ignore</code> (default): ignore unused dependencies,</li>
+         <li><code>warn</code>: emit a warning to the console,</li>
+         <li><code>fail</code>: fail the compilation.</li>
+       </ul>
+     </p>
+     <p>This option overrides the default value from {call buck.concept_link_heading}
+       {param page : 'buckconfig' /}
+       {param heading : 'java.unused_dependencies_action' /}
+       {param name : '.buckconfig' /}
+     {/call}.
+  {/param}
+{/call}
+{/template}

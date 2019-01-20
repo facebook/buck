@@ -1,0 +1,3 @@
+[repositories]
+  primary = .
+  secondary = secondary

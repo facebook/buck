@@ -1,0 +1,20 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "manifestservice",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/manifestservice:manifestservice",
+        "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/util/timing:timing",
+        "//test/com/facebook/buck/core/config:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/easymock:easymock",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

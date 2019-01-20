@@ -16,18 +16,22 @@
 
 package com.facebook.buck.rules.keys;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 
-import java.lang.reflect.Field;
+class DefaultAlterRuleKey implements AlterRuleKey {
+  private final ValueExtractor valueExtractor;
 
-class DefaultAlterRuleKey extends AbstractAlterRuleKey {
-  public DefaultAlterRuleKey(Field field) {
-    super(field);
+  DefaultAlterRuleKey(ValueExtractor valueExtractor) {
+    this.valueExtractor = valueExtractor;
   }
 
   @Override
-  public void amendKey(RuleKeyObjectSink builder, BuildRule rule) {
-    builder.setReflectively(field.getName(), getValue(field, rule));
+  public void amendKey(RuleKeyObjectSink builder, Object addsToRuleKey) {
+    try {
+      builder.setReflectively(valueExtractor.getName(), valueExtractor.getValue(addsToRuleKey));
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(e, "When amending %s.", valueExtractor.getName());
+    }
   }
 }

@@ -1,15 +1,49 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace android_common}
 
 /***/
 {template .manifest_apk_arg}
 {call buck.arg}
   {param name: 'manifest' /}
+  {param default: 'None' /}
   {param desc}
     Relative path to the Android manifest for the APK.  The common
     case is that the manifest will be in the same directory as the
     rule, in which case this will simply be
     {sp}<code>'AndroidManifest.xml'</code>, but it can also reference
     an {call buck.android_manifest /} rule.
+
+    Prefer using <code>manifest_skeleton</code>, which performs merging automatically.
+    Exactly one of <code>manifest</code> and <code>manifest_skeleton</code> must be set.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'manifest_skeleton' /}
+  {param default: 'None' /}
+  {param desc}
+    Relative path to the skeleton Android manifest for the APK.
+    An {call buck.android_manifest /} will be created automatically to merge
+    all manifests from libraries and resources going into the app.
+    The common case is that the manifest will be in the same directory as the
+    rule, in which case this will simply be
+    {sp}<code>'AndroidManifest.xml'</code>.
+
+    Exactly one of <code>manifest</code> and <code>manifest_skeleton</code> must be set.
   {/param}
 {/call}
 {/template}
@@ -34,6 +68,19 @@
     <li><code>ndk_library()</code>
     <li><code>prebuilt_native_library()</code>
   </ul>
+  {/param}
+{/call}
+{/template}
+
+/**
+ * @param type Either a library or a resource
+ */
+{template .manifest_arg}
+{call buck.arg}
+  {param name: 'manifest' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional <a href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">Android Manifest</a> for the {$type} to declare any permissions or intents it may need or want to handle.  May either be a file or a {call buck.android_manifest /} target.
   {/param}
 {/call}
 {/template}

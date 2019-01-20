@@ -33,7 +33,7 @@ public class Main {
         "[--dump-width=<n>]\n" +
         "  [--dump-method=<name>[*]] [--verbose-dump] [--no-files] " +
         "[--core-library]\n" +
-        "  [--num-threads=<n>] [--incremental] [--force-jumbo]\n" +
+        "  [--num-threads=<n>] [--incremental] [--force-jumbo] [--no-warning]\n" +
         "  [--multi-dex [--main-dex-list=<file> [--minimal-main-dex]]\n" +
         "  [--input-list=<file>]\n" +
         "  [<file>.class | <file>.{zip,jar,apk} | <directory>] ...\n" +

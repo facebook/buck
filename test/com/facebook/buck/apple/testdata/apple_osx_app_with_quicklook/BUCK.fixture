@@ -1,0 +1,44 @@
+apple_binary(
+    name = "AppBinary",
+    srcs = ["App/App.m"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/AppKit.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    headers = ["App/App.h"],
+)
+
+apple_bundle(
+    name = "App",
+    binary = ":AppBinary",
+    extension = "app",
+    info_plist = "App/Info.plist",
+    deps = [
+        ":QuickLook",
+    ],
+)
+
+apple_binary(
+    name = "QuickLookBinary",
+    srcs = [
+        "Quicklook/GeneratePreviewForURL.m",
+        "Quicklook/GenerateThumbnailForURL.m",
+        "Quicklook/main.c",
+    ],
+    compiler_flags = ["-Wno-global-constructors"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Cocoa.framework",
+        "$SDKROOT/System/Library/Frameworks/CoreGraphics.framework",
+        "$SDKROOT/System/Library/Frameworks/CoreMedia.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/QuartzCore.framework",
+    ],
+    linker_flags = ["-bundle"],
+)
+
+apple_bundle(
+    name = "QuickLook",
+    binary = ":QuickLookBinary",
+    extension = "qlgenerator",
+    info_plist = "Quicklook/Info.plist",
+)

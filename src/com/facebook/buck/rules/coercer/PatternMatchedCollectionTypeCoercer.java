@@ -16,11 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.types.Pair;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Iterator;
@@ -34,8 +32,7 @@ public class PatternMatchedCollectionTypeCoercer<T>
   TypeCoercer<T> valueTypeCoercer;
 
   public PatternMatchedCollectionTypeCoercer(
-      TypeCoercer<Pattern> patternTypeCoercer,
-      TypeCoercer<T> valueTypeCoercer) {
+      TypeCoercer<Pattern> patternTypeCoercer, TypeCoercer<T> valueTypeCoercer) {
     this.patternTypeCoercer = patternTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
   }
@@ -57,16 +54,12 @@ public class PatternMatchedCollectionTypeCoercer<T>
   }
 
   @Override
-  public void traverse(PatternMatchedCollection<T> object, Traversal traversal) {
+  public void traverse(
+      CellPathResolver cellRoots, PatternMatchedCollection<T> object, Traversal traversal) {
     for (Pair<Pattern, T> value : object.getPatternsAndValues()) {
       traversal.traverse(value.getFirst());
-      valueTypeCoercer.traverse(value.getSecond(), traversal);
+      valueTypeCoercer.traverse(cellRoots, value.getSecond(), traversal);
     }
-  }
-
-  @Override
-  public Optional<PatternMatchedCollection<T>> getOptionalValue() {
-    return Optional.of(PatternMatchedCollection.<T>of());
   }
 
   @Override
@@ -74,33 +67,24 @@ public class PatternMatchedCollectionTypeCoercer<T>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (!(object instanceof List)) {
       throw CoerceFailedException.simple(
-          object,
-          getOutputClass(),
-          "input object should be a list of pairs");
+          object, getOutputClass(), "input object should be a list of pairs");
     }
     PatternMatchedCollection.Builder<T> builder = PatternMatchedCollection.builder();
     List<?> list = (List<?>) object;
     for (Object element : list) {
       if (!(element instanceof Collection) || ((Collection<?>) element).size() != 2) {
         throw CoerceFailedException.simple(
-            object,
-            getOutputClass(),
-            "input object should be a list of pairs");
+            object, getOutputClass(), "input object should be a list of pairs");
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
-      Pattern platformSelector = patternTypeCoercer.coerce(
-          cellRoots,
-          filesystem,
-          pathRelativeToProjectRoot,
-          pair.next());
-      T value = valueTypeCoercer.coerce(
-          cellRoots,
-          filesystem,
-          pathRelativeToProjectRoot,
-          pair.next());
+      Pattern platformSelector =
+          patternTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, pair.next());
+      T value =
+          valueTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, pair.next());
       builder.add(platformSelector, value);
     }
     return builder.build();

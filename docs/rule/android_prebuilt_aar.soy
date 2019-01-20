@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace android_prebuilt_aar}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'android_prebuilt_aar()' /}
+    {param navid: 'rule_android_prebuilt_aar' /}
     {param prettify: true /}
     {param description}
       A rule that takes an .aar file and makes it available as an Android
@@ -20,7 +36,7 @@ an {call buck.android_binary /} that transitively depends on
 an <code>android_prebuilt_aar()</code> will include its contents in the generated APK.
 <p>
 <p>
-See the <a href="http://tools.android.com/tech-docs/new-build-system/aar-format">
+See the <a href="https://developer.android.com/studio/projects/android-library#aar-contents">
 official Android documentation</a> for details about the <code>.aar</code> format.
 {/param}
 
@@ -42,6 +58,25 @@ official Android documentation</a> for details about the <code>.aar</code> forma
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'source_jar' /}
+  {param default : 'None' /}
+  {param desc}
+  Path to a JAR file that contains the <code>.java</code> files to create
+  the <code>.class</code> in the <code>aar</code>. This is frequently
+  provided for debugging purposes.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'javadoc_url' /}
+  {param default : 'None' /}
+  {param desc}
+  URL to the Javadoc for the <code>.class</code> files in the
+  {sp}<code>aar</code>.
+  {/param}
+{/call}
+
 {/param} // close args
 
 {param examples}
@@ -50,6 +85,8 @@ official Android documentation</a> for details about the <code>.aar</code> forma
 android_prebuilt_aar(
   name = 'play-services',
   aar = 'play-services-4.0.30.aar',
+  source_jar = 'play-services-4.0.30-sources.jar',
+  javadoc_url = 'file:///opt/android-sdk/extras/google/google_play_services/docs/reference',
 )
 
 android_library(

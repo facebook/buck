@@ -1,0 +1,22 @@
+cxx_binary(
+    name = "main",
+    srcs = ["main.c"],
+    deps = [
+        ":foobar",
+        ":foobar2",
+    ],
+)
+
+cxx_library(
+    name = "foobar",
+    srcs = [],
+    exported_headers = ["public.h"],
+    header_namespace = "foobar",
+)
+
+cxx_library(
+    name = "foobar2",
+    srcs = [],
+    exported_headers = {"public.h": "public/public.h"},
+    header_namespace = "foobar",
+)

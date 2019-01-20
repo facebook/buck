@@ -16,31 +16,21 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
-
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Comparator;
-import java.util.Set;
+import java.util.Objects;
 import java.util.SortedSet;
+import java.util.function.Function;
 
-/**
- * Common conversion functions from raw Description Arg specifications.
- */
+/** Common conversion functions from raw Description Arg specifications. */
 public class RuleUtils {
 
   /** Utility class: do not instantiate. */
@@ -50,6 +40,7 @@ public class RuleUtils {
       Function<SourcePath, Path> resolver,
       Iterable<SourceWithFlags> sources,
       Iterable<SourcePath> extraXcodeSources,
+      Iterable<SourcePath> extraXcodeFiles,
       Iterable<SourcePath> publicHeaders,
       Iterable<SourcePath> privateHeaders) {
     Path rootPath = Paths.get("root");
@@ -58,22 +49,27 @@ public class RuleUtils {
     for (SourceWithFlags sourceWithFlags : sources) {
       Path path = rootPath.resolve(resolver.apply(sourceWithFlags.getSourcePath()));
       GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(sourceWithFlags);
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     for (SourcePath sourcePath : extraXcodeSources) {
       Path path = rootPath.resolve(resolver.apply(sourcePath));
       GroupedSource groupedSource = GroupedSource.ofSourceWithFlags(SourceWithFlags.of(sourcePath));
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
+    }
+    for (SourcePath sourcePath : extraXcodeFiles) {
+      Path path = rootPath.resolve(resolver.apply(sourcePath));
+      GroupedSource groupedSource = GroupedSource.ofIgnoredSource(sourcePath);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     for (SourcePath publicHeader : publicHeaders) {
       Path path = rootPath.resolve(resolver.apply(publicHeader));
       GroupedSource groupedSource = GroupedSource.ofPublicHeader(publicHeader);
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     for (SourcePath privateHeader : privateHeaders) {
       Path path = rootPath.resolve(resolver.apply(privateHeader));
       GroupedSource groupedSource = GroupedSource.ofPrivateHeader(privateHeader);
-      entriesBuilder.put(Preconditions.checkNotNull(path.getParent()), groupedSource);
+      entriesBuilder.put(Objects.requireNonNull(path.getParent()), groupedSource);
     }
     ImmutableMultimap<Path, GroupedSource> entries = entriesBuilder.build();
 
@@ -93,15 +89,11 @@ public class RuleUtils {
 
     ImmutableList<GroupedSource> groupedSources =
         createGroupsFromEntryMaps(
-            subgroups,
-            entries,
-            groupedSourceNameComparator,
-            rootPath,
-            rootPath);
+            subgroups, entries, groupedSourceNameComparator, rootPath, rootPath);
 
     // Remove the longest common prefix from all paths.
-    while (groupedSources.size() == 1 &&
-        groupedSources.get(0).getType() == GroupedSource.Type.SOURCE_GROUP) {
+    while (groupedSources.size() == 1
+        && groupedSources.get(0).getType() == GroupedSource.Type.SOURCE_GROUP) {
       groupedSources = ImmutableList.copyOf(groupedSources.get(0).getSourceGroup().get());
     }
 
@@ -121,7 +113,6 @@ public class RuleUtils {
       String name2 = source2.getName(pathResolver);
       return name1.compareTo(name2);
     }
-
   }
 
   @VisibleForTesting
@@ -140,11 +131,7 @@ public class RuleUtils {
               subgroupName,
               subgroupPath.subpath(rootGroupPath.getNameCount(), subgroupPath.getNameCount()),
               createGroupsFromEntryMaps(
-                  subgroups,
-                  entries,
-                  comparator,
-                  rootGroupPath,
-                  subgroupPath)));
+                  subgroups, entries, comparator, rootGroupPath, subgroupPath)));
     }
 
     SortedSet<GroupedSource> sortedEntries =
@@ -154,25 +141,5 @@ public class RuleUtils {
     }
 
     return groupBuilder.build().asList();
-  }
-
-  public static Supplier<ImmutableCollection<Path>> subpathsOfPathsSupplier(
-      final ProjectFilesystem projectFilesystem,
-      final Set<Path> dirs) {
-    return Suppliers.memoize(
-        new Supplier<ImmutableCollection<Path>>() {
-          @Override
-          public ImmutableCollection<Path> get() {
-            ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-            for (Path dir : dirs) {
-              try {
-                paths.addAll(projectFilesystem.getFilesUnderPath(dir));
-              } catch (IOException e) {
-                throw new HumanReadableException(e, "Error traversing directory: %s.", dir);
-              }
-            }
-            return paths.build();
-          }
-        });
   }
 }

@@ -16,60 +16,76 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.TestCxxPlatformsProviderFactory;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
-
+import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class JavaTestBuilder extends AbstractNodeBuilder<JavaTestDescription.Arg> {
-  private JavaTestBuilder(BuildTarget target) {
+public class JavaTestBuilder
+    extends AbstractNodeBuilder<
+        JavaTestDescriptionArg.Builder, JavaTestDescriptionArg, JavaTestDescription, JavaTest> {
+  private JavaTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new JavaTestDescription(
-            DEFAULT_JAVA_OPTIONS,
-            DEFAULT_JAVAC_OPTIONS,
-            /* testRuleTimeoutMs */ Optional.<Long>absent(),
-            null,
-            Optional.<Path>absent()),
+            new ToolchainProviderBuilder()
+                .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
+                .withToolchain(
+                    JavaCxxPlatformProvider.DEFAULT_NAME,
+                    JavaCxxPlatformProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM))
+                .withToolchain(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+                .withToolchain(
+                    JavaOptionsProvider.DEFAULT_NAME,
+                    JavaOptionsProvider.of(DEFAULT_JAVA_OPTIONS, DEFAULT_JAVA_OPTIONS))
+                .withToolchain(
+                    JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
+                .build(),
+            javaBuckConfig),
         target);
   }
 
   public static JavaTestBuilder createBuilder(BuildTarget target) {
-    return new JavaTestBuilder(target);
+    return new JavaTestBuilder(target, DEFAULT_JAVA_CONFIG);
+  }
+
+  public static JavaTestBuilder createBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
+    return new JavaTestBuilder(target, javaBuckConfig);
   }
 
   public JavaTestBuilder addDep(BuildTarget rule) {
-    arg.deps = amend(arg.deps, rule);
+    getArgForPopulating().addDeps(rule);
     return this;
   }
 
   public JavaTestBuilder addProvidedDep(BuildTarget rule) {
-    arg.providedDeps = amend(arg.providedDeps, rule);
+    getArgForPopulating().addProvidedDeps(rule);
     return this;
   }
 
   public JavaTestBuilder addSrc(Path path) {
-    arg.srcs = amend(arg.srcs, new PathSourcePath(new FakeProjectFilesystem(), path));
+    getArgForPopulating().addSrcs(PathSourcePath.of(new FakeProjectFilesystem(), path));
     return this;
   }
 
-  public JavaTestBuilder setSourceUnderTest(
-      @Nullable ImmutableSortedSet<BuildTarget> sourceUnderTest) {
-    arg.sourceUnderTest = Optional.fromNullable(sourceUnderTest);
-    return this;
-  }
-
-  public JavaTestBuilder setVmArgs(@Nullable ImmutableList<String> vmArgs) {
-    arg.vmArgs = Optional.fromNullable(vmArgs);
+  public JavaTestBuilder setVmArgs(@Nullable ImmutableList<StringWithMacros> vmArgs) {
+    getArgForPopulating().setVmArgs(Optional.ofNullable(vmArgs).orElse(ImmutableList.of()));
     return this;
   }
 }

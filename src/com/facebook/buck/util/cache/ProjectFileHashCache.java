@@ -16,10 +16,42 @@
 
 package com.facebook.buck.util.cache;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.hashing.ProjectFileHashLoader;
+import com.google.common.hash.HashCode;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Map.Entry;
+import java.util.stream.Stream;
 
-public interface ProjectFileHashCache extends FileHashCache {
+/**
+ * A {@link FileHashLoader} which manages caching file hashes for a given {@link ProjectFilesystem}.
+ */
+public interface ProjectFileHashCache extends ProjectFileHashLoader {
 
   ProjectFilesystem getFilesystem();
 
+  boolean willGet(Path path);
+
+  boolean willGet(ArchiveMemberPath archiveMemberPath);
+
+  boolean isIgnored(Path path);
+
+  void invalidate(Path path);
+
+  void invalidateAll();
+
+  void set(Path path, HashCode hashCode) throws IOException;
+
+  default FileHashCacheVerificationResult verify() throws IOException {
+    throw new RuntimeException(
+        "ProjectFileHashCache class " + getClass().getName() + " does not support verification.");
+  }
+
+  default Stream<Entry<Path, HashCode>> debugDump() {
+    throw new RuntimeException(
+        "ProjectFileHashCache class " + getClass().getName() + " does not support debugDump.");
+  }
 }

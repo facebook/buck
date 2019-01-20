@@ -16,16 +16,16 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 
 /**
  * Checks for and kills processes by name.
  *
- * Only supported on non-Windows platforms (depends on {@code pkill} binary).
+ * <p>Only supported on non-Windows platforms (depends on {@code pkill} binary).
  */
 public class PkillProcessManager implements ProcessManager {
   private static final Logger LOG = Logger.get(PkillProcessManager.class);
@@ -81,9 +81,8 @@ public class PkillProcessManager implements ProcessManager {
 
   private ProcessExecutor.Result runProcess(ImmutableList<String> processAndArgs)
       throws InterruptedException, IOException {
-    ProcessExecutorParams params = ProcessExecutorParams.builder()
-        .setCommand(processAndArgs)
-        .build();
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder().setCommand(processAndArgs).build();
     return processExecutor.launchAndExecute(params);
   }
 }

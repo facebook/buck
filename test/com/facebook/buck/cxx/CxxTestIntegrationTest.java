@@ -19,45 +19,39 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.IOException;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class CxxTestIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder temp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   @Test
   public void spinningTestTimesOutWithGlobalTimeout() throws IOException {
     assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX, Platform.MACOS));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "slow_cxx_tests",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "slow_cxx_tests", temp);
     workspace.setUp();
     workspace.writeContentsToPath(
-        Joiner.on('\n').join(
-            "[test]",
-            "rule_timeout = 250",
-            "[cxx]",
-            "gtest_dep = //:fake-gtest"),
+        Joiner.on('\n').join("[test]", "rule_timeout = 250", "[cxx]", "gtest_dep = //:fake-gtest"),
         ".buckconfig");
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
-    result.assertSpecialExitCode("test should fail", 42);
+    ProcessResult result = workspace.runBuckCommand("test", "//:spinning");
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertThat(stderr, Matchers.containsString("Timed out after 250 ms running test command"));
   }
@@ -65,26 +59,23 @@ public class CxxTestIntegrationTest {
   private void runAndAssertSpinningTestTimesOutWithPerRuleTimeout(
       ImmutableSet<Flavor> targetFlavors) throws IOException {
     assumeThat(Platform.detect(), Matchers.oneOf(Platform.LINUX, Platform.MACOS));
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "slow_cxx_tests_per_rule_timeout",
-        temp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "slow_cxx_tests_per_rule_timeout", temp);
     workspace.setUp();
 
     BuildTarget target = BuildTargetFactory.newInstance("//:spinning");
     target = target.withFlavors(targetFlavors);
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "test",
-        target.getFullyQualifiedName());
-    result.assertSpecialExitCode("test should fail", 42);
+    ProcessResult result = workspace.runBuckCommand("test", target.getFullyQualifiedName());
+    result.assertSpecialExitCode("test should fail", ExitCode.TEST_ERROR);
     String stderr = result.getStderr();
     assertThat(stderr, Matchers.containsString("Timed out after 100 ms running test command"));
   }
 
   @Test
   public void testSpinningTestTimesOutWithPerRuleTimeout() throws IOException {
-    runAndAssertSpinningTestTimesOutWithPerRuleTimeout(ImmutableSet.<Flavor>of());
+    runAndAssertSpinningTestTimesOutWithPerRuleTimeout(ImmutableSet.of());
   }
 
   @Test

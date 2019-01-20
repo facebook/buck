@@ -16,117 +16,113 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
-
-import com.facebook.buck.io.DirectoryTraverser;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.MkdirAndSymlinkFileStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.step.fs.SymlinkFileStep;
+import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
-
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
 import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
-public class JavaBinary extends AbstractBuildRule
-    implements BinaryBuildRule, HasClasspathEntries, RuleKeyAppendable {
+public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements BinaryBuildRule, HasClasspathEntries {
 
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(PACKAGING);
+  // We're just propagating the runtime launcher through `getExecutable`, so don't add it to the
+  // rule key.
+  private final Tool javaRuntimeLauncher;
 
-  @AddToRuleKey
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  @AddToRuleKey @Nullable private final String mainClass;
 
-  @AddToRuleKey
-  @Nullable
-  private final String mainClass;
-
-  @AddToRuleKey
-  @Nullable
-  private final SourcePath manifestFile;
+  @AddToRuleKey @Nullable private final SourcePath manifestFile;
   private final boolean mergeManifests;
+  private final boolean disallowAllDuplicates;
 
-  @Nullable
-  private final Path metaInfDirectory;
+  @Nullable @AddToRuleKey private final SourcePath metaInfDirectory;
+
+  @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final ImmutableSet<String> blacklist;
+  private final ImmutableSet<Pattern> blacklist;
 
-  private final DirectoryTraverser directoryTraverser;
-  private final ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries;
+  private final PatternsMatcher blacklistPatternsMatcher;
+
+  private final ImmutableSet<JavaLibrary> transitiveClasspathDeps;
+  private final ImmutableSet<SourcePath> transitiveClasspaths;
+
+  private final boolean cache;
+  private Level duplicatesLogLevel;
 
   public JavaBinary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      Tool javaRuntimeLauncher,
       @Nullable String mainClass,
       @Nullable SourcePath manifestFile,
       boolean mergeManifests,
+      boolean disallowAllDuplicates,
       @Nullable Path metaInfDirectory,
-      ImmutableSet<String> blacklist,
-      DirectoryTraverser directoryTraverser,
-      ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries) {
-    super(params, resolver);
+      ImmutableSet<Pattern> blacklist,
+      ImmutableSet<JavaLibrary> transitiveClasspathDeps,
+      ImmutableSet<SourcePath> transitiveClasspaths,
+      boolean cache,
+      Level duplicatesLogLevel) {
+    super(buildTarget, projectFilesystem, params);
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.mainClass = mainClass;
     this.manifestFile = manifestFile;
     this.mergeManifests = mergeManifests;
-    this.metaInfDirectory = metaInfDirectory;
+    this.disallowAllDuplicates = disallowAllDuplicates;
+    this.metaInfDirectory =
+        metaInfDirectory != null
+            ? PathSourcePath.of(getProjectFilesystem(), metaInfDirectory)
+            : null;
     this.blacklist = blacklist;
-    this.directoryTraverser = directoryTraverser;
-    this.transitiveClasspathEntries = transitiveClasspathEntries;
-  }
-
-  @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    // Build a sorted set so that metaInfDirectory contents are listed in a canonical order.
-    ImmutableSortedSet.Builder<Path> paths = ImmutableSortedSet.naturalOrder();
-    BuildRules.addInputsToSortedSet(metaInfDirectory, paths, directoryTraverser);
-
-    sink.setReflectively(
-        "metaInfDirectory",
-        FluentIterable.from(paths.build())
-            .transform(SourcePaths.toSourcePath(getProjectFilesystem())));
+    blacklistPatternsMatcher = new PatternsMatcher(blacklist);
+    this.transitiveClasspathDeps = transitiveClasspathDeps;
+    this.transitiveClasspaths = transitiveClasspaths;
+    this.cache = cache;
+    this.duplicatesLogLevel = duplicatesLogLevel;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     Path outputDirectory = getOutputDirectory();
-    Step mkdir = new MkdirStep(getProjectFilesystem(), outputDirectory);
+    Step mkdir =
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory));
     commands.add(mkdir);
 
     ImmutableSortedSet<Path> includePaths;
@@ -134,35 +130,48 @@ public class JavaBinary extends AbstractBuildRule
       Path stagingRoot = outputDirectory.resolve("meta_inf_staging");
       Path stagingTarget = stagingRoot.resolve("META-INF");
 
-      MakeCleanDirectoryStep createStagingRoot = new MakeCleanDirectoryStep(
-          getProjectFilesystem(),
-          stagingRoot);
-      commands.add(createStagingRoot);
+      commands.addAll(
+          MakeCleanDirectoryStep.of(
+              BuildCellRelativePath.fromCellRelativePath(
+                  context.getBuildCellRootPath(), getProjectFilesystem(), stagingRoot)));
 
-      MkdirAndSymlinkFileStep link = new MkdirAndSymlinkFileStep(
-          getProjectFilesystem(),
-          metaInfDirectory,
-          stagingTarget);
-      commands.add(link);
+      commands.add(
+          SymlinkFileStep.builder()
+              .setFilesystem(getProjectFilesystem())
+              .setExistingFile(context.getSourcePathResolver().getAbsolutePath(metaInfDirectory))
+              .setDesiredLink(stagingTarget)
+              .build());
 
-      includePaths = ImmutableSortedSet.<Path>naturalOrder()
-          .add(stagingRoot)
-          .addAll(getTransitiveClasspathEntries().values())
-          .build();
+      includePaths =
+          ImmutableSortedSet.<Path>naturalOrder()
+              .add(stagingRoot)
+              .addAll(
+                  context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths()))
+              .build();
     } else {
-      includePaths = ImmutableSortedSet.copyOf(getTransitiveClasspathEntries().values());
+      includePaths = context.getSourcePathResolver().getAllAbsolutePaths(getTransitiveClasspaths());
     }
 
-    Path outputFile = getPathToOutput();
-    Path manifestPath = manifestFile == null ? null : getResolver().getAbsolutePath(manifestFile);
-    Step jar = new JarDirectoryStep(
-        getProjectFilesystem(),
-        outputFile,
-        includePaths,
-        mainClass,
-        manifestPath,
-        mergeManifests,
-        blacklist);
+    Path outputFile = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+    Path manifestPath =
+        manifestFile == null ? null : context.getSourcePathResolver().getAbsolutePath(manifestFile);
+    Step jar =
+        new JarDirectoryStep(
+            getProjectFilesystem(),
+            JarParameters.builder()
+                .setJarPath(outputFile)
+                .setEntriesToJar(includePaths)
+                .setMainClass(Optional.ofNullable(mainClass))
+                .setManifestFile(Optional.ofNullable(manifestPath))
+                .setMergeManifests(mergeManifests)
+                .setDisallowAllDuplicates(disallowAllDuplicates)
+                .setDuplicatesLogLevel(duplicatesLogLevel)
+                .setRemoveEntryPredicate(
+                    entry ->
+                        blacklistPatternsMatcher.hasPatterns()
+                            && blacklistPatternsMatcher.substringMatches(
+                                ((ZipEntry) entry).getName()))
+                .build());
     commands.add(jar);
 
     buildableContext.recordArtifact(outputFile);
@@ -170,26 +179,38 @@ public class JavaBinary extends AbstractBuildRule
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return transitiveClasspathEntries;
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
+    return transitiveClasspaths;
   }
 
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return transitiveClasspathEntries.keySet();
-  }
-
-  private Path getOutputDirectory() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getParent();
+    return transitiveClasspathDeps;
   }
 
   @Override
-  public Path getPathToOutput() {
-    return Paths.get(
-        String.format(
-            "%s/%s.jar",
-            getOutputDirectory(),
-            getBuildTarget().getShortNameAndFlavorPostfix()));
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
+    // A binary has no exported deps or classpath contributions of its own
+    return ImmutableSet.of();
+  }
+
+  private Path getOutputDirectory() {
+    return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getParent();
+  }
+
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(),
+        Paths.get(
+            String.format(
+                "%s/%s.jar",
+                getOutputDirectory(), getBuildTarget().getShortNameAndFlavorPostfix())));
   }
 
   @Override
@@ -199,10 +220,14 @@ public class JavaBinary extends AbstractBuildRule
         "Must specify a main class for %s in order to to run it.",
         getBuildTarget());
 
-    return new CommandTool.Builder()
-        .addArg(javaRuntimeLauncher.getCommand())
+    return new CommandTool.Builder(javaRuntimeLauncher)
         .addArg("-jar")
-        .addArg(new SourcePathArg(getResolver(), new BuildTargetSourcePath(getBuildTarget())))
+        .addArg(SourcePathArg.of(getSourcePathToOutput()))
         .build();
+  }
+
+  @Override
+  public boolean isCacheable() {
+    return cache;
   }
 }

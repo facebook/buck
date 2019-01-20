@@ -1,0 +1,17 @@
+java_test(
+    name = "env",
+    srcs = [
+        "EnvTest.java",
+    ],
+    env = {
+        "A": "B",
+        "FILE": "$(location :exported_file)",
+    },
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+export_file(
+    name = "exported_file",
+)

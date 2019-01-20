@@ -1,0 +1,6 @@
+class {class} {{
+  // Put the data in the identifier name so it's easier to extract with dexdump.
+  public static String data__{data}__ = "{data}";
+
+  public static String longString = "This is a place to pur a really long string to increase the estimated dex weight of this file. {class} {data} {longstring}";
+}}

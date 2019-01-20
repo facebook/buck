@@ -1,0 +1,63 @@
+java_binary(
+    name = "bin",
+    deps = [":lib"],
+)
+
+java_library(
+    name = "lib",
+    srcs = [
+        "Lib.java",
+    ],
+    deps = [":lib_dep"],
+)
+
+java_library(
+    name = "lib_dep",
+    exported_deps = [
+        ":exported_dep",
+        ":exported_provided_dep",
+    ],
+    provided_deps = [
+        ":exported_provided_dep",
+        ":provided_dep",
+    ],
+    deps = [
+        ":dep",
+        ":dep_provided_dep",
+    ],
+)
+
+java_library(
+    name = "dep",
+    srcs = [
+        "Dep.java",
+    ],
+)
+
+java_library(
+    name = "exported_dep",
+    srcs = [
+        "ExportedDep.java",
+    ],
+)
+
+java_library(
+    name = "provided_dep",
+    srcs = [
+        "ProvidedDep.java",
+    ],
+)
+
+java_library(
+    name = "dep_provided_dep",
+    srcs = [
+        "DepProvidedDep.java",
+    ],
+)
+
+java_library(
+    name = "exported_provided_dep",
+    srcs = [
+        "ExportedProvidedDep.java",
+    ],
+)

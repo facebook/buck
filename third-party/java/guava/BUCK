@@ -1,9 +1,34 @@
 prebuilt_jar(
-  name = 'guava',
-  binary_jar = 'guava-19.0.jar',
-  source_jar = 'guava-19.0-sources.jar',
-  licenses = [
-    'COPYING',
-  ],
-  visibility = ['PUBLIC'],
+    name = "shaded-guava-20",
+    binary_jar = "guava-20.0.jar",
+    licenses = [
+        "COPYING",
+    ],
+    source_jar = "guava-20.0-sources.jar",
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_jar(
+    name = "guava",
+    binary_jar = "guava-23.3-jre.jar",
+    licenses = [
+        "COPYING",
+    ],
+    source_jar = "guava-23.3-jre-sources.jar",
+    visibility = ["PUBLIC"],
+    deps = ["//third-party/java/j2objc:j2objc-annotations"],
+)
+
+prebuilt_jar(
+    name = "guava-testlib",
+    binary_jar = "guava-testlib-23.3-jre.jar",
+    licenses = [
+        "COPYING",
+    ],
+    source_jar = "guava-testlib-23.3-jre-sources.jar",
+    visibility = [
+        "//test/...",
+        "//tools/ideabuck/tests/...",
+    ],
+    deps = [":guava"],
 )

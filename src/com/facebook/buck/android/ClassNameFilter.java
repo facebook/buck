@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableSet;
 /**
  * Filter for internal class names.
  *
- * <p>We use this to determine if a class must be placed in our primary dex.
- * It supports prefix, suffix, substring, and exact matches.
+ * <p>We use this to determine if a class must be placed in our primary dex. It supports prefix,
+ * suffix, substring, and exact matches.
  */
 public class ClassNameFilter {
   // We use naive algorithms for prefix, suffix, and substring, but these could easily be
@@ -47,11 +47,11 @@ public class ClassNameFilter {
   /**
    * Convenience factory to produce a filter from a very simple pattern language.
    *
-   * <p>patterns are substrings by default, but {@code ^} at the start or end of a pattern
-   * anchors it to the start or end of the class name.
+   * <p>patterns are substrings by default, but {@code ^} at the start or end of a pattern anchors
+   * it to the start or end of the class name.
    *
-   * @param patterns  Patterns to include in the filter.
-   * @return  A new filter.
+   * @param patterns Patterns to include in the filter.
+   * @return A new filter.
    */
   public static ClassNameFilter fromConfiguration(Iterable<String> patterns) {
     ImmutableList.Builder<String> prefixes = ImmutableList.builder();
@@ -74,10 +74,7 @@ public class ClassNameFilter {
     }
 
     return new ClassNameFilter(
-        prefixes.build(),
-        suffixes.build(),
-        substrings.build(),
-        exactMatches.build());
+        prefixes.build(), suffixes.build(), substrings.build(), exactMatches.build());
   }
 
   public boolean matches(String internalClassName) {

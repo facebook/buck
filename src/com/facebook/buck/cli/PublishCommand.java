@@ -16,42 +16,49 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import static com.facebook.buck.jvm.core.JavaLibrary.MAVEN_JAR;
+import static com.facebook.buck.jvm.core.JavaLibrary.SRC_JAR;
+import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
+
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
-import com.facebook.buck.model.BuildTarget;
 import com.facebook.buck.parser.BuildTargetSpec;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
 import com.facebook.buck.parser.TargetNodeSpec;
-import com.facebook.buck.rules.BuildRule;
-import com.google.common.base.Function;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.base.Throwables;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import javax.annotation.Nullable;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.deployment.DeployResult;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.kohsuke.args4j.Option;
-
-import java.io.IOException;
-import java.net.URL;
-
-import javax.annotation.Nullable;
 
 public class PublishCommand extends BuildCommand {
   public static final String REMOTE_REPO_LONG_ARG = "--remote-repo";
   public static final String REMOTE_REPO_SHORT_ARG = "-r";
   public static final String INCLUDE_SOURCE_LONG_ARG = "--include-source";
   public static final String INCLUDE_SOURCE_SHORT_ARG = "-s";
+  public static final String INCLUDE_DOCS_LONG_ARG = "--include-docs";
+  public static final String INCLUDE_DOCS_SHORT_ARG = "-w";
   public static final String TO_MAVEN_CENTRAL_LONG_ARG = "--to-maven-central";
   public static final String DRY_RUN_LONG_ARG = "--dry-run";
+
+  private static final String PUBLISH_GEN_PATH = "publish";
 
   @Option(
       name = REMOTE_REPO_LONG_ARG,
@@ -72,171 +79,166 @@ public class PublishCommand extends BuildCommand {
   private boolean includeSource = false;
 
   @Option(
-      name = DRY_RUN_LONG_ARG,
-      usage = "Just print the artifacts to be published")
+      name = INCLUDE_DOCS_LONG_ARG,
+      aliases = INCLUDE_DOCS_SHORT_ARG,
+      usage = "Publish docs as well")
+  private boolean includeDocs = false;
+
+  @Option(name = DRY_RUN_LONG_ARG, usage = "Just print the artifacts to be published")
   private boolean dryRun = false;
 
+  @Option(
+      name = "--username",
+      aliases = "-u",
+      usage = "User name to use to authenticate with the server")
+  @Nullable
+  private String username = null;
+
+  @Option(
+      name = "--password",
+      aliases = "-p",
+      usage = "Password to use to authenticate with the server")
+  @Nullable
+  private String password = null;
+
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
 
     // Input validation
+    if (remoteRepo != null && toMavenCentral) {
+      throw new CommandLineException(
+          "please specify only a single remote repository to publish to.\n"
+              + "Use "
+              + REMOTE_REPO_LONG_ARG
+              + " <URL> or "
+              + TO_MAVEN_CENTRAL_LONG_ARG
+              + " but not both.");
+    }
+
     if (remoteRepo == null && !toMavenCentral) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Please specify a remote repository to publish to.\n" +
-              "Use " + REMOTE_REPO_LONG_ARG + " <URL> or " + TO_MAVEN_CENTRAL_LONG_ARG));
-      return 1;
+      throw new CommandLineException(
+          "please specify a remote repository to publish to.\n"
+              + "Use "
+              + REMOTE_REPO_LONG_ARG
+              + " <URL> or "
+              + TO_MAVEN_CENTRAL_LONG_ARG);
     }
 
     // Build the specified target(s).
-    int exitCode = super.runWithoutHelp(params);
-    if (exitCode != 0) {
+
+    assertArguments(params);
+
+    BuildRunResult buildRunResult;
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Publish", getConcurrencyLimit(params.getBuckConfig()))) {
+      buildRunResult = super.run(params, pool, ImmutableSet.of());
+    }
+
+    ExitCode exitCode = buildRunResult.getExitCode();
+    if (exitCode != ExitCode.SUCCESS) {
       return exitCode;
     }
 
     // Publish starting with the given targets.
-    return publishTargets(getBuildTargets(), params) ? 0 : 1;
+    publishTargets(buildRunResult.getBuildTargets(), params);
+    return ExitCode.SUCCESS;
   }
 
-  private boolean publishTargets(
-      ImmutableList<BuildTarget> buildTargets,
-      CommandRunnerParams params) {
+  private void publishTargets(ImmutableSet<BuildTarget> buildTargets, CommandRunnerParams params) {
     ImmutableSet.Builder<MavenPublishable> publishables = ImmutableSet.builder();
-    boolean success = true;
+
     for (BuildTarget buildTarget : buildTargets) {
-      BuildRule buildRule = null;
-      try {
-        buildRule = getBuild().getRuleResolver().requireRule(buildTarget);
-      } catch (NoSuchBuildTargetException e) {
-        // This doesn't seem physically possible!
-        Throwables.propagate(e);
-      }
-      Preconditions.checkNotNull(buildRule);
+      BuildRule buildRule = getBuild().getGraphBuilder().requireRule(buildTarget);
+      Objects.requireNonNull(buildRule);
 
       if (!(buildRule instanceof MavenPublishable)) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            "Cannot publish rule of type %s",
-            buildRule.getClass().getName()));
-        success &= false;
-        continue;
+        throw new HumanReadableException(
+            "Cannot publish rule of type %s", buildRule.getClass().getName());
       }
 
       MavenPublishable publishable = (MavenPublishable) buildRule;
       if (!publishable.getMavenCoords().isPresent()) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
+        throw new HumanReadableException(
             "No maven coordinates specified for %s",
-            buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName()));
-        success &= false;
-        continue;
+            buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName());
       }
       publishables.add(publishable);
     }
 
-    Publisher publisher = new Publisher(
-        params.getCell().getFilesystem(),
-        Optional.fromNullable(remoteRepo),
-        dryRun);
+    // Assume validation passed.
+    URL repoUrl = toMavenCentral ? Publisher.MAVEN_CENTRAL : Objects.requireNonNull(remoteRepo);
+
+    Publisher publisher =
+        new Publisher(
+            params.getCell().getFilesystem().getBuckPaths().getTmpDir().resolve(PUBLISH_GEN_PATH),
+            repoUrl,
+            Optional.ofNullable(username),
+            Optional.ofNullable(password),
+            dryRun);
 
     try {
-      ImmutableSet<DeployResult> deployResults = publisher.publish(publishables.build());
+      ImmutableSet<DeployResult> deployResults =
+          publisher.publish(
+              DefaultSourcePathResolver.from(
+                  new SourcePathRuleFinder(getBuild().getGraphBuilder())),
+              publishables.build());
       for (DeployResult deployResult : deployResults) {
         printArtifactsInformation(params, deployResult);
       }
     } catch (DeploymentException e) {
-      params.getConsole().printBuildFailureWithoutStacktraceDontUnwrap(e);
-      return false;
+      throw new HumanReadableException(e, e.getMessage());
     }
-    return success;
   }
 
   private static void printArtifactsInformation(
-      CommandRunnerParams params,
-      DeployResult deployResult) {
-    params.getConsole().getStdOut().println(
-        "\nPublished artifacts:\n" +
-            Joiner.on('\n').join(
-                FluentIterable
-                    .from(deployResult.getArtifacts())
-                    .transform(
-                        new Function<Artifact, String>() {
-                          @Override
-                          public String apply(Artifact input) {
-                            return artifactToString(input);
-                          }
-                        })));
+      CommandRunnerParams params, DeployResult deployResult) {
+    params
+        .getConsole()
+        .getStdOut()
+        .println(
+            "\nPublished artifacts:\n"
+                + Joiner.on('\n')
+                    .join(
+                        FluentIterable.from(deployResult.getArtifacts())
+                            .transform(PublishCommand::artifactToString)));
     params.getConsole().getStdOut().println("\nDeployRequest:\n" + deployResult.getRequest());
   }
 
   private static String artifactToString(Artifact artifact) {
-    return artifact.toString() + " < " + artifact.getFile();
+    return artifact + " < " + artifact.getFile();
   }
 
   @Override
   public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      BuckConfig config, Iterable<String> targetsAsArgs) {
-    ImmutableList<TargetNodeSpec> specs = super.parseArgumentsAsTargetNodeSpecs(
-        config,
-        targetsAsArgs);
+      CellPathResolver cellPathResolver, BuckConfig config, Iterable<String> targetsAsArgs) {
+    ImmutableList<TargetNodeSpec> specs =
+        super.parseArgumentsAsTargetNodeSpecs(cellPathResolver, config, targetsAsArgs);
 
-    if (includeSource) {
-      specs = ImmutableList.<TargetNodeSpec>builder()
-          .addAll(specs)
-          .addAll(FluentIterable
-              .from(specs)
-              .filter(
-                  new Predicate<TargetNodeSpec>() {
-                    @Override
-                    public boolean apply(TargetNodeSpec input) {
-                      if (!(input instanceof BuildTargetSpec)) {
-                        throw new IllegalArgumentException(
-                            "Targets must be explicitly defined when using " +
-                                INCLUDE_SOURCE_LONG_ARG);
-                      }
-                      return !((BuildTargetSpec) input)
-                          .getBuildTarget()
-                          .getFlavors()
-                          .contains(JavaLibrary.SRC_JAR);
-                    }
-                  })
-              .transform(
-                  new Function<TargetNodeSpec, BuildTargetSpec>() {
-                    @Override
-                    public BuildTargetSpec apply(TargetNodeSpec input) {
-                      return BuildTargetSpec.of(
-                          ((BuildTargetSpec) input)
-                              .getBuildTarget()
-                              .withFlavors(JavaLibrary.SRC_JAR),
-                          input.getBuildFileSpec());
-                    }
-                  }))
-          .build();
+    Map<BuildTarget, TargetNodeSpec> uniqueSpecs = new HashMap<>();
+    for (TargetNodeSpec spec : specs) {
+      if (!(spec instanceof BuildTargetSpec)) {
+        throw new IllegalArgumentException(
+            "Need to specify build targets explicitly when publishing. " + "Cannot modify " + spec);
+      }
+
+      BuildTargetSpec targetSpec = (BuildTargetSpec) spec;
+      Objects.requireNonNull(targetSpec.getBuildTarget());
+
+      BuildTarget mavenTarget = targetSpec.getBuildTarget().withFlavors(MAVEN_JAR);
+      uniqueSpecs.put(mavenTarget, targetSpec.withBuildTarget(mavenTarget));
+
+      if (includeSource) {
+        BuildTarget sourceTarget = targetSpec.getBuildTarget().withFlavors(MAVEN_JAR, SRC_JAR);
+        uniqueSpecs.put(sourceTarget, targetSpec.withBuildTarget(sourceTarget));
+      }
+
+      if (includeDocs) {
+        BuildTarget docsTarget = targetSpec.getBuildTarget().withFlavors(MAVEN_JAR, DOC_JAR);
+        uniqueSpecs.put(docsTarget, targetSpec.withBuildTarget(docsTarget));
+      }
     }
 
-    // Append "maven" flavor
-    specs = FluentIterable
-        .from(specs)
-        .transform(
-            new Function<TargetNodeSpec, TargetNodeSpec>() {
-              @Nullable
-              @Override
-              public TargetNodeSpec apply(@Nullable TargetNodeSpec input) {
-                if (!(input instanceof BuildTargetSpec)) {
-                  throw new IllegalArgumentException(
-                      "Need to specify build targets explicitly when publishing. " +
-                          "Cannot modify " + input);
-                }
-                BuildTargetSpec buildTargetSpec = (BuildTargetSpec) input;
-                BuildTarget buildTarget =
-                    Preconditions.checkNotNull(buildTargetSpec.getBuildTarget());
-                return buildTargetSpec.withBuildTarget(
-                    BuildTarget
-                        .builder(buildTarget)
-                        .addFlavors(JavaLibrary.MAVEN_JAR)
-                        .build());
-              }
-            })
-        .toList();
-
-    return specs;
+    return ImmutableList.copyOf(uniqueSpecs.values());
   }
 
   @Override

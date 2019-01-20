@@ -1,0 +1,36 @@
+[
+  {
+    "cat": "buck",
+    "name": "process_name",
+    "ph": "M",
+    "pid": 0,
+    "tid": 0,
+    "ts": 0,
+    "tts": 0,
+    "args": {
+      "name": "buck"
+    }
+  },
+  {
+    "cat": "buck",
+    "name": "query",
+    "ph": "B",
+    "pid": 0,
+    "tid": 419,
+    "ts": 65793942923,
+    "tts": 149943,
+    "args": {
+      "command_args": "deps(fb4a, 1)"
+    }
+  },
+  {
+    "cat": "buck",
+    "name": "target_node_parse_pipeline",
+    "ph": "B",
+    "pid": 0,
+    "tid": 419,
+    "ts": 65794079325,
+    "tts": 155425,
+    "args": {}
+  }
+]

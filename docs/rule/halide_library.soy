@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.halide_library}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'halide_library()' /}
+    {param navid: 'rule_halide_library' /}
     {param prettify: true /}
     {param description}
       A halide_library() rule represents a set of Halide source files.
@@ -62,6 +78,8 @@ Halide pipelines). The object code will be generated for the target architecture
 {call cxx_common.linker_flags_arg /}
 
 {call cxx_common.platform_linker_flags_arg /}
+
+{call cxx_common.supported_platforms_regex_arg /}
 
 {/param} // close args
 

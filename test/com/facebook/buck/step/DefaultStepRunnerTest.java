@@ -15,53 +15,44 @@
  */
 
 package com.facebook.buck.step;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.FakeBuckEventListener;
-import com.facebook.buck.model.BuildTarget;
-import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-
+import java.util.Optional;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.concurrent.Executors;
 
 public class DefaultStepRunnerTest {
 
   @Test
-  public void testEventsFired() throws StepFailedException, InterruptedException, IOException {
+  public void testEventsFired() throws StepFailedException, InterruptedException {
     Step passingStep = new FakeStep("step1", "fake step 1", 0);
     Step failingStep = new FakeStep("step1", "fake step 1", 1);
 
     // The EventBus should be updated with events indicating how the steps were run.
-    BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setBuckEventBus(eventBus)
-        .build();
-    DefaultStepRunner runner = new DefaultStepRunner(context);
-    runner.runStepForBuildTarget(passingStep, Optional.<BuildTarget>absent());
+    ExecutionContext context = TestExecutionContext.newBuilder().setBuckEventBus(eventBus).build();
+    DefaultStepRunner runner = new DefaultStepRunner();
+    runner.runStepForBuildTarget(context, passingStep, Optional.empty());
     try {
-      runner.runStepForBuildTarget(failingStep, Optional.<BuildTarget>absent());
+      runner.runStepForBuildTarget(context, failingStep, Optional.empty());
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
     }
 
-    ImmutableList<StepEvent> events = FluentIterable.from(listener.getEvents())
-        .filter(StepEvent.class)
-        .toList();
+    ImmutableList<StepEvent> events =
+        FluentIterable.from(listener.getEvents()).filter(StepEvent.class).toList();
     assertEquals(4, events.size());
 
     assertTrue(events.get(0) instanceof StepEvent.Started);
@@ -89,39 +80,19 @@ public class DefaultStepRunnerTest {
     assertFalse(events.get(1).isRelatedTo(events.get(3)));
   }
 
-  @Test(expected = StepFailedException.class, timeout = 5000)
-  public void testParallelStepFailure()
-      throws StepFailedException, InterruptedException, IOException {
-    ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(new SleepingStep(0, 0));
-    steps.add(new SleepingStep(10, 1));
-    // Add a step that will also fail, but taking longer than the test timeout to complete.
-    // This tests the fail-fast behaviour of runStepsInParallelAndWait (that is, since the 10ms
-    // step will fail so quickly, the result of the 5000ms step will not be observed).
-    steps.add(new SleepingStep(5000, 1));
-
-    ListeningExecutorService service =
-        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(3));
-    DefaultStepRunner runner = new DefaultStepRunner(TestExecutionContext.newInstance());
-    runner.runStepsInParallelAndWait(
-        steps.build(),
-        Optional.<BuildTarget>absent(),
-        service,
-        StepRunner.NOOP_CALLBACK);
-
-    // Success if the test timeout is not reached.
-  }
-
   @Test
-  public void testExplodingStep() throws InterruptedException, IOException {
+  public void testExplodingStep() throws InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    DefaultStepRunner runner = new DefaultStepRunner(context);
+    DefaultStepRunner runner = new DefaultStepRunner();
     try {
-      runner.runStepForBuildTarget(new ExplosionStep(), Optional.<BuildTarget>absent());
+      runner.runStepForBuildTarget(context, new ExplosionStep(), Optional.empty());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
-      assertTrue(e.getMessage().startsWith("Failed on step explode with an exception:\n#yolo"));
+      assertTrue(
+          e.getMessage(),
+          e.getMessage()
+              .startsWith("#yolo" + System.lineSeparator() + "  When running <explode>."));
     }
   }
 
@@ -139,35 +110,6 @@ public class DefaultStepRunnerTest {
     @Override
     public String getDescription(ExecutionContext context) {
       return "MOAR EXPLOSIONS!!!!";
-    }
-  }
-
-  private static class SleepingStep implements Step {
-    private final long sleepMillis;
-    private final int exitCode;
-
-    public SleepingStep(long sleepMillis, int exitCode) {
-      this.sleepMillis = sleepMillis;
-      this.exitCode = exitCode;
-    }
-
-    @Override
-    public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
-      Thread.sleep(sleepMillis);
-      return StepExecutionResult.of(exitCode);
-    }
-
-    @Override
-    public String getShortName() {
-      return "sleep";
-    }
-
-    @Override
-    public String getDescription(ExecutionContext context) {
-      return String.format("%s %d, then %s",
-          getShortName(),
-          sleepMillis,
-          exitCode == 0 ? "success" : "fail");
     }
   }
 }

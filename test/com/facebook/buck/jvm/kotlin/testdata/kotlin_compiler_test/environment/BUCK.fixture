@@ -1,0 +1,7 @@
+kotlin_library(
+    name = "simple",
+    srcs = ["Simple.kt"],
+    visibility = [
+        "PUBLIC",
+    ],
+)

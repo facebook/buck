@@ -19,26 +19,26 @@ package com.facebook.buck.test.selectors;
 import java.util.Objects;
 
 /**
- * A non-JUnit specific way of describing a test-method inside a test-class.  This meants that the
+ * A non-JUnit specific way of describing a test-method inside a test-class. This meants that the
  * test-selectors code does not need a dependency on JUnit.
  */
 public class TestDescription {
 
-   private final String className;
-   private final String methodName;
+  private final String className;
+  private final String methodName;
 
-   public TestDescription(String className, String methodName) {
-     this.className = className;
-     this.methodName = methodName;
-   }
+  public TestDescription(String className, String methodName) {
+    this.className = className;
+    this.methodName = methodName;
+  }
 
-   public String getClassName() {
-     return className;
-   }
+  public String getClassName() {
+    return className;
+  }
 
-   public String getMethodName() {
-     return methodName;
-   }
+  public String getMethodName() {
+    return methodName;
+  }
 
   @Override
   public boolean equals(Object obj) {
@@ -46,9 +46,8 @@ public class TestDescription {
       return false;
     }
     TestDescription other = (TestDescription) obj;
-    return
-        Objects.equals(this.className, other.className) &&
-        Objects.equals(this.methodName, other.methodName);
+    return Objects.equals(this.className, other.className)
+        && Objects.equals(this.methodName, other.methodName);
   }
 
   @Override

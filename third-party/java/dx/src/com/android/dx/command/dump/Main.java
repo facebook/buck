@@ -19,12 +19,15 @@ package com.android.dx.command.dump;
 import com.android.dex.util.FileUtils;
 import com.android.dx.cf.iface.ParseException;
 import com.android.dx.util.HexParser;
+
 import java.io.UnsupportedEncodingException;
 
 /**
  * Main class for the class file dumper.
  */
 public class Main {
+
+    private Args parsedArgs = new Args();
 
     /**
      * This class is uninstantiable.
@@ -33,13 +36,15 @@ public class Main {
         // This space intentionally left blank.
     }
 
+    public static void main(String[] args) {
+        new Main().run(args);
+    }
+
     /**
      * Run!
      */
-    public static void main(String[] args) {
+    private void run(String[] args) {
         int at = 0;
-
-        Args parsedArgs = new Args();
 
         for (/*at*/; at < args.length; at++) {
             String arg = args[at];
@@ -94,7 +99,7 @@ public class Main {
                     }
                     bytes = HexParser.parse(src);
                 }
-                processOne(name, bytes, parsedArgs);
+                processOne(name, bytes);
             } catch (ParseException ex) {
                 System.err.println("\ntrouble parsing:");
                 if (parsedArgs.debug) {
@@ -112,7 +117,7 @@ public class Main {
      * @param name {@code non-null;} name of the file
      * @param bytes {@code non-null;} contents of the file
      */
-    private static void processOne(String name, byte[] bytes, Args parsedArgs) {
+    private void processOne(String name, byte[] bytes) {
         if (parsedArgs.dotDump) {
             DotDumper.dump(bytes, name, parsedArgs);
         } else if (parsedArgs.basicBlocks) {

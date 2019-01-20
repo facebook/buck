@@ -16,21 +16,18 @@
 
 package com.facebook.buck.jvm.scala;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Functions;
-import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.File;
 import java.nio.file.Path;
+import java.util.stream.Collectors;
 
 public class ScalacStep extends ShellStep {
   private final Tool scalac;
@@ -65,12 +62,12 @@ public class ScalacStep extends ShellStep {
     return "scalac";
   }
 
-
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ImmutableList.Builder<String> commandBuilder = ImmutableList.<String>builder()
-        .addAll(scalac.getCommandPrefix(resolver))
-        .addAll(extraArguments);
+    ImmutableList.Builder<String> commandBuilder =
+        ImmutableList.<String>builder()
+            .addAll(scalac.getCommandPrefix(resolver))
+            .addAll(extraArguments);
 
     Verbosity verbosity = context.getVerbosity();
     if (verbosity.shouldUseVerbosityFlagIfAvailable()) {
@@ -80,17 +77,18 @@ public class ScalacStep extends ShellStep {
     // Specify the output directory.
     commandBuilder.add("-d").add(filesystem.resolve(outputDirectory).toString());
 
-    String classpath = Joiner.on(File.pathSeparator).join(
-        FluentIterable.from(classpathEntries)
-            .transform(filesystem.getAbsolutifier()));
+    String classpath =
+        classpathEntries
+            .stream()
+            .map(filesystem::resolve)
+            .map(Path::toString)
+            .collect(Collectors.joining(File.pathSeparator));
     if (classpath.isEmpty()) {
       commandBuilder.add("-classpath", "''");
     } else {
       commandBuilder.add("-classpath", classpath);
     }
-    commandBuilder.addAll(
-        FluentIterable.from(sourceFilePaths)
-            .transform(Functions.toStringFunction()));
+    commandBuilder.addAll(sourceFilePaths.stream().map(Object::toString).iterator());
 
     return commandBuilder.build();
   }

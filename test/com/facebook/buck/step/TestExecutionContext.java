@@ -16,16 +16,21 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.FakeProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -41,21 +46,34 @@ public class TestExecutionContext {
   private static ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
 
   public static ExecutionContext.Builder newBuilder() {
-    Map<ExecutionContext.ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
-    executors.put(ExecutionContext.ExecutorPool.CPU, MoreExecutors.listeningDecorator(
-        Executors.newCachedThreadPool()));
+    Map<ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
+    executors.put(
+        ExecutorPool.CPU, MoreExecutors.listeningDecorator(Executors.newCachedThreadPool()));
+
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
+
     return ExecutionContext.builder()
         .setConsole(new TestConsole())
-        .setBuckEventBus(BuckEventBusFactory.newInstance())
+        .setBuckEventBus(BuckEventBusForTests.newInstance())
         .setPlatform(Platform.detect())
-        .setEnvironment(ImmutableMap.copyOf(System.getenv()))
+        .setEnvironment(EnvVariablesProvider.getSystemEnv())
         .setJavaPackageFinder(new FakeJavaPackageFinder())
-        .setObjectMapper(ObjectMappers.newDefaultInstance())
         .setClassLoaderCache(testClassLoaderCache)
-        .setExecutors(executors);
+        .setExecutors(executors)
+        .setProcessExecutor(new FakeProcessExecutor())
+        .setCellPathResolver(cellPathResolver)
+        .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
+        .setBuildCellRootPath(filesystem.getRootPath());
   }
 
   public static ExecutionContext newInstance() {
     return newBuilder().build();
+  }
+
+  public static ExecutionContext newInstanceWithRealProcessExecutor() {
+    TestConsole console = new TestConsole();
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(console);
+    return newBuilder().setConsole(console).setProcessExecutor(processExecutor).build();
   }
 }

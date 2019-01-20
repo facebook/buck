@@ -16,13 +16,13 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,10 +44,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
    * @param outDir relative to the project root where the symlinks will be created.
    */
   public SymlinkFilesIntoDirectoryStep(
-      ProjectFilesystem filesystem,
-      Path srcDir,
-      Iterable<Path> entries,
-      Path outDir) {
+      ProjectFilesystem filesystem, Path srcDir, Iterable<Path> entries, Path outDir) {
     super("symlinking files into " + outDir);
 
     this.filesystem = filesystem;
@@ -57,7 +54,7 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     // Note that because these paths are resolved to absolute paths, the symlinks will be absolute
     // paths, as well.
     Path outDir = filesystem.resolve(this.outDir);
@@ -66,15 +63,9 @@ public class SymlinkFilesIntoDirectoryStep extends AbstractExecutionStep {
     for (Path entry : entries) {
       Path link = outDir.resolve(entry);
       Path target = srcDir.resolve(entry);
-      try {
-        Files.createDirectories(link.getParent());
-        filesystem.createSymLink(link, target, false);
-      } catch (IOException e) {
-        context.logError(e, "Failed to create symlink from %s to %s.", link, target);
-        return StepExecutionResult.ERROR;
-      }
+      Files.createDirectories(link.getParent());
+      filesystem.createSymLink(link, target, false);
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
-
 }

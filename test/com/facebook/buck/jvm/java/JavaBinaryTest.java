@@ -19,26 +19,29 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.io.DefaultDirectoryTraverser;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.logging.Level;
+import org.junit.Test;
 
 public class JavaBinaryTest {
 
@@ -46,57 +49,66 @@ public class JavaBinaryTest {
   private static final Path PATH_TO_GENERATOR_JAR = Paths.get("third_party/guava/generator.jar");
 
   @Test
-  public void testGetExecutableCommand() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
-
+  public void testGetExecutableCommand() {
     // prebuilt_jar //third_party/generator:generator
-    PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/generator:generator"))
+    PrebuiltJarBuilder.createBuilder(
+            BuildTargetFactory.newInstance("//third_party/generator:generator"))
         .setBinaryJar(PATH_TO_GENERATOR_JAR)
-        .build(ruleResolver);
+        .build();
 
     // prebuilt_jar //third_party/guava:guava
-    BuildRule guava = PrebuiltJarBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//third_party/guava:guava"))
-        .setBinaryJar(PATH_TO_GUAVA_JAR)
-        .build(ruleResolver);
+    TargetNode<?> guavaNode =
+        PrebuiltJarBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//third_party/guava:guava"))
+            .setBinaryJar(PATH_TO_GUAVA_JAR)
+            .build();
 
     // java_library //java/com/facebook/base:base
-    BuildRule libraryRule = JavaLibraryBuilder
-        .createBuilder(BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
-        .addSrc(Paths.get("java/com/facebook/base/Base.java"))
-        .addDep(guava.getBuildTarget())
-        .build(ruleResolver);
+    TargetNode<?> libraryNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance("//java/com/facebook/base:base"))
+            .addSrc(Paths.get("java/com/facebook/base/Base.java"))
+            .addDep(guavaNode.getBuildTarget())
+            .build();
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(
-        BuildTargetFactory.newInstance("//java/com/facebook/base:Main"))
-        .setDeclaredDeps(ImmutableSortedSet.of(libraryRule))
-        .build();
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(guavaNode, libraryNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+
+    BuildRule libraryRule = graphBuilder.requireRule(libraryNode.getBuildTarget());
+
+    BuildTarget target = BuildTargetFactory.newInstance("//java/com/facebook/base:Main");
+    BuildRuleParams params =
+        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(libraryRule));
     // java_binary //java/com/facebook/base:Main
     JavaBinary javaBinary =
-        ruleResolver.addToIndex(
+        graphBuilder.addToIndex(
             new JavaBinary(
+                target,
+                new FakeProjectFilesystem(),
                 params,
-                new SourcePathResolver(ruleResolver),
-                new ExternalJavaRuntimeLauncher("/foobar/java"),
+                JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher(graphBuilder),
                 "com.facebook.base.Main",
                 null,
                 /* merge manifests */ true,
+                false,
                 null,
-                /* blacklist */ ImmutableSet.<String>of(),
-                new DefaultDirectoryTraverser(),
-                ImmutableSetMultimap.<JavaLibrary, Path>of()));
+                /* blacklist */ ImmutableSet.of(),
+                ImmutableSet.of(),
+                ImmutableSet.of(),
+                /* cache */ true,
+                Level.INFO));
 
     // Strip the trailing "." from the absolute path to the current directory.
     final String basePath = new File(".").getAbsolutePath().replaceFirst("\\.$", "");
 
     // Each classpath entry is specified via its absolute path so that the executable command can be
     // run from a /tmp directory, if necessary.
-    String expectedClasspath = basePath + javaBinary.getPathToOutput();
+    String expectedClasspath =
+        basePath + pathResolver.getRelativePath(javaBinary.getSourcePathToOutput());
 
-    List<String> expectedCommand = ImmutableList.of("/foobar/java", "-jar", expectedClasspath);
+    List<String> expectedCommand = ImmutableList.of("java", "-jar", expectedClasspath);
     assertEquals(expectedCommand, javaBinary.getExecutableCommand().getCommandPrefix(pathResolver));
 
     assertFalse(

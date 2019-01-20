@@ -3,21 +3,18 @@
 genrule(
   name = "example",
   bash = "cat $SRCS > $OUT",
-  cmd = None,
-  cmdExe = None,
-  executable = None,
-  licenses = [
-  ],
   out = "baz.txt",
   srcs = [
     "foo.txt",
     "bar.txt",
     "//fake:rule",
   ],
-  tests = [
-  ],
-  visibility = [
-    "PUBLIC",
-  ],
+)
+
+genrule(
+  name = "foo",
+  cmd = "echo foo > $OUT",
+  environment_expansion_separator = ",",
+  out = "foo.txt",
 )
 

@@ -19,69 +19,84 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.GccPreprocessor;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import java.util.Optional;
+import org.junit.Test;
 
 public class CxxPrecompiledHeaderTest {
 
   @Test
   public void generatesPchStepShouldUseCorrectLang() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Preprocessor preprocessorSupportingPch =
-        new DefaultPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp().resolve(resolver)) {
+        new GccPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp().resolve(graphBuilder)) {
           @Override
           public boolean supportsPrecompiledHeaders() {
             return true;
           }
         };
-    SourcePathResolver sourcePathResolver = new SourcePathResolver(resolver);
-    CxxPrecompiledHeader precompiledHeader = new CxxPrecompiledHeader(
-        params,
-        sourcePathResolver,
-        Paths.get("foo.pch"),
-        new PreprocessorDelegate(
-            sourcePathResolver,
-            CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER,
-            CxxPlatformUtils.DEFAULT_CONFIG.getHeaderVerification(),
-            Paths.get("./"),
-            preprocessorSupportingPch,
-            PreprocessorFlags.builder().build(),
-            CxxDescriptionEnhancer.frameworkPathToSearchPath(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                sourcePathResolver),
-            ImmutableList.<CxxHeaders>of()),
-        CxxToolFlags.of(),
-        new FakeSourcePath("foo.h"),
-        CxxSource.Type.C,
-        CxxPlatforms.DEFAULT_DEBUG_PATH_SANITIZER);
-    ImmutableList<Step> postBuildSteps = precompiledHeader.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT,
-        new FakeBuildableContext());
-    CxxPreprocessAndCompileStep step = Iterables.getOnlyElement(
-        Iterables.filter(postBuildSteps, CxxPreprocessAndCompileStep.class));
+    Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(graphBuilder);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    CxxPrecompiledHeader precompiledHeader =
+        new CxxPrecompiledHeader(
+            /* canPrecompile */ true,
+            target,
+            new FakeProjectFilesystem(),
+            ImmutableSortedSet.of(),
+            Paths.get("dir/foo.hash1.hash2.gch"),
+            new PreprocessorDelegate(
+                CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
+                FakeSourcePath.of("./"),
+                preprocessorSupportingPch,
+                PreprocessorFlags.builder().build(),
+                CxxDescriptionEnhancer.frameworkPathToSearchPath(
+                    CxxPlatformUtils.DEFAULT_PLATFORM, sourcePathResolver),
+                /* leadingIncludePaths */ Optional.empty(),
+                Optional.of(new FakeBuildRule(target.withFlavors(InternalFlavor.of("deps")))),
+                ImmutableSortedSet.of()),
+            new CompilerDelegate(
+                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                compiler,
+                CxxToolFlags.of(),
+                Optional.empty()),
+            CxxToolFlags.of(),
+            FakeSourcePath.of("foo.h"),
+            CxxSource.Type.C,
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+    graphBuilder.addToIndex(precompiledHeader);
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(sourcePathResolver);
+    ImmutableList<Step> postBuildSteps =
+        precompiledHeader.getBuildSteps(buildContext, new FakeBuildableContext());
+    CxxPreprocessAndCompileStep step =
+        Iterables.getOnlyElement(
+            Iterables.filter(postBuildSteps, CxxPreprocessAndCompileStep.class));
     assertThat(
         "step that generates pch should have correct flags",
         step.getCommand(),
         hasItem(CxxSource.Type.C.getPrecompiledHeaderLanguage().get()));
   }
-
 }

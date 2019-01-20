@@ -16,52 +16,55 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
 import com.facebook.buck.android.aapt.MiniAapt;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildOutputInitializer;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.InitializableFromDisk;
-import com.facebook.buck.rules.OnDiskBuildInfo;
-import com.facebook.buck.rules.RecordFileSha1Step;
-import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.android.aapt.MiniAapt.ResourceCollectionType;
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
+import com.facebook.buck.core.rules.attr.InitializableFromDisk;
+import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathDeps;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
+import com.facebook.buck.step.fs.TouchStep;
+import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.RichStream;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.hash.Hashing;
-
 import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
  * An object that represents the resources of an android library.
- * <p>
- * Suppose this were a rule defined in <code>src/com/facebook/feed/BUCK</code>:
+ *
+ * <p>Suppose this were a rule defined in <code>src/com/facebook/feed/BUCK</code>:
+ *
  * <pre>
  * android_resources(
  *   name = 'res',
@@ -73,81 +76,50 @@ import javax.annotation.Nullable;
  * )
  * </pre>
  */
-public class AndroidResource extends AbstractBuildRule
-    implements
-    AndroidPackageable,
-    HasAndroidResourceDeps,
-    InitializableFromDisk<AndroidResource.BuildOutput>,
-    SupportsInputBasedRuleKey {
+public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements AndroidPackageable,
+        HasAndroidResourceDeps,
+        HasClasspathDeps,
+        InitializableFromDisk<String>,
+        SupportsInputBasedRuleKey {
 
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, LIBRARY);
-
-  @VisibleForTesting
-  static final String METADATA_KEY_FOR_ABI = "ANDROID_RESOURCE_ABI_KEY";
-
-  @VisibleForTesting
-  static final String METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE = "METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE";
-
-  @Nullable
-  private final SourcePath res;
-
-  /** contents of {@code res} under version control (i.e., not generated by another rule). */
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  @AddToRuleKey
-  private final ImmutableSortedSet<? extends  SourcePath> resSrcs;
+  @AddToRuleKey @Nullable private final SourcePath res;
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final Optional<SourcePath> additionalResKey;
+  private final ImmutableSortedMap<String, SourcePath> resSrcs;
 
-  @Nullable
-  private final SourcePath assets;
-
-  /** contents of {@code assets} under version control (i.e., not generated by another rule). */
-  @SuppressWarnings("PMD.UnusedPrivateField")
-  @AddToRuleKey
-  private final ImmutableSortedSet<? extends SourcePath> assetsSrcs;
+  @AddToRuleKey @Nullable private final SourcePath assets;
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
-  private final Optional<SourcePath> additionalAssetsKey;
+  private final ImmutableSortedMap<String, SourcePath> assetsSrcs;
 
-  @Nullable
   private final Path pathToTextSymbolsDir;
-
-  @Nullable
   private final Path pathToTextSymbolsFile;
-
-  @Nullable
   private final Path pathToRDotJavaPackageFile;
 
-  @AddToRuleKey
-  @Nullable
-  private final SourcePath manifestFile;
+  @AddToRuleKey @Nullable private final SourcePath manifestFile;
 
-  @AddToRuleKey
-  private final Supplier<ImmutableSortedSet<? extends  SourcePath>> symbolsOfDeps;
+  @AddToRuleKey private final Supplier<ImmutableSortedSet<? extends SourcePath>> symbolsOfDeps;
 
-  @AddToRuleKey
-  private final boolean hasWhitelistedStrings;
+  @AddToRuleKey private final boolean hasWhitelistedStrings;
 
-  @AddToRuleKey
-  private final boolean resourceUnion;
+  @AddToRuleKey private final boolean resourceUnion;
+
+  private final boolean isGrayscaleImageProcessingEnabled;
 
   private final ImmutableSortedSet<BuildRule> deps;
 
-  private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+  private final BuildOutputInitializer<String> buildOutputInitializer;
+
+  /** This is the original {@code package} argument passed to this rule. */
+  @AddToRuleKey @Nullable private final String rDotJavaPackageArgument;
 
   /**
-   * This is the original {@code package} argument passed to this rule.
-   */
-  @AddToRuleKey
-  @Nullable
-  private final String rDotJavaPackageArgument;
-
-  /**
-   * Supplier that returns the package for the Java class generated for the resources in
-   * {@link #res}, if any. The value for this supplier is determined, as follows:
+   * Supplier that returns the package for the Java class generated for the resources in {@link
+   * #res}, if any. The value for this supplier is determined, as follows:
+   *
    * <ul>
    *   <li>If the user specified a {@code package} argument, the supplier will return that value.
    *   <li>Failing that, when the rule is built, it will parse the package from the file specified
@@ -162,146 +134,135 @@ public class AndroidResource extends AbstractBuildRule
   private final AtomicReference<String> rDotJavaPackage;
 
   public AndroidResource(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      final ImmutableSortedSet<BuildRule> deps,
-      @Nullable final SourcePath res,
-      ImmutableSortedSet<? extends SourcePath> resSrcs,
-      Optional<SourcePath> additionalResKey,
+      SourcePathRuleFinder ruleFinder,
+      ImmutableSortedSet<BuildRule> deps,
+      @Nullable SourcePath res,
+      ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
       @Nullable SourcePath assets,
-      ImmutableSortedSet<? extends SourcePath> assetsSrcs,
-      Optional<SourcePath> additionalAssetsKey,
+      ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
       Supplier<ImmutableSortedSet<? extends SourcePath>> symbolFilesFromDeps,
       boolean hasWhitelistedStrings,
-      boolean resourceUnion) {
+      boolean resourceUnion,
+      boolean isGrayscaleImageProcessingEnabled) {
     super(
-        buildRuleParams.appendExtraDeps(
-            Suppliers.compose(resolver.filterBuildRuleInputsFunction(), symbolFilesFromDeps)),
-        resolver);
+        buildTarget,
+        projectFilesystem,
+        buildRuleParams.copyAppendingExtraDeps(
+            Suppliers.compose(ruleFinder::filterBuildRuleInputs, symbolFilesFromDeps::get)));
     if (res != null && rDotJavaPackageArgument == null && manifestFile == null) {
       throw new HumanReadableException(
-          "When the 'res' is specified for android_resource() %s, at least one of 'package' or " +
-              "'manifest' must be specified.",
+          "When the 'res' is specified for android_resource() %s, at least one of 'package' or "
+              + "'manifest' must be specified.",
           getBuildTarget());
     }
 
     this.res = res;
-    this.resSrcs = resSrcs;
-    this.additionalResKey = additionalResKey;
+    this.resSrcs = MoreMaps.transformKeysAndSort(resSrcs, Path::toString);
     this.assets = assets;
-    this.assetsSrcs = assetsSrcs;
-    this.additionalAssetsKey = additionalAssetsKey;
+    this.assetsSrcs = MoreMaps.transformKeysAndSort(assetsSrcs, Path::toString);
     this.manifestFile = manifestFile;
     this.symbolsOfDeps = symbolFilesFromDeps;
     this.hasWhitelistedStrings = hasWhitelistedStrings;
     this.resourceUnion = resourceUnion;
 
-    BuildTarget buildTarget = buildRuleParams.getBuildTarget();
-    if (res == null) {
-      pathToTextSymbolsDir = null;
-      pathToTextSymbolsFile = null;
-      pathToRDotJavaPackageFile = null;
-    } else {
-      pathToTextSymbolsDir =
-          BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
-      pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
-      pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
-    }
+    this.pathToTextSymbolsDir =
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "__%s_text_symbols__");
+    this.pathToTextSymbolsFile = pathToTextSymbolsDir.resolve("R.txt");
+    this.pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
 
     this.deps = deps;
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
 
     this.rDotJavaPackageArgument = rDotJavaPackageArgument;
-    this.rDotJavaPackage = new AtomicReference<>();
-    if (rDotJavaPackageArgument != null) {
-      this.rDotJavaPackage.set(rDotJavaPackageArgument);
-    }
+    this.rDotJavaPackage = new AtomicReference<>(rDotJavaPackageArgument);
 
-    this.rDotJavaPackageSupplier = new Supplier<String>() {
-      @Override
-      public String get() {
-        String rDotJavaPackage = AndroidResource.this.rDotJavaPackage.get();
-        if (rDotJavaPackage != null) {
-          return rDotJavaPackage;
-        } else {
-          throw new RuntimeException(
-              "rDotJavaPackage for " + AndroidResource.this.getBuildTarget().toString() +
-              " was requested before it was made available.");
-        }
-      }
-    };
+    this.rDotJavaPackageSupplier =
+        () -> {
+          String rDotJavaPackage1 = AndroidResource.this.rDotJavaPackage.get();
+          if (rDotJavaPackage1 != null) {
+            return rDotJavaPackage1;
+          } else {
+            throw new RuntimeException(
+                "rDotJavaPackage for "
+                    + AndroidResource.this.getBuildTarget()
+                    + " was requested before it was made available.");
+          }
+        };
+    this.isGrayscaleImageProcessingEnabled = isGrayscaleImageProcessingEnabled;
   }
 
   public AndroidResource(
-      final BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      final ImmutableSortedSet<BuildRule> deps,
-      @Nullable final SourcePath res,
-      ImmutableSortedSet<? extends SourcePath> resSrcs,
-      Optional<SourcePath> additionalResKey,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      SourcePathRuleFinder ruleFinder,
+      ImmutableSortedSet<BuildRule> deps,
+      @Nullable SourcePath res,
+      ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
       @Nullable SourcePath assets,
-      ImmutableSortedSet<? extends SourcePath> assetsSrcs,
-      Optional<SourcePath> additionalAssetsKey,
+      ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings) {
     this(
+        buildTarget,
+        projectFilesystem,
         buildRuleParams,
-        resolver,
+        ruleFinder,
         deps,
         res,
         resSrcs,
-        additionalResKey,
         rDotJavaPackageArgument,
         assets,
         assetsSrcs,
-        additionalAssetsKey,
         manifestFile,
         hasWhitelistedStrings,
-        false);
+        /* resourceUnion */ false,
+        /* isGrayscaleImageProcessingEnabled */ false);
   }
 
   public AndroidResource(
-      final BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      final ImmutableSortedSet<BuildRule> deps,
-      @Nullable final SourcePath res,
-      ImmutableSortedSet<? extends SourcePath> resSrcs,
-      Optional<SourcePath> additionalResKey,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams buildRuleParams,
+      SourcePathRuleFinder ruleFinder,
+      ImmutableSortedSet<BuildRule> deps,
+      @Nullable SourcePath res,
+      ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
       @Nullable SourcePath assets,
-      ImmutableSortedSet<? extends SourcePath> assetsSrcs,
-      Optional<SourcePath> additionalAssetsKey,
+      ImmutableSortedMap<Path, SourcePath> assetsSrcs,
       @Nullable SourcePath manifestFile,
       boolean hasWhitelistedStrings,
-      boolean resourceUnion) {
+      boolean resourceUnion,
+      boolean isGrayscaleImageProcessingEnabled) {
     this(
+        buildTarget,
+        projectFilesystem,
         buildRuleParams,
-        resolver,
+        ruleFinder,
         deps,
         res,
         resSrcs,
-        additionalResKey,
         rDotJavaPackageArgument,
         assets,
         assetsSrcs,
-        additionalAssetsKey,
         manifestFile,
-        new Supplier<ImmutableSortedSet<? extends SourcePath>>() {
-          @Override
-          public ImmutableSortedSet<? extends SourcePath> get() {
-            return FluentIterable.from(buildRuleParams.getDeps())
+        () ->
+            RichStream.from(buildRuleParams.getBuildDeps())
                 .filter(HasAndroidResourceDeps.class)
-                .filter(NON_EMPTY_RESOURCE)
-                .transform(GET_RES_SYMBOLS_TXT)
-                .toSortedSet(Ordering.natural());
-          }
-        },
+                .filter(input -> input.getRes() != null)
+                .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
+                .toImmutableSortedSet(Ordering.natural()),
         hasWhitelistedStrings,
-        resourceUnion);
+        resourceUnion,
+        isGrayscaleImageProcessingEnabled);
   }
 
   @Override
@@ -323,82 +284,82 @@ public class AndroidResource extends AbstractBuildRule
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      final BuildableContext buildableContext) {
-    // If there is no res directory, then there is no R.java to generate, so the ABI key doesn't
-    // need to take anything into account.
-    // TODO(bolinfest): Change android_resources() so that 'res' is required.
-    if (getRes() == null) {
-      buildableContext.addMetadata(
-          METADATA_KEY_FOR_ABI,
-          Hashing.sha1().newHasher().hash().toString());
-      return ImmutableList.of();
-    }
+      BuildContext context, BuildableContext buildableContext) {
+    buildableContext.recordArtifact(Objects.requireNonNull(pathToTextSymbolsFile));
+    buildableContext.recordArtifact(Objects.requireNonNull(pathToRDotJavaPackageFile));
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    steps.add(
-        new MakeCleanDirectoryStep(
-            getProjectFilesystem(),
-            Preconditions.checkNotNull(pathToTextSymbolsDir)));
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                Objects.requireNonNull(pathToTextSymbolsDir))));
+    if (getRes() == null) {
+      return steps
+          .add(new TouchStep(getProjectFilesystem(), pathToTextSymbolsFile))
+          .add(
+              new WriteFileStep(
+                  getProjectFilesystem(),
+                  rDotJavaPackageArgument == null ? "" : rDotJavaPackageArgument,
+                  pathToRDotJavaPackageFile,
+                  false /* executable */))
+          .build();
+    }
 
     // If the 'package' was not specified for this android_resource(), then attempt to parse it
     // from the AndroidManifest.xml.
     if (rDotJavaPackageArgument == null) {
-      Preconditions.checkNotNull(
+      Objects.requireNonNull(
           manifestFile,
-          "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is " +
-              "null. This should already be enforced by the constructor.");
+          "manifestFile cannot be null when res is non-null and rDotJavaPackageArgument is "
+              + "null. This should already be enforced by the constructor.");
       steps.add(
           new ExtractFromAndroidManifestStep(
-              getResolver().getAbsolutePath(manifestFile),
+              context.getSourcePathResolver().getAbsolutePath(manifestFile),
               getProjectFilesystem(),
-              buildableContext,
-              METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE,
-              Preconditions.checkNotNull(pathToRDotJavaPackageFile)));
-      buildableContext.recordArtifact(Preconditions.checkNotNull(pathToRDotJavaPackageFile));
+              Objects.requireNonNull(pathToRDotJavaPackageFile)));
+    } else {
+      steps.add(
+          new WriteFileStep(
+              getProjectFilesystem(),
+              rDotJavaPackageArgument,
+              pathToRDotJavaPackageFile,
+              false /* executable */));
     }
 
     ImmutableSet<Path> pathsToSymbolsOfDeps =
-        FluentIterable.from(symbolsOfDeps.get())
-            .transform(getResolver().getAbsolutePathFunction())
-            .toSet();
-
+        symbolsOfDeps
+            .get()
+            .stream()
+            .map(context.getSourcePathResolver()::getAbsolutePath)
+            .collect(ImmutableSet.toImmutableSet());
     steps.add(
         new MiniAapt(
-            getResolver(),
+            context.getSourcePathResolver(),
             getProjectFilesystem(),
-            Preconditions.checkNotNull(res),
-            Preconditions.checkNotNull(pathToTextSymbolsFile),
+            Objects.requireNonNull(res),
+            Objects.requireNonNull(pathToTextSymbolsFile),
             pathsToSymbolsOfDeps,
-            resourceUnion));
-
-    buildableContext.recordArtifact(Preconditions.checkNotNull(pathToTextSymbolsFile));
-
-    steps.add(
-        new RecordFileSha1Step(
-            getProjectFilesystem(),
-            Preconditions.checkNotNull(pathToTextSymbolsFile),
-            METADATA_KEY_FOR_ABI,
-            buildableContext));
-
+            isGrayscaleImageProcessingEnabled,
+            ResourceCollectionType.R_DOT_TXT));
     return steps.build();
   }
 
   @Override
   @Nullable
-  public Path getPathToOutput() {
-    return pathToTextSymbolsDir;
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsDir);
   }
 
   @Override
-  @Nullable
   public SourcePath getPathToTextSymbolsFile() {
-    return new BuildTargetSourcePath(getBuildTarget(), pathToTextSymbolsFile);
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToTextSymbolsFile);
   }
 
   @Override
-  public Sha1HashCode getTextSymbolsAbiKey() {
-    return buildOutputInitializer.getBuildOutput().textSymbolsAbiKey;
+  public SourcePath getPathToRDotJavaPackageFile() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToRDotJavaPackageFile);
   }
 
   @Override
@@ -411,31 +372,27 @@ public class AndroidResource extends AbstractBuildRule
   }
 
   @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
-  }
-
-  @Override
-  public BuildOutput initializeFromDisk(OnDiskBuildInfo onDiskBuildInfo) {
-    Optional<Sha1HashCode> sha1HashCode = onDiskBuildInfo.getHash(METADATA_KEY_FOR_ABI);
-    Preconditions.checkState(
-        sha1HashCode.isPresent(),
-        "OnDiskBuildInfo should have a METADATA_KEY_FOR_ABI hash");
-    Optional<String> rDotJavaPackageFromAndroidManifest = onDiskBuildInfo.getValue(
-        METADATA_KEY_FOR_R_DOT_JAVA_PACKAGE);
-    if (rDotJavaPackageFromAndroidManifest.isPresent()) {
-      rDotJavaPackage.set(rDotJavaPackageFromAndroidManifest.get());
+  public String initializeFromDisk(SourcePathResolver pathResolver) {
+    String rDotJavaPackageFromFile =
+        getProjectFilesystem().readFirstLine(pathToRDotJavaPackageFile).get();
+    if (rDotJavaPackageArgument != null
+        && !rDotJavaPackageFromFile.equals(rDotJavaPackageArgument)) {
+      throw new RuntimeException(
+          String.format(
+              "%s contains incorrect rDotJavaPackage (%s!=%s)",
+              pathToRDotJavaPackageFile, rDotJavaPackageFromFile, rDotJavaPackageArgument));
     }
-    return new BuildOutput(sha1HashCode.get());
+    rDotJavaPackage.set(rDotJavaPackageFromFile);
+    return rDotJavaPackageFromFile;
   }
 
   @Override
-  public BuildOutputInitializer<BuildOutput> getBuildOutputInitializer() {
+  public BuildOutputInitializer<String> getBuildOutputInitializer() {
     return buildOutputInitializer;
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
     return AndroidPackageableCollector.getPackageableRules(deps);
   }
 
@@ -451,13 +408,15 @@ public class AndroidResource extends AbstractBuildRule
     if (assets != null) {
       collector.addAssetsDirectory(getBuildTarget(), assets);
     }
+    if (manifestFile != null) {
+      collector.addManifestPiece(getBuildTarget(), manifestFile);
+    }
   }
 
-  public static class BuildOutput {
-    private final Sha1HashCode textSymbolsAbiKey;
-
-    public BuildOutput(Sha1HashCode textSymbolsAbiKey) {
-      this.textSymbolsAbiKey = textSymbolsAbiKey;
-    }
+  @Override
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return deps.stream()
+        .filter(rule -> rule instanceof HasClasspathEntries)
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

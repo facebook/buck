@@ -1,0 +1,5 @@
+apple_library(
+    name = "TestLibrary2",
+    srcs = ["TestClass2.m"],
+    deps = ["//Libraries/TestLibrary:TestLibrary"],
+)

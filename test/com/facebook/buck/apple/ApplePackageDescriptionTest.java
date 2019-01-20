@@ -18,108 +18,104 @@ package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.Either;
-import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.shell.ExportFileBuilder;
-import com.facebook.buck.testutil.TargetGraphFactory;
-
+import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableSortedSet;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ApplePackageDescriptionTest {
 
-  @Test
-  public void descriptionCreatesExternallyBuiltPackageRuleIfConfigExists() throws Exception {
-    ApplePackageDescription description = descriptionWithCommand("echo");
-    BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance("//foo:binary");
-    BuildTarget bundleBuildTarget = BuildTargetFactory.newInstance("//foo:bundle");
-    TargetGraph graph = TargetGraphFactory.newInstance(
-        AppleBinaryBuilder.createBuilder(binaryBuildTarget).build(),
-        AppleBundleBuilder.createBuilder(bundleBuildTarget)
-            .setBinary(binaryBuildTarget)
-            .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
-            .build());
-
-    ApplePackageDescription.Arg arg = description.createUnpopulatedConstructorArg();
-    arg.bundle = bundleBuildTarget;
-
-    BuildTarget packageBuildTarget = BuildTargetFactory.newInstance("//foo:package#macosx-x86_64");
-
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
-
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(packageBuildTarget).build();
-    resolver.requireAllRules(
-        description.findDepsForTargetFromConstructorArgs(
-            packageBuildTarget,
-            params.getCellRoots(),
-            arg));
-    BuildRule rule = description.createBuildRule(
-        graph,
-        new FakeBuildRuleParamsBuilder(packageBuildTarget).build(),
-        resolver,
-        arg);
-
-    assertThat(rule, instanceOf(ExternallyBuiltApplePackage.class));
-    assertThat(
-        rule.getDeps(),
-        hasItem(
-            resolver.getRule(
-                bundleBuildTarget.withFlavors(ImmutableFlavor.of("macosx-x86_64")))));
+  @Before
+  public void setUp() {
+    assumeThat(Platform.detect(), is(Platform.MACOS));
   }
 
   @Test
-  public void descriptionExpandsLocationMacrosAndTracksDependencies() throws Exception {
-    ApplePackageDescription description = descriptionWithCommand("echo $(location :exportfile)");
+  public void descriptionCreatesExternallyBuiltPackageRuleIfConfigExists() {
+    ApplePackageDescription description = descriptionWithCommand("echo");
     BuildTarget binaryBuildTarget = BuildTargetFactory.newInstance("//foo:binary");
     BuildTarget bundleBuildTarget = BuildTargetFactory.newInstance("//foo:bundle");
-    BuildTarget exportFileBuildTarget = BuildTargetFactory.newInstance("//foo:exportfile");
-    TargetGraph graph = TargetGraphFactory.newInstance(
-        ExportFileBuilder.newExportFileBuilder(exportFileBuildTarget).build(),
-        AppleBinaryBuilder.createBuilder(binaryBuildTarget).build(),
-        AppleBundleBuilder.createBuilder(bundleBuildTarget)
-            .setBinary(binaryBuildTarget)
-            .setExtension(Either.<AppleBundleExtension, String>ofLeft(AppleBundleExtension.APP))
-            .build());
+    TargetGraph graph =
+        TargetGraphFactory.newInstance(
+            AppleBinaryBuilder.createBuilder(binaryBuildTarget).build(),
+            AppleBundleBuilder.createBuilder(bundleBuildTarget)
+                .setBinary(binaryBuildTarget)
+                .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+                .setInfoPlist(FakeSourcePath.of("Info.plist"))
+                .build());
 
-    ApplePackageDescription.Arg arg = description.createUnpopulatedConstructorArg();
-    arg.bundle = bundleBuildTarget;
+    ApplePackageDescriptionArg arg =
+        ApplePackageDescriptionArg.builder()
+            .setName("package")
+            .setBundle(bundleBuildTarget)
+            .build();
 
     BuildTarget packageBuildTarget = BuildTargetFactory.newInstance("//foo:package#macosx-x86_64");
 
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(graph, new DefaultTargetNodeToBuildRuleTransformer());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(graph);
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(packageBuildTarget).build();
-    resolver.requireAllRules(
-        description.findDepsForTargetFromConstructorArgs(
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
+    description.findDepsForTargetFromConstructorArgs(
+        packageBuildTarget,
+        TestCellPathResolver.get(projectFilesystem),
+        arg,
+        implicitDeps,
+        ImmutableSortedSet.naturalOrder());
+    graphBuilder.requireAllRules(implicitDeps.build());
+    BuildRule rule =
+        description.createBuildRule(
+            TestBuildRuleCreationContextFactory.create(graph, graphBuilder, projectFilesystem),
             packageBuildTarget,
-            params.getCellRoots(),
-            arg));
-    BuildRule rule = description.createBuildRule(graph, params, resolver, arg);
+            TestBuildRuleParams.create(),
+            arg);
 
-    assertThat(rule.getDeps(), hasItem(resolver.getRule(exportFileBuildTarget)));
+    assertThat(rule, instanceOf(ExternallyBuiltApplePackage.class));
+    assertThat(
+        rule.getBuildDeps(),
+        hasItem(
+            graphBuilder.getRule(
+                bundleBuildTarget.withFlavors(InternalFlavor.of("macosx-x86_64")))));
   }
 
   private ApplePackageDescription descriptionWithCommand(String command) {
     return new ApplePackageDescription(
-      new AppleConfig(FakeBuckConfig.builder()
-          .setSections(
-              "[apple]",
-              "macosx_package_command = " + command,
-              "macosx_package_extension = api"
-          )
-          .build()),
-      FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN);
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                AppleCxxPlatformsProvider.DEFAULT_NAME,
+                AppleCxxPlatformsProvider.of(
+                    FakeAppleRuleDescriptions.DEFAULT_APPLE_CXX_PLATFORM_FLAVOR_DOMAIN))
+            .build(),
+        new NoSandboxExecutionStrategy(),
+        FakeBuckConfig.builder()
+            .setSections(
+                "[apple]",
+                "macosx_package_command = " + command.replace("$", "\\$"),
+                "macosx_package_extension = api")
+            .build()
+            .getView(AppleConfig.class));
   }
 }

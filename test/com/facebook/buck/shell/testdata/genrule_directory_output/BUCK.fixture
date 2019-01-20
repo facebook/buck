@@ -1,5 +1,5 @@
 genrule(
-  name = 'mkdir',
-  cmd = 'mkdir $OUT && echo something> $OUT/file',
-  out = 'directory',
+    name = "mkdir",
+    out = "directory",
+    cmd = "mkdir $OUT && echo something> $OUT/file",
 )

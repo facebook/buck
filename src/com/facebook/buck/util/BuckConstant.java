@@ -16,90 +16,33 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Preconditions;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.annotation.Nullable;
-
 public class BuckConstant {
+  public static final String BUCK_LOG_FILE_NAME = "buck.log";
+  public static final String BUCK_MACHINE_LOG_FILE_NAME = "buck-machine-log";
+  public static final String DIST_BUILD_TRACE_FILE_NAME = "dist-build.trace";
+  private static final Path BUCK_OUTPUT_PATH_DEFAULT = Paths.get("buck-out");
 
-  private static final String BUCK_OUTPUT_DIRECTORY = "buck-out";
-  private static final Path BUCK_OUTPUT_PATH = Paths.get("buck-out");
-  private static final Path CURRENT_VERSION_FILE =
-      getBuckOutputPath().resolve(".currentversion");
+  public static final String DIST_BUILD_SLAVE_TOPLEVEL_LOG_DIR_NAME_TEMPLATE =
+      "dist-build-slave-%s";
+  public static final String DIST_BUILD_SLAVE_BUCK_OUT_LOG_DIR_NAME = "buck-out-log";
+  public static final String DIST_BUILD_ANALYSIS_FILE_NAME = "dist-build-summary.log";
 
-  // TODO(bolinfest): The constants GEN_DIR, BIN_DIR, and ANNOTATION_DIR should be
-  // package-private to the com.facebook.buck.rules directory. Currently, they are also used in the
-  // com.facebook.buck.shell package, but these values should be injected into shell commands rather
-  // than hardcoded therein. This ensures that shell commands stay build-rule-agnostic.
-
-  private static final Path LOG_PATH = getBuckOutputPath().resolve("log");
-
-  private static final Path BUCK_TRACE_DIR = getBuckOutputPath().resolve("log/traces");
-  private static final String DEFAULT_CACHE_DIR = getBuckOutputDirectory() + "/cache";
-
-  // We put a . at the front of the name so Spotlight doesn't try to index the contents on OS X.
-  private static final String TRASH_DIR = getBuckOutputDirectory() + "/.trash";
-  private static final Path TRASH_PATH = getBuckOutputPath().resolve(".trash");
+  public static final String RULE_KEY_LOGGER_FILE_NAME = "rule_key_logger.tsv";
+  public static final String RULE_KEY_DIAG_KEYS_FILE_NAME = "rule_key_diag_keys.txt";
+  public static final String RULE_KEY_DIAG_GRAPH_FILE_NAME = "rule_key_diag_graph.txt";
 
   private BuckConstant() {}
 
   /**
-   * An optional path-component for the directory where test-results are written.
-   * <p>
-   * See the --one-time-directory command line option in {@link com.facebook.buck.cli.TestCommand}
-   * where this is used to give each parallel buck processes a unique test-results-directory
-   * thereby stopping the parallel processes from interfering with each others results.
-   * <p>
-   * TODO(#4473736) Create a long-term non-hacky solution to this problem!
-   */
-  @Nullable
-  public static String oneTimeTestSubdirectory = null;
-
-  public static void setOneTimeTestSubdirectory(String oneTimeTestSubdirectory) {
-    Preconditions.checkState(!oneTimeTestSubdirectory.isEmpty(), "cannot be an empty string");
-    BuckConstant.oneTimeTestSubdirectory = oneTimeTestSubdirectory;
-  }
-
-  /**
    * The relative path to the directory where Buck will generate its files.
    *
-   * NOTE: Should only ever be used from there and {@link com.facebook.buck.io.ProjectFilesystem}.
+   * <p>NOTE: Should only ever be used from there and {@link
+   * com.facebook.buck.io.filesystem.ProjectFilesystem}.
    */
-  public static String getBuckOutputDirectory() {
-    return BUCK_OUTPUT_DIRECTORY;
-  }
-
-  private static Path getBuckOutputPath() {
-    return BUCK_OUTPUT_PATH;
-  }
-
-  /**
-   * The version the buck output directory was created for
-   */
-  public static Path getCurrentVersionFile() {
-    return CURRENT_VERSION_FILE;
-  }
-
-  public static Path getLogPath() {
-    return LOG_PATH;
-  }
-
-  public static Path getBuckTraceDir() {
-    return BUCK_TRACE_DIR;
-  }
-
-  public static String getDefaultCacheDir() {
-    return DEFAULT_CACHE_DIR;
-  }
-
-  public static String getTrashDir() {
-    return TRASH_DIR;
-  }
-
-  public static Path getTrashPath() {
-    return TRASH_PATH;
+  public static Path getBuckOutputPath() {
+    return BUCK_OUTPUT_PATH_DEFAULT;
   }
 }

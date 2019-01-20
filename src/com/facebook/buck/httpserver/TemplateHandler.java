@@ -18,42 +18,32 @@ package com.facebook.buck.httpserver;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.MediaType;
-import com.google.template.soy.SoyFileSet;
-import com.google.template.soy.data.SoyMapData;
-import com.google.template.soy.tofu.SoyTofu;
-
+import java.io.IOException;
+import java.util.Map;
+import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STGroupFile;
 
-import java.io.IOException;
-import java.net.URL;
-
-import javax.annotation.Nullable;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-/**
- * {@link Handler} that provides a response by populating a Soy template.
- */
+/** {@link Handler} that provides a response by populating a template. */
 class TemplateHandler extends AbstractHandler {
 
   /**
    * Whether to re-parse the templates for this handler on every request.
-   * <p>
-   * Should be set to {@code false} when checked in, but it is convenient to set this to
-   * {@code true} in development.
+   *
+   * <p>Should be set to {@code false} when checked in, but it is convenient to set this to {@code
+   * true} in development.
    */
   private static final boolean DEBUG = Boolean.getBoolean("buck.soy.debug");
 
   private final TemplateHandlerDelegate delegate;
 
-  /**
-   * This field is set lazily by {@link #createAndMaybeCacheSoyTofu()}.
-   */
-  @Nullable
-  private volatile SoyTofu tofu;
+  /** This field is set lazily by {@link #createAndMaybeCacheTemplates()}. */
+  @Nullable private volatile STGroupFile groupFile;
 
   protected TemplateHandler(TemplateHandlerDelegate templateBasedHandler) {
     this.delegate = templateBasedHandler;
@@ -65,11 +55,9 @@ class TemplateHandler extends AbstractHandler {
    * template data, and then combines them to produce the response.
    */
   @Override
-  public void handle(String target,
-      Request baseRequest,
-      HttpServletRequest request,
-      HttpServletResponse response)
-      throws IOException, ServletException {
+  public void handle(
+      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+      throws IOException {
     String html = createHtmlForResponse(baseRequest);
     if (html != null) {
       Responses.writeSuccessfulResponse(html, MediaType.HTML_UTF_8, baseRequest, response);
@@ -81,12 +69,12 @@ class TemplateHandler extends AbstractHandler {
   @Nullable
   String createHtmlForResponse(Request baseRequest) throws IOException {
     String template = delegate.getTemplateForRequest(baseRequest);
-    SoyTofu.Renderer renderer = createAndMaybeCacheSoyTofu().newRenderer(template);
+    ST st = createAndMaybeCacheTemplates().getInstanceOf(template);
 
-    SoyMapData data = delegate.getDataForRequest(baseRequest);
+    Map<String, Object> data = delegate.getDataForRequest(baseRequest);
     if (data != null) {
-      renderer.setData(data);
-      return renderer.render();
+      data.forEach(st::add);
+      return st.render();
     } else {
       return null;
     }
@@ -98,37 +86,31 @@ class TemplateHandler extends AbstractHandler {
   }
 
   /**
-   * Returns the {@link SoyTofu} for {@link TemplateHandlerDelegate#getTemplates()}. If
-   * {@link #DEBUG} is {@code false}, then the result will be cached because {@link SoyTofu} objects
-   * can be expensive to construct.
+   * Returns the {@link STGroupFile} for {@link TemplateHandlerDelegate#getTemplateGroup()}. If
+   * {@link #DEBUG} is {@code false}, then the result will be cached.
    */
-  private SoyTofu createAndMaybeCacheSoyTofu() {
-    // In debug mode, create a new SoyTofu object for each request. This makes it possible to test
+  private STGroupFile createAndMaybeCacheTemplates() {
+    // In debug mode, create a new STGroupFile for each request. This makes it possible to test
     // new versions of the templates without restarting buckd.
     if (DEBUG) {
-      return createSoyTofu();
+      return createSTGroupFile();
     }
 
-    // In production, cache the SoyTofu object for efficiency.
-    if (tofu != null) {
-      return tofu;
+    // In production, cache the GroupFile object for efficiency.
+    if (groupFile != null) {
+      return groupFile;
     }
 
     synchronized (this) {
-      if (tofu == null) {
-        tofu = createSoyTofu();
+      if (groupFile == null) {
+        groupFile = createSTGroupFile();
       }
     }
-    return tofu;
+    return groupFile;
   }
 
-  /** Creates the {@link SoyTofu} for {@link TemplateHandlerDelegate#getTemplates()}. */
-  private SoyTofu createSoyTofu() {
-    SoyFileSet.Builder builder = SoyFileSet.builder();
-    for (String soyFile : delegate.getTemplates()) {
-      URL url = delegate.getClass().getResource(soyFile);
-      builder.add(url);
-    }
-    return builder.build().compileToTofu();
+  /** Load string templates for {@link TemplateHandlerDelegate#getTemplateGroup()}. */
+  private STGroupFile createSTGroupFile() {
+    return new STGroupFile(delegate.getTemplateGroup(), "UTF-8", '$', '$');
   }
 }

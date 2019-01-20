@@ -17,27 +17,24 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class ResourcesRootIntegrationTest {
 
-  @Rule
-  public TemporaryPaths temporaryFolder = new TemporaryPaths();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testResourcePathRelativeToResourcesRoot() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "resources_root", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "resources_root", temporaryFolder);
     workspace.setUp();
 
     Path supWorldJar = workspace.buildAndReturnOutput("//java/com/example:SupWorld");
@@ -47,7 +44,7 @@ public class ResourcesRootIntegrationTest {
     ProcessExecutor.Result result = workspace.runJar(supWorldJar);
     assertEquals(
         "SupWorld should print the resource file's contents.",
-        "nuthin much\n",
+        "nuthin much" + System.lineSeparator(),
         result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }

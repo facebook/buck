@@ -1,0 +1,7 @@
+genrule(
+    name = "rule_with_binary_input_file",
+    srcs = ["binary.dat"],
+    out = "Foo.java",
+    cmd = "echo 'class Main{}' > $OUT",
+    visibility = ["PUBLIC"],
+)

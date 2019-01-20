@@ -53,28 +53,54 @@ public class MainDexListBuilder {
             "Slightly longer version: This tool is used by mainDexClasses script to build" + EOL +
             "the main dex list." + EOL;
 
+    /**
+     * By default we force all classes annotated with runtime annotation to be kept in the
+     * main dex list. This option disable the workaround, limiting the index pressure in the main
+     * dex but exposing to the Dalvik resolution bug. The resolution bug occurs when accessing
+     * annotations of a class that is not in the main dex and one of the annotations as an enum
+     * parameter.
+     *
+     * @see <a href="https://code.google.com/p/android/issues/detail?id=78144">bug discussion</a>
+     *
+     */
+    private static final String DISABLE_ANNOTATION_RESOLUTION_WORKAROUND =
+            "--disable-annotation-resolution-workaround";
+
     private Set<String> filesToKeep = new HashSet<String>();
 
     public static void main(String[] args) {
 
-        if (args.length != 2) {
+        int argIndex = 0;
+        boolean keepAnnotated = true;
+        while (argIndex < args.length -2) {
+            if (args[argIndex].equals(DISABLE_ANNOTATION_RESOLUTION_WORKAROUND)) {
+                keepAnnotated = false;
+            } else {
+                System.err.println("Invalid option " + args[argIndex]);
+                printUsage();
+                System.exit(STATUS_ERROR);
+            }
+            argIndex++;
+        }
+        if (args.length - argIndex != 2) {
             printUsage();
             System.exit(STATUS_ERROR);
         }
 
         try {
-
-            MainDexListBuilder builder = new MainDexListBuilder(args[0], args[1]);
+            MainDexListBuilder builder = new MainDexListBuilder(keepAnnotated, args[argIndex],
+                    args[argIndex + 1]);
             Set<String> toKeep = builder.getMainDexList();
             printList(toKeep);
         } catch (IOException e) {
-            System.err.println("A fatal error occured: " + e.getMessage());
+            System.err.println("A fatal error occurred: " + e.getMessage());
             System.exit(STATUS_ERROR);
             return;
         }
     }
 
-    public MainDexListBuilder(String rootJar, String pathString) throws IOException {
+    public MainDexListBuilder(boolean keepAnnotated, String rootJar, String pathString)
+            throws IOException {
         ZipFile jarOfRoots = null;
         Path path = null;
         try {
@@ -91,7 +117,9 @@ public class MainDexListBuilder {
             for (String className : mainListBuilder.getClassNames()) {
                 filesToKeep.add(className + CLASS_EXTENSION);
             }
-            keepAnnotated(path);
+            if (keepAnnotated) {
+                keepAnnotated(path);
+            }
         } finally {
             try {
                 jarOfRoots.close();

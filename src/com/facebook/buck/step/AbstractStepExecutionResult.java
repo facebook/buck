@@ -16,8 +16,9 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.ProcessExecutor;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -25,6 +26,7 @@ import org.immutables.value.Value;
 abstract class AbstractStepExecutionResult {
 
   public abstract int getExitCode();
+
   public abstract Optional<String> getStderr();
 
   @Value.Derived
@@ -33,10 +35,10 @@ abstract class AbstractStepExecutionResult {
   }
 
   public static StepExecutionResult of(int exitCode) {
-    return StepExecutionResult.of(exitCode, Optional.<String>absent());
+    return StepExecutionResult.of(exitCode, Optional.empty());
   }
 
-  public static final StepExecutionResult SUCCESS = StepExecutionResult.of(0);
-  public static final StepExecutionResult ERROR = StepExecutionResult.of(1);
-
+  public static StepExecutionResult of(ProcessExecutor.Result result) {
+    return StepExecutionResult.of(result.getExitCode(), result.getStderr());
+  }
 }

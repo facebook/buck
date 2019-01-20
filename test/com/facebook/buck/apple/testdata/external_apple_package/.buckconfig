@@ -1,0 +1,3 @@
+[apple]
+iphonesimulator_package_command = "echo \"I AM A BUNDLE FROM $SDKROOT $SRCS\" > \"$OUT\""
+iphonesimulator_package_extension = omg

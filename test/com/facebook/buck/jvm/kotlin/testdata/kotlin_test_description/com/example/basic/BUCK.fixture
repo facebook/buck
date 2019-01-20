@@ -1,0 +1,19 @@
+kotlin_test(
+    name = "passing",
+    srcs = [
+        "PassingUnitTest.kt",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
+
+kotlin_test(
+    name = "failing",
+    srcs = [
+        "FailingUnitTest.kt",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)

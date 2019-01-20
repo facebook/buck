@@ -17,17 +17,16 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
-
+import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
+import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
+import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.concurrent.TimeUnit;
-
 public class CommandThreadManagerTest {
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   @SuppressWarnings("PMD.EmptyWhileStmt")
@@ -37,23 +36,21 @@ public class CommandThreadManagerTest {
     exception.expectMessage("Thread Test-0");
     exception.expectMessage(this.getClass().getName());
 
-    ConcurrencyLimit concurrencyLimit = new ConcurrencyLimit(1, Double.POSITIVE_INFINITY);
+    ConcurrencyLimit concurrencyLimit =
+        new ConcurrencyLimit(
+            /* threadLimit */ 1,
+            ResourceAllocationFairness.FAIR,
+            /* managedThreadCount */ 1,
+            ResourceAmountsEstimator.DEFAULT_AMOUNTS,
+            ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS.withCpu(1));
 
     try (CommandThreadManager pool =
-             new CommandThreadManager(
-                 "Test",
-                 WorkQueueExecutionOrder.LIFO,
-                 concurrencyLimit,
-                 250,
-                 TimeUnit.MILLISECONDS)) {
-      pool.getExecutor().submit(
-          new Runnable() {
-            @Override
-            public void run() {
-              while (true) {}
-            }
-          });
+        new CommandThreadManager("Test", concurrencyLimit, 250, TimeUnit.MILLISECONDS)) {
+      pool.getListeningExecutorService()
+          .submit(
+              () -> {
+                while (true) {}
+              });
     }
   }
-
 }

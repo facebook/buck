@@ -21,10 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Annotation for objects that build annotation processors
- */
+/** Annotation for objects that build annotation processors */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface BuildsAnnotationProcessor {
-}
+public @interface BuildsAnnotationProcessor {}

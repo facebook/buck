@@ -1,0 +1,13 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "../project1/lib/src/src1/Test1.java",
+        "../project3/lib/src/src1/Test1.java",
+        "lib/Test.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

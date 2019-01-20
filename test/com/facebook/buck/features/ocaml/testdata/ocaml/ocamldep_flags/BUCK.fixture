@@ -1,0 +1,37 @@
+# Warning - these rules will not be rebuilt if fake_ppx changes. This is one
+# of the major limitations of ocamldep_flags. Copy this pattern at your own
+# peril!
+ocaml_library(
+    name = "code",
+    srcs = [
+        "myModule.ml",
+        "otherModule.ml",
+    ],
+    compiler_flags = [
+      "-pp",
+      "ocamldep_flags/fake_ppx.sh",
+    ],
+    ocamldep_flags = [
+      "-pp",
+      "ocamldep_flags/fake_ppx.sh",
+    ]
+)
+
+ocaml_binary(
+    name = "main",
+    srcs = [
+        "main.ml",
+        "thirdModule.ml",
+    ],
+    compiler_flags = [
+      "-pp",
+      "ocamldep_flags/fake_ppx.sh",
+    ],
+    ocamldep_flags = [
+      "-pp",
+      "ocamldep_flags/fake_ppx.sh",
+    ],
+    deps = [
+      ":code",
+    ]
+)

@@ -1,10 +1,10 @@
 java_library(
-  name = 'res',
-  srcs = [ 'ResClass.java' ],
+    name = "res",
+    srcs = ["ResClass.java"],
 )
 
 java_library(
-  name = 'lib',
-  srcs = [ 'LibClass.java' ],
-  resources = [ ':res' ],
+    name = "lib",
+    srcs = ["LibClass.java"],
+    resources = [":res"],
 )

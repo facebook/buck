@@ -16,23 +16,19 @@
 
 package com.facebook.buck.android;
 
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
-
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.tree.ClassNode;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.function.Supplier;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.tree.ClassNode;
 
-/**
- * This Supplier returns a list of all the ClassNode objects in a set of jar files.
- */
+/** This Supplier returns a list of all the ClassNode objects in a set of jar files. */
 class ClassNodeListSupplier implements Supplier<ImmutableList<ClassNode>> {
 
   private final Iterable<Path> jarPaths;
@@ -42,7 +38,7 @@ class ClassNodeListSupplier implements Supplier<ImmutableList<ClassNode>> {
   }
 
   public static Supplier<ImmutableList<ClassNode>> createMemoized(Iterable<Path> jarPaths) {
-    return Suppliers.memoize(new ClassNodeListSupplier(jarPaths));
+    return MoreSuppliers.memoize(new ClassNodeListSupplier(jarPaths));
   }
 
   @Override

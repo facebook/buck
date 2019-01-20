@@ -36,7 +36,7 @@ public final class PrintHeaderMap {
         map.print(System.out);
       }
     } catch (IOException e) {
-      System.err.println(e.toString());
+      System.err.println(e);
       System.exit(1);
     }
   }

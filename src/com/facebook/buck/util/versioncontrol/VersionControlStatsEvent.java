@@ -18,17 +18,21 @@ package com.facebook.buck.util.versioncontrol;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.log.views.JsonViews;
+import com.fasterxml.jackson.annotation.JsonView;
+import java.util.Objects;
 
 public class VersionControlStatsEvent extends AbstractBuckEvent {
-  private VersionControlStats versionControlStats;
 
-  public VersionControlStatsEvent(VersionControlStats versionControlStats) {
+  @JsonView(JsonViews.MachineReadableLog.class)
+  private CommonSlowVersionControlStats versionControlStats;
+
+  public VersionControlStatsEvent(CommonSlowVersionControlStats versionControlStats) {
     super(EventKey.unique());
-    this.versionControlStats = Preconditions.checkNotNull(versionControlStats);
+    this.versionControlStats = Objects.requireNonNull(versionControlStats);
   }
 
-  public VersionControlStats getVersionControlStats() {
+  public CommonSlowVersionControlStats getVersionControlStats() {
     return versionControlStats;
   }
 

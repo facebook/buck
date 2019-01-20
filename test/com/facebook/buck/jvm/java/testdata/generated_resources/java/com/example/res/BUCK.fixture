@@ -1,8 +1,8 @@
 genrule(
-  name = 'create_resources',
-  cmd = 'echo hello world> $OUT',
-  out = 'helloworld.txt',
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "create_resources",
+    out = "helloworld.txt",
+    cmd = "echo hello world> $OUT",
+    visibility = [
+        "PUBLIC",
+    ],
 )

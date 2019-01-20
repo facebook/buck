@@ -1,48 +1,81 @@
-LOGGER_FILES = ['Logger.java']
-APPENDABLE_LOG_RECORD_FILES = ['AppendableLogRecord.java']
-
-java_library(
-  name = 'appendablelogrecord',
-  srcs = APPENDABLE_LOG_RECORD_FILES,
-  visibility = [
-    # The test runner needs access to this so it can format Buck's special
-    # AppendableLogRecords in its JulLogFormatter.
-    '//src/com/facebook/buck/testrunner:junit',
-  ],
-)
-
-java_library(
-  name = 'api',
-  srcs = LOGGER_FILES,
-  deps = [
-    # This class is used everywhere. Only depend on
-    # appendablelogrecord and third-party, and then only if strictly
-    # necessary.
-    '//third-party/java/jsr:jsr305',
-    ':appendablelogrecord',
-  ],
-  visibility = [ 'PUBLIC' ],
-)
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 java_immutables_library(
-  name = 'log',
-  srcs = glob(['*.java'], excludes = LOGGER_FILES + APPENDABLE_LOG_RECORD_FILES),
-  immutable_types = [
-    'LogConfigSetup',
-  ],
-  tests = [
-    '//test/com/facebook/buck/log:log',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/android:helpers',
-    '//src/com/facebook/buck/android:rules',
-    '//src/com/facebook/buck/android:steps',
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/event:event',
-    '//src/com/facebook/buck/event/listener:listener',
-    '//src/com/facebook/buck/rules:types',
-    '//test/com/facebook/buck/log/...',
-    '//test/com/facebook/buck/rules/...',
-  ],
+    name = "log",
+    srcs = glob(
+        ["*.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+    ],
+    tests = [
+        "//test/com/facebook/buck/log:log",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/android:rules",
+        "//src/com/facebook/buck/android:steps",
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/command:command",
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/distributed:distributed",
+        "//src/com/facebook/buck/distributed/build_client:build_client",
+        "//src/com/facebook/buck/distributed/build_slave:build_slave",
+        "//src/com/facebook/buck/doctor:doctor",
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/log/memory:memory",
+        "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
+        "//src/com/facebook/buck/remoteexecution/factory:factory",
+        "//src/com/facebook/buck/remoteexecution/grpc:grpc",
+        "//src/com/facebook/buck/rules/modern/builders:builders",
+        "//src/com/facebook/buck/slb:slb",
+        "//src/com/facebook/buck/util/perf:perf",
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/core/util/log/appendablelogrecord:appendablelogrecord",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/io:executable-finder",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/watchman:transport",
+        "//src/com/facebook/buck/io/windowsfs:windowsfs",
+        "//src/com/facebook/buck/log/views:views",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/util:constants",
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/environment:environment",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/network/hostname:hostname",
+        "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
+        "//src/com/facebook/buck/util/zip:zip",
+        "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-core",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/stringtemplate:stringtemplate",
+    ],
+)
+
+java_library(
+    name = "config",
+    srcs = [
+        "MachineReadableLogConfig.java",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [],
 )

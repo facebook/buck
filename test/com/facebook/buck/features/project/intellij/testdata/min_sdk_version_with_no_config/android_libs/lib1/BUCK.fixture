@@ -1,0 +1,4 @@
+android_library(
+    name = "lib1",
+    manifest = "AndroidManifest.xml",
+)

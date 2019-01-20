@@ -19,4 +19,5 @@ package com.sample.app;
 import android.app.Application;
 
 public class MyApplication extends Application {
+  private static String name = "MyReplaceableName";
 }

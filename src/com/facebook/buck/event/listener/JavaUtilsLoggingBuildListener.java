@@ -16,14 +16,12 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.BuildRuleEvent;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.eventbus.Subscribe;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,24 +31,30 @@ import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+import java.util.logging.Logger; // NOPMD
 
-/**
- * Logs build events to java.util.logging.
- */
+/** Logs build events to java.util.logging. */
 public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
   private static final Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
   private static final Level LEVEL = Level.INFO;
 
-  public static void ensureLogFileIsWritten(ProjectFilesystem filesystem) {
-    try {
-      filesystem.mkdirs(filesystem.getBuckPaths().getScratchDir());
-    } catch (IOException e) {
-      throw new HumanReadableException(
-          e,
-          "Unable to create output directory: %s",
-          filesystem.getBuckPaths().getScratchDir());
+  public JavaUtilsLoggingBuildListener(ProjectFilesystem filesystem) {
+    ensureLogFileIsWritten(filesystem);
+  }
+
+  private static void ensureLogFileIsWritten(ProjectFilesystem filesystem) {
+    if (!filesystem.exists(filesystem.getBuckPaths().getScratchDir())) {
+      try {
+        filesystem.mkdirs(filesystem.getBuckPaths().getScratchDir());
+      } catch (IOException e) {
+        throw new HumanReadableException(
+            e,
+            "Unable to create output directory: %s: %s: %s",
+            filesystem.getBuckPaths().getScratchDir(),
+            e.getClass(),
+            e.getMessage());
+      }
     }
 
     try {
@@ -116,21 +120,18 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
     LOG.log(record);
   }
 
-  @Override
-  public void outputTrace(BuildId buildId) {
-    closeLogFile();
-  }
-
   private static class BuildEventFormatter extends Formatter {
 
-    private final ThreadLocal<SimpleDateFormat> dateFormat = new ThreadLocal<SimpleDateFormat>() {
-      @Override protected SimpleDateFormat initialValue() {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        // Normalize all the times.
-        format.setTimeZone(TimeZone.getTimeZone("UTC"));
-        return format;
-      }
-    };
+    private final ThreadLocal<SimpleDateFormat> dateFormat =
+        new ThreadLocal<SimpleDateFormat>() {
+          @Override
+          protected SimpleDateFormat initialValue() {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            // Normalize all the times.
+            format.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return format;
+          }
+        };
 
     @Override
     public String format(LogRecord logRecord) {
@@ -145,6 +146,11 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
       return builder.toString();
     }
+  }
+
+  @Override
+  public void close() {
+    closeLogFile();
   }
 
   public static void closeLogFile() {

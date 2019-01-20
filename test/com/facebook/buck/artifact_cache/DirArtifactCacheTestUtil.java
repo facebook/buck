@@ -15,28 +15,24 @@
  */
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.rules.RuleKey;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.rulekey.RuleKey;
 import com.google.common.base.Preconditions;
-
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 
 public class DirArtifactCacheTestUtil {
   private DirArtifactCacheTestUtil() {}
 
   // This is for DirArtifactCache only.
   public static Path getPathForRuleKey(
-      ArtifactCache cache,
-      RuleKey ruleKey,
-      Optional<String> extension) {
+      ArtifactCache cache, RuleKey ruleKey, Optional<String> extension) {
     Preconditions.checkArgument(cache instanceof DirArtifactCache);
     DirArtifactCache dirArtifactCache = (DirArtifactCache) cache;
     return dirArtifactCache.getPathForRuleKey(ruleKey, extension);
   }
 
-  public static File[] getAllFilesInCache(ArtifactCache cache) throws IOException {
+  public static List<Path> getAllFilesInCache(ArtifactCache cache) {
     Preconditions.checkArgument(cache instanceof DirArtifactCache);
     DirArtifactCache dirArtifactCache = (DirArtifactCache) cache;
     return dirArtifactCache.getAllFilesInCache();

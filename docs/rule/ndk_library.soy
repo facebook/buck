@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace ndk_library}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'ndk_library()' /}
+    {param navid: 'rule_ndk_library' /}
     {param prettify: true /}
     {param description}
       A rule that is used to define a set of C/C++ files, an Android.mk and an
@@ -27,6 +43,17 @@ objects.
   {param name: 'name' /}
   {param desc}
   The name of the rule.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'srcs' /}
+  {{param default : '[**/*.{cpp,c,cc,cxx,h,hpp,mk}]' /}}
+  {param desc}
+  The set of files to compile for this rule.
+  If not provided, <code>buck</code> assumes
+  that all files with the following extensions are part of the build:
+  {sp}<code>c, cpp, cc, cxx, h, hpp, mk</code>.
   {/param}
 {/call}
 
@@ -74,11 +101,6 @@ root of the APK named <code>lib/</code> or <code>assets/lib/</code>.
 Unlike the default invocation of <code>ndk-build</code>,
 {sp}<code>buck</code> will put all intermediate files and build output
 into a subdirectory under <code>buck-out/gen</code>.
-<p>
-Also, because <code>ndk-build</code> and <code>Android.mk</code> do not
-expose the necessary dependency information, <code>buck</code> assumes
-that all files with the following extensions are part of the build:
-{sp}<code>c, cpp, cc, cxx, h, hpp, mk</code>.
 
 {/param}
 

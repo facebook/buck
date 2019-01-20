@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "executor",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/util/function:function",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)

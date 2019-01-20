@@ -1,0 +1,121 @@
+delimiters "$", "$"
+
+/** Base page setting up headers and footers. */
+page(title, content) ::= <<
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>$title$</title>
+  <link rel="stylesheet" href="/static/theme.css" type="text/css">
+</head>
+<body>
+
+<div class="navbar">
+  <a href="/">Buck</a>
+</div>
+<div class="content">
+
+$content$
+
+</div>
+</body>
+</html>
+
+>>
+
+
+/** The index page */
+index() ::= <% $page(title="Buck", content={
+
+<h1>Local Build</h1>
+
+<ul>
+  <li><a href="/traces">Traces</a>
+</ul>
+
+<h1>Resources</h1>
+
+<ul>
+  <li><a href="http://buckbuild.com/">Documentation</a>
+  <li><a href="https://github.com/facebook/buck">Source code on GitHub</a>
+</ul>
+
+
+})$ %>
+
+
+/**
+ * The traces page.
+ *
+ * traces should be a list of objects with fields
+ *   id
+ *   name
+ *   dateTime
+ *   command (optional)
+ */
+traces(traces) ::= <% $page(title="Traces", content={
+
+<h1>Traces</h1>
+
+<table cellspacing="0">
+  <tr>
+    <th>Time</th>
+    <th>Viewer</th>
+    <th>Command</th>
+  </tr>
+
+  $traces:{trace |
+  <tr class="row">
+    <td>
+      $trace.dateTime$
+    </td>
+    <td>
+      <a href="/trace/$trace.id$"><tt>$trace.name$</tt></a>
+    </td>
+    <td>
+      $if(trace.command)$
+        <code>$trace.command$</code>
+      $endif$
+    </td>
+  </tr>
+  }$
+</table>
+
+})$ %>
+
+
+/**
+ * The trace page.
+ */
+
+trace(traceId, dateTime, command) ::=
+  <% $page(title={Trace $traceId$}, content=traceContent_(...))$ %>
+
+// Trace page content, using a named template here since anonymous templates
+// requires escaping '}', which is used in the inline js.
+traceContent_(traceId, dateTime, command) ::= <<
+  <link type="text/css" rel="stylesheet" href="/static/trace_viewer.css">
+
+  <div>
+    $if(command)$
+      Trace for <tt><strong>$command$</strong></tt> from $dateTime$.
+      &nbsp;
+    $endif$
+
+    (<a href="/traces">All Traces</a>)
+  </div>
+
+  <script src="/static/trace_viewer.js"></script>
+  <script>
+  var onTracesLoaded = function(traces) {
+    var model = new tracing.TraceModel();
+    model.importTraces(traces);
+
+    var viewEl = tracing.TimelineView();
+    viewEl.model = model;
+    document.body.appendChild(viewEl);
+  };
+  </script>
+  <script src="/tracedata/$traceId$?callback=onTracesLoaded"></script>
+>>

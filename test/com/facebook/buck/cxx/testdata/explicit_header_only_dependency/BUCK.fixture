@@ -1,0 +1,26 @@
+cxx_binary(
+    name = "binary-lacking-symbols",
+    srcs = ["main.c"],
+    deps = [":lib1#headers"],
+)
+
+cxx_binary(
+    name = "binary",
+    srcs = ["main.c"],
+    deps = [":lib1"],
+)
+
+cxx_library(
+    name = "lib1",
+    srcs = ["lib1.c"],
+    exported_headers = ["lib1.h"],
+    header_namespace = "lib1",
+    deps = [":lib1_dep"],
+)
+
+cxx_library(
+    name = "lib1_dep",
+    srcs = ["lib1_dep.c"],
+    exported_headers = ["lib1_dep.h"],
+    header_namespace = "lib1_dep",
+)

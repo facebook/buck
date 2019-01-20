@@ -18,18 +18,17 @@ package com.facebook.buck.rules.args;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.shell.GenruleBuilder;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -37,28 +36,24 @@ public class SourcePathArgTest {
 
   @Test
   public void stringify() {
-    SourcePath path = new FakeSourcePath("something");
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
-    SourcePathArg arg = new SourcePathArg(resolver, path);
+    SourcePath path = FakeSourcePath.of("something");
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    SourcePathArg arg = SourcePathArg.of(path);
     assertThat(
-        Arg.stringListFunction().apply(arg),
+        Arg.stringifyList(arg, resolver),
         Matchers.contains(resolver.getAbsolutePath(path).toString()));
   }
 
   @Test
-  public void getDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void getDeps() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     Genrule rule =
-        (Genrule) GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:rule"))
             .setOut("output")
-            .build(resolver);
-    SourcePathArg arg =
-        new SourcePathArg(pathResolver, new BuildTargetSourcePath(rule.getBuildTarget()));
-    assertThat(arg.getDeps(pathResolver), Matchers.<BuildRule>contains(rule));
+            .build(graphBuilder);
+    SourcePathArg arg = SourcePathArg.of(rule.getSourcePathToOutput());
+    assertThat(BuildableSupport.getDepsCollection(arg, ruleFinder), Matchers.contains(rule));
   }
-
 }

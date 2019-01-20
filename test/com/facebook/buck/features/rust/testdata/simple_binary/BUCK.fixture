@@ -1,0 +1,47 @@
+rust_binary(
+    name = "xyzzy",
+    srcs = [
+        "main.rs",
+    ],
+)
+
+rust_binary(
+    name = "xyzzy_flags",
+    srcs = [
+        "main.rs",
+    ],
+    rustc_flags = ["--this-is-a-bad-option"],
+)
+
+rust_binary(
+    name = "xyzzy_aliased",
+    srcs = [
+        "main.rs",
+    ],
+    crate = "xyzzy",
+)
+
+rust_binary(
+    name = "xyzzy_linkerflags",
+    srcs = [
+        "main.rs",
+    ],
+    crate = "xyzzy",
+    linker_flags = ["--this-is-a-bad-option"],
+)
+
+rust_binary(
+    name = "xyzzy_crate_root",
+    srcs = [
+        "xyzzy-top.rs",
+    ],
+    crate_root = "xyzzy-top.rs",
+)
+
+genrule(
+    name = "generated_linker",
+    srcs = ["linker.sh"],
+    out = "generated_linker.sh",
+    bash = "cp linker.sh $OUT; chmod +x $OUT",
+    executable = True,
+)

@@ -16,22 +16,20 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.google.common.collect.ImmutableList;
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
 
+import com.google.common.collect.ImmutableList;
 import org.easymock.EasyMockRunner;
 import org.easymock.Mock;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-
 @RunWith(EasyMockRunner.class)
 public class TracingTaskListenerCleanerTest {
 
-  @Mock
-  private JavacPhaseTracer mockTracer;
+  @Mock private JavacPhaseTracer mockTracer;
   private TracingTaskListener.TraceCleaner traceCleaner;
 
   @Before
@@ -57,9 +55,27 @@ public class TracingTaskListenerCleanerTest {
   }
 
   @Test
+  public void testAnalyzeEventsCombinedIntoOne() {
+    mockTracer.beginAnalyze();
+    mockTracer.endAnalyze(
+        ImmutableList.of("file1", "file2", "file3"), ImmutableList.of("type1", "type2", "type3"));
+
+    replay(mockTracer);
+
+    traceCleaner.startAnalyze("file1", "type1");
+    traceCleaner.startAnalyze("file2", "type2");
+    traceCleaner.startAnalyze("file3", "type3");
+    traceCleaner.finishAnalyze("file1", "type1");
+    traceCleaner.finishAnalyze("file2", "type2");
+    traceCleaner.finishAnalyze("file3", "type3");
+
+    verify(mockTracer);
+  }
+
+  @Test
   public void testUnmatchedAnalyzeFinishAddsAStarted() {
-    mockTracer.beginAnalyze("file", "type");
-    mockTracer.endAnalyze();
+    mockTracer.beginAnalyze();
+    mockTracer.endAnalyze(ImmutableList.of("file"), ImmutableList.of("type"));
 
     replay(mockTracer);
 
@@ -70,10 +86,10 @@ public class TracingTaskListenerCleanerTest {
 
   @Test
   public void testUnmatchedAnalyzeFinishAfterMatchTracesTwoAnalyzeEvents() {
-    mockTracer.beginAnalyze("file1", "type1");
-    mockTracer.endAnalyze();
-    mockTracer.beginAnalyze("file2", "type2");
-    mockTracer.endAnalyze();
+    mockTracer.beginAnalyze();
+    mockTracer.endAnalyze(ImmutableList.of("file1"), ImmutableList.of("type1"));
+    mockTracer.beginAnalyze();
+    mockTracer.endAnalyze(ImmutableList.of("file2"), ImmutableList.of("type2"));
 
     replay(mockTracer);
 

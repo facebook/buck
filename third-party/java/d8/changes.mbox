@@ -1,0 +1,145 @@
+From fa0678bd211c878ebd82a3dac5534ad1ba723e28 Mon Sep 17 00:00:00 2001
+From: Gautam Korlam <gkorlam@uber.com>
+Date: Tue, 4 Dec 2018 17:21:07 -0800
+Subject: [PATCH] Compute referenced resources in D8
+
+- Computing referenced resources is used to trim the Uber R.java.
+- Set default min sdk for D8 to Api level J
+- Fix Lambda Descriptor name handling to be compatible with buck's predexing
+---
+ src/main/java/com/android/tools/r8/D8Command.java  |  8 +++++++-
+ .../com/android/tools/r8/graph/DexItemFactory.java | 14 ++++++++++++++
+ .../tools/r8/ir/conversion/IRConverter.java        |  2 +-
+ .../tools/r8/ir/desugar/LambdaDescriptor.java      | 11 +++--------
+ .../android/tools/r8/utils/AndroidApiLevel.java    |  3 ++-
+ 5 files changed, 27 insertions(+), 11 deletions(-)
+
+diff --git a/src/main/java/com/android/tools/r8/D8Command.java b/src/main/java/com/android/tools/r8/D8Command.java
+index 10045324b..63dc33ac0 100644
+--- a/src/main/java/com/android/tools/r8/D8Command.java
++++ b/src/main/java/com/android/tools/r8/D8Command.java
+@@ -176,6 +176,11 @@ public final class D8Command extends BaseCompilerCommand {
+   static final String USAGE_MESSAGE = D8CommandParser.USAGE_MESSAGE;
+ 
+   private boolean intermediate = false;
++  private DexItemFactory dexItemFactory;
++
++  public DexItemFactory getDexItemFactory() {
++    return dexItemFactory;
++  }
+ 
+   public static Builder builder() {
+     return new Builder();
+@@ -245,7 +250,8 @@ public final class D8Command extends BaseCompilerCommand {
+ 
+   @Override
+   InternalOptions getInternalOptions() {
+-    InternalOptions internal = new InternalOptions(new DexItemFactory(), getReporter());
++    dexItemFactory = new DexItemFactory();
++    InternalOptions internal = new InternalOptions(dexItemFactory, getReporter());
+     assert !internal.debug;
+     internal.debug = getMode() == CompilationMode.DEBUG;
+     internal.programConsumer = getProgramConsumer();
+diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
+index 72c690321..332356a90 100644
+--- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
++++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
+@@ -39,6 +39,7 @@ import java.util.ArrayList;
+ import java.util.Arrays;
+ import java.util.Collection;
+ import java.util.HashMap;
++import java.util.HashSet;
+ import java.util.IdentityHashMap;
+ import java.util.List;
+ import java.util.Map;
+@@ -1071,4 +1072,17 @@ public class DexItemFactory {
+   synchronized public void forAllTypes(Consumer<DexType> f) {
+     new ArrayList<>(types.values()).forEach(f);
+   }
++
++  // Facebook addition: compute the resources referenced by this dex file.
++  // Does not apply to any merging, just the input class.
++  public Collection<String> computeReferencedResources() {
++    Set<String> resourceNames = new HashSet<>();
++    for (DexField item: fields.values()) {
++      DexType clazz = item.clazz;
++      if (clazz.toDescriptorString().contains("/R$")) {
++        resourceNames.add(clazz.getPackageDescriptor().replaceAll("/", ".") + "." + item.name.toString());
++      }
++    }
++    return resourceNames;
++  }
+ }
+diff --git a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
+index e96acfb7f..353493643 100644
+--- a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
++++ b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
+@@ -295,7 +295,7 @@ public class IRConverter {
+   }
+ 
+   private boolean enableTwrCloseResourceDesugaring() {
+-    return enableTryWithResourcesDesugaring() && !options.canUseTwrCloseResourceMethod();
++    return false;
+   }
+ 
+   private boolean enableTryWithResourcesDesugaring() {
+diff --git a/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java b/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
+index 6836ad33c..894ce7712 100644
+--- a/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
++++ b/src/main/java/com/android/tools/r8/ir/desugar/LambdaDescriptor.java
+@@ -168,11 +168,6 @@ public final class LambdaDescriptor {
+       return false;
+     }
+ 
+-    if (implHandle.type.isInvokeInterface()) {
+-      // Interface methods must be public.
+-      return false;
+-    }
+-
+     boolean staticTarget = implHandle.type.isInvokeStatic();
+     boolean instanceTarget = implHandle.type.isInvokeInstance() || implHandle.type.isInvokeDirect();
+     boolean initTarget = implHandle.type.isInvokeConstructor();
+@@ -192,7 +187,7 @@ public final class LambdaDescriptor {
+         boolean accessedFromSamePackage =
+             accessedFrom.getPackageDescriptor().equals(
+                 implHandle.asMethod().holder.getPackageDescriptor());
+-        return !accessedFromSamePackage;
++        return !accessedFromSamePackage || accessedFrom.getPackageDescriptor().isEmpty();
+       }
+ 
+       // Since instance method was not found, always generate an accessor
+@@ -206,7 +201,7 @@ public final class LambdaDescriptor {
+     if (flags.isPrivate()) {
+       return true;
+     }
+-    if (flags.isPublic()) {
++    if (flags.isPublic() && !accessedFrom.getPackageDescriptor().isEmpty()) {
+       return false;
+     }
+ 
+@@ -214,7 +209,7 @@ public final class LambdaDescriptor {
+         accessedFrom.getPackageDescriptor().equals(
+             targetMethod.method.holder.getPackageDescriptor());
+     assert flags.isProtected() || accessedFromSamePackage;
+-    return flags.isProtected() && !accessedFromSamePackage;
++    return (flags.isProtected() && !accessedFromSamePackage) || accessedFrom.getPackageDescriptor().isEmpty();
+   }
+ 
+   /**
+diff --git a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
+index 135e961d1..05f6ec64c 100644
+--- a/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
++++ b/src/main/java/com/android/tools/r8/utils/AndroidApiLevel.java
+@@ -56,7 +56,8 @@ public enum AndroidApiLevel {
+   }
+ 
+   public static AndroidApiLevel getDefault() {
+-    return AndroidApiLevel.B;
++    // Setting to a sane min api level
++    return AndroidApiLevel.J;
+   }
+ 
+   public DexVersion getDexVersion() {
+-- 
+2.19.2
+

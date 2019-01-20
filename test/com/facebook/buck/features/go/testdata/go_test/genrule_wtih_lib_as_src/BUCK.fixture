@@ -1,0 +1,34 @@
+go_binary(
+    name = "copy",
+    srcs = [
+        "copy/copy.go",
+    ],
+)
+
+genrule(
+    name = "gen_source_go",
+    srcs = [
+        "raw_files/file.go",
+    ],
+    out = "out.go",
+    cmd = "$(exe :copy) mod $OUT $SRCS",
+)
+
+go_library(
+    name = "lib",
+    package_name = "lib",
+    srcs = [
+        "lib/lib.go",
+        ":gen_source_go",
+    ],
+)
+
+go_test(
+    name = "test",
+    srcs = [
+        "test.go",
+    ],
+    deps = [
+        ":lib",
+    ],
+)

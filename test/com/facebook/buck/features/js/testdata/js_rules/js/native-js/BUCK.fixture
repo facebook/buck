@@ -1,0 +1,34 @@
+js_library(
+    name = "photo-album-js",
+    srcs = ["photo-album.js"],
+    visibility = ["PUBLIC"],
+    worker = "//js:packager_worker",
+)
+
+java_library(
+    name = "photo-album",
+    visibility = ["PUBLIC"],
+    deps = [":photo-album-js"],
+)
+
+js_library(
+    name = "text-widget-js",
+    srcs = ["text-widget.js"],
+    visibility = ["PUBLIC"],
+    worker = "//js:packager_worker",
+)
+
+java_library(
+    name = "text-widget",
+    visibility = ["PUBLIC"],
+    deps = [":text-widget-js"],
+)
+
+java_library(
+    name = "widgets",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":photo-album",
+        ":text-widget",
+    ],
+)

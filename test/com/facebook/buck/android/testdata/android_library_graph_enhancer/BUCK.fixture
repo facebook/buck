@@ -1,0 +1,45 @@
+android_library(
+    name = "lib_with_direct_dep",
+    srcs = [
+        "Test.java",
+    ],
+    deps = [
+        ":res",
+    ],
+)
+
+android_library(
+    name = "lib_with_provided_dep",
+    srcs = [
+        "Test.java",
+    ],
+    provided_deps = [
+        ":res",
+    ],
+)
+
+android_library(
+    name = "lib_with_java_resources_dep",
+    srcs = [
+        "Test.java",
+    ],
+    resources = [
+        ":res",
+    ],
+)
+
+android_library(
+    name = "lib_with_licenses_dep",
+    srcs = [
+        "Test.java",
+    ],
+    licenses = [
+        ":res",
+    ],
+)
+
+android_resource(
+    name = "res",
+    package = "com.facebook.buck",
+    res = "res",
+)

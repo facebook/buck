@@ -1,6 +1,0 @@
-java_test(
-  name = 'xcspec',
-  srcs = glob(['*.java']),
-  resources = glob(['testdata/**']),
-  autodeps = True,
-)

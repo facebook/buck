@@ -16,44 +16,47 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.util.Collections;
+import java.util.Optional;
+import org.junit.Test;
 
 public class AndroidBuildConfigJavaLibraryTest {
 
   @Test
-  public void testAddToCollector() {
+  public void testAddToCollector() throws NoSuchBuildTargetException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
-    BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
-        .createBuildRule(
+    BuildRuleParams params = TestBuildRuleParams.create();
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
+        AndroidBuildConfigDescription.createBuildRule(
+            buildTarget,
+            new FakeProjectFilesystem(),
             params,
             "com.example.buck",
             /* values */ BuildConfigFields.fromFieldDeclarations(
                 Collections.singleton("String foo = \"bar\"")),
-            /* valuesFile */ Optional.<SourcePath>absent(),
+            /* valuesFile */ Optional.empty(),
             /* useConstantExpressions */ false,
+            DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            buildRuleResolver);
+            graphBuilder);
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(collector);
@@ -62,27 +65,29 @@ public class AndroidBuildConfigJavaLibraryTest {
         ImmutableMap.of(
             "com.example.buck",
             BuildConfigFields.fromFields(
-                ImmutableList.<BuildConfigFields.Field>of(
-                    BuildConfigFields.Field.of("String", "foo", "\"bar\"")))),
+                ImmutableList.of(BuildConfigFields.Field.of("String", "foo", "\"bar\"")))),
         collection.getBuildConfigs());
   }
 
   @Test
-  public void testBuildConfigHasCorrectProperties() {
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:bar").build();
-    BuildConfigFields fields = BuildConfigFields.fromFieldDeclarations(
-        Collections.singleton("String KEY = \"value\""));
-    BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary = AndroidBuildConfigDescription
-        .createBuildRule(
+  public void testBuildConfigHasCorrectProperties() throws NoSuchBuildTargetException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
+    BuildRuleParams params = TestBuildRuleParams.create();
+    BuildConfigFields fields =
+        BuildConfigFields.fromFieldDeclarations(Collections.singleton("String KEY = \"value\""));
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    AndroidBuildConfigJavaLibrary buildConfigJavaLibrary =
+        AndroidBuildConfigDescription.createBuildRule(
+            buildTarget,
+            new FakeProjectFilesystem(),
             params,
             "com.example.buck",
             /* values */ fields,
-            /* valuesFile */ Optional.<SourcePath>absent(),
+            /* valuesFile */ Optional.empty(),
             /* useConstantExpressions */ false,
+            DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            buildRuleResolver);
+            graphBuilder);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

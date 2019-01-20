@@ -20,7 +20,6 @@ import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.IntegerCounter;
 import com.facebook.buck.counters.SamplingCounter;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.model.BuildId;
 import com.facebook.buck.slb.LoadBalancedServiceEvent;
 import com.facebook.buck.slb.LoadBalancedServiceEventData;
 import com.facebook.buck.slb.LoadBalancerPingEvent;
@@ -29,30 +28,26 @@ import com.facebook.buck.slb.PerServerData;
 import com.facebook.buck.slb.PerServerPingData;
 import com.facebook.buck.slb.ServerHealthManagerEvent;
 import com.facebook.buck.slb.ServerHealthManagerEventData;
-import com.facebook.buck.util.exportedfiles.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
-
 import java.net.SocketTimeoutException;
 import java.net.URI;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 
 public class LoadBalancerEventsListener implements BuckEventListener {
   public static final String COUNTER_CATEGORY = "buck_slb_counters";
+  private static final String POOL_NAME_TAG = "server_pool_name";
+
   private final CounterRegistry registry;
   private final ConcurrentMap<URI, ServerCounters> allServerCounters;
-  private final IntegerCounter noHealthyServersCounter;
-
+  private final ConcurrentMap<String, IntegerCounter> noHealthyServersCounters;
 
   public LoadBalancerEventsListener(CounterRegistry registry) {
     this.registry = registry;
     this.allServerCounters = Maps.newConcurrentMap();
-
-    noHealthyServersCounter = registry.newIntegerCounter(
-        COUNTER_CATEGORY,
-        "no_healthy_servers_count",
-        ImmutableMap.<String, String>of());
+    this.noHealthyServersCounters = Maps.newConcurrentMap();
   }
 
   @Subscribe
@@ -71,8 +66,9 @@ public class LoadBalancerEventsListener implements BuckEventListener {
       }
 
       if (perServerData.getPingRequestLatencyMillis().isPresent()) {
-        counters.getPingRequestLatencyMillis().addSample(
-            perServerData.getPingRequestLatencyMillis().get());
+        counters
+            .getPingRequestLatencyMillis()
+            .addSample(perServerData.getPingRequestLatencyMillis().get());
       }
     }
   }
@@ -80,6 +76,7 @@ public class LoadBalancerEventsListener implements BuckEventListener {
   @Subscribe
   public void onServerHealthManagerEvent(ServerHealthManagerEvent event) {
     ServerHealthManagerEventData data = event.getData();
+    IntegerCounter noHealthyServersCounter = getNoHealthyServerCounter(data.getServerPoolName());
     if (data.noHealthyServersAvailable()) {
       noHealthyServersCounter.inc();
     }
@@ -103,6 +100,9 @@ public class LoadBalancerEventsListener implements BuckEventListener {
     if (data.getRequestSizeBytes().isPresent()) {
       counters.getRequestSizeBytes().addSample(data.getRequestSizeBytes().get());
     }
+    if (data.getLatencyMicros().isPresent()) {
+      counters.getLatencyMicros().addSample(data.getLatencyMicros().get());
+    }
     if (data.getResponseSizeBytes().isPresent()) {
       counters.getResponseSizeBytes().addSample(data.getResponseSizeBytes().get());
     }
@@ -121,13 +121,22 @@ public class LoadBalancerEventsListener implements BuckEventListener {
       if (!allServerCounters.containsKey(server)) {
         allServerCounters.put(server, new ServerCounters(registry, server));
       }
-      return Preconditions.checkNotNull(allServerCounters.get(server));
+      return Objects.requireNonNull(allServerCounters.get(server));
     }
   }
 
-  @Override
-  public void outputTrace(BuildId buildId) throws InterruptedException {
-    // Nothing to do.
+  private IntegerCounter getNoHealthyServerCounter(String poolName) {
+    synchronized (allServerCounters) {
+      if (!noHealthyServersCounters.containsKey(poolName)) {
+        IntegerCounter counter =
+            registry.newIntegerCounter(
+                COUNTER_CATEGORY,
+                "no_healthy_servers_count",
+                ImmutableMap.of(POOL_NAME_TAG, poolName));
+        noHealthyServersCounters.put(poolName, counter);
+      }
+      return Objects.requireNonNull(noHealthyServersCounters.get(poolName));
+    }
   }
 
   public static class ServerCounters {
@@ -143,57 +152,49 @@ public class LoadBalancerEventsListener implements BuckEventListener {
     private final IntegerCounter isBestServerCount;
 
     private final SamplingCounter requestSizeBytes;
+    private final SamplingCounter latencyMicros;
     private final SamplingCounter responseSizeBytes;
     private final IntegerCounter requestCount;
     private final IntegerCounter requestErrorCount;
     private final IntegerCounter requestTimeoutCount;
 
     public ServerCounters(CounterRegistry registry, URI server) {
-      this.pingRequestLatencyMillis = registry.newSamplingCounter(
-          PER_SERVER_CATEGORY,
-          "ping_request_latency_millis",
-          getTagsForServer(server));
-      this.pingRequestCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "ping_request_count",
-          getTagsForServer(server));
-      this.pingRequestErrorCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "ping_request_error_count",
-          getTagsForServer(server));
-      this.pingRequestTimeoutCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "ping_request_timeout_count",
-          getTagsForServer(server));
-      this.serverNotHealthyCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "server_not_healthy_count",
-          getTagsForServer(server));
-      this.isBestServerCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "is_best_server_count",
-          getTagsForServer(server));
+      this.pingRequestLatencyMillis =
+          registry.newSamplingCounter(
+              PER_SERVER_CATEGORY, "ping_request_latency_millis", getTagsForServer(server));
+      this.pingRequestCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "ping_request_count", getTagsForServer(server));
+      this.pingRequestErrorCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "ping_request_error_count", getTagsForServer(server));
+      this.pingRequestTimeoutCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "ping_request_timeout_count", getTagsForServer(server));
+      this.serverNotHealthyCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "server_not_healthy_count", getTagsForServer(server));
+      this.isBestServerCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "is_best_server_count", getTagsForServer(server));
 
-      this.requestSizeBytes = registry.newSamplingCounter(
-          PER_SERVER_CATEGORY,
-          "request_size_bytes",
-          getTagsForServer(server));
-      this.responseSizeBytes = registry.newSamplingCounter(
-          PER_SERVER_CATEGORY,
-          "response_size_bytes",
-          getTagsForServer(server));
-      this.requestCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "request_count",
-          getTagsForServer(server));
-      this.requestErrorCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "request_error_count",
-          getTagsForServer(server));
-      this.requestTimeoutCount = registry.newIntegerCounter(
-          PER_SERVER_CATEGORY,
-          "request_timeout_count",
-          getTagsForServer(server));
+      this.requestSizeBytes =
+          registry.newSamplingCounter(
+              PER_SERVER_CATEGORY, "request_size_bytes", getTagsForServer(server));
+      this.latencyMicros =
+          registry.newSamplingCounter(PER_SERVER_CATEGORY, "latency_us", getTagsForServer(server));
+      this.responseSizeBytes =
+          registry.newSamplingCounter(
+              PER_SERVER_CATEGORY, "response_size_bytes", getTagsForServer(server));
+      this.requestCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "request_count", getTagsForServer(server));
+      this.requestErrorCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "request_error_count", getTagsForServer(server));
+      this.requestTimeoutCount =
+          registry.newIntegerCounter(
+              PER_SERVER_CATEGORY, "request_timeout_count", getTagsForServer(server));
     }
 
     public IntegerCounter getIsBestServerCount() {
@@ -222,6 +223,10 @@ public class LoadBalancerEventsListener implements BuckEventListener {
 
     public SamplingCounter getRequestSizeBytes() {
       return requestSizeBytes;
+    }
+
+    public SamplingCounter getLatencyMicros() {
+      return latencyMicros;
     }
 
     public SamplingCounter getResponseSizeBytes() {

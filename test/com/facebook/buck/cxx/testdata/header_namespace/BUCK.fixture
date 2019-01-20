@@ -1,10 +1,10 @@
 cxx_binary(
-  name = 'test',
-  header_namespace = 'namespace',
-  headers = [
-    'test.h',
-  ],
-  srcs = [
-    'test.cpp',
-  ],
+    name = "test",
+    srcs = [
+        "test.cpp",
+    ],
+    header_namespace = "namespace",
+    headers = [
+        "test.h",
+    ],
 )

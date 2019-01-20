@@ -18,37 +18,111 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.jvm.kotlin.KotlinTestAssumptions;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
+public class AndroidLibraryIntegrationTest extends AbiCompilationModeTest {
 
-public class AndroidLibraryIntegrationTest {
-
-  @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
   public void setUp() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
     workspace.setUp();
+    setWorkspaceCompilationMode(workspace);
   }
 
   @Test
-  public void testAndroidLibraryDoesNotUseTransitiveResources() throws IOException {
+  public void testAndroidLibraryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProcessResult result =
         workspace.runBuckBuild("//java/com/sample/lib:lib_using_transitive_empty_res");
     result.assertFailure();
-    assertTrue(result.getStderr().contains("package R does not exist"));
+    assertTrue(result.getStderr().contains("package com.sample does not exist"));
+  }
+
+  @Test
+  public void testAndroidKotlinBinaryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
+    ProcessResult result =
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_using_transitive_empty_res");
+    result.assertFailure();
+    assertTrue(result.getStderr().contains("unresolved reference: R"));
+  }
+
+  @Test
+  public void testAndroidKotlinLibraryCompilation() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
+    ProcessResult result =
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_depending_on_main_lib");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testAndroidKotlinLibraryExtraArgumentsCompilation() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
+    ProcessResult result =
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_extra_kotlinc_arguments");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testAndroidKotlinLibraryMixedSourcesCompilation() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
+    ProcessResult result = workspace.runBuckBuild("//kotlin/com/sample/lib:lib_mixed_sources");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testAndroidKotlinLibraryNoKotlinSourcesCompilation() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    KotlinTestAssumptions.assumeCompilerAvailable(workspace.asCell().getBuckConfig());
+    ProcessResult result =
+        workspace.runBuckBuild("//kotlin/com/sample/lib:lib_mixed_no_kotlin_sources");
+    result.assertSuccess();
+  }
+
+  @Test(timeout = (3 * 60 * 1000))
+  public void testAndroidScalaLibraryDoesNotUseTransitiveResources()
+      throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProcessResult result =
+        workspace.runBuckBuild("//scala/com/sample/lib:lib_using_transitive_empty_res");
+    result.assertFailure();
+    assertTrue(result.getStderr().contains("not found: value R"));
+  }
+
+  @Test(timeout = (3 * 60 * 1000))
+  public void testAndroidScalaLibraryCompilation() throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProcessResult result =
+        workspace.runBuckBuild("//scala/com/sample/lib:lib_depending_on_main_lib");
+    result.assertSuccess();
+  }
+
+  @Test
+  public void testAndroidLibraryBuildFailsWithInvalidLanguageParam()
+      throws InterruptedException, IOException {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    ProcessResult processResult =
+        workspace.runBuckBuild("//scala/com/sample/invalid_lang:lib_with_invalid_language_param");
+    processResult.assertFailure();
   }
 }

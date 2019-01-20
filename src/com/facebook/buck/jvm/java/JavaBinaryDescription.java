@@ -16,145 +16,189 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.CxxPlatforms;
-import com.facebook.buck.io.DefaultDirectoryTraverser;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.annotations.Beta;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.arg.HasTests;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedSet;
-
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
-public class JavaBinaryDescription implements
-    Description<JavaBinaryDescription.Args>,
-    ImplicitDepsInferringDescription<JavaBinaryDescription.Args> {
+public class JavaBinaryDescription
+    implements DescriptionWithTargetGraph<JavaBinaryDescriptionArg>,
+        ImplicitDepsInferringDescription<JavaBinaryDescription.AbstractJavaBinaryDescriptionArg>,
+        VersionRoot<JavaBinaryDescriptionArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("java_binary");
+  private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = InternalFlavor.of("inner-jar");
 
-  private static final Flavor FAT_JAR_INNER_JAR_FLAVOR = ImmutableFlavor.of("inner-jar");
+  private final ToolchainProvider toolchainProvider;
+  private final JavaBuckConfig javaBuckConfig;
+  private final JavacFactory javacFactory;
+  private final Supplier<JavaOptions> javaOptions;
 
-  private final JavacOptions javacOptions;
-  private final CxxPlatform cxxPlatform;
-  private final JavaOptions javaOptions;
-
-  public JavaBinaryDescription(
-      JavaOptions javaOptions,
-      JavacOptions javacOptions,
-      CxxPlatform cxxPlatform) {
-    this.javaOptions = javaOptions;
-    this.javacOptions = Preconditions.checkNotNull(javacOptions);
-    this.cxxPlatform = Preconditions.checkNotNull(cxxPlatform);
+  public JavaBinaryDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
+    this.javaBuckConfig = javaBuckConfig;
+    this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<JavaBinaryDescriptionArg> getConstructorArgType() {
+    return JavaBinaryDescriptionArg.class;
+  }
+
+  private CxxPlatform getCxxPlatform(AbstractJavaBinaryDescriptionArg args) {
+    return args.getDefaultCxxPlatform()
+        .map(
+            toolchainProvider
+                    .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                    .getCxxPlatforms()
+                ::getValue)
+        .orElse(
+            toolchainProvider
+                .getByName(JavaCxxPlatformProvider.DEFAULT_NAME, JavaCxxPlatformProvider.class)
+                .getDefaultJavaCxxPlatform());
   }
 
   @Override
-  public Args createUnpopulatedConstructorArg() {
-    return new Args();
-  }
-
-  @Override
-  public <A extends Args> BuildRule createBuildRule(
-      TargetGraph targetGraph,
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
+      JavaBinaryDescriptionArg args) {
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableMap<String, SourcePath> nativeLibraries =
-        JavaLibraryRules.getNativeLibraries(params.getDeps(), cxxPlatform);
-    BuildRuleParams binaryParams = params;
+        JavaLibraryRules.getNativeLibraries(
+            params.getBuildDeps(), getCxxPlatform(args), context.getActionGraphBuilder());
+    BuildTarget binaryBuildTarget = buildTarget;
 
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and
     // package it into the final fat JAR, so adjust it's params to use a flavored target.
     if (!nativeLibraries.isEmpty()) {
-      binaryParams = params.copyWithChanges(
-          params.getBuildTarget().withAppendedFlavors(FAT_JAR_INNER_JAR_FLAVOR),
-          params.getDeclaredDeps(),
-          params.getExtraDeps());
+      binaryBuildTarget = binaryBuildTarget.withAppendedFlavors(FAT_JAR_INNER_JAR_FLAVOR);
     }
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
     // Construct the build rule to build the binary JAR.
-    ImmutableSetMultimap<JavaLibrary, Path> transitiveClasspathEntries =
-        Classpaths.getClasspathEntries(binaryParams.getDeps());
-    BuildRule rule = new JavaBinary(
-        binaryParams.appendExtraDeps(transitiveClasspathEntries.keys()),
-        pathResolver,
-        javaOptions.getJavaRuntimeLauncher(),
-        args.mainClass.orNull(),
-        args.manifestFile.orNull(),
-        args.mergeManifests.or(true),
-        args.metaInfDirectory.orNull(),
-        args.blacklist.or(ImmutableSortedSet.<String>of()),
-        new DefaultDirectoryTraverser(),
-        transitiveClasspathEntries);
+    ImmutableSet<JavaLibrary> transitiveClasspathDeps =
+        JavaLibraryClasspathProvider.getClasspathDeps(params.getBuildDeps());
+    ImmutableSet<SourcePath> transitiveClasspaths =
+        JavaLibraryClasspathProvider.getClasspathsFromLibraries(transitiveClasspathDeps);
+    JavaBinary javaBinary =
+        new JavaBinary(
+            binaryBuildTarget,
+            projectFilesystem,
+            params.copyAppendingExtraDeps(transitiveClasspathDeps),
+            javaOptions.get().getJavaRuntimeLauncher(graphBuilder),
+            args.getMainClass().orElse(null),
+            args.getManifestFile().orElse(null),
+            args.getMergeManifests().orElse(true),
+            args.getDisallowAllDuplicates().orElse(false),
+            args.getMetaInfDirectory().orElse(null),
+            args.getBlacklist(),
+            transitiveClasspathDeps,
+            transitiveClasspaths,
+            javaBuckConfig.shouldCacheBinaries(),
+            javaBuckConfig.getDuplicatesLogLevel());
 
     // If we're packaging native libraries, construct the rule to build the fat JAR, which packages
     // up the original binary JAR and any required native libraries.
-    if (!nativeLibraries.isEmpty()) {
-      BuildRule innerJarRule = rule;
-      resolver.addToIndex(innerJarRule);
-      SourcePath innerJar = new BuildTargetSourcePath(innerJarRule.getBuildTarget());
-      rule = new JarFattener(
-          params.appendExtraDeps(
-              Suppliers.<Iterable<BuildRule>>ofInstance(
-                  pathResolver.filterBuildRuleInputs(
-                      ImmutableList.<SourcePath>builder()
-                          .add(innerJar)
-                          .addAll(nativeLibraries.values())
-                          .build()))),
-          pathResolver,
-          javacOptions,
-          innerJar,
-          nativeLibraries,
-          javaOptions.getJavaRuntimeLauncher());
+    BuildRule rule;
+    if (nativeLibraries.isEmpty()) {
+      rule = javaBinary;
+    } else {
+      graphBuilder.addToIndex(javaBinary);
+      SourcePath innerJar = javaBinary.getSourcePathToOutput();
+      JavacFactory javacFactory = JavacFactory.getDefault(toolchainProvider);
+      rule =
+          new JarFattener(
+              buildTarget,
+              projectFilesystem,
+              params.copyAppendingExtraDeps(
+                  Suppliers.<Iterable<BuildRule>>ofInstance(
+                      Iterables.concat(
+                          ruleFinder.filterBuildRuleInputs(
+                              ImmutableList.<SourcePath>builder()
+                                  .add(innerJar)
+                                  .addAll(nativeLibraries.values())
+                                  .build()),
+                          javacFactory.getBuildDeps(ruleFinder)))),
+              javacFactory.create(ruleFinder, null),
+              toolchainProvider
+                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                  .getJavacOptions(),
+              innerJar,
+              javaBinary,
+              nativeLibraries,
+              javaOptions.get().getJavaRuntimeLauncher(graphBuilder));
     }
 
     return rule;
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Args constructorArg) {
-    return CxxPlatforms.getParseTimeDeps(cxxPlatform);
+      AbstractJavaBinaryDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    targetGraphOnlyDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Args extends AbstractDescriptionArg {
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-    public Optional<String> mainClass;
-    public Optional<SourcePath> manifestFile;
-    public Optional<Boolean> mergeManifests;
-    @Beta
-    public Optional<Path> metaInfDirectory;
-    @Beta
-    public Optional<ImmutableSortedSet<String>> blacklist;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractJavaBinaryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasTests {
+    Optional<String> getMainClass();
+
+    Optional<SourcePath> getManifestFile();
+
+    Optional<Boolean> getMergeManifests();
+
+    Optional<Boolean> getDisallowAllDuplicates();
+
+    Optional<Path> getMetaInfDirectory();
+
+    ImmutableSet<Pattern> getBlacklist();
+
+    Optional<Flavor> getDefaultCxxPlatform();
   }
 }

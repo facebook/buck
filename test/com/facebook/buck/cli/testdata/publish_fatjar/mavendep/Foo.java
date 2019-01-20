@@ -16,5 +16,4 @@
 
 package mavendep;
 
-public class Foo {
-}
+public class Foo {}

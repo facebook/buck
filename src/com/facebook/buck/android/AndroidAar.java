@@ -16,111 +16,121 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;
-import static com.facebook.buck.rules.BuildableProperties.Kind.PACKAGING;
-
-import com.facebook.buck.android.NdkCxxPlatforms.TargetCpuType;
-import com.facebook.buck.jvm.java.Classpaths;
-import com.facebook.buck.jvm.java.HasClasspathEntries;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JarDirectoryStep;
-import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.jvm.java.JarParameters;
+import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.zip.ZipCompressionLevel;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
 
-public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries {
+public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements HasClasspathEntries {
 
-  private static final BuildableProperties PROPERTIES = new BuildableProperties(ANDROID, PACKAGING);
   public static final String AAR_FORMAT = "%s.aar";
 
   private final Path pathToOutputFile;
   private final Path temp;
   private final AndroidManifest manifest;
   private final AndroidResource androidResource;
-  private final Path assembledResourceDirectory;
-  private final Path assembledAssetsDirectory;
-  private final Optional<Path> assembledNativeLibs;
-  private final ImmutableSet<SourcePath> nativeLibAssetsDirectories;
+  private final SourcePath assembledResourceDirectory;
+  private final SourcePath assembledAssetsDirectory;
+  private final Optional<SourcePath> assembledNativeLibs;
+  private final Optional<SourcePath> assembledNativeLibsAssets;
+
+  private final ImmutableSortedSet<SourcePath> classpathsToIncludeInJar;
 
   public AndroidAar(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       AndroidManifest manifest,
       AndroidResource androidResource,
-      Path assembledResourceDirectory,
-      Path assembledAssetsDirectory,
-      Optional<Path> assembledNativeLibs,
-      ImmutableSet<SourcePath> nativeLibAssetsDirectories) {
-    super(params, resolver);
-    BuildTarget buildTarget = params.getBuildTarget();
+      SourcePath assembledResourceDirectory,
+      SourcePath assembledAssetsDirectory,
+      Optional<SourcePath> assembledNativeLibs,
+      Optional<SourcePath> assembledNativeLibsAssets,
+      ImmutableSortedSet<SourcePath> classpathsToIncludeInJar) {
+    super(buildTarget, projectFilesystem, params);
     this.pathToOutputFile =
-        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, AAR_FORMAT);
-    this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, AAR_FORMAT);
+    this.temp = BuildTargetPaths.getScratchPath(getProjectFilesystem(), buildTarget, "__temp__%s");
     this.manifest = manifest;
     this.androidResource = androidResource;
     this.assembledAssetsDirectory = assembledAssetsDirectory;
     this.assembledResourceDirectory = assembledResourceDirectory;
     this.assembledNativeLibs = assembledNativeLibs;
-    this.nativeLibAssetsDirectories = nativeLibAssetsDirectories;
+    this.assembledNativeLibsAssets = assembledNativeLibsAssets;
+    this.classpathsToIncludeInJar = classpathsToIncludeInJar;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Create temp folder to store the files going to be zipped
-    commands.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
+
+    commands.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), temp)));
 
     // Remove the output .aar file
-    commands.add(new RmStep(getProjectFilesystem(), pathToOutputFile, /* force delete */ true));
+    commands.add(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutputFile)));
 
     // put manifest into tmp folder
     commands.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            manifest.getPathToOutput(),
+            context.getSourcePathResolver().getRelativePath(manifest.getSourcePathToOutput()),
             temp.resolve("AndroidManifest.xml")));
 
     // put R.txt into tmp folder
     commands.add(
         CopyStep.forFile(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(
-                Preconditions.checkNotNull(androidResource.getPathToTextSymbolsFile())),
+            context
+                .getSourcePathResolver()
+                .getAbsolutePath(
+                    Objects.requireNonNull(androidResource.getPathToTextSymbolsFile())),
             temp.resolve("R.txt")));
 
     // put res/ and assets/ into tmp folder
-    commands.add(CopyStep.forDirectory(
+    commands.add(
+        CopyStep.forDirectory(
             getProjectFilesystem(),
-            assembledResourceDirectory,
+            context.getSourcePathResolver().getRelativePath(assembledResourceDirectory),
             temp.resolve("res"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
-    commands.add(CopyStep.forDirectory(
+    commands.add(
+        CopyStep.forDirectory(
             getProjectFilesystem(),
-            assembledAssetsDirectory,
+            context.getSourcePathResolver().getRelativePath(assembledAssetsDirectory),
             temp.resolve("assets"),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
@@ -128,63 +138,76 @@ public class AndroidAar extends AbstractBuildRule implements HasClasspathEntries
     commands.add(
         new JarDirectoryStep(
             getProjectFilesystem(),
-            temp.resolve("classes.jar"),
-            ImmutableSortedSet.copyOf(getTransitiveClasspathEntries().values()),
-            null,
-            null));
+            JarParameters.builder()
+                .setJarPath(temp.resolve("classes.jar"))
+                .setEntriesToJar(
+                    context.getSourcePathResolver().getAllAbsolutePaths(classpathsToIncludeInJar))
+                .setMergeManifests(true)
+                .build()));
 
     // move native libs into tmp folder under jni/
     if (assembledNativeLibs.isPresent()) {
       commands.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
-              assembledNativeLibs.get(),
+              context.getSourcePathResolver().getRelativePath(assembledNativeLibs.get()),
               temp.resolve("jni"),
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
-    // move native assets into tmp folder under assets/lib/
-    for (SourcePath dir : nativeLibAssetsDirectories) {
-      CopyNativeLibraries.copyNativeLibrary(
-          getProjectFilesystem(),
-          getResolver().getAbsolutePath(dir),
-          temp.resolve("assets").resolve("lib"),
-          ImmutableSet.<TargetCpuType>of(),
-          commands);
+    // move native asset libs into tmp folder under assets/lib
+    if (assembledNativeLibsAssets.isPresent()) {
+      commands.add(
+          CopyStep.forDirectory(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getRelativePath(assembledNativeLibsAssets.get()),
+              temp.resolve("assets").resolve("lib"),
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
     // do the zipping
-    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
+    commands.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToOutputFile.getParent())));
     commands.add(
         new ZipStep(
             getProjectFilesystem(),
             pathToOutputFile,
-            ImmutableSet.<Path>of(),
+            ImmutableSet.of(),
             false,
-            ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             temp));
 
+    buildableContext.recordArtifact(pathToOutputFile);
     return commands.build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return pathToOutputFile;
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToOutputFile);
   }
 
   @Override
-  public BuildableProperties getProperties() {
-    return PROPERTIES;
-  }
-
-  @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return Classpaths.getClasspathEntries(getDeps());
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
+    return classpathsToIncludeInJar;
   }
 
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return Classpaths.getClasspathDeps(getDeps());
+    return JavaLibraryClasspathProvider.getClasspathDeps(getBuildDeps());
   }
 
+  @Override
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
+    // The aar has no exported deps or classpath contributions of its own
+    return ImmutableSet.of();
+  }
 }

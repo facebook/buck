@@ -16,18 +16,18 @@
 
 package com.facebook.buck.apple;
 
-/**
- * Known bundle extensions that have special handling.
- */
+/** Known bundle extensions that have special handling. */
 public enum AppleBundleExtension {
   APP,
   FRAMEWORK,
   APPEX,
   PLUGIN,
   BUNDLE,
-  OCTEST,
   XCTEST,
-  DSYM;
+  DSYM,
+  XPC,
+  PREFPANE,
+  QLGENERATOR;
 
   public String toFileExtension() {
     switch (this) {
@@ -41,14 +41,18 @@ public enum AppleBundleExtension {
         return "plugin";
       case BUNDLE:
         return "bundle";
-      case OCTEST:
-        return "octest";
       case XCTEST:
         return "xctest";
       case DSYM:
         return "dSYM";
+      case XPC:
+        return "xpc";
+      case PREFPANE:
+        return "prefPane";
+      case QLGENERATOR:
+        return "qlgenerator";
       default:
-        throw new IllegalStateException("Invalid bundle extension value: " + this.toString());
+        throw new IllegalStateException("Invalid bundle extension value: " + this);
     }
   }
 }

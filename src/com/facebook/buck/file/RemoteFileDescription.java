@@ -16,72 +16,98 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.hash.HashCode;
-
 import java.net.URI;
+import java.util.Optional;
+import java.util.function.Supplier;
+import org.immutables.value.Value;
 
-public class RemoteFileDescription implements Description<RemoteFileDescription.Arg> {
+public class RemoteFileDescription implements DescriptionWithTargetGraph<RemoteFileDescriptionArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("remote_file");
-  private final Downloader downloader;
+  private final Supplier<Downloader> downloaderSupplier;
+
+  public RemoteFileDescription(ToolchainProvider toolchainProvider) {
+    this.downloaderSupplier =
+        () -> toolchainProvider.getByName(Downloader.DEFAULT_NAME, Downloader.class);
+  }
 
   public RemoteFileDescription(Downloader downloader) {
-    this.downloader = downloader;
+    this.downloaderSupplier = () -> downloader;
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<RemoteFileDescriptionArg> getConstructorArgType() {
+    return RemoteFileDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> BuildRule createBuildRule(
-      TargetGraph targetGraph,
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+      RemoteFileDescriptionArg args) {
     HashCode sha1;
     try {
-      sha1 = HashCode.fromString(args.sha1);
+      sha1 = HashCode.fromString(args.getSha1());
     } catch (IllegalArgumentException e) {
       throw new HumanReadableException(
           e,
           "%s when parsing sha1 of %s",
           e.getMessage(),
-          params.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName());
+          buildTarget.getUnflavoredBuildTarget().getFullyQualifiedName());
     }
 
-    String out = args.out.or(params.getBuildTarget().getShortNameAndFlavorPostfix());
+    String out = args.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
 
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    RemoteFile.Type type = args.getType().orElse(RemoteFile.Type.DATA);
+    if (type == RemoteFile.Type.EXECUTABLE) {
+      return new RemoteFileBinary(
+          buildTarget,
+          projectFilesystem,
+          params,
+          downloaderSupplier.get(),
+          args.getUrl(),
+          sha1,
+          out,
+          type);
+    }
     return new RemoteFile(
+        buildTarget,
+        projectFilesystem,
         params,
-        new SourcePathResolver(resolver),
-        downloader,
-        args.url,
+        downloaderSupplier.get(),
+        args.getUrl(),
         sha1,
-        out);
+        out,
+        type);
   }
 
-  @SuppressFieldNotInitialized
-  public class Arg extends AbstractDescriptionArg {
-    public URI url;
-    public String sha1;
-    public Optional<String> out;
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractRemoteFileDescriptionArg extends CommonDescriptionArg {
+    URI getUrl();
+
+    String getSha1();
+
+    Optional<String> getOut();
+
+    Optional<RemoteFile.Type> getType();
   }
 }

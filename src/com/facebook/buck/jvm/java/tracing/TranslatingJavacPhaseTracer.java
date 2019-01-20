@@ -16,152 +16,54 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
-import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.ClassLoaderCache;
-import com.google.common.collect.ImmutableList;
-import com.google.common.io.ByteStreams;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Method;
-import java.net.URL;
 import java.util.List;
-
 import javax.annotation.Nullable;
-import javax.tools.JavaCompiler;
 
 /**
  * A {@link JavacPhaseTracer} that translates the trace data to be more useful.
- * <p>
- * The phases of compilation are described
- * <a href="http://openjdk.java.net/groups/compiler/doc/compilation-overview/index.html">here</a>.
- * The doc describes annotation processing as conceptually occuring before compilation, but
- * actually occurring somewhat out-of-phase with the conceptual model.
- * <p>
- * Javac calls {@link TracingTaskListener} according to the conceptual model described in that
- * document: annotation processing starts at the very beginning of the run, and ends after the
- * last annotation processor is run in the last round of processing. Then there is one last parse
- * and enter before going into analyze and generate. This is problematic from a performance
- * perspective, because some of the work attributed to annotation processing would have happened
- * regardless.
- * <p>
- * This class translates the tracing data from the conceptual model back into something that more
+ *
+ * <p>The phases of compilation are described <a
+ * href="http://openjdk.java.net/groups/compiler/doc/compilation-overview/index.html">here</a>. The
+ * doc describes annotation processing as conceptually occuring before compilation, but actually
+ * occurring somewhat out-of-phase with the conceptual model.
+ *
+ * <p>Javac calls {@link TracingTaskListener} according to the conceptual model described in that
+ * document: annotation processing starts at the very beginning of the run, and ends after the last
+ * annotation processor is run in the last round of processing. Then there is one last parse and
+ * enter before going into analyze and generate. This is problematic from a performance perspective,
+ * because some of the work attributed to annotation processing would have happened regardless.
+ *
+ * <p>This class translates the tracing data from the conceptual model back into something that more
  * closely matches the actual implementation:
+ *
  * <ul>
- *   <li>Parse, enter, analyze, and generate phases pass thru unchanged</li>
- *   <li>What javac traces as an annotation processing round is renamed
- *   "run annotation processors"</li>
+ *   <li>Parse, enter, analyze, and generate phases pass thru unchanged
+ *   <li>What javac traces as an annotation processing round is renamed "run annotation processors"
  *   <li>Annotation processing rounds are traced from the beginning of "run annotation processors"
- *   to the beginning of the next "run annotation processors" or (for the last round)
- *   the first analyze phase</li>
- *   <li>Annotation processing is traced from the beginning of the first round to
- *   the end of the last</li>
+ *       to the beginning of the next "run annotation processors" or (for the last round) the first
+ *       analyze phase
+ *   <li>Annotation processing is traced from the beginning of the first round to the end of the
+ *       last
  *   <li>If compilation ends during annotation processing (as can happen with -proc:only), it
- *   detects this (via being closed by its caller) and emits appropriate tracing</li>
+ *       detects this (via being closed by its caller) and emits appropriate tracing
  * </ul>
- * In this way, the time attributed to annotation processing is always time
- * that would not have been spent if annotation processors were not present.
+ *
+ * In this way, the time attributed to annotation processing is always time that would not have been
+ * spent if annotation processors were not present.
  */
 public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoCloseable {
-  private static final Logger LOG = Logger.get(TranslatingJavacPhaseTracer.class);
-  private static final String JAVAC_TRACING_JAR_RESOURCE_PATH = "javac-tracing-compiler-plugin.jar";
-  @Nullable
-  private static final URL JAVAC_TRACING_JAR_URL = extractJavaTracingJar();
-
   private final JavacPhaseEventLogger logger;
 
   private boolean isProcessingAnnotations = false;
   private int roundNumber = 0;
-
-  /**
-   * Extracts the jar containing {@link TracingTaskListener} and returns a URL that can be given
-   * to a {@link java.net.URLClassLoader}.
-   */
-  @Nullable
-  private static URL extractJavaTracingJar() {
-    @Nullable final URL resourceURL =
-        TranslatingJavacPhaseTracer.class.getResource(JAVAC_TRACING_JAR_RESOURCE_PATH);
-    if (resourceURL == null) {
-      return null;
-    } else if ("file".equals(resourceURL.getProtocol())) {
-      // When Buck is running from the repo, the jar is actually already on disk, so no extraction
-      // is necessary
-      return resourceURL;
-    } else {
-      // Running from a .pex file, extraction is required
-      try (InputStream resourceStream = TranslatingJavacPhaseTracer.class.getResourceAsStream(
-          JAVAC_TRACING_JAR_RESOURCE_PATH)) {
-        File tempFile = File.createTempFile("javac-tracing", ".jar");
-        tempFile.deleteOnExit();
-        try (OutputStream tempFileStream = new FileOutputStream(tempFile)) {
-          ByteStreams.copy(resourceStream, tempFileStream);
-          return tempFile.toURI().toURL();
-        }
-      } catch (IOException e) {
-        LOG.warn(e, "Failed to extract javac tracing jar");
-        return null;
-      }
-    }
-  }
-
-  @Nullable
-  public static TranslatingJavacPhaseTracer setupTracing(
-      BuildTarget invokingTarget,
-      ClassLoaderCache classLoaderCache,
-      BuckEventBus buckEventBus,
-      JavaCompiler.CompilationTask task) {
-    if (JAVAC_TRACING_JAR_URL == null) {
-      return null;
-    }
-
-    try {
-      // TracingTaskListener is an implementation of com.sun.source.util.TaskListener that traces
-      // the TaskEvents to a JavacPhaseTracer. TaskListener is a public API that is packaged in the
-      // javac compiler JAR. However, Buck allows Java rules to supply custom compiler JARs. In
-      // order to implement TaskListener, then, TracingTaskListener must be loaded in a ClassLoader
-      // that has access to the appropriate compiler JAR.
-      final ClassLoader compilerClassLoader = task.getClass().getClassLoader();
-      final ClassLoader tracingTaskListenerClassLoader =
-          classLoaderCache.getClassLoaderForClassPath(
-              compilerClassLoader,
-              ImmutableList.of(JAVAC_TRACING_JAR_URL));
-
-      final Class<?> tracingTaskListenerClass = Class.forName(
-          "com.facebook.buck.jvm.java.tracing.TracingTaskListener",
-          false,
-          tracingTaskListenerClassLoader);
-      final Method setupTracingMethod = tracingTaskListenerClass.getMethod(
-          "setupTracing",
-          JavaCompiler.CompilationTask.class,
-          JavacPhaseTracer.class);
-      final TranslatingJavacPhaseTracer tracer = new TranslatingJavacPhaseTracer(
-          new JavacPhaseEventLogger(invokingTarget, buckEventBus));
-      setupTracingMethod.invoke(
-          null,
-          task,
-          tracer);
-
-      return tracer;
-    } catch (ReflectiveOperationException e) {
-      LOG.warn(
-          e,
-          "Failed loading TracingTaskListener. " +
-              "Perhaps using a compiler that doesn't support com.sun.source.util.JavaTask?");
-      return null;
-    }
-  }
+  private boolean isLastRound = false;
 
   public TranslatingJavacPhaseTracer(JavacPhaseEventLogger logger) {
     this.logger = logger;
   }
 
   @Override
-  public void beginParse(String filename) {
+  public void beginParse(@Nullable String filename) {
     logger.beginParse(filename);
   }
 
@@ -178,6 +80,14 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   @Override
   public void endEnter(List<String> filenames) {
     logger.endEnter(filenames);
+    if (isProcessingAnnotations && isLastRound) {
+      endAnnotationProcessing();
+    }
+  }
+
+  @Override
+  public void setIsLastRound(boolean isLastRound) {
+    this.isLastRound = isLastRound;
   }
 
   @Override
@@ -200,23 +110,17 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
   }
 
   @Override
-  public void beginAnalyze(String filename, String typename) {
-    if (isProcessingAnnotations) {
-      logger.endAnnotationProcessingRound(true);
-      logger.endAnnotationProcessing();
-      isProcessingAnnotations = false;
-    }
-
-    logger.beginAnalyze(filename, typename);
+  public void beginAnalyze() {
+    logger.beginAnalyze();
   }
 
   @Override
-  public void endAnalyze() {
-    logger.endAnalyze();
+  public void endAnalyze(List<String> filenames, List<String> typenames) {
+    logger.endAnalyze(filenames, typenames);
   }
 
   @Override
-  public void beginGenerate(String filename, String typename) {
+  public void beginGenerate(@Nullable String filename, @Nullable String typename) {
     logger.beginGenerate(filename, typename);
   }
 
@@ -227,13 +131,23 @@ public class TranslatingJavacPhaseTracer implements JavacPhaseTracer, AutoClosea
 
   @Override
   public void close() {
-    if (isProcessingAnnotations) {
-      // If javac is invoked with -proc:only, the last thing we'll hear from it is the end of
-      // the annotation processing round. We won't get a beginAnalyze (or even a beginEnter) after
-      // the annotation processors run for the last time.
+    // If javac is invoked with -proc:only, the last thing we'll hear from it is the end of
+    // the annotation processing round. We won't get a beginAnalyze (or even a beginEnter) after
+    // the annotation processors run for the last time.
+    maybeEndAnnotationProcessing();
+  }
+
+  private void maybeEndAnnotationProcessing() {
+    if (isProcessingAnnotations && isLastRound) {
       logger.endAnnotationProcessingRound(true);
       logger.endAnnotationProcessing();
       isProcessingAnnotations = false;
     }
+  }
+
+  private void endAnnotationProcessing() {
+    logger.endAnnotationProcessingRound(true);
+    logger.endAnnotationProcessing();
+    isProcessingAnnotations = false;
   }
 }

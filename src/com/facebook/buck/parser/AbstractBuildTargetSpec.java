@@ -16,19 +16,14 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
-import com.google.common.base.Predicate;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
-
+import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
-/**
- * Matches a {@link TargetNode} name by a specific {@link BuildTarget}.
- */
+/** Matches a {@link TargetNode} name by a specific {@link BuildTarget}. */
 @Value.Immutable(builder = false)
 @BuckStyleImmutable
 abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
@@ -50,16 +45,20 @@ abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
   }
 
   @Override
-  public ImmutableMap<BuildTarget, Optional<TargetNode<?>>> filter(Iterable<TargetNode<?>> nodes) {
-    Optional<TargetNode<?>> firstMatchingNode = Iterables.tryFind(
-        nodes,
-        new Predicate<TargetNode<?>>() {
-          @Override
-          public boolean apply(TargetNode<?> input) {
-            return input.getBuildTarget().getUnflavoredBuildTarget().equals(
-                getBuildTarget().getUnflavoredBuildTarget());
-          }
-        });
+  public ImmutableMap<BuildTarget, TargetNode<?>> filter(Iterable<TargetNode<?>> nodes) {
+    TargetNode<?> firstMatchingNode =
+        StreamSupport.stream(nodes.spliterator(), false)
+            .filter(
+                input ->
+                    input
+                        .getBuildTarget()
+                        .getUnflavoredBuildTarget()
+                        .equals(getBuildTarget().getUnflavoredBuildTarget()))
+            .findFirst()
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Cannot find target node for build target " + getBuildTarget()));
     return ImmutableMap.of(getBuildTarget(), firstMatchingNode);
   }
 
@@ -67,5 +66,4 @@ abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
   public String toString() {
     return getBuildTarget().getFullyQualifiedName();
   }
-
 }

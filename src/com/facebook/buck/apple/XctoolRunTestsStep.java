@@ -16,31 +16,29 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.TeeInputStream;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.collect.LinkedListMultimap;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,18 +50,22 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
- * Runs {@code xctool} on one or more logic tests and/or application
- * tests (each paired with a host application).
+ * Runs {@code xctool} on one or more logic tests and/or application tests (each paired with a host
+ * application).
  *
- * The output is written in streaming JSON format to stdout and is
- * parsed by {@link XctoolOutputParsing}.
+ * <p>The output is written in streaming JSON format to stdout and is parsed by {@link
+ * XctoolOutputParsing}.
  */
 class XctoolRunTestsStep implements Step {
 
@@ -71,6 +73,7 @@ class XctoolRunTestsStep implements Step {
   private static final ScheduledExecutorService stutterTimeoutExecutorService =
       Executors.newSingleThreadScheduledExecutor();
   private static final String XCTOOL_ENV_VARIABLE_PREFIX = "XCTOOL_TEST_ENV_";
+  private static final String FB_REFERENCE_IMAGE_DIR = "FB_REFERENCE_IMAGE_DIR";
 
   private final ProjectFilesystem filesystem;
 
@@ -85,12 +88,14 @@ class XctoolRunTestsStep implements Step {
   private final Optional<Long> xctoolStutterTimeout;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
-  private final Supplier<Optional<Path>> xcodeDeveloperDirSupplier;
+  private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
   private final TestSelectorList testSelectorList;
   private final Optional<String> logDirectoryEnvironmentVariable;
   private final Optional<Path> logDirectory;
   private final Optional<String> logLevelEnvironmentVariable;
   private final Optional<String> logLevel;
+  private final Optional<Long> timeoutInMs;
+  private final Optional<String> snapshotReferenceImagesPath;
 
   // Helper class to parse the output of `xctool -listTestsOnly` then
   // store it in a multimap of {target: [testDesc1, testDesc2, ...], ... } pairs.
@@ -98,7 +103,7 @@ class XctoolRunTestsStep implements Step {
   // We need to remember both the target name and the test class/method names, since
   // `xctool -only` requires the format `TARGET:className/methodName,...`
   private static class ListTestsOnlyHandler implements XctoolOutputParsing.XctoolEventCallback {
-    private String currentTestTarget;
+    private @Nullable String currentTestTarget;
     public Multimap<String, TestDescription> testTargetsToDescriptions;
 
     public ListTestsOnlyHandler() {
@@ -115,39 +120,34 @@ class XctoolRunTestsStep implements Step {
 
     @Override
     public void handleEndOcunitEvent(XctoolOutputParsing.EndOcunitEvent event) {
-      Preconditions.checkNotNull(this.currentTestTarget);
+      Objects.requireNonNull(this.currentTestTarget);
       Preconditions.checkState(this.currentTestTarget.equals(event.targetName));
       // Signals the end of listing all tests belonging to a single target.
       this.currentTestTarget = null;
     }
 
     @Override
-    public void handleBeginTestSuiteEvent(XctoolOutputParsing.BeginTestSuiteEvent event) {
-    }
+    public void handleBeginTestSuiteEvent(XctoolOutputParsing.BeginTestSuiteEvent event) {}
 
     @Override
-    public void handleEndTestSuiteEvent(XctoolOutputParsing.EndTestSuiteEvent event) {
-    }
+    public void handleEndTestSuiteEvent(XctoolOutputParsing.EndTestSuiteEvent event) {}
 
     @Override
-    public void handleBeginStatusEvent(XctoolOutputParsing.StatusEvent event) {
-    }
+    public void handleBeginStatusEvent(XctoolOutputParsing.StatusEvent event) {}
 
     @Override
-    public void handleEndStatusEvent(XctoolOutputParsing.StatusEvent event) {
-    }
+    public void handleEndStatusEvent(XctoolOutputParsing.StatusEvent event) {}
 
     @Override
     public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
-      Preconditions.checkNotNull(this.currentTestTarget);
       testTargetsToDescriptions.put(
-          this.currentTestTarget,
-          new TestDescription(event.className, event.methodName));
+          Objects.requireNonNull(this.currentTestTarget),
+          new TestDescription(
+              Objects.requireNonNull(event.className), Objects.requireNonNull(event.methodName)));
     }
 
     @Override
-    public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {
-    }
+    public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {}
   }
 
   public XctoolRunTestsStep(
@@ -159,52 +159,50 @@ class XctoolRunTestsStep implements Step {
       Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
+      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
-      Supplier<Optional<Path>> xcodeDeveloperDirSupplier,
+      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
       TestSelectorList testSelectorList,
+      boolean waitForDebugger,
       Optional<String> logDirectoryEnvironmentVariable,
       Optional<Path> logDirectory,
       Optional<String> logLevelEnvironmentVariable,
-      Optional<String> logLevel) {
+      Optional<String> logLevel,
+      Optional<Long> timeoutInMs,
+      Optional<String> snapshotReferenceImagesPath) {
     Preconditions.checkArgument(
-        !(logicTestBundlePaths.isEmpty() &&
-          appTestBundleToHostAppPaths.isEmpty()),
-        "Either logic tests (%s) or app tests (%s) must be present",
+        !(logicTestBundlePaths.isEmpty()
+            && appTestBundleToHostAppPaths.isEmpty()
+            && appTestPathsToTestHostAppPathsToTestTargetAppPaths.isEmpty()),
+        "Either logic tests (%s) or app tests (%s) or uitest (%s) must be present",
         logicTestBundlePaths,
-        appTestBundleToHostAppPaths);
+        appTestBundleToHostAppPaths,
+        appTestPathsToTestHostAppPathsToTestTargetAppPaths);
 
     this.filesystem = filesystem;
 
-    // Each test bundle must have one of these extensions. (xctool
-    // depends on them to choose which test runner to use.)
-    Preconditions.checkArgument(
-        AppleBundleExtensions.allPathsHaveValidTestExtensions(logicTestBundlePaths),
-        "Extension of all logic tests must be one of %s (got %s)",
-        AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS,
-        logicTestBundlePaths);
-    Preconditions.checkArgument(
-        AppleBundleExtensions.allPathsHaveValidTestExtensions(appTestBundleToHostAppPaths.keySet()),
-        "Extension of all app tests must be one of %s (got %s)",
-        AppleBundleExtensions.VALID_XCTOOL_BUNDLE_EXTENSIONS,
-        appTestBundleToHostAppPaths.keySet());
-
-    this.command = createCommandArgs(
-        xctoolPath,
-        sdkName,
-        destinationSpecifier,
-        logicTestBundlePaths,
-        appTestBundleToHostAppPaths);
+    this.command =
+        createCommandArgs(
+            xctoolPath,
+            sdkName,
+            destinationSpecifier,
+            logicTestBundlePaths,
+            appTestBundleToHostAppPaths,
+            appTestPathsToTestHostAppPathsToTestTargetAppPaths,
+            waitForDebugger);
     this.environmentOverrides = environmentOverrides;
     this.xctoolStutterTimeout = xctoolStutterTimeout;
     this.outputPath = outputPath;
     this.stdoutReadingCallback = stdoutReadingCallback;
-    this.xcodeDeveloperDirSupplier = xcodeDeveloperDirSupplier;
+    this.appleDeveloperDirectoryForTestsProvider = appleDeveloperDirectoryForTestsProvider;
     this.testSelectorList = testSelectorList;
     this.logDirectoryEnvironmentVariable = logDirectoryEnvironmentVariable;
     this.logDirectory = logDirectory;
     this.logLevelEnvironmentVariable = logLevelEnvironmentVariable;
     this.logLevel = logLevel;
+    this.timeoutInMs = timeoutInMs;
+    this.snapshotReferenceImagesPath = snapshotReferenceImagesPath;
   }
 
   @Override
@@ -213,14 +211,10 @@ class XctoolRunTestsStep implements Step {
   }
 
   public ImmutableMap<String, String> getEnv(ExecutionContext context) {
-    Map<String, String> environment = new HashMap<>();
-    environment.putAll(context.getEnvironment());
-    Optional<Path> xcodeDeveloperDir = xcodeDeveloperDirSupplier.get();
-    if (xcodeDeveloperDir.isPresent()) {
-      environment.put("DEVELOPER_DIR", xcodeDeveloperDir.get().toString());
-    } else {
-      throw new RuntimeException("Cannot determine xcode developer dir");
-    }
+    Map<String, String> environment = new HashMap<>(context.getEnvironment());
+    Path xcodeDeveloperDir =
+        appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests();
+    environment.put("DEVELOPER_DIR", xcodeDeveloperDir.toString());
     // xctool will only pass through to the test environment variables whose names
     // start with `XCTOOL_TEST_ENV_`. (It will remove that prefix when passing them
     // to the test.)
@@ -231,8 +225,11 @@ class XctoolRunTestsStep implements Step {
     }
     if (logLevelEnvironmentVariable.isPresent() && logLevel.isPresent()) {
       environment.put(
-          XCTOOL_ENV_VARIABLE_PREFIX + logLevelEnvironmentVariable.get(),
-          logLevel.get());
+          XCTOOL_ENV_VARIABLE_PREFIX + logLevelEnvironmentVariable.get(), logLevel.get());
+    }
+    if (snapshotReferenceImagesPath.isPresent()) {
+      environment.put(
+          XCTOOL_ENV_VARIABLE_PREFIX + FB_REFERENCE_IMAGE_DIR, snapshotReferenceImagesPath.get());
     }
 
     environment.putAll(this.environmentOverrides);
@@ -240,124 +237,170 @@ class XctoolRunTestsStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ImmutableMap<String, String> env = getEnv(context);
 
-    ProcessExecutorParams.Builder processExecutorParamsBuilder = ProcessExecutorParams.builder()
-        .addAllCommand(command)
-        .setDirectory(filesystem.getRootPath().toAbsolutePath().toFile())
-        .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
-        .setEnvironment(env);
+    ProcessExecutorParams.Builder processExecutorParamsBuilder =
+        ProcessExecutorParams.builder()
+            .addAllCommand(command)
+            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
+            .setEnvironment(env);
 
     if (!testSelectorList.isEmpty()) {
-      try {
-        ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
-        int returnCode = listAndFilterTestsThenFormatXctoolParams(
-            context.getProcessExecutor(),
-            context.getConsole(),
-            testSelectorList,
-            // Copy the entire xctool command and environment but add a -listTestsOnly arg.
-            ProcessExecutorParams.builder()
-                .from(processExecutorParamsBuilder.build())
-                .addCommand("-listTestsOnly")
-                .build(),
-            xctoolFilterParamsBuilder);
-        if (returnCode != 0) {
-          context.getConsole().printErrorText("Failed to query tests with xctool");
-          return StepExecutionResult.of(returnCode);
-        }
-        ImmutableList<String> xctoolFilterParams = xctoolFilterParamsBuilder.build();
-        if (xctoolFilterParams.isEmpty()) {
-          context.getConsole().printBuildFailure(
-              String.format(
-                  Locale.US,
-                  "No tests found matching specified filter (%s)",
-                  testSelectorList.getExplanation()));
-          return StepExecutionResult.SUCCESS;
-        }
-        processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
-      } catch (IOException e) {
-        context.getConsole().printErrorText("Failed to get list of tests from test bundle");
-        context.getConsole().printBuildFailureWithStacktrace(e);
-        return StepExecutionResult.ERROR;
+      ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
+      int returnCode =
+          listAndFilterTestsThenFormatXctoolParams(
+              context.getProcessExecutor(),
+              context.getConsole(),
+              testSelectorList,
+              // Copy the entire xctool command and environment but add a -listTestsOnly arg.
+              ProcessExecutorParams.builder()
+                  .from(processExecutorParamsBuilder.build())
+                  .addCommand("-listTestsOnly")
+                  .build(),
+              xctoolFilterParamsBuilder);
+      if (returnCode != 0) {
+        context.getConsole().printErrorText("Failed to query tests with xctool");
+        return StepExecutionResult.of(returnCode);
       }
+      ImmutableList<String> xctoolFilterParams = xctoolFilterParamsBuilder.build();
+      if (xctoolFilterParams.isEmpty()) {
+        context
+            .getConsole()
+            .printBuildFailure(
+                String.format(
+                    Locale.US,
+                    "No tests found matching specified filter (%s)",
+                    testSelectorList.getExplanation()));
+        return StepExecutionResults.SUCCESS;
+      }
+      processExecutorParamsBuilder.addAllCommand(xctoolFilterParams);
     }
 
     ProcessExecutorParams processExecutorParams = processExecutorParamsBuilder.build();
 
     // Only launch one instance of xctool at the time
-    final AtomicBoolean stutterLockIsNotified = new AtomicBoolean(false);
+    AtomicBoolean stutterLockIsNotified = new AtomicBoolean(false);
     try {
       LOG.debug("Running command: %s", processExecutorParams);
 
+      acquireStutterLock(stutterLockIsNotified);
+
+      // Start the process.
+      ProcessExecutor.LaunchedProcess launchedProcess =
+          context.getProcessExecutor().launchProcess(processExecutorParams);
+
+      int exitCode = -1;
+      String stderr = "Unexpected termination";
       try {
-        acquireStutterLock(stutterLockIsNotified);
-
-        // Start the process.
-        ProcessExecutor.LaunchedProcess launchedProcess =
-            context.getProcessExecutor().launchProcess(processExecutorParams);
-
-        int exitCode;
-        String stderr;
-        try (OutputStream outputStream = filesystem.newFileOutputStream(
-            outputPath);
-             TeeInputStream stdoutWrapperStream = new TeeInputStream(
-                 launchedProcess.getInputStream(), outputStream);
-             InputStreamReader stderrReader = new InputStreamReader(
-                 launchedProcess.getErrorStream(),
-                 StandardCharsets.UTF_8);
-             BufferedReader bufferedStderrReader = new BufferedReader(stderrReader)) {
-          if (stdoutReadingCallback.isPresent()) {
-            // The caller is responsible for reading all the data, which TeeInputStream will
-            // copy to outputStream.
-            stdoutReadingCallback.get().readStdout(stdoutWrapperStream);
-          } else {
-            // Nobody's going to read from stdoutWrapperStream, so close it and copy
-            // the process's stdout to outputPath directly.
-            stdoutWrapperStream.close();
-            ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
-          }
-          stderr = CharStreams.toString(bufferedStderrReader).trim();
-          exitCode = waitForProcessAndGetExitCode(context.getProcessExecutor(), launchedProcess);
-          LOG.debug("Finished running command, exit code %d, stderr %s", exitCode, stderr);
-        } finally {
-          context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
-          context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
+        ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
+        ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
+        Thread stdoutReaderThread = new Thread(stdoutReader);
+        Thread stderrReaderThread = new Thread(stderrReader);
+        stdoutReaderThread.start();
+        stderrReaderThread.start();
+        exitCode =
+            waitForProcessAndGetExitCode(
+                context.getProcessExecutor(), launchedProcess, timeoutInMs);
+        stdoutReaderThread.join(timeoutInMs.orElse(1000L));
+        stderrReaderThread.join(timeoutInMs.orElse(1000L));
+        Optional<IOException> exception = stdoutReader.getException();
+        if (exception.isPresent()) {
+          throw exception.get();
         }
-
-        if (exitCode != 0) {
-          if (!stderr.isEmpty()) {
-            context.getConsole().printErrorText(
-                String.format(
-                    Locale.US,
-                    "xctool failed with exit code %d: %s",
-                    exitCode,
-                    stderr));
-          } else {
-            context.getConsole().printErrorText(
-                String.format(
-                    Locale.US,
-                    "xctool failed with exit code %d",
-                    exitCode));
-          }
-        }
-
-        return StepExecutionResult.of(exitCode);
-
-      } catch (Exception e) {
-        LOG.error(e, "Exception while running %s", processExecutorParams.getCommand());
-        MoreThrowables.propagateIfInterrupt(e);
-        context.getConsole().printBuildFailureWithStacktrace(e);
-        return StepExecutionResult.ERROR;
+        stderr = stderrReader.getStdErr();
+        LOG.debug("Finished running command, exit code %d, stderr %s", exitCode, stderr);
+      } finally {
+        context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
+        context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
       }
+
+      if (exitCode != 0) {
+        if (!stderr.isEmpty()) {
+          context
+              .getConsole()
+              .printErrorText(
+                  String.format(
+                      Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
+        } else {
+          context
+              .getConsole()
+              .printErrorText(
+                  String.format(Locale.US, "xctool failed with exit code %d", exitCode));
+        }
+      }
+
+      return StepExecutionResult.of(exitCode);
+
     } finally {
       releaseStutterLock(stutterLockIsNotified);
     }
   }
 
+  private class ProcessStdoutReader implements Runnable {
+
+    private final ProcessExecutor.LaunchedProcess launchedProcess;
+    private Optional<IOException> exception = Optional.empty();
+
+    public ProcessStdoutReader(ProcessExecutor.LaunchedProcess launchedProcess) {
+      this.launchedProcess = launchedProcess;
+    }
+
+    @Override
+    public void run() {
+      try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
+          TeeInputStream stdoutWrapperStream =
+              new TeeInputStream(launchedProcess.getInputStream(), outputStream)) {
+        if (stdoutReadingCallback.isPresent()) {
+          // The caller is responsible for reading all the data, which TeeInputStream will
+          // copy to outputStream.
+          stdoutReadingCallback.get().readStdout(stdoutWrapperStream);
+        } else {
+          // Nobody's going to read from stdoutWrapperStream, so close it and copy
+          // the process's stdout to outputPath directly.
+          stdoutWrapperStream.close();
+          ByteStreams.copy(launchedProcess.getInputStream(), outputStream);
+        }
+      } catch (IOException e) {
+        exception = Optional.of(e);
+      }
+    }
+
+    public Optional<IOException> getException() {
+      return exception;
+    }
+  }
+
+  private static class ProcessStderrReader implements Runnable {
+
+    private final ProcessExecutor.LaunchedProcess launchedProcess;
+    private String stderr = "";
+
+    public ProcessStderrReader(ProcessExecutor.LaunchedProcess launchedProcess) {
+      this.launchedProcess = launchedProcess;
+    }
+
+    @Override
+    public void run() {
+      try (InputStreamReader stderrReader =
+              new InputStreamReader(launchedProcess.getErrorStream(), StandardCharsets.UTF_8);
+          BufferedReader bufferedStderrReader = new BufferedReader(stderrReader)) {
+        stderr = CharStreams.toString(bufferedStderrReader).trim();
+      } catch (IOException e) {
+        stderr = Throwables.getStackTraceAsString(e);
+      }
+    }
+
+    public String getStdErr() {
+      return stderr;
+    }
+  }
+
   @Override
   public String getDescription(ExecutionContext context) {
-    return Joiner.on(' ').join(Iterables.transform(command, Escaper.SHELL_ESCAPER));
+    return command.stream().map(Escaper.SHELL_ESCAPER).collect(Collectors.joining(" "));
   }
 
   private static int listAndFilterTestsThenFormatXctoolParams(
@@ -365,7 +408,8 @@ class XctoolRunTestsStep implements Step {
       Console console,
       TestSelectorList testSelectorList,
       ProcessExecutorParams listTestsOnlyParams,
-      ImmutableList.Builder<String> filterParamsBuilder) throws IOException, InterruptedException {
+      ImmutableList.Builder<String> filterParamsBuilder)
+      throws IOException, InterruptedException {
     Preconditions.checkArgument(!testSelectorList.isEmpty());
     LOG.debug("Filtering tests with selector list: %s", testSelectorList.getExplanation());
 
@@ -377,34 +421,24 @@ class XctoolRunTestsStep implements Step {
     String stderr;
     int listTestsResult;
     try (InputStreamReader isr =
-         new InputStreamReader(
-             launchedProcess.getInputStream(),
-             StandardCharsets.UTF_8);
-         BufferedReader br = new BufferedReader(isr);
-         InputStreamReader esr =
-         new InputStreamReader(
-             launchedProcess.getErrorStream(),
-             StandardCharsets.UTF_8);
-         BufferedReader ebr = new BufferedReader(esr)) {
+            new InputStreamReader(launchedProcess.getInputStream(), StandardCharsets.UTF_8);
+        BufferedReader br = new BufferedReader(isr);
+        InputStreamReader esr =
+            new InputStreamReader(launchedProcess.getErrorStream(), StandardCharsets.UTF_8);
+        BufferedReader ebr = new BufferedReader(esr)) {
       XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
       stderr = CharStreams.toString(ebr).trim();
-      listTestsResult = processExecutor.waitForLaunchedProcess(launchedProcess);
+      listTestsResult = processExecutor.waitForLaunchedProcess(launchedProcess).getExitCode();
     }
 
     if (listTestsResult != 0) {
       if (!stderr.isEmpty()) {
         console.printErrorText(
             String.format(
-                Locale.US,
-                "xctool failed with exit code %d: %s",
-                listTestsResult,
-                stderr));
+                Locale.US, "xctool failed with exit code %d: %s", listTestsResult, stderr));
       } else {
         console.printErrorText(
-            String.format(
-                Locale.US,
-                "xctool failed with exit code %d",
-                listTestsResult));
+            String.format(Locale.US, "xctool failed with exit code %d", listTestsResult));
       }
     } else {
       formatXctoolFilterParams(
@@ -448,7 +482,9 @@ class XctoolRunTestsStep implements Step {
       String sdkName,
       Optional<String> destinationSpecifier,
       Collection<Path> logicTestBundlePaths,
-      Map<Path, Path> appTestBundleToHostAppPaths) {
+      Map<Path, Path> appTestBundleToHostAppPaths,
+      Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
+      boolean waitForDebugger) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
     args.add(xctoolPath.toString());
     args.add("-reporter");
@@ -468,14 +504,45 @@ class XctoolRunTestsStep implements Step {
       args.add(appTestBundleAndHostApp.getKey() + ":" + appTestBundleAndHostApp.getValue());
     }
 
+    for (Map.Entry<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetApp :
+        appTestPathsToTestHostAppPathsToTestTargetAppPaths.entrySet()) {
+      for (Map.Entry<Path, Path> testHostAppToTestTargetApp :
+          appTestPathsToTestHostAppPathsToTestTargetApp.getValue().entrySet()) {
+        args.add("-uiTest");
+        args.add(
+            appTestPathsToTestHostAppPathsToTestTargetApp.getKey()
+                + ":"
+                + testHostAppToTestTargetApp.getKey()
+                + ":"
+                + testHostAppToTestTargetApp.getValue());
+      }
+    }
+    if (waitForDebugger) {
+      args.add("-waitForDebugger");
+    }
+
     return args.build();
   }
 
   private static int waitForProcessAndGetExitCode(
       ProcessExecutor processExecutor,
-      ProcessExecutor.LaunchedProcess launchedProcess)
+      ProcessExecutor.LaunchedProcess launchedProcess,
+      Optional<Long> timeoutInMs)
       throws InterruptedException {
-    int processExitCode = processExecutor.waitForLaunchedProcess(launchedProcess);
+    int processExitCode;
+    if (timeoutInMs.isPresent()) {
+      ProcessExecutor.Result processResult =
+          processExecutor.waitForLaunchedProcessWithTimeout(
+              launchedProcess, timeoutInMs.get(), Optional.empty());
+      if (processResult.isTimedOut()) {
+        throw new HumanReadableException(
+            "Timed out after %d ms running test command", timeoutInMs.orElse(-1L));
+      } else {
+        processExitCode = processResult.getExitCode();
+      }
+    } else {
+      processExitCode = processExecutor.waitForLaunchedProcess(launchedProcess).getExitCode();
+    }
     if (processExitCode == 0 || processExitCode == 1) {
       // Test failure is denoted by xctool returning 1. Unfortunately, there's no way
       // to distinguish an internal xctool error from a test failure:
@@ -491,8 +558,7 @@ class XctoolRunTestsStep implements Step {
     }
   }
 
-  private void acquireStutterLock(final AtomicBoolean stutterLockIsNotified)
-      throws InterruptedException {
+  private void acquireStutterLock(AtomicBoolean stutterLockIsNotified) throws InterruptedException {
     if (!xctoolStutterTimeout.isPresent()) {
       return;
     }
@@ -503,12 +569,7 @@ class XctoolRunTestsStep implements Step {
       throw e;
     }
     stutterTimeoutExecutorService.schedule(
-        new Runnable() {
-          @Override
-          public void run() {
-            releaseStutterLock(stutterLockIsNotified);
-          }
-        },
+        () -> releaseStutterLock(stutterLockIsNotified),
         xctoolStutterTimeout.get(),
         TimeUnit.MILLISECONDS);
   }
@@ -525,5 +586,4 @@ class XctoolRunTestsStep implements Step {
   public ImmutableList<String> getCommand() {
     return command;
   }
-
 }

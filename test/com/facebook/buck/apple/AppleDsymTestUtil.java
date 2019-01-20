@@ -15,43 +15,37 @@
  */
 package com.facebook.buck.apple;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.codehaus.plexus.util.StringUtils;
 import org.hamcrest.Matchers;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class AppleDsymTestUtil {
   private static final String MAIN = "main";
+
   private AppleDsymTestUtil() {}
 
-  public static void checkDsymFileHasDebugSymbolForMain(
-      ProjectWorkspace workspace,
-      Path dwarfPath) throws IOException, InterruptedException {
+  public static void checkDsymFileHasDebugSymbolForMain(ProjectWorkspace workspace, Path dwarfPath)
+      throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbol(MAIN, workspace, dwarfPath);
   }
 
   public static void checkDsymFileHasDebugSymbol(
-      String symbolName,
-      ProjectWorkspace workspace,
-      Path dwarfPath) throws IOException, InterruptedException {
+      String symbolName, ProjectWorkspace workspace, Path dwarfPath)
+      throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbolForConcreteArchitectures(
-        symbolName,
-        workspace,
-        dwarfPath,
-        Optional.<ImmutableList<String>>absent());
+        symbolName, workspace, dwarfPath, Optional.empty());
   }
 
   public static void checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
-      ProjectWorkspace workspace,
-      Path dwarfPath,
-      Optional<ImmutableList<String>> architectures) throws IOException, InterruptedException {
+      ProjectWorkspace workspace, Path dwarfPath, Optional<ImmutableList<String>> architectures)
+      throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbolForConcreteArchitectures(MAIN, workspace, dwarfPath, architectures);
   }
 
@@ -59,9 +53,13 @@ public class AppleDsymTestUtil {
       String symbolName,
       ProjectWorkspace workspace,
       Path dwarfPath,
-      Optional<ImmutableList<String>> architectures) throws IOException, InterruptedException {
-    String dwarfdumpMainStdout = workspace
-        .runCommand("dwarfdump", "-n", symbolName, dwarfPath.toString()).getStdout().or("");
+      Optional<ImmutableList<String>> architectures)
+      throws IOException, InterruptedException {
+    String dwarfdumpMainStdout =
+        workspace
+            .runCommand("dwarfdump", "-n", symbolName, dwarfPath.toString())
+            .getStdout()
+            .orElse("");
 
     int expectedMatchCount = 1;
     if (architectures.isPresent()) {
@@ -72,8 +70,7 @@ public class AppleDsymTestUtil {
     }
 
     assertThat(
-        StringUtils.countMatches(
-        dwarfdumpMainStdout, "AT_name"),
+        StringUtils.countMatches(dwarfdumpMainStdout, "AT_name"),
         Matchers.equalTo(expectedMatchCount));
     assertThat(
         StringUtils.countMatches(dwarfdumpMainStdout, "AT_decl_file"),
@@ -81,5 +78,18 @@ public class AppleDsymTestUtil {
     assertThat(
         StringUtils.countMatches(dwarfdumpMainStdout, "AT_decl_line"),
         Matchers.equalTo(expectedMatchCount));
+  }
+
+  public static void checkDsymFileHasSection(
+      String segname, String sectname, ProjectWorkspace workspace, Path dwarfPath)
+      throws IOException, InterruptedException {
+    String otoolStdout =
+        workspace
+            .runCommand("otool", "-s", segname, sectname, dwarfPath.toString())
+            .getStdout()
+            .orElse("");
+
+    String contentsStr = "Contents of (" + segname + "," + sectname + ") section";
+    assertThat(StringUtils.contains(otoolStdout, contentsStr), is(true));
   }
 }

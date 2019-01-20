@@ -1,0 +1,15 @@
+cxx_library(
+    name = "echo",
+    srcs = ["echo.cpp"],
+)
+
+sh_binary(
+    name = "cxx",
+    main = ":cxx-genrule",
+)
+
+genrule(
+    name = "cxx-genrule",
+    out = "out",
+    cmd = "echo echo test > $OUT && chmod +x $OUT",
+)

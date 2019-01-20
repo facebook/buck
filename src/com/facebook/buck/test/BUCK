@@ -1,47 +1,62 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 REPORT_FORMAT_SRCS = [
-  'CoverageReportFormat.java',
+    "CoverageReportFormat.java",
 ]
+
 java_library(
-  name = 'report-format',
-  srcs = REPORT_FORMAT_SRCS,
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/jvm/java:steps',
-    '//test/com/facebook/buck/jvm/java:java',
-  ],
+    name = "report-format",
+    srcs = REPORT_FORMAT_SRCS,
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/jvm/java:steps",
+        "//test/com/facebook/buck/jvm/java:java",
+    ],
 )
 
 CONFIG_SRCS = [
-  'AbstractTestResultSummaryVerbosity.java',
-  'TestConfig.java',
+    "AbstractTestResultSummaryVerbosity.java",
+    "TestConfig.java",
 ]
+
 java_immutables_library(
-  name = 'config',
-  srcs = CONFIG_SRCS,
-  immutable_types = [
-    'TestResultSummaryVerbosity',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//src/com/facebook/buck/event/listener:listener',
-    '//test/com/facebook/buck/event/listener:listener',
-    '//test/com/facebook/buck/test:test',
-  ],
+    name = "config",
+    srcs = CONFIG_SRCS,
+    visibility = [
+        "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/cli:cli",
+        "//test/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/test:test",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/config:config",
+    ],
 )
 
 # Sources for dealing with test results.
 java_immutables_library(
-  name = 'test',
-  srcs = glob(['*.java'], excludes = REPORT_FORMAT_SRCS + CONFIG_SRCS),
-  immutable_types = [
-    'TestResults',
-    'TestRunningOptions',
-    'TestStatusMessage',
-  ],
-  tests = [
-    '//test/com/facebook/buck/test:test',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
+    name = "test",
+    srcs = glob(
+        ["*.java"],
+        exclude = REPORT_FORMAT_SRCS + CONFIG_SRCS,
+    ),
+    tests = [
+        "//test/com/facebook/buck/test:test",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":report-format",
+        "//src/com/facebook/buck/core/config:config",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/test/result/type:type",
+        "//src/com/facebook/buck/test/selectors:selectors",
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/xml:xml",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
 )

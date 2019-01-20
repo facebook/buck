@@ -1,0 +1,13 @@
+config_setting(
+    name = "java_8",
+    values = {
+        "java.target_level": "8",
+    },
+)
+
+config_setting(
+    name = "java_11",
+    values = {
+        "java.target_level": "11",
+    },
+)

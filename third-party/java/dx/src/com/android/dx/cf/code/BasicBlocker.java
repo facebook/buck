@@ -230,6 +230,7 @@ public final class BasicBlocker implements BytecodeArray.Visitor {
                 addWorkIfNecessary(offset, true);
                 // Fall through to next case...
             }
+	    // fall through
             default: {
                 int next = offset + length;
                 visitCommon(offset, length, true);

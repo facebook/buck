@@ -1,0 +1,5 @@
+apple_binary(
+    name = "TestApp",
+    srcs = ["main.c"],
+    thin_lto = True,
+)

@@ -1,24 +1,24 @@
 android_resource(
-  name = 'base',
-  res = 'res',
-  # See com.facebook.buck.android.AndroidBinaryRuleIntegrationTest#testEditingAssetForcesRebuild
-  assets = 'buck-assets',
-  package = 'com.sample',
-  visibility = [
-    'PUBLIC',
-  ],
-  deps = [
-  ],
+    name = "base",
+    # See com.facebook.buck.android.AndroidBinaryRuleIntegrationTest#testEditingAssetForcesRebuild
+    assets = "buck-assets",
+    package = "com.sample",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
 )
 
 android_resource(
-  name = 'base_with_lib_dep',
-  res = 'res',
-  package = 'com.sample',
-  visibility = [
-    'PUBLIC',
-  ],
-  deps = [
-    '//java/com/sample/small:small',
-  ],
+    name = "base_with_lib_dep",
+    package = "com.sample",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//java/com/sample/small:small",
+    ],
 )

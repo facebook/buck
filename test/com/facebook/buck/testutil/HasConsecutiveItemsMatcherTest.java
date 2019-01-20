@@ -21,90 +21,61 @@ import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
-
 import org.junit.Test;
 
-/**
- * Unit tests for {@link HasConsecutiveItemsMatcher}.
- */
+/** Unit tests for {@link HasConsecutiveItemsMatcher}. */
 public class HasConsecutiveItemsMatcherTest {
 
   @Test
   public void emptyIncludesEmpty() {
-    assertThat(
-        ImmutableList.of(),
-        hasConsecutiveItems());
+    assertThat(ImmutableList.of(), hasConsecutiveItems());
   }
 
   @Test
   public void nonEmptyIncludesEmpty() {
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        hasConsecutiveItems());
+    assertThat(ImmutableList.of("a", "b", "c"), hasConsecutiveItems());
   }
 
   @Test
   public void includesSingleItem() {
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        hasConsecutiveItems("a"));
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        hasConsecutiveItems("b"));
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        hasConsecutiveItems("c"));
+    assertThat(ImmutableList.of("a", "b", "c"), hasConsecutiveItems("a"));
+    assertThat(ImmutableList.of("a", "b", "c"), hasConsecutiveItems("b"));
+    assertThat(ImmutableList.of("a", "b", "c"), hasConsecutiveItems("c"));
   }
 
   @Test
   public void includesSublist() {
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        hasConsecutiveItems("b", "c"));
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        hasConsecutiveItems("a", "b"));
+    assertThat(ImmutableList.of("a", "b", "c"), hasConsecutiveItems("b", "c"));
+    assertThat(ImmutableList.of("a", "b", "c"), hasConsecutiveItems("a", "b"));
   }
 
   @Test
   public void includesEntireList() {
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        hasConsecutiveItems("a", "b", "c"));
+    assertThat(ImmutableList.of("a", "b", "c"), hasConsecutiveItems("a", "b", "c"));
   }
 
   @Test
   public void doesNotIncludeExtraItem() {
-    assertThat(
-        ImmutableList.of("a", "b", "fnord", "c"),
-        not(hasConsecutiveItems("a", "b", "c")));
+    assertThat(ImmutableList.of("a", "b", "fnord", "c"), not(hasConsecutiveItems("a", "b", "c")));
   }
 
   @Test
   public void doesNotIncludeMissingItem() {
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        not(hasConsecutiveItems("d")));
+    assertThat(ImmutableList.of("a", "b", "c"), not(hasConsecutiveItems("d")));
   }
 
   @Test
   public void doesNotIncludeListTooLong() {
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        not(hasConsecutiveItems("a", "b", "c", "d")));
+    assertThat(ImmutableList.of("a", "b", "c"), not(hasConsecutiveItems("a", "b", "c", "d")));
   }
 
   @Test
   public void includesCollection() {
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        hasConsecutiveItems(ImmutableList.of("b", "c")));
+    assertThat(ImmutableList.of("a", "b", "c"), hasConsecutiveItems(ImmutableList.of("b", "c")));
   }
 
   @Test
   public void doesNotIncludeCollectionWithMissingItem() {
-    assertThat(
-        ImmutableList.of("a", "b", "c"),
-        not(hasConsecutiveItems(ImmutableList.of("d"))));
+    assertThat(ImmutableList.of("a", "b", "c"), not(hasConsecutiveItems(ImmutableList.of("d"))));
   }
 }

@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.build}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'buck build' /}
+    {param navid: 'command_build' /}
     {param prettify: true /}
     {param description}
       A command that builds one or more specified targets.
@@ -13,19 +29,30 @@
 
 {call buck.command}
 {param overview}
+
 <p>
-Builds one or more specified targets.
+Builds one or more rules specified by a set 
+of {call buck.build_target /}s and  {call buck.build_target_pattern /}s. 
+This is the most commonly used command in Buck. 
+</p>
+
 <p>
-As Buck is a build system, this is the most commonly used command in
-Buck. To build a rule, pass its target to buck build:
+Syntax:
+</p>
+
+<pre>buck build &#123; &lt;build target&gt; &#124; &lt;build target pattern&gt; &#125; . . .</pre>
+<p>
+Example:
+</p>
 
 <pre>buck build /&#x2F;java/com/example/app:amazing</pre>
 
 <p>
   Note that any {call buck.remote_file /} rules referenced by your build rules must be downloaded
-  with {call buck.cmd_fetch /} prior to calling this command if you don't set <code>in_build = true
-  </code> in the <code>[download]</code> section of your <code>.buckconfig</code>.
+  with {call buck.cmd_fetch /} prior to calling this command unless you set <code>in_build = true
+  </code> in the <code>[download]</code> section of your {call buck.buckconfig_link /}.
 </p>
+
 
 {/param}
 {param params}
@@ -35,8 +62,9 @@ Buck. To build a rule, pass its target to buck build:
   {param desc}
   Specifies a file where a JSON summary of the build output should be written.
   Note that <code>--build-report</code> can be used without <code>--keep-going</code>,
-  though if <code>--keep-going</code> is not specified, the report will only be written
-  if all of the targets are built successfully. Here is a sample build report:
+  though if <code>--keep-going</code> is not specified, the generated report may be partial and not
+  include information about the targets that buck haven't had a chance to try to build.
+  Here is a sample build report:
   <p>
 <pre class="prettyprint lang-js">{literal}
 {
@@ -116,6 +144,15 @@ Buck. To build a rule, pass its target to buck build:
 {/call}
 
 {call buck.param}
+  {param name: 'out' /}
+  {param desc}
+  Takes the output of the build target and copies it to the specified path.
+  Only works with a single build target, and the corresponding build rule
+  must support this option.
+  {/param}
+{/call}
+
+{call buck.param}
   {param name: 'populate-cache' /}
   {param desc}
 
@@ -125,16 +162,92 @@ Buck. To build a rule, pass its target to buck build:
 {/call}
 
 
-{call buck.param}
-  {param name: 'verbose' /}
-  {param alias: 'v'/}
-  {param desc}
-  How verbose logging to the console should be, with 1 as the minimum
-  and 10 as the most verbose.
-  {/param}
-{/call}
+{call command_common.show_output_param /}
+
+{call command_common.common_param_xref /}
 
 {/param}
+
+{param examples}
+
+<h3>View compiler flags using the compilation database</h3>
+
+<p>
+For C++ builds, to view the compiler flags that Buck is passing to the
+C++ compiler, tell Buck to generate a <em>compilation database</em> for
+the target. The compilation database is a JSON file that contains
+information about how Buck compiled the target. The syntax is:
+</p>
+
+{literal}<pre class="prettyprint lang-bash">
+buck build path/to/target#compilation-database
+</pre>{/literal}
+
+<p>
+You can then get the path to the compilation-database file itself using:
+</p>
+
+{literal}<pre class="prettyprint lang-bash">
+buck targets --show-output path/to/target#compilation-database
+</pre>{/literal}
+
+<p>
+For example:
+</p>
+
+{literal}<pre class="prettyprint lang-bash">
+$ buck clean
+Parsing buck files: finished in 1.7 sec (100%)
+Building: finished in 1.5 sec (100%) 3/3 jobs, 3 updated, 0.0% cache miss
+  Total time: 3.7 sec
+
+$ buck build :main#compilation-database
+Building: finished in 1.5 sec (100%) 3/3 jobs, 3 updated, 0.0% cache miss
+  Total time: 3.7 sec
+
+$ buck targets --show-output :main#compilation-database
+//:main#compilation-database buck-out/gen/__main#compilation-database/compile_commands.json
+
+$ jq . buck-out/gen/__main#compilation-database/compile_commands.json 
+[
+  {
+    "directory": "/Users/devuser/git/gtDev/C++/oop/simple-classes",
+    "file": "/Users/devuser/git/gtDev/C++/oop/simple-classes/main.cpp",
+    "arguments": [
+      "/usr/bin/clang++",
+      "-x",
+      "c++",
+      "-I",
+      "buck-out/gen/main#default,private-headers.hmap",
+      "-I",
+      "buck-out",
+      "-Xclang",
+      "-fdebug-compilation-dir",
+      "-Xclang",
+      ".",
+      "-fdebug-prefix-map=/Users/devuser/git/gtDev/C++/oop/simple-classes=.",
+      "-c",
+      "-MD",
+      "-MF",
+      "buck-out/gen/main#compile-main.cpp.oa5b6a1ba,default/main.cpp.o.dep",
+      "main.cpp",
+      "-o",
+      "buck-out/gen/main#compile-main.cpp.oa5b6a1ba,default/main.cpp.o"
+    ]
+  }
+]
+</pre>{/literal}
+
+<p>
+In the preceding example <code>:main</code> specifies 
+a <em>relative</em> build target that is defined in the build file 
+located in the current directory.
+The <code>jq</code> tool&mdash;available through package managers such 
+as Homebrew&mdash;enables you to pretty-print JSON files.
+</p>
+
+
+{/param} // examples
 
 {/call}
 

@@ -12,9 +12,13 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
+import shutil
+import tempfile
 import unittest
 
-from buck_tool import CommandLineArgs
+from buck_tool import BuckToolException, CommandLineArgs, get_java_path
+from subprocutils import which
 
 
 class TestCommandLineArgs(unittest.TestCase):
@@ -52,6 +56,7 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertEqual(args.buck_options, ["--version"])
         self.assertEqual(args.command_options, [])
         self.assertTrue(args.is_help(), "--version does not require a build")
+        self.assertTrue(args.is_version())
 
     def test_command_help(self):
         args = CommandLineArgs(["buck", "clean", "--help"])
@@ -68,12 +73,42 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertFalse(args.is_help(), "Global --help ignored with command")
 
     def test_command_all(self):
-        args = CommandLineArgs(["buck", "--help", "--version", "clean", "--help", "all"])
+        args = CommandLineArgs(
+            ["buck", "--help", "--version", "clean", "--help", "all"]
+        )
         self.assertEqual(args.command, "clean")
         self.assertEqual(args.buck_options, ["--help", "--version"])
         self.assertEqual(args.command_options, ["--help", "all"])
         self.assertTrue(args.is_help())
 
 
-if __name__ == '__main__':
+class TestJavaPath(unittest.TestCase):
+    def setUp(self):
+        self.java_home = tempfile.mkdtemp()
+        self.java_exec = "java.exe" if os.name == "nt" else "java"
+        bin_dir = os.path.join(self.java_home, "bin")
+        os.mkdir(bin_dir)
+        open(os.path.join(bin_dir, self.java_exec), "w")
+
+    def test_with_java_home_valid(self):
+        os.environ["JAVA_HOME"] = self.java_home
+        self.assertEqual(
+            get_java_path().lower(),
+            os.path.join(self.java_home, "bin", self.java_exec).lower(),
+        )
+
+    def test_with_java_home_invalid(self):
+        os.environ["JAVA_HOME"] = "/nosuchfolder/89aabebc-42cb-4cd8-bcf7-d964371daf3e"
+        self.assertRaises(BuckToolException)
+
+    def test_without_java_home(self):
+        self.assertEquals(get_java_path().lower(), which("java").lower())
+
+    def tearDown(self):
+        if "JAVA_HOME" in os.environ:
+            del os.environ["JAVA_HOME"]
+        shutil.rmtree(self.java_home)
+
+
+if __name__ == "__main__":
     unittest.main()

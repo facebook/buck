@@ -1,0 +1,4 @@
+android_library(
+    name = "src_release",
+    manifest = "Manifest.xml",
+)

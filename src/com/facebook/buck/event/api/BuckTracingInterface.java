@@ -18,10 +18,9 @@ package com.facebook.buck.event.api;
 
 import java.util.Map;
 
-/**
- * Used by Buck to supply an implementation for {@link BuckTracing}.
- */
+/** Used by Buck to supply an implementation for {@link BuckTracing}. */
 public interface BuckTracingInterface {
   void begin(String pluginName, String eventName, Map<String, String> args);
+
   void end(Map<String, String> args);
 }

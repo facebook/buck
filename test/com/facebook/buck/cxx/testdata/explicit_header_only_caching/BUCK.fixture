@@ -1,0 +1,51 @@
+# We generally want our target structure to look like this:
+#
+# B -> D -> L1 -> L2
+#   |
+#   -> L3 -> L1#headers
+#
+# Which is to say, L3 dynamically links the code in L1 which
+# is provided by D (our dylib)
+
+cxx_binary(
+    name = "binary",
+    srcs = ["main.c"],
+    deps = [
+        ":dylib-exporting-lib1",
+        ":lib3",
+    ],
+)
+
+cxx_library(
+    name = "dylib-exporting-lib1",
+    srcs = ["stub.c"],
+    linker_flags = ["-all_load"],
+    preferred_linkage = "shared",
+    deps = [":lib1"],
+)
+
+cxx_library(
+    name = "lib1",
+    srcs = ["lib1.c"],
+    exported_headers = ["lib1.h"],
+    header_namespace = "lib1",
+    preferred_linkage = "static",
+    deps = [":lib2"],
+)
+
+cxx_library(
+    name = "lib2",
+    srcs = ["lib2.c"],
+    exported_headers = ["lib2.h"],
+    header_namespace = "lib2",
+    preferred_linkage = "static",
+)
+
+cxx_library(
+    name = "lib3",
+    srcs = ["lib3.c"],
+    exported_headers = ["lib3.h"],
+    header_namespace = "lib3",
+    preferred_linkage = "static",
+    deps = [":lib1#headers"],
+)

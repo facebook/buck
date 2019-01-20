@@ -1,12 +1,7 @@
 import static org.junit.Assert.fail;
 
-import org.junit.Test;
-
-import java.util.Collections;
-
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
-import java.util.logging.Handler;
+import org.junit.Test;
 
 public class LoggingTest {
 

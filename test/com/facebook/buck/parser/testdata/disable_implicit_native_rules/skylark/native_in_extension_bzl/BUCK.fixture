@@ -1,0 +1,7 @@
+# BUILD FILE SYNTAX: SKYLARK
+load("//skylark/native_in_extension_bzl:extension.bzl", "java_maker")
+
+java_maker(
+    name = "main",
+    srcs = ["Main.java"],
+)

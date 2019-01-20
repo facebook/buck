@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buckconfig}
 
 /**
@@ -17,9 +32,23 @@
  * @param description The description of this setting.
  * @param? example_value An example value for this setting.
  * @param? raw_example Raw HTML to show the example.
+ * @param? deprecated Whether this setting has been deprecated
+ * @param? deprecationAlternative An alternative to use rather than this deprecated setting. Can also include a link to the github deprecation announcement.
+ * @param? preliminary Whether or not this setting is preliminary
  */
 {template .entry}
   <h3 id="{$section}.{$name}">{$name} <a class="inline-link" href="#{$section}.{$name}">#</a></h3>
+  {if $deprecated}
+  <p class="warning-banner">
+  This setting is deprecated. {if isNonnull($deprecationAlternative)}{$deprecationAlternative|noAutoescape}{/if}
+  </p>
+  {/if}
+  {if $preliminary}
+  <p class="warning-banner">
+  This setting is preliminary and is likely to change.
+  </p>
+  {/if}
+
   <p>
     {$description|noAutoescape}
   </p>
@@ -38,7 +67,34 @@
  * @param section The section the entry is in.
  */
 {template .section_link}
-<a href="{ROOT}concept/buckconfig.html#{$section}"><code>[{$section}]</code></a>
+<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}"><code>[{$section}]</code></a>
+{/template}
+
+
+/**
+ * @param title Text for heading that appears in rendered content
+ * @param id    ID string that is used to link to the heading. See
+ *              .heading_link template.
+ */
+{template .section_concept_h2}
+  <h2 id="{$id}">{$title}&nbsp;<a class="inline-link" href="#{$id}">#</a></h2>
+{/template}
+
+/**
+ * @param id             ID string for the heading to link to. See .heading template.
+ * @param rendered_text  The rendered text for the link.
+ */
+{template .section_concept_link}
+  <a href="#{$id}"><strong>{$rendered_text}</strong></a><br>
+{/template}
+
+
+/***/
+{template .dx_threads}
+{call .entry_link}
+  {param section : 'dx' /}
+  {param entry : 'threads' /}
+{/call}
 {/template}
 
 /***/
@@ -58,9 +114,10 @@
 /**
  * @param section The section the entry is in.
  * @param entry The name of the entry to link to.
+ * @param? link_text The text of the link
  */
 {template .entry_link}
-<a href="{ROOT}concept/buckconfig.html#{$section}.{$entry}">{$section}.{$entry}</a>
+<a href="{ROOT}files-and-dirs/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}<code>[{$section}].{$entry}</code>{/if}</a>
 {/template}
 
 /***/
@@ -104,6 +161,30 @@
 {/template}
 
 /***/
+{template .apple_toolchains_override}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: '*_toolchains_override' /}
+{/call}
+{/template}
+
+/***/
+{template .apple_replacement}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: '*_replacement' /}
+{/call}
+{/template}
+
+/***/
+{template .apple_xcode_tool_name_override}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: '*_xcode_tool_name_override' /}
+{/call}
+{/template}
+
+/***/
 {template .build_depfiles}
 {call .entry_link}
   {param section: 'build' /}
@@ -120,10 +201,33 @@
 {/template}
 
 /***/
-{template .cache_http_cache_names}
+{template .buildfile_includes}
+{call .entry_link}
+  {param section: 'buildfile' /}
+  {param entry: 'includes' /}
+{/call}
+{/template}
+
+/***/
+{template .buildfile_name}
+{call .entry_link}
+  {param section: 'buildfile' /}
+  {param entry: 'name' /}
+{/call}
+{/template}
+
+/***/
+{template .cache}
+{call .section_link}
+  {param section: 'cache' /}
+{/call}
+{/template}
+
+/***/
+{template .http_mode}
 {call .entry_link}
   {param section: 'cache' /}
-  {param entry: 'http_cache_names' /}
+  {param entry: 'http_mode' /}
 {/call}
 {/template}
 
@@ -144,10 +248,50 @@
 {/template}
 
 /***/
-{template .log_remote_log_url}
+{template .cxx_gtest_dep}
 {call .entry_link}
-    {param section: 'log' /}
-    {param entry: 'remote_log_url' /}
+  {param section: 'cxx' /}
+  {param entry: 'gtest_dep' /}
+{/call}
+{/template}
+
+/***/
+{template .should_remap_host_platform}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'should_remap_host_platform' /}
+{/call}
+{/template}
+
+/***/
+{template .host_platform}
+{call .entry_link}
+  {param section: 'cxx' /}
+  {param entry: 'host_platform' /}
+{/call}
+{/template}
+
+/***/
+{template .kotlin_kotlinc}
+{call .entry_link}
+  {param section: 'kotlin' /}
+  {param entry: 'kotlinc' /}
+{/call}
+{/template}
+
+/***/
+{template .kotlin_external}
+{call .entry_link}
+  {param section: 'kotlin' /}
+  {param entry: 'external' /}
+{/call}
+{/template}
+
+/***/
+{template .kotlin_kotlin_home}
+{call .entry_link}
+  {param section: 'kotlin' /}
+  {param entry: 'kotlin_home' /}
 {/call}
 {/template}
 
@@ -176,6 +320,36 @@
 {/template}
 
 /***/
+{template .parser}
+{call .section_link}
+  {param section: 'parser' /}
+{/call}
+{/template}
+
+/***/
+{template .parser_polyglot_parsing_enabled}
+    {call .entry_link}
+        {param section: 'parser' /}
+        {param entry: 'polyglot_parsing_enabled' /}
+    {/call}
+{/template}
+
+/***/
+{template .project_ignore}
+{call .entry_link}
+    {param section: 'project' /}
+    {param entry: 'ignore' /}
+{/call}
+{/template}
+
+/***/
+{template .python}
+{call .section_link}
+  {param section: 'python' /}
+{/call}
+{/template}
+
+/***/
 {template .python_interpreter}
 {call .entry_link}
     {param section: 'python' /}
@@ -192,10 +366,33 @@
 {/template}
 
 /***/
+{template .repositories}
+{call .section_link}
+  {param section: 'repositories' /}
+{/call}
+{/template}
+
+/***/
 {template .test_rule_timeout}
 {call .entry_link}
     {param section: 'test' /}
     {param entry: 'rule_timeout' /}
+{/call}
+{/template}
+
+/***/
+{template .test_external_runner}
+{call .entry_link}
+    {param section: 'test' /}
+    {param entry: 'external_runner' /}
+{/call}
+{/template}
+
+/***/
+{template .test_threads}
+{call .entry_link}
+    {param section: 'test' /}
+    {param entry: 'threads' /}
 {/call}
 {/template}
 
@@ -228,6 +425,117 @@
 {call buckconfig.entry_link}
   {param section: 'tools' /}
   {param entry: 'java_jar' /}
+{/call}
+{/template}
+
+/***/
+{template .alias}
+{call .section_link}
+  {param section: 'alias' /}
+{/call}
+{/template}
+
+/***/
+{template .java_src_roots}
+{call .entry_link}
+    {param section: 'java' /}
+    {param entry: 'src_roots' /}
+{/call}
+{/template}
+
+/***/
+{template .java_abi_generation_mode}
+{call .entry_link}
+    {param section: 'java' /}
+    {param entry: 'abi_generation_mode' /}
+{/call}
+{/template}
+
+/***/
+{template .android_build_tools_version}
+{call .entry_link}
+    {param section: 'android' /}
+    {param entry: 'build_tools_version' /}
+{/call}
+{/template}
+
+/***/
+{template .android_target}
+{call .entry_link}
+    {param section: 'android' /}
+    {param entry: 'target' /}
+{/call}
+{/template}
+
+/***/
+{template .android_sdk_path}
+{call .entry_link}
+    {param section: 'android' /}
+    {param entry: 'sdk_path' /}
+{/call}
+{/template}
+
+/***/
+{template .ndk_version}
+{call .entry_link}
+    {param section: 'ndk' /}
+    {param entry: 'ndk_version' /}
+{/call}
+{/template}
+
+/***/
+{template .go_vendor_path}
+{call buckconfig.entry_link}
+  {param section: 'go' /}
+  {param entry: 'vendor_path' /}
+{/call}
+{/template}
+
+/***/
+{template .ndk_path}
+{call .entry_link}
+    {param section: 'ndk' /}
+    {param entry: 'ndk_path' /}
+{/call}
+{/template}
+
+/***/
+{template .ndk_repository_path}
+{call .entry_link}
+    {param section: 'ndk' /}
+    {param entry: 'ndk_repository_path' /}
+{/call}
+{/template}
+
+/***/
+{template .default_android_manifest_path}
+{call .entry_link}
+    {param section: 'intellij' /}
+    {param entry: 'default_android_manifest_path' /}
+{/call}
+{/template}
+
+/***/
+{template .generate_android_manifest}
+{call .entry_link}
+    {param section: 'intellij' /}
+    {param entry: 'generate_android_manifest' /}
+{/call}
+{/template}
+
+/***/
+{template .python_native_link_strategy}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'native_link_strategy' /}
+{/call}
+{/template}
+
+/***/
+{template .download_in_build}
+{call .entry_link}
+  {param section: 'download' /}
+  {param entry: 'in_build' /}
 {/call}
 {/template}
 

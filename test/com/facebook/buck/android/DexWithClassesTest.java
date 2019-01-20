@@ -19,75 +19,88 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibrary;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
-
+import java.util.Optional;
 import org.junit.Test;
 
 public class DexWithClassesTest {
 
   @Test
   public void testIntermediateDexRuleToDexWithClasses() {
-        SourcePathResolver resolver =
- new SourcePathResolver(
-         new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-     );
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
-    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
+    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, resolver, javaLibrary);
-    dexFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
-        new DexProducedFromJavaLibrary.BuildOutput(
-            /* linearAllocEstimate */ 1600,
-            /* classNamesToHashes */ ImmutableSortedMap.of(
-                "com/example/Main",
-                HashCode.fromString(Strings.repeat("cafebabe", 5)))));
+        new DexProducedFromJavaLibrary(
+            buildTarget,
+            new FakeProjectFilesystem(),
+            TestAndroidPlatformTargetFactory.create(),
+            params,
+            javaLibrary,
+            DxStep.DX);
+    dexFromJavaLibrary
+        .getBuildOutputInitializer()
+        .setBuildOutputForTests(
+            new DexProducedFromJavaLibrary.BuildOutput(
+                /* weightEstimate */ 1600,
+                /* classNamesToHashes */ ImmutableSortedMap.of(
+                    "com/example/Main", HashCode.fromString(Strings.repeat("cafebabe", 5))),
+                Optional.empty()));
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertEquals(
-        BuildTargets.getGenPath(javaLibrary.getProjectFilesystem(), buildTarget, "%s.dex.jar"),
-        dexWithClasses.getPathToDexFile());
+        BuildTargetPaths.getGenPath(javaLibrary.getProjectFilesystem(), buildTarget, "%s.dex.jar"),
+        pathResolver.getRelativePath(dexWithClasses.getSourcePathToDexFile()));
     assertEquals(ImmutableSet.of("com/example/Main"), dexWithClasses.getClassNames());
-    assertEquals(1600, dexWithClasses.getSizeEstimate());
+    assertEquals(1600, dexWithClasses.getWeightEstimate());
   }
 
   @Test
   public void testIntermediateDexRuleToDexWithClassesWhenIntermediateDexHasNoClasses() {
-    SourcePathResolver resolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
     BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//java/com/example:lib");
-    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget, resolver);
+    JavaLibrary javaLibrary = new FakeJavaLibrary(javaLibraryTarget);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:lib#dex");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(buildTarget).build();
+    BuildRuleParams params = TestBuildRuleParams.create();
     DexProducedFromJavaLibrary dexFromJavaLibrary =
-        new DexProducedFromJavaLibrary(params, resolver, javaLibrary);
-    dexFromJavaLibrary.getBuildOutputInitializer().setBuildOutput(
-        new DexProducedFromJavaLibrary.BuildOutput(
-            /* linearAllocEstimate */ 1600,
-            /* classNamesToHashes */ ImmutableSortedMap.<String, HashCode>of()));
+        new DexProducedFromJavaLibrary(
+            buildTarget,
+            new FakeProjectFilesystem(),
+            TestAndroidPlatformTargetFactory.create(),
+            params,
+            javaLibrary,
+            DxStep.DX);
+    dexFromJavaLibrary
+        .getBuildOutputInitializer()
+        .setBuildOutputForTests(
+            new DexProducedFromJavaLibrary.BuildOutput(
+                /* weightEstimate */ 1600,
+                /* classNamesToHashes */ ImmutableSortedMap.of(),
+                Optional.empty()));
 
     DexWithClasses dexWithClasses = DexWithClasses.TO_DEX_WITH_CLASSES.apply(dexFromJavaLibrary);
     assertNull(
-        "If the JavaLibraryRule does not produce any .class files, " +
-            "then DexWithClasses.TO_DEX_WITH_CLASSES should return null.",
+        "If the JavaLibraryRule does not produce any .class files, "
+            + "then DexWithClasses.TO_DEX_WITH_CLASSES should return null.",
         dexWithClasses);
   }
 }

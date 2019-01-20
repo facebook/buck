@@ -20,9 +20,14 @@ import org.junit.Test;
 import org.junit.internal.AssumptionViolatedException;
 
 public class AssumptionTestAJunit {
-  @Test public void test1() {}
-  @Test public void test2() {}
-  @Test public void test3() {
+  @Test
+  public void test1() {}
+
+  @Test
+  public void test2() {}
+
+  @Test
+  public void test3() {
     throw new AssumptionViolatedException("A3");
   }
 }

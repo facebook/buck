@@ -16,65 +16,136 @@
 
 package com.facebook.buck.jvm.scala;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.core.SuggestBuildRules;
-import com.facebook.buck.jvm.java.BaseCompileToJarStepFactory;
-import com.facebook.buck.jvm.java.ClassUsageFileWriter;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.FileExtensionMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.CompilerParameters;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
-class ScalacToJarStepFactory extends BaseCompileToJarStepFactory {
+public class ScalacToJarStepFactory extends CompileToJarStepFactory implements AddsToRuleKey {
 
-  private final Tool scalac;
-  private final ImmutableList<String> extraArguments;
+  private static final PathMatcher JAVA_PATH_MATCHER = FileExtensionMatcher.of("java");
+  private static final PathMatcher SCALA_PATH_MATCHER = FileExtensionMatcher.of("scala");
+
+  @AddToRuleKey private final Tool scalac;
+  @AddToRuleKey private final ImmutableList<String> configCompilerFlags;
+  @AddToRuleKey private final ImmutableList<String> extraArguments;
+  @AddToRuleKey private final ImmutableSet<SourcePath> compilerPlugins;
+  @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
+  @AddToRuleKey private final Javac javac;
+  @AddToRuleKey private final JavacOptions javacOptions;
 
   public ScalacToJarStepFactory(
       Tool scalac,
-      ImmutableList<String> extraArguments) {
+      ImmutableList<String> configCompilerFlags,
+      ImmutableList<String> extraArguments,
+      ImmutableSet<BuildRule> compilerPlugins,
+      Javac javac,
+      JavacOptions javacOptions,
+      ExtraClasspathProvider extraClassPath) {
     this.scalac = scalac;
+    this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
+    this.compilerPlugins =
+        compilerPlugins
+            .stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .collect(ImmutableSet.toImmutableSet());
+    this.javac = javac;
+    this.javacOptions = javacOptions;
+    this.extraClassPath = extraClassPath;
   }
 
   @Override
   public void createCompileStep(
       BuildContext context,
-      ImmutableSortedSet<Path> sourceFilePaths,
+      ProjectFilesystem projectFilesystem,
       BuildTarget invokingRule,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
-      ImmutableSortedSet<Path> classpathEntries,
-      Path outputDirectory,
-      Optional<Path> workingDirectory,
-      Path pathToSrcsList,
-      Optional<SuggestBuildRules> suggestBuildRules,
-      ClassUsageFileWriter usedClassesFileWriter,
-      /* out params */
-      ImmutableList.Builder<Step> steps,
+      CompilerParameters parameters,
+      /* output params */
+      Builder<Step> steps,
       BuildableContext buildableContext) {
-    steps.add(
-        new ScalacStep(
-            scalac,
-            extraArguments,
-            resolver,
-            outputDirectory,
-            sourceFilePaths,
-            classpathEntries,
-            filesystem));
+
+    ImmutableSortedSet<Path> classpathEntries = parameters.getClasspathEntries();
+    ImmutableSortedSet<Path> sourceFilePaths = parameters.getSourceFilePaths();
+    Path outputDirectory = parameters.getOutputPaths().getClassesDir();
+
+    if (sourceFilePaths.stream().anyMatch(SCALA_PATH_MATCHER::matches)) {
+      steps.add(
+          new ScalacStep(
+              scalac,
+              ImmutableList.<String>builder()
+                  .addAll(configCompilerFlags)
+                  .addAll(extraArguments)
+                  .addAll(
+                      Iterables.transform(
+                          compilerPlugins,
+                          input ->
+                              "-Xplugin:" + context.getSourcePathResolver().getRelativePath(input)))
+                  .build(),
+              context.getSourcePathResolver(),
+              outputDirectory,
+              sourceFilePaths,
+              ImmutableSortedSet.<Path>naturalOrder()
+                  .addAll(
+                      Optional.ofNullable(extraClassPath.getExtraClasspath())
+                          .orElse(ImmutableList.of()))
+                  .addAll(classpathEntries)
+                  .build(),
+              projectFilesystem));
+    }
+
+    ImmutableSortedSet<Path> javaSourceFiles =
+        ImmutableSortedSet.copyOf(
+            sourceFilePaths
+                .stream()
+                .filter(JAVA_PATH_MATCHER::matches)
+                .collect(Collectors.toSet()));
+
+    // Don't invoke javac if we don't have any java files.
+    if (!javaSourceFiles.isEmpty()) {
+      CompilerParameters javacParameters =
+          CompilerParameters.builder()
+              .from(parameters)
+              .setClasspathEntries(
+                  ImmutableSortedSet.<Path>naturalOrder()
+                      .add(outputDirectory)
+                      .addAll(
+                          Optional.ofNullable(extraClassPath.getExtraClasspath())
+                              .orElse(ImmutableList.of()))
+                      .addAll(classpathEntries)
+                      .build())
+              .setSourceFilePaths(javaSourceFiles)
+              .build();
+      new JavacToJarStepFactory(javac, javacOptions, extraClassPath)
+          .createCompileStep(
+              context, projectFilesystem, invokingRule, javacParameters, steps, buildableContext);
+    }
   }
 
   @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    scalac.appendToRuleKey(sink);
-    sink.setReflectively("extraArguments", extraArguments);
+  public boolean hasAnnotationProcessing() {
+    return !javacOptions.getAnnotationProcessingParams().isEmpty();
   }
 }

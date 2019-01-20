@@ -16,29 +16,40 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
-public class ExportFileBuilder extends AbstractNodeBuilder<ExportFileDescription.Arg> {
-  private ExportFileBuilder(BuildTarget target) {
-    super(new ExportFileDescription(), target);
+public class ExportFileBuilder
+    extends AbstractNodeBuilder<
+        ExportFileDescriptionArg.Builder,
+        ExportFileDescriptionArg,
+        ExportFileDescription,
+        ExportFile> {
+  public ExportFileBuilder(BuildTarget target) {
+    super(new ExportFileDescription(FakeBuckConfig.builder().build()), target);
   }
 
-  public static ExportFileBuilder newExportFileBuilder(BuildTarget target) {
-    return new ExportFileBuilder(target);
+  public ExportFileBuilder(BuckConfig buckConfig, BuildTarget target) {
+    super(new ExportFileDescription(buckConfig), target);
   }
 
   public ExportFileBuilder setSrc(@Nullable SourcePath path) {
-    arg.src = Optional.fromNullable(path);
+    getArgForPopulating().setSrc(Optional.ofNullable(path));
     return this;
   }
 
   public ExportFileBuilder setOut(String out) {
-    arg.out = Optional.of(out);
+    getArgForPopulating().setOut(out);
+    return this;
+  }
+
+  public ExportFileBuilder setMode(ExportFileDescription.Mode mode) {
+    getArgForPopulating().setMode(mode);
     return this;
   }
 }

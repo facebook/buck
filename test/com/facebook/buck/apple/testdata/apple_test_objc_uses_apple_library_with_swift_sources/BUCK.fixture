@@ -1,0 +1,20 @@
+apple_library(
+    name = "Lib",
+    srcs = ["Lib/Lib.swift"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    swift_version = "4",
+    tests = [":LibTest"],
+)
+
+apple_test(
+    name = "LibTest",
+    srcs = ["Test/LibTest.m"],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test/LibTest.plist",
+    deps = [":Lib"],
+)

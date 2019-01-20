@@ -1,0 +1,6 @@
+apple_binary(
+    name = "binary",
+    srcs = ["main.c"],
+    compiler_flags = ["-g"],
+    deps = ["other_cell//:library"],
+)

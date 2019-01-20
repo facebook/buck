@@ -21,5 +21,4 @@ public class LibExitCode {
   public static void main(String[] args) {
     System.exit(5);
   }
-
 }

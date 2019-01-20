@@ -16,56 +16,54 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.zip.ZipCompressionLevel.DEFAULT_COMPRESSION_LEVEL;
-
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasMavenCoordinates;
+import com.facebook.buck.jvm.core.HasSources;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
+import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
-
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
+public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements HasMavenCoordinates, HasSources {
 
-public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordinates, HasSources {
-
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> sources;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
   private final Path output;
   private final Path temp;
   private final Optional<String> mavenCoords;
 
   public JavaSourceJar(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ImmutableSortedSet<SourcePath> sources,
       Optional<String> mavenCoords) {
-    super(params, resolver);
+    super(buildTarget, projectFilesystem, params);
     this.sources = sources;
-    BuildTarget target = params.getBuildTarget();
     this.output =
-        BuildTargets.getGenPath(
-            getProjectFilesystem(),
-            target,
-            String.format("%%s%s", Javac.SRC_JAR));
-    this.temp = BuildTargets.getScratchPath(getProjectFilesystem(), target, "%s-srcs");
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s" + Javac.SRC_JAR);
+    this.temp = BuildTargetPaths.getScratchPath(getProjectFilesystem(), buildTarget, "%s-srcs");
     this.mavenCoords = mavenCoords;
   }
 
@@ -76,34 +74,45 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(new MkdirStep(getProjectFilesystem(), output.getParent()));
-    steps.add(new RmStep(getProjectFilesystem(), output, /* force deletion */ true));
-    steps.add(new MakeCleanDirectoryStep(getProjectFilesystem(), temp));
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
+    steps.add(
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output)));
 
-    Set<Path> seenPackages = Sets.newHashSet();
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), temp)));
+
+    Set<Path> seenPackages = new HashSet<>();
 
     // We only want to consider raw source files, since the java package finder doesn't have the
     // smarts to read the "package" line from a source file.
 
-    for (Path source : getResolver().filterInputsToCompareToOutput(sources)) {
+    for (Path source : context.getSourcePathResolver().filterInputsToCompareToOutput(sources)) {
       Path packageFolder = packageFinder.findJavaPackageFolder(source);
       Path packageDir = temp.resolve(packageFolder);
       if (seenPackages.add(packageDir)) {
-        steps.add(new MkdirStep(getProjectFilesystem(), packageDir));
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), packageDir)));
       }
       steps.add(
           CopyStep.forFile(
-              getProjectFilesystem(),
-              source,
-              packageDir.resolve(source.getFileName())));
+              getProjectFilesystem(), source, packageDir.resolve(source.getFileName())));
     }
     steps.add(
         new ZipStep(
             getProjectFilesystem(),
             output,
-            ImmutableSet.<Path>of(),
+            ImmutableSet.of(),
             /* junk paths */ false,
-            DEFAULT_COMPRESSION_LEVEL,
+            ZipCompressionLevel.DEFAULT,
             temp));
 
     buildableContext.recordArtifact(output);
@@ -117,8 +126,8 @@ public class JavaSourceJar extends AbstractBuildRule implements HasMavenCoordina
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override

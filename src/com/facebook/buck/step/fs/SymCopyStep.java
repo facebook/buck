@@ -16,13 +16,13 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -30,27 +30,14 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 
 /**
- * This step copies the content of a directory tree through symlinks,
- * copying only directories.
+ * This step copies the content of a directory tree through symlinks, copying only directories.
  *
- * Assuming that ' on filename denotes a symbolic link to filename,
- * then a directory tree like this:
- * RootFolder/
- *  folderA/
- *    fileA
- *    fileB
- *  FolderB/
- *    fileC
+ * <p>Assuming that ' on filename denotes a symbolic link to filename, then a directory tree like
+ * this: RootFolder/ folderA/ fileA fileB FolderB/ fileC
  *
- * Will be copied on a DestinationFolder like this:
- * DestinationFolder/
- *  folderA/
- *    fileA'
- *    fileB'
- *  FolderB/
- *    fileC'
+ * <p>Will be copied on a DestinationFolder like this: DestinationFolder/ folderA/ fileA' fileB'
+ * FolderB/ fileC'
  */
-
 public class SymCopyStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -58,25 +45,19 @@ public class SymCopyStep implements Step {
   private final Path dest;
 
   public SymCopyStep(
-      ProjectFilesystem filesystem,
-      ImmutableList<Path> rootsRelativeToProjectRoot,
-      Path dest) {
+      ProjectFilesystem filesystem, ImmutableList<Path> rootsRelativeToProjectRoot, Path dest) {
     this.filesystem = filesystem;
     this.roots = rootsRelativeToProjectRoot;
     this.dest = dest;
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     for (Path source : roots) {
-      Preconditions.checkArgument(
-          !source.isAbsolute() && filesystem.exists(source));
-      filesystem.walkRelativeFileTree(
-          source,
-          new SymCopyFileVisitor(source, dest));
+      Preconditions.checkArgument(!source.isAbsolute() && filesystem.exists(source));
+      filesystem.walkRelativeFileTree(source, new SymCopyFileVisitor(source, dest));
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
@@ -100,8 +81,8 @@ public class SymCopyStep implements Step {
     }
 
     @Override
-    public FileVisitResult preVisitDirectory(
-        Path dir, BasicFileAttributes attrs) throws IOException {
+    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+        throws IOException {
       Path relativeVisitedDir = sourceRoot.relativize(dir);
       Path newDir = destRoot.resolve(relativeVisitedDir);
       filesystem.mkdirs(newDir);
@@ -112,10 +93,7 @@ public class SymCopyStep implements Step {
     public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
       Path relativeVisitedFile = sourceRoot.relativize(file);
       Path link = destRoot.resolve(relativeVisitedFile);
-      filesystem.createSymLink(
-          filesystem.resolve(link),
-          filesystem.resolve(file),
-          true);
+      filesystem.createSymLink(filesystem.resolve(link), filesystem.resolve(file), true);
       return FileVisitResult.CONTINUE;
     }
 
@@ -125,7 +103,7 @@ public class SymCopyStep implements Step {
     }
 
     @Override
-    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+    public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
       return FileVisitResult.CONTINUE;
     }
   }

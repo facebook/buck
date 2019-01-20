@@ -1,0 +1,8 @@
+rust_library(
+    name = "subdir",
+    srcs = [
+        "lib.rs",
+        "subinclude.rs",
+    ],
+    visibility = ["PUBLIC"],
+)

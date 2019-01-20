@@ -16,44 +16,36 @@
 
 package com.facebook.buck.android;
 
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Optional;
-
-import org.hamcrest.Matchers;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class AndroidXmlFileIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
-  private static final String MAIN_BUILD_TARGET =
-      "//java/com/sample/lib:lib";
+  private static final String MAIN_BUILD_TARGET = "//java/com/sample/lib:lib";
   private static final String PATH_TO_STRINGS_XML = "res/com/sample/base/res/values/strings.xml";
   private static final String PATH_TO_LAYOUT_XML = "res/com/sample/top/res/layout/top_layout.xml";
 
   @Before
   public void setUp() throws IOException, InterruptedException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "android_project", tmpFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmpFolder);
 
     workspace.setUp();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
+    ProcessResult result = workspace.runBuckCommand("build", MAIN_BUILD_TARGET);
     result.assertSuccess();
   }
 
@@ -62,18 +54,15 @@ public class AndroidXmlFileIntegrationTest {
     workspace.replaceFileContents(PATH_TO_STRINGS_XML, "Hello", "Bye");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
+    ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
     buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
     buildLog.assertTargetHadMatchingInputRuleKey("//res/com/sample/top:top");
-    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
-    assertThat(
-        buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
-            .getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingInputRuleKey(MAIN_BUILD_TARGET);
   }
 
   @Test
@@ -81,39 +70,34 @@ public class AndroidXmlFileIntegrationTest {
     workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "white", "black");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
+    ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
     buildLog.assertTargetHadMatchingRuleKey("//res/com/sample/base:base");
     buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
-    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
-    assertThat(
-        buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
-            .getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingInputRuleKey(MAIN_BUILD_TARGET);
   }
 
   @Test
   public void testAddingAStringToTransitiveDepResultsInAbiMatch() throws IOException {
-    workspace.replaceFileContents(PATH_TO_STRINGS_XML,
+    workspace.replaceFileContents(
+        PATH_TO_STRINGS_XML,
         "</resources>",
         "<string name=\"base_text\">Goodbye!</string></resources>");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
+    ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
     buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
     buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
-    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
-    assertThat(
-        buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
-            .getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingInputRuleKey(MAIN_BUILD_TARGET);
   }
 
   @Test
@@ -122,25 +106,22 @@ public class AndroidXmlFileIntegrationTest {
     workspace.replaceFileContents(PATH_TO_LAYOUT_XML, "base_button", "base_text");
 
     workspace.resetBuildLogFile();
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
+    ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
 
     buildLog.assertTargetBuiltLocally("//res/com/sample/base:base");
     buildLog.assertTargetBuiltLocally("//res/com/sample/top:top");
-    buildLog.assertTargetHadMatchingDepsAbi("//java/com/sample/lib:lib#dummy_r_dot_java");
-    assertThat(
-        buildLog.getLogEntry(BuildTargetFactory.newInstance(MAIN_BUILD_TARGET))
-            .getSuccessType(),
-        Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
+    buildLog.assertTargetHadMatchingInputRuleKey("//java/com/sample/lib:lib#dummy_r_dot_java");
+    buildLog.assertTargetHadMatchingInputRuleKey(MAIN_BUILD_TARGET);
   }
 
   @Test
   public void testChangingRDotJavaPackageBreaksBuild() throws IOException {
     workspace.replaceFileContents("res/com/sample/title/BUCK", "com.sample2", "com.sample");
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
+    ProcessResult result = workspace.runBuckBuild(MAIN_BUILD_TARGET);
     result.assertFailure();
     assertTrue(result.getStderr().contains("package com.sample2 does not exist"));
   }

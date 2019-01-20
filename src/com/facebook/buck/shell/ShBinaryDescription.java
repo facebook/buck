@@ -16,49 +16,49 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import org.immutables.value.Value;
 
-public class ShBinaryDescription implements Description<ShBinaryDescription.Arg> {
-
-  private static final BuildRuleType TYPE = BuildRuleType.of("sh_binary");
+public class ShBinaryDescription implements DescriptionWithTargetGraph<ShBinaryDescriptionArg> {
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<ShBinaryDescriptionArg> getConstructorArgType() {
+    return ShBinaryDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> ShBinary createBuildRule(
-      TargetGraph targetGraph,
+  public ShBinary createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    return new ShBinary(params, new SourcePathResolver(resolver), args.main, args.resources.get());
+      ShBinaryDescriptionArg args) {
+    return new ShBinary(
+        buildTarget,
+        context.getCellPathResolver(),
+        context.getProjectFilesystem(),
+        params,
+        args.getMain(),
+        args.getResources());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath main;
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractShBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getMain();
 
-    public Optional<ImmutableSet<SourcePath>> resources;
+    ImmutableSet<SourcePath> getResources();
   }
 }

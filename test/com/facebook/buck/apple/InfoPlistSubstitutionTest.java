@@ -21,37 +21,28 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-/**
- * Unit tests for {@link InfoPlistSubstitution}.
- */
+/** Unit tests for {@link InfoPlistSubstitution}. */
 public class InfoPlistSubstitutionTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void emptyStringReplacementIsEmpty() {
     assertThat(
-        InfoPlistSubstitution.replaceVariablesInString(
-            "",
-            ImmutableMap.<String, String>of()),
-        is(emptyString()));
+        InfoPlistSubstitution.replaceVariablesInString("", ImmutableMap.of()), is(emptyString()));
   }
 
   @Test
   public void emptyMapLeavesStringAsIs() {
     assertThat(
-        InfoPlistSubstitution.replaceVariablesInString(
-            "Hello world",
-            ImmutableMap.<String, String>of()),
+        InfoPlistSubstitution.replaceVariablesInString("Hello world", ImmutableMap.of()),
         equalTo("Hello world"));
   }
 
@@ -59,8 +50,7 @@ public class InfoPlistSubstitutionTest {
   public void curlyBracesAreSubstituted() {
     assertThat(
         InfoPlistSubstitution.replaceVariablesInString(
-            "Hello ${FOO} world",
-            ImmutableMap.of("FOO", "cruel")),
+            "Hello ${FOO} world", ImmutableMap.of("FOO", "cruel")),
         equalTo("Hello cruel world"));
   }
 
@@ -68,8 +58,7 @@ public class InfoPlistSubstitutionTest {
   public void parensAreSubstituted() {
     assertThat(
         InfoPlistSubstitution.replaceVariablesInString(
-            "Hello $(FOO) world",
-            ImmutableMap.of("FOO", "cruel")),
+            "Hello $(FOO) world", ImmutableMap.of("FOO", "cruel")),
         equalTo("Hello cruel world"));
   }
 
@@ -77,8 +66,7 @@ public class InfoPlistSubstitutionTest {
   public void unknownModifiersAreIgnored() {
     assertThat(
         InfoPlistSubstitution.replaceVariablesInString(
-            "Hello $(FOO:bar) world",
-            ImmutableMap.of("FOO", "cruel")),
+            "Hello $(FOO:bar) world", ImmutableMap.of("FOO", "cruel")),
         equalTo("Hello cruel world"));
   }
 
@@ -98,8 +86,7 @@ public class InfoPlistSubstitutionTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("Unrecognized plist variable: ${XYZZY:blurgh}");
     InfoPlistSubstitution.replaceVariablesInString(
-        "Hello ${XYZZY:blurgh} world",
-        ImmutableMap.<String, String>of());
+        "Hello ${XYZZY:blurgh} world", ImmutableMap.of());
   }
 
   @Test
@@ -108,7 +95,7 @@ public class InfoPlistSubstitutionTest {
     thrown.expectMessage("Recursive plist variable: FOO -> BAR -> BAZ -> FOO");
     InfoPlistSubstitution.replaceVariablesInString(
         "Hello ${FOO}",
-        ImmutableMap.<String, String>of(
+        ImmutableMap.of(
             "FOO", "${BAR}",
             "BAR", "${BAZ}",
             "BAZ", "${FOO}"));
@@ -117,18 +104,14 @@ public class InfoPlistSubstitutionTest {
   @Test
   public void mismatchedParenIgnored() {
     assertThat(
-        InfoPlistSubstitution.replaceVariablesInString(
-            "Hello $(FOO} world",
-            ImmutableMap.<String, String>of()),
+        InfoPlistSubstitution.replaceVariablesInString("Hello $(FOO} world", ImmutableMap.of()),
         equalTo("Hello $(FOO} world"));
   }
 
   @Test
   public void mismatchedBraceIgnored() {
     assertThat(
-        InfoPlistSubstitution.replaceVariablesInString(
-            "Hello ${FOO) world",
-            ImmutableMap.<String, String>of()),
+        InfoPlistSubstitution.replaceVariablesInString("Hello ${FOO) world", ImmutableMap.of()),
         equalTo("Hello ${FOO) world"));
   }
 
@@ -146,7 +129,8 @@ public class InfoPlistSubstitutionTest {
   @Test
   public void testVariableExpansionForPlatform() {
     assertThat(
-        InfoPlistSubstitution.getVariableExpansionForPlatform("FOO",
+        InfoPlistSubstitution.getVariableExpansionForPlatform(
+            "FOO",
             "iphoneos",
             ImmutableMap.of(
                 "FOO", "BAR",
@@ -158,19 +142,21 @@ public class InfoPlistSubstitutionTest {
   @Test
   public void testVariableExpansionForPlatformWithUnknownKey() {
     assertThat(
-        InfoPlistSubstitution.getVariableExpansionForPlatform("BAZ",
+        InfoPlistSubstitution.getVariableExpansionForPlatform(
+            "BAZ",
             "iphoneos",
             ImmutableMap.of(
                 "FOO", "BAR",
                 "FOO[sdk=iphoneos]", "BARiphoneos",
                 "FOO[sdk=iphonesimulator]", "BARiphonesimulator")),
-        equalTo(Optional.<String>absent()));
+        equalTo(Optional.empty()));
   }
 
   @Test
   public void testVariableExpansionForPlatformWithUnknownPlatform() {
     assertThat(
-        InfoPlistSubstitution.getVariableExpansionForPlatform("FOO",
+        InfoPlistSubstitution.getVariableExpansionForPlatform(
+            "FOO",
             "baz",
             ImmutableMap.of(
                 "FOO", "BAR",

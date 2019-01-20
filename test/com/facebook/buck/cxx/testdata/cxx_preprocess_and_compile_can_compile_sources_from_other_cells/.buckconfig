@@ -1,0 +1,5 @@
+[repositories]
+
+cell1 = cell1
+cell2 = cell2
+root = .

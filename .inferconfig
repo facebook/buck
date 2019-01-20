@@ -1,24 +1,23 @@
 {
-  "checkers_whitelist": [
+  "biabduction": false,
+  "eradicate": true,
+  "report-whitelist-path-regex": [
     "src",
-    "plugin"
+    "ideabuck"
   ],
-  "checkers_blacklist": [
+  "report-blacklist-path-regex": [
+    "src/com/facebook/buck/jvm/java/runner",
+    "src/com/facebook/buck/testrunner",
     "src-gen"
   ],
-  "eradicate_whitelist": [
-    "src",
-    "plugin"
+  "external-java-packages": [
+    "com.android.",
+    "com.dd.",
+    "com.google.",
+    "com.sun.",
+    "java.",
+    "javax.",
+    "org."
   ],
-  "eradicate_blacklist": [
-    "src/com/facebook/buck/junit",
-    "src-gen"
-  ],
-  "infer_whitelist": [
-    "src",
-    "plugin"
-  ],
-  "infer_blacklist": [
-    "src-gen"
-  ]
+  "skip-duplicated-types": false
 }

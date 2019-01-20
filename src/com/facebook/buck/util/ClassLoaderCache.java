@@ -17,20 +17,18 @@
 package com.facebook.buck.util;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.HashMap;
 import java.util.Map;
-
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
- * Maintain a cache mapping class paths to class loaders that load from these class paths.  The
- * class loaders remain active until ClassLoaderCache itself is unloaded.
+ * Maintain a cache mapping class paths to class loaders that load from these class paths. The class
+ * loaders remain active until ClassLoaderCache itself is unloaded.
  */
 public final class ClassLoaderCache implements AutoCloseable {
 
@@ -40,8 +38,7 @@ public final class ClassLoaderCache implements AutoCloseable {
 
   private synchronized Map<ImmutableList<URL>, ClassLoader> getCacheForParent(
       @Nullable ClassLoader parentClassLoader) {
-    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
-        cache.get(parentClassLoader);
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent = cache.get(parentClassLoader);
 
     if (cacheForParent == null) {
       cacheForParent = new HashMap<>();
@@ -52,16 +49,14 @@ public final class ClassLoaderCache implements AutoCloseable {
   }
 
   public synchronized ClassLoader getClassLoaderForClassPath(
-      @Nullable ClassLoader parentClassLoader,
-      ImmutableList<URL> classPath) {
+      @Nullable ClassLoader parentClassLoader, ImmutableList<URL> classPath) {
 
-    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
-        getCacheForParent(parentClassLoader);
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent = getCacheForParent(parentClassLoader);
 
     ClassLoader classLoader = cacheForParent.get(classPath);
     if (classLoader == null) {
-      URL[] urls = classPath.toArray(new URL[classPath.size()]);
-      classLoader = new URLClassLoader(urls, parentClassLoader);
+      URL[] urls = classPath.toArray(new URL[0]);
+      classLoader = new CachedURLClassLoader(urls, parentClassLoader);
       cacheForParent.put(classPath, classLoader);
     }
 
@@ -73,8 +68,7 @@ public final class ClassLoaderCache implements AutoCloseable {
       @Nullable ClassLoader parentClassLoader,
       ImmutableList<URL> classPath,
       ClassLoader injectedClassLoader) {
-    Map<ImmutableList<URL>, ClassLoader> cacheForParent =
-        getCacheForParent(parentClassLoader);
+    Map<ImmutableList<URL>, ClassLoader> cacheForParent = getCacheForParent(parentClassLoader);
 
     cacheForParent.put(classPath, injectedClassLoader);
   }
@@ -91,13 +85,13 @@ public final class ClassLoaderCache implements AutoCloseable {
       return;
     }
 
-    Optional<IOException> caughtEx = Optional.absent();
+    Optional<IOException> caughtEx = Optional.empty();
 
     for (Map<ImmutableList<URL>, ClassLoader> cacheForParent : cache.values()) {
       for (ClassLoader cl : cacheForParent.values()) {
         try {
-          if (cl instanceof URLClassLoader) {
-            ((URLClassLoader) cl).close();
+          if (cl instanceof CachedURLClassLoader) {
+            ((CachedURLClassLoader) cl).reallyClose();
           }
         } catch (IOException ex) {
           if (caughtEx.isPresent()) {
@@ -111,6 +105,21 @@ public final class ClassLoaderCache implements AutoCloseable {
 
     if (caughtEx.isPresent()) {
       throw caughtEx.get();
+    }
+  }
+
+  private static class CachedURLClassLoader extends URLClassLoader {
+    public CachedURLClassLoader(URL[] urls, @Nullable ClassLoader parent) {
+      super(urls, parent);
+    }
+
+    @Override
+    public void close() {
+      // Do nothing; only the cache can close this ClassLoader
+    }
+
+    private void reallyClose() throws IOException {
+      super.close();
     }
   }
 }

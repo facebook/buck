@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace cxx_library}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'cxx_library()' /}
+    {param navid: 'rule_cxx_library' /}
     {param prettify: true /}
     {param description}
       A cxx_library() rule represents a set of C/C++ source files.
@@ -13,11 +29,47 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-A cxx_library() rule represents a set of C/C++ source files and provides various flags to control
-how they get built. Other than that, C/C++ libraries by themselves are relatively abstract, and it's
-dependent on the various top-level targets (e.g. C/C++ binary, Android APK) that transitively depend
-on this rule how this library actually gets built (e.g. a C/C++ binary will require a static non-PIC
-build of the library, while an Android APK will require a shared PIC-enabled build).
+<p>
+A <code>cxx_library()</code> rule specifies a set of C/C++ source files
+and also provides flags that specify how those files should be built.
+</p>
+
+
+<h3>Building requires a specified top-level target</h3>
+ 
+<p>
+Whether a Buck command builds the <code>cxx_library</code>  is 
+determined by the inclusion of a top-level target, such as 
+a {call buck.cxx_binary /} or {call buck.android_binary /}, that 
+transitively depends on the <code>cxx_library</code>. The set of
+targets specified to the Buck command (<code>buck build</code>, <code>buck run</code>, etc) must 
+include one of these top-level targets in order for Buck to build 
+the <code>cxx_library</code>. Note that you could specify the top-level target 
+implicitly using a {call buck.build_target_pattern /} or you could also specify 
+the top-level target using an {call buckconfig.alias /} defined in <code>.buckconfig</code>.
+</p>
+
+<p>
+<em>How</em> Buck builds the library also depends on the specified top-level target.
+For example, a C/C++ binary (<code>cxx_binary</code>) would require a static non-PIC build of the library, 
+whereas an Android APK (<code>android_binary</code>) would require a shared PIC-enabled build.
+(PIC stands for position-independent code.)
+</p>
+
+
+<h4>Dependencies of the cxx_library also require a top-level target</h4>
+
+<p>
+Similarly, in order for Buck to build a target that 
+the <code>cxx_library</code> depends on, such as a {call buck.cxx_genrule /}, 
+you must specify in the Buck command a top-level target that depends on 
+the <code>cxx_library</code>.  For example, you could specify 
+to {call buck.cmd_build /} a <code>cxx_binary</code> that 
+depends on the <code>cxx_library</code>. If you specify as
+your build target the <code>cxx_library</code> itself, the build targets 
+that the <code>cxx_library</code> depends on <em>might not be built</em>.
+</p>
+
 {/param}
 
 {param args}
@@ -45,15 +97,29 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.preprocessor_flags_arg /}
 
+{call cxx_common.lang_preprocessor_flags_arg /}
+
 {call cxx_common.platform_preprocessor_flags_arg /}
+
+{call cxx_common.lang_platform_preprocessor_flags_arg /}
 
 {call cxx_common.exported_preprocessor_flags_arg /}
 
+{call cxx_common.exported_lang_preprocessor_flags_arg /}
+
 {call cxx_common.exported_platform_preprocessor_flags_arg /}
+
+{call cxx_common.exported_lang_platform_preprocessor_flags_arg /}
 
 {call cxx_common.compiler_flags_arg /}
 
+{call cxx_common.lang_compiler_flags_arg /}
+
 {call cxx_common.platform_compiler_flags_arg /}
+
+{call cxx_common.lang_platform_compiler_flags_arg /}
+
+{call cxx_common.linker_extra_outputs_arg /}
 
 {call cxx_common.linker_flags_arg /}
 
@@ -61,9 +127,17 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
 
 {call cxx_common.exported_linker_flags_arg /}
 
+{call cxx_common.exported_post_linker_flags_arg /}
+
 {call cxx_common.exported_platform_linker_flags_arg /}
 
+{call cxx_common.exported_post_platform_linker_flags_arg /}
+
 {call native_common.link_style /}
+
+{call native_common.link_whole /}
+
+{call cxx_common.raw_headers_arg /}
 
 {call buck.arg}
   {param name : 'soname' /}
@@ -78,23 +152,23 @@ build of the library, while an Android APK will require a shared PIC-enabled bui
   {/param}
 {/call}
 
-{call buck.arg}
-  {param name : 'supported_platforms_regex' /}
-  {param default : 'None' /}
-  {param desc}
-  If present, an un-anchored regex (in java.util.regex.Pattern syntax) that matches all platforms
-  that this library supports. It will not be built for other platforms. (Currently, this is only
-  respected by android_binary and ndk_library.)
-  {/param}
-{/call}
+{call cxx_common.supported_platforms_regex_arg /}
 
 {call cxx_common.force_static /}
 
-{call cxx_common.preferred_linkage /}
+{call native_common.preferred_linkage /}
+
+{call cxx_common.reexport_all_header_dependencies_arg /}
 
 {call cxx_common.exported_deps_arg /}
 
+{call cxx_common.precompiled_header_arg /}
+
 {call buck.tests_arg /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // close args
 

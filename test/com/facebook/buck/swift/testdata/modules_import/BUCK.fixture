@@ -1,0 +1,19 @@
+apple_library(
+    name = "one",
+    srcs = ["one/one.m"],
+    exported_headers = ["one/one.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    headers = ["one/one-private.h"],
+)
+
+apple_library(
+    name = "second-one",
+    srcs = ["one/one.m"],
+    exported_headers = ["one/dummy.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    headers = ["one/one-private.h"],
+)

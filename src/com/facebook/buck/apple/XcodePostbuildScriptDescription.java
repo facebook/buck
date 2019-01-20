@@ -16,52 +16,44 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 
 /**
- * Description for an xcode_postbuild_script rule which runs a shell script
- * after the 'copy resources' phase has run.
- * <p>
- * Example rule:
+ * Description for an xcode_postbuild_script rule which runs a shell script after the 'copy
+ * resources' phase has run.
+ *
+ * <p>Example rule:
+ *
  * <pre>
  * xcode_postbuild_script(
  *   name = 'pngcrush',
  *   cmd = '../Tools/pngcrush.sh',
  * )
  * </pre>
- * <p>
- * This rule is a hack and in the long-term should be replaced with a rule
- * which operates similarly to apk_genrule, or should be removed entirely
- * if possible. Those rules do nothing when building with Buck.
+ *
+ * <p>This rule is a hack and in the long-term should be replaced with a rule which operates
+ * similarly to apk_genrule, or should be removed entirely if possible. Those rules do nothing when
+ * building with Buck.
  */
 public class XcodePostbuildScriptDescription
-  implements Description<XcodeScriptDescriptionArg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("xcode_postbuild_script");
+    implements DescriptionWithTargetGraph<XcodeScriptDescriptionArg> {
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<XcodeScriptDescriptionArg> getConstructorArgType() {
+    return XcodeScriptDescriptionArg.class;
   }
 
   @Override
-  public XcodeScriptDescriptionArg createUnpopulatedConstructorArg() {
-    return new XcodeScriptDescriptionArg();
-  }
-
-  @Override
-  public <A extends XcodeScriptDescriptionArg> NoopBuildRule createBuildRule(
-      TargetGraph targetGraph,
+  public NoopBuildRuleWithDeclaredAndExtraDeps createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    return new NoopBuildRule(params, new SourcePathResolver(resolver));
+      XcodeScriptDescriptionArg args) {
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(
+        buildTarget, context.getProjectFilesystem(), params);
   }
-
 }

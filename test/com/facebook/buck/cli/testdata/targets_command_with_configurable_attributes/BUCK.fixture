@@ -1,0 +1,22 @@
+genrule(
+    name = "echo",
+    out = "out",
+    cmd = select({
+        ":a": "echo a > $OUT",
+        ":b": "echo b > $OUT",
+    }),
+)
+
+config_setting(
+    name = "a",
+    values = {
+        "a.b": "a",
+    },
+)
+
+config_setting(
+    name = "b",
+    values = {
+        "a.b": "b",
+    },
+)

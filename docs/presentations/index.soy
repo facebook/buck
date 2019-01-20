@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.presentations}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'Presentations about Buck' /}
+    {param navid: 'presentations_index' /}
     {param description: 'Public presentations about Buck.' /}
     {param content}
 <p>
@@ -11,6 +27,23 @@ This is a collection of presentations that have been given on Buck.
 Note that Buck has evolved over time, so more recent presentations
 may have information that supersedes information in older presentations.
 <p>
+{call .presentation}
+  {param title: 'Lightning fast iOS builds with Buck' /}
+  {param speaker: 'Alan Zeino, Uber' /}
+  {param event: 'Sydney CocoaHeads' /}
+  {param eventUrl: 'https://www.meetup.com/sydneycocoaheads/events/237577980/' /}
+  {param date: 'February 16, 2017' /}
+  {param vimeoId: '208053716' /}
+{/call}
+{call .presentation}
+  {param title: 'Lightning fast Android builds with Gradle + Buck' /}
+  {param speaker: 'Gautam Korlam, Uber' /}
+  {param event: 'DroidCon NYC' /}
+  {param eventUrl: 'https://droidcon-server.herokuapp.com/showSession/72039' /}
+  {param date: 'September 29, 2016' /}
+  {param youTubeId: 'j6CiHlapado' /}
+{/call}
+
 {call .presentation}
   {param title: 'Building Android at Ludicrous Speed' /}
   {param speaker: 'Michael Bolin, David Reiss' /}
@@ -95,6 +128,7 @@ ill-fated downstairs breakout room</a>.
  * @param? youTubeStart
  * @param? slides
  * @param? embedSlides
+ * @param? vimeoId
  */
 {template .presentation}
 <hr>
@@ -119,6 +153,13 @@ ill-fated downstairs breakout room</a>.
   {/call}
 {/if}
 
+{if $vimeoId}
+  <p>
+  {call .vimeoVideo}
+    {param id: $vimeoId /}
+  {/call}
+{/if}
+
 {if $slides}
   <br>
   Slides: <a href="{$slides}">{$slides}</a>
@@ -138,6 +179,15 @@ ill-fated downstairs breakout room</a>.
 {template .youTubeVideo}
   {call .iframe}
     {param url}//www.youtube.com/embed/{$id}{if $start}?start={$start}{/if}{/param}
+  {/call}
+{/template}
+
+/**
+ * @param id
+ */
+{template .vimeoVideo}
+  {call .iframe}
+    {param url}//player.vimeo.com/video/{$id}{/param}
   {/call}
 {/template}
 

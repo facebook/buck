@@ -1,0 +1,4 @@
+java_binary(
+    name = "bin-meta-inf",
+    meta_inf_directory = "META-INF",
+)

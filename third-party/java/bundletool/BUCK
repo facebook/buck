@@ -1,0 +1,17 @@
+prebuilt_jar(
+    name = "prebuilt",
+    binary_jar = "bundletool-0.7.1.jar",
+)
+
+java_library(
+    name = "bundletool",
+    srcs = [],
+    exported_deps = [
+        ":prebuilt",
+        "//third-party/java/aapt2-proto:aapt2-proto",
+        "//third-party/java/guava:guava",
+        "//third-party/java/protobuf:protobuf",
+        "//third-party/java/protobuf:protobuf-util",
+    ],
+    visibility = ["PUBLIC"],
+)

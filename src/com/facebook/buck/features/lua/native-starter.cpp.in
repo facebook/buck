@@ -1,0 +1,152 @@
+/*
+ * Copyright 2015-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+#include \<libgen.h>
+#include \<limits.h>
+#include \<stdio.h>
+#include \<stdlib.h>
+#include \<string.h>
+
+#include \<sstream>
+#include \<string>
+
+#ifdef BUILTIN_NATIVE_STARTER
+extern "C" {
+#include \<lua.h>
+#include \<lualib.h>
+#include \<lauxlib.h>
+}
+#endif
+
+static std::string repr(int x) {
+  std::ostringstream s;
+  s \<\< std::dec \<\< x;
+  return s.str();
+}
+
+static std::string repr(const std::string& s) {
+  return '"' + s + '"';
+}
+
+static std::string repr(const char *s) {
+  return repr(std::string(s));
+}
+
+static std::string repr(const char ** s) {
+  std::string out = "{";
+  for (int i = 0; s[i]; i++) {
+    if (i != 0) {
+      out += ", ";
+    }
+    out += '[' + repr(i) + "] = " + repr(s[i]);
+  }
+  return out + '}';
+}
+
+static std::string join(const char *a, const char *b) {
+  std::string p;
+  p += a;
+  p += '/';
+  p += b;
+  return p;
+}
+
+static std::string join(const char *a, const std::string& b) {
+  return join(a, b.c_str());
+}
+
+static std::string join(const std::string& a, const char * b) {
+  return join(a.c_str(), b);
+}
+
+static std::string join(const std::string& a, const std::string& b) {
+  return join(a.c_str(), b.c_str());
+}
+
+static std::string dirname(const std::string& path) {
+  char * copy = strdup(path.c_str());
+  std::string dir = dirname(copy);
+  free(copy);
+  return dir;
+}
+
+static std::string realpath(const std::string& path) {
+  char out[PATH_MAX];
+  realpath(path.c_str(), out);
+  return std::string(out);
+}
+
+#ifndef BUILTIN_NATIVE_STARTER
+extern "C"
+int run_starter(
+    int argc,
+    const char **argv,
+    const char *main_module,
+    const char *modules_dir,
+    const char *py_modules_dir,
+    const char *extension_suffix);
+#else
+static int run_starter(
+    int argc,
+    const char **argv,
+    const char *main_module,
+    const char *modules_dir,
+    const char *py_modules_dir,
+    const char *extension_suffix) {
+
+  lua_State *L = luaL_newstate();
+
+  luaL_openlibs(L);
+
+  std::string str;
+  str += "arg = " + repr(argv) + ';';
+  if (modules_dir != NULL) {
+    str += "package.path = " + repr(join(modules_dir, "?.lua") + ';' +
+      join(join(modules_dir, "?"), "init.lua")) + ';';
+    str += "package.cpath = " +
+      repr(join(modules_dir, std::string("?.") + extension_suffix)) + ';';
+  }
+  str += "require " + repr(main_module) + ';';
+
+  int rc = luaL_dostring(L, str.c_str());
+  if (rc != 0) {
+    fprintf(stderr, "%s\n", lua_tostring(L, -1));
+    lua_pop(L, 1);
+  }
+
+  lua_close(L);
+
+  return rc;
+}
+#endif
+
+int main(int argc, const char ** argv) {
+  const char *main_module = <MAIN_MODULE>;
+  const char *modules_dir = <MODULES_DIR>;
+  const char *py_modules_dir = <PY_MODULES_DIR>;
+  const char *extension_suffix = <EXT_SUFFIX>;
+  return run_starter(
+    argc,
+    argv,
+    main_module,
+    modules_dir != NULL ?
+      join(dirname(realpath(argv[0])), modules_dir).c_str() :
+      NULL,
+    py_modules_dir != NULL ?
+      join(dirname(realpath(argv[0])), py_modules_dir).c_str() :
+      NULL,
+    extension_suffix);
+}

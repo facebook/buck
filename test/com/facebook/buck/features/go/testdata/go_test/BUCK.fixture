@@ -1,0 +1,98 @@
+go_library(
+    name = "base",
+    package_name = "buck_base",
+    srcs = ["buck_base/base.go"],
+)
+
+go_library(
+    name = "lib",
+    package_name = "lib",
+    srcs = ["lib.go"],
+    tests = [
+        ":test-success",
+        ":test-success-internal",
+        # test-success-bad isn't here to test for the requirement that it should be here.
+        ":test-failure",
+    ],
+    deps = [":base"],
+)
+
+go_test(
+    name = "test-success",
+    package_name = "lib",
+    srcs = [
+        "lib.go",
+        "lib_test.go",
+    ],
+    deps = [":base"],
+)
+
+go_test(
+    name = "test-with-env",
+    srcs = [
+        "env_test.go",
+    ],
+    env = {
+        "FOO": "BAR",
+    },
+    deps = [":base"],
+)
+
+go_test(
+    name = "test-success-internal",
+    srcs = ["lib_test.go"],
+    library = ":lib",
+)
+
+go_test(
+    name = "test-success-bad",
+    srcs = ["lib_test.go"],
+    library = ":lib",
+)
+
+go_test(
+    name = "test-failure",
+    srcs = ["bad_test.go"],
+    deps = [":lib"],
+)
+
+go_test(
+    name = "test-panic",
+    srcs = ["panic_test.go"],
+)
+
+go_test(
+    name = "test-with-resources",
+    srcs = ["resources_test.go"],
+    resources = ["testdata/input"],
+)
+
+go_test(
+    name = "test-spinning",
+    srcs = ["spinning_test.go"],
+    test_rule_timeout_ms = 500,
+)
+
+go_test(
+    name = "subtests",
+    srcs = ["subtests.go"],
+)
+
+go_test(
+    name = "test-hyphen",
+    package_name = "lib",
+    srcs = [
+        "power-driven.go",
+        "power-driven_test.go",
+    ],
+    coverage_mode = "set",
+)
+
+go_test(
+    name = "test-scores",
+    package_name = "lib",
+    srcs = [
+        "test_scores.go",
+        "test_scores_test.go",
+    ],
+)

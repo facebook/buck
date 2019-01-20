@@ -1,0 +1,19 @@
+genrule(
+    name = "gen",
+    out = "gen",
+    cmd = "touch \"$OUT\"",
+)
+
+cxx_library(
+    name = "lib",
+    srcs = [
+        "foo.cpp",
+    ],
+    compiler_flags = [
+        # This is actually a preprocessor flag.  A better example would be the
+        # `-fsanitize-blacklist` compiler, but since this isn't available on older
+        # compilers, use `-include` instead.
+        "-include",
+        "$(location :gen)",
+    ],
+)

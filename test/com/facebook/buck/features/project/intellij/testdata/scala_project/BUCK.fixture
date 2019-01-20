@@ -1,0 +1,7 @@
+prebuilt_jar(
+    name = "scala-library",
+    binary_jar = "scala-library.jar",
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -1,0 +1,87 @@
+lua_binary(
+    name = "simple",
+    main_module = "simple",
+    deps = [
+        ":simple-lib",
+    ],
+)
+
+lua_library(
+    name = "simple-lib",
+    srcs = [
+        "simple.lua",
+    ],
+)
+
+lua_binary(
+    name = "native",
+    main_module = "foo",
+    deps = [
+        ":foo",
+    ],
+)
+
+cxx_lua_extension(
+    name = "foo",
+    srcs = [
+        "foo.c",
+    ],
+)
+
+lua_binary(
+    name = "native_with_dep",
+    main_module = "bar",
+    deps = [
+        ":bar",
+    ],
+)
+
+cxx_lua_extension(
+    name = "bar",
+    srcs = [
+        "bar.c",
+    ],
+    deps = [
+        ":dep",
+    ],
+)
+
+cxx_library(
+    name = "dep",
+    srcs = [
+        "dep.c",
+    ],
+    exported_headers = [
+        "dep.h",
+    ],
+)
+
+python_binary(
+    name = "packager",
+    main_module = "packager",
+    deps = [
+        ":lib-packager",
+    ],
+)
+
+python_library(
+    name = "lib-packager",
+    srcs = [
+        "packager.py",
+    ],
+)
+
+lua_binary(
+    name = "simple_with_native",
+    main_module = "simple",
+    deps = [
+        ":foo",
+        ":simple-lib",
+    ],
+)
+
+genrule(
+    name = "genrule",
+    out = "something",
+    cmd = "$(exe :simple_with_native) >> $OUT",
+)

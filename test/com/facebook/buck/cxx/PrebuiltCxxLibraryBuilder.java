@@ -16,112 +16,182 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
-import com.facebook.buck.rules.coercer.SourceList;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
+import com.facebook.buck.rules.coercer.VersionMatchedCollection;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 public class PrebuiltCxxLibraryBuilder
-    extends AbstractCxxBuilder<PrebuiltCxxLibraryDescription.Arg> {
+    extends AbstractNodeBuilder<
+        PrebuiltCxxLibraryDescriptionArg.Builder,
+        PrebuiltCxxLibraryDescriptionArg,
+        PrebuiltCxxLibraryDescription,
+        BuildRule> {
 
-  public PrebuiltCxxLibraryBuilder(
-      BuildTarget target,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(new PrebuiltCxxLibraryDescription(CxxPlatformUtils.DEFAULT_CONFIG, cxxPlatforms), target);
+  public PrebuiltCxxLibraryBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
+    super(
+        new PrebuiltCxxLibraryDescription(
+            new ToolchainProviderBuilder()
+                .withToolchain(
+                    CxxPlatformsProvider.DEFAULT_NAME,
+                    CxxPlatformsProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM, cxxPlatforms))
+                .build(),
+            CxxPlatformUtils.DEFAULT_CONFIG),
+        target);
   }
 
   public PrebuiltCxxLibraryBuilder(BuildTarget target) {
-    this(target, createDefaultPlatforms());
+    this(target, CxxTestUtils.createDefaultPlatforms());
   }
 
-  public PrebuiltCxxLibraryBuilder setIncludeDirs(ImmutableList<String> includeDirs) {
-    arg.includeDirs = Optional.of(includeDirs);
+  public PrebuiltCxxLibraryBuilder setHeaderDirs(ImmutableList<SourcePath> headerDirs) {
+    getArgForPopulating().setHeaderDirs(headerDirs);
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setLibName(String libName) {
-    arg.libName = Optional.of(libName);
+  public PrebuiltCxxLibraryBuilder setSharedLib(SourcePath lib) {
+    getArgForPopulating().setSharedLib(lib);
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setLibDir(String libDir) {
-    arg.libDir = Optional.of(libDir);
+  public PrebuiltCxxLibraryBuilder setPlatformSharedLib(PatternMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setPlatformSharedLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setStaticLib(SourcePath lib) {
+    getArgForPopulating().setStaticLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setPlatformStaticLib(PatternMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setPlatformStaticLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setVersionedStaticLib(VersionMatchedCollection<SourcePath> lib) {
+    getArgForPopulating().setVersionedStaticLib(lib);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setStaticPicLib(SourcePath lib) {
+    getArgForPopulating().setStaticPicLib(lib);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setLinkWithoutSoname(boolean linkWithoutSoname) {
-    arg.linkWithoutSoname = Optional.of(linkWithoutSoname);
+    getArgForPopulating().setLinkWithoutSoname(linkWithoutSoname);
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setExportedHeaders(SourceList exportedHeaders) {
-    arg.exportedHeaders = Optional.of(exportedHeaders);
-    return this;
-  }
-
-  public PrebuiltCxxLibraryBuilder setExportedPlatformHeaders(
-      PatternMatchedCollection<SourceList> collection) {
-    arg.exportedPlatformHeaders = Optional.of(collection);
+  public PrebuiltCxxLibraryBuilder setExportedHeaders(SourceSortedSet exportedHeaders) {
+    getArgForPopulating().setExportedHeaders(exportedHeaders);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setExportedPlatformHeaders(
-      String cxxPlatform,
-      SourceList exportedHeaders) {
-    return setExportedPlatformHeaders(
-        PatternMatchedCollection.<SourceList>builder()
-            .add(Pattern.compile(cxxPlatform), exportedHeaders)
-            .build());
+      PatternMatchedCollection<SourceSortedSet> collection) {
+    getArgForPopulating().setExportedPlatformHeaders(collection);
+    return this;
   }
 
   public PrebuiltCxxLibraryBuilder setHeaderNamespace(String headerNamespace) {
-    arg.headerNamespace = Optional.of(headerNamespace);
+    getArgForPopulating().setHeaderNamespace(Optional.of(headerNamespace));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setHeaderOnly(boolean headerOnly) {
-    arg.headerOnly = Optional.of(headerOnly);
+    getArgForPopulating().setHeaderOnly(headerOnly);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setProvided(boolean provided) {
-    arg.provided = Optional.of(provided);
+    getArgForPopulating().setProvided(provided);
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(ImmutableList<String> linkerFlags) {
-    arg.exportedLinkerFlags = Optional.of(linkerFlags);
+  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(
+      ImmutableList<StringWithMacros> linkerFlags) {
+    getArgForPopulating().setExportedLinkerFlags(linkerFlags);
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setLinkWhole(boolean linkWhole) {
-    arg.linkWhole = Optional.of(linkWhole);
-    return this;
+  public PrebuiltCxxLibraryBuilder setExportedLinkerFlags(String... linkerFlags) {
+    return setExportedLinkerFlags(StringWithMacrosUtils.fromStrings(Arrays.asList(linkerFlags)));
   }
 
   public PrebuiltCxxLibraryBuilder setSoname(String soname) {
-    arg.soname = Optional.of(soname);
+    getArgForPopulating().setSoname(Optional.of(soname));
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setForceStatic(boolean forceStatic) {
-    arg.forceStatic = Optional.of(forceStatic);
+    getArgForPopulating().setForceStatic(forceStatic);
     return this;
   }
 
   public PrebuiltCxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {
-    arg.exportedDeps = Optional.of(exportedDeps);
+    getArgForPopulating().setExportedDeps(exportedDeps);
     return this;
   }
 
+  public PrebuiltCxxLibraryBuilder setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
+    getArgForPopulating().setSupportedPlatformsRegex(Optional.of(supportedPlatformsRegex));
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setPreferredLinkage(NativeLinkable.Linkage linkage) {
+    getArgForPopulating().setPreferredLinkage(linkage);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedPreprocessorFlags(
+      ImmutableList<StringWithMacros> exportedPreprocessorFlags) {
+    getArgForPopulating().setExportedPreprocessorFlags(exportedPreprocessorFlags);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedPlatformPreprocessorFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> exportedPlatformPreprocessorFlags) {
+    getArgForPopulating().setExportedPlatformPreprocessorFlags(exportedPlatformPreprocessorFlags);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setExportedLangPlatformPreprocessorFlags(
+      ImmutableMap<
+              AbstractCxxSource.Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          exportedLangPlatformPreprocessorFlags) {
+    getArgForPopulating()
+        .setExportedLangPlatformPreprocessorFlags(exportedLangPlatformPreprocessorFlags);
+    return this;
+  }
+
+  public PrebuiltCxxLibraryBuilder setVersionedExportedPreprocessorFlags(
+      VersionMatchedCollection<ImmutableList<StringWithMacros>>
+          versionedExportedPreprocessorFlags) {
+    getArgForPopulating().setVersionedExportedPreprocessorFlags(versionedExportedPreprocessorFlags);
+    return this;
+  }
 }

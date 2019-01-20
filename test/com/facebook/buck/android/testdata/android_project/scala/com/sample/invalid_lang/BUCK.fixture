@@ -1,0 +1,5 @@
+android_library(
+    name = "lib_with_invalid_language_param",
+    srcs = glob(["*.scala"]),
+    language = "unknown",
+)

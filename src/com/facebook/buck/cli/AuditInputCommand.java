@@ -16,112 +16,80 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.graph.AbstractBottomUpTraversal;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-
-import org.kohsuke.args4j.Argument;
-import org.kohsuke.args4j.Option;
-
+import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 public class AuditInputCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(AuditInputCommand.class);
 
-  @Option(name = "--json",
-      usage = "Output in JSON format")
+  @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
   }
 
-  @Argument
-  private List<String> arguments = Lists.newArrayList();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
   }
 
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
-  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
-    return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
-  }
-
   @Override
-  public int runWithoutHelp(final CommandRunnerParams params)
-      throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
-    // TargetNodes for the specified BuildTargets.
-    final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+    // TargetNodes for the specified BuildTargetPaths.
+    ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, getArguments());
 
-    if (fullyQualifiedBuildTargets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Please specify at least one build target."));
-      return 1;
+    if (targets.isEmpty()) {
+      throw new CommandLineException("must specify at least one build target");
     }
-
-    ImmutableSet<BuildTarget> targets = FluentIterable
-        .from(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()))
-        .transform(new Function<String, BuildTarget>() {
-                     @Override
-                     public BuildTarget apply(String input) {
-                       return BuildTargetParser.INSTANCE.parse(
-                           input,
-                           BuildTargetPatternParser.fullyQualified(),
-                           params.getCell().getCellRoots());
-                     }
-                   })
-        .toSet();
 
     LOG.debug("Getting input for targets: %s", targets);
 
     TargetGraph graph;
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Audit",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
-        getConcurrencyLimit(params.getBuckConfig()))) {
-      graph = params.getParser().buildTargetGraph(
-          params.getBuckEventBus(),
-          params.getCell(),
-          getEnableParserProfiling(),
-          pool.getExecutor(),
-          targets);
-    } catch (BuildFileParseException | BuildTargetException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()))) {
+      graph =
+          params
+              .getParser()
+              .buildTargetGraph(
+                  params.getCell(),
+                  getEnableParserProfiling(),
+                  pool.getListeningExecutorService(),
+                  targets);
+    } catch (BuildFileParseException e) {
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      return ExitCode.PARSE_ERROR;
     }
 
     if (shouldGenerateJsonOutput()) {
@@ -136,71 +104,63 @@ public class AuditInputCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  int printJsonInputs(final CommandRunnerParams params, TargetGraph graph) throws IOException {
-    final SortedMap<String, ImmutableSortedSet<Path>> targetToInputs =
-        new TreeMap<>();
+  ExitCode printJsonInputs(CommandRunnerParams params, TargetGraph graph) throws IOException {
+    SortedMap<String, ImmutableSortedSet<Path>> targetToInputs = new TreeMap<>();
 
-    new AbstractBottomUpTraversal<TargetNode<?>, Void>(graph) {
+    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(graph) {
 
       @Override
       public void visit(TargetNode<?> node) {
         Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
-        Cell cell = cellRoot.isPresent() ? cellRoot.get() : params.getCell();
-        LOG.debug(
-            "Looking at inputs for %s",
-            node.getBuildTarget().getFullyQualifiedName());
+        Cell cell = cellRoot.orElse(params.getCell());
+        LOG.debug("Looking at inputs for %s", node.getBuildTarget().getFullyQualifiedName());
 
-        SortedSet<Path> targetInputs = new TreeSet<>();
+        ImmutableSortedSet.Builder<Path> targetInputs =
+            new ImmutableSortedSet.Builder<>(Ordering.natural());
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
             if (!cell.getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s",
-                  node,
-                  params.getCell().getRoot().relativize(cell.getRoot().resolve(input)));
+                  node, params.getCell().getRoot().relativize(cell.getRoot().resolve(input)));
             }
             targetInputs.addAll(cell.getFilesystem().getFilesUnderPath(input));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
         }
-        targetToInputs.put(
-            node.getBuildTarget().getFullyQualifiedName(),
-            ImmutableSortedSet.copyOf(targetInputs));
+        targetToInputs.put(node.getBuildTarget().getFullyQualifiedName(), targetInputs.build());
       }
     }.traverse();
 
-    params.getObjectMapper().writeValue(
-        params.getConsole().getStdOut(),
-        targetToInputs);
+    ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetToInputs);
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
-  private int printInputs(final CommandRunnerParams params, TargetGraph graph) {
+  private ExitCode printInputs(CommandRunnerParams params, TargetGraph graph) {
     // Traverse the TargetGraph and print out all of the inputs used to produce each TargetNode.
     // Keep track of the inputs that have been displayed to ensure that they are not displayed more
     // than once.
-    new AbstractBottomUpTraversal<TargetNode<?>, Void>(graph) {
+    new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(graph) {
 
-      final Set<Path> inputs = Sets.newHashSet();
+      final Set<Path> inputs = new HashSet<>();
 
       @Override
       public void visit(TargetNode<?> node) {
         Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
-        Cell cell = cellRoot.isPresent() ? cellRoot.get() : params.getCell();
+        Cell cell = cellRoot.orElse(params.getCell());
         for (Path input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
             if (!cell.getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s",
-                  node,
-                  params.getCell().getRoot().relativize(cell.getRoot().resolve(input)));
+                  node, params.getCell().getRoot().relativize(cell.getRoot().resolve(input)));
             }
-            ImmutableSortedSet<Path> nodeContents = ImmutableSortedSet.copyOf(
-                cell.getFilesystem().getFilesUnderPath(input));
+            ImmutableSortedSet<Path> nodeContents =
+                ImmutableSortedSet.copyOf(cell.getFilesystem().getFilesUnderPath(input));
             for (Path path : nodeContents) {
               putInput(params.getCell().getRoot().relativize(cell.getRoot().resolve(path)));
             }
@@ -218,12 +178,11 @@ public class AuditInputCommand extends AbstractCommand {
       }
     }.traverse();
 
-    return 0;
+    return ExitCode.SUCCESS;
   }
 
   @Override
   public String getShortDescription() {
     return "provides facilities to audit build targets' input files";
   }
-
 }

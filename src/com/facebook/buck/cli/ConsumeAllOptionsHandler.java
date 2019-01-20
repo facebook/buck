@@ -26,9 +26,7 @@ import org.kohsuke.args4j.spi.Setter;
 public class ConsumeAllOptionsHandler extends OptionHandler<String> {
 
   public ConsumeAllOptionsHandler(
-      CmdLineParser parser,
-      OptionDef option,
-      Setter<? super String> setter) throws CmdLineException {
+      CmdLineParser parser, OptionDef option, Setter<? super String> setter) {
     super(parser, option, setter);
   }
 

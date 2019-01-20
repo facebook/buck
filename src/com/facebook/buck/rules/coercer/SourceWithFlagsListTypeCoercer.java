@@ -16,13 +16,11 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.SourceWithFlags;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 import java.util.List;
 
@@ -34,9 +32,8 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
       TypeCoercer<String> stringTypeCoercer,
       TypeCoercer<SourceWithFlags> sourceWithFlagsTypeCoercer) {
     this.unnamedSourcesTypeCoercer = new SortedSetTypeCoercer<>(sourceWithFlagsTypeCoercer);
-    this.namedSourcesTypeCoercer = new SortedMapTypeCoercer<>(
-        stringTypeCoercer,
-        sourceWithFlagsTypeCoercer);
+    this.namedSourcesTypeCoercer =
+        new SortedMapTypeCoercer<>(stringTypeCoercer, sourceWithFlagsTypeCoercer);
   }
 
   @Override
@@ -46,18 +43,19 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return unnamedSourcesTypeCoercer.hasElementClass(types) ||
-        namedSourcesTypeCoercer.hasElementClass(types);
+    return unnamedSourcesTypeCoercer.hasElementClass(types)
+        || namedSourcesTypeCoercer.hasElementClass(types);
   }
 
   @Override
-  public void traverse(SourceWithFlagsList object, Traversal traversal) {
+  public void traverse(
+      CellPathResolver cellRoots, SourceWithFlagsList object, Traversal traversal) {
     switch (object.getType()) {
       case UNNAMED:
-        unnamedSourcesTypeCoercer.traverse(object.getUnnamedSources().get(), traversal);
+        unnamedSourcesTypeCoercer.traverse(cellRoots, object.getUnnamedSources().get(), traversal);
         break;
       case NAMED:
-        namedSourcesTypeCoercer.traverse(object.getNamedSources().get(), traversal);
+        namedSourcesTypeCoercer.traverse(cellRoots, object.getNamedSources().get(), traversal);
         break;
       default:
         throw new RuntimeException("Unhandled type: " + object.getType());
@@ -65,32 +63,19 @@ public class SourceWithFlagsListTypeCoercer implements TypeCoercer<SourceWithFla
   }
 
   @Override
-  public Optional<SourceWithFlagsList> getOptionalValue() {
-    return Optional.of(
-        SourceWithFlagsList.ofUnnamedSources(
-            ImmutableSortedSet.<SourceWithFlags>of()));
-  }
-
-  @Override
   public SourceWithFlagsList coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof List) {
       return SourceWithFlagsList.ofUnnamedSources(
           unnamedSourcesTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
     } else {
       return SourceWithFlagsList.ofNamedSources(
-          namedSourcesTypeCoercer.coerce(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              object));
+          namedSourcesTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
     }
   }
 }

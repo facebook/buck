@@ -16,30 +16,32 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.jvm.java.ExtraClasspathProvider;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.jvm.java.JavacOptionsAmender;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
+import com.facebook.buck.jvm.java.ResourcesParameters;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
-
+import java.util.Optional;
 
 /**
  * {@link JavaLibrary} that wraps the output of an {@link AndroidBuildConfig}.
- * <p>
- * This is a custom subclass of {@link DefaultJavaLibrary} so that it can have special behavior
+ *
+ * <p>This is a custom subclass of {@link DefaultJavaLibrary} so that it can have special behavior
  * when being traversed by an {@link AndroidPackageableCollector}.
  */
 class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements AndroidPackageable {
@@ -47,46 +49,59 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
   private final AndroidBuildConfig androidBuildConfig;
 
   AndroidBuildConfigJavaLibrary(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      Javac javac,
       JavacOptions javacOptions,
-      SourcePath abiJar,
       AndroidBuildConfig androidBuildConfig) {
     super(
-        params,
-        resolver,
-        /* srcs */ ImmutableSortedSet.of(
-            new BuildTargetSourcePath(androidBuildConfig.getBuildTarget())),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
-        javacOptions.getGeneratedSourceFolderName(),
-        /* proguardConfig */ Optional.<SourcePath>absent(),
-        /* postprocessClassesCommands */ ImmutableList.<String>of(),
-        /* exportedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        abiJar,
-        /* trackClassUsage */ javacOptions.trackClassUsage(),
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        new JavacToJarStepFactory(javacOptions, JavacOptionsAmender.IDENTITY),
-        /* resourcesRoot */ Optional.<Path>absent(),
-        /* mavenCoords */ Optional.<String>absent(),
-        /* tests */ ImmutableSortedSet.<BuildTarget>of());
+        buildTarget,
+        projectFilesystem,
+        new JarBuildStepsFactory(
+            buildTarget,
+            new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY),
+            /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
+            ImmutableSortedSet.of(),
+            ResourcesParameters.of(),
+            /* manifest file */ Optional.empty(),
+            /* postprocessClassesCommands */ ImmutableList.of(),
+            /* trackClassUsage */ javacOptions.trackClassUsage(),
+            /* trackJavacPhaseEvents */ javacOptions.trackJavacPhaseEvents(),
+            /* classesToRemoveFromJar */ RemoveClassesPatternsMatcher.EMPTY,
+            AbiGenerationMode.CLASS,
+            AbiGenerationMode.CLASS,
+            ImmutableList.of(),
+            false),
+        ruleFinder,
+        Optional.empty(),
+        ImmutableSortedSet.of(androidBuildConfig),
+        /* exportedDeps */ ImmutableSortedSet.of(),
+        /* providedDeps */ ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
+        JavaAbis.getClassAbiJar(buildTarget),
+        /* sourceOnlyAbiJar */ null,
+        /* mavenCoords */ Optional.empty(),
+        /* tests */ ImmutableSortedSet.of(),
+        /* requiredForSourceOnlyAbi */ false,
+        UnusedDependenciesAction.IGNORE,
+        Optional.empty(),
+        null,
+        false,
+        false);
     this.androidBuildConfig = androidBuildConfig;
-    Preconditions.checkState(
-        params.getDeps().contains(androidBuildConfig),
-        "%s must depend on the AndroidBuildConfig whose output is in this rule's srcs.",
-        params.getBuildTarget());
+    Preconditions.checkState(getBuildDeps().contains(androidBuildConfig));
   }
 
   /**
    * If an {@link AndroidPackageableCollector} is traversing this rule for an {@link AndroidBinary},
-   * then it should flag itself as a class that should not be dexed and insert a new classpath
-   * entry for a {@code BuildConfig} with the final values for the APK.
+   * then it should flag itself as a class that should not be dexed and insert a new classpath entry
+   * for a {@code BuildConfig} with the final values for the APK.
    */
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
     collector.addBuildConfig(
-        androidBuildConfig.getJavaPackage(),
-        androidBuildConfig.getBuildConfigFields());
+        androidBuildConfig.getJavaPackage(), androidBuildConfig.getBuildConfigFields());
   }
 
   public AndroidBuildConfig getAndroidBuildConfig() {

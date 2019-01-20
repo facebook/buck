@@ -15,21 +15,16 @@
  */
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.rules.ArchiveMemberSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
+import java.util.Optional;
+import org.immutables.value.Value;
 
 @BuckStyleImmutable
 @JsonSerialize
@@ -44,14 +39,13 @@ abstract class AbstractDependencyFileEntry {
   @Value.Check
   protected void check() {
     Preconditions.checkState(!pathToFile().isAbsolute());
-    Preconditions.checkState(!pathWithinArchive().isPresent() ||
-        !pathWithinArchive().get().isAbsolute());
+    Preconditions.checkState(
+        !pathWithinArchive().isPresent() || !pathWithinArchive().get().isAbsolute());
   }
 
   public static DependencyFileEntry fromSourcePath(
-      SourcePath sourcePath,
-      SourcePathResolver resolver) {
-    final DependencyFileEntry.Builder builder = DependencyFileEntry.builder();
+      SourcePath sourcePath, SourcePathResolver resolver) {
+    DependencyFileEntry.Builder builder = DependencyFileEntry.builder();
     if (sourcePath instanceof ArchiveMemberSourcePath) {
       ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
       ArchiveMemberPath relativeArchiveMemberPath =
@@ -63,20 +57,5 @@ abstract class AbstractDependencyFileEntry {
     }
 
     return builder.build();
-  }
-
-  public static Function<SourcePath, DependencyFileEntry> fromSourcePathFunction(
-      final SourcePathResolver resolver) {
-    return new Function<SourcePath, DependencyFileEntry>() {
-      @Nullable
-      @Override
-      public DependencyFileEntry apply(@Nullable SourcePath input) {
-        if (input == null) {
-          return null;
-        }
-
-        return fromSourcePath(input, resolver);
-      }
-    };
   }
 }

@@ -19,15 +19,13 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningExecutorService;
-
-import java.util.LinkedHashSet;
+import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * An abstract class that provides generic regex filter functionality.
- * The actual expressions to filter are defined in the subclasses.
+ * An abstract class that provides generic regex filter functionality. The actual expressions to
+ * filter are defined in the subclasses.
  */
 abstract class RegexFilterFunction implements QueryFunction {
 
@@ -35,18 +33,13 @@ abstract class RegexFilterFunction implements QueryFunction {
 
   protected abstract String getPattern(ImmutableList<Argument> args);
 
-  protected abstract <T> String getStringToFilter(
-      QueryEnvironment<T> env,
-      ImmutableList<Argument> args,
-      T target)
-      throws QueryException, InterruptedException;
+  protected abstract String getStringToFilter(
+      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target) throws QueryException;
 
   @Override
-  public <T> Set<T> eval(
-      QueryEnvironment<T> env,
-      ImmutableList<Argument> args,
-      ListeningExecutorService executor)
-      throws QueryException, InterruptedException {
+  public ImmutableSet<QueryTarget> eval(
+      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+      throws QueryException {
     Pattern compiledPattern;
     try {
       compiledPattern = Pattern.compile(getPattern(args));
@@ -55,14 +48,14 @@ abstract class RegexFilterFunction implements QueryFunction {
           String.format("Illegal pattern regexp '%s': %s", getPattern(args), e.getMessage()));
     }
 
-    Set<T> targets = getExpressionToEval(args).eval(env, executor);
-    Set<T> result = new LinkedHashSet<>();
-    for (T target : targets) {
+    Set<QueryTarget> targets = evaluator.eval(getExpressionToEval(args), env);
+    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
+    for (QueryTarget target : targets) {
       String attributeValue = getStringToFilter(env, args, target);
       if (compiledPattern.matcher(attributeValue).find()) {
         result.add(target);
       }
     }
-    return result;
+    return result.build();
   }
 }

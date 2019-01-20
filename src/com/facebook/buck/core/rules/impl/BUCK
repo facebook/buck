@@ -1,0 +1,22 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "impl",
+    srcs = glob(
+        ["*.java"],
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/attr:attr",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/step/fs:fs",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+    ],
+)

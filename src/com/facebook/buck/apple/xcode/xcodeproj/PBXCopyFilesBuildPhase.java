@@ -34,7 +34,8 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
     PLUGINS(13),
     JAVA_RESOURCES(15),
     PRODUCTS(16),
-    ;
+    XPC(16),
+    QLGENERATOR(16);
 
     private int value;
 
@@ -42,14 +43,12 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
       return value;
     }
 
-    private Destination(int value) {
+    Destination(int value) {
       this.value = value;
     }
   }
 
-  /**
-   * Spec for the destination folder.
-   */
+  /** Spec for the destination folder. */
   private CopyFilePhaseDestinationSpec dstSubfolderSpec;
 
   public PBXCopyFilesBuildPhase(CopyFilePhaseDestinationSpec dstSubfolderSpec) {
@@ -69,6 +68,6 @@ public class PBXCopyFilesBuildPhase extends PBXBuildPhase {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
     s.addField("dstSubfolderSpec", dstSubfolderSpec.getDestination().getValue());
-    s.addField("dstPath", dstSubfolderSpec.getPath().or(""));
+    s.addField("dstPath", dstSubfolderSpec.getPath().orElse(""));
   }
 }

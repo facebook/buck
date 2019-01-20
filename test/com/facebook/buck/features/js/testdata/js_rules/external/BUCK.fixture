@@ -1,0 +1,25 @@
+export_file(
+    name = "exported.js",
+    visibility = ["PUBLIC"],
+)
+
+js_library(
+    name = "replace-file-prefix",
+    srcs = [
+        "tropical-fruit/mango.js",
+        "tropical-fruit/papaya.js",
+    ],
+    base_path = "../js/node_modules",
+    worker = "//js:packager_worker",
+)
+
+export_file(
+    name = "write-node-modules.sh",
+)
+
+genrule(
+    name = "node-modules-installation",
+    out = "node_modules",
+    bash = "$(location :write-node-modules.sh) $OUT",
+    visibility = ["PUBLIC"],
+)

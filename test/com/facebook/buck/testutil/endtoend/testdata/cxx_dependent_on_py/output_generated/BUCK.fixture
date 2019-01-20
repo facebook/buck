@@ -1,0 +1,8 @@
+cxx_library(
+    name = "output_generated",
+    srcs = ["output_generated.cpp"],
+    exported_headers = ["output_generated.h"],
+    link_style = "static",
+    visibility = ["PUBLIC"],
+    deps = ["//generate_cpp:generated"],
+)

@@ -16,30 +16,48 @@
 
 package com.facebook.buck.file;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.file.downloader.Downloader;
 import com.google.common.hash.HashCode;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 
-public class RemoteFileBuilder extends AbstractNodeBuilder<RemoteFileDescription.Arg> {
+public class RemoteFileBuilder
+    extends AbstractNodeBuilder<
+        RemoteFileDescriptionArg.Builder,
+        RemoteFileDescriptionArg,
+        RemoteFileDescription,
+        RemoteFile> {
   protected RemoteFileBuilder(Downloader downloader, BuildTarget target) {
-    super(new RemoteFileDescription(downloader), target);
+    super(new RemoteFileDescription(createToolchainProviderWithDownloader(downloader)), target);
+  }
+
+  private static ToolchainProvider createToolchainProviderWithDownloader(Downloader downloader) {
+    return new ToolchainProviderBuilder()
+        .withToolchain(Downloader.DEFAULT_NAME, downloader)
+        .build();
   }
 
   public static RemoteFileBuilder createBuilder(Downloader downloader, BuildTarget target) {
     return new RemoteFileBuilder(downloader, target);
   }
 
+  public RemoteFileBuilder from(RemoteFileDescriptionArg arg) {
+    getArgForPopulating().from(arg);
+    return this;
+  }
+
   public RemoteFileBuilder setSha1(HashCode hashCode) {
-    arg.sha1 = hashCode.toString();
+    getArgForPopulating().setSha1(hashCode.toString());
     return this;
   }
 
   public RemoteFileBuilder setUrl(String url) {
     try {
-      arg.url = new URI(url);
+      getArgForPopulating().setUrl(new URI(url));
     } catch (URISyntaxException e) {
       throw new RuntimeException("Unable to set url: " + url);
     }

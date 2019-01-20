@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.android_library}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'android_library()' /}
+    {param navid: 'rule_android_library' /}
     {param prettify: true /}
     {param description}
       A rule that is used to define a set of Java files that can be compiled
@@ -53,14 +69,28 @@ compiled class files and resources.
   {/param}
 {/call}
 
+{call android_common.manifest_arg}
+  {param type: 'library' /}
+{/call}
+
 {call buck.arg}
-  {param name: 'manifest' /}
-  {param default: 'None' /}
+  {param name: 'final_r_name' /}
+  {param default : 'None' /}
   {param desc}
-  An optional
-  {sp}<a href="http://developer.android.com/guide/topics/manifest/manifest-intro.html">Android
-  Manifest</a> for the library to declare any permissions or intents it may need or want to handle.
-  May either be a file or a {call buck.android_manifest /} target.
+  An optional name for a class like R.java with final values that is generated to be used
+  for annotation processors. The values will be wrong i.e they will not match the real values
+  in the final android binary, so they should only be used by carefully crafted annotation processors.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'skip_non_union_r_dot_java' /}
+  {param default : 'false' /}
+  {param desc}
+  When using <code>resource_union_package</code> setting <code>skip_non_union_r_dot_java</code> will
+  skip generating dummy R.java for other packages which are unnecessary. Reducing the number of
+  R.java helps in improving the overall compile time especially in libraries with large number of
+  dependent prebuilt targets.
   {/param}
 {/call}
 
@@ -124,6 +154,8 @@ compiled class files and resources.
   {/param}
 {/call}
 
+{call jvm_common.compiler_class_name_arg /}
+
 {call buck.arg}
   {param name: 'extra_arguments' /}
   {param default : '[]' /}
@@ -135,13 +167,44 @@ compiled class files and resources.
 {/call}
 
 {call buck.arg}
-  {param name: 'exported_deps' /}
+  {param name: 'extra_kotlinc_arguments' /}
   {param default : '[]' /}
   {param desc}
-  This is the same as in <a href="{ROOT}rule/java_library.html">
-  <code>java_library</code></a>.
+  List of additional arguments to pass into the Kotlin compiler.
   {/param}
 {/call}
+
+{call buck.arg}
+  {param name: 'annotation_processing_tool' /}
+  {param default : 'kapt' /}
+  {param desc}
+  Specifies the tool to use for annotation processing. Possible values: "kapt" or "javac".
+  "kapt" allows running Java annotation processors against Kotlin sources while backporting
+  it for Java sources too.
+  "javac" works only against Java sources, Kotlin sources won't have access to generated
+  classes at compile time.
+  {/param}
+{/call}
+
+{call jvm_common.exported_deps}
+  {param library: 'android_library' /}
+{/call}
+
+{call jvm_common.provided_deps}
+  {param binary: 'android_binary' /}
+{/call}
+
+{call jvm_common.exported_provided_deps /}
+
+{call buck.deps_query_arg /}
+
+{call buck.provided_deps_query_arg /}
+
+{call jvm_common.abi_generation_mode /}
+
+{call jvm_common.source_only_abi_deps /}
+
+{call jvm_common.required_for_source_only_abi /}
 
 {call buck.tests_arg /}
 

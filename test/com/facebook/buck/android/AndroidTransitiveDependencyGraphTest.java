@@ -18,42 +18,36 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.google.common.collect.ImmutableSortedSet;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class AndroidTransitiveDependencyGraphTest {
 
   @Test
-  public void findManifestFilesWithTransitiveDeps() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+  public void findManifestFilesWithTransitiveDeps() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule dep3 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep3"))
-            .setManifestFile(new FakeSourcePath("manifest3.xml"))
-            .build(resolver);
+            .setManifestFile(FakeSourcePath.of("manifest3.xml"))
+            .build(graphBuilder);
     BuildRule dep2 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep2"))
             .addDep(dep3.getBuildTarget())
-            .build(resolver);
+            .build(graphBuilder);
     BuildRule dep1 =
         AndroidLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep1"))
-            .setManifestFile(new FakeSourcePath("manifest1.xml"))
+            .setManifestFile(FakeSourcePath.of("manifest1.xml"))
             .addDep(dep2.getBuildTarget())
-            .build(resolver);
+            .build(graphBuilder);
     assertThat(
         new AndroidTransitiveDependencyGraph(ImmutableSortedSet.of(dep1)).findManifestFiles(),
-        Matchers.<SourcePath>containsInAnyOrder(
-            new FakeSourcePath("manifest1.xml"),
-            new FakeSourcePath("manifest3.xml")));
+        Matchers.containsInAnyOrder(
+            FakeSourcePath.of("manifest1.xml"), FakeSourcePath.of("manifest3.xml")));
   }
-
 }

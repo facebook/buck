@@ -17,21 +17,17 @@
 package com.facebook.buck.event.external.events;
 
 /**
- * Describes a step made by buck when building a target.
- * This type is intended to be used by external applications (like the Intellij Buck plugin)
- * to deserialize events coming from the webserver.
+ * Describes a step made by buck when building a target. This type is intended to be used by
+ * external applications (like the Intellij Buck plugin) to deserialize events coming from the
+ * webserver.
  */
 public interface StepEventExternalInterface extends BuckEventExternalInterface {
   // Sent when a step has started
   String STEP_STARTED = "StepStarted";
   // Sent when a step has finished
   String STEP_FINISHED = "StepFinished";
-  /**
-   * @return the step name.
-   */
+  /** @return the step name. */
   String getShortStepName();
-  /**
-   * @return the description of the step, usually the command itself.
-   */
+  /** @return the description of the step, usually the command itself. */
   String getDescription();
 }

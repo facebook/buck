@@ -21,21 +21,19 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.Collection;
-
+import java.util.Optional;
 import javax.annotation.concurrent.GuardedBy;
 
-/**
- * Fake implementation of {@link ScribeLogger} which records logged lines to memory.
- */
-public final class FakeScribeLogger implements ScribeLogger {
+/** Fake implementation of {@link ScribeLogger} which records logged lines to memory. */
+public final class FakeScribeLogger extends ScribeLogger {
   // Keep the lines in the order in which they were written.
   @GuardedBy("this")
   private final Multimap<String, String> loggedCategoryLines = LinkedListMultimap.create();
 
   @Override
-  public ListenableFuture<Void> log(String category, Iterable<String> lines) {
+  public ListenableFuture<Void> log(
+      String category, Iterable<String> lines, Optional<Integer> bucket) {
     synchronized (this) {
       loggedCategoryLines.putAll(category, lines);
       return Futures.immediateFuture(null);
@@ -53,6 +51,5 @@ public final class FakeScribeLogger implements ScribeLogger {
   }
 
   @Override
-  public void close() throws Exception {
-  }
+  public void close() {}
 }

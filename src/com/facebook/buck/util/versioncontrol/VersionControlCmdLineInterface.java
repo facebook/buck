@@ -17,46 +17,40 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.google.common.collect.ImmutableSet;
+import java.io.InputStream;
+import java.util.Optional;
 
-/***
- * Provides meta-data about the version control repository the project being built is using.
- */
+/** * Provides meta-data about the version control repository the project being built is using. */
 public interface VersionControlCmdLineInterface {
-  /***
-   *
-   * @return true if project is using version control, and we support it (i.e. hg)
-   */
-  boolean isSupportedVersionControlSystem();
+  /** @return true if project is using version control, and we support it (i.e. hg) */
+  boolean isSupportedVersionControlSystem() throws InterruptedException;
 
-  /***
-   * @param name Bookmark name, e.g. master
-   * @return Global revision ID for given name
-   * @throws VersionControlCommandFailedException
+  /**
+   * @param baseRevision
+   * @param tipRevision
+   * @return {@link VersionControlSupplier} of the input stream of the diff between two revisions
    * @throws InterruptedException
    */
-  String revisionId(String name) throws VersionControlCommandFailedException, InterruptedException;
-
-  /***
-   *
-   * @return Revision ID for current tip
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  String currentRevisionId() throws VersionControlCommandFailedException, InterruptedException;
-
-  /***
-   *
-   * @param revisionIdOne
-   * @param revisionIdTwo
-   * @return Revision ID that is an ancestor for both revisionIdOne and revisionIdTwo
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  String commonAncestor(String revisionIdOne, String revisionIdTwo)
+  VersionControlSupplier<InputStream> diffBetweenRevisions(String baseRevision, String tipRevision)
       throws VersionControlCommandFailedException, InterruptedException;
 
   /**
-   *
+   * @param baseRevision
+   * @param tipRevision
+   * @return {@link VersionControlSupplier} of the input stream of the diff between two revisions or
+   *     {@link Optional#empty}
+   * @throws InterruptedException
+   */
+  default Optional<VersionControlSupplier<InputStream>> diffBetweenRevisionsOrAbsent(
+      String baseRevision, String tipRevision) throws InterruptedException {
+    try {
+      return Optional.of(diffBetweenRevisions(baseRevision, tipRevision));
+    } catch (VersionControlCommandFailedException e) {
+      return Optional.empty();
+    }
+  }
+
+  /**
    * @param fromRevisionId
    * @return files changed from the given revision.
    * @throws VersionControlCommandFailedException
@@ -65,23 +59,6 @@ public interface VersionControlCmdLineInterface {
   ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException;
 
-  /***
-   *
-   * @return True if working directory has changes after last commit
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  boolean hasWorkingDirectoryChanges()
-      throws VersionControlCommandFailedException, InterruptedException;
-
-  /***
-   *
-   * @param revisionId
-   * @return Unix timestamp of given revisionId (in seconds)
-   * @throws VersionControlCommandFailedException
-   * @throws InterruptedException
-   */
-  long timestampSeconds(String revisionId)
-      throws VersionControlCommandFailedException, InterruptedException;
-
+  FastVersionControlStats fastVersionControlStats()
+      throws InterruptedException, VersionControlCommandFailedException;
 }

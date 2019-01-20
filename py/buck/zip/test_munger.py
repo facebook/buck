@@ -13,67 +13,97 @@
 # under the License.
 
 import contextlib
-import unittest
 import os
+import shutil
+import unittest
 import zipfile
 
 from py.buck.zip import munger
 
 
+def make_inputs(tempdir, *paths):
+    for path in paths:
+        fullpath = os.path.join(tempdir, path)
+        dirname, filename = os.path.split(fullpath)
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        else:
+            assert os.path.isdir(dirname)
+        with open(fullpath, "w") as f:
+            f.write(filename)
+
+
+def make_zip(tempdir, zip):
+    shutil.make_archive(zip, "zip", tempdir)
+
+
+def get_zip_contents(zip):
+    with contextlib.closing(zipfile.ZipFile(zip)) as output:
+        return [
+            info.filename
+            for info in output.infolist()
+            if not info.filename.endswith("/")
+        ]
+
+
 class TestMunger(unittest.TestCase):
     def test_include_includes(self):
         with munger.tempdir() as temp_dir:
-            output_file = os.path.join(temp_dir, 'output')
-            input_file = os.path.join(temp_dir, 'input')
-            included = os.path.join(temp_dir, 'included')
-            with open(included, 'w') as f:
-                f.write('some content')
-            excluded = os.path.join(temp_dir, 'excluded')
-            with open(excluded, 'w') as f:
-                f.write('some content')
-            with contextlib.closing(zipfile.ZipFile(input_file, 'w')) as input:
-                input.write(included, os.path.relpath(included, temp_dir))
-                input.write(excluded, os.path.relpath(excluded, temp_dir))
+            output_file = os.path.join(temp_dir, "output")
+            input_file = os.path.join(temp_dir, "input")
+
+            workdir = os.path.join(temp_dir, "work")
+            excluded = os.path.join("excluded")
+            included = os.path.join(excluded, "included")
+
+            make_inputs(workdir, os.path.join(excluded, "some_file"), included)
+            make_zip(workdir, input_file)
 
             munger.process_jar(
-                input_file,
-                output_file,
-                ['included'],
-                [])
+                input_file + ".zip", output_file, ["excluded/included"], ["excluded"]
+            )
 
-            with contextlib.closing(zipfile.ZipFile(output_file)) as output:
-                self.assertEqual(len(output.infolist()), 1, 'Only one file ended up in the zip')
-                exists = False
-                for info in output.infolist():
-                    exists = exists or info.filename == 'included'
-                self.assertTrue(exists, 'Included file was included')
+            contents = get_zip_contents(output_file)
+            self.assertEqual(
+                len(contents),
+                1,
+                "Only one file should end up in the zip. Got [%s]."
+                % (", ".join(contents)),
+            )
+
+            exists = False
+            for path in contents:
+                exists = exists or path == "excluded/included"
+            self.assertTrue(exists, "Included file was included")
 
     def test_exclude_excludes(self):
         with munger.tempdir() as temp_dir:
-            output_file = os.path.join(temp_dir, 'output')
-            input_file = os.path.join(temp_dir, 'input')
-            included = os.path.join(temp_dir, 'included')
-            with open(included, 'w') as f:
-                f.write('some content')
-            excluded = os.path.join(temp_dir, 'excluded')
-            with open(excluded, 'w') as f:
-                f.write('some content')
-            with contextlib.closing(zipfile.ZipFile(input_file, 'w')) as input:
-                input.write(included, os.path.relpath(included, temp_dir))
-                input.write(excluded, os.path.relpath(excluded, temp_dir))
+            output_file = os.path.join(temp_dir, "output")
+            input_file = os.path.join(temp_dir, "input")
+
+            workdir = os.path.join(temp_dir, "work")
+            included = os.path.join("included")
+            excluded = os.path.join("excluded")
+            make_inputs(workdir, included, excluded)
+            make_zip(workdir, input_file)
 
             munger.process_jar(
-                input_file,
-                output_file,
-                [],
-                ['excluded'])
+                input_file + ".zip", output_file, ["other-include"], ["excluded"]
+            )
 
-            with contextlib.closing(zipfile.ZipFile(output_file)) as output:
-                self.assertEqual(len(output.infolist()), 1, 'Only one file ended up in the zip')
-                exists = False
-                for info in output.infolist():
-                    exists = exists or info.filename == 'included'
-                self.assertTrue(exists, 'Included file was included')
+            contents = get_zip_contents(output_file)
+            self.assertEqual(
+                len(contents),
+                1,
+                "Only one file should end up in the zip. Got [%s]."
+                % (", ".join(contents)),
+            )
 
-if __name__ == '__main__':
+            exists = False
+            for path in contents:
+                exists = exists or path == "included"
+            self.assertTrue(exists, "Included file was included")
+
+
+if __name__ == "__main__":
     unittest.main()

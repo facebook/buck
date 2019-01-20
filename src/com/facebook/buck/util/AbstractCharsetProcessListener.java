@@ -24,8 +24,8 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CoderResult;
 
 /**
- * Implementation of {@link ListeningProcessExecutor.ProcessListener} which decodes
- * bytes to and from Java String data.
+ * Implementation of {@link ListeningProcessExecutor.ProcessListener} which decodes bytes to and
+ * from Java String data.
  */
 public abstract class AbstractCharsetProcessListener
     implements ListeningProcessExecutor.ProcessListener {
@@ -60,37 +60,30 @@ public abstract class AbstractCharsetProcessListener
   }
 
   /**
-   * Creates a {@link AbstractCharsetProcessListener} which uses a single {@link Charset}
-   * to encode and decode stdin, stdout, and stderr bytes to and from String data.
+   * Creates a {@link AbstractCharsetProcessListener} which uses a single {@link Charset} to encode
+   * and decode stdin, stdout, and stderr bytes to and from String data.
    */
   public AbstractCharsetProcessListener(Charset charset) {
     this(charset.newEncoder(), charset.newDecoder(), charset.newDecoder());
   }
 
   /**
-   * Creates a {@link AbstractCharsetProcessListener} which uses
-   * separate {@link CharsetEncoder} and {@link CharsetDecoder}s to
-   * encode and decode stdin, stdout, and stderr bytes to and from
-   * String data.
+   * Creates a {@link AbstractCharsetProcessListener} which uses separate {@link CharsetEncoder} and
+   * {@link CharsetDecoder}s to encode and decode stdin, stdout, and stderr bytes to and from String
+   * data.
    */
   public AbstractCharsetProcessListener(
-      CharsetEncoder stdinEncoder,
-      CharsetDecoder stdoutDecoder,
-      CharsetDecoder stderrDecoder) {
+      CharsetEncoder stdinEncoder, CharsetDecoder stdoutDecoder, CharsetDecoder stderrDecoder) {
     this.stdinEncoder = new ListeningCharsetEncoder(new StdinEncoderListener(), stdinEncoder);
     this.stdoutDecoder = new ListeningCharsetDecoder(new StdoutDecoderListener(), stdoutDecoder);
     this.stderrDecoder = new ListeningCharsetDecoder(new StderrDecoderListener(), stderrDecoder);
   }
 
   @Override
-  public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
-
-  }
+  public void onStart(ListeningProcessExecutor.LaunchedProcess process) {}
 
   @Override
-  public void onExit(int exitCode) {
-
-  }
+  public void onExit(int exitCode) {}
 
   @Override
   public final void onStdout(ByteBuffer buffer, boolean closed) {
@@ -110,21 +103,19 @@ public abstract class AbstractCharsetProcessListener
   /**
    * Called when the process is ready to receive string data on stdin.
    *
-   * Before this method returns, you must set the {@code buffer}'s
-   * {@link CharBuffer#position() position} and {@link CharBuffer#limit() limit} (for example, by
-   * invoking {@link CharBuffer#flip()}) to indicate how much data is in the buffer
-   * before returning from this method.
+   * <p>Before this method returns, you must set the {@code buffer}'s {@link CharBuffer#position()
+   * position} and {@link CharBuffer#limit() limit} (for example, by invoking {@link
+   * CharBuffer#flip()}) to indicate how much data is in the buffer before returning from this
+   * method.
    *
-   * You must first call {@link ListeningProcessExecutor.LaunchedProcess#wantWrite()} at
-   * least once before this method will be invoked.
+   * <p>You must first call {@link ListeningProcessExecutor.LaunchedProcess#wantWrite()} at least
+   * once before this method will be invoked.
    *
-   * If not all of the data needed to be written will fit in {@code buffer},
-   * you can return {@code true} to indicate that you would like to write more
-   * data.
+   * <p>If not all of the data needed to be written will fit in {@code buffer}, you can return
+   * {@code true} to indicate that you would like to write more data.
    *
-   * Otherwise, return {@code false} if you have no more data to write to
-   * stdin. (You can always invoke {@link ListeningProcessExecutor.LaunchedProcess#wantWrite()} any
-   * time in the future.
+   * <p>Otherwise, return {@code false} if you have no more data to write to stdin. (You can always
+   * invoke {@link ListeningProcessExecutor.LaunchedProcess#wantWrite()} any time in the future.
    */
   @SuppressWarnings("unused") // Unused parameters are meant for subclasses to override and use.
   protected boolean onStdinCharsReady(CharBuffer buffer) {
@@ -132,8 +123,8 @@ public abstract class AbstractCharsetProcessListener
   }
 
   /**
-   * Called when there is an error encoding string data received from
-   * {@link #onStdinCharsReady(CharBuffer)}.
+   * Called when there is an error encoding string data received from {@link
+   * #onStdinCharsReady(CharBuffer)}.
    *
    * @param result The {@link CoderResult} indicating encoder error
    */
@@ -142,11 +133,10 @@ public abstract class AbstractCharsetProcessListener
   }
 
   /**
-   * Override this to receive decoded Unicode Java string data read from
-   * stdout.
-   * <p>
-   * Make sure to set the {@link CharBuffer#position() position} of
-   * {@code buffer} to indicate how much data you have read before returning.
+   * Override this to receive decoded Unicode Java string data read from stdout.
+   *
+   * <p>Make sure to set the {@link CharBuffer#position() position} of {@code buffer} to indicate
+   * how much data you have read before returning.
    *
    * @param buffer The {@link CharBuffer} receiving Unicode string data.
    */
@@ -157,11 +147,10 @@ public abstract class AbstractCharsetProcessListener
   }
 
   /**
-   * Override this to receive decoded Unicode Java string data read from
-   * stderr.
-   * <p>
-   * Make sure to set the {@link CharBuffer#position() position} of
-   * {@code buffer} to indicate how much data you have read before returning.
+   * Override this to receive decoded Unicode Java string data read from stderr.
+   *
+   * <p>Make sure to set the {@link CharBuffer#position() position} of {@code buffer} to indicate
+   * how much data you have read before returning.
    *
    * @param buffer The {@link CharBuffer} receiving Unicode string data.
    */

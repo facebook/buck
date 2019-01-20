@@ -16,39 +16,40 @@
 
 package com.facebook.buck.json;
 
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
+import com.facebook.buck.parser.syntax.ListWithSelects;
+import com.facebook.buck.parser.syntax.SelectorValue;
+import com.facebook.buck.util.hashing.StringHashing;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.Hasher;
-
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 import javax.annotation.Nullable;
 
-/**
- * Hashes parsed BUCK file objects.
- */
+/** Hashes parsed BUCK file objects. */
 public class JsonObjectHashing {
-  private static enum HashedObjectType {
-      BOOLEAN,
-      DOUBLE,
-      FLOAT,
-      INTEGER,
-      LIST,
-      LONG,
-      SHORT,
-      STRING,
-      MAP,
-      NULL
+  private enum HashedObjectType {
+    BOOLEAN,
+    DOUBLE,
+    FLOAT,
+    INTEGER,
+    LIST,
+    LONG,
+    SHORT,
+    STRING,
+    MAP,
+    SELECTOR_LIST,
+    SELECTOR_VALUE,
+    NULL,
   }
 
   // Utility class; do not instantiate.
-  private JsonObjectHashing() { }
+  private JsonObjectHashing() {}
 
   /**
-   * Given a {@link Hasher} and a parsed BUCK file object, updates the Hasher
-   * with the contents of the JSON object.
+   * Given a {@link Hasher} and a parsed BUCK file object, updates the Hasher with the contents of
+   * the JSON object.
    */
   public static void hashJsonObject(Hasher hasher, @Nullable Object obj) {
     if (obj instanceof Map) {
@@ -61,8 +62,7 @@ public class JsonObjectHashing {
           throw new RuntimeException(
               String.format(
                   "Keys of JSON maps are expected to be strings. Actual type: %s, contents: %s",
-                  key.getClass().getName(),
-                  key));
+                  key.getClass().getName(), key));
         }
         Object value = entry.getValue();
         if (value != null) {
@@ -89,9 +89,8 @@ public class JsonObjectHashing {
       }
     } else if (obj instanceof String) {
       hasher.putInt(HashedObjectType.STRING.ordinal());
-      byte[] stringBytes = ((String) obj).getBytes(Charsets.UTF_8);
-      hasher.putInt(stringBytes.length);
-      hasher.putBytes(stringBytes);
+      String s = (String) obj;
+      StringHashing.hashStringAndLength(hasher, s);
     } else if (obj instanceof Boolean) {
       hasher.putInt(HashedObjectType.BOOLEAN.ordinal());
       hasher.putBoolean((boolean) obj);
@@ -107,6 +106,19 @@ public class JsonObjectHashing {
       }
     } else if (obj instanceof Void || obj == null) {
       hasher.putInt(HashedObjectType.NULL.ordinal());
+    } else if (obj instanceof ListWithSelects) {
+      ListWithSelects listWithSelects = (ListWithSelects) obj;
+      hasher.putInt(HashedObjectType.SELECTOR_LIST.ordinal());
+      List<Object> elements = listWithSelects.getElements();
+      hasher.putInt(elements.size());
+      for (Object collectionEntry : elements) {
+        hashJsonObject(hasher, collectionEntry);
+      }
+    } else if (obj instanceof SelectorValue) {
+      SelectorValue selectorValue = (SelectorValue) obj;
+      hasher.putInt(HashedObjectType.SELECTOR_VALUE.ordinal());
+      hashJsonObject(hasher, selectorValue.getDictionary());
+      hashJsonObject(hasher, selectorValue.getNoMatchError());
     } else {
       throw new RuntimeException(
           String.format("Unsupported object %s (class %s)", obj, obj.getClass()));

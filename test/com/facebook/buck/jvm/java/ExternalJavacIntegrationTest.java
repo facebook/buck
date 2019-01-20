@@ -19,102 +19,124 @@ package com.facebook.buck.jvm.java;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class ExternalJavacIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
-  public void whenExternalJavacIsSetCompilationSucceeds()
-    throws IOException, InterruptedException {
+  public void whenExternalJavacIsSetCompilationSucceeds() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "external_javac", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
 
     workspace.setUp();
 
     Path javac = workspace.getPath("javac.sh");
-    MoreFiles.makeExecutable(javac);
+    MostFiles.makeExecutable(javac);
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
     workspace.runBuckCommand("build", "example").assertSuccess();
   }
 
   @Test
-  @Ignore("Disabled due to badness t4689997")
-  public void whenExternalSrcZipUsedCompilationSucceeds()
-      throws IOException, InterruptedException {
+  public void whenExternalSrcZipUsedCompilationSucceeds() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "external_javac_src_zip", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac_src_zip", tmp);
 
     workspace.setUp();
 
     Path javac = workspace.getPath("javac.sh");
-    MoreFiles.makeExecutable(javac);
+    MostFiles.makeExecutable(javac);
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
 
     workspace.runBuckCommand("build", "//:lib", "-v", "2").assertSuccess();
   }
 
-  @Test
-  public void whenExternalJavacFailsOutputIsInFailureMessage()
-      throws IOException, InterruptedException {
+  @Test(timeout = 180000)
+  public void whenExternalSrcZipUsedBuildingBinarySucceeds() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "external_javac", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
+
+    workspace.setUp();
+
+    workspace.replaceFileContents(".buckconfig", "@JAVAC@", "//:real-javac.sh");
+
+    workspace
+        .runBuckCommand("build", "-c", "cache.mode=dir", "//java/com/example:example_binary")
+        .assertSuccess();
+
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
+
+    workspace.writeContentsToPath("int foo() {  return 1; }", "java/com/example/foo.c");
+
+    workspace
+        .runBuckCommand("build", "-c", "cache.mode=dir", "//java/com/example:example_binary")
+        .assertSuccess();
+  }
+
+  @Test
+  public void whenExternalJavacFailsOutputIsInFailureMessage() throws IOException {
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
     workspace.setUp();
 
     Path error = workspace.getPath("error.sh");
-    MoreFiles.makeExecutable(error);
+    MostFiles.makeExecutable(error);
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", error.toAbsolutePath().toString());
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand("build", "example");
+    ProcessResult result = workspace.runBuckCommand("build", "example");
 
     assertThat(
-        "Failure should have been due to external javac.", result.getStderr(),
+        "Failure should have been due to external javac.",
+        result.getStderr(),
         Matchers.containsString("error compiling"));
     assertThat(
-        "Expected exit code should have been in failure message.", result.getStderr(),
+        "Expected exit code should have been in failure message.",
+        result.getStderr(),
         Matchers.containsString("42"));
   }
 
   @Test
   public void whenBuckdUsesExternalJavacThenClientEnvironmentUsed() throws IOException {
-    final ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "external_javac", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "external_javac", tmp);
     workspace.setUp();
 
     Path javac = workspace.getPath("check_env.sh");
-    MoreFiles.makeExecutable(javac);
+    MostFiles.makeExecutable(javac);
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
-    workspace.runBuckdCommand(
-        ImmutableMap.of(
-            "CHECK_THIS_VARIABLE", "1",
-            "PATH", System.getenv("PATH")),
-        "build",
-        "example")
+    workspace
+        .runBuckdCommand(
+            ImmutableMap.of(
+                "CHECK_THIS_VARIABLE",
+                "1",
+                "PATH",
+                EnvVariablesProvider.getSystemEnv().get("PATH")),
+            "build",
+            "example")
         .assertSuccess();
   }
-
 }

@@ -16,18 +16,35 @@
 
 package com.facebook.buck.slb;
 
-import com.squareup.okhttp.Response;
-
+import com.google.common.annotations.VisibleForTesting;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import okhttp3.Call;
+import okhttp3.Response;
 
 public class LoadBalancedHttpResponse extends OkHttpResponseWrapper {
   private final HttpLoadBalancer loadBalancer;
   private final URI server;
   private boolean hasConnectionResultBeenReported;
 
-  public LoadBalancedHttpResponse(URI server, HttpLoadBalancer loadBalancer, Response response) {
+  private static final boolean FIX_HTTP_BOTTLENECK =
+      "true".equals(System.getProperty("buck.fix_http_bottleneck"));
+
+  public static LoadBalancedHttpResponse createLoadBalancedResponse(
+      URI server, HttpLoadBalancer loadBalancer, Call call) throws IOException {
+    try {
+      return new LoadBalancedHttpResponse(server, loadBalancer, call.execute());
+    } catch (IOException e) {
+      if (FIX_HTTP_BOTTLENECK) {
+        loadBalancer.reportRequestException(server);
+      }
+      throw e;
+    }
+  }
+
+  @VisibleForTesting
+  LoadBalancedHttpResponse(URI server, HttpLoadBalancer loadBalancer, Response response) {
     super(response);
     this.loadBalancer = loadBalancer;
     this.server = server;
@@ -45,13 +62,8 @@ public class LoadBalancedHttpResponse extends OkHttpResponseWrapper {
   }
 
   @Override
-  public InputStream getBody() throws IOException {
-    try {
-      return new LoadBalancedInputStream(getResponse().body().byteStream());
-    } catch (IOException e) {
-      reportConnectionResultIfFirst(false);
-      throw e;
-    }
+  public InputStream getBody() {
+    return new LoadBalancedInputStream(getResponse().body().byteStream());
   }
 
   @Override
@@ -86,7 +98,6 @@ public class LoadBalancedHttpResponse extends OkHttpResponseWrapper {
     @Override
     public void close() throws IOException {
       rawStream.close();
-      super.close();
     }
 
     @Override

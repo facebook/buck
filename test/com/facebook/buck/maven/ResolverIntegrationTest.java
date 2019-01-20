@@ -24,36 +24,49 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.file.ExplodingDownloader;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.features.python.PythonBuckConfig;
+import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.file.RemoteFileDescription;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.json.DefaultProjectBuildFileParserFactory;
-import com.facebook.buck.json.ProjectBuildFileParser;
-import com.facebook.buck.json.ProjectBuildFileParserOptions;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
+import com.facebook.buck.maven.aether.Repository;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.python.PythonBuckConfig;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
-import com.facebook.buck.rules.Description;
+import com.facebook.buck.parser.PythonDslProjectBuildFileParser;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
-
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
@@ -62,29 +75,18 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 public class ResolverIntegrationTest {
 
-  @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   private static HttpdForTests httpd;
-  private static ProjectBuildFileParser buildFileParser;
+  private static PythonDslProjectBuildFileParser buildFileParser;
   private static Path repo;
   private Path buckRepoRoot;
   private Path thirdParty;
   private Path thirdPartyRelative;
   private Path localRepo;
-  private Resolver resolver;
 
   @BeforeClass
   public static void setUpFakeMavenRepo() throws Exception {
@@ -103,31 +105,36 @@ public class ResolverIntegrationTest {
   public static void createParser() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    ParserConfig parserConfig = new ParserConfig(buckConfig);
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(
-        buckConfig,
-        new ExecutableFinder());
+    ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
 
-    ImmutableSet<Description<?>> descriptions = ImmutableSet.<Description<?>>of(
-        new RemoteFileDescription(new ExplodingDownloader()),
-        new PrebuiltJarDescription());
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(Downloader.DEFAULT_NAME, new ExplodingDownloader())
+            .build();
+    ImmutableSet<DescriptionWithTargetGraph<?>> descriptions =
+        ImmutableSet.of(new RemoteFileDescription(toolchainProvider), new PrebuiltJarDescription());
 
-    DefaultProjectBuildFileParserFactory parserFactory = new DefaultProjectBuildFileParserFactory(
-        ProjectBuildFileParserOptions.builder()
-            .setProjectRoot(filesystem.getRootPath())
-            .setPythonInterpreter(pythonBuckConfig.getPythonInterpreter())
-            .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
-            .setBuildFileName(parserConfig.getBuildFileName())
-            .setDefaultIncludes(parserConfig.getDefaultIncludes())
-            .setDescriptions(descriptions)
-            .build());
-    buildFileParser = parserFactory.createParser(
-        new ConstructorArgMarshaller(new DefaultTypeCoercerFactory(
-            ObjectMappers.newDefaultInstance())),
-        new TestConsole(),
-        ImmutableMap.<String, String>of(),
-        BuckEventBusFactory.newInstance(),
-        /* ignoreBuckAutodepsFiles */ false);
+    buildFileParser =
+        new PythonDslProjectBuildFileParser(
+            ProjectBuildFileParserOptions.builder()
+                .setProjectRoot(filesystem.getRootPath())
+                .setPythonInterpreter(
+                    new PythonInterpreterFromConfig(pythonBuckConfig, new ExecutableFinder())
+                        .getPythonInterpreterPath()
+                        .toString())
+                .setAllowEmptyGlobs(parserConfig.getAllowEmptyGlobs())
+                .setIgnorePaths(filesystem.getIgnorePaths())
+                .setBuildFileName(parserConfig.getBuildFileName())
+                .setDefaultIncludes(parserConfig.getDefaultIncludes())
+                .setDescriptions(descriptions)
+                .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
+                .build(),
+            new DefaultTypeCoercerFactory(),
+            ImmutableMap.of(),
+            BuckEventBusForTests.newInstance(),
+            new DefaultProcessExecutor(new TestConsole()),
+            Optional.empty());
   }
 
   @AfterClass
@@ -138,21 +145,44 @@ public class ResolverIntegrationTest {
 
   @Before
   public void setUpRepos() throws Exception {
-    buckRepoRoot = temp.newFolder().toPath();
+    buckRepoRoot = temp.newFolder();
     thirdPartyRelative = Paths.get("third-party").resolve("java");
     thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
-    localRepo = temp.newFolder().toPath();
-    resolver = new Resolver(
-        buckRepoRoot,
-        thirdPartyRelative,
-        localRepo,
-        httpd.getUri("/").toString());
+    localRepo = temp.newFolder();
+  }
+
+  private ArtifactConfig newConfig() {
+    ArtifactConfig config = new ArtifactConfig();
+    config.buckRepoRoot = buckRepoRoot.toString();
+    config.thirdParty = thirdPartyRelative.toString();
+    config.mavenLocalRepo = localRepo.toString();
+    return config;
+  }
+
+  private void resolveWithArtifacts(String... artifacts)
+      throws URISyntaxException, IOException, RepositoryException, ExecutionException,
+          InterruptedException {
+    ArtifactConfig config = newConfig();
+    config.repositories.add(new Repository(httpd.getUri("/").toString()));
+    config.artifacts.addAll(Arrays.asList(artifacts));
+    config.visibility.add("PUBLIC");
+    new Resolver(config).resolve(config.artifacts);
   }
 
   @Test
-  public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnce()
-  throws IOException, RepositoryException {
-    resolver.resolve("com.example:A-depends-on-B-and-C:jar:1.0");
+  public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnce() throws Exception {
+    resolveWithArtifacts("com.example:A-depends-on-B-and-C:jar:1.0");
+    Path groupDir = thirdParty.resolve("example");
+    assertTrue(Files.exists(groupDir));
+    assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar")));
+    assertFalse(Files.exists(groupDir.resolve("D-depends-on-none-1.0.jar")));
+  }
+
+  @Test
+  public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnceViaPom() throws Exception {
+    resolveWithArtifacts(
+        repo.resolve("com/example/A-depends-on-B-and-C/1.0/A-depends-on-B-and-C-1.0.pom")
+            .toString());
     Path groupDir = thirdParty.resolve("example");
     assertTrue(Files.exists(groupDir));
     assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar")));
@@ -161,7 +191,7 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldSetUpAPrivateLibraryIfGivenAMavenCoordWithoutDeps() throws Exception {
-    resolver.resolve("com.example:no-deps:jar:1.0");
+    resolveWithArtifacts("com.example:no-deps:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
     assertTrue(Files.exists(groupDir));
@@ -172,10 +202,11 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
-    List<Map<String, Object>> rules = buildFileParser.getAll(groupDir.resolve("BUCK"));
+    Map<String, Map<String, Object>> rules =
+        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
-    Map<String, Object> rule = rules.get(0);
+    Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
     // Name is derived from the project identifier
     assertEquals("no-deps", rule.get("name"));
 
@@ -183,89 +214,96 @@ public class ResolverIntegrationTest {
     assertEquals("no-deps-1.0.jar", rule.get("binaryJar"));
 
     // There was no source jar in the repo
-    assertTrue(rule.containsKey("sourceJar"));
     assertNull(rule.get("sourceJar"));
 
-    // Nothing depends on this, so it's not visible
-    assertEquals(ImmutableList.of(), rule.get("visibility"));
+    // It's a library that's requested on the CLI, so it gets full visibility.
+    assertEquals(ImmutableList.of("PUBLIC"), rule.get("visibility"));
 
     // And it doesn't depend on anything
-    assertEquals(ImmutableList.of(), rule.get("deps"));
+    assertNull(rule.get("deps"));
   }
 
   @Test
   public void shouldIncludeSourceJarIfOneIsPresent() throws Exception {
-    resolver.resolve("com.example:with-sources:jar:1.0");
+    resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
-    List<Map<String, Object>> rules = buildFileParser.getAll(groupDir.resolve("BUCK"));
+    Map<String, Map<String, Object>> rules =
+        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
 
-    Map<String, Object> rule = rules.get(0);
+    Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
   }
 
   @Test
   public void shouldSetVisibilityOfTargetToGiveDependenciesAccess() throws Exception {
-    resolver.resolve("com.example:with-deps:jar:1.0");
+    resolveWithArtifacts("com.example:with-deps:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
     Map<String, Object> withDeps =
-        buildFileParser.getAll(buckRepoRoot.resolve(exampleDir).resolve("BUCK")).get(0);
+        Iterables.getOnlyElement(
+            buildFileParser
+                .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
+                .getTargets()
+                .values());
     Path otherDir = thirdPartyRelative.resolve("othercorp");
     Map<String, Object> noDeps =
-        buildFileParser.getAll(buckRepoRoot.resolve(otherDir).resolve("BUCK")).get(0);
+        Iterables.getOnlyElement(
+            buildFileParser
+                .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
+                .getTargets()
+                .values());
 
     @SuppressWarnings("unchecked")
     List<String> visibility = (List<String>) noDeps.get("visibility");
     assertEquals(1, visibility.size());
-    assertEquals(ImmutableList.of(String.format("//%s:with-deps", exampleDir)), visibility);
-    assertEquals(ImmutableList.of(), noDeps.get("deps"));
+    assertEquals(
+        ImmutableList.of(
+            String.format("//%s:with-deps", MorePaths.pathWithUnixSeparators(exampleDir))),
+        visibility);
+    assertNull(noDeps.get("deps"));
 
-    assertEquals(ImmutableList.of(), withDeps.get("visibility"));
+    assertEquals(ImmutableList.of("PUBLIC"), withDeps.get("visibility"));
     @SuppressWarnings("unchecked")
     List<String> deps = (List<String>) withDeps.get("deps");
     assertEquals(1, deps.size());
-    assertEquals(ImmutableList.of(String.format("//%s:no-deps", otherDir)), deps);
+    assertEquals(
+        ImmutableList.of(String.format("//%s:no-deps", MorePaths.pathWithUnixSeparators(otherDir))),
+        deps);
   }
 
   @Test
   public void shouldOmitTargetsInTheSameBuildFileInVisibilityArguments() throws Exception {
-    resolver.resolve("com.example:deps-in-same-project:jar:1.0");
+    resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    List<Map<String, Object>> allTargets = buildFileParser.getAll(
-        buckRepoRoot.resolve(exampleDir).resolve(
-            "BUCK"));
+    Map<String, Map<String, Object>> allTargets =
+        buildFileParser
+            .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
+            .getTargets();
 
     assertEquals(2, allTargets.size());
 
-    Map<String, Object> noDeps = null;
-    for (Map<String, Object> target : allTargets) {
-      if ("no-deps".equals(target.get("name"))) {
-        noDeps = target;
-        break;
-      }
-    }
+    Map<String, Object> noDeps = allTargets.get("no-deps");
+
     assertNotNull(noDeps);
 
     // Although the "deps-in-same-project" could be in the visibility param, it doesn't need to be
     // because it's declared in the same build file.
-    assertEquals(0, ((Collection<?>) noDeps.get("visibility")).size());
+    assertNull(noDeps.get("visibility"));
   }
 
   @Test
   public void shouldNotDownloadOlderJar() throws Exception {
     Path existingNewerJar = thirdParty.resolve("example/no-deps-1.1.jar");
     Files.createDirectories(existingNewerJar.getParent());
-    Files.copy(
-        repo.resolve("com/example/no-deps/1.0/no-deps-1.0.jar"),
-        existingNewerJar);
+    Files.copy(repo.resolve("com/example/no-deps/1.0/no-deps-1.0.jar"), existingNewerJar);
 
     Path groupDir = thirdParty.resolve("example");
     Path repoOlderJar = groupDir.resolve("no-deps-1.0.jar");
     assertFalse(Files.exists(repoOlderJar));
 
-    resolver.resolve("com.example:no-deps:jar:1.0");
+    resolveWithArtifacts("com.example:no-deps:jar:1.0");
 
     assertTrue(Files.exists(groupDir));
 
@@ -288,7 +326,7 @@ public class ResolverIntegrationTest {
     Files.copy(sourceJar, existingNewestJar);
 
     Artifact artifact = new DefaultArtifact("com.example", "no-deps", "jar", "1.0");
-    Optional<Path> result = resolver.getNewerVersionFile(artifact, groupDir);
+    Optional<Path> result = new Resolver(newConfig()).getNewerVersionFile(artifact, groupDir);
 
     assertTrue(result.isPresent());
     assertThat(result.get(), equalTo(existingNewestJar));

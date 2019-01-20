@@ -1,0 +1,51 @@
+# a code generation program that generates a Go package with cgo
+genrule(
+    name = "gen",
+    srcs = [
+        "cgosrc.go",
+        "lib.c",
+        "lib.h",
+        "main.go",
+    ],
+    out = ".",
+    cmd = "cp cgosrc.go $OUT/cgosrc_gen.go && cp lib.c $OUT/lib_gen.c && cp lib.h $OUT/lib_gen.h && cp main.go $OUT/main_gen.go",
+)
+
+# Define a target for each file so they can be used individually
+[
+    genrule(
+        name = file,
+        out = file,
+        cmd = "cp $(location :gen)/{} $OUT".format(file),
+    )
+    for file in [
+        "cgosrc_gen.go",
+        "lib_gen.c",
+        "lib_gen.h",
+        "main_gen.go",
+    ]
+]
+
+# Regular rules that uses the generated files
+go_binary(
+    name = "bin",
+    srcs = [":main_gen.go"],
+    deps = [
+        ":cgo",
+    ],
+)
+
+cgo_library(
+    name = "cgo",
+    package_name = "cgo",
+    srcs = [":cgosrc_gen.go"],
+    headers = [":lib_gen.h"],
+    deps = [":lib"],
+)
+
+cxx_library(
+    name = "lib",
+    srcs = [":lib_gen.c"],
+    exported_headers = [":lib_gen.h"],
+    header_namespace = "",
+)

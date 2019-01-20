@@ -22,6 +22,7 @@ public interface HttpLoadBalancer extends AutoCloseable {
   URI getBestServer() throws NoHealthyServersException;
 
   void reportRequestSuccess(URI server);
+
   void reportRequestException(URI server);
 
   @Override

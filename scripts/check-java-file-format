@@ -1,0 +1,17 @@
+#!/bin/sh
+
+FILES_TO_SKIP="^(src-gen|third-party|(test/.*\/testdata\/)).*\.java$"
+
+JAR_PATH=$1
+FILE_PATH=$2
+
+# Test if the file is Java file
+echo "${FILE_PATH}" | grep -Eqi "\.java$" || exit 1
+
+# Test if the file should be skipped
+echo "${FILE_PATH}" | grep -Eqi "${FILES_TO_SKIP}" && exit 0
+
+# Try to format the file
+java -jar "${JAR_PATH}" -i "${FILE_PATH}"
+
+exit 0

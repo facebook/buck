@@ -1,0 +1,30 @@
+load("//tools/build_rules:export_files.bzl", "export_files")
+
+python_library(
+    name = "hash_files-lib",
+    srcs = [
+        "hash_files.py",
+    ],
+    tests = [
+        ":test_hash_files",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+python_test(
+    name = "test_hash_files",
+    srcs = [
+        "test_hash_files.py",
+    ],
+    deps = [
+        ":hash_files-lib",
+    ],
+)
+
+python_binary(
+    name = "hash_files",
+    main = "hash_files.py",
+    visibility = ["PUBLIC"],
+)
+
+export_files(["hash_files.py"])

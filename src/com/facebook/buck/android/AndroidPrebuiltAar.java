@@ -16,61 +16,89 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.java.CompileToJarStepFactory;
+import com.facebook.buck.jvm.java.JarBuildStepsFactory;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
 import com.facebook.buck.jvm.java.PrebuiltJar;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
+import com.facebook.buck.jvm.java.ResourcesParameters;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
+import java.util.stream.Stream;
 
-import java.nio.file.Path;
-
-public class AndroidPrebuiltAar
-    extends AndroidLibrary
+public class AndroidPrebuiltAar extends AndroidLibrary
     implements HasAndroidResourceDeps, HasRuntimeDeps {
 
   private final UnzipAar unzipAar;
   private final SourcePath nativeLibsDirectory;
   private final PrebuiltJar prebuiltJar;
 
+  // TODO(cjhopman): It's silly that this is pretending to be a java library.
   public AndroidPrebuiltAar(
+      BuildTarget androidLibraryBuildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams androidLibraryParams,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       SourcePath proguardConfig,
       SourcePath nativeLibsDirectory,
       PrebuiltJar prebuiltJar,
       UnzipAar unzipAar,
-      JavacOptions javacOptions,
+      CompileToJarStepFactory configuredCompiler,
       Iterable<PrebuiltJar> exportedDeps,
-      SourcePath abiJar) {
+      boolean requiredForSourceAbi,
+      Optional<String> mavenCoords) {
     super(
-        androidLibraryParams,
-        resolver,
-        /* srcs */ ImmutableSortedSet.<SourcePath>of(),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
+        androidLibraryBuildTarget,
+        projectFilesystem,
+        new JarBuildStepsFactory(
+            androidLibraryBuildTarget,
+            configuredCompiler,
+            /* srcs */ ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            ResourcesParameters.of(),
+            /* manifestFile */ Optional.empty(), // Manifest means something else for Android rules
+            /* postprocessClassesCommands */ ImmutableList.of(),
+            /* trackClassUsage */ false,
+            /* trackJavacPhaseEvents */ false,
+            RemoveClassesPatternsMatcher.EMPTY,
+            AbiGenerationMode.CLASS,
+            AbiGenerationMode.CLASS,
+            ImmutableList.of(),
+            requiredForSourceAbi),
+        ruleFinder,
         Optional.of(proguardConfig),
-        /* postprocessClassesCommands */ ImmutableList.<String>of(),
-        /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
+        /* firstOrderPackageableDeps */ androidLibraryParams.getDeclaredDeps().get(),
+        /* exportedDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .add(prebuiltJar)
             .addAll(exportedDeps)
             .build(),
-        /* providedDeps */ ImmutableSortedSet.<BuildRule>of(),
-        abiJar,
-        /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-        javacOptions,
-        /* resourcesRoot */ Optional.<Path>absent(),
-        /* mavenCoords */ Optional.<String>absent(),
-        Optional.<SourcePath>of(
-            new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
-        /* tests */ ImmutableSortedSet.<BuildTarget>of());
+        /* providedDeps */ ImmutableSortedSet.of(),
+        ImmutableSortedSet.of(),
+        JavaAbis.getClassAbiJar(androidLibraryBuildTarget),
+        /* sourceOnlyAbiJar */ null,
+        mavenCoords,
+        Optional.of(
+            ExplicitBuildTargetSourcePath.of(
+                unzipAar.getBuildTarget(), unzipAar.getAndroidManifest())),
+        /* tests */ ImmutableSortedSet.of(),
+        /* requiredForSourceAbi */ requiredForSourceAbi,
+        UnusedDependenciesAction.IGNORE,
+        Optional.empty(),
+        null,
+        false,
+        false);
     this.unzipAar = unzipAar;
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
@@ -83,12 +111,14 @@ public class AndroidPrebuiltAar
 
   @Override
   public SourcePath getPathToTextSymbolsFile() {
-    return new BuildTargetSourcePath(unzipAar.getBuildTarget(), unzipAar.getTextSymbolsFile());
+    return ExplicitBuildTargetSourcePath.of(
+        unzipAar.getBuildTarget(), unzipAar.getTextSymbolsFile());
   }
 
   @Override
-  public Sha1HashCode getTextSymbolsAbiKey() {
-    return unzipAar.getTextSymbolsHash();
+  public SourcePath getPathToRDotJavaPackageFile() {
+    return ExplicitBuildTargetSourcePath.of(
+        unzipAar.getBuildTarget(), unzipAar.getPathToRDotJavaPackageFile());
   }
 
   @Override
@@ -114,16 +144,15 @@ public class AndroidPrebuiltAar
     return prebuiltJar;
   }
 
-  public Path getBinaryJar() {
-    return prebuiltJar.getPathToOutput();
+  public SourcePath getBinaryJar() {
+    return prebuiltJar.getSourcePathToOutput();
   }
 
   // This class is basically a wrapper around its android resource rule, since dependents will
   // use this interface to access the underlying R.java package, so make sure it's available when
   // a dependent is building against us.
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return ImmutableSortedSet.<BuildRule>of(unzipAar);
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return Stream.of(unzipAar.getBuildTarget());
   }
-
 }

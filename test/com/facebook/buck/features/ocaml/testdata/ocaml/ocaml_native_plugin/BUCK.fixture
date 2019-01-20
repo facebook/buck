@@ -1,0 +1,19 @@
+genrule(
+    name = "tester",
+    srcs = [
+        "registry.ml",
+        "tester.ml",
+    ],
+    out = "./tester",
+    cmd = "ocamlopt -o $OUT dynlink.cmxa registry.ml tester.ml",
+    executable = True,
+)
+
+ocaml_library(
+    name = "plugin",
+    srcs = [
+        "plugin.ml",
+        "registry.ml",
+    ],
+    native_plugin = True,
+)

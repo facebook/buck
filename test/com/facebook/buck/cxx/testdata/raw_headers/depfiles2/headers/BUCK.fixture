@@ -1,0 +1,8 @@
+cxx_library(
+    name = "headers",
+    raw_headers = [
+        "used.h",
+        "unused.h",
+    ],
+    visibility = ["PUBLIC"],
+)

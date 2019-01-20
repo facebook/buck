@@ -1,0 +1,11 @@
+VERIFICATION
+Verification is intended to assist the Chocolatey moderators and community
+in verifying that this package's contents are trustworthy.
+
+To reproduce buck.pex:
+
+- Clone the buck repository (`git clone --branch {release_version} https://github.com/facebook/buck.git buck`)
+- Build buck. The README.md included in this package explains how to do this in more detail but the simplified version is to run the following from the buck directory:
+-- ant
+-- ./bin/buck build -c buck.release_version={release_version} -c buck.release_timestamp={release_timestamp} --output buck.pex buck
+- Verify that buck.pex shas match with a tool like Powershell's `Get-Filehash`, or Chocolatey's `checksum.exe`

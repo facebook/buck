@@ -1,0 +1,7 @@
+cxx_library(
+    name = "jni",
+    srcs = glob(["*.cpp"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

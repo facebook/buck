@@ -1,0 +1,6 @@
+genrule(
+    name = "gr",
+    out = "generated",
+    blurgle = "mcschberble",
+    cmd = "touch $OUT",
+)

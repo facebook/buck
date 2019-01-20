@@ -1,0 +1,18 @@
+java_test(
+    name = "model",
+    srcs = glob(["*.java"]),
+    provided_deps = [
+        # Tools.jar is the compiler itself, and will already be present at runtime;
+        # we compile against a stub.
+        "//third-party/java/jdk:compiler-tree-api",
+    ],
+    deps = [
+        "//src/com/facebook/buck/jvm/java/abi/source/api:api",
+        "//src/com/facebook/buck/jvm/java/lang/model:model",
+        "//test/com/facebook/buck/jvm/java/testutil/compiler:compiler",
+        "//third-party/java/guava:guava",
+        "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/junit:junit",
+    ],
+)

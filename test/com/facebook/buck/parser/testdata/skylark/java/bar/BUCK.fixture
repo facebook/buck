@@ -1,0 +1,20 @@
+# BUILD FILE SYNTAX: SKYLARK
+
+java_library(
+    name = "bar",
+    srcs = ["Bar.java"],
+)
+
+java_binary(
+    name = "main",
+    main_class = "bar.Bar",
+    deps = [
+        ":bar",
+    ],
+)
+
+java_test(
+    name = "bar_test",
+    srcs = ["BarTest.java"],
+    deps = [":bar"],
+)

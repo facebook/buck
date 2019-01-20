@@ -16,6 +16,4 @@
 
 package com.facebook.buck.junit.testdata.build_then_test;
 
-public class ClassWithoutTests {
-
-}
+public class ClassWithoutTests {}

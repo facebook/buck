@@ -1,0 +1,15 @@
+java_library(
+    name = "aether",
+    srcs = glob(
+        ["*.java"],
+    ),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/aether:aether-connector-basic",
+        "//third-party/java/aether:aether-transport-file",
+        "//third-party/java/aether:aether-transport-http",
+        "//third-party/java/maven:maven-aether-provider",
+    ],
+)

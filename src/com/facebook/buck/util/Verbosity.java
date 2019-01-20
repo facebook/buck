@@ -20,26 +20,22 @@ package com.facebook.buck.util;
  * An indication of how verbose Buck should be. Enum values are in order from least to most verbose.
  */
 public enum Verbosity {
-  // TODO(bolinfest): Consider introducing more Verbosity levels that affect the Java Logger
+  // TODO(mbolin): Consider introducing more Verbosity levels that affect the Java Logger
   // setting.
 
   /** Do not print anything to the console. */
   SILENT,
 
-  /**
-   * Prints out the bare minimum required information, such as errors from build steps.
-   */
+  /** Prints out the bare minimum required information, such as errors from build steps. */
   STANDARD_INFORMATION,
 
-  /**
-   * Print extra output from generated binaries and tests being run, but nothing else.
-   */
+  /** Print extra output from generated binaries and tests being run, but nothing else. */
   BINARY_OUTPUTS,
 
   /** Print the command being executed, but do not print its output. */
   COMMANDS,
 
-  /** Commands plus the output from some select commands of intereset. */
+  /** Commands plus the output from some select commands of interest. */
   COMMANDS_AND_SPECIAL_OUTPUT,
 
   /** Print the command being executed followed by its output. */

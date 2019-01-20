@@ -1,0 +1,36 @@
+python_binary(
+    name = "bin",
+    main_module = "bin",
+    deps = [
+        ":lib",
+        ":transitively_excluded_root",
+    ],
+)
+
+python_library(
+    name = "lib",
+    srcs = [
+        "ext.dylib",
+        "ext.so",
+    ],
+    deps = [
+        ":excluded_root",
+    ],
+)
+
+cxx_library(
+    name = "excluded_root",
+    srcs = [
+        "empty.c",
+    ],
+    deps = [
+        ":transitively_excluded_root",
+    ],
+)
+
+cxx_library(
+    name = "transitively_excluded_root",
+    srcs = [
+        "empty.c",
+    ],
+)

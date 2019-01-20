@@ -14,80 +14,71 @@
  * under the License.
  */
 
-/***************
+/**
+ * *************
  *
- * This code can be embedded in arbitrary third-party projects!
- * For maximum compatibility, use only Java 6 constructs.
+ * <p>This code can be embedded in arbitrary third-party projects! For maximum compatibility, use
+ * only Java 6 constructs.
  *
- ***************/
-
+ * <p>*************
+ */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.util.exportedfiles.Nullable;
-import com.facebook.buck.util.exportedfiles.Preconditions;
-
+import com.facebook.buck.util.liteinfersupport.Nullable;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.ObjectStreamConstants;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLEventReader;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamException;
+/** Helper class for unpacking fat JAR resources. */
+public class FatJar implements Serializable {
 
-@XmlRootElement(name = "fatjar")
-@XmlAccessorType(XmlAccessType.FIELD)
-public class FatJar {
+  /**
+   * Used by the serialization runtime for versioning. Increment this if you add/remove fields or
+   * change their semantics.
+   */
+  private static final long serialVersionUID = 1L;
 
   public static final String FAT_JAR_INFO_RESOURCE = "fat_jar_info.dat";
 
-  /**
-   * The resource name for the real JAR.
-   */
-  @Nullable
-  private String innerJar;
+  /** The resource name for the real JAR. */
+  @Nullable private String innerJar;
 
   /**
-   * The map of system-specific shared library names to their corresponding resource names.
+   * The map of system-specific shared library names to their corresponding resource names. Note: We
+   * purposely use <code>HashMap</code> instead of <code>Map</code> here to ensure serializability
+   * of this class.
    */
+  @SuppressWarnings("PMD.LooseCoupling")
   @Nullable
-  private Map<String, String> nativeLibraries;
-
-  // Required for XML deserialization.
-  protected FatJar() {}
+  private HashMap<String, String> nativeLibraries;
 
   public FatJar(String innerJar, Map<String, String> nativeLibraries) {
     this.innerJar = innerJar;
-    this.nativeLibraries = nativeLibraries;
+    this.nativeLibraries = new HashMap<String, String>(nativeLibraries);
   }
 
-  /**
-   * @return the {@link FatJar} object deserialized from the resource name via {@code loader}.
-   */
-  public static FatJar load(ClassLoader loader)
-      throws XMLStreamException, JAXBException, IOException {
+  /** @return the {@link FatJar} object deserialized from the resource name via {@code loader}. */
+  public static FatJar load(ClassLoader loader) throws ClassNotFoundException, IOException {
     InputStream inputStream = loader.getResourceAsStream(FAT_JAR_INFO_RESOURCE);
     try {
       BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
       try {
-        XMLEventReader xmlEventReader =
-            XMLInputFactory.newFactory().createXMLEventReader(bufferedInputStream);
-        JAXBContext context = JAXBContext.newInstance(FatJar.class);
-        Unmarshaller unmarshaller = context.createUnmarshaller();
-        JAXBElement<FatJar> jaxbElementA = unmarshaller.unmarshal(xmlEventReader, FatJar.class);
-        return jaxbElementA.getValue();
+        ObjectInputStream objectInputStream = new ObjectInputStream(bufferedInputStream);
+        try {
+          return (FatJar) objectInputStream.readObject();
+        } finally {
+          objectInputStream.close();
+        }
       } finally {
         bufferedInputStream.close();
       }
@@ -96,18 +87,25 @@ public class FatJar {
     }
   }
 
-  /**
-   * Serialize this instance as XML to {@code outputStream}.
-   */
-  public void store(OutputStream outputStream) throws JAXBException {
-    JAXBContext context = JAXBContext.newInstance(FatJar.class);
-    JAXBElement<FatJar> element = new JAXBElement<FatJar>(new QName("fatjar"), FatJar.class, this);
-    Marshaller marshaller = context.createMarshaller();
-    marshaller.marshal(element, outputStream);
+  /** Serialize this instance as binary to {@code outputStream}. */
+  public void store(OutputStream outputStream) throws IOException {
+    ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+    try {
+      // Explicitly specify a protocol version, just in case the default protocol gets updated with
+      // a new version of Java. We need to ensure the serialized data can be read by older versions
+      // of Java, as the fat jar stub, which references this class, is compiled against an older
+      // version of Java for compatibility purposes, unlike the main Buck jar, which also references
+      // this class.
+      objectOutputStream.useProtocolVersion(ObjectStreamConstants.PROTOCOL_VERSION_2);
+
+      objectOutputStream.writeObject(this);
+    } finally {
+      objectOutputStream.close();
+    }
   }
 
   public void unpackNativeLibrariesInto(ClassLoader loader, Path destination) throws IOException {
-    for (Map.Entry<String, String> entry : Preconditions.checkNotNull(nativeLibraries).entrySet()) {
+    for (Map.Entry<String, String> entry : Objects.requireNonNull(nativeLibraries).entrySet()) {
       InputStream input = loader.getResourceAsStream(entry.getValue());
       try {
         BufferedInputStream bufferedInput = new BufferedInputStream(input);
@@ -123,7 +121,7 @@ public class FatJar {
   }
 
   public void unpackJarTo(ClassLoader loader, Path destination) throws IOException {
-    InputStream input = loader.getResourceAsStream(Preconditions.checkNotNull(innerJar));
+    InputStream input = loader.getResourceAsStream(Objects.requireNonNull(innerJar));
     try {
       BufferedInputStream bufferedInput = new BufferedInputStream(input);
       try {

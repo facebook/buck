@@ -18,23 +18,22 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.base.Joiner;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Integration test to verify that when a {@code java_library} rule is built, the classpath that is
@@ -42,15 +41,15 @@ import java.nio.file.Path;
  */
 public class CleanClasspathIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testJavaLibraryRuleDoesNotIncludeItsOwnOldOutputOnTheClasspath() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "classpath_corruption_regression", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "classpath_corruption_regression", tmp);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(tmp.getRootPath());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     // Build //:example so that content is written to buck-out/gen/.
     BuildTarget target = BuildTargetFactory.newInstance("//:example");
@@ -61,16 +60,14 @@ public class CleanClasspathIntegrationTest {
         "example.jar should be written. This should not be on the classpath on the next build.",
         Files.isRegularFile(
             workspace.getPath(
-                BuildTargets.getGenPath(filesystem, target, "lib__%s__output/example.jar"))));
+                BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output/example.jar"))));
 
     // Overwrite the existing BUCK file, redefining the java_library rule to exclude Bar.java from
     // its srcs.
     Path buildFile = workspace.getPath("BUCK");
-    String newBuildFileContents = Joiner.on('\n').join(
-        "java_library(",
-        "  name = 'example',",
-        "  srcs = [ 'Foo.java' ], ",
-        ")");
+    String newBuildFileContents =
+        Joiner.on('\n')
+            .join("java_library(", "  name = 'example',", "  srcs = [ 'Foo.java' ], ", ")");
     Files.write(buildFile, newBuildFileContents.getBytes(StandardCharsets.UTF_8));
 
     // Rebuilding //:example should fail even though Bar.class is in

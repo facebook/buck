@@ -1,0 +1,17 @@
+apple_library(
+    name = "library",
+    exported_headers = ["producer.h"],
+)
+
+apple_binary(
+    name = "binary",
+    srcs = [
+        "consumer.swift",
+        "main.m",
+    ],
+    bridging_header = "bridge.h",
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    deps = [":library"],
+)

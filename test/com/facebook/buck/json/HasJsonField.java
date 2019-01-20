@@ -16,28 +16,19 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import java.io.IOException;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 
-import java.io.IOException;
-
-/**
- * Matches an {@link JsonNode} which has the specified field.
- */
+/** Matches an {@link JsonNode} which has the specified field. */
 public class HasJsonField extends BaseMatcher<JsonNode> {
-  private ObjectMapper objectMapper;
   private String fieldName;
   private Matcher<? super JsonNode> valueMatcher;
 
-  public HasJsonField(
-      ObjectMapper objectMapper,
-      String fieldName,
-      Matcher<? super JsonNode> valueMatcher) {
-    this.objectMapper = objectMapper;
+  public HasJsonField(String fieldName, Matcher<? super JsonNode> valueMatcher) {
     this.fieldName = fieldName;
     this.valueMatcher = valueMatcher;
   }
@@ -66,9 +57,9 @@ public class HasJsonField extends BaseMatcher<JsonNode> {
     if (item instanceof JsonNode) {
       JsonNode node = (JsonNode) item;
       try {
-        description.appendText("was ").appendText(
-            objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(
-                node));
+        description
+            .appendText("was ")
+            .appendText(ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsString(node));
       } catch (IOException e) {
         super.describeMismatch(item, description);
       }

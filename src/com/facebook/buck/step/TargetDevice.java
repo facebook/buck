@@ -16,24 +16,21 @@
 
 package com.facebook.buck.step;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
-/**
- * Represents information about the device we're targeting.
- */
+/** Represents information about the device we're targeting. */
 public class TargetDevice {
 
   private final Type type;
-  @Nullable
-  private final String identifier;
+  private final Optional<String> identifier;
 
-  public static enum Type {
+  public enum Type {
     REAL_DEVICE,
     EMULATOR,
     BY_SERIAL
   }
 
-  public TargetDevice(Type type, @Nullable String identifier) {
+  public TargetDevice(Type type, Optional<String> identifier) {
     this.type = type;
     this.identifier = identifier;
   }
@@ -42,12 +39,7 @@ public class TargetDevice {
     return type == Type.EMULATOR;
   }
 
-  public boolean hasIdentifier() {
-    return identifier != null;
-  }
-
-  @Nullable
-  public String getIdentifier() {
+  public Optional<String> getIdentifier() {
     return identifier;
   }
 }

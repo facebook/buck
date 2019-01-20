@@ -16,83 +16,118 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.InstallableApk;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
+import java.util.SortedSet;
+import java.util.function.Supplier;
+import org.immutables.value.Value;
 
-public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescription.Arg> {
+public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenruleDescriptionArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("apk_genrule");
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public ApkGenruleDescription(
+      ToolchainProvider toolchainProvider, SandboxExecutionStrategy sandboxExecutionStrategy) {
+    super(toolchainProvider, sandboxExecutionStrategy, false);
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
+  public Class<ApkGenruleDescriptionArg> getConstructorArgType() {
+    return ApkGenruleDescriptionArg.class;
   }
 
   @Override
-  protected <A extends ApkGenruleDescription.Arg> BuildRule createBuildRule(
+  protected BuildRule createBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args,
-      ImmutableList<SourcePath> srcs,
-      Optional<com.facebook.buck.rules.args.Arg> cmd,
-      Optional<com.facebook.buck.rules.args.Arg> bash,
-      Optional<com.facebook.buck.rules.args.Arg> cmdExe,
-      String out) {
+      ActionGraphBuilder graphBuilder,
+      ApkGenruleDescriptionArg args,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe) {
 
-    final BuildRule installableApk = resolver.getRule(args.apk);
-    if (!(installableApk instanceof InstallableApk)) {
-      throw new HumanReadableException("The 'apk' argument of %s, %s, must correspond to an " +
-          "installable rule, such as android_binary() or apk_genrule().",
-          params.getBuildTarget(),
-          args.apk.getFullyQualifiedName());
+    BuildRule apk = graphBuilder.getRule(args.getApk());
+    if (!(apk instanceof HasInstallableApk)) {
+      throw new HumanReadableException(
+          "The 'apk' argument of %s, %s, must correspond to an "
+              + "installable rule, such as android_binary() or apk_genrule().",
+          buildTarget, args.getApk().getFullyQualifiedName());
     }
 
-    final Supplier<ImmutableSortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
+    Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
 
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     return new ApkGenrule(
-        params.copyWithExtraDeps(
-            Suppliers.memoize(
-                new Supplier<ImmutableSortedSet<BuildRule>>() {
-                  @Override
-                  public ImmutableSortedSet<BuildRule> get() {
-                    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        buildTarget,
+        projectFilesystem,
+        sandboxExecutionStrategy,
+        graphBuilder,
+        params.withExtraDeps(
+            MoreSuppliers.memoize(
+                () ->
+                    ImmutableSortedSet.<BuildRule>naturalOrder()
                         .addAll(originalExtraDeps.get())
-                        .add(installableApk)
-                        .build();
-                  }
-                })),
-        new SourcePathResolver(resolver),
-        srcs,
+                        .add(apk)
+                        .build())),
+        ruleFinder,
+        args.getSrcs(),
         cmd,
         bash,
         cmdExe,
-        new BuildTargetSourcePath(args.apk),
-        args.tests.get());
+        args.getType(),
+        apk.getSourcePathToOutput(),
+        args.getIsCacheable(),
+        args.getEnvironmentExpansionSeparator(),
+        toolchainProvider.getByNameIfPresent(
+            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
+        toolchainProvider.getByNameIfPresent(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
+        toolchainProvider.getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractGenruleDescription.Arg {
-    public BuildTarget apk;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractApkGenruleDescriptionArg extends AbstractGenruleDescription.CommonArg {
+    Optional<String> getOut();
+
+    BuildTarget getApk();
+
+    @Override
+    default Optional<String> getType() {
+      return Optional.of("apk");
+    }
+
+    // TODO(T32241734): Cleanup uses of `is_cacheable` and remove, favoring `cacheable` instead.
+    @Value.Default
+    default boolean getIsCacheable() {
+      return getCacheable().orElse(true);
+    }
   }
 
+  static AndroidBinary getUnderlyingApk(HasInstallableApk installable) {
+    if (installable instanceof AndroidBinary) {
+      return (AndroidBinary) installable;
+    } else if (installable instanceof ApkGenrule) {
+      return getUnderlyingApk(((ApkGenrule) installable).getInstallableApk());
+    } else {
+      throw new IllegalStateException(
+          installable.getBuildTarget().getFullyQualifiedName()
+              + " must be backed by either an android_binary() or an apk_genrule()");
+    }
+  }
 }

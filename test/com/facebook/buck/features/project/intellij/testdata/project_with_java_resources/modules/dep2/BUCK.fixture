@@ -1,0 +1,5 @@
+java_library(
+    name = "dep2",
+    srcs = glob(["*.java"]),
+    resources = glob(["testdata/**/*.txt"]),
+)

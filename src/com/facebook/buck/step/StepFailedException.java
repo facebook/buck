@@ -16,80 +16,59 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.CapturingPrintStream;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.util.exceptions.ExceptionWithContext;
+import com.facebook.buck.util.exceptions.WrapsException;
+import java.util.Optional;
 
-@SuppressWarnings("serial")
-public class StepFailedException extends Exception {
-
+public class StepFailedException extends Exception implements WrapsException, ExceptionWithContext {
   private final Step step;
-  private final int exitCode;
+  private final String description;
 
   /** Callers should use {@link #createForFailingStepWithExitCode} unless in a unit test. */
-  @VisibleForTesting
-  public StepFailedException(String message, Step step, int exitCode) {
-    super(message);
+  private StepFailedException(Throwable cause, Step step, String description) {
+    super(cause);
     this.step = step;
-    this.exitCode = exitCode;
+    this.description = description;
   }
 
-  static StepFailedException createForFailingStepWithExitCode(Step step,
-      ExecutionContext context,
-      StepExecutionResult executionResult,
-      Optional<BuildTarget> buildTarget) {
+  @Override
+  public String getMessage() {
+    return getCause().getMessage() + System.lineSeparator() + "  " + getContext().get();
+  }
+
+  /** Creates a StepFailedException based on a StepExecutionResult. */
+  public static StepFailedException createForFailingStepWithExitCode(
+      Step step, ExecutionContext context, StepExecutionResult executionResult) {
     int exitCode = executionResult.getExitCode();
-    String nameOrDescription = context.getVerbosity().shouldPrintCommand()
+    StringBuilder messageBuilder = new StringBuilder();
+    messageBuilder.append(String.format("Command failed with exit code %d.", exitCode));
+    executionResult
+        .getStderr()
+        .ifPresent(
+            stderr ->
+                messageBuilder.append(System.lineSeparator()).append("stderr: ").append(stderr));
+    return createForFailingStepWithException(
+        step, context, new HumanReadableException(messageBuilder.toString()));
+  }
+
+  static StepFailedException createForFailingStepWithException(
+      Step step, ExecutionContext context, Throwable throwable) {
+    return new StepFailedException(throwable, step, descriptionForStep(step, context));
+  }
+
+  private static String descriptionForStep(Step step, ExecutionContext context) {
+    return context.getVerbosity().shouldPrintCommand()
         ? step.getDescription(context)
         : step.getShortName();
-    String message;
-    if (buildTarget.isPresent()) {
-      message = String.format("%s failed with exit code %d:\n%s",
-          buildTarget.get().getFullyQualifiedName(),
-          exitCode,
-          nameOrDescription);
-    } else {
-      message = String.format("Failed with exit code %d:\n%s",
-          exitCode,
-          nameOrDescription);
-    }
-    Optional<String> stderr = executionResult.getStderr();
-    if (stderr.isPresent()) {
-      message += "\nstderr: " + stderr.get();
-    }
-    return new StepFailedException(message, step, exitCode);
-  }
-
-  static StepFailedException createForFailingStepWithException(Step step,
-      Throwable throwable,
-      Optional<BuildTarget> buildTarget) {
-    CapturingPrintStream printStream = new CapturingPrintStream();
-    throwable.printStackTrace(printStream);
-    String stackTrace = printStream.getContentsAsString(Charsets.UTF_8);
-
-    String message;
-    if (buildTarget.isPresent()) {
-      message = String.format("%s failed on step %s with an exception:\n%s\n%s",
-          buildTarget.get().getFullyQualifiedName(),
-          step.getShortName(),
-          throwable.getMessage(),
-          stackTrace);
-    } else {
-      message = String.format("Failed on step %s with an exception:\n%s\n%s",
-          step.getShortName(),
-          throwable.getMessage(),
-          stackTrace);
-    }
-    return new StepFailedException(message, step, 1);
   }
 
   public Step getStep() {
     return step;
   }
 
-  public int getExitCode() {
-    return exitCode;
+  @Override
+  public Optional<String> getContext() {
+    return Optional.of(String.format("When running <%s>.", description));
   }
 }

@@ -6,7 +6,7 @@
 # for docs on the keys and values in this file.
 
 # The log levels in this file come from java.util.logging.Level.
-# Here's how they map to com.buck.log.Logger APIs:
+# Here's how they map to com.buck.core.util.log.Logger APIs:
 
 # j.u.l   | buck
 # ----------------
@@ -25,36 +25,50 @@
 # If you want to enable more verbose logging, do it here.
 .level=FINE
 
-# Enable the console logging handler and the file handler to
-# write rotating log files under buck-out/log/buck-*.log in the
-# project(s) being used.
-handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,java.util.logging.FileHandler
+# Enable console logging handler and file handler to write rotating log files under
+# buck-out/log/buck-*.log in the project(s) being used.
+handlers=com.facebook.buck.cli.bootstrapper.ConsoleHandler,com.facebook.buck.cli.bootstrapper.LogFileHandler,com.facebook.buck.cli.bootstrapper.MemoryHandler,java.util.logging.FileHandler
 
 # We handle console events via the event bus, so disable console logging by default.
 com.facebook.buck.log.ConsoleHandler.level=SEVERE
 
 # http client is way too chatty at FINER level.
-org.apache.http.level=SEVERE
+httpclient.wire.content.level=SEVERE
+httpclient.wire.header.level=SEVERE
 
-# Log to buck-out/log/buck-*log.
+# Needed for "buck fix" to find many source ABI errors
+com.facebook.buck.jvm.java.Jsr199JavacInvocation.level=FINE
+
+# Log to buck-out/log/buck-*.log.
 java.util.logging.FileHandler.pattern=<default_file_pattern>
 
-# Write to disk all log messages not otherwise filtered by the top-level ".level"
-# property.
+# Write to disk all log messages not otherwise filtered by the top-level ".level" property.
 java.util.logging.FileHandler.level=ALL
-
-# Ignore the environment and always write UTF-8 to files.
-java.util.logging.FileHandler.encoding=UTF-8
-
-# Replace the default fugly multiline log formatter with a custom one.
-java.util.logging.FileHandler.formatter=com.facebook.buck.cli.bootstrapper.LogFormatter
 
 # Rotate up to this many log files, then start deleting the oldest one.
 java.util.logging.FileHandler.count=<default_count>
 
-# TODO(t4624433): Temporarily disable logging for Guava's CombinedFuture
-# class until we can figure out what's going on.
-com.google.common.util.concurrent.level=OFF
+# Replace the default fugly multiline log formatter with a custom one.
+java.util.logging.FileHandler.formatter=com.facebook.buck.cli.bootstrapper.LogFormatter
+
+# Ignore the environment and always write UTF-8 to files.
+java.util.logging.FileHandler.encoding=UTF-8
+
+# Use a circular buffer to store high granularity logging in memory, only interesting if we hit
+# an error.
+com.facebook.buck.log.memory.MemoryHandler.level=SEVERE
+
+# Define the buffer size.
+com.facebook.buck.log.memory.MemoryHandler.size=10
+
+# Define the push level.
+com.facebook.buck.log.memory.MemoryHandler.push=SEVERE
+
+# Max size in bytes all logs will take.
+com.facebook.buck.log.LogFileHandler.max_size_bytes=<default_max_size_bytes>
+
+# Max number of logs preserved in disk.
+com.facebook.buck.log.LogFileHandler.count=25
 
 # Put any per-package/class logging configuration here.
 #
@@ -68,8 +82,6 @@ com.google.common.util.concurrent.level=OFF
 # Example: Disable logging for all classes under com.facebook.buck.rules
 # com.facebook.buck.rules.level=OFF
 
-# Disable Jetty session-scavenging noise (logged at level FINE)
-org.eclipse.jetty.server.session.level=INFO
-
-# Allow watchman to log itself to the console
-com.facebook.buck.io.level=INFO
+# Disable Jetty debug noise (logged at level FINE)
+org.eclipse.jetty.level=INFO
+oshi.level=OFF

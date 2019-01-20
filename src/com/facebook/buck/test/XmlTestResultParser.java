@@ -19,67 +19,106 @@ package com.facebook.buck.test;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.util.XmlDomParser;
+import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-
 public class XmlTestResultParser {
 
-  /** Utility Class:  Do not instantiate. */
+  /** Utility Class: Do not instantiate. */
   private XmlTestResultParser() {}
 
-  public static TestCaseSummary parseAndroid(Path xmlFile, String serialNumber)
+  public static List<TestCaseSummary> parseAndroid(Path xmlFile, String serialNumber)
       throws IOException, SAXException {
     String fileContents = new String(Files.readAllBytes(xmlFile), UTF_8);
-    Document doc = XmlDomParser.parse(new InputSource(new StringReader(fileContents)),
-        /* namespaceAware */ true);
+    Document doc =
+        XmlDomParser.parse(
+            new InputSource(new StringReader(fileContents)), /* namespaceAware */ true);
     Element root = doc.getDocumentElement();
     Preconditions.checkState("testsuite".equals(root.getTagName()));
-    String testCaseName = root.getAttribute("name") + " (" + serialNumber + ")";
 
     NodeList testElements = doc.getElementsByTagName("testcase");
-    List<TestResultSummary> testResults = Lists.newArrayListWithCapacity(testElements.getLength());
+
+    throwIfProcessFailed(root);
+
+    List<TestCaseSummary> results = new ArrayList<>();
+
+    Map<String, List<TestResultSummary>> testResultsMap = new LinkedHashMap<>();
+
     for (int i = 0; i < testElements.getLength(); i++) {
       Element node = (Element) testElements.item(i);
-      String testName = node.getAttribute("name");
-      double time = Float.parseFloat(node.getAttribute("time"));
 
-      String message = null;
-      String stacktrace = null;
-      String stdOut = null;
-      String stdErr = null;
-      ResultType type = ResultType.SUCCESS;
-
-      NodeList failure = node.getElementsByTagName("failure");
-      if (failure.getLength() == 1) {
-        stdOut = failure.item(0).getTextContent();
-        type = ResultType.FAILURE;
+      String className = node.getAttribute("classname");
+      List<TestResultSummary> testResults = testResultsMap.get(className);
+      if (testResults == null) {
+        testResults = new ArrayList<>();
+        testResultsMap.put(className, testResults);
       }
-      TestResultSummary testResult = new TestResultSummary(
-          testCaseName,
-          testName,
-          type,
-          Math.round(time * 1000),
-          message,
-          stacktrace,
-          stdOut,
-          stdErr);
-      testResults.add(testResult);
+
+      testResults.add(getTestResultFromElement(node, getTestCaseName(className, serialNumber)));
     }
 
-    return new TestCaseSummary(testCaseName, testResults);
+    for (Map.Entry<String, List<TestResultSummary>> entry : testResultsMap.entrySet()) {
+      TestCaseSummary testCaseSummary =
+          new TestCaseSummary(getTestCaseName(entry.getKey(), serialNumber), entry.getValue());
+      results.add(testCaseSummary);
+    }
+
+    return results;
+  }
+
+  private static void throwIfProcessFailed(Element root) {
+    NodeList children = root.getChildNodes();
+    for (int i = 0; i < children.getLength(); i++) {
+      if (!(children.item(i) instanceof Element)) {
+        continue;
+      }
+      Element child = (Element) children.item(i);
+      if (child.getTagName().equals("failure")) {
+        throw new TestProcessCrashed(child.getTextContent() + "\nSee logcat for more details.");
+      }
+    }
+  }
+
+  private static String getTestCaseName(String className, String serialNumber) {
+    return className + " (" + serialNumber + ")";
+  }
+
+  private static TestResultSummary getTestResultFromElement(Element node, String testCaseName) {
+    double time = Float.parseFloat(node.getAttribute("time"));
+    String testName = node.getAttribute("name");
+
+    String message = null;
+    String stacktrace = null;
+    String stdOut = null;
+    String stdErr = null;
+    ResultType type = ResultType.SUCCESS;
+
+    NodeList failure = node.getElementsByTagName("failure");
+    if (failure.getLength() == 1) {
+
+      stacktrace = failure.item(0).getTextContent();
+
+      type = ResultType.FAILURE;
+
+      String[] firstLineParts = stacktrace.split("\n")[0].split(":", 2);
+      message = firstLineParts.length > 1 ? firstLineParts[1].trim() : "";
+    }
+    return new TestResultSummary(
+        testCaseName, testName, type, Math.round(time * 1000), message, stacktrace, stdOut, stdErr);
   }
 
   public static TestCaseSummary parse(Path xmlFile) throws IOException {
@@ -95,8 +134,8 @@ public class XmlTestResultParser {
   }
 
   private static TestCaseSummary doParse(String xml) throws IOException, SAXException {
-    Document doc = XmlDomParser.parse(new InputSource(new StringReader(xml)),
-        /* namespaceAware */ true);
+    Document doc =
+        XmlDomParser.parse(new InputSource(new StringReader(xml)), /* namespaceAware */ true);
     Element root = doc.getDocumentElement();
     Preconditions.checkState("testcase".equals(root.getTagName()));
     String testCaseName = root.getAttribute("name");
@@ -136,15 +175,9 @@ public class XmlTestResultParser {
         stdErr = null;
       }
 
-      TestResultSummary testResult = new TestResultSummary(
-          testCaseName,
-          testName,
-          type,
-          time,
-          message,
-          stacktrace,
-          stdOut,
-          stdErr);
+      TestResultSummary testResult =
+          new TestResultSummary(
+              testCaseName, testName, type, time, message, stacktrace, stdOut, stdErr);
       testResults.add(testResult);
     }
 
@@ -152,7 +185,10 @@ public class XmlTestResultParser {
   }
 
   private static String createDetailedExceptionMessage(Path xmlFile, String xmlFileContents) {
-    return "Error parsing test result data in " + xmlFile.toAbsolutePath() + ".\n" +
-        "File contents:\n" + xmlFileContents;
+    return "Error parsing test result data in "
+        + xmlFile.toAbsolutePath()
+        + ".\n"
+        + "File contents:\n"
+        + xmlFileContents;
   }
 }

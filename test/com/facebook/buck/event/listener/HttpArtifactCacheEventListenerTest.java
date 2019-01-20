@@ -16,68 +16,90 @@
 
 package com.facebook.buck.event.listener;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Finished;
-import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.network.RemoteLogger;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
+import com.facebook.buck.util.network.AbstractBatchingLogger;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
-import org.easymock.Capture;
-import org.easymock.EasyMock;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
 public class HttpArtifactCacheEventListenerTest {
 
-  private static final BuildId BUILD_ID = new BuildId("My Super ID");
-  private static final ObjectMapper CONVERTER = ObjectMappers.newDefaultInstance();
+  private static class TestBatchingLogger extends AbstractBatchingLogger {
+    private List<String> logEntries = new ArrayList<>();
 
-  private RemoteLogger logger;
-  private HttpArtifactCacheListener listener;
+    public TestBatchingLogger(int minBatchSize) {
+      super(minBatchSize);
+    }
+
+    public List<String> getLogEntries() {
+      return logEntries;
+    }
+
+    @Override
+    public Optional<ListenableFuture<Void>> log(String logLine) {
+      logEntries.add(logLine);
+      return super.log(logLine);
+    }
+
+    @Override
+    protected ListenableFuture<Void> logMultiple(
+        ImmutableCollection<AbstractBatchingLogger.BatchEntry> data) {
+      return Futures.immediateFuture(null);
+    }
+
+    @Override
+    public ListenableFuture<Void> forceFlush() {
+      return Futures.immediateFuture(null);
+    }
+  }
+
+  private static final BuildId BUILD_ID = new BuildId("My Super ID");
+
+  private TestBatchingLogger fetchLogger;
+  private HttpArtifactCacheEventListener listener;
+  private TaskManagerScope managerScope;
 
   @Before
   public void setUp() {
-    logger = EasyMock.createMock(RemoteLogger.class);
-    listener = new HttpArtifactCacheListener(logger, CONVERTER);
+    TestBatchingLogger storeLogger = new TestBatchingLogger(1);
+    fetchLogger = new TestBatchingLogger(1);
+    managerScope = new TestBackgroundTaskManager().getNewScope(new BuildId("test"));
+    listener = new HttpArtifactCacheEventListener(storeLogger, fetchLogger, managerScope);
   }
 
   @Test
-  public void creatingRowWithoutColumns() throws InterruptedException {
-    Capture<String> logLineCapture = Capture.newInstance();
-    EasyMock.expect(
-        logger.log(
-            EasyMock.capture(logLineCapture)))
-        .andReturn(Optional.<ListenableFuture<Void>>absent())
-        .once();
-    EasyMock.expect(logger.close())
-        .andReturn(null)
-        .once();
-    EasyMock.replay(logger);
-
+  public void creatingRowWithoutColumns() {
     String errorMsg = "My super cool error message!!!";
 
-    HttpArtifactCacheEvent.Started startedEvent = HttpArtifactCacheEvent.newFetchStartedEvent(
-        ImmutableSet.<RuleKey>of());
-    startedEvent.configure(-1, -1, -1, null);
-    Finished event = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent)
-        .setFetchResult(CacheResult.hit("http"))
-        .setErrorMessage(errorMsg)
-        .build();
-    event.configure(-1, -1, -1, BUILD_ID);
+    HttpArtifactCacheEvent.Started startedEvent =
+        ArtifactCacheTestUtils.newFetchConfiguredStartedEvent(null, new RuleKey("1234"));
+    Finished.Builder builder = HttpArtifactCacheEvent.newFinishedEventBuilder(startedEvent);
+    builder
+        .getFetchBuilder()
+        .setFetchResult(CacheResult.hit("http", ArtifactCacheMode.http))
+        .setErrorMessage(errorMsg);
+    Finished event = builder.build();
+    event.configure(-1, -1, -1, -1, BUILD_ID);
     listener.onHttpArtifactCacheEvent(event);
-    listener.outputTrace(BUILD_ID);
-    EasyMock.verify(logger);
-    String actualLogLine = logLineCapture.getValue();
+    listener.close();
+    managerScope.close();
+    String actualLogLine = fetchLogger.getLogEntries().iterator().next();
     assertFalse(Strings.isNullOrEmpty(actualLogLine));
     assertTrue(actualLogLine.contains(errorMsg));
     assertTrue(actualLogLine.contains(BUILD_ID.toString()));

@@ -16,122 +16,189 @@
 
 package com.facebook.buck.cli;
 
+import static java.util.Collections.singletonList;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
-import com.facebook.buck.artifact_cache.NoopArtifactCache;
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
+import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.PerBuildStateFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.TestCellBuilder;
-import com.facebook.buck.testutil.TestConsole;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.testutil.FakeFileHashCache;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.concurrent.Executors;
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.concurrent.Executors;
+import org.pf4j.PluginManager;
 
 public class BuckQueryEnvironmentTest {
 
-  @Rule
-  public TemporaryPaths tmp = new TemporaryPaths();
+  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
+
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private BuckQueryEnvironment buckQueryEnvironment;
   private Path cellRoot;
   private ListeningExecutorService executor;
+  private PerBuildState parserState;
+  private BuckEventBus eventBus;
+  private CapturingConsoleEventListener capturingConsoleEventListener;
 
   private QueryTarget createQueryBuildTarget(String baseName, String shortName) {
-    return QueryBuildTarget.of(BuildTarget.builder(cellRoot, baseName, shortName).build());
+    return QueryBuildTarget.of(BuildTargetFactory.newInstance(cellRoot, baseName, shortName));
+  }
+
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
   }
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "query_command",
-        tmp);
+  public void setUp() throws IOException {
+    eventBus = BuckEventBusForTests.newInstance();
+    capturingConsoleEventListener = new CapturingConsoleEventListener();
+    eventBus.register(capturingConsoleEventListener);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
-    Cell cell = new TestCellBuilder()
-        .setFilesystem(new ProjectFilesystem(workspace.getDestPath()))
-        .build();
+    Cell cell =
+        new TestCellBuilder()
+            .setFilesystem(TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()))
+            .build();
 
-    TestConsole console = new TestConsole();
-    CommandRunnerParams params = CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
-        console,
-        cell,
-        new FakeAndroidDirectoryResolver(),
-        new NoopArtifactCache(),
-        BuckEventBusFactory.newInstance(),
-        FakeBuckConfig.builder().build(),
-        Platform.detect(),
-        ImmutableMap.copyOf(System.getenv()),
-        new FakeJavaPackageFinder(),
-        ObjectMappers.newDefaultInstance(),
-        Optional.<WebServer>absent());
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(pluginManager);
 
-    buckQueryEnvironment = new BuckQueryEnvironment(params, /* enableProfiling */ false);
-    cellRoot = workspace.getDestPath();
+    ExecutableFinder executableFinder = new ExecutableFinder();
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
+    PerBuildStateFactory perBuildStateFactory =
+        PerBuildStateFactory.createFactory(
+            typeCoercerFactory,
+            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            knownRuleTypesProvider,
+            new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+            cell.getBuckConfig(),
+            WatchmanFactory.NULL_WATCHMAN,
+            eventBus,
+            getManifestSupplier(),
+            new FakeFileHashCache(ImmutableMap.of()));
+    Parser parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory, eventBus);
+    parserState =
+        perBuildStateFactory.create(
+            parser.getPermState(),
+            executor,
+            cell,
+            ImmutableList.of(),
+            /* enableProfiling */ false,
+            SpeculativeParsing.ENABLED);
+
+    TargetPatternEvaluator targetPatternEvaluator =
+        new TargetPatternEvaluator(
+            cell, FakeBuckConfig.builder().build(), parser, /* enableProfiling */ false, false);
+    OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser, parserState);
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+    buckQueryEnvironment =
+        BuckQueryEnvironment.from(
+            cell,
+            ownersReportBuilder,
+            parser,
+            parserState,
+            executor,
+            targetPatternEvaluator,
+            eventBus,
+            TYPE_COERCER_FACTORY);
+    cellRoot = workspace.getDestPath();
   }
 
   @After
   public void cleanUp() {
+    parserState.close();
     executor.shutdown();
   }
 
   @Test
-  public void testResolveSingleTargets() throws QueryException, InterruptedException {
+  public void testResolveSingleTargets() throws QueryException {
     ImmutableSet<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six", executor);
+    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six");
     expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example", "six"));
     assertThat(targets, is(equalTo(expectedTargets)));
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven", executor);
+    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven");
     expectedTargets = ImmutableSortedSet.of(createQueryBuildTarget("//example/app", "seven"));
     assertThat(targets, is(equalTo(expectedTargets)));
   }
 
   @Test
-  public void testResolveTargetPattern() throws QueryException, InterruptedException {
-    ImmutableSet<QueryTarget> expectedTargets = ImmutableSortedSet.of(
-        createQueryBuildTarget("//example", "one"),
-        createQueryBuildTarget("//example", "two"),
-        createQueryBuildTarget("//example", "three"),
-        createQueryBuildTarget("//example", "four"),
-        createQueryBuildTarget("//example", "five"),
-        createQueryBuildTarget("//example", "six"),
-        createQueryBuildTarget("//example", "application-test-lib"),
-        createQueryBuildTarget("//example", "one-tests"),
-        createQueryBuildTarget("//example", "four-tests"),
-        createQueryBuildTarget("//example", "four-application-tests"),
-        createQueryBuildTarget("//example", "six-tests"));
+  public void testResolveTargetPattern() throws QueryException {
+    ImmutableSet<QueryTarget> expectedTargets =
+        ImmutableSortedSet.of(
+            createQueryBuildTarget("//example", "one"),
+            createQueryBuildTarget("//example", "two"),
+            createQueryBuildTarget("//example", "three"),
+            createQueryBuildTarget("//example", "four"),
+            createQueryBuildTarget("//example", "five"),
+            createQueryBuildTarget("//example", "six"),
+            createQueryBuildTarget("//example", "application-test-lib"),
+            createQueryBuildTarget("//example", "test-lib-lib"),
+            createQueryBuildTarget("//example", "one-tests"),
+            createQueryBuildTarget("//example", "four-tests"),
+            createQueryBuildTarget("//example", "four-application-tests"),
+            createQueryBuildTarget("//example", "six-tests"));
     assertThat(
-        buckQueryEnvironment.getTargetsMatchingPattern("//example:", executor),
-        is(equalTo(expectedTargets)));
+        buckQueryEnvironment.getTargetsMatchingPattern("//example:"), is(equalTo(expectedTargets)));
+  }
+
+  @Test
+  public void whenNonExistentFileIsQueriedAWarningIsIssued() {
+    ImmutableList<String> expectedTargets = ImmutableList.of("/foo/bar");
+    buckQueryEnvironment.getFileOwners(expectedTargets);
+    String expectedWarning =
+        "File " + MorePaths.pathWithPlatformSeparators("/foo/bar") + " does not exist";
+    assertThat(
+        capturingConsoleEventListener.getLogMessages(),
+        CoreMatchers.equalTo(singletonList(expectedWarning)));
   }
 }

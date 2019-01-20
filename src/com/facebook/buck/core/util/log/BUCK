@@ -1,0 +1,9 @@
+java_library(
+    name = "log",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/util/log/appendablelogrecord:appendablelogrecord",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 
 /**
  * Utility class with methods working with {@link HeaderVisibility} in the context of Apple rules.
@@ -40,9 +40,9 @@ public class AppleHeaderVisibilities {
   public static String getHeaderSymlinkTreeSuffix(HeaderVisibility headerVisibility) {
     switch (headerVisibility) {
       case PUBLIC:
-        return "-public-header-symlink-tree";
+        return "-pub";
       case PRIVATE:
-        return "-private-header-symlink-tree";
+        return "-priv";
     }
     throw new IllegalStateException("Invalid header visibility value: " + headerVisibility);
   }

@@ -1,0 +1,5 @@
+cxx_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    deps = ["//deps:dep4"],
+)

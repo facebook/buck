@@ -20,18 +20,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.collect.ImmutableList;
-
 import org.junit.Test;
 
 public class ClassNameFilterTest {
   @Test
   public void testFiltering() {
-    ClassNameFilter filter = ClassNameFilter.fromConfiguration(ImmutableList.of(
-        "^org/acra/",
-        "^org/tukaani/",
-        "/FbInjector^",
-        "^com/facebook/build/Config^",
-        "/nodex/"));
+    ClassNameFilter filter =
+        ClassNameFilter.fromConfiguration(
+            ImmutableList.of(
+                "^org/acra/",
+                "^org/tukaani/",
+                "/FbInjector^",
+                "^com/facebook/build/Config^",
+                "/nodex/"));
 
     assertTrue(filter.matches("org/acra/Reporter"));
     assertTrue(filter.matches("org/tukaani/Decoder$State"));

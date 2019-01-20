@@ -1,23 +1,41 @@
 <?xml version='1.0' encoding='utf-8'?>
 <manifest
-    xmlns:android='http://schemas.android.com/apk/res/android'
-    package='buck.exotest'
+  xmlns:android='http://schemas.android.com/apk/res/android'
+  package='buck.exotest'
   >
 
   <uses-sdk
-      android:minSdkVersion="9"
-      android:targetSdkVersion="19"
+    android:minSdkVersion="9"
+    android:targetSdkVersion="19"
     />
 
   <application
-      android:label='exo-test'
-      android:name='exotest.AppShell'
-      android:debuggable='true'
+    android:name='exotest.AppShell'
+    android:label='@string/exo_app_name'
+    android:icon='@drawable/exo_icon'
+    android:debuggable='true'
     >
+    <meta-data
+      android:name='app_meta'
+      android:resource='@array/meta_array'
+      />
+    <meta-data
+      android:name='app_meta2'
+      android:resource='@array/meta_array2'
+      />
+    <meta-data
+      android:name='app_meta_xml'
+      android:resource='@xml/meta_xml'
+      />
     <activity
-        android:name='exotest.LogActivity'
-        android:exported='true' 
-    />
+      android:name='exotest.LogActivity'
+      android:exported='true'
+      >
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
   </application>
 
 </manifest>

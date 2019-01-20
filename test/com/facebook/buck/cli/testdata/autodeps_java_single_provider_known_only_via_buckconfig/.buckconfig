@@ -1,2 +1,0 @@
-[autodeps]
-    java-package-mappings = com.example.Bar => //:bar

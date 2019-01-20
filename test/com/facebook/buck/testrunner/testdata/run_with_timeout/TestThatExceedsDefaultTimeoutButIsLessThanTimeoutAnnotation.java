@@ -23,9 +23,9 @@ import org.junit.runner.RunWith;
 public class TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation {
 
   /**
-   * This test should take 5 seconds, which is longer than the default timeout specified in
-   * {@code .buckconfig}, which is 3 seconds. However, the timeout specified by the annotation
-   * (7 seconds) should take precedence, so this test should pass.
+   * This test should take 5 seconds, which is longer than the default timeout specified in {@code
+   * .buckconfig}, which is 3 seconds. However, the timeout specified by the annotation (7 seconds)
+   * should take precedence, so this test should pass.
    */
   @Test(timeout = 7000)
   public void testThatRunsForMoreThanThreeSecondsButForLessThanSevenSeconds() {
@@ -35,5 +35,4 @@ public class TestThatExceedsDefaultTimeoutButIsLessThanTimeoutAnnotation {
       // Ignore.
     }
   }
-
 }

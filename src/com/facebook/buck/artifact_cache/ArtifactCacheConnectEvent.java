@@ -20,9 +20,7 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvent;
 
-/**
- * Base class for events about build rules.
- */
+/** Base class for events about build rules. */
 public abstract class ArtifactCacheConnectEvent extends AbstractBuckEvent implements LeafEvent {
 
   public ArtifactCacheConnectEvent(EventKey eventKey) {
@@ -69,5 +67,4 @@ public abstract class ArtifactCacheConnectEvent extends AbstractBuckEvent implem
       return "ArtifactCacheConnectFinished";
     }
   }
-
 }

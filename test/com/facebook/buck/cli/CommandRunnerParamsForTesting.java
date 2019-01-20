@@ -16,41 +16,60 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.AndroidBuckConfig;
-import com.facebook.buck.android.AndroidDirectoryResolver;
-import com.facebook.buck.android.FakeAndroidDirectoryResolver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
+import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
+import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
+import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventBusFactory;
+import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.httpserver.WebServer;
+import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.ActionGraphCache;
-import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.ConstructorArgMarshaller;
-import com.facebook.buck.rules.TestCellBuilder;
+import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.parser.TestParserFactory;
+import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.testutil.FakeExecutor;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.DefaultClock;
 import com.facebook.buck.util.Console;
-import com.facebook.buck.util.ObjectMappers;
-import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.TriState;
-import com.facebook.buck.util.cache.NullFileHashCache;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
+import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
+import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
+import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
+import com.facebook.buck.versions.VersionedTargetGraphCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.ListeningExecutorService;
-
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+import javax.annotation.Nullable;
+import org.pf4j.PluginManager;
 
 public class CommandRunnerParamsForTesting {
 
@@ -61,7 +80,7 @@ public class CommandRunnerParamsForTesting {
           .setOs("test")
           .setAvailableCores(1)
           .setSystemMemory(1024L)
-          .setBuckDirty(TriState.FALSE)
+          .setBuckDirty(Optional.of(false))
           .setBuckCommit("test")
           .setJavaVersion("test")
           .setJsonProtocolVersion(1)
@@ -70,46 +89,68 @@ public class CommandRunnerParamsForTesting {
   /** Utility class: do not instantiate. */
   private CommandRunnerParamsForTesting() {}
 
+  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
+      getManifestSupplier() {
+    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
+  }
+
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
       Console console,
       Cell cell,
-      AndroidDirectoryResolver androidDirectoryResolver,
       ArtifactCache artifactCache,
       BuckEventBus eventBus,
       BuckConfig config,
       Platform platform,
       ImmutableMap<String, String> environment,
       JavaPackageFinder javaPackageFinder,
-      ObjectMapper objectMapper,
-      Optional<WebServer> webServer)
-      throws IOException, InterruptedException {
-    DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory(
-        ObjectMappers.newDefaultInstance());
-    return new CommandRunnerParams(
+      Optional<WebServer> webServer) {
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    KnownRuleTypesProvider knownRuleTypesProvider =
+        TestKnownRuleTypesProvider.create(pluginManager);
+
+    return CommandRunnerParams.of(
         console,
-        new ByteArrayInputStream("".getBytes("UTF-8")),
+        new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
         cell,
-        Main.createAndroidPlatformTargetSupplier(
-            androidDirectoryResolver,
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
-            eventBus),
-        artifactCache,
+        WatchmanFactory.NULL_WATCHMAN,
+        new InstrumentedVersionedTargetGraphCache(
+            new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
+        new SingletonArtifactCacheFactory(artifactCache),
+        typeCoercerFactory,
+        TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider),
         eventBus,
-        new Parser(
-            new ParserConfig(cell.getBuckConfig()),
-            typeCoercerFactory, new ConstructorArgMarshaller(typeCoercerFactory)),
         platform,
         environment,
         javaPackageFinder,
-        objectMapper,
         new DefaultClock(),
-        Optional.<ProcessManager>absent(),
+        new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
+        Optional.empty(),
         webServer,
+        Optional.empty(),
         config,
-        new NullFileHashCache(),
-        new HashMap<ExecutionContext.ExecutorPool, ListeningExecutorService>(),
+        new StackedFileHashCache(ImmutableList.of()),
+        ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()),
+        new FakeExecutor(),
         BUILD_ENVIRONMENT_DESCRIPTION,
-        new ActionGraphCache());
+        new ActionGraphProviderBuilder()
+            .withMaxEntries(config.getMaxActionGraphCacheEntries())
+            .withPoolSupplier(Main.getForkJoinPoolSupplier(config))
+            .build(),
+        knownRuleTypesProvider,
+        new BuildInfoStoreManager(),
+        Optional.empty(),
+        Optional.empty(),
+        new DefaultProjectFilesystemFactory(),
+        TestRuleKeyConfigurationFactory.create(),
+        processExecutor,
+        new ExecutableFinder(),
+        pluginManager,
+        TestBuckModuleManagerFactory.create(pluginManager),
+        Main.getForkJoinPoolSupplier(config),
+        MetadataProviderFactory.emptyMetadataProvider(),
+        getManifestSupplier());
   }
 
   public static Builder builder() {
@@ -118,30 +159,31 @@ public class CommandRunnerParamsForTesting {
 
   public static class Builder {
 
-    private AndroidDirectoryResolver androidDirectoryResolver = new FakeAndroidDirectoryResolver();
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
     private BuckConfig config = FakeBuckConfig.builder().build();
-    private BuckEventBus eventBus = BuckEventBusFactory.newInstance();
+    private BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     private Platform platform = Platform.detect();
-    private ImmutableMap<String, String> environment = ImmutableMap.copyOf(System.getenv());
+    private ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
     private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
-    private ObjectMapper objectMapper = ObjectMappers.newDefaultInstance();
-    private Optional<WebServer> webServer = Optional.absent();
+    private Optional<WebServer> webServer = Optional.empty();
+    @Nullable private ToolchainProvider toolchainProvider = null;
 
-    public CommandRunnerParams build()
-        throws IOException, InterruptedException{
+    public CommandRunnerParams build() {
+      TestCellBuilder cellBuilder = new TestCellBuilder();
+      if (toolchainProvider != null) {
+        cellBuilder.setToolchainProvider(toolchainProvider);
+      }
+
       return createCommandRunnerParamsForTesting(
           console,
-          new TestCellBuilder().build(),
-          androidDirectoryResolver,
+          cellBuilder.build(),
           artifactCache,
           eventBus,
           config,
           platform,
           environment,
           javaPackageFinder,
-          objectMapper,
           webServer);
     }
 
@@ -160,10 +202,9 @@ public class CommandRunnerParamsForTesting {
       return this;
     }
 
-    public Builder setBuckConfig(BuckConfig buckConfig) {
-      this.config = buckConfig;
+    public Builder setToolchainProvider(ToolchainProvider toolchainProvider) {
+      this.toolchainProvider = toolchainProvider;
       return this;
     }
-
   }
 }

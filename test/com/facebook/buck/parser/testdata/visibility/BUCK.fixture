@@ -1,0 +1,22 @@
+java_library(
+    name = "should_pass",
+    deps = [
+        "//sub:sub",
+        "//sub:sub_pub",
+    ],
+)
+
+java_library(
+    name = "should_pass2",
+    deps = [
+        "//sub:sub_pub",
+    ],
+)
+
+java_library(
+    name = "should_fail",
+    deps = [
+        "//sub:sub",
+        "//sub:sub_pub",
+    ],
+)

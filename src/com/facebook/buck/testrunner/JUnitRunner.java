@@ -18,8 +18,23 @@ package com.facebook.buck.testrunner;
 
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestDescription;
-
+import com.facebook.buck.test.selectors.TestSelector;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger; // NOPMD
+import java.util.logging.StreamHandler;
 import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
 import org.junit.internal.builders.AnnotatedBuilder;
 import org.junit.internal.builders.JUnit4Builder;
@@ -28,32 +43,19 @@ import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
 import org.junit.runner.Request;
 import org.junit.runner.Result;
+import org.junit.runner.RunWith;
 import org.junit.runner.Runner;
 import org.junit.runner.manipulation.Filter;
 import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.junit.runners.model.RunnerBuilder;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogManager;
-import java.util.logging.Logger;
-import java.util.logging.StreamHandler;
-
 /**
  * Class that runs a set of JUnit tests and writes the results to a directory.
- * <p>
- * IMPORTANT! This class limits itself to types that are available in both the JDK and Android Java
- * API. The objective is to limit the set of files added to the ClassLoader that runs the test, as
- * not to interfere with the results of the test.
+ *
+ * <p>IMPORTANT! This class limits itself to types that are available in both the JDK and Android
+ * Java API. The objective is to limit the set of files added to the ClassLoader that runs the test,
+ * as not to interfere with the results of the test.
  */
 public final class JUnitRunner extends BaseRunner {
 
@@ -63,8 +65,7 @@ public final class JUnitRunner extends BaseRunner {
   private static final String STD_OUT_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdOutLogLevel";
   private static final String STD_ERR_LOG_LEVEL_PROPERTY = "com.facebook.buck.stdErrLogLevel";
 
-  public JUnitRunner() {
-  }
+  public JUnitRunner() {}
 
   @Override
   public void run() throws Throwable {
@@ -82,176 +83,125 @@ public final class JUnitRunner extends BaseRunner {
       stdErrLogLevel = Level.parse(unparsedStdErrLogLevel);
     }
 
-    Filter filter = new Filter() {
-      @Override
-      public boolean shouldRun(Description description) {
-        String methodName = description.getMethodName();
-        if (methodName == null) {
-          // JUnit will give us an org.junit.runner.Description like this for the test class
-          // itself.  It's easier for our filtering to make decisions just at the method level,
-          // however, so just always return true here.
-          return true;
-        } else {
-          String className = description.getClassName();
-          TestDescription testDescription = new TestDescription(className, methodName);
-          if (testSelectorList.isIncluded(testDescription)) {
-            boolean isIgnored = description.getAnnotation(Ignore.class) != null;
-            if (!isIgnored) {
-              seenDescriptions.add(testDescription);
-            }
-            return !isDryRun;
-          } else {
-            return false;
-          }
-        }
-      }
-
-      @Override
-      public String describe() {
-        return FILTER_DESCRIPTION;
-      }
-    };
-
     for (String className : testClassNames) {
-      final Class<?> testClass = Class.forName(className);
-      Ignore ignore = testClass.getAnnotation(Ignore.class);
-      boolean isTestClassIgnored = (ignore != null || !isTestClass(testClass));
-      boolean isTestClassAbstract = Modifier.isAbstract(testClass.getModifiers());
+      Class<?> testClass = Class.forName(className);
 
-      List<TestResult> results;
-      if (isTestClassIgnored || isTestClassAbstract) {
-        // Test case has @Ignore annotation, or is abstract and cannot be instantiated,
-        // so do nothing.
-        results = Collections.emptyList();
-      } else {
-        results = new ArrayList<>();
+      List<TestResult> results = new ArrayList<>();
+      RecordingFilter filter = new RecordingFilter();
+      if (mightBeATestClass(testClass)) {
         JUnitCore jUnitCore = new JUnitCore();
-
-        Runner suite = new Computer().getSuite(createRunnerBuilder(), new Class<?>[]{testClass});
+        Runner suite = new Computer().getSuite(createRunnerBuilder(), new Class<?>[] {testClass});
         Request request = Request.runner(suite);
         request = request.filterWith(filter);
-
         jUnitCore.addListener(new TestListener(results, stdOutLogLevel, stdErrLogLevel));
         jUnitCore.run(request);
       }
-
-      results = interpretResults(className, results);
-      if (results != null) {
-        writeResult(className, results);
-      }
+      // Combine the results with the tests we filtered out
+      List<TestResult> actualResults = combineResults(results, filter.filteredOut);
+      writeResult(className, actualResults);
     }
   }
 
+  /** Guessing whether or not a class is a test class is an imperfect art form. */
+  private boolean mightBeATestClass(Class<?> klass) {
+    if (klass.getAnnotation(RunWith.class) != null) {
+      return true; // If the class is explicitly marked with @RunWith, it's a test class.
+    }
+    // Since no RunWith annotation, using standard runner, which requires
+    // test classes to be non-abstract/non-interface
+    int klassModifiers = klass.getModifiers();
+    if (Modifier.isInterface(klassModifiers) || Modifier.isAbstract(klassModifiers)) {
+      return false;
+    }
+    // Since no RunWith annotation, using standard runner, which requires
+    // test classes to have exactly one public constructor (that has no args).
+    // Classes may have (non-public) constructors (with or without args).
+    boolean foundPublicNoArgConstructor = false;
+    for (Constructor<?> c : klass.getConstructors()) {
+      if (Modifier.isPublic(c.getModifiers())) {
+        if (c.getParameterCount() != 0) {
+          return false;
+        }
+        foundPublicNoArgConstructor = true;
+      }
+    }
+    if (!foundPublicNoArgConstructor) {
+      return false;
+    }
+    // If the class has a JUnit4 @Test-annotated method, it's a test class.
+    boolean hasAtLeastOneTest = false;
+    for (Method m : klass.getMethods()) {
+      if (Modifier.isPublic(m.getModifiers())
+          && m.getParameters().length == 0
+          && m.getAnnotation(Test.class) != null) {
+        hasAtLeastOneTest = true;
+        break;
+      }
+    }
+    return hasAtLeastOneTest;
+  }
+
   /**
-   * This method filters a list of test results prior to writing results to a file.  null is
-   * returned to indicate "don't write anything", which is different to writing a file containing
-   * 0 results.
+   * This method filters a list of test results prior to writing results to a file. null is returned
+   * to indicate "don't write anything", which is different to writing a file containing 0 results.
    *
-   * <p>
-   *
-   * JUnit handles classes-without-tests in different ways.  If you are not using the
-   * org.junit.runner.Request.filterWith facility then JUnit ignores classes-without-tests.
-   * However, if you are using a filter then a class-without-tests will cause a
-   * NoTestsRemainException to be thrown, which is propagated back as an error.
+   * <p>JUnit handles classes-without-tests in different ways. If you are not using the
+   * org.junit.runner.Request.filterWith facility then JUnit ignores classes-without-tests. However,
+   * if you are using a filter then a class-without-tests will cause a NoTestsRemainException to be
+   * thrown, which is propagated back as an error.
    */
   /* @Nullable */
-  private List<TestResult> interpretResults(String className, List<TestResult> results) {
-    // For dry runs, write fake results for every method seen in the given class.
-    if (isDryRun) {
-      List<TestResult> fakeResults = new ArrayList<>();
-      for (TestDescription seenDescription : seenDescriptions) {
-        if (seenDescription.getClassName().equals(className)) {
-          TestResult fakeResult = new TestResult(
-            seenDescription.getClassName(),
-              seenDescription.getMethodName(),
-              0L,
-              ResultType.DRY_RUN,
-              null,
-              "",
-              "");
-          fakeResults.add(fakeResult);
-        }
-      }
-      results = fakeResults;
+  private List<TestResult> combineResults(
+      List<TestResult> results, List<TestResult> filteredResults) {
+    List<TestResult> combined = new ArrayList<>(filteredResults);
+    if (!isSingleResultCausedByNoTestsRemainException(results)) {
+      combined.addAll(results);
     }
-
-    // When not using any command line filtering options, all results should be recorded.
-    if (testSelectorList.isEmpty()) {
-      if (isSingleResultCausedByNoTestsRemainException(results)) {
-        // ...except for testless-classes, where we pretend nothing ran.
-        return new ArrayList<>();
-      } else {
-        return results;
-      }
-    }
-
-    // If the results size is 0 (which can happen at least with JUnit 4.11), results are not
-    // significant and shouldn't be recorded.
-    if (results.size() == 0) {
-      return null;
-    }
-
-    // In (at least) JUnit 4.8, we have an odd scenario where we have one result telling us we
-    // have no results.
-    if (isSingleResultCausedByNoTestsRemainException(results)) {
-      return null;
-    }
-
-    return results;
+    return combined;
   }
 
   /**
-   * JUnit doesn't normally consider encountering a testless class an error.  However, when
-   * using org.junit.runner.manipulation.Filter, testless classes *are* considered an error,
-   * throwing org.junit.runner.manipulation.NoTestsRemainException.
+   * JUnit doesn't normally consider encountering a testless class an error. However, when using
+   * org.junit.runner.manipulation.Filter, testless classes *are* considered an error, throwing
+   * org.junit.runner.manipulation.NoTestsRemainException.
    *
-   * If we are using test-selectors then it's possible we will run a test class but never run any
-   * of its test methods, because they'd all get filtered out.  When this happens, the results will
+   * <p>If we are using test-selectors then it's possible we will run a test class but never run any
+   * of its test methods, because they'd all get filtered out. When this happens, the results will
    * contain a single failure containing the error from the NoTestsRemainException.
    *
-   * (NB: we can't decide at the class level whether we need to run a test class or not; we can only
-   * run the test class and all its test methods and handle the erroneous exception JUnit throws if
-   * no test-methods were actually run.)
+   * <p>However, there is another reason why the test class may have a single failure -- if the
+   * class fails to instantiate, then it doesn't get far enough to detect whether or not there were
+   * any tests. In that case, JUnit4 returns a single failure result with the testMethodName set to
+   * "initializationError".
+   *
+   * <p>(NB: we can't decide at the class level whether we need to run a test class or not; we can
+   * only run the test class and all its test methods and handle the erroneous exception JUnit
+   * throws if no test-methods were actually run.)
    */
   private boolean isSingleResultCausedByNoTestsRemainException(List<TestResult> results) {
     if (results.size() != 1) {
       return false;
     }
-
-    TestResult testResult = results.get(0);
-    if (testResult.isSuccess()) {
-      return false;
-    }
-
-    if (testResult.failure == null) {
-      return false;
-    }
-
-    String message = testResult.failure.getMessage();
-    if (message == null) {
-      return false;
-    }
-
-    return message.contains("No tests found matching " + FILTER_DESCRIPTION);
-  }
-
-  private boolean isTestClass(Class<?> klass) {
-    return klass.getConstructors().length <= 1;
+    TestResult singleResult = results.get(0);
+    return !singleResult.isSuccess()
+        && "initializationError".equals(singleResult.testMethodName)
+        && "org.junit.runner.manipulation.Filter".equals(singleResult.testClassName);
   }
 
   /**
-   * Creates an {@link AllDefaultPossibilitiesBuilder} that returns our custom
-   * {@link BuckBlockJUnit4ClassRunner} when a {@link JUnit4Builder} is requested. This ensures that
-   * JUnit 4 tests are executed using our runner whereas other types of tests are run with whatever
-   * JUnit thinks is best.
+   * Creates an {@link AllDefaultPossibilitiesBuilder} that returns our custom {@link
+   * BuckBlockJUnit4ClassRunner} when a {@link JUnit4Builder} is requested. This ensures that JUnit
+   * 4 tests are executed using our runner whereas other types of tests are run with whatever JUnit
+   * thinks is best.
    */
   private RunnerBuilder createRunnerBuilder() {
-    final JUnit4Builder jUnit4RunnerBuilder = new JUnit4Builder() {
-      @Override
-      public Runner runnerForClass(Class<?> testClass) throws Throwable {
-        return new BuckBlockJUnit4ClassRunner(testClass, defaultTestTimeoutMillis);
-      }
-    };
+    JUnit4Builder jUnit4RunnerBuilder =
+        new JUnit4Builder() {
+          @Override
+          public Runner runnerForClass(Class<?> testClass) throws Throwable {
+            return new BuckBlockJUnit4ClassRunner(testClass, defaultTestTimeoutMillis);
+          }
+        };
 
     return new AllDefaultPossibilitiesBuilder(/* canUseSuiteMethod */ true) {
       @Override
@@ -274,8 +224,8 @@ public final class JUnitRunner extends BaseRunner {
 
         return new AnnotatedBuilder(this) {
           @Override
-          public Runner buildRunner(Class<? extends Runner> runnerClass,
-              Class<?> testClass) throws Exception {
+          public Runner buildRunner(Class<? extends Runner> runnerClass, Class<?> testClass)
+              throws Exception {
             Runner originalRunner = super.buildRunner(runnerClass, testClass);
             return new DelegateRunnerWithTimeout(originalRunner, defaultTestTimeoutMillis);
           }
@@ -285,29 +235,26 @@ public final class JUnitRunner extends BaseRunner {
   }
 
   /**
-   * Creates RunListener that will prepare individual result for each test
-   * and store it to results list afterwards.
+   * Creates RunListener that will prepare individual result for each test and store it to results
+   * list afterwards.
    */
-  private static class TestListener extends RunListener {
+  private class TestListener extends RunListener {
     private final List<TestResult> results;
     private final Level stdErrLogLevel;
     private final Level stdOutLogLevel;
-    private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
-    private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
-    private ByteArrayOutputStream julLogBytes, julErrLogBytes;
-    private Handler julLogHandler;
-    private Handler julErrLogHandler;
-    private Result result;
-    private RunListener resultListener;
-    private Failure assumptionFailure;
+    /* @Nullable */ private PrintStream originalOut, originalErr, stdOutStream, stdErrStream;
+    /* @Nullable */ private ByteArrayOutputStream rawStdOutBytes, rawStdErrBytes;
+    /* @Nullable */ private ByteArrayOutputStream julLogBytes, julErrLogBytes;
+    /* @Nullable */ private Handler julLogHandler;
+    /* @Nullable */ private Handler julErrLogHandler;
+    /* @Nullable */ private Result result;
+    /* @Nullable */ private RunListener resultListener;
+    /* @Nullable */ private Failure assumptionFailure;
 
     // To help give a reasonable (though imprecise) guess at the runtime for unpaired failures
     private long startTime = System.currentTimeMillis();
 
-    public TestListener(
-        List<TestResult> results,
-        Level stdOutLogLevel,
-        Level stdErrLogLevel) {
+    TestListener(List<TestResult> results, Level stdOutLogLevel, Level stdErrLogLevel) {
       this.results = results;
       this.stdOutLogLevel = stdOutLogLevel;
       this.stdErrLogLevel = stdErrLogLevel;
@@ -323,10 +270,8 @@ public final class JUnitRunner extends BaseRunner {
       rawStdErrBytes = new ByteArrayOutputStream();
       julLogBytes = new ByteArrayOutputStream();
       julErrLogBytes = new ByteArrayOutputStream();
-      stdOutStream = new PrintStream(
-          rawStdOutBytes, true /* autoFlush */, ENCODING);
-      stdErrStream = new PrintStream(
-          rawStdErrBytes, true /* autoFlush */, ENCODING);
+      stdOutStream = new PrintStream(rawStdOutBytes, true /* autoFlush */, ENCODING);
+      stdErrStream = new PrintStream(rawStdErrBytes, true /* autoFlush */, ENCODING);
       System.setOut(stdOutStream);
       System.setErr(stdErrStream);
 
@@ -376,17 +321,6 @@ public final class JUnitRunner extends BaseRunner {
       int numFailures = result.getFailureCount();
       String className = description.getClassName();
       String methodName = description.getMethodName();
-      // In practice, I have seen one case of a test having more than one failure:
-      // com.xtremelabs.robolectric.shadows.H2DatabaseTest#shouldUseH2DatabaseMap() had 2
-      // failures. However, I am not sure what to make of it, so we let it through.
-      if (numFailures < 0) {
-        throw new IllegalStateException(String.format(
-            "Unexpected number of failures while testing %s#%s(): %d (%s)",
-            className,
-            methodName,
-            numFailures,
-            result.getFailures()));
-      }
 
       Failure failure;
       ResultType type;
@@ -395,6 +329,13 @@ public final class JUnitRunner extends BaseRunner {
         type = ResultType.ASSUMPTION_VIOLATION;
         // Clear the assumption-failure field before the next test result appears.
         assumptionFailure = null;
+      } else if (isDryRun) {
+        if ("org.junit.runner.manipulation.Filter".equals(className)
+            && "initializationError".equals(methodName)) {
+          return; // don't record errors from failed class initialization during dry run
+        }
+        failure = numFailures == 0 ? null : result.getFailures().get(0);
+        type = ResultType.DRY_RUN;
       } else if (numFailures == 0) {
         failure = null;
         type = ResultType.SUCCESS;
@@ -418,27 +359,42 @@ public final class JUnitRunner extends BaseRunner {
         stdErr.append(julErrLogBytes.toString(ENCODING));
       }
 
-      results.add(new TestResult(className,
-          methodName,
-          result.getRunTime(),
-          type,
-          failure == null ? null : failure.getException(),
-          stdOut.length() == 0 ? null : stdOut.toString(),
-          stdErr.length() == 0 ? null : stdErr.toString()));
+      results.add(
+          new TestResult(
+              className,
+              methodName,
+              result.getRunTime(),
+              type,
+              failure == null ? null : failure.getException(),
+              stdOut.length() == 0 ? null : stdOut.toString(),
+              stdErr.length() == 0 ? null : stdErr.toString()));
+    }
+
+    @Override
+    public void testRunFinished(Result runResult) {
+      if (resultListener != null) {
+        // testStarted was called for latest test, but not the testFinished
+        // report all failures as unbounded
+        for (Failure failure : result.getFailures()) {
+          recordUnpairedResult(failure, ResultType.FAILURE);
+        }
+      }
     }
 
     /**
-     * The regular listener we created from the singular result, in this class, will not by
-     * default treat assumption failures as regular failures, and will not store them.  As a
-     * consequence, we store them ourselves!
+     * The regular listener we created from the singular result, in this class, will not by default
+     * treat assumption failures as regular failures, and will not store them. As a consequence, we
+     * store them ourselves!
      *
-     * We store the assumption-failure in a temporary field, which we'll make sure we clear each
+     * <p>We store the assumption-failure in a temporary field, which we'll make sure we clear each
      * time we write results.
      */
     @Override
     public void testAssumptionFailure(Failure failure) {
       assumptionFailure = failure;
-      if (resultListener != null) {
+      if (resultListener == null) {
+        recordUnpairedResult(failure, ResultType.ASSUMPTION_VIOLATION);
+      } else {
         // Left in only to help catch future bugs -- right now this does nothing.
         resultListener.testAssumptionFailure(failure);
       }
@@ -447,7 +403,7 @@ public final class JUnitRunner extends BaseRunner {
     @Override
     public void testFailure(Failure failure) throws Exception {
       if (resultListener == null) {
-        recordUnpairedFailure(failure);
+        recordUnpairedResult(failure, ResultType.FAILURE);
       } else {
         resultListener.testFailure(failure);
       }
@@ -461,31 +417,29 @@ public final class JUnitRunner extends BaseRunner {
     }
 
     /**
-     * It's possible to encounter a Failure before we've started any tests (and therefore before
-     * testStarted() has been called).  The known example is a @BeforeClass that throws an
+     * It's possible to encounter a Failure/Skip before we've started any tests (and therefore
+     * before testStarted() has been called). The known example is a @BeforeClass that throws an
      * exception, but there may be others.
-     * <p>
-     * Recording these unexpected failures helps us propagate failures back up to the "buck test"
+     *
+     * <p>Recording these unexpected failures helps us propagate failures back up to the "buck test"
      * process.
      */
-    private void recordUnpairedFailure(Failure failure) {
+    private void recordUnpairedResult(Failure failure, ResultType resultType) {
       long runtime = System.currentTimeMillis() - startTime;
       Description description = failure.getDescription();
-      results.add(new TestResult(
-          description.getClassName(),
-          description.getMethodName(),
-          runtime,
-          ResultType.FAILURE,
-          failure.getException(),
-          null,
-          null));
+      results.add(
+          new TestResult(
+              description.getClassName(),
+              description.getMethodName(),
+              runtime,
+              resultType,
+              failure.getException(),
+              null,
+              null));
     }
 
-    private static Handler addStreamHandler(
-        Logger rootLogger,
-        OutputStream stream,
-        Formatter formatter,
-        Level level) {
+    private Handler addStreamHandler(
+        Logger rootLogger, OutputStream stream, Formatter formatter, Level level) {
       Handler result;
       if (rootLogger != null) {
         result = new StreamHandler(stream, formatter);
@@ -497,13 +451,56 @@ public final class JUnitRunner extends BaseRunner {
       return result;
     }
 
-    private static void flushAndRemoveLogHandler(Logger rootLogger, Handler handler) {
+    private void flushAndRemoveLogHandler(Logger rootLogger, Handler handler) {
       if (handler != null) {
         handler.flush();
       }
       if (rootLogger != null && handler != null) {
         rootLogger.removeHandler(handler);
       }
+    }
+  }
+
+  /** A JUnit Filter that records the tests it filters out. */
+  private class RecordingFilter extends Filter {
+    static final String FILTER_DESCRIPTION = "TestSelectorList-filter";
+
+    List<TestResult> filteredOut = new ArrayList<>();
+
+    @Override
+    public boolean shouldRun(Description description) {
+      String methodName = description.getMethodName();
+      if (methodName == null) {
+        // JUnit will give us an org.junit.runner.Description like this for the
+        // test class
+        // itself.  It's easier for our filtering to make decisions just at the method level,
+        // however, so just always return true here.
+        return true;
+      }
+      String className = description.getClassName();
+      TestDescription testDescription = new TestDescription(className, methodName);
+      TestSelector matchingSelector = testSelectorList.findSelector(testDescription);
+      if (!matchingSelector.isInclusive()) {
+        if (shouldExplainTestSelectors) {
+          String reason = "Excluded by filter: " + matchingSelector.getExplanation();
+          filteredOut.add(TestResult.forExcluded(className, methodName, reason));
+        }
+        return false;
+      }
+      if (description.getAnnotation(Ignore.class) != null) {
+        filteredOut.add(TestResult.forDisabled(className, methodName));
+        return false;
+      }
+      if (isDryRun) {
+        filteredOut.add(TestResult.forDryRun(className, methodName));
+        return false;
+      }
+      return true;
+    }
+
+    @Override
+    public String describe() {
+      return FILTER_DESCRIPTION;
     }
   }
 }

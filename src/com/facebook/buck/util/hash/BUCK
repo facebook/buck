@@ -1,5 +1,9 @@
-standard_java_library(
-  tests = [
-    '//test/com/facebook/buck/util/hash:hash',
-  ],
+java_library(
+    name = "hash",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

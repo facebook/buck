@@ -29,5 +29,4 @@ public class NotBuckBlockJUnit4ClassRunner extends BlockJUnit4ClassRunner {
   public NotBuckBlockJUnit4ClassRunner(Class<?> klass) throws InitializationError {
     super(klass);
   }
-
 }

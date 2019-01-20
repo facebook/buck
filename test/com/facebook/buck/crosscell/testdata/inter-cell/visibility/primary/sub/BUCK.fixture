@@ -1,5 +1,4 @@
-
 export_file(
-  name = 'wild-card',
-  src = 'secondary//:hello',
+    name = "wild-card",
+    src = "secondary//:hello",
 )

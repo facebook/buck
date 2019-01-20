@@ -16,10 +16,7 @@
 
 package com.facebook.buck.step;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 public class TargetDeviceOptions {
 
@@ -27,25 +24,17 @@ public class TargetDeviceOptions {
 
   private boolean useRealDevicesOnlyMode;
 
-  @Nullable
-  private String serialNumber;
+  private Optional<String> serialNumber;
 
   public TargetDeviceOptions() {
-    this(false, false, null);
+    this(false, false, Optional.empty());
   }
 
   public TargetDeviceOptions(
-      boolean useEmulatorsOnlyMode,
-      boolean useRealDevicesOnlyMode,
-      @Nullable String serialNumber) {
+      boolean useEmulatorsOnlyMode, boolean useRealDevicesOnlyMode, Optional<String> serialNumber) {
     this.useEmulatorsOnlyMode = useEmulatorsOnlyMode;
     this.useRealDevicesOnlyMode = useRealDevicesOnlyMode;
     this.serialNumber = serialNumber;
-  }
-
-  @VisibleForTesting
-  TargetDeviceOptions(String serial) {
-    this.serialNumber = serial;
   }
 
   public boolean isEmulatorsOnlyModeEnabled() {
@@ -56,23 +45,7 @@ public class TargetDeviceOptions {
     return useRealDevicesOnlyMode;
   }
 
-  @Nullable
-  public String getSerialNumber() {
+  public Optional<String> getSerialNumber() {
     return serialNumber;
-  }
-
-  public boolean hasSerialNumber() {
-    return serialNumber != null;
-  }
-
-  public Optional<TargetDevice> getTargetDeviceOptional() {
-    if (!hasSerialNumber() && !isEmulatorsOnlyModeEnabled() && !isRealDevicesOnlyModeEnabled()) {
-      return Optional.absent();
-    }
-
-    TargetDevice device = new TargetDevice(
-        isEmulatorsOnlyModeEnabled() ? TargetDevice.Type.EMULATOR : TargetDevice.Type.REAL_DEVICE,
-        getSerialNumber());
-    return Optional.of(device);
   }
 }

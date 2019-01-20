@@ -1,0 +1,26 @@
+java_library(
+    name = "top",
+    srcs = ["Top.java"],
+    deps = [
+        ":direct_dep",
+        ":mid_test",
+    ],
+)
+
+java_test(
+    name = "mid_test",
+    srcs = ["MidTest.java"],
+    deps = [
+        ":transitive_lib",
+    ],
+)
+
+java_library(
+    name = "direct_dep",
+    srcs = ["DirectDep.java"],
+)
+
+java_library(
+    name = "transitive_lib",
+    srcs = ["TransitiveLib.java"],
+)

@@ -17,47 +17,58 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
-
-import org.easymock.EasyMock;
+import java.io.IOException;
+import java.net.URI;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URI;
-
 public class ServerHealthManagerTest {
-  private static final ImmutableList<URI> SERVERS = ImmutableList.of(
-      URI.create("http://localhost:4242"),
-      URI.create("http://localhost:8484"),
-      URI.create("http://localhost:2121")
-  );
+  private static final ImmutableList<URI> SERVERS =
+      ImmutableList.of(
+          URI.create("http://localhost:8484"),
+          URI.create("http://localhost:4242"),
+          URI.create("http://localhost:2121"));
 
-  private static final long NOW_MILLIS = 0;
+  private static final long NOW_MILLIS = 1409702151000L;
+  private static final long NOW_NANO_TIME = 3000000;
+  private static final FakeClock NOW_FAKE_CLOCK =
+      FakeClock.builder().currentTimeMillis(NOW_MILLIS).nanoTime(NOW_NANO_TIME).build();
   private static final int RANGE_MILLIS = 42;
   private static final float MAX_ERROR_PERCENTAGE = 0.1f;
   private static final int MAX_ACCEPTABLE_LATENCY_MILLIS = 42;
+  private static final int MIN_SAMPLES_TO_REPORT_ERROR = 5;
 
   private BuckEventBus eventBus;
 
   @Before
   public void setUp() {
-    eventBus = EasyMock.createNiceMock(BuckEventBus.class);
+    eventBus = BuckEventBusForTests.newInstance();
   }
 
   @Test
   public void testGetBestServerWithoutInformation() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
-    URI server = manager.getBestServer(NOW_MILLIS);
+    URI server = manager.getBestServer();
     Assert.assertNotNull(server);
+  }
+
+  @Test
+  public void testFastestServerIsAlwaysReturned() throws IOException {
+    ServerHealthManager manager = newServerHealthManager();
+    URI server = manager.getBestServer();
+    Assert.assertNotNull(server);
+    Assert.assertEquals(SERVERS.get(0), server);
   }
 
   @Test(expected = NoHealthyServersException.class)
   public void testExceptionThrownIfServersAreUnhealthy() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
-    reportErrorToAll(manager, 1);
-    manager.getBestServer(NOW_MILLIS);
+    reportErrorToAll(manager, 10);
+    manager.getBestServer();
     Assert.fail("All servers have errors so an exception was expected.");
   }
 
@@ -65,41 +76,48 @@ public class ServerHealthManagerTest {
   public void testExceptionThrownIfServersAreTooSlow() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
     reportLatencyToAll(manager, MAX_ACCEPTABLE_LATENCY_MILLIS + 1);
-    manager.getBestServer(NOW_MILLIS);
+    manager.getBestServer();
     Assert.fail("All servers have high latency so an exception was expected.");
   }
 
   @Test
-  public void testFastestServerIsAlwaysReturned() throws IOException {
+  public void testExceptionIsNotThrownIfSamplesTooFew() throws IOException {
     ServerHealthManager manager = newServerHealthManager();
-    for (int i = 0; i < SERVERS.size(); ++i) {
-      manager.reportPingLatency(SERVERS.get(i), NOW_MILLIS, i);
-    }
+    reportErrorToAll(manager, MIN_SAMPLES_TO_REPORT_ERROR - 1);
+    manager.getBestServer();
+  }
 
-    URI server = manager.getBestServer(NOW_MILLIS);
-    Assert.assertEquals(SERVERS.get(0), server);
+  @Test(expected = NoHealthyServersException.class)
+  public void testExceptionIsThrownIfSamplesTooMuch() throws IOException {
+    ServerHealthManager manager = newServerHealthManager();
+    reportErrorToAll(manager, MIN_SAMPLES_TO_REPORT_ERROR + 1);
+    manager.getBestServer();
+    Assert.fail("All servers have high latency so an exception was expected.");
   }
 
   private void reportLatencyToAll(ServerHealthManager manager, int latencyMillis) {
     for (URI server : SERVERS) {
-      manager.reportPingLatency(server, NOW_MILLIS, latencyMillis);
+      manager.reportPingLatency(server, latencyMillis);
     }
   }
 
   private ServerHealthManager newServerHealthManager() {
     return new ServerHealthManager(
+        "test_server_pool",
         SERVERS,
         RANGE_MILLIS,
         MAX_ERROR_PERCENTAGE,
         RANGE_MILLIS,
         MAX_ACCEPTABLE_LATENCY_MILLIS,
-        eventBus);
+        MIN_SAMPLES_TO_REPORT_ERROR,
+        eventBus,
+        NOW_FAKE_CLOCK);
   }
 
   private static void reportErrorToAll(ServerHealthManager manager, int numberOfErrors) {
     for (int i = 0; i < numberOfErrors; ++i) {
       for (URI server : SERVERS) {
-        manager.reportRequestError(server, NOW_MILLIS);
+        manager.reportRequestError(server);
       }
     }
   }

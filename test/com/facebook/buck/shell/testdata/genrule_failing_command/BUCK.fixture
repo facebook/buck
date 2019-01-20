@@ -1,5 +1,5 @@
 genrule(
-  name = 'fail',
-  bash = 'false; echo >&2 hi',
-  out = 'fail',
+    name = "fail",
+    out = "fail",
+    bash = "false; echo >&2 hi",
 )

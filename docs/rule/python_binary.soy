@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace python_binary}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'python_binary()' /}
+    {param navid: 'rule_python_binary' /}
     {param prettify: true /}
     {param description}
       A rule that is used to build a PEX file that includes python sources and
@@ -14,9 +30,10 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-A <code>python_binary()</code> rule is used to build a <a href="http://pantsbuild.github.io/pex_design.html">PEX</a> file
--- an exectuble python package that includes python sources and resources
-from all transitive {call buck.python_library /} dependencies.
+A <code>python_binary()</code> rule is used to build 
+a <a href="http://pantsbuild.github.io/pex_design.html">PEX</a> file&mdash;an 
+executable Python package&mdash;that includes Python sources and resources from 
+all transitive {call buck.python_library /} dependencies.
 {/param}
 
 {param args}
@@ -24,25 +41,42 @@ from all transitive {call buck.python_library /} dependencies.
 {call buck.arg}
   {param name: 'name' /}
   {param desc}
-  The name of the rule.  The output PEX file will also get this name, with an additional <code>.pex</code> suffix.
+  The name of the rule.  The output PEX file will have this name as its
+  base filename with an additional <code>.pex</code> extension.
   {/param}
 {/call}
 
 {call buck.arg}
   {param name: 'main_module' /}
   {param desc}
-  The module which serves as the entry point for this rule.
-  The <code>__main__.py</code> file of this module will be executed by the interpreter when the PEX file is run.
+  The python module that should be the entry point of the binary. This should be
+  a module name within a python_library that this binary depends on. Note that
+  module names take <code>base_module</code> of the library into account.
+  This property is mutually exclusive with <code>main</code>, and should be preferred to <code>main</code>, which is deprecated.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'main' /}
+  {param deprecated: true /}
+  {param deprecationAlternative}
+  Use a {call buck.python_library /} dependency and <code>main_module</code> instead
+  {/param}
+  {param default: 'None' /}
+  {param desc}
+  The Python file which serves as the entry point for the PEX.
+  The interpreter initiates execution of the PEX with the code in this file.
   {/param}
 {/call}
 
 {call buck.arg}
   {param name: 'base_module' /}
   {param default : 'None' /}
+  {param deprecated: true /}
   {param desc}
-  The package for which the main module should reside under in it's final location
-  in the binary.  If unset, the project relative directory that houses the BUCK file
-  is used.
+  The package in which the main module should reside in its final
+  location in the binary. If unset, Buck uses the project-relative directory 
+  that contains the BUCK file.
   {/param}
 {/call}
 
@@ -52,7 +86,9 @@ from all transitive {call buck.python_library /} dependencies.
   {param name: 'deps' /}
   {param default : '[]' /}
   {param desc}
-  {call buck.python_library /} rules to include in the PEX file (including all transitive dependencies).
+  A list of {call buck.python_library /} rules that specify Python
+  modules to include in the PEX file&mdash;including all transitive 
+  dependencies of these rules.
   {/param}
 {/call}
 
@@ -66,10 +102,16 @@ from all transitive {call buck.python_library /} dependencies.
 
 {param examples}
 
+<p>
+Build a PEX from the Python files in the BUCK directory.
+</p>
+
 {literal}<pre class="prettyprint lang-py">
+# BUCK
+
 python_binary(
   name = 'tailer',
-  main = 'tailer.py',
+  main_module = 'tailer',
   deps = [
     ':tailerutils',
   ],
@@ -77,24 +119,30 @@ python_binary(
 
 python_library(
   name = 'tailerutils',
-  srcs = glob(['*.py'], excludes = ['tailer.py']),
+  # The main module, tailer.py, is specified here.
+  # (Separated out from the glob pattern for clarity.)
+  srcs = glob(['tailer.py', '*.py']),
 )
 </pre>{/literal}
 <p>
-Here is an example of using the `platform` parameter to select the "py2"
-Python platform as defined in `.buckconfig`:
+Use the <code>platform</code> argument to select 
+the <code>[python#py2]</code> platform as defined 
+in <code>.buckconfig</code>.
 </p>
 {literal}<pre class="prettyprint lang-ini">
 ; .buckconfig
+
 [python#py2]
   interpreter = /usr/bin/python2.7
 </pre>{/literal}
 
 {literal}<pre class="prettyprint lang-py">
 # BUCK
+
 python_binary(
   name = 'bin',
   platform = 'py2',
+  main_module = 'main',
   deps = [
     ':bar',
   ],

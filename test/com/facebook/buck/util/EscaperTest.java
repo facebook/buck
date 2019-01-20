@@ -21,18 +21,17 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class EscaperTest {
 
   @Test
   public void testEscapeAsPythonString() {
     assertEquals("\"a\"", Escaper.escapeAsPythonString("a"));
-    assertEquals("\"C:\\\\Program Files\\\\\"",
-        Escaper.escapeAsPythonString("C:\\Program Files\\"));
+    assertEquals(
+        "\"C:\\\\Program Files\\\\\"", Escaper.escapeAsPythonString("C:\\Program Files\\"));
   }
 
   @Test
@@ -86,18 +85,24 @@ public class EscaperTest {
   }
 
   @Test
+  public void testEscapeWithQuotesAsMakefileValueStringDoesNothingWithoutSpecialCharacters() {
+    assertEquals("hello world", Escaper.escapeWithQuotesAsMakefileValueString("hello world"));
+  }
+
+  @Test
+  public void testEscapeWithQuotesAsMakefileValueStringEscapesWithSpecialCharacters() {
+    assertEquals("\"hello\\#world\"", Escaper.escapeWithQuotesAsMakefileValueString("hello#world"));
+  }
+
+  @Test
   public void testEscapePathForCIncludeStringWindows() {
     assumeThat(File.separatorChar, equalTo('\\'));
 
+    assertThat(Escaper.escapePathForCIncludeString(Paths.get("/")), equalTo("\\\\"));
     assertThat(
-        Escaper.escapePathForCIncludeString(Paths.get("/")),
-        equalTo("\\\\"));
+        Escaper.escapePathForCIncludeString(Paths.get("some/path")), equalTo("some\\\\path"));
     assertThat(
-        Escaper.escapePathForCIncludeString(Paths.get("some/path")),
-        equalTo("some\\\\path"));
-    assertThat(
-        Escaper.escapePathForCIncludeString(Paths.get("/some/path")),
-        equalTo("\\\\some\\\\path"));
+        Escaper.escapePathForCIncludeString(Paths.get("/some/path")), equalTo("\\\\some\\\\path"));
     assertThat(
         Escaper.escapePathForCIncludeString(Paths.get("some/path/to.file")),
         equalTo("some\\\\path\\\\to.file"));
@@ -107,17 +112,81 @@ public class EscaperTest {
   public void testEscapePathForCIncludeStringUnix() {
     assumeThat(File.separatorChar, equalTo('/'));
 
-    assertThat(
-        Escaper.escapePathForCIncludeString(Paths.get("/")),
-        equalTo("/"));
-    assertThat(
-        Escaper.escapePathForCIncludeString(Paths.get("some/path")),
-        equalTo("some/path"));
-    assertThat(
-        Escaper.escapePathForCIncludeString(Paths.get("/some/path")),
-        equalTo("/some/path"));
+    assertThat(Escaper.escapePathForCIncludeString(Paths.get("/")), equalTo("/"));
+    assertThat(Escaper.escapePathForCIncludeString(Paths.get("some/path")), equalTo("some/path"));
+    assertThat(Escaper.escapePathForCIncludeString(Paths.get("/some/path")), equalTo("/some/path"));
     assertThat(
         Escaper.escapePathForCIncludeString(Paths.get("some/path/to.file")),
         equalTo("some/path/to.file"));
+  }
+
+  @Test
+  public void testDecodeNumericEscapeOctal1Char() {
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        2, Escaper.decodeNumericEscape(builder, "\\1", /*pos*/ 1, /*maxCodeLen*/ 3, /*base*/ 8));
+    String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals("\1", str);
+  }
+
+  @Test
+  public void testDecodeNumericEscapeOctal2Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        3, Escaper.decodeNumericEscape(builder, "\\43", /*pos*/ 1, /*maxCodeLen*/ 3, /*base*/ 8));
+    String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals("#", str);
+  }
+
+  @Test
+  public void testDecodeNumericEscapeOctal3Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        4, Escaper.decodeNumericEscape(builder, "\\170", /*pos*/ 1, /*maxCodeLen*/ 3, /*base*/ 8));
+    String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals("x", str);
+  }
+
+  @Test
+  public void testDecodeNumericEscapeHex2Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        4, Escaper.decodeNumericEscape(builder, "\\x53", /*pos*/ 2, /*maxCodeLen*/ 2, /*base*/ 16));
+    String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals("S", str);
+  }
+
+  @Test
+  public void testDecodeNumericEscapeUnicode4Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        6,
+        Escaper.decodeNumericEscape(
+            builder, "\\u0070", /*pos*/ 2, /*maxCodeLen*/ 4, /*base*/ 16, /*maxCodes*/ 2));
+    String str = builder.toString();
+    assertEquals(1, str.length());
+    assertEquals('p', str.charAt(0));
+  }
+
+  @Test
+  public void testDecodeNumericEscapeUnicode8Char() {
+    // http://en.cppreference.com/w/cpp/language/ascii
+    StringBuilder builder = new StringBuilder();
+    assertEquals(
+        10,
+        Escaper.decodeNumericEscape(
+            builder, "\\u00700071", /*pos*/ 2, /*maxCodeLen*/ 4, /*base*/ 16, /*maxCodes*/ 2));
+    String str = builder.toString();
+    assertEquals(2, str.length());
+    assertEquals('p', str.charAt(0));
+    assertEquals('q', str.charAt(1));
   }
 }

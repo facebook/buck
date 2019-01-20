@@ -16,15 +16,20 @@
 
 package com.facebook.buck.jvm.core;
 
-import com.facebook.buck.model.HasBuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
 
-public interface HasJavaClassHashes extends HasBuildTarget {
+/**
+ * This should be considered deprecated. It comes from a time before the target/action graph split
+ * and input-based rule keys. It will be a lot of work to eliminate (including getting rid of
+ * SmartDexingStep), but we should do it at some point.
+ */
+public interface HasJavaClassHashes extends BuildRule {
 
   /**
-   * @return a (possibly empty) map of names of {@code .class} files in the output of this rule
-   *     to SHA-1 hashes of their contents.
+   * @return a (possibly empty) map of names of {@code .class} files in the output of this rule to
+   *     SHA-1 hashes of their contents.
    */
-  public ImmutableSortedMap<String, HashCode> getClassNamesToHashes();
+  ImmutableSortedMap<String, HashCode> getClassNamesToHashes();
 }

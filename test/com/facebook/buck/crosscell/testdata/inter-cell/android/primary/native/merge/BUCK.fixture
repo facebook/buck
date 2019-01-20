@@ -1,0 +1,69 @@
+# Before merging:
+#
+#    A
+#   / \
+#  B   C
+#
+#
+# After merging:
+#    1(AB)
+#    |
+#    C
+#
+#
+
+cxx_library(
+    name = "A",
+    srcs = ["A.c"],
+    can_be_asset = True,
+    soname = "lib1a.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":B",
+        ":C",
+    ],
+)
+
+cxx_library(
+    name = "B",
+    srcs = ["B.c"],
+    can_be_asset = True,
+    soname = "lib1b.so",
+)
+
+cxx_library(
+    name = "C",
+    srcs = ["C.c"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":prebuilt_for_C",
+        ":static_for_C",
+    ],
+)
+
+cxx_library(
+    name = "static_for_C",
+    srcs = ["static_for_C.c"],
+    force_static = True,
+    deps = [],
+)
+
+prebuilt_cxx_library(
+    name = "prebuilt_for_C",
+    shared_lib = "prebuilt_for_C/android-x86/libprebuilt_for_C.so",
+)
+
+cxx_library(
+    name = "glue_1",
+    srcs = ["glue_1.c"],
+    force_static = True,
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)
+
+sh_binary(
+    name = "codegen",
+    main = "codegen.sh",
+    visibility = ["PUBLIC"],
+)

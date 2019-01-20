@@ -15,47 +15,54 @@
  */
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdkConstants;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.description.arg.HasSrcs;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxHeaders;
-import com.facebook.buck.cxx.CxxPlatform;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxSource;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.cxx.NativeLinkables;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.cxx.CxxSourceTypes;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.MoreStrings;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
+import com.facebook.buck.util.string.MoreStrings;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
@@ -65,44 +72,28 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
-public class NdkLibraryDescription implements Description<NdkLibraryDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("ndk_library");
+public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibraryDescriptionArg> {
 
   private static final Pattern EXTENSIONS_REGEX =
       Pattern.compile(
-              ".*\\." +
-              MoreStrings.regexPatternForAny("mk", "h", "hpp", "c", "cpp", "cc", "cxx") + "$");
+          ".*\\."
+              + MoreStrings.regexPatternForAny("mk", "h", "hpp", "c", "cpp", "cc", "cxx")
+              + "$");
 
-  public static final MacroHandler MACRO_HANDLER = new MacroHandler(
-      ImmutableMap.<String, MacroExpander>of(
-          "env", new EnvironmentVariableMacroExpander(Platform.detect())
-      )
-  );
-
-  private final Optional<String> ndkVersion;
-  private final ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms;
-
-  public NdkLibraryDescription(
-      Optional<String> ndkVersion,
-      ImmutableMap<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> cxxPlatforms) {
-    this.ndkVersion = ndkVersion;
-    this.cxxPlatforms = Preconditions.checkNotNull(cxxPlatforms);
-  }
+  public static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(new EnvironmentVariableMacroExpander(Platform.detect()));
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<NdkLibraryDescriptionArg> getConstructorArgType() {
+    return NdkLibraryDescriptionArg.class;
   }
 
-  @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  private Iterable<String> escapeForMakefile(ProjectFilesystem filesystem, Iterable<String> args) {
+  private Iterable<String> escapeForMakefile(
+      ProjectFilesystem filesystem, boolean escapeInQuotes, Iterable<String> args) {
     ImmutableList.Builder<String> escapedArgs = ImmutableList.builder();
 
     for (String arg : args) {
@@ -114,9 +105,19 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       // including the initial escaping.  Since the makefiles eventually hand-off these values
       // to the shell, we first perform bash escaping.
       //
+      // Additionally to that Android NDK 16 has a fix that changes the escaping logic for some of
+      // the flags, but not for all of them. This means some flags needs to be escaped with the old
+      // logic (4 escapes) while other flags must be escaped using a simpler approach.
+      // Github issue with the fix: https://github.com/android-ndk/ndk/issues/161
+
       escapedArg = Escaper.escapeAsShellString(escapedArg);
-      for (int i = 0; i < 4; i++) {
-        escapedArg = Escaper.escapeAsMakefileValueString(escapedArg);
+
+      if (escapeInQuotes) {
+        escapedArg = Escaper.escapeWithQuotesAsMakefileValueString(escapedArg);
+      } else {
+        for (int i = 0; i < 4; i++) {
+          escapedArg = Escaper.escapeAsMakefileValueString(escapedArg);
+        }
       }
 
       // We run ndk-build from the root of the NDK, so fixup paths that use the relative path to
@@ -131,12 +132,14 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     return escapedArgs.build();
   }
 
-  private String getTargetArchAbi(NdkCxxPlatforms.TargetCpuType cpuType) {
+  private String getTargetArchAbi(TargetCpuType cpuType) {
     switch (cpuType) {
       case ARM:
         return "armeabi";
       case ARMV7:
         return "armeabi-v7a";
+      case ARM64:
+        return "arm64-v8a";
       case X86:
         return "x86";
       case X86_64:
@@ -150,7 +153,7 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
   @VisibleForTesting
   protected static Path getGeneratedMakefilePath(BuildTarget target, ProjectFilesystem filesystem) {
-    return BuildTargets.getGenPath(filesystem, target, "Android.%s.mk");
+    return BuildTargetPaths.getGenPath(filesystem, target, "Android.%s.mk");
   }
 
   /**
@@ -158,15 +161,24 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
    *     file and also appends relevant preprocessor and linker flags to use C/C++ library deps.
    */
   private Pair<String, Iterable<BuildRule>> generateMakefile(
+      ToolchainProvider toolchainProvider,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver resolver) throws NoSuchBuildTargetException {
+      ActionGraphBuilder graphBuilder) {
 
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
 
-    for (Map.Entry<NdkCxxPlatforms.TargetCpuType, NdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
+    NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
+        toolchainProvider.getByName(
+            NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
+
+    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry :
+        ndkCxxPlatformsProvider.getNdkCxxPlatforms().entrySet()) {
       CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform();
 
       // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
@@ -174,52 +186,63 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
       CxxPreprocessorInput cxxPreprocessorInput =
           CxxPreprocessorInput.concat(
               CxxPreprocessables.getTransitiveCxxPreprocessorInput(
-                  cxxPlatform,
-                  params.getDeps(),
-                  Predicates.instanceOf(NdkLibrary.class)));
+                  cxxPlatform, graphBuilder, params.getBuildDeps(), NdkLibrary.class::isInstance));
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
       // it technically should be added to the top-level rule.
-      deps.addAll(cxxPreprocessorInput.getDeps(resolver, pathResolver));
+      deps.addAll(cxxPreprocessorInput.getDeps(graphBuilder, ruleFinder));
 
       // Add in the transitive preprocessor flags contributed by C/C++ library rules into the
       // NDK build.
       ImmutableList.Builder<String> ppFlags = ImmutableList.builder();
-      ppFlags.addAll(cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C));
+      ppFlags.addAll(
+          Arg.stringify(
+              cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C), pathResolver));
+      Preprocessor preprocessor =
+          CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C).resolve(graphBuilder);
       ppFlags.addAll(
           CxxHeaders.getArgs(
-              cxxPreprocessorInput.getIncludes(),
-              pathResolver,
-              Optional.<Function<Path, Path>>absent()));
+              cxxPreprocessorInput.getIncludes(), pathResolver, Optional.empty(), preprocessor));
       String localCflags =
-          Joiner.on(' ').join(escapeForMakefile(params.getProjectFilesystem(), ppFlags.build()));
+          Joiner.on(' ')
+              .join(
+                  escapeForMakefile(
+                      projectFilesystem,
+                      androidNdk.shouldEscapeCFlagsInDoubleQuotes(),
+                      ppFlags.build()));
 
       // Collect the native linkable input for all C/C++ library deps.  We search *through* other
       // NDK library rules.
       NativeLinkableInput nativeLinkableInput =
           NativeLinkables.getTransitiveNativeLinkableInput(
               cxxPlatform,
-              params.getDeps(),
+              graphBuilder,
+              params.getBuildDeps(),
               Linker.LinkableDepType.SHARED,
-              Predicates.instanceOf(NdkLibrary.class));
+              r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
 
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.
       deps.addAll(
-          FluentIterable.from(nativeLinkableInput.getArgs())
-              .transformAndConcat(com.facebook.buck.rules.args.Arg.getDepsFunction(pathResolver)));
+          nativeLinkableInput
+              .getArgs()
+              .stream()
+              .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+              .iterator());
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
       // NDK build.
       String localLdflags =
-          Joiner.on(' ').join(
-              escapeForMakefile(
-                  params.getProjectFilesystem(),
-                  com.facebook.buck.rules.args.Arg.stringify(nativeLinkableInput.getArgs())));
+          Joiner.on(' ')
+              .join(
+                  escapeForMakefile(
+                      projectFilesystem,
+                      false,
+                      Arg.stringify(nativeLinkableInput.getArgs(), pathResolver)));
 
       // Write the relevant lines to the generated makefile.
       if (!localCflags.isEmpty() || !localLdflags.isEmpty()) {
-        NdkCxxPlatforms.TargetCpuType targetCpuType = entry.getKey();
+        TargetCpuType targetCpuType = entry.getKey();
         String targetArchAbi = getTargetArchAbi(targetCpuType);
 
         outputLinesBuilder.add(String.format("ifeq ($(TARGET_ARCH_ABI),%s)", targetArchAbi));
@@ -235,10 +258,11 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
     }
 
     // GCC-only magic that rewrites non-deterministic parts of builds
-    String ndksubst = NdkCxxPlatforms.ANDROID_NDK_ROOT;
+    String ndksubst = AndroidNdkConstants.ANDROID_NDK_ROOT;
 
     outputLinesBuilder.addAll(
-        ImmutableList.copyOf(new String[] {
+        ImmutableList.copyOf(
+            new String[] {
               // We're evaluated once per architecture, but want to add the cflags only once.
               "ifeq ($(BUCK_ALREADY_HOOKED_CFLAGS),)",
               "BUCK_ALREADY_HOOKED_CFLAGS := 1",
@@ -250,8 +274,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               // Replace paths relative to the build rule with paths relative to the
               // repository root.
               "NDK_APP_CFLAGS += -fdebug-prefix-map=$(BUCK_PROJECT_DIR)/=./",
-              "NDK_APP_CFLAGS += -fdebug-prefix-map=./=" +
-              ".$(subst $(abspath $(BUCK_PROJECT_DIR)),,$(abspath $(CURDIR)))/",
+              "NDK_APP_CFLAGS += -fdebug-prefix-map=./="
+                  + ".$(subst $(abspath $(BUCK_PROJECT_DIR)),,$(abspath $(CURDIR)))/",
               "NDK_APP_CFLAGS += -fno-record-gcc-switches",
               "ifeq ($(filter 4.6,$(TOOLCHAIN_VERSION)),)",
               // Do not let header canonicalization undo the work we just did above.  Note that GCC
@@ -279,8 +303,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
               // candidate replaces last-first (because it internally pushes them all onto a stack
               // and scans the stack first-match-wins), so only add them after the more
               // generic paths.
-              "NDK_APP_CFLAGS += -fdebug-prefix-map=$(TOOLCHAIN_PREBUILT_ROOT)/=" +
-              "@ANDROID_NDK_ROOT@/toolchains/$(TOOLCHAIN_NAME)/prebuilt/@BUILD_HOST@/",
+              "NDK_APP_CFLAGS += -fdebug-prefix-map=$(TOOLCHAIN_PREBUILT_ROOT)/="
+                  + "@ANDROID_NDK_ROOT@/toolchains/$(TOOLCHAIN_NAME)/prebuilt/@BUILD_HOST@/",
             }));
 
     outputLinesBuilder.add("include Android.mk");
@@ -292,12 +316,11 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
 
   @VisibleForTesting
   protected ImmutableSortedSet<SourcePath> findSources(
-      final ProjectFilesystem filesystem,
-      final Path buildRulePath) {
-    final ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
+      ProjectFilesystem filesystem, Path buildRulePath) {
+    ImmutableSortedSet.Builder<SourcePath> srcs = ImmutableSortedSet.naturalOrder();
 
     try {
-      final Path rootDirectory = filesystem.resolve(buildRulePath);
+      Path rootDirectory = filesystem.resolve(buildRulePath);
       Files.walkFileTree(
           rootDirectory,
           EnumSet.of(FileVisitOption.FOLLOW_LINKS),
@@ -308,9 +331,8 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
                 throws IOException {
               if (EXTENSIONS_REGEX.matcher(file.toString()).matches()) {
                 srcs.add(
-                    new PathSourcePath(
-                        filesystem,
-                        buildRulePath.resolve(rootDirectory.relativize(file))));
+                    PathSourcePath.of(
+                        filesystem, buildRulePath.resolve(rootDirectory.relativize(file))));
               }
 
               return super.visitFile(file, attrs);
@@ -324,35 +346,61 @@ public class NdkLibraryDescription implements Description<NdkLibraryDescription.
   }
 
   @Override
-  public <A extends Arg> NdkLibrary createBuildRule(
-      TargetGraph targetGraph,
-      final BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    Pair<String, Iterable<BuildRule>> makefilePair = generateMakefile(params, resolver);
+  public NdkLibrary createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      BuildRuleParams params,
+      NdkLibraryDescriptionArg args) {
+    ToolchainProvider toolchainProvider = context.getToolchainProvider();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    Pair<String, Iterable<BuildRule>> makefilePair =
+        generateMakefile(toolchainProvider, projectFilesystem, params, graphBuilder);
+
+    ImmutableSortedSet<SourcePath> sources;
+    if (!args.getSrcs().isEmpty()) {
+      sources = args.getSrcs();
+    } else {
+      sources = findSources(projectFilesystem, buildTarget.getBasePath());
+    }
+
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(context.getCellPathResolver())
+            .setExpanders(MACRO_EXPANDERS)
+            .build();
+
+    ImmutableList<Arg> flags =
+        args.getFlags()
+            .stream()
+            .map(flag -> macrosConverter.convert(flag, graphBuilder))
+            .collect(ImmutableList.toImmutableList());
+
+    AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
     return new NdkLibrary(
-        params.appendExtraDeps(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(makefilePair.getSecond())
-                .build()),
-        new SourcePathResolver(resolver),
-        getGeneratedMakefilePath(params.getBuildTarget(), params.getProjectFilesystem()),
+        buildTarget,
+        projectFilesystem,
+        toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class),
+        params.copyAppendingExtraDeps(
+            ImmutableSortedSet.<BuildRule>naturalOrder().addAll(makefilePair.getSecond()).build()),
+        getGeneratedMakefilePath(buildTarget, projectFilesystem),
         makefilePair.getFirst(),
-        findSources(params.getProjectFilesystem(), params.getBuildTarget().getBasePath()),
-        args.flags.get(),
-        args.isAsset.or(false),
-        ndkVersion,
-        MACRO_HANDLER.getExpander(
-            params.getBuildTarget(),
-            params.getCellRoots(),
-            resolver));
+        sources,
+        flags,
+        args.getIsAsset(),
+        androidNdk.getNdkVersion());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<ImmutableList<String>> flags;
-    public Optional<Boolean> isAsset;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
-  }
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractNdkLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+    ImmutableList<StringWithMacros> getFlags();
 
+    @Value.Default
+    default boolean getIsAsset() {
+      return false;
+    }
+  }
 }

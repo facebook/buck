@@ -16,90 +16,29 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.HasBuildTarget;
-import com.facebook.buck.rules.Sha1HashCode;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import javax.annotation.Nullable;
 
-/**
- * Indicates that this class may have android resources that should be packaged into an APK.
- */
-public interface HasAndroidResourceDeps extends HasBuildTarget {
+/** Indicates that this class may have android resources that should be packaged into an APK. */
+public interface HasAndroidResourceDeps {
 
-  Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode> ABI_HASHER =
-      new Function<Iterable<HasAndroidResourceDeps>, Sha1HashCode>() {
-        @Override
-        public Sha1HashCode apply(Iterable<HasAndroidResourceDeps> deps) {
-          Hasher hasher = Hashing.sha1().newHasher();
-          for (HasAndroidResourceDeps dep : deps) {
-            hasher.putUnencodedChars(dep.getPathToTextSymbolsFile().toString());
-            // Avoid collisions by marking end of path explicitly.
-            hasher.putChar('\0');
-            hasher.putUnencodedChars(dep.getTextSymbolsAbiKey().getHash());
-            hasher.putUnencodedChars(dep.getRDotJavaPackage());
-            hasher.putChar('\0');
-          }
-          return Sha1HashCode.fromHashCode(hasher.hash());
-        }
-      };
+  BuildTarget getBuildTarget();
 
-  Function<HasAndroidResourceDeps, String> TO_R_DOT_JAVA_PACKAGE =
-      new Function<HasAndroidResourceDeps, String>() {
-        @Override
-        public String apply(HasAndroidResourceDeps input) {
-          return input.getRDotJavaPackage();
-        }
-      };
-
-  Predicate<HasAndroidResourceDeps> NON_EMPTY_RESOURCE =
-      new Predicate<HasAndroidResourceDeps>() {
-        @Override
-        public boolean apply(HasAndroidResourceDeps input) {
-          return input.getRes() != null;
-        }
-      };
-
-  Function<HasAndroidResourceDeps, SourcePath> GET_RES_SYMBOLS_TXT =
-      new Function<HasAndroidResourceDeps, SourcePath>() {
-        @Nullable
-        @Override
-        public SourcePath apply(HasAndroidResourceDeps input) {
-          return input.getPathToTextSymbolsFile();
-        }
-      };
-
-  /**
-   * @return the package name in which to generate the R.java representing these resources.
-   */
+  /** @return the package name in which to generate the R.java representing these resources. */
   String getRDotJavaPackage();
 
-  /**
-   * @return path to a temporary directory for storing text symbols.
-   */
+  /** @return path to a temporary directory for storing text symbols. */
   SourcePath getPathToTextSymbolsFile();
 
-  /**
-   * @return an ABI for the file pointed by {@link #getPathToTextSymbolsFile()}. Since the symbols
-   *     text file is essentially a list of resource id, name and type, this is simply a sha1 of
-   *     that file.
-   */
-  Sha1HashCode getTextSymbolsAbiKey();
+  /** @return path to a file containing the package name for R.java. */
+  SourcePath getPathToRDotJavaPackageFile();
 
-  /**
-   * @return path to a directory containing Android resources.
-   */
+  /** @return path to a directory containing Android resources. */
   @Nullable
   SourcePath getRes();
 
-  /**
-   * @return path to a directory containing Android assets.
-   */
+  /** @return path to a directory containing Android assets. */
   @Nullable
   SourcePath getAssets();
-
 }

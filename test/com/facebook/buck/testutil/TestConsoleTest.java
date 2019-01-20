@@ -20,9 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-/**
- * Unit test for {@link TestConsole}.
- */
+/** Unit test for {@link TestConsole}. */
 public class TestConsoleTest {
 
   @Test
@@ -31,7 +29,7 @@ public class TestConsoleTest {
     console.getStdOut().println("foo");
     console.getStdErr().println("bar");
 
-    assertEquals("foo\n", console.getTextWrittenToStdOut());
-    assertEquals("bar\n", console.getTextWrittenToStdErr());
+    assertEquals("foo" + System.lineSeparator(), console.getTextWrittenToStdOut());
+    assertEquals("bar" + System.lineSeparator(), console.getTextWrittenToStdErr());
   }
 }

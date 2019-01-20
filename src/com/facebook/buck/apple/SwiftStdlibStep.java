@@ -16,23 +16,26 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.apple.toolchain.CodeSignIdentity;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * A step that invokes Apple's tool to scan the binary and copy any needed Swift standard libraries.
@@ -43,6 +46,7 @@ class SwiftStdlibStep implements Step {
 
   private final Path workingDirectory;
   private final Path temp;
+  private final Path sdkPath;
   private final Path destinationDirectory;
   private final Iterable<String> command;
   private final Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier;
@@ -50,10 +54,12 @@ class SwiftStdlibStep implements Step {
   public SwiftStdlibStep(
       Path workingDirectory,
       Path temp,
+      Path sdkPath,
       Path destinationDirectory,
       Iterable<String> command,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier) {
     this.workingDirectory = workingDirectory;
+    this.sdkPath = sdkPath;
     this.destinationDirectory = workingDirectory.resolve(destinationDirectory);
     this.temp = workingDirectory.resolve(temp);
     this.command = command;
@@ -65,53 +71,49 @@ class SwiftStdlibStep implements Step {
     return "copy swift standard libs";
   }
 
-  private ProcessExecutorParams makeProcessExecutorParams() {
+  private ProcessExecutorParams makeProcessExecutorParams(ExecutionContext context) {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-    builder.setDirectory(workingDirectory.toAbsolutePath().toFile());
+    builder.setDirectory(workingDirectory.toAbsolutePath());
     builder.setCommand(command);
     builder.addCommand("--destination", temp.toString());
     if (codeSignIdentitySupplier.isPresent()) {
       builder.addCommand(
-          "--sign",
-          CodeSignStep.getIdentityArg(codeSignIdentitySupplier.get().get()));
+          "--sign", CodeSignStep.getIdentityArg(codeSignIdentitySupplier.get().get()));
     }
+
+    Map<String, String> environment = new HashMap<>(context.getEnvironment());
+    environment.put("SDKROOT", sdkPath.toString());
+    builder.setEnvironment(ImmutableMap.copyOf(environment));
     return builder.build();
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
-    ProcessExecutorParams params = makeProcessExecutorParams();
+    ProcessExecutorParams params = makeProcessExecutorParams(context);
     SimpleProcessListener listener = new SimpleProcessListener();
 
-    // TODO(ryu2): parse output as needed
-    try {
-      LOG.debug("%s", command);
-      ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
-      int result = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
-      if (result != 0) {
-        LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
-        return StepExecutionResult.of(result);
-      }
-    } catch (IOException e) {
-      LOG.error(e, "Could not execute command %s", command);
-      return StepExecutionResult.ERROR;
+    // TODO(markwang): parse output as needed
+    LOG.debug("%s", command);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
+    int result = executor.waitForProcess(process);
+    if (result != 0) {
+      LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
+      return StepExecutionResult.of(result);
     }
 
     // Copy from temp to destinationDirectory if we wrote files.
     if (Files.notExists(temp)) {
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     }
     try (DirectoryStream<Path> dirStream = Files.newDirectoryStream(temp)) {
       if (dirStream.iterator().hasNext()) {
         Files.createDirectories(destinationDirectory);
-        MoreFiles.copyRecursively(temp, destinationDirectory);
+        MostFiles.copyRecursively(temp, destinationDirectory);
       }
-    } catch (IOException e) {
-      LOG.error(e, "Could not copy to %s", destinationDirectory);
-      return StepExecutionResult.ERROR;
     }
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

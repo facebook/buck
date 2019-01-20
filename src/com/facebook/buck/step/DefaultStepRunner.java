@@ -16,38 +16,20 @@
 
 package com.facebook.buck.step;
 
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.util.concurrent.MoreFutures;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.log.Logger;
 import java.io.IOException;
-import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 
 public final class DefaultStepRunner implements StepRunner {
 
   private static final Logger LOG = Logger.get(DefaultStepRunner.class);
 
-  private final ExecutionContext context;
-
-  public DefaultStepRunner(ExecutionContext executionContext) {
-    this.context = executionContext;
-  }
-
   @Override
-  public void runStepForBuildTarget(Step step, Optional<BuildTarget> buildTarget)
+  public void runStepForBuildTarget(
+      ExecutionContext context, Step step, Optional<BuildTarget> buildTarget)
       throws StepFailedException, InterruptedException {
-
     if (context.getVerbosity().shouldPrintCommand()) {
       context.getStdErr().println(step.getDescription(context));
     }
@@ -56,97 +38,20 @@ public final class DefaultStepRunner implements StepRunner {
     String stepDescription = step.getDescription(context);
     UUID stepUuid = UUID.randomUUID();
     StepEvent.Started started = StepEvent.started(stepShortName, stepDescription, stepUuid);
-    context.getBuckEventBus().logDebugAndPost(
-        LOG, started);
-    StepExecutionResult executionResult = StepExecutionResult.ERROR;
+    LOG.verbose(started.toString());
+    context.getBuckEventBus().post(started);
+    StepExecutionResult executionResult = StepExecutionResults.ERROR;
     try {
       executionResult = step.execute(context);
     } catch (IOException | RuntimeException e) {
-      throw StepFailedException.createForFailingStepWithException(step, e, buildTarget);
+      throw StepFailedException.createForFailingStepWithException(step, context, e);
     } finally {
-      context.getBuckEventBus().logDebugAndPost(
-          LOG, StepEvent.finished(started, executionResult.getExitCode()));
+      StepEvent.Finished finished = StepEvent.finished(started, executionResult.getExitCode());
+      LOG.verbose(finished.toString());
+      context.getBuckEventBus().post(finished);
     }
     if (!executionResult.isSuccess()) {
-      throw StepFailedException.createForFailingStepWithExitCode(step,
-          context,
-          executionResult,
-          buildTarget);
+      throw StepFailedException.createForFailingStepWithExitCode(step, context, executionResult);
     }
-  }
-
-  @Override
-  public <T> ListenableFuture<T> runStepsAndYieldResult(
-      final List<Step> steps,
-      final Callable<T> interpretResults,
-      final Optional<BuildTarget> buildTarget,
-      ListeningExecutorService listeningExecutorService,
-      final StepRunningCallback callback) {
-    Preconditions.checkState(!listeningExecutorService.isShutdown());
-    Callable<T> callable = new Callable<T>() {
-
-      @Override
-      public T call() throws Exception {
-        callback.stepsWillRun(buildTarget);
-        for (Step step : steps) {
-          runStepForBuildTarget(step, buildTarget);
-        }
-        callback.stepsDidRun(buildTarget);
-
-        return interpretResults.call();
-      }
-
-    };
-
-    return listeningExecutorService.submit(callable);
-  }
-
-  /**
-   * Run multiple steps in parallel and block waiting for all of them to finish.  An
-   * exception is thrown (immediately) if any step fails.
-   *
-   * @param steps List of steps to execute.
-   */
-  @Override
-  public void runStepsInParallelAndWait(
-      final List<Step> steps,
-      final Optional<BuildTarget> target,
-      ListeningExecutorService listeningExecutorService,
-      final StepRunningCallback callback)
-      throws StepFailedException, InterruptedException {
-    List<Callable<Void>> callables = Lists.transform(steps,
-        new Function<Step, Callable<Void>>() {
-      @Override
-      public Callable<Void> apply(final Step step) {
-        return new Callable<Void>() {
-          @Override
-          public Void call() throws Exception {
-            runStepForBuildTarget(step, target);
-            return null;
-          }
-        };
-      }
-    });
-
-    try {
-      callback.stepsWillRun(target);
-      MoreFutures.getAll(listeningExecutorService, callables);
-      callback.stepsDidRun(target);
-    } catch (ExecutionException e) {
-      Throwable cause = e.getCause();
-      Throwables.propagateIfInstanceOf(cause, StepFailedException.class);
-
-      // Programmer error.  Boo-urns.
-      throw new RuntimeException(cause);
-    }
-  }
-
-  @Override
-  public <T> ListenableFuture<Void> addCallback(
-      ListenableFuture<List<T>> dependencies,
-      FutureCallback<List<T>> callback,
-      ListeningExecutorService listeningExecutorService) {
-    Preconditions.checkState(!listeningExecutorService.isShutdown());
-    return MoreFutures.addListenableCallback(dependencies, callback, listeningExecutorService);
   }
 }

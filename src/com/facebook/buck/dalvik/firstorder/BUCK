@@ -1,9 +1,0 @@
-java_library(
-  name = 'firstorder',
-  srcs = glob(['*.java']),
-  tests = [
-    '//test/com/facebook/buck/dalvik/firstorder:firstorder',
-  ],
-  autodeps = True,
-  visibility = ['PUBLIC'],
-)

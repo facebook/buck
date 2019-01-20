@@ -1,0 +1,47 @@
+# This file contains Kotlin code with a Kotlin annotation
+# processed by a Kotlin annotation processor that generates
+# .java files.
+
+kotlin_library(
+    name = "annotation",
+    srcs = [
+        "KotlinAnnotation.kt",
+    ],
+)
+
+kotlin_library(
+    name = "annotationprocessor",
+    srcs = [
+        "KotlinAnnotationProcessor.kt",
+    ],
+    resources = glob([
+        "resources/**",
+    ]),
+    resources_root = "resources",
+    deps = [
+        ":annotation",
+        "//com/example/ap/libs:javapoet.jar",
+    ],
+)
+
+java_annotation_processor(
+    name = "annotationprocessor-plugin",
+    processor_class = "com.example.ap.kotlinapgenjava.KotlinAnnotationProcessor",
+    deps = [
+        ":annotationprocessor",
+    ],
+)
+
+kotlin_library(
+    name = "example",
+    srcs = [
+        "Example.kt",
+    ],
+    annotation_processing_tool = "kapt",
+    plugins = [
+        ":annotationprocessor-plugin",
+    ],
+    deps = [
+        ":annotation",
+    ],
+)

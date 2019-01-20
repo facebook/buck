@@ -19,7 +19,6 @@ package com.facebook.buck.jvm.java.classes;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.google.common.io.CharSource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,7 +33,7 @@ public class FileLikeCharSource extends CharSource {
 
   @Override
   public Reader openStream() throws IOException {
-    final InputStream is = fileLike.getInput();
+    InputStream is = fileLike.getInput();
     return new InputStreamReader(is, UTF_8) {
       @Override
       public void close() throws IOException {

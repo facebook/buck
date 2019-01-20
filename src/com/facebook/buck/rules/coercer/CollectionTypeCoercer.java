@@ -16,10 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
-
 import java.nio.file.Path;
 import java.util.Collection;
 
@@ -37,34 +36,42 @@ public abstract class CollectionTypeCoercer<C extends ImmutableCollection<T>, T>
   }
 
   @Override
-  public void traverse(C object, Traversal traversal) {
+  public void traverse(CellPathResolver cellRoots, C object, Traversal traversal) {
     traversal.traverse(object);
     for (T element : object) {
-      elementTypeCoercer.traverse(element, traversal);
+      elementTypeCoercer.traverse(cellRoots, element, traversal);
     }
   }
 
-  /**
-   * Helper method to add coerced elements to the builder.
-   */
+  /** Helper method to add coerced elements to the builder. */
   protected void fill(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      C.Builder<T> builder,
-      Object object) throws CoerceFailedException {
+      ImmutableCollection.Builder<T> builder,
+      Object object)
+      throws CoerceFailedException {
     if (object instanceof Collection) {
-      for (Object element : (Iterable<?>) object) {
-        // if any element failed, the entire collection fails
-        T coercedElement = elementTypeCoercer.coerce(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            element);
-        builder.add(coercedElement);
-      }
+      Iterable<?> iterable = (Iterable<?>) object;
+      fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, iterable);
     } else {
       throw CoerceFailedException.simple(object, getOutputClass());
+    }
+  }
+
+  /** Populates collection builder with coerced elements from {@code iterable}. */
+  private void fill(
+      CellPathResolver cellRoots,
+      ProjectFilesystem filesystem,
+      Path pathRelativeToProjectRoot,
+      ImmutableCollection.Builder<T> builder,
+      Iterable<?> iterable)
+      throws CoerceFailedException {
+    for (Object element : iterable) {
+      // if any element failed, the entire collection fails
+      T coercedElement =
+          elementTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, element);
+      builder.add(coercedElement);
     }
   }
 }

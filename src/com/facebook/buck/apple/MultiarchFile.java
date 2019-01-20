@@ -16,96 +16,149 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.CxxBinary;
+import com.facebook.buck.cxx.CxxLink;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
+import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.DefaultShellStep;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
-import java.util.SortedSet;
+import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.stream.Stream;
 
-/**
- * Puts together multiple thin library/binaries into a multi-arch file.
- */
-public class MultiarchFile extends AbstractBuildRule implements ProvidesLinkedBinaryDeps {
+/** Puts together multiple thin library/binaries into a multi-arch file. */
+public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
+    implements HasAppleDebugSymbolDeps {
 
-  @AddToRuleKey
-  private final Tool lipo;
+  private final SourcePathRuleFinder ruleFinder;
+  @AddToRuleKey private final Tool lipo;
 
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> thinBinaries;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> thinBinaries;
+
+  private final boolean isCacheable;
 
   @AddToRuleKey(stringify = true)
   private final Path output;
 
   public MultiarchFile(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
       Tool lipo,
-      SortedSet<SourcePath> thinBinaries,
+      ImmutableSortedSet<SourcePath> thinBinaries,
+      boolean isCacheable,
       Path output) {
-    super(buildRuleParams, resolver);
+    super(buildTarget, projectFilesystem, buildRuleParams);
+    this.ruleFinder = ruleFinder;
     this.lipo = lipo;
     this.thinBinaries = ImmutableSortedSet.copyOf(thinBinaries);
+    this.isCacheable = isCacheable;
     this.output = output;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(output);
 
+    ImmutableList.Builder<Step> steps = ImmutableList.builder();
+    steps.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
+
+    lipoBinaries(context, steps);
+    copyLinkMaps(buildableContext, context, steps);
+
+    return steps.build();
+  }
+
+  private void copyLinkMaps(
+      BuildableContext buildableContext,
+      BuildContext buildContext,
+      ImmutableList.Builder<Step> steps) {
+    Path linkMapDir = Paths.get(output + "-LinkMap");
+    steps.addAll(
+        MakeCleanDirectoryStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), linkMapDir)));
+
+    for (SourcePath thinBinary : thinBinaries) {
+      Optional<BuildRule> maybeRule = ruleFinder.getRule(thinBinary);
+      if (maybeRule.isPresent()) {
+        BuildRule rule = maybeRule.get();
+        if (rule instanceof CxxBinary) {
+          rule = ((CxxBinary) rule).getLinkRule();
+        }
+        if (rule instanceof CxxLink
+            && !rule.getBuildTarget()
+                .getFlavors()
+                .contains(LinkerMapMode.NO_LINKER_MAP.getFlavor())) {
+          Optional<Path> maybeLinkerMapPath = ((CxxLink) rule).getLinkerMapPath();
+          if (maybeLinkerMapPath.isPresent()) {
+            Path source = maybeLinkerMapPath.get();
+            Path dest = linkMapDir.resolve(source.getFileName());
+            steps.add(CopyStep.forFile(getProjectFilesystem(), source, dest));
+            buildableContext.recordArtifact(dest);
+          }
+        }
+      }
+    }
+  }
+
+  private void lipoBinaries(BuildContext context, ImmutableList.Builder<Step> steps) {
     ImmutableList.Builder<String> commandBuilder = ImmutableList.builder();
-    commandBuilder.addAll(lipo.getCommandPrefix(getResolver()));
+    commandBuilder.addAll(lipo.getCommandPrefix(context.getSourcePathResolver()));
     commandBuilder.add("-create", "-output", getProjectFilesystem().resolve(output).toString());
     for (SourcePath thinBinary : thinBinaries) {
-      commandBuilder.add(getResolver().getAbsolutePath(thinBinary).toString());
+      commandBuilder.add(context.getSourcePathResolver().getAbsolutePath(thinBinary).toString());
     }
-    return ImmutableList.<Step>of(
-        new MkdirStep(getProjectFilesystem(), output.getParent()),
+    steps.add(
         new DefaultShellStep(
             getProjectFilesystem().getRootPath(),
             commandBuilder.build(),
-            lipo.getEnvironment(getResolver())));
+            lipo.getEnvironment(context.getSourcePathResolver())));
   }
 
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
   @Override
-  public ImmutableSet<BuildRule> getStaticLibraryDeps() {
-    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
-    for (BuildRule dep : getDeps()) {
-      if (dep instanceof ProvidesLinkedBinaryDeps) {
-        builder.addAll(((ProvidesLinkedBinaryDeps) dep).getStaticLibraryDeps());
-      }
-    }
-    return builder.build();
+  public Stream<BuildRule> getAppleDebugSymbolDeps() {
+    return RichStream.from(getBuildDeps())
+        .filter(HasAppleDebugSymbolDeps.class)
+        .flatMap(HasAppleDebugSymbolDeps::getAppleDebugSymbolDeps)
+        // Include the build deps themselves, which are the rules generating the thin binary.
+        // These rules may generate supplemental object files that are linked into the binary, and
+        // must be materialized in order for dsymutil to find them.
+        .concat(getBuildDeps().stream());
   }
 
   @Override
-  public ImmutableSet<BuildRule> getCompileDeps() {
-    ImmutableSet.Builder<BuildRule> builder = ImmutableSet.builder();
-    for (BuildRule dep : getDeps()) {
-      if (dep instanceof ProvidesLinkedBinaryDeps) {
-        builder.addAll(((ProvidesLinkedBinaryDeps) dep).getCompileDeps());
-      }
-    }
-    return builder.build();
+  public boolean isCacheable() {
+    return isCacheable;
   }
 }

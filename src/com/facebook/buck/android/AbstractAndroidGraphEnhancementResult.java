@@ -16,32 +16,63 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
+import com.facebook.buck.android.exopackage.ExopackagePathAndHash;
+import com.facebook.buck.android.packageable.AndroidPackageableCollection;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 interface AbstractAndroidGraphEnhancementResult {
   AndroidPackageableCollection getPackageableCollection();
-  AaptPackageResources getAaptPackageResources();
-  Optional<CopyNativeLibraries> getCopyNativeLibraries();
+
+  Optional<ImmutableMap<APKModule, CopyNativeLibraries>> getCopyNativeLibraries();
+
   Optional<PackageStringAssets> getPackageStringAssets();
-  Optional<PreDexMerge> getPreDexMerge();
-  Optional<ComputeExopackageDepsAbi> getComputeExopackageDepsAbi();
-  Optional<Boolean> getPackageAssetLibraries();
+
+  Either<PreDexMerge, NonPreDexedDexBuildable> getDexMergeRule();
+
+  SourcePath getPrimaryResourcesApkPath();
+
+  ImmutableMap<APKModule, SourcePath> getModuleResourceApkPaths();
+
+  ImmutableList<SourcePath> getPrimaryApkAssetZips();
+
+  ImmutableList<ExopackagePathAndHash> getExoResources();
 
   /**
-   * This includes everything from the corresponding
-   * {@link AndroidPackageableCollection#getClasspathEntriesToDex}, and may include additional
-   * entries due to {@link AndroidBuildConfig}s.
+   * This includes everything from the corresponding {@link
+   * AndroidPackageableCollection#getClasspathEntriesToDex}, and may include additional entries due
+   * to {@link AndroidBuildConfig}s (or R.java, in the future).
    */
   ImmutableSet<SourcePath> getClasspathEntriesToDex();
 
-  ImmutableSortedSet<BuildRule> getFinalDeps();
+  SourcePath getAndroidManifestPath();
+
+  APKModuleGraph getAPKModuleGraph();
+
+  @Value.Derived
+  default Optional<PreDexMerge> getPreDexMerge() {
+    return getDexMergeRule().transform(left -> Optional.of(left), right -> Optional.empty());
+  }
+
+  @Value.Derived
+  default DexFilesInfo getDexFilesInfo() {
+    return getDexMergeRule()
+        .transform(PreDexMerge::getDexFilesInfo, NonPreDexedDexBuildable::getDexFilesInfo);
+  }
+
+  @Value.Derived
+  default ImmutableList<SourcePath> getAdditionalRedexInputs() {
+    return getDexMergeRule()
+        .transform(left -> ImmutableList.of(), right -> right.getAdditionalRedexInputs());
+  }
 }

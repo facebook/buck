@@ -19,25 +19,22 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeThat;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class CxxGenruleIntegrationTest {
 
   private ProjectWorkspace workspace;
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
   public void setUp() throws IOException {
@@ -50,18 +47,14 @@ public class CxxGenruleIntegrationTest {
   public void cppflags() throws IOException {
     workspace.replaceFileContents("BUCK", "@CMD@", "echo -- $(cppflags :c)");
     Path output = workspace.buildAndReturnOutput("//:rule#default");
-    assertThat(
-        workspace.getFileContents(output),
-        Matchers.containsString("-DC_CFLAG"));
+    assertThat(workspace.getFileContents(output), Matchers.containsString("-DC_CFLAG"));
   }
 
   @Test
   public void cxxppflags() throws IOException {
     workspace.replaceFileContents("BUCK", "@CMD@", "echo -- $(cxxppflags :c)");
     Path output = workspace.buildAndReturnOutput("//:rule#default");
-    assertThat(
-        workspace.getFileContents(output),
-        Matchers.containsString("-DC_CXXFLAG"));
+    assertThat(workspace.getFileContents(output), Matchers.containsString("-DC_CXXFLAG"));
   }
 
   @Test
@@ -70,9 +63,7 @@ public class CxxGenruleIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:rule#default");
     assertThat(
         workspace.getFileContents(output),
-        Matchers.allOf(
-            Matchers.containsString("-DA_CFLAG"),
-            Matchers.containsString("-DB_CFLAG")));
+        Matchers.allOf(Matchers.containsString("-DA_CFLAG"), Matchers.containsString("-DB_CFLAG")));
   }
 
   @Test
@@ -81,17 +72,30 @@ public class CxxGenruleIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:rule#default");
     assertThat(
         workspace.getFileContents(output),
-        Matchers.allOf(
-            Matchers.containsString("-DA_CFLAG"),
-            Matchers.containsString("-DC_CFLAG")));
+        Matchers.allOf(Matchers.containsString("-DA_CFLAG"), Matchers.containsString("-DC_CFLAG")));
+  }
+
+  @Test
+  public void cppflagsNoopBuild() throws IOException {
+    workspace.replaceFileContents("BUCK", "@CMD@", "echo $(cppflags :header)");
+    workspace.runBuckBuild("//:rule#default").assertSuccess();
+    workspace.runBuckBuild("//:rule#default").assertSuccess();
+    workspace.getBuildLog().assertNotTargetBuiltLocally("//:rule#default");
+  }
+
+  @Test
+  public void cppflagsChangingHeaderCausesRebuild() throws IOException {
+    workspace.replaceFileContents("BUCK", "@CMD@", "echo $(cppflags :header)");
+    workspace.runBuckBuild("//:rule#default").assertSuccess();
+    workspace.writeContentsToPath("#define HELLO", "real_header.h");
+    workspace.runBuckBuild("//:rule#default").assertSuccess();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:rule#default");
   }
 
   @Test
   public void headers() throws IOException {
     workspace.replaceFileContents(
-        "BUCK",
-        "@CMD@",
-        "gcc -E $(cppflags :header) -include header.h - < /dev/null");
+        "BUCK", "@CMD@", "gcc -E $(cppflags :header) -include header.h - < /dev/null");
     workspace.runBuckBuild("//:rule#default").assertSuccess();
   }
 
@@ -101,9 +105,7 @@ public class CxxGenruleIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:rule#default");
     assertThat(
         workspace.getFileContents(output),
-        Matchers.allOf(
-            Matchers.containsString("libc.a"),
-            Matchers.containsString("-c-ld-flag")));
+        Matchers.allOf(Matchers.containsString("libc.a"), Matchers.containsString("-c-ld-flag")));
   }
 
   @Test
@@ -132,4 +134,10 @@ public class CxxGenruleIntegrationTest {
             Matchers.containsString("-c-ld-flag")));
   }
 
+  @Test
+  public void platformName() throws IOException {
+    workspace.replaceFileContents("BUCK", "@CMD@", "echo -- $(platform-name)");
+    Path output = workspace.buildAndReturnOutput("//:rule#default");
+    assertThat(workspace.getFileContents(output), Matchers.containsString("default"));
+  }
 }

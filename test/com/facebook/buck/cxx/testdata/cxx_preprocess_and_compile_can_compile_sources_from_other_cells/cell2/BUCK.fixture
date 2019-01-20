@@ -1,0 +1,11 @@
+export_file(
+    name = "exported_file.c",
+    src = "exported_file.c",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "exported_file.h",
+    src = "exported_file.h",
+    visibility = ["PUBLIC"],
+)

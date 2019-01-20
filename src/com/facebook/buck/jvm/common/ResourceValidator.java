@@ -15,12 +15,11 @@
  */
 package com.facebook.buck.jvm.common;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
 
 public final class ResourceValidator {
@@ -33,8 +32,7 @@ public final class ResourceValidator {
         throw new HumanReadableException("Error: `resources` argument '%s' does not exist.", path);
       } else if (filesystem.isDirectory(path)) {
         throw new HumanReadableException(
-            "Error: a directory is not a valid input to the `resources` argument: %s",
-            path);
+            "Error: a directory is not a valid input to the `resources` argument: %s", path);
       }
     }
     return resourcePaths;

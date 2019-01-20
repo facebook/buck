@@ -17,41 +17,45 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.timing.Clock;
+import com.facebook.buck.util.timing.Clock;
 import com.google.common.collect.ImmutableList;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.MediaType;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Protocol;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
-
+import java.net.URI;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Dispatcher;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
+import org.easymock.EasyMockSupport;
+import org.easymock.IAnswer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.net.URI;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+public class ClientSideSlbTest extends EasyMockSupport {
 
-public class ClientSideSlbTest {
-
-  private static final ImmutableList<URI> SERVERS = ImmutableList.of(
-      URI.create("http://localhost:4242"),
-      URI.create("http://localhost:8484"),
-      URI.create("http://localhost:2121")
-  );
+  private static final ImmutableList<URI> SERVERS =
+      ImmutableList.of(
+          URI.create("http://localhost:4242"),
+          URI.create("http://localhost:8484"),
+          URI.create("http://localhost:2121"));
+  private static final String SERVER_POOL_NAME = ClientSideSlbTest.class + "_server_pool";
 
   private BuckEventBus mockBus;
   private Clock mockClock;
   private OkHttpClient mockClient;
   private ScheduledExecutorService mockScheduler;
   private ClientSideSlbConfig config;
+  private Dispatcher dispatcher;
 
   // Apparently EasyMock does not deal very well with Generic Types using wildcard ?.
   // Several workarounds can be found on StackOverflow this one being the list intrusive.
@@ -60,73 +64,103 @@ public class ClientSideSlbTest {
 
   @Before
   public void setUp() {
-    mockBus = EasyMock.createNiceMock(BuckEventBus.class);
-    mockFuture = EasyMock.createMock(ScheduledFuture.class);
-    mockClient = EasyMock.createNiceMock(OkHttpClient.class);
-    mockScheduler = EasyMock.createMock(ScheduledExecutorService.class);
-    mockClock = EasyMock.createMock(Clock.class);
+    mockBus = createNiceMock(BuckEventBus.class);
+    mockFuture = createMock(ScheduledFuture.class);
+    mockClient = createNiceMock(OkHttpClient.class);
+    dispatcher = new Dispatcher(createMock(ExecutorService.class));
+    EasyMock.expect(mockClient.dispatcher()).andReturn(dispatcher).anyTimes();
+    mockScheduler = createMock(ScheduledExecutorService.class);
+    mockClock = createMock(Clock.class);
     EasyMock.expect(mockClock.currentTimeMillis()).andReturn(42L).anyTimes();
-    EasyMock.replay(mockClock);
 
-    config = ClientSideSlbConfig.builder()
-        .setClock(mockClock)
-        .setSchedulerService(mockScheduler)
-        .setPingHttpClient(mockClient)
-        .setServerPool(SERVERS)
-        .setEventBus(mockBus)
-        .build();
+    config =
+        ClientSideSlbConfig.builder()
+            .setClock(mockClock)
+            .setServerPool(SERVERS)
+            .setEventBus(mockBus)
+            .setServerPoolName(SERVER_POOL_NAME)
+            .build();
   }
 
   @Test
   @SuppressWarnings("unchecked")
   public void testBackgroundHealthCheckIsScheduled() {
     Capture<Runnable> capture = EasyMock.newCapture();
-    EasyMock.expect(mockScheduler.scheduleWithFixedDelay(
-        EasyMock.capture(capture),
-        EasyMock.anyLong(),
-        EasyMock.anyLong(),
-        EasyMock.anyObject(TimeUnit.class)))
+    EasyMock.expect(
+            mockScheduler.scheduleWithFixedDelay(
+                EasyMock.capture(capture),
+                EasyMock.anyLong(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject(TimeUnit.class)))
         .andReturn(mockFuture)
         .once();
-    EasyMock.replay(mockScheduler);
+    EasyMock.expect(mockFuture.cancel(true)).andReturn(true).once();
+    EasyMock.expect(mockScheduler.shutdownNow()).andReturn(ImmutableList.of()).once();
+    EasyMock.expect(dispatcher.executorService().shutdownNow())
+        .andReturn(ImmutableList.of())
+        .once();
 
-    try (ClientSideSlb slb = new ClientSideSlb(config)) {
+    replayAll();
+
+    try (ClientSideSlb slb = new ClientSideSlb(config, mockScheduler, mockClient)) {
       Assert.assertTrue(capture.hasCaptured());
     }
 
-    EasyMock.verify(mockScheduler);
+    verifyAll();
   }
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testAllServersArePinged() throws IOException {
+  public void testAllServersArePinged() {
     Capture<Runnable> capture = EasyMock.newCapture();
-    EasyMock.expect(mockScheduler.scheduleWithFixedDelay(
-        EasyMock.capture(capture),
-        EasyMock.anyLong(),
-        EasyMock.anyLong(),
-        EasyMock.anyObject(TimeUnit.class)))
+    EasyMock.expect(
+            mockScheduler.scheduleWithFixedDelay(
+                EasyMock.capture(capture),
+                EasyMock.anyLong(),
+                EasyMock.anyLong(),
+                EasyMock.anyObject(TimeUnit.class)))
         .andReturn(mockFuture)
         .once();
-    ResponseBody body = ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
-    Response response = new Response.Builder()
-        .body(body)
-        .code(200)
-        .protocol(Protocol.HTTP_1_1)
-        .request(new Request.Builder().url("http://dummy.url").build())
-        .build();
-    Call mockCall = EasyMock.createMock(Call.class);
-    EasyMock.expect(mockCall.execute()).andReturn(response).times(SERVERS.size());
-    EasyMock.expect(mockClient.newCall(EasyMock.anyObject(Request.class)))
-        .andReturn(mockCall)
-        .times(SERVERS.size());
-    EasyMock.replay(mockClient, mockCall, mockScheduler);
+    Call mockCall = createMock(Call.class);
+    for (URI server : SERVERS) {
+      EasyMock.expect(mockClient.newCall(EasyMock.anyObject(Request.class))).andReturn(mockCall);
+      mockCall.enqueue(EasyMock.anyObject(ClientSideSlb.ServerPing.class));
+      EasyMock.expectLastCall()
+          .andAnswer(
+              new IAnswer<Object>() {
+                @Override
+                public Object answer() throws Throwable {
+                  Callback callback = (Callback) EasyMock.getCurrentArguments()[0];
+                  ResponseBody body =
+                      ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
+                  Response response =
+                      new Response.Builder()
+                          .body(body)
+                          .code(200)
+                          .protocol(Protocol.HTTP_1_1)
+                          .request(new Request.Builder().url(server.toString()).build())
+                          .message("")
+                          .build();
+                  callback.onResponse(mockCall, response);
+                  return null;
+                }
+              });
+    }
+    mockBus.post(EasyMock.anyObject(LoadBalancerPingEvent.class));
+    EasyMock.expectLastCall();
+    EasyMock.expect(mockFuture.cancel(true)).andReturn(true).once();
+    EasyMock.expect(mockScheduler.shutdownNow()).andReturn(ImmutableList.of()).once();
+    EasyMock.expect(dispatcher.executorService().shutdownNow())
+        .andReturn(ImmutableList.of())
+        .once();
 
-    try (ClientSideSlb slb = new ClientSideSlb(config)) {
+    replayAll();
+
+    try (ClientSideSlb slb = new ClientSideSlb(config, mockScheduler, mockClient)) {
       Runnable healthCheckLoop = capture.getValue();
       healthCheckLoop.run();
     }
 
-    EasyMock.verify(mockClient, mockCall, mockScheduler);
+    verifyAll();
   }
 }

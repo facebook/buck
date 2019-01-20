@@ -15,95 +15,117 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-
-import javax.annotation.Nullable;
+import java.util.Optional;
+import java.util.SortedSet;
 
 /**
- * Controls how strip tool is invoked. To have better understanding please refer to `man strip`.
- * If you don't want stripping, you should depend on CxxLink directly.
+ * Controls how strip tool is invoked. To have better understanding please refer to `man strip`. If
+ * you don't want stripping, you should depend on CxxLink directly.
  */
 public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   /**
-   * Used to identify this rule in the graph. This should be appended ONLY to build target
-   * that is passed to the CxxStrip constructor when you create instance of this class.
-   * Appending it in other places is does nothing except adds a unnecessary flavor that will skew
-   * output paths of other build rules.
+   * Used to identify this rule in the graph. This should be appended ONLY to build target that is
+   * passed to the CxxStrip constructor when you create instance of this class. Appending it in
+   * other places is does nothing except adds a unnecessary flavor that will skew output paths of
+   * other build rules.
    */
-  public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("stripped");
+  public static final Flavor RULE_FLAVOR = InternalFlavor.of("stripped");
 
-  @AddToRuleKey
-  private final StripStyle stripStyle;
-  @AddToRuleKey
-  private final SourcePath cxxLinkSourcePath;
-  @AddToRuleKey
-  private final Tool strip;
+  @AddToRuleKey private final SourcePath unstrippedBinary;
+  @AddToRuleKey private final StripStyle stripStyle;
+  @AddToRuleKey private final Tool strip;
+
   @AddToRuleKey(stringify = true)
   private final Path output;
 
-  public CxxStrip(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      StripStyle stripStyle,
-      SourcePath cxxLinkSourcePath,
-      Tool strip,
-      Path output) {
-    super(buildRuleParams, resolver);
-    this.stripStyle = stripStyle;
-    this.cxxLinkSourcePath = cxxLinkSourcePath;
-    this.strip = strip;
-    this.output = output;
-    performChecks(buildRuleParams.getBuildTarget());
-  }
+  private final boolean isCacheable;
 
-  private void performChecks(BuildTarget buildTarget) {
+  private SourcePathRuleFinder ruleFinder;
+
+  public CxxStrip(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePath unstrippedBinary,
+      SourcePathRuleFinder ruleFinder,
+      StripStyle stripStyle,
+      Tool strip,
+      boolean isCacheable,
+      Path output) {
+    super(buildTarget, projectFilesystem);
+    this.unstrippedBinary = unstrippedBinary;
+    this.ruleFinder = ruleFinder;
+    this.stripStyle = stripStyle;
+    this.strip = strip;
+    this.isCacheable = isCacheable;
+    this.output = output;
+
     Preconditions.checkArgument(
         buildTarget.getFlavors().contains(RULE_FLAVOR),
-        "CxxStrip rule %s should contain %s flavor", this, RULE_FLAVOR);
+        "CxxStrip rule %s should contain %s flavor",
+        this,
+        RULE_FLAVOR);
     Preconditions.checkArgument(
         StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
         "CxxStrip rule %s should contain one of the strip style flavors (%s)",
-        this, StripStyle.FLAVOR_DOMAIN.getFlavors());
+        this,
+        StripStyle.FLAVOR_DOMAIN.getFlavors());
   }
 
-  public static BuildRuleParams removeStripStyleFlavorInParams(
-      BuildRuleParams params,
-      Optional<StripStyle> flavoredStripStyle) {
-    params = params.withoutFlavor(CxxStrip.RULE_FLAVOR);
+  public static BuildTarget removeStripStyleFlavorInTarget(
+      BuildTarget buildTarget, Optional<StripStyle> flavoredStripStyle) {
+    Preconditions.checkState(
+        !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR),
+        "This function used to strip "
+            + RULE_FLAVOR
+            + ", which masked errors in constructing "
+            + "build targets and caused the returned rule's build target to differ from the "
+            + "requested one. This is now explicitly disallowed to catch existing and future "
+            + "programming errors of this kind. (Applied to target "
+            + buildTarget
+            + ")");
     if (flavoredStripStyle.isPresent()) {
-      params = params.withoutFlavor(flavoredStripStyle.get().getFlavor());
+      return buildTarget.withoutFlavors(flavoredStripStyle.get().getFlavor());
     }
-    return params;
+    return buildTarget;
   }
 
-  public static BuildRuleParams restoreStripStyleFlavorInParams(
-      BuildRuleParams params,
-      Optional<StripStyle> flavoredStripStyle) {
+  public static BuildTarget restoreStripStyleFlavorInTarget(
+      BuildTarget buildTarget, Optional<StripStyle> flavoredStripStyle) {
     if (flavoredStripStyle.isPresent()) {
       // we should not append CxxStrip.RULE_FLAVOR here because it must be appended
       // to CxxStrip rule only. Other users of CxxStrip flavors must not append it.
-      params = params.withFlavor(flavoredStripStyle.get().getFlavor());
+      return buildTarget.withAppendedFlavors(flavoredStripStyle.get().getFlavor());
     }
-    return params;
+    return buildTarget;
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(unstrippedBinary));
   }
 
   @Override
@@ -113,23 +135,35 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
     return ImmutableList.of(
         CopyStep.forFile(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(cxxLinkSourcePath),
+            context.getSourcePathResolver().getAbsolutePath(unstrippedBinary),
             output),
         new StripSymbolsStep(
             output,
-            strip,
+            strip.getCommandPrefix(context.getSourcePathResolver()),
+            strip.getEnvironment(context.getSourcePathResolver()),
             stripStyle.getStripToolArgs(),
-            getProjectFilesystem(),
-            getResolver()));
+            getProjectFilesystem()));
   }
 
   public StripStyle getStripStyle() {
     return stripStyle;
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return output;
+  public boolean isCacheable() {
+    return isCacheable;
+  }
+
+  @Override
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+  }
+
+  @Override
+  public void updateBuildRuleResolver(
+      BuildRuleResolver ruleResolver,
+      SourcePathRuleFinder ruleFinder,
+      SourcePathResolver sourcePathResolver) {
+    this.ruleFinder = ruleFinder;
   }
 }

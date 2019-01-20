@@ -16,47 +16,38 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSortedSet;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import org.immutables.value.Value;
 
-public class KeystoreDescription implements Description<KeystoreDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("keystore");
+public class KeystoreDescription implements DescriptionWithTargetGraph<KeystoreDescriptionArg> {
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<KeystoreDescriptionArg> getConstructorArgType() {
+    return KeystoreDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> Keystore createBuildRule(
-      TargetGraph targetGraph,
+  public Keystore createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    return new Keystore(params, new SourcePathResolver(resolver), args.store, args.properties);
+      KeystoreDescriptionArg args) {
+    return new Keystore(
+        buildTarget, context.getProjectFilesystem(), params, args.getStore(), args.getProperties());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SourcePath store;
-    public SourcePath properties;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractKeystoreDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+    SourcePath getStore();
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    SourcePath getProperties();
   }
 }

@@ -1,0 +1,23 @@
+java_library(
+    name = "annotationprocessor-lib",
+    srcs = glob(
+        ["*.java"],
+    ),
+    resources = glob(["*.st"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/stringtemplate:stringtemplate",
+    ],
+)
+
+java_annotation_processor(
+    name = "annotationprocessor",
+    processor_class = "com.facebook.buck.core.module.annotationprocessor.BuckModuleAnnotationProcessor",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":annotationprocessor-lib",
+    ],
+)

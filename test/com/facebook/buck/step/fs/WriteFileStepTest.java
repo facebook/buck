@@ -19,14 +19,12 @@ package com.facebook.buck.step.fs;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import java.util.Optional;
+import org.junit.Test;
 
 public class WriteFileStepTest {
 
@@ -38,7 +36,6 @@ public class WriteFileStepTest {
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     writeFileStep.execute(executionContext);
     assertThat(
-        filesystem.readFileIfItExists(Paths.get("foo.txt")),
-        equalTo(Optional.of("Hello world\n")));
+        filesystem.readFileIfItExists(Paths.get("foo.txt")), equalTo(Optional.of("Hello world\n")));
   }
 }

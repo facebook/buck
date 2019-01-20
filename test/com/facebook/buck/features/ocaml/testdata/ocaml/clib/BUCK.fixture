@@ -1,0 +1,36 @@
+ocaml_binary(
+    name = "clib",
+    srcs = [
+        "main.ml",
+    ],
+    deps = [
+        ":plus",
+    ],
+)
+
+ocaml_library(
+    name = "plus",
+    srcs = [
+        "plus/plus.ml",
+        "plus/plus_imp.c",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":cc",
+    ],
+)
+
+cxx_library(
+    name = "cc",
+    srcs = [
+        "cc/cc.cpp",
+    ],
+    exported_headers = [
+        "cc/cc.h",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

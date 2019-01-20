@@ -1,23 +1,30 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
 java_immutables_library(
-  name = 'testutil',
-  srcs = [
-    'AbstractType.java',
-    'DeprecatedType.java',
-  ],
-  immutable_types = [
-    'Type',
-  ],
-  autodeps = True,
-  tests = [
-    '//test/com/facebook/buck/immutables:test',
-  ],
-  visibility = [
-    '//test/...',
-  ],
+    name = "testutil",
+    srcs = [
+        "AbstractType.java",
+    ],
+    tests = [
+        "//test/com/facebook/buck/immutables:test",
+    ],
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//third-party/java/immutables:immutables",
+    ],
 )
 
 java_test(
-  name = 'test',
-  srcs = glob(['*Test.java']),
-  autodeps = True,
+    name = "test",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/util/immutables:immutables",
+        "//test/com/facebook/buck/immutables:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/immutables:immutables",
+        "//third-party/java/junit:junit",
+    ],
 )

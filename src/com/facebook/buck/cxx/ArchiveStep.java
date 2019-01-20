@@ -16,48 +16,55 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.cxx.toolchain.Archiver;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.CommandSplitter;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Functions;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.logging.Level;
 
-/**
- * Create an object archive with ar.
- */
-public class ArchiveStep implements Step {
+/** Create an object archive with ar. */
+class ArchiveStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final ImmutableMap<String, String> environment;
-  private final ImmutableList<String> archiver;
-  private final Archive.Contents contents;
+  private final ImmutableList<String> archiverCommand;
+  private final ImmutableList<String> archiverFlags;
+  private final ImmutableList<String> archiverExtraFlags;
   private final Path output;
   private final ImmutableList<Path> inputs;
+  private final Archiver archiver;
+  private final Path scratchDir;
 
   public ArchiveStep(
       ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
-      ImmutableList<String> archiver,
-      Archive.Contents contents,
+      ImmutableList<String> archiverCommand,
+      ImmutableList<String> archiverFlags,
+      ImmutableList<String> archiverExtraFlags,
       Path output,
-      ImmutableList<Path> inputs) {
+      ImmutableList<Path> inputs,
+      Archiver archiver,
+      Path scratchDir) {
     Preconditions.checkArgument(!output.isAbsolute());
     // Our current support for thin archives requires that all the inputs are relative paths from
     // the same cell as the output.
@@ -66,10 +73,13 @@ public class ArchiveStep implements Step {
     }
     this.filesystem = filesystem;
     this.environment = environment;
-    this.archiver = archiver;
-    this.contents = contents;
+    this.archiverCommand = archiverCommand;
+    this.archiverFlags = archiverFlags;
+    this.archiverExtraFlags = archiverExtraFlags;
     this.output = output;
     this.inputs = inputs;
+    this.archiver = archiver;
+    this.scratchDir = scratchDir;
   }
 
   private ImmutableList<String> getAllInputs() throws IOException {
@@ -81,7 +91,7 @@ public class ArchiveStep implements Step {
       if (filesystem.isDirectory(input)) {
         // We make sure to sort the files we find under the directories so that we get
         // deterministic output.
-        final Set<String> dirFiles = new TreeSet<>();
+        Set<String> dirFiles = new TreeSet<>();
         filesystem.walkFileTree(
             filesystem.resolve(input),
             new SimpleFileVisitor<Path>() {
@@ -100,28 +110,26 @@ public class ArchiveStep implements Step {
     return allInputs.build();
   }
 
-  private int runArchiver(
-      ExecutionContext context,
-      final ImmutableList<String> command)
+  private ProcessExecutor.Result runArchiver(
+      ExecutionContext context, ImmutableList<String> command)
       throws IOException, InterruptedException {
-    ProcessBuilder builder = new ProcessBuilder();
-    builder.directory(filesystem.getRootPath().toFile());
-    builder.environment().putAll(environment);
-    builder.command(command);
-    ProcessExecutor.Result result = context.getProcessExecutor().execute(builder.start());
+    Map<String, String> env = new HashMap<>(context.getEnvironment());
+    env.putAll(environment);
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setDirectory(filesystem.getRootPath())
+            .setEnvironment(ImmutableMap.copyOf(env))
+            .setCommand(command)
+            .build();
+    ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
     if (result.getExitCode() != 0 && result.getStderr().isPresent()) {
       context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, result.getStderr().get()));
     }
-    return result.getExitCode();
+    return result;
   }
 
-  private String getArchiveOptions() {
-    StringBuilder options = new StringBuilder();
-    options.append("qc");
-    if (contents == Archive.Contents.THIN) {
-      options.append("T");
-    }
-    return options.toString();
+  private Path getArgfile() {
+    return filesystem.resolve(scratchDir).resolve("ar.argsfile");
   }
 
   @Override
@@ -130,31 +138,48 @@ public class ArchiveStep implements Step {
     ImmutableList<String> allInputs = getAllInputs();
     if (allInputs.isEmpty()) {
       filesystem.writeContentsToPath("!<arch>\n", output);
-      return StepExecutionResult.SUCCESS;
+      return StepExecutionResults.SUCCESS;
     } else {
-      ImmutableList<String> archiveCommandPrefix =
-          ImmutableList.<String>builder()
-              .addAll(archiver)
-              .add(getArchiveOptions())
-              .add(output.toString())
-              .build();
-      CommandSplitter commandSplitter = new CommandSplitter(archiveCommandPrefix);
-      for (ImmutableList<String> command : commandSplitter.getCommandsForArguments(allInputs)) {
-        int exitCode = runArchiver(context, command);
-        if (exitCode != 0) {
-          return StepExecutionResult.of(exitCode);
+      ImmutableList<String> outputArgs = archiver.outputArgs(output.toString());
+      if (archiver.isArgfileRequired()) {
+        Iterable<String> argfileLines =
+            Iterables.concat(archiverFlags, archiverExtraFlags, outputArgs, allInputs);
+        Path argfile = getArgfile();
+        filesystem.writeLinesToPath(argfileLines, argfile);
+        ImmutableList<String> command =
+            ImmutableList.<String>builder().addAll(archiverCommand).add("@" + argfile).build();
+        return StepExecutionResult.of(runArchiver(context, command));
+      } else {
+        ImmutableList<String> archiveCommandPrefix =
+            ImmutableList.<String>builder()
+                .addAll(archiverCommand)
+                .addAll(archiverFlags)
+                .addAll(archiverExtraFlags)
+                .addAll(outputArgs)
+                .build();
+        CommandSplitter commandSplitter = new CommandSplitter(archiveCommandPrefix);
+        for (ImmutableList<String> command : commandSplitter.getCommandsForArguments(allInputs)) {
+          ProcessExecutor.Result result = runArchiver(context, command);
+          if (result.getExitCode() != 0) {
+            return StepExecutionResult.of(result);
+          }
         }
+        return StepExecutionResults.SUCCESS;
       }
-      return StepExecutionResult.SUCCESS;
     }
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.add("ar", getArchiveOptions());
-    command.add(output.toString());
-    command.addAll(Iterables.transform(inputs, Functions.toStringFunction()));
+    ImmutableList.Builder<String> command =
+        archiver.isArgfileRequired()
+            ? ImmutableList.<String>builder().addAll(archiverCommand).add("@" + getArgfile())
+            : ImmutableList.<String>builder()
+                .add("ar")
+                .addAll(archiverFlags)
+                .addAll(archiverExtraFlags)
+                .addAll(archiver.outputArgs(output.toString()))
+                .addAll(Iterables.transform(inputs, Object::toString));
     return Joiner.on(' ').join(command.build());
   }
 
@@ -162,5 +187,4 @@ public class ArchiveStep implements Step {
   public String getShortName() {
     return "archive";
   }
-
 }

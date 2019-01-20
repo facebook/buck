@@ -1,5 +1,4 @@
-
 java_library(
-  name = 'example',
-  srcs = glob(['*.java']),
+    name = "example",
+    srcs = glob(["*.java"]),
 )

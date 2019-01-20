@@ -1,0 +1,24 @@
+java_library(
+    name = "tip",
+    srcs = [
+        "Test.java",
+    ],
+    deps = [
+        ":library1",
+        ":library2",
+    ],
+)
+
+prebuilt_jar(
+    name = "library1",
+    binary_jar = "library1.jar",
+    javadoc_url = "http://company.com/library1/",
+    source_jar = "librarysrc1.jar",
+)
+
+prebuilt_jar(
+    name = "library2",
+    binary_jar = "library2.jar",
+    javadoc_url = "http://company.com/library2/",
+    source_jar = "librarysrc2.jar",
+)

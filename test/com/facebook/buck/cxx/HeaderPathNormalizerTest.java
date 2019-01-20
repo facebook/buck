@@ -18,51 +18,60 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-import java.nio.file.Path;
-
 public class HeaderPathNormalizerTest {
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
   public void unmanagedHeader() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
-    HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.<Path>identity())
-            .build();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    Path header = filesystem.getPath("foo/bar.h");
+    HeaderPathNormalizer normalizer = new HeaderPathNormalizer.Builder(pathResolver).build();
     assertThat(
-        normalizer.getAbsolutePathForUnnormalizedPath(header),
-        Matchers.equalTo(Optional.<Path>absent()));
+        normalizer.getAbsolutePathForUnnormalizedPath(filesystem.resolve(header)),
+        Matchers.equalTo(Optional.empty()));
   }
 
   @Test
   public void managedHeader() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
-    SourcePath headerPath = new PathSourcePath(filesystem, header);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    Path header = filesystem.getPath("foo/bar.h");
+    SourcePath headerPath = PathSourcePath.of(filesystem, header);
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.<Path>identity())
-            .addHeader(headerPath)
-            .build();
+        new HeaderPathNormalizer.Builder(pathResolver).addHeader(headerPath).build();
+    assertThat(
+        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerPath)),
+        Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
+    assertThat(
+        normalizer.getSourcePathForAbsolutePath(pathResolver.getAbsolutePath(headerPath)),
+        Matchers.equalTo(headerPath));
+  }
+
+  @Test
+  public void managedHeaderWithRelativePath() {
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    Path header = filesystem.getPath("foo/bar.h");
+    SourcePath headerPath = PathSourcePath.of(filesystem, header);
+    HeaderPathNormalizer normalizer =
+        new HeaderPathNormalizer.Builder(pathResolver).addHeader(headerPath).build();
+    assertThat(
+        normalizer.getAbsolutePathForUnnormalizedPath(filesystem.resolve(header)),
+        Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
     assertThat(
         normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerPath)),
         Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
@@ -73,16 +82,12 @@ public class HeaderPathNormalizerTest {
 
   @Test
   public void managedHeaderDir() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path header = filesystem.getRootPath().getFileSystem().getPath("foo/bar.h");
-    SourcePath headerDirPath = new PathSourcePath(filesystem, header.getParent());
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    Path header = filesystem.getPath("foo/bar.h");
+    SourcePath headerDirPath = PathSourcePath.of(filesystem, header.getParent());
     HeaderPathNormalizer normalizer =
-        new HeaderPathNormalizer.Builder(pathResolver, Functions.<Path>identity())
-            .addHeaderDir(headerDirPath)
-            .build();
+        new HeaderPathNormalizer.Builder(pathResolver).addHeaderDir(headerDirPath).build();
     assertThat(
         normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerDirPath)),
         Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerDirPath))));
@@ -97,4 +102,19 @@ public class HeaderPathNormalizerTest {
         Matchers.equalTo(headerDirPath));
   }
 
+  @Test
+  public void managedPrefixHeaderDir() {
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+    Path header = filesystem.getPath("foo/bar.pch");
+    SourcePath headerPath = PathSourcePath.of(filesystem, header);
+    HeaderPathNormalizer normalizer =
+        new HeaderPathNormalizer.Builder(pathResolver).addPrefixHeader(headerPath).build();
+    assertThat(
+        normalizer.getAbsolutePathForUnnormalizedPath(pathResolver.getAbsolutePath(headerPath)),
+        Matchers.equalTo(Optional.of(pathResolver.getAbsolutePath(headerPath))));
+    assertThat(
+        normalizer.getSourcePathForAbsolutePath(pathResolver.getAbsolutePath(headerPath)),
+        Matchers.equalTo(headerPath));
+  }
 }

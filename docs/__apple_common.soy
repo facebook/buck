@@ -1,3 +1,18 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace apple_common}
 
 /***/
@@ -16,7 +31,7 @@
   the filename of the header file. If a dictionary is specified, each header can be imported
   with <code>#import "$HEADER_NAME"</code>, where <code>$HEADER_NAME</code> is the key
   corresponding to this file. In this case, the <code>header_path_prefix</code> attribute is
-  ignored.  In either case, quotes in the import statements can be replaced with angle brackets.
+  ignored. In either case, quotes in the import statements can be replaced with angle brackets.
   {/param}
 {/call}
 {/template}
@@ -50,9 +65,22 @@
   {param name : 'header_path_prefix' /}
   {param default : 'name' /}
   {param desc}
-  A path prefix when including headers of this target. Defaults to the short name of the target. Can
-  contain forward slashes (<code>/</code>), but cannot start with one. See <code>headers</code> for
-  more information.
+  A path prefix when including headers of this target. For example, headers from a library defined
+  using
+  {literal}<pre class="prettyprint lang-py">
+apple_library(
+    name = "Library",
+    headers = glob(["**/*.h"]),
+    header_path_prefix = "Lib",
+)
+</pre>{/literal}
+  can be imported using following mapping
+  {literal}<pre>
+Library/SubDir/Header1.h -> Lib/Header1.h
+Library/Header2.h -> Lib/Header2.h
+  </pre>{/literal}
+  Defaults to the short name of the target. Can contain forward slashes (<code>/</code>), but
+  cannot start with one. See <code>headers</code> for more information.
   {/param}
 {/call}
 {/template}
@@ -97,3 +125,26 @@
 {/call}
 {/template}
 
+/***/
+{template .extra_xcode_sources}
+{call buck.arg}
+  {param name : 'extra_xcode_sources' /}
+  {param default: '[]' /}
+  {param desc}
+  When the project is generated, this is the list of files that will added to the build phase
+  "Compile Sources" of the given target.
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .extra_xcode_files}
+{call buck.arg}
+  {param name : 'extra_xcode_files' /}
+  {param default: '[]' /}
+  {param desc}
+  When the project is generated, this is the list of files that will added to the project.
+  Those files won't be added to the build phase "Compile Sources".
+  {/param}
+{/call}
+{/template}

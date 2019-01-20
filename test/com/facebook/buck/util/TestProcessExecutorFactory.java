@@ -17,12 +17,11 @@
 package com.facebook.buck.util;
 
 import com.facebook.buck.testutil.TestConsole;
-
 import java.io.PrintStream;
 
 public class TestProcessExecutorFactory implements ProcessExecutorFactory {
   @Override
   public ProcessExecutor createProcessExecutor(PrintStream stdout, PrintStream stderr) {
-    return new ProcessExecutor(new TestConsole());
+    return new DefaultProcessExecutor(new TestConsole());
   }
 }

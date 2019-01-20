@@ -25,10 +25,13 @@ def die(msg, exit_code=1):
 def safe_copy(source, dest, overwrite=False):
   def do_copy():
     temp_dest = dest + uuid4().hex
-    shutil.copyfile(source, temp_dest)
+    if os.path.isdir(source):
+        shutil.copytree(source, temp_dest)
+    else:
+        shutil.copyfile(source, temp_dest)
     os.rename(temp_dest, dest)
 
-  if hasattr(os, 'link'):
+  if hasattr(os, 'link') and not os.path.isdir(source):
     try:
       os.link(source, dest)
     except OSError as e:
@@ -300,8 +303,17 @@ class Chroot(object):
     """Get all files in the chroot."""
     all_files = set()
     for label in self.filesets:
-      all_files.update(self.filesets[label])
+      for fn in self.filesets[label]:
+          self._add_files(fn, all_files)
     return all_files
+
+  def _add_files(self, fn, all_files):
+      all_files.add(fn)
+      p = os.path.join(self.chroot, fn)
+      if os.path.isdir(p):
+          contents = os.listdir(p)
+          for f in contents:
+              self._add_files(os.path.join(fn, f), all_files)
 
   def labels(self):
     return self.filesets.keys()

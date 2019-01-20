@@ -18,10 +18,12 @@ package com.example.clown;
 
 import static junit.framework.TestCase.assertTrue;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class CarTest {
 
+  @Ignore
   @Test
   public void testWheelsFallOff() {
     assertTrue(true);

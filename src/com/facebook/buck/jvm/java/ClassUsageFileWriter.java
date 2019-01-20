@@ -16,17 +16,14 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.IOException;
-
-import javax.tools.StandardJavaFileManager;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import java.nio.file.Path;
 
 public interface ClassUsageFileWriter {
-  StandardJavaFileManager wrapFileManager(StandardJavaFileManager inner);
-
   void writeFile(
+      ClassUsageTracker tracker,
+      Path relativePath,
       ProjectFilesystem filesystem,
-      ObjectMapper objectMapper) throws IOException;
+      CellPathResolver cellPathResolver);
 }

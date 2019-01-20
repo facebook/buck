@@ -16,24 +16,24 @@
 
 package com.facebook.buck.testutil;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger; // NOPMD
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Handler;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
-
 /**
  * A LogSink that buffers log messages written to a particular logger.
  *
- * Uses JUnit's rule mechanism to take care of installing and removing itself as a Logger handler.
+ * <p>Uses JUnit's rule mechanism to take care of installing and removing itself as a Logger
+ * handler.
  *
- * Usage:
+ * <p>Usage:
  *
  * <pre>
  *   @Rule
@@ -46,15 +46,14 @@ public final class TestLogSink extends Handler implements TestRule {
 
   /**
    * Construct a log sink that listens to log message from a particular class's logger.
+   *
    * @param classUnderTest Class whose logger should be listened to
    */
   public TestLogSink(Class<?> classUnderTest) {
     this.classUnderTest = classUnderTest;
   }
 
-  /**
-   * Retrieve the log records that were published.
-   */
+  /** Retrieve the log records that were published. */
   public List<LogRecord> getRecords() {
     return records;
   }
@@ -66,19 +65,16 @@ public final class TestLogSink extends Handler implements TestRule {
    */
   public static Matcher<LogRecord> logRecordWithMessage(Matcher<String> messageMatcher) {
     return new FeatureMatcher<LogRecord, String>(
-        messageMatcher,
-        "a LogRecord with message",
-        "message") {
+        messageMatcher, "a LogRecord with message", "message") {
       @Override
       protected String featureValueOf(LogRecord logRecord) {
         return logRecord.getMessage();
       }
     };
-
   }
 
   @Override
-  public Statement apply(final Statement base, Description description) {
+  public Statement apply(Statement base, Description description) {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
@@ -98,10 +94,8 @@ public final class TestLogSink extends Handler implements TestRule {
   }
 
   @Override
-  public void flush() {
-  }
+  public void flush() {}
 
   @Override
-  public void close() throws SecurityException {
-  }
+  public void close() throws SecurityException {}
 }

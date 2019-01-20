@@ -1,6 +1,14 @@
-
 genrule(
-  name = 'child-target',
-  out = 'baz.txt',
-  cmd = 'echo "$(location @parent//:top)" > $OUT',
+    name = "child-target",
+    out = "baz.txt",
+    cmd = "echo \"$(location @parent//:top)\" > $OUT",
+)
+
+export_file(
+    name = "dummy.c",
+)
+
+export_file(
+    name = "reexported-dummy.c",
+    src = ":dummy.c",
 )

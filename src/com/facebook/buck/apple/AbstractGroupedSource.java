@@ -16,43 +16,34 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourceWithFlags;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
-import org.immutables.value.Value;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import org.immutables.value.Value;
 
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractGroupedSource {
-  /**
-   * The type of grouped source entry this object represents.
-   */
+  /** The type of grouped source entry this object represents. */
   public enum Type {
-      /**
-       * A single {@link SourceWithFlags}.
-       */
-      SOURCE_WITH_FLAGS,
-      /**
-       * A single {@link SourcePath} representing a public header file.
-       */
-      PUBLIC_HEADER,
-      /**
-       * A single {@link SourcePath} representing a private header file.
-       */
-      PRIVATE_HEADER,
-      /**
-       * A source group (group name and one or more GroupedSource objects).
-       */
-      SOURCE_GROUP
+    /** A single {@link SourceWithFlags}. */
+    SOURCE_WITH_FLAGS,
+    /** A single {@link SourcePath} that shouldn't be included in the build phase. */
+    IGNORED_SOURCE,
+    /** A single {@link SourcePath} representing a public header file. */
+    PUBLIC_HEADER,
+    /** A single {@link SourcePath} representing a private header file. */
+    PRIVATE_HEADER,
+    /** A source group (group name and one or more GroupedSource objects). */
+    SOURCE_GROUP,
   }
 
   @Value.Parameter
@@ -83,6 +74,7 @@ abstract class AbstractGroupedSource {
         Preconditions.checkArgument(!getSourceGroupPathRelativeToTarget().isPresent());
         Preconditions.checkArgument(!getSourceGroup().isPresent());
         break;
+      case IGNORED_SOURCE:
       case PUBLIC_HEADER:
       case PRIVATE_HEADER:
         Preconditions.checkArgument(!getSourceWithFlags().isPresent());
@@ -108,11 +100,14 @@ abstract class AbstractGroupedSource {
     switch (getType()) {
       case SOURCE_WITH_FLAGS:
         sourcePath = getSourceWithFlags().get().getSourcePath();
-        return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
+        return Objects.requireNonNull(pathResolver.apply(sourcePath)).getFileName().toString();
+      case IGNORED_SOURCE:
+        sourcePath = getSourcePath().get();
+        return Objects.requireNonNull(pathResolver.apply(sourcePath)).getFileName().toString();
       case PUBLIC_HEADER:
       case PRIVATE_HEADER:
         sourcePath = getSourcePath().get();
-        return Preconditions.checkNotNull(pathResolver.apply(sourcePath)).getFileName().toString();
+        return Objects.requireNonNull(pathResolver.apply(sourcePath)).getFileName().toString();
       case SOURCE_GROUP:
         return getSourceGroupName().get();
       default:
@@ -120,17 +115,29 @@ abstract class AbstractGroupedSource {
     }
   }
 
-  /**
-   * Creates a {@link GroupedSource} given a {@link SourceWithFlags}.
-   */
+  /** Creates a {@link GroupedSource} given a {@link SourceWithFlags}. */
   public static GroupedSource ofSourceWithFlags(SourceWithFlags sourceWithFlags) {
     return GroupedSource.of(
         Type.SOURCE_WITH_FLAGS,
         Optional.of(sourceWithFlags),
-        Optional.<SourcePath>absent(),
-        Optional.<String>absent(),
-        Optional.<Path>absent(),
-        Optional.<List<GroupedSource>>absent());
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
+  }
+
+  /**
+   * Creates a {@link GroupedSource} given a {@link SourcePath} representing a file that should not
+   * be included in sources.
+   */
+  public static GroupedSource ofIgnoredSource(SourcePath sourcePath) {
+    return GroupedSource.of(
+        Type.IGNORED_SOURCE,
+        Optional.empty(),
+        Optional.of(sourcePath),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   /**
@@ -139,11 +146,11 @@ abstract class AbstractGroupedSource {
   public static GroupedSource ofPublicHeader(SourcePath headerPath) {
     return GroupedSource.of(
         Type.PUBLIC_HEADER,
-        Optional.<SourceWithFlags>absent(),
+        Optional.empty(),
         Optional.of(headerPath),
-        Optional.<String>absent(),
-        Optional.<Path>absent(),
-        Optional.<List<GroupedSource>>absent());
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   /**
@@ -152,25 +159,22 @@ abstract class AbstractGroupedSource {
   public static GroupedSource ofPrivateHeader(SourcePath headerPath) {
     return GroupedSource.of(
         Type.PRIVATE_HEADER,
-        Optional.<SourceWithFlags>absent(),
+        Optional.empty(),
         Optional.of(headerPath),
-        Optional.<String>absent(),
-        Optional.<Path>absent(),
-        Optional.<List<GroupedSource>>absent());
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
-  /**
-   * Creates a {@link GroupedSource} given a source group name and a
-   * list of GroupedSources.
-   */
+  /** Creates a {@link GroupedSource} given a source group name and a list of GroupedSources. */
   public static GroupedSource ofSourceGroup(
       String sourceGroupName,
       Path sourceGroupPathRelativeToTarget,
       Collection<GroupedSource> sourceGroup) {
     return GroupedSource.of(
         Type.SOURCE_GROUP,
-        Optional.<SourceWithFlags>absent(),
-        Optional.<SourcePath>absent(),
+        Optional.empty(),
+        Optional.empty(),
         Optional.of(sourceGroupName),
         Optional.of(sourceGroupPathRelativeToTarget),
         Optional.of((List<GroupedSource>) ImmutableList.copyOf(sourceGroup)));
@@ -178,8 +182,13 @@ abstract class AbstractGroupedSource {
 
   public interface Visitor {
     void visitSourceWithFlags(SourceWithFlags sourceWithFlags);
+
+    void visitIgnoredSource(SourcePath source);
+
     void visitPublicHeader(SourcePath publicHeader);
+
     void visitPrivateHeader(SourcePath privateHeader);
+
     void visitSourceGroup(
         String sourceGroupName,
         Path sourceGroupPathRelativeToTarget,
@@ -190,6 +199,9 @@ abstract class AbstractGroupedSource {
     switch (getType()) {
       case SOURCE_WITH_FLAGS:
         visitor.visitSourceWithFlags(getSourceWithFlags().get());
+        break;
+      case IGNORED_SOURCE:
+        visitor.visitIgnoredSource(getSourcePath().get());
         break;
       case PUBLIC_HEADER:
         visitor.visitPublicHeader(getSourcePath().get());

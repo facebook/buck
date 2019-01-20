@@ -16,12 +16,11 @@
 
 package com.example;
 
+import java.util.Arrays;
+import java.util.Collection;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
-import java.util.Arrays;
-import java.util.Collection;
 
 @RunWith(Parameterized.class)
 public class ParametrizedTest {
@@ -34,7 +33,7 @@ public class ParametrizedTest {
 
   @Parameterized.Parameters
   public static Collection<Object[]> data() {
-    Object[][] data = new Object[][] { { 0 }, { 1 }, { 2 }, { 3 } };
+    Object[][] data = new Object[][] {{0}, {1}, {2}, {3}};
     return Arrays.asList(data);
   }
 
@@ -42,5 +41,4 @@ public class ParametrizedTest {
   public void parametrizedTest() {
     System.out.print(String.format("Parameter: %d\n", number));
   }
-
 }

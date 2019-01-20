@@ -16,34 +16,35 @@
 
 package com.facebook.buck.event;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.external.events.BuckEventExternalInterface;
-import com.facebook.buck.model.BuildId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.annotations.VisibleForTesting;
 
 public interface BuckEvent extends BuckEventExternalInterface {
   @VisibleForTesting
-  void configure(long timestamp, long nanoTime, long threadId, BuildId buildId);
+  void configure(
+      long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId);
 
   @JsonIgnore
   boolean isConfigured();
 
   long getNanoTime();
 
+  long getThreadUserNanoTime();
+
   String toLogMessage();
 
   long getThreadId();
 
-  /**
-   * @return an identifier that distinguishes the build with which this event is associated.
-   */
+  /** @return an identifier that distinguishes the build with which this event is associated. */
   BuildId getBuildId();
 
   /**
-   * @return Whether or not this event is related to another event.  Events are related if they
-   * pertain to the same event, for example if they are measuring the start and stop of some phase.
-   * For example,
-   * <pre>
+   * @return Whether or not this event is related to another event. Events are related if they
+   *     pertain to the same event, for example if they are measuring the start and stop of some
+   *     phase. For example,
+   *     <pre>
    *   <code>
    *    (CommandEvent.started("build")).isRelatedTo(CommandEvent.finished("build")) == true
    *    (CommandEvent.started("build")).isRelatedTo(CommandEvent.started("build")) == true
@@ -53,9 +54,6 @@ public interface BuckEvent extends BuckEventExternalInterface {
    */
   boolean isRelatedTo(BuckEvent event);
 
-  /**
-   * @return key used to determine whether this event is related to another event.
-   */
+  /** @return key used to determine whether this event is related to another event. */
   EventKey getEventKey();
-
 }

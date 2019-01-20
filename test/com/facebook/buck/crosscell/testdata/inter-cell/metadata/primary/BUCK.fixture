@@ -1,0 +1,7 @@
+cxx_binary(
+    name = "hello",
+    srcs = [
+        "hello.cpp",
+        "main.cpp",
+    ],
+)

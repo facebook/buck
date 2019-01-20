@@ -1,0 +1,10 @@
+apple_test(
+    name = "spinning",
+    srcs = ["SpinningXCTest.m"],
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    info_plist = "Test.plist",
+    test_rule_timeout_ms = 100,
+)

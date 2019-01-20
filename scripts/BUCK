@@ -1,0 +1,31 @@
+python_binary(
+    name = "diff_rulekeys",
+    main_module = "diff_rulekeys",
+    deps = [
+        ":diff_rulekeys_lib",
+    ],
+)
+
+python_library(
+    name = "diff_rulekeys_lib",
+    srcs = [
+        "diff_rulekeys.py",
+    ],
+    base_module = "",
+    visibility = [
+        "//scripts/...",
+    ],
+    deps = [
+        "//third-party/py/argparse:argparse",
+    ],
+)
+
+python_test(
+    name = "diff_rulekeys_test",
+    srcs = [
+        "diff_rulekeys_test.py",
+    ],
+    deps = [
+        ":diff_rulekeys_lib",
+    ],
+)

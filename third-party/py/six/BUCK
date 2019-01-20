@@ -1,0 +1,17 @@
+load("//tools/build_rules:export_files.bzl", "export_files")
+
+python_library(
+    name = "six",
+    srcs = [
+        "six.py",
+    ],
+    base_module = "",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+export_files(["six.py"])

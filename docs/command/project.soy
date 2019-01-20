@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.project}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'buck project' /}
+    {param navid: 'command_project' /}
     {param description}
       A command that generates the configuration files for an IDE to work with the project.
     {/param}
@@ -51,10 +67,8 @@
 {call buck.param}
   {param name: 'without-tests' /}
   {param desc}
-    Indicates that Buck should build a project slice without tests (the default is to include any
-    tests that reference the targets in the project with <code>source_under_test</code> on
-    {sp}<code>*_test</code> rules and <code>tests</code> on <code>*_library</code> and
-    {sp}<code>*_binary</code> rules).
+    Indicates that Buck should build a project slice without tests (the default is to include 
+    {sp}<code>tests</code> on <code>*_library</code> and <code>*_binary</code> rules).
   {/param}
 {/call}
 
@@ -62,6 +76,23 @@
   {param name: 'without-dependencies-tests' /}
   {param desc}
     Indicates that Buck should build a project slice with the tests of the specified targets only.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'exclude-artifacts  ' /}
+  {param desc}
+    Don't include references to the artifacts created by compiling a target in the
+    module representing that target. This can improve indexing times, but will mean generated code
+    does not show up in the ide. For example R files for Android.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'remove-unused-ij-libraries ' /}
+  {param desc}
+    After generating an IntelliJ project remove all IntelliJ libraries that are not used in the
+    project.
   {/param}
 {/call}
 </ul>
@@ -76,7 +107,7 @@
 <h3 id="intellij">IntelliJ</h3>
 
 <p>
-  This command processes all of the {call buck.project_config /} rules across all of the
+  This command processes all of the 
   {sp}{call buck.build_file /}s whose targets were specified and uses them to generate the
   configuration files for an IDE.  The generated files include:
 </p>
@@ -87,9 +118,8 @@
     always corresponds to a {call buck.prebuilt_jar /}.
   </li>
   <li>
-    <code>.iml</code> files, each of which defines a module in IntelliJ.  An <code>.iml</code> file
-    will be created in each directory with a {call buck.build_file /} that has a
-    {sp}{call buck.project_config /}.  A module can depend on other modules, as well as libraries.
+    <code>.iml</code> files, each of which defines a module in IntelliJ.
+    A module can depend on other modules, as well as libraries.
     It should be noted that although Buck allows multiple build targets per build file, IntelliJ's
     modules are only defined at the directory level.  This means that you may find IntelliJ flagging
     compilation errors because of missing dependencies of classes outside of your project slice, but
@@ -132,6 +162,17 @@
   {param desc}
     Indicates that Buck should build a single monoproject for all {call buck.build_target /}s
     specified.
+  {/param}
+{/call}
+
+{call buck.param}
+  {param name: 'project-schemes' /}
+  {param desc}
+    Enables the generation of separate schemes for all projects included in the generated workspace.
+    Each project's scheme is constrained to the set of build and test targets that are members or
+    deps of the associated project.
+    You can specify the default value using by adding <code>project_schemes = true</code> to the
+    <code>[project]</code> section of your <code>.buckconfig</code> file.
   {/param}
 {/call}
 </ul>

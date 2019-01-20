@@ -20,26 +20,27 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.util.Map;
+import org.junit.Test;
 
 public class ProguardMappingTest {
   @Test
   public void testBasicParse() {
-    Map<String, String> mapping = ProguardMapping.readClassMapping(ImmutableList.of(
-        "foo.bar.Baz -> foo.bar.a:",
-        "  member -> x",
-        "foo.bar.Baz$Qux -> foo.bar.Baz$Qux:"));
-    assertEquals(mapping, ImmutableMap.of(
-        "foo.bar.Baz", "foo.bar.a",
-        "foo.bar.Baz$Qux", "foo.bar.Baz$Qux"));
+    Map<String, String> mapping =
+        ProguardMapping.readClassMapping(
+            ImmutableList.of(
+                "foo.bar.Baz -> foo.bar.a:",
+                "  member -> x",
+                "foo.bar.Baz$Qux -> foo.bar.Baz$Qux:"));
+    assertEquals(
+        mapping,
+        ImmutableMap.of(
+            "foo.bar.Baz", "foo.bar.a",
+            "foo.bar.Baz$Qux", "foo.bar.Baz$Qux"));
   }
 
   @Test(expected = IllegalArgumentException.class)
   public void testInternalNameError() {
-    ProguardMapping.readClassMapping(ImmutableList.of(
-        "foo/bar/Baz -> foo/bar/a:"));
+    ProguardMapping.readClassMapping(ImmutableList.of("foo/bar/Baz -> foo/bar/a:"));
   }
 }

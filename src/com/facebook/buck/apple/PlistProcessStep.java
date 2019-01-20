@@ -16,21 +16,27 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.collect.ImmutableMap;
-
 import com.dd.plist.BinaryPropertyListWriter;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
-
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.step.ExecutionContext;
+import com.facebook.buck.step.Step;
+import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
+import com.google.common.collect.ImmutableMap;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.BufferedInputStream;
 import java.nio.file.Path;
+import java.text.ParseException;
+import java.util.HashMap;
+import java.util.Optional;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 class PlistProcessStep implements Step {
 
@@ -46,6 +52,7 @@ class PlistProcessStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final Path input;
+  private final Optional<Path> additionalInputToMerge;
   private final Path output;
 
   /** Only valid if the input .plist is a NSDictionary; ignored otherwise. */
@@ -53,17 +60,20 @@ class PlistProcessStep implements Step {
 
   /** Only valid if the input .plist is a NSDictionary; ignored otherwise. */
   private final ImmutableMap<String, NSObject> overrideKeys;
+
   private final OutputFormat outputFormat;
 
   public PlistProcessStep(
       ProjectFilesystem filesystem,
       Path input,
+      Optional<Path> additionalInputToMerge,
       Path output,
       ImmutableMap<String, NSObject> additionalKeys,
       ImmutableMap<String, NSObject> overrideKeys,
       OutputFormat outputFormat) {
     this.filesystem = filesystem;
     this.input = input;
+    this.additionalInputToMerge = additionalInputToMerge;
     this.output = output;
     this.additionalKeys = additionalKeys;
     this.overrideKeys = overrideKeys;
@@ -71,18 +81,58 @@ class PlistProcessStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     try (InputStream stream = filesystem.newFileInputStream(input);
-         BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
+        BufferedInputStream bufferedStream = new BufferedInputStream(stream)) {
       NSObject infoPlist;
       try {
         infoPlist = PropertyListParser.parse(bufferedStream);
-      } catch (Exception e) {
-        throw new IOException(input.toString() + ": " + e);
+      } catch (PropertyListFormatException
+          | ParseException
+          | ParserConfigurationException
+          | SAXException
+          | UnsupportedOperationException e) {
+        throw new IOException(input + ": " + e);
+      } catch (ArrayIndexOutOfBoundsException e) {
+        throw new HumanReadableException(input + ": the content of the plist is invalid or empty.");
       }
 
       if (infoPlist instanceof NSDictionary) {
         NSDictionary dictionary = (NSDictionary) infoPlist;
+
+        if (additionalInputToMerge.isPresent()) {
+          try (InputStream mergeStream =
+                  filesystem.newFileInputStream(additionalInputToMerge.get());
+              BufferedInputStream mergeBufferedStream = new BufferedInputStream(mergeStream)) {
+            NSObject mergeInfoPlist;
+            try {
+              mergeInfoPlist = PropertyListParser.parse(mergeBufferedStream);
+            } catch (PropertyListFormatException
+                | ParseException
+                | ParserConfigurationException
+                | SAXException e) {
+              throw new IOException(additionalInputToMerge + ": " + e);
+            }
+            HashMap<String, NSObject> infoPlistMap = dictionary.getHashMap();
+            ((NSDictionary) mergeInfoPlist)
+                .getHashMap()
+                .forEach(
+                    (mergeInfoPlistKey, mergeInfoPlistValue) ->
+                        infoPlistMap.merge(
+                            mergeInfoPlistKey,
+                            mergeInfoPlistValue,
+                            (oldInfoPlistValue, newInfoPlistValue) -> {
+                              if (oldInfoPlistValue instanceof NSDictionary
+                                  && newInfoPlistValue instanceof NSDictionary) {
+                                ((NSDictionary) oldInfoPlistValue)
+                                    .putAll(((NSDictionary) newInfoPlistValue).getHashMap());
+                                return oldInfoPlistValue;
+                              }
+                              return newInfoPlistValue;
+                            }));
+          }
+        }
+
         for (ImmutableMap.Entry<String, NSObject> entry : additionalKeys.entrySet()) {
           if (!dictionary.containsKey(entry.getKey())) {
             dictionary.put(entry.getKey(), entry.getValue());
@@ -95,23 +145,16 @@ class PlistProcessStep implements Step {
       switch (this.outputFormat) {
         case XML:
           String serializedInfoPlist = infoPlist.toXMLPropertyList();
-          filesystem.writeContentsToPath(
-              serializedInfoPlist,
-              output);
+          filesystem.writeContentsToPath(serializedInfoPlist, output);
           break;
         case BINARY:
           byte[] binaryInfoPlist = BinaryPropertyListWriter.writeToArray(infoPlist);
-          filesystem.writeBytesToPath(
-              binaryInfoPlist,
-              output);
+          filesystem.writeBytesToPath(binaryInfoPlist, output);
           break;
       }
-    } catch (IOException e) {
-      context.logError(e, "error parsing plist %s", input);
-      return StepExecutionResult.ERROR;
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
@@ -123,5 +166,4 @@ class PlistProcessStep implements Step {
   public String getDescription(ExecutionContext context) {
     return String.format("process-plist %s %s", input, output);
   }
-
 }

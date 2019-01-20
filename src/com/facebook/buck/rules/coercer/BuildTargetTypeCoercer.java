@@ -16,15 +16,13 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.parser.BuildTargetParseException;
-import com.facebook.buck.parser.BuildTargetParser;
-import com.facebook.buck.parser.BuildTargetPatternParser;
-import com.facebook.buck.rules.CellPathResolver;
-
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
@@ -42,20 +40,21 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
-      throw new IllegalArgumentException("BuildTargetTypeCoercer called for non-string object");
+      throw CoerceFailedException.simple(object, getOutputClass());
     }
     String param = (String) object;
 
     try {
-        String baseName = UnflavoredBuildTarget.BUILD_TARGET_PREFIX +
-            MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
+      String baseName =
+          UnflavoredBuildTarget.BUILD_TARGET_PREFIX
+              + MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
 
-      return BuildTargetParser.INSTANCE.parse(
-          param,
-          BuildTargetPatternParser.forBaseName(baseName),
-          cellRoots);
+      return BuildTargetParser.INSTANCE.parse(cellRoots, param, baseName, false);
     } catch (BuildTargetParseException e) {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw new CoerceFailedException(
+          String.format(
+              "Unable to find the target %s.\n%s", object, e.getHumanReadableErrorMessage()),
+          e);
     }
   }
 }

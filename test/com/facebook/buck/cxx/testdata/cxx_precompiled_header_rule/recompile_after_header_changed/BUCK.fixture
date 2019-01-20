@@ -1,0 +1,14 @@
+cxx_binary(
+    name = "main",
+    srcs = [
+        "main.cpp",
+    ],
+    precompiled_header = ":pch",
+)
+
+cxx_precompiled_header(
+    name = "pch",
+    src = "header.h",
+    deps = [
+    ],
+)

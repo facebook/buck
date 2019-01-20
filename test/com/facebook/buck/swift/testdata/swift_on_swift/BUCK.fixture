@@ -1,0 +1,69 @@
+swift_library(
+    name = "dep1",
+    srcs = ["dep1/dep1.swift"],
+)
+
+apple_binary(
+    name = "parent",
+    srcs = ["parent/main.swift"],
+    deps = [":dep1"],
+)
+
+swift_library(
+    name = "libparent",
+    srcs = ["libparent/libparent.swift"],
+    deps = [":dep1"],
+)
+
+apple_bundle(
+    name = "sos",
+    binary = ":parent",
+    extension = "app",
+    info_plist = "parent/Info.plist",
+    info_plist_substitutions = {
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.example.test1",
+    },
+)
+
+swift_library(
+    name = "iosdep1",
+    srcs = ["iosdep1/iosdep1.swift"],
+    preferred_linkage = "any",  # iosdep1 preferred_linkage anchor
+)
+
+apple_binary(
+    name = "ios-parent",
+    srcs = ["ios-parent/AppDelegate.swift"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    deps = [":iosdep1"],
+)
+
+apple_binary(
+    name = "ios-parent-dynamic",
+    srcs = ["ios-parent/AppDelegate.swift"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    link_style = "shared",
+    deps = [":iosdep1"],
+)
+
+swift_library(
+    name = "dep1-soname",
+    srcs = ["dep1/dep1.swift"],
+    soname = "custom-soname",
+)
+
+apple_bundle(
+    name = "ios-sos",
+    binary = ":ios-parent",
+    extension = "app",
+    info_plist = "ios-parent/Info.plist",
+    info_plist_substitutions = {
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.example.iostest1",
+    },
+)

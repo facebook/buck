@@ -1,9 +1,0 @@
-#@# GENERATED FILE: DO NOT MODIFY 955fc146b9952ffcdb8c74a172c048761406043f #@#
-{
-  "unixsocket" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//third-party/java/jna:jna"
-    ]
-  }
-}

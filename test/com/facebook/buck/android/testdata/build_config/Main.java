@@ -21,10 +21,10 @@ class Main {
   private Main() {}
 
   public static void main(String... args) {
-    if (!BuildConfig.DEBUG ||
-        BuildConfig.VERSION != 1234 ||
-        !BuildConfig.IS_A_GOOD_FIELD ||
-        !"vcebelutvgnvljrnnvuurudbbknrbfij".equals(BuildConfig.APP_ID)) {
+    if (!BuildConfig.DEBUG
+        || BuildConfig.VERSION != 1234
+        || !BuildConfig.IS_A_GOOD_FIELD
+        || !"vcebelutvgnvljrnnvuurudbbknrbfij".equals(BuildConfig.APP_ID)) {
       System.exit(1);
     }
   }

@@ -1,24 +1,24 @@
 java_library(
-  name = 'b',
-  srcs = [
-    'B.java',
-  ],
-  # This rule is missing the following dependencies:
-  # deps = [
-  #   ':moreb',
-  #   '//java/com/example/a:a'
-  # ],
+    name = "b",
+    srcs = [
+        "B.java",
+    ],
+    # This rule is missing the following dependencies:
+    # deps = [
+    #   ':moreb',
+    #   '//java/com/example/a:a'
+    # ],
 )
 
 java_library(
-  name = 'moreb',
-  srcs = [
-    'MoreB.java',
-  ],
+    name = "moreb",
+    srcs = [
+        "MoreB.java",
+    ],
 )
 
 # Same as above, but as a test rather than a library.
 java_test(
-  name = 'test',
-  srcs = ['B.java'],
+    name = "test",
+    srcs = ["B.java"],
 )

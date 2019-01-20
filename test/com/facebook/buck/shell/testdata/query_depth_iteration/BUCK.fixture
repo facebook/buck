@@ -1,0 +1,48 @@
+# Use case: Find all deps which are not provided_deps
+#
+# digraph G {
+#     Top -> Dep
+#     Top -> Provided  [label="provided_dep"]
+#     Dep -> ShouldStay
+#     Provided -> ShouldStay
+#     Provided -> ProvidedOnlyShouldNotBeIncluded
+# }
+
+java_library(
+    name = "Top",
+    provided_deps = [
+        ":Provided",
+    ],
+    deps = [
+        ":Dep",
+    ],
+)
+
+java_library(
+    name = "Dep",
+    deps = [
+        ":ShouldStay",
+    ],
+)
+
+java_library(
+    name = "Provided",
+    deps = [
+        ":ProvidedOnlyShouldNotBeIncluded",
+        ":ShouldStay",
+    ],
+)
+
+java_library(
+    name = "ShouldStay",
+)
+
+java_library(
+    name = "ProvidedOnlyShouldNotBeIncluded",
+)
+
+genrule(
+    name = "print_deps_not_provided",
+    out = "out",
+    cmd = "echo $(query_targets 'deps(:Top, 42, labels(deps, lookup(@this)) )') > $OUT",
+)

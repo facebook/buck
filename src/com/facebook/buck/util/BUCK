@@ -1,142 +1,179 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
 CONSTANT_SRCS = [
-  'BuckConstant.java',
-  'AbstractSampleRate.java',
-  'AbstractPatternAndMessage.java',
+    "BuckConstant.java",
 ]
-java_immutables_library(
-  name = 'constants',
-  srcs = CONSTANT_SRCS,
-  immutable_types = [
-    'SampleRate',
-    'PatternAndMessage',
-  ],
-  tests = [
-    '//test/com/facebook/buck/util:util',
-  ],
-  visibility = [ 'PUBLIC' ],
-  autodeps = True,
-)
 
-TRISTATE_SRCS = [
-  'TriState.java',
-]
 java_library(
-  name = 'tristate',
-  srcs = TRISTATE_SRCS,
-  tests = [
-    '//test/com/facebook/buck/util:util',
-  ],
-  visibility = [ 'PUBLIC' ],
-  autodeps = True,
+    name = "constants",
+    srcs = CONSTANT_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/util/string:string",
+    ],
 )
 
-EXCEPTION_SRCS = [
-  'ExceptionWithHumanReadableMessage.java',
-  'HumanReadableException.java',
-  'WatchmanWatcherException.java',
-]
+EXCEPTION_SRCS = glob(["exceptions/*.java"])
+
 java_library(
-  name = 'exceptions',
-  srcs = EXCEPTION_SRCS,
-  tests = [
-    '//test/com/facebook/buck/util:util',
-  ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "exceptions",
+    srcs = EXCEPTION_SRCS,
+    tests = [
+        "//test/com/facebook/buck/util:util",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/jsr:jsr305",
+    ],
 )
-
 
 IO_SRCS = [
-  'AbstractCharsetProcessListener.java',
-  'AbstractProcessExecutorParams.java',
-  'Ansi.java',
-  'AnsiEnvironmentChecking.java',
-  'BestCompressionGZIPOutputStream.java',
-  'BgProcessKiller.java',
-  'Libc.java',
-  'Console.java',
-  'CapturingPrintStream.java',
-  'DirtyPrintStreamDecorator.java',
-  'InputStreamConsumer.java',
-  'LineFetcher.java',
-  'LineIterating.java',
-  'ListeningCharsetEncoder.java',
-  'ListeningCharsetDecoder.java',
-  'ListeningProcessExecutor.java',
-  'PkillProcessManager.java',
-  'ProcessManager.java',
-  'ProcessExecutor.java',
-  'Threads.java',
-  'UserIdFetcher.java',
-  'UnixUserIdFetcher.java',
-  'Verbosity.java',
+    "AbstractCharsetProcessListener.java",
+    "AbstractDirectoryCleanerArgs.java",
+    "AnsiEnvironmentChecking.java",
+    "DefaultFilteredDirectoryCopier.java",
+    "DirectoryCleaner.java",
+    "FilteredDirectoryCopier.java",
+    "ListeningCharsetDecoder.java",
+    "ListeningCharsetEncoder.java",
+    "NamedTemporaryDirectory.java",
+    "PkillProcessManager.java",
+    "SimpleProcessListener.java",
+    "TimeFormat.java",
+    "UnixUserIdFetcher.java",
+    "UserIdFetcher.java",
 ]
+
 java_immutables_library(
-  name = 'io',
-  srcs = IO_SRCS,
-  immutable_types = [
-    'ProcessExecutorParams',
-  ],
-  tests = [
-  ],
-  autodeps = True,
-  visibility = [ 'PUBLIC' ],
+    name = "io",
+    srcs = IO_SRCS,
+    tests = [
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":exceptions",
+        ":process_executor",
+        ":util",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/nuprocess:nuprocess",
+    ],
 )
 
-ESCAPER_SRCS = [
- 'Escaper.java',
- 'WindowsCreateProcessEscape.java',
+PROCESS_EXECUTOR_SRCS = [
+    "AbstractProcessExecutorParams.java",
+    "AbstractProcessResourceConsumption.java",
+    "Ansi.java",
+    "BgProcessKiller.java",
+    "CapturingPrintStream.java",
+    "Console.java",
+    "ContextualProcessExecutor.java",
+    "DefaultProcessExecutor.java",
+    "DirtyPrintStreamDecorator.java",
+    "ForwardingProcessListener.java",
+    "InputStreamConsumer.java",
+    "Libc.java",
+    "LineFetcher.java",
+    "ListeningProcessExecutor.java",
+    "PrintStreamProcessExecutorFactory.java",
+    "ProcessExecutor.java",
+    "ProcessExecutorFactory.java",
+    "ProcessHelper.java",
+    "ProcessManager.java",
+    "ProcessRegistry.java",
+    "Threads.java",
+    "Verbosity.java",
 ]
-java_library(
-  name = 'escaper',
-  srcs = ESCAPER_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+
+java_immutables_library(
+    name = "process_executor",
+    srcs = PROCESS_EXECUTOR_SRCS,
+    tests = [
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":util",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/jna:jna-platform",
+        "//third-party/java/nuprocess:nuprocess",
+        "//third-party/java/oshi:oshi-core",
+    ],
 )
 
-WATCHMAN_WATCHER_SRCS = [
-  'WatchmanWatcher.java',
+PACKAGED_RESOURCE_SRCS = [
+    "PackagedResource.java",
 ]
+
 java_library(
-  name = 'watchman',
-  srcs = WATCHMAN_WATCHER_SRCS,
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/cli:cli',
-    '//test/com/facebook/buck/util:util',
-  ],
+    name = "packaged_resource",
+    srcs = PACKAGED_RESOURCE_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/string:string",
+        "//src/com/facebook/buck/util/unarchive:unarchive",
+        "//third-party/java/guava:guava",
+    ],
 )
 
-OBJECT_MAPPER_SRCS = [
- 'ObjectMappers.java',
+ISOLATED_SRCS = [
+    "JavaVersion.java",
 ]
-java_library(
-  name = 'object_mapper',
-  srcs = OBJECT_MAPPER_SRCS,
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
-)
 
 java_library(
-  name = 'util',
-  srcs = glob(
-    includes = ['*.java'],
-    excludes = CONSTANT_SRCS + ESCAPER_SRCS + EXCEPTION_SRCS + IO_SRCS +
-               WATCHMAN_WATCHER_SRCS + TRISTATE_SRCS + OBJECT_MAPPER_SRCS),
-  tests = [
-    '//test/com/facebook/buck/util:util',
-  ],
-  autodeps = True,
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "isolated",
+    srcs = ISOLATED_SRCS,
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        # Do NOT add any deps here. This library is used by code that cannot depend on the rest of Buck.
+    ],
 )
 
-sh_test(
-  name = 'limit_new_project_filesystem_test',
-  test = 'limit_new_project_filesystem_test.sh',
+java_immutables_library(
+    name = "util",
+    srcs = glob(
+        ["*.java"],
+        exclude = CONSTANT_SRCS + EXCEPTION_SRCS + IO_SRCS +
+                  PACKAGED_RESOURCE_SRCS + PROCESS_EXECUTOR_SRCS + ISOLATED_SRCS,
+    ),
+    exported_deps = [
+        "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+    ],
+    tests = [
+        "//test/com/facebook/buck/util:util",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":exceptions",
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/exceptions/handler:handler",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/guava:guava",
+        "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
 )

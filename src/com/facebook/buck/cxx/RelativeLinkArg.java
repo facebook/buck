@@ -16,45 +16,41 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.modern.CustomClassSerialization;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueVisitor;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Consumer;
 
-public class RelativeLinkArg extends Arg {
-
-  private final PathSourcePath library;
+/** Relative link arg. */
+@CustomClassBehavior(RelativeLinkArg.SerializationBehavior.class)
+public class RelativeLinkArg implements Arg {
+  @AddToRuleKey private final PathSourcePath library;
   private final ImmutableList<String> link;
 
   public RelativeLinkArg(PathSourcePath library) {
     this.library = library;
+    this.link = createLink(library);
+  }
+
+  private static ImmutableList<String> createLink(PathSourcePath library) {
     Path fullPath = library.getFilesystem().resolve(library.getRelativePath());
     String name = MorePaths.stripPathPrefixAndExtension(fullPath.getFileName(), "lib");
-    this.link = ImmutableList.of("-L" + fullPath.getParent(), "-l" + name);
+    return ImmutableList.of("-L" + fullPath.getParent(), "-l" + name);
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return ImmutableList.<SourcePath>of(library);
-  }
-
-  @Override
-  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
-    builder.addAll(link);
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    link.forEach(consumer);
   }
 
   @Override
@@ -79,9 +75,19 @@ public class RelativeLinkArg extends Arg {
     return Objects.hash(library);
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("relative_link_lib", library);
-  }
+  /** Custom serialization. */
+  static class SerializationBehavior implements CustomClassSerialization<RelativeLinkArg> {
+    @Override
+    public <E extends Exception> void serialize(
+        RelativeLinkArg instance, ValueVisitor<E> serializer) throws E {
+      serializer.visitSourcePath(instance.library);
+    }
 
+    @Override
+    public <E extends Exception> RelativeLinkArg deserialize(ValueCreator<E> deserializer)
+        throws E {
+      PathSourcePath library = (PathSourcePath) deserializer.createSourcePath();
+      return new RelativeLinkArg(library);
+    }
+  }
 }

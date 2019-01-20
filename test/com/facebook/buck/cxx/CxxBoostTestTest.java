@@ -18,93 +18,86 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CommandTool;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.RuleScheduleInfo;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.test.TestResultSummary;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Rule;
-import org.junit.Test;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class CxxBoostTestTest {
 
-  private static final ObjectMapper mapper = ObjectMappers.newDefaultInstance();
   private static final TypeReference<List<TestResultSummary>> SUMMARIES_REFERENCE =
       new TypeReference<List<TestResultSummary>>() {};
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testParseResults() throws Exception {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "boost_test", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "boost_test", tmp);
     workspace.setUp();
 
     ImmutableList<String> samples =
-        ImmutableList.of(
-            "simple_success",
-            "simple_failure",
-            "simple_failure_with_output");
+        ImmutableList.of("simple_success", "simple_failure", "simple_failure_with_output");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
     CxxBoostTest test =
         new CxxBoostTest(
-            new FakeBuildRuleParamsBuilder(target)
-                .setProjectFilesystem(new ProjectFilesystem(tmp.getRoot().toPath()))
-                .build(),
-            pathResolver,
+            target,
+            projectFilesystem,
+            TestBuildRuleParams.create(),
             new CxxLink(
-                new FakeBuildRuleParamsBuilder(BuildTargetFactory.newInstance("//:link")).build(),
-                pathResolver,
+                linkTarget,
+                new FakeProjectFilesystem(),
+                ruleFinder,
+                TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
                 Paths.get("output"),
-                ImmutableList.<Arg>of(),
-                Optional.<RuleScheduleInfo>absent(),
-                /* cacheable */ true),
-            new CommandTool.Builder()
-                .addArg(new StringArg(""))
-                .build(),
-            Suppliers.ofInstance(ImmutableMap.<String, String>of()),
-            Suppliers.ofInstance(ImmutableList.<String>of()),
-            ImmutableSortedSet.<SourcePath>of(),
-            Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()),
-            ImmutableSet.<Label>of(),
-            ImmutableSet.<String>of(),
-            ImmutableSet.<BuildRule>of(),
+                ImmutableMap.of(),
+                ImmutableList.of(),
+                Optional.empty(),
+                Optional.empty(),
+                /* cacheable */ true,
+                /* thinLto */ false),
+            new CommandTool.Builder().addArg(StringArg.of("")).build(),
+            ImmutableMap.of(),
+            ImmutableList.of(),
+            ImmutableSortedSet.of(),
+            ImmutableSet.of(),
+            unused -> ImmutableSortedSet.of(),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
             /* runTestSeparately */ false,
-            /* testRuleTimeoutMs */ Optional.<Long>absent());
+            /* testRuleTimeoutMs */ Optional.empty());
 
     for (String sample : samples) {
       Path exitCode = Paths.get("unused");
@@ -112,12 +105,10 @@ public class CxxBoostTestTest {
       Path results = workspace.resolve(Paths.get(sample)).resolve("results");
       Path summaries = workspace.resolve(Paths.get(sample)).resolve("summaries");
       List<TestResultSummary> expectedSummaries =
-          mapper.readValue(summaries.toFile(), SUMMARIES_REFERENCE);
+          ObjectMappers.readValue(summaries, SUMMARIES_REFERENCE);
       ImmutableList<TestResultSummary> actualSummaries =
           test.parseResults(exitCode, output, results);
       assertEquals(sample, expectedSummaries, actualSummaries);
     }
-
   }
-
 }

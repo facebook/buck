@@ -1,0 +1,3 @@
+load("cell//:lib.bzl", "foo")
+
+export_file(name = "lib.bzl")

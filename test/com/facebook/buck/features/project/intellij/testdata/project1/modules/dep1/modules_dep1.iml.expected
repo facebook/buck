@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet type="android" name="Android">
+      <configuration>
+        <option name="GEN_FOLDER_RELATIVE_PATH_APT" value="/../../buck-out/android/modules/dep1/gen" />
+        <option name="GEN_FOLDER_RELATIVE_PATH_AIDL" value="/../../buck-out/android/modules/dep1/gen" />
+        <option name="RES_FOLDERS_RELATIVE_PATH" value="" />
+        <option name="LIBRARY_PROJECT" value="true" />
+        <option name="PROJECT_TYPE" value="1" />
+        <option name="UPDATE_PROPERTY_FILES" value="false" />
+        <option name="ENABLE_SOURCES_AUTOGENERATION" value="true" />
+        <includeAssetsFromLibraries>true</includeAssetsFromLibraries>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
+    <output url="jar://$MODULE_DIR$/../../buck-out/gen/modules/dep1/lib__generated__output/generated.jar!/" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../buck-out/android/modules/dep1/gen">
+      <sourceFolder url="file://$MODULE_DIR$/../../buck-out/android/modules/dep1/gen" isTestSource="false" />
+    </content>
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" packagePrefix="com.example" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="//libs:jsr305" scope="COMPILE" level="project" />
+    <orderEntry type="library" name="//libs:junit" scope="TEST" level="project" />
+    <orderEntry type="library" name="//modules/dep1:generated" scope="PROVIDED" level="project" exported="" />
+  </component>
+</module>

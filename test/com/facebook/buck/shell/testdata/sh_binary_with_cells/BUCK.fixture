@@ -1,0 +1,5 @@
+genrule(
+    name = "create_output_using_node",
+    out = "output.txt",
+    cmd = "$(exe node//:node) arg1 arg2 > $OUT",
+)

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.event;
 
-
 public abstract class NetworkEvent extends AbstractBuckEvent {
   protected NetworkEvent(EventKey eventKey) {
     super(eventKey);

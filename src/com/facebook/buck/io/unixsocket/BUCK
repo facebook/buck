@@ -1,1 +1,10 @@
-standard_java_library()
+java_library(
+    name = "unixsocket",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io/watchman:transport",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

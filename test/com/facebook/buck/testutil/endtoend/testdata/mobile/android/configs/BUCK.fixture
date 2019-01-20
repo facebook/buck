@@ -1,0 +1,24 @@
+# Copyright 2018-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+export_file(
+    name = "dont_obfuscate",
+    src = "dont_obfuscate.pro",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_build_config(
+    name = "build_config",
+    package = "com.facebook.buck",
+    values = [
+        "String BUILD_ID = \"build-id\"",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

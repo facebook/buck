@@ -1,7 +1,18 @@
 #!/bin/bash
 
-# Runs buck in debug mode with the given args
+BUCK_BIN="$(cd "`dirname "$0"`" && pwd)"
 
-buck kill && 
-lsof -i:8888 | tail +2 | awk '{ print $2 }' | xargs -L1 kill -9 &&
-BUCK_DEBUG_MODE=1 NO_BUCKD=1 buck "$@"
+# Runs buck in debug mode with the given args
+if ! "$BUCK_BIN/buck" kill; then
+  echo "$0: failed to kill buck" >&2
+  exit 1
+fi
+
+pids=$(lsof -i:8888 | sed 1,1d | awk '{print $2}')
+if test -n "$pids"; then
+  for p in $pids; do
+    kill -9 $p
+  done
+fi
+
+BUCK_DEBUG_MODE=1 NO_BUCKD=1 "$BUCK_BIN/buck" "$@"

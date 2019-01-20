@@ -16,49 +16,74 @@
 
 package com.facebook.buck.cli;
 
-import com.google.common.collect.Sets;
-
+import com.facebook.buck.support.cli.args.PluginBasedSubCommandFactory;
+import com.facebook.buck.support.cli.args.PluginBasedSubCommands;
+import com.google.common.collect.ImmutableList;
+import java.lang.reflect.Field;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.ClassParser;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.IllegalAnnotationError;
 import org.kohsuke.args4j.Option;
+import org.kohsuke.args4j.ParserProperties;
+import org.kohsuke.args4j.spi.FieldSetter;
+import org.kohsuke.args4j.spi.OptionHandler;
 import org.kohsuke.args4j.spi.Setters;
-
-import java.lang.reflect.Field;
-import java.util.Set;
+import org.pf4j.PluginManager;
 
 /**
  * {@link CmdLineParser} with nested options via the {@link AdditionalOptions} annotation.
- * <p>
- * Fields annotated with it should be of classes which have a default constructor, and will be
+ *
+ * <p>Fields annotated with it should be of classes which have a default constructor, and will be
  * automatically instantiated.
  */
 public class AdditionalOptionsCmdLineParser extends CmdLineParser {
 
+  @SuppressWarnings("rawtypes")
+  static final Comparator<OptionHandler> DEFAULT_COMPARATOR =
+      Comparator.comparing(o -> o.option.toString());
+
+  private final PluginManager pluginManager;
+
   /**
-   * Creates a new command line owner that parses arguments/options and set them into
-   * the given object.
+   * Creates a new command line owner that parses arguments/options and set them into the given
+   * object.
    *
-   * @param bean
-   *      instance of a class annotated by {@link Option}, {@link Argument}
-   *      and {@link AdditionalOptions}.
-   *      This object will receive values. If this is null, the processing will
-   *      be skipped, which is useful if you'd like to feed metadata from other sources.
-   *
-   * @throws IllegalAnnotationError
-   *      if the option bean class is using args4j annotations incorrectly.
+   * @param bean instance of a class annotated by {@link Option}, {@link Argument} and {@link
+   *     AdditionalOptions}. This object will receive values. If this is null, the processing will
+   *     be skipped, which is useful if you'd like to feed metadata from other sources.
+   * @throws IllegalAnnotationError if the option bean class is using args4j annotations
+   *     incorrectly.
    * @see CmdLineParser#CmdLineParser(Object)
    */
-  public AdditionalOptionsCmdLineParser(Object bean) {
-    super(bean);
-    Set<Class<?>> visited = Sets.newHashSet();
-    parseAdditionalOptions(new ClassParser(), bean, visited);
+  public AdditionalOptionsCmdLineParser(PluginManager pluginManager, Object bean) {
+    /**
+     * Disable '@' syntax. We convert this ourselves in {@link BuckArgsMethods#expandAtFiles}, so
+     * options passed to parseArgument() should already be properly expanded. This allows us to have
+     * things like `buck run @file //:script -- @this_goes_to_the_script`, as @file is expanded
+     * before hitting this method.
+     */
+    super(null, ParserProperties.defaults().withAtSyntax(false));
+    this.pluginManager = pluginManager;
+
+    // This is copied in simplified form from CmdLineParser constructor and put here to save the
+    // reference to the plugin manager before doing the parsing of options.
+    new ClassParser().parse(bean, this);
+    getOptions().sort(DEFAULT_COMPARATOR);
+
+    Set<Class<?>> visited = new HashSet<>();
+    parseAnnotations(new ClassParser(), bean, visited);
   }
 
-  @SuppressWarnings("unchecked")
-  private void parseAdditionalOptions(ClassParser classParser, Object bean, Set<Class<?>> visited) {
+  public PluginManager getPluginManager() {
+    return pluginManager;
+  }
+
+  private void parseAnnotations(ClassParser classParser, Object bean, Set<Class<?>> visited) {
     // The top-level bean was already parsed by the superclass constructor,
     // so an empty visited set means we're parsing the top-level bean.
     if (!visited.isEmpty()) {
@@ -72,17 +97,39 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
     }
 
     for (Field f : beanClass.getDeclaredFields()) {
-      if (f.isAnnotationPresent(AdditionalOptions.class)) {
-        try {
-          // TODO(mrkane27): nicer to do this lazily in parseArgument()
-          Object fieldValue = f.getType().newInstance();
-          Setters.create(f, bean).addValue(fieldValue);
-          parseAdditionalOptions(classParser, fieldValue, visited);
-        } catch (CmdLineException | IllegalAccessException | InstantiationException e) {
-          throw new RuntimeException(e);
-        }
+      parseAdditionalOptions(classParser, bean, visited, f);
+      parsePluginBasedOption(classParser, bean, visited, f);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private void parseAdditionalOptions(
+      ClassParser classParser, Object bean, Set<Class<?>> visited, Field f) {
+    if (f.isAnnotationPresent(AdditionalOptions.class)) {
+      try {
+        // TODO(vlada): nicer to do this lazily in parseArgument()
+        Object fieldValue = f.getType().newInstance();
+        Setters.create(f, bean).addValue(fieldValue);
+        parseAnnotations(classParser, fieldValue, visited);
+      } catch (CmdLineException | IllegalAccessException | InstantiationException e) {
+        throw new RuntimeException(e);
       }
     }
   }
 
+  private void parsePluginBasedOption(
+      ClassParser classParser, Object bean, Set<Class<?>> visited, Field f) {
+    if (f.isAnnotationPresent(PluginBasedSubCommands.class)) {
+      PluginBasedSubCommands optionAnnotation = f.getAnnotation(PluginBasedSubCommands.class);
+      ImmutableList<Object> commands =
+          pluginManager
+              .getExtensions(optionAnnotation.factoryClass())
+              .stream()
+              .map(PluginBasedSubCommandFactory::createSubCommand)
+              .collect(ImmutableList.toImmutableList());
+
+      new FieldSetter(bean, f).addValue(commands);
+      commands.forEach(cmd -> parseAnnotations(classParser, cmd, visited));
+    }
+  }
 }

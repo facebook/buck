@@ -27,15 +27,16 @@ final class TestResult {
   final String testMethodName;
   final long runTime;
   final ResultType type;
-  final/* @Nullable */Throwable failure;
+  final /* @Nullable */ Throwable failure;
   final /* @Nullable */ String stdOut;
   final /* @Nullable */ String stdErr;
 
-  public TestResult(String testClassName,
+  public TestResult(
+      String testClassName,
       String testMethodName,
       long runTime,
       ResultType type,
-      /* @Nullable */Throwable failure,
+      /* @Nullable */ Throwable failure,
       /* @Nullable */ String stdOut,
       /* @Nullable */ String stdErr) {
     this.testClassName = testClassName;
@@ -45,6 +46,19 @@ final class TestResult {
     this.failure = failure;
     this.stdOut = stdOut;
     this.stdErr = stdErr;
+  }
+
+  public static TestResult forDryRun(String testClassName, String testMethodName) {
+    return new TestResult(testClassName, testMethodName, 0, ResultType.DRY_RUN, null, null, null);
+  }
+
+  public static TestResult forExcluded(String testClassName, String testMethodName, String reason) {
+    return new TestResult(
+        testClassName, testMethodName, 0, ResultType.EXCLUDED, null, reason, null);
+  }
+
+  public static TestResult forDisabled(String testClassName, String testMethodName) {
+    return new TestResult(testClassName, testMethodName, 0, ResultType.DISABLED, null, null, null);
   }
 
   public boolean isSuccess() {

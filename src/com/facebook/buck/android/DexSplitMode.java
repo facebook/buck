@@ -16,150 +16,153 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.dalvik.ZipSplitter;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
+import com.facebook.buck.android.dalvik.ZipSplitter;
+import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
-
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
+import java.util.Optional;
 
-import javax.annotation.concurrent.Immutable;
+/** Bundles together some information about whether and how we should split up dex files. */
+class DexSplitMode implements AddsToRuleKey {
+  public static final DexSplitMode NO_SPLIT =
+      new DexSplitMode(
+          /* shouldSplitDex */ false,
+          ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
+          DexStore.JAR,
+          /* linearAllocHardLimit */ 0,
+          /* primaryDexPatterns */ ImmutableSet.of(),
+          /* primaryDexClassesFile */ Optional.empty(),
+          /* primaryDexScenarioFile */ Optional.empty(),
+          /* isPrimaryDexScenarioOverflowAllowed */ false,
+          /* secondaryDexHeadClassesFile */ Optional.empty(),
+          /* secondaryDexTailClassesFile */ Optional.empty(),
+          /* allowRDotJavaInSecondaryDex */ false);
 
-/**
- * Bundles together some information about whether and how we should split up dex files.
- */
-@Immutable
-class DexSplitMode implements RuleKeyAppendable {
-  public static final DexSplitMode NO_SPLIT = new DexSplitMode(
-      /* shouldSplitDex */ false,
-      ZipSplitter.DexSplitStrategy.MAXIMIZE_PRIMARY_DEX_SIZE,
-      DexStore.JAR,
-      /* useLinearAllocSplitDex */ false,
-      /* linearAllocHardLimit */ 0,
-      /* primaryDexPatterns */ ImmutableSet.<String>of(),
-      /* primaryDexClassesFile */ Optional.<SourcePath>absent(),
-      /* primaryDexScenarioFile */ Optional.<SourcePath>absent(),
-      /* isPrimaryDexScenarioOverflowAllowed */ false,
-      /* secondaryDexHeadClassesFile */ Optional.<SourcePath>absent(),
-      /* secondaryDexTailClassesFile */ Optional.<SourcePath>absent());
+  /**
+   * By default, assume we have 5MB of linear alloc, 1MB of which is taken up by the framework, so
+   * that leaves 4MB.
+   */
+  static final long DEFAULT_LINEAR_ALLOC_HARD_LIMIT = 4 * 1024 * 1024;
 
-  private final boolean shouldSplitDex;
-  private final DexStore dexStore;
-  private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
-  private final boolean useLinearAllocSplitDex;
-  private final long linearAllocHardLimit;
-  private final ImmutableSet<String> primaryDexPatterns;
+  @AddToRuleKey private final boolean shouldSplitDex;
+
+  @AddToRuleKey private final DexStore dexStore;
+
+  @AddToRuleKey private final ZipSplitter.DexSplitStrategy dexSplitStrategy;
+
+  @AddToRuleKey private final long linearAllocHardLimit;
+
+  @AddToRuleKey private final ImmutableSortedSet<String> primaryDexPatterns;
 
   /**
    * File that whitelists the class files that should be in the primary dex.
-   * <p>
-   * Values in this file must match JAR entries (without the .class suffix),
-   * so they should contain path separators.
-   * For example:
+   *
+   * <p>Values in this file must match JAR entries (without the .class suffix), so they should
+   * contain path separators. For example:
+   *
    * <pre>
    * java/util/Map$Entry
    * </pre>
    */
-  private final Optional<SourcePath> primaryDexClassesFile;
+  @AddToRuleKey private final Optional<SourcePath> primaryDexClassesFile;
 
   /**
-   * File identifying the class files used in scenarios we want to fit in
-   * the primary dex.  We will add these classes and their dependencies, as
-   * well as base classes/interfaces thereof to the primary dex.
-   * <p>
-   * Values in this file must match JAR entries (without the .class suffix),
-   * so they should contain path separators.
-   * For example:
+   * File identifying the class files used in scenarios we want to fit in the primary dex. We will
+   * add these classes and their dependencies, as well as base classes/interfaces thereof to the
+   * primary dex.
+   *
+   * <p>Values in this file must match JAR entries (without the .class suffix), so they should
+   * contain path separators. For example:
+   *
    * <pre>
    *   java/util/Map$Entry
    * </pre>
    */
-  private final Optional<SourcePath> primaryDexScenarioFile;
+  @AddToRuleKey private final Optional<SourcePath> primaryDexScenarioFile;
 
   /**
-   * Boolean identifying whether we should allow the build to succeed if all
-   * the classes identified by primaryDexScenarioFile + dependencies do not
-   * fit in the primary dex.  The default is false, which causes the build
-   * to fail in this case.
+   * Boolean identifying whether we should allow the build to succeed if all the classes identified
+   * by primaryDexScenarioFile + dependencies do not fit in the primary dex. The default is false,
+   * which causes the build to fail in this case.
    */
-  private final boolean isPrimaryDexScenarioOverflowAllowed;
+  @AddToRuleKey private final boolean isPrimaryDexScenarioOverflowAllowed;
 
   /**
-   * File that whitelists the class files that should be in the first secondary
-   * dexes.
-   * <p>
-   * Values in this file must match JAR entries (without the .class suffix),
-   * so they should contain path separators.
-   * For example:
-   * <pre>
-   * java/util/Map$Entry
-   * </pre>
-   */
-  private final Optional<SourcePath> secondaryDexHeadClassesFile;
-
-  /**
-   * File that whitelists the class files that should be in the last secondary
-   * dexes.
-   * <p>
-   * Values in this file must match JAR entries (without the .class suffix),
-   * so they should contain path separators.
-   * For example:
-   * <pre>
-   * java/util/Map$Entry
-   * </pre>
-   */
-  private final Optional<SourcePath> secondaryDexTailClassesFile;
-
-
-
-  /**
+   * File that whitelists the class files that should be in the first secondary dexes.
    *
+   * <p>Values in this file must match JAR entries (without the .class suffix), so they should
+   * contain path separators. For example:
+   *
+   * <pre>
+   * java/util/Map$Entry
+   * </pre>
+   */
+  @AddToRuleKey private final Optional<SourcePath> secondaryDexHeadClassesFile;
+
+  /**
+   * File that whitelists the class files that should be in the last secondary dexes.
+   *
+   * <p>Values in this file must match JAR entries (without the .class suffix), so they should
+   * contain path separators. For example:
+   *
+   * <pre>
+   * java/util/Map$Entry
+   * </pre>
+   */
+  @AddToRuleKey private final Optional<SourcePath> secondaryDexTailClassesFile;
+
+  /**
+   * Boolean identifying whether we should allow the dex splitting to move R classes into secondary
+   * dex files.
+   */
+  @AddToRuleKey private boolean allowRDotJavaInSecondaryDex;
+
+  /**
    * @param primaryDexPatterns Set of substrings that, when matched, will cause individual input
    *     class or resource files to be placed into the primary jar (and thus the primary dex
-   *     output).  These classes are required for correctness.
+   *     output). These classes are required for correctness.
    * @param primaryDexClassesFile Path to a file containing a list of classes that must be included
-   *     in the primary dex.  These classes are required for correctness.
+   *     in the primary dex. These classes are required for correctness.
    * @param primaryDexScenarioFile Path to a file containing a list of classes used in a scenario
    *     that should be included in the primary dex along with all dependency classes required for
-   *     preverification.  These dependencies will be calculated by buck.  This list is used for
+   *     preverification. These dependencies will be calculated by buck. This list is used for
    *     performance, not correctness.
    * @param isPrimaryDexScenarioOverflowAllowed A boolean indicating whether to fail the build if
    *     any classes required by primaryDexScenarioFile cannot fit (false) or to allow the build to
    *     to proceed on a best-effort basis (true).
-   * @param secondaryDexHeadClassesFile Path to a file containing a list of classes that are put
-   *     in the first secondary dexes.
-   * @param secondaryDexTailClassesFile Path to a file containing a list of classes that are put
-   *     in the last secondary dexes.
-   * @param useLinearAllocSplitDex If true, {@link com.facebook.buck.dalvik.DalvikAwareZipSplitter}
-   *     will be used. Also, {@code linearAllocHardLimit} must have a positive value in this case.
+   * @param secondaryDexHeadClassesFile Path to a file containing a list of classes that are put in
+   *     the first secondary dexes.
+   * @param secondaryDexTailClassesFile Path to a file containing a list of classes that are put in
+   * @param allowRDotJavaInSecondaryDex whether to allow R.java classes in the secondary dex files
    */
   public DexSplitMode(
       boolean shouldSplitDex,
-      ZipSplitter.DexSplitStrategy dexSplitStrategy,
+      DexSplitStrategy dexSplitStrategy,
       DexStore dexStore,
-      boolean useLinearAllocSplitDex,
       long linearAllocHardLimit,
       Collection<String> primaryDexPatterns,
       Optional<SourcePath> primaryDexClassesFile,
       Optional<SourcePath> primaryDexScenarioFile,
       boolean isPrimaryDexScenarioOverflowAllowed,
       Optional<SourcePath> secondaryDexHeadClassesFile,
-      Optional<SourcePath> secondaryDexTailClassesFile) {
+      Optional<SourcePath> secondaryDexTailClassesFile,
+      boolean allowRDotJavaInSecondaryDex) {
     this.shouldSplitDex = shouldSplitDex;
     this.dexSplitStrategy = dexSplitStrategy;
     this.dexStore = dexStore;
-    this.useLinearAllocSplitDex = useLinearAllocSplitDex;
     this.linearAllocHardLimit = linearAllocHardLimit;
-    this.primaryDexPatterns = ImmutableSet.copyOf(primaryDexPatterns);
+    this.primaryDexPatterns = ImmutableSortedSet.copyOf(primaryDexPatterns);
     this.primaryDexClassesFile = primaryDexClassesFile;
     this.primaryDexScenarioFile = primaryDexScenarioFile;
     this.isPrimaryDexScenarioOverflowAllowed = isPrimaryDexScenarioOverflowAllowed;
     this.secondaryDexHeadClassesFile = secondaryDexHeadClassesFile;
     this.secondaryDexTailClassesFile = secondaryDexTailClassesFile;
-
+    this.allowRDotJavaInSecondaryDex = allowRDotJavaInSecondaryDex;
   }
 
   public DexStore getDexStore() {
@@ -173,10 +176,6 @@ class DexSplitMode implements RuleKeyAppendable {
   ZipSplitter.DexSplitStrategy getDexSplitStrategy() {
     Preconditions.checkState(isShouldSplitDex());
     return dexSplitStrategy;
-  }
-
-  public boolean useLinearAllocSplitDex() {
-    return useLinearAllocSplitDex;
   }
 
   public long getLinearAllocHardLimit() {
@@ -198,26 +197,16 @@ class DexSplitMode implements RuleKeyAppendable {
   public boolean isPrimaryDexScenarioOverflowAllowed() {
     return isPrimaryDexScenarioOverflowAllowed;
   }
+
   public Optional<SourcePath> getSecondaryDexHeadClassesFile() {
     return secondaryDexHeadClassesFile;
   }
+
   public Optional<SourcePath> getSecondaryDexTailClassesFile() {
     return secondaryDexTailClassesFile;
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("dexStore", dexStore);
-    sink.setReflectively("dexSplitStrategy", dexSplitStrategy);
-    sink.setReflectively("isPrimaryDexScenarioOverflowAllowed",
-        isPrimaryDexScenarioOverflowAllowed);
-    sink.setReflectively("linearAllocHardLimit", linearAllocHardLimit);
-    sink.setReflectively("primaryDexPatterns", primaryDexPatterns);
-    sink.setReflectively("primaryDexClassesFile", primaryDexClassesFile);
-    sink.setReflectively("primaryDexScenarioFile", primaryDexScenarioFile);
-    sink.setReflectively("secondaryDexHeadClassesFile", secondaryDexHeadClassesFile);
-    sink.setReflectively("secondaryDexTailClassesFile", secondaryDexTailClassesFile);
-    sink.setReflectively("shouldSplitDex", shouldSplitDex);
-    sink.setReflectively("useLinearAllocSplitDex", useLinearAllocSplitDex);
+  public boolean isAllowRDotJavaInSecondaryDex() {
+    return allowRDotJavaInSecondaryDex;
   }
 }

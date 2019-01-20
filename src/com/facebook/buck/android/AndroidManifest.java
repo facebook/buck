@@ -16,29 +16,34 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
-import java.util.Set;
+import java.util.Collection;
+import java.util.SortedSet;
+import java.util.function.Supplier;
 
 /**
  * {@link AndroidManifest} is a {@link BuildRule} that can generate an Android manifest from a
  * skeleton manifest and the library manifests from its dependencies.
+ *
  * <pre>
  * android_manifest(
  *   name = 'my_manifest',
@@ -50,8 +55,10 @@ import java.util.Set;
  *   ],
  * )
  * </pre>
- * This will produce a file under buck-out/gen that will be parameterized by the name of the
- * {@code android_manifest} rule. This can be used as follows:
+ *
+ * This will produce a file under buck-out/gen that will be parameterized by the name of the {@code
+ * android_manifest} rule. This can be used as follows:
+ *
  * <pre>
  * android_binary(
  *   name = 'my_app',
@@ -62,59 +69,76 @@ import java.util.Set;
  */
 public class AndroidManifest extends AbstractBuildRule {
 
-  @AddToRuleKey
-  private final SourcePath skeletonFile;
+  @AddToRuleKey private final SourcePath skeletonFile;
 
   /** These must be sorted so the rule key is stable. */
-  @AddToRuleKey
-  private final ImmutableSortedSet<SourcePath> manifestFiles;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> manifestFiles;
+
+  @AddToRuleKey private final APKModule module;
 
   private final Path pathToOutputFile;
+  private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
   protected AndroidManifest(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder finder,
       SourcePath skeletonFile,
-      Set<SourcePath> manifestFiles) {
-    super(params, resolver);
+      APKModule module,
+      Collection<SourcePath> manifestFiles) {
+    super(buildTarget, projectFilesystem);
     this.skeletonFile = skeletonFile;
+    this.module = module;
     this.manifestFiles = ImmutableSortedSet.copyOf(manifestFiles);
-    BuildTarget buildTarget = params.getBuildTarget();
     this.pathToOutputFile =
-        BuildTargets.getGenPath(getProjectFilesystem(), buildTarget, "AndroidManifest__%s__.xml");
+        BuildTargetPaths.getGenPath(
+            getProjectFilesystem(), buildTarget, "AndroidManifest__%s__.xml");
+    this.buildDepsSupplier = BuildableSupport.buildDepsSupplier(this, finder);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return buildDepsSupplier.get();
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
     // Clear out the old file, if it exists.
     commands.add(
-        new RmStep(
-            getProjectFilesystem(),
-            pathToOutputFile,
-            /* shouldForceDeletion */ true,
-            /* shouldRecurse */ false));
+        RmStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), pathToOutputFile)));
 
     // Make sure the directory for the output file exists.
-    commands.add(new MkdirStep(getProjectFilesystem(), pathToOutputFile.getParent()));
+    commands.add(
+        MkdirStep.of(
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(),
+                getProjectFilesystem(),
+                pathToOutputFile.getParent())));
 
     commands.add(
         new GenerateManifestStep(
             getProjectFilesystem(),
-            getResolver().getAbsolutePath(skeletonFile),
-            ImmutableSet.copyOf(getResolver().getAllAbsolutePaths(manifestFiles)),
-            getPathToOutput()));
+            context.getSourcePathResolver().getAbsolutePath(skeletonFile),
+            module,
+            context.getSourcePathResolver().getAllAbsolutePaths(manifestFiles),
+            context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
+            getProjectFilesystem()
+                .resolve(
+                    BuildTargetPaths.getScratchPath(
+                        getProjectFilesystem(), getBuildTarget(), "%s/merge-report.txt"))));
 
     buildableContext.recordArtifact(pathToOutputFile);
     return commands.build();
   }
 
   @Override
-  public Path getPathToOutput() {
-    return pathToOutputFile;
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), pathToOutputFile);
   }
 }

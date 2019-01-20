@@ -1,7 +1,7 @@
 groovy_library(
-  name = 'fail',
-  srcs = ['Fail.groovy'],
-  visibility = [
-    'PUBLIC',
-  ]
+    name = "fail",
+    srcs = ["Fail.groovy"],
+    visibility = [
+        "PUBLIC",
+    ],
 )

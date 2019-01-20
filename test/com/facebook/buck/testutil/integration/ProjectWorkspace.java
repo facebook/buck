@@ -16,8 +16,10 @@
 
 package com.facebook.buck.testutil.integration;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
@@ -25,210 +27,227 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
-import com.facebook.buck.cli.BuckConfig;
 import com.facebook.buck.cli.Main;
-import com.facebook.buck.cli.TestRunning;
-import com.facebook.buck.config.Config;
-import com.facebook.buck.config.Configs;
-import com.facebook.buck.config.RawConfig;
+import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellConfig;
+import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
+import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
+import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.MoreFiles;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.io.Watchman;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.watchman.WatchmanWatcher;
+import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
-import com.facebook.buck.model.BuckVersion;
-import com.facebook.buck.model.BuildId;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.Cell;
-import com.facebook.buck.rules.KnownBuildRuleTypesFactory;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.testutil.AbstractWorkspace;
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.timing.DefaultClock;
-import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.DefaultPropertyFinder;
-import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ErrorLogger;
+import com.facebook.buck.util.ErrorLogger.LogImpl;
+import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.JavaVersion;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.environment.Architecture;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.Threads;
+import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.environment.CommandMode;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.string.MoreStrings;
+import com.facebook.buck.util.trace.ChromeTraceParser;
+import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
+import com.facebook.nailgun.NGContext;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.martiansoftware.nailgun.NGContext;
-
-import org.junit.rules.TemporaryFolder;
-
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.channels.Channels;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.FileSystems;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
+import javax.tools.ToolProvider;
+import org.hamcrest.Matchers;
+import org.pf4j.PluginManager;
 
 /**
  * {@link ProjectWorkspace} is a directory that contains a Buck project, complete with build files.
- * <p>
- * When {@link #setUp()} is invoked, the project files are cloned from a directory of testdata into
- * a tmp directory according to the following rule:
+ *
+ * <p>When {@link #setUp()} is invoked, the project files are cloned from a directory of testdata
+ * into a tmp directory according to the following rule:
+ *
  * <ul>
  *   <li>Files with the {@code .fixture} extension will be copied and renamed without the extension.
  *   <li>Files with the {@code .expected} extension will not be copied.
  * </ul>
+ *
  * After {@link #setUp()} is invoked, the test should invoke Buck in that directory. As this is an
  * integration test, we expect that files will be written as a result of invoking Buck.
- * <p>
- * After Buck has been run, invoke {@link #verify()} to verify that Buck wrote the correct files.
+ *
+ * <p>After Buck has been run, invoke {@link #verify()} to verify that Buck wrote the correct files.
  * For each file in the testdata directory with the {@code .expected} extension, {@link #verify()}
  * will check that a file with the same relative path (but without the {@code .expected} extension)
  * exists in the tmp directory. If not, {@link org.junit.Assert#fail()} will be invoked.
  */
-public class ProjectWorkspace {
+public class ProjectWorkspace extends AbstractWorkspace {
 
-  private static final String FIXTURE_SUFFIX = "fixture";
-  private static final String EXPECTED_SUFFIX = "expected";
+  /**
+   * For this file to be generated, log.jul_build_log needs to be set to true. This is done by
+   * default in setUp()
+   */
+  public static final String PATH_TO_BUILD_LOG = "buck-out/bin/build.log";
 
-  private static final String PATH_TO_BUILD_LOG = "buck-out/bin/build.log";
+  public static final String TEST_CELL_LOCATION =
+      "test/com/facebook/buck/testutil/integration/testlibs";
 
-  private static final Function<Path, Path> BUILD_FILE_RENAME = new Function<Path, Path>() {
-    @Override
-    @Nullable
-    public Path apply(Path path) {
-      String fileName = path.getFileName().toString();
-      String extension = com.google.common.io.Files.getFileExtension(fileName);
-      switch (extension) {
-        case FIXTURE_SUFFIX:
-          return path.getParent().resolve(
-              com.google.common.io.Files.getNameWithoutExtension(fileName));
-        case EXPECTED_SUFFIX:
-          return null;
-        default:
-          return path;
-      }
-    }
+  private static final String[] TEST_CELL_DIRECTORIES_TO_LINK = {
+    "third-party",
   };
 
   private boolean isSetUp = false;
   private final Path templatePath;
-  private final Path destPath;
+  private final boolean addBuckRepoCell;
+  private final ProcessExecutor processExecutor;
+  @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
+  @Nullable private Main.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
 
-  /**
-   * @param templateDir The directory that contains the template version of the project.
-   * @param targetFolder The directory where the clone of the template directory should be
-   *     written. By requiring a {@link TemporaryFolder} rather than a {@link File}, we can ensure
-   *     that JUnit will clean up the test correctly.
-   */
-  public ProjectWorkspace(Path templateDir, Path targetFolder) {
-    Preconditions.checkNotNull(templateDir);
-    Preconditions.checkNotNull(targetFolder);
+  private static class ProjectFilesystemAndConfig {
+
+    private final ProjectFilesystem projectFilesystem;
+    private final Config config;
+
+    private ProjectFilesystemAndConfig(ProjectFilesystem projectFilesystem, Config config) {
+      this.projectFilesystem = projectFilesystem;
+      this.config = config;
+    }
+  }
+
+  @VisibleForTesting
+  ProjectWorkspace(Path templateDir, Path targetFolder, boolean addBuckRepoCell) {
+    super(targetFolder);
     this.templatePath = templateDir;
-    this.destPath = targetFolder;
+    this.addBuckRepoCell = addBuckRepoCell;
+    this.processExecutor = new DefaultProcessExecutor(new TestConsole());
   }
 
-  public ProjectWorkspace(File templateDir, TemporaryPaths temporaryFolder) {
-    this(templateDir.toPath(), temporaryFolder.getRoot());
+  @VisibleForTesting
+  ProjectWorkspace(Path templateDir, Path targetFolder) {
+    this(templateDir, targetFolder, true);
   }
 
-  public ProjectWorkspace(Path templateDir, TemporaryPaths temporaryFolder) {
-    this(templateDir, temporaryFolder.getRoot());
+  private ProjectFilesystemAndConfig getProjectFilesystemAndConfig() throws IOException {
+    if (projectFilesystemAndConfig == null) {
+      Config config = Configs.createDefaultConfig(destPath);
+      projectFilesystemAndConfig =
+          new ProjectFilesystemAndConfig(
+              TestProjectFilesystems.createProjectFilesystem(destPath, config), config);
+    }
+    return projectFilesystemAndConfig;
   }
 
-
-  /**
-   * This will copy the template directory, renaming files named {@code foo.fixture} to {@code foo}
-   * in the process. Files whose names end in {@code .expected} will not be copied.
-   */
-  @SuppressWarnings("PMD.EmptyCatchBlock")
   public ProjectWorkspace setUp() throws IOException {
+    addTemplateToWorkspace(templatePath);
 
-    MoreFiles.copyRecursively(templatePath, destPath, BUILD_FILE_RENAME);
-
-    // Stamp the buck-out directory if it exists and isn't stamped already
-    try (OutputStream outputStream =
-             new BufferedOutputStream(
-                 Channels.newOutputStream(
-                     Files.newByteChannel(
-                         destPath.resolve(BuckConstant.getCurrentVersionFile()),
-                         ImmutableSet.<OpenOption>of(
-                             StandardOpenOption.CREATE_NEW,
-                             StandardOpenOption.WRITE))))) {
-      outputStream.write(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
-    } catch (FileAlreadyExistsException | NoSuchFileException e) {
-      // If the current version file already exists we don't need to create it
-      // If buck-out doesn't exist we don't need to stamp it
+    if (addBuckRepoCell) {
+      Path bucklibRoot = setupBuckLib();
+      addBuckConfigLocalOption("repositories", "buck", bucklibRoot.toString());
     }
 
-    // If there's a local.properties in the host project but not in the destination, make a copy.
-    Path localProperties = FileSystems.getDefault().getPath("local.properties");
-    Path destLocalProperties = destPath.resolve(localProperties.getFileName());
-
-    if (localProperties.toFile().exists() && !destLocalProperties.toFile().exists()) {
-      Files.copy(localProperties, destLocalProperties);
-    }
-
-    if (Platform.detect() == Platform.WINDOWS) {
-      // Hack for symlinks on Windows.
-      SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
-        @Override
-        public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
-          // On Windows, symbolic links from git repository are checked out as normal files
-          // containing a one-line path. In order to distinguish them, paths are read and pointed
-          // files are trued to locate. Once the pointed file is found, it will be copied to target.
-          // On NTFS length of path must be greater than 0 and less than 4096.
-          if (attrs.size() > 0 && attrs.size() <= 4096) {
-            String linkTo = new String(Files.readAllBytes(path), UTF_8);
-            Path linkToFile;
-            try {
-              linkToFile = templatePath.resolve(linkTo);
-            } catch (InvalidPathException e) {
-              // Let's assume we were reading a normal text file, and not something meant to be a
-              // link.
-              return FileVisitResult.CONTINUE;
-            }
-            if (Files.isRegularFile(linkToFile)) {
-              Files.copy(linkToFile, path, StandardCopyOption.REPLACE_EXISTING);
-            } else if (Files.isDirectory(linkToFile)) {
-              Files.delete(path);
-              MoreFiles.copyRecursively(linkToFile, path);
-            }
-          }
-          return FileVisitResult.CONTINUE;
-        }
-      };
-      Files.walkFileTree(destPath, copyDirVisitor);
-    }
-
-    // Disable the directory cache by default.  Tests that want to enable it can call
-    // `enableDirCache` on this object.  Only do this if a .buckconfig.local file does not already
-    // exist, however (we assume the test knows what it is doing at that point).
-    if (!Files.exists(getPath(".buckconfig.local"))) {
-      writeContentsToPath("[cache]\n  mode =", ".buckconfig.local");
-    }
+    // Enable the JUL build log.  This log is very verbose but rarely useful,
+    // so it's disabled by default.
+    addBuckConfigLocalOption("log", "jul_build_log", "true");
 
     isSetUp = true;
     return this;
+  }
+
+  private Path setupBuckLib() throws IOException {
+    Path bucklibRoot = createBucklibRoot();
+    createSymlinkToBuckTestRepository(bucklibRoot);
+    saveBucklibConfig(bucklibRoot);
+    return bucklibRoot;
+  }
+
+  private Path createBucklibRoot() throws IOException {
+    Path root = Files.createTempDirectory("buck-testlib").toRealPath().normalize();
+    Runtime.getRuntime()
+        .addShutdownHook(
+            new Thread(
+                () -> {
+                  try {
+                    MostFiles.deleteRecursivelyIfExists(root);
+                  } catch (IOException e) {
+                    throw new RuntimeException(e);
+                  }
+                }));
+    return root;
+  }
+
+  private void createSymlinkToBuckTestRepository(Path bucklib) throws IOException {
+    for (String directory : TEST_CELL_DIRECTORIES_TO_LINK) {
+      Path directoryPath = bucklib.resolve(directory);
+      MorePaths.createSymLink(
+          new WindowsFS(),
+          directoryPath,
+          Paths.get(TEST_CELL_LOCATION).resolve(directory).toAbsolutePath());
+    }
+  }
+
+  private static void saveBucklibConfig(Path bucklibRoot) throws IOException {
+    Map<String, Map<String, String>> configs = prepareBucklibConfig();
+    String contents = convertToBuckConfig(configs);
+    Files.write(bucklibRoot.resolve(".buckconfig"), contents.getBytes(UTF_8));
+  }
+
+  private static Map<String, Map<String, String>> prepareBucklibConfig() {
+    Map<String, Map<String, String>> configs = new HashMap<>();
+    configs.put(
+        "project",
+        ImmutableMap.of(
+            "allow_symlinks",
+            "ALLOW",
+            "read_only_paths",
+            Joiner.on(", ").join(TEST_CELL_DIRECTORIES_TO_LINK)));
+    return configs;
+  }
+
+  public BuckPaths getBuckPaths() throws InterruptedException, IOException {
+    return getProjectFilesystemAndConfig().projectFilesystem.getBuckPaths();
   }
 
   public ProcessResult runBuckBuild(String... args) throws IOException {
@@ -238,85 +257,169 @@ public class ProjectWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  public Path buildAndReturnOutput(String... args) throws IOException {
-    // Build the java_library.
-    ProjectWorkspace.ProcessResult buildResult = runBuckBuild(args);
-    buildResult.assertSuccess();
-
-    // Use `buck targets` to find the output JAR file.
-    // TODO(oconnor663): This is going to overwrite the build.log. Maybe stash that and return it?
-    ProjectWorkspace.ProcessResult outputFileResult = runBuckCommand(
-        "targets",
-        "--show-output",
-        args[args.length - 1]);
-    outputFileResult.assertSuccess();
-    String pathToGeneratedJarFile = outputFileResult.getStdout().split(" ")[1].trim();
-    return getPath(pathToGeneratedJarFile);
+  public ProcessResult runBuckTest(String... args) throws IOException {
+    String[] totalArgs = new String[args.length + 1];
+    totalArgs[0] = "test";
+    System.arraycopy(args, 0, totalArgs, 1, args.length);
+    return runBuckCommand(totalArgs);
   }
 
-  public ProcessExecutor.Result runJar(Path jar,
-      ImmutableList<String> vmArgs,
-      String... args)  throws IOException, InterruptedException {
-    List<String> command = ImmutableList.<String>builder()
-        .add(JavaCompilationConstants.DEFAULT_JAVA_OPTIONS.getJavaRuntimeLauncher().getCommand())
-        .addAll(vmArgs)
-        .add("-jar")
-        .add(jar.toString())
-        .addAll(ImmutableList.copyOf(args))
-        .build();
+  public ProcessResult runBuckDistBuildRun(String... args) throws IOException {
+    String[] totalArgs = new String[args.length + 2];
+    totalArgs[0] = "distbuild";
+    totalArgs[1] = "run";
+    System.arraycopy(args, 0, totalArgs, 2, args.length);
+    return runBuckCommand(totalArgs);
+  }
+
+  private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(String... args)
+      throws IOException {
+    // Add in `--show-output` to the build, so we can parse the output paths after the fact.
+    ImmutableList<String> buildArgs =
+        ImmutableList.<String>builder().add("--show-output").add(args).build();
+    ProcessResult buildResult = runBuckBuild(buildArgs.toArray(new String[0]));
+    buildResult.assertSuccess();
+
+    // Build outputs are contained on stdout
+    return parseShowOutputStdoutAsStrings(buildResult.getStdout());
+  }
+
+  /**
+   * Parses the output of a --show-output build command into an easy to use map.
+   *
+   * @param stdout The stdout of the --show-output build command.
+   * @return The map of target => target output string. The value is relative to the Buck root of
+   *     the invoked command.
+   */
+  public ImmutableMap<String, String> parseShowOutputStdoutAsStrings(String stdout) {
+    List<String> lines =
+        Splitter.on(CharMatcher.anyOf(System.lineSeparator()))
+            .trimResults()
+            .omitEmptyStrings()
+            .splitToList(stdout);
+
+    Splitter lineSplitter = Splitter.on(' ').trimResults();
+    ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
+    for (String line : lines) {
+      List<String> fields = lineSplitter.splitToList(line);
+      assertThat(fields, Matchers.hasSize(2));
+      builder.put(fields.get(0), fields.get(1));
+    }
+
+    return builder.build();
+  }
+
+  public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(String... args)
+      throws IOException {
+    return buildMultipleAndReturnStringOutputs(args)
+        .entrySet()
+        .stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                entry -> entry.getKey(), entry -> getPath(entry.getValue())));
+  }
+
+  public Path buildAndReturnOutput(String... args) throws IOException {
+    ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(args);
+
+    // Verify we only have a single output.
+    assertThat(
+        String.format(
+            "expected only a single build target in command `%s`: %s",
+            ImmutableList.copyOf(args), outputs),
+        outputs.entrySet(),
+        Matchers.hasSize(1));
+
+    return outputs.values().iterator().next();
+  }
+
+  public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(String... args)
+      throws IOException {
+    return buildMultipleAndReturnStringOutputs(args)
+        .entrySet()
+        .stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                entry -> entry.getKey(), entry -> Paths.get(entry.getValue())));
+  }
+
+  public Path buildAndReturnRelativeOutput(String... args) throws IOException {
+    ImmutableMap<String, Path> outputs = buildMultipleAndReturnRelativeOutputs(args);
+
+    // Verify we only have a single output.
+    assertThat(
+        String.format(
+            "expected only a single build target in command `%s`: %s",
+            ImmutableList.copyOf(args), outputs),
+        outputs.entrySet(),
+        Matchers.hasSize(1));
+
+    return outputs.values().iterator().next();
+  }
+
+  public ProcessExecutor.Result runJar(Path jar, ImmutableList<String> vmArgs, String... args)
+      throws IOException, InterruptedException {
+    List<String> command =
+        ImmutableList.<String>builder()
+            .addAll(JavaCompilationConstants.DEFAULT_JAVA_COMMAND_PREFIX)
+            .addAll(vmArgs)
+            .add("-jar")
+            .add(jar.toString())
+            .addAll(ImmutableList.copyOf(args))
+            .build();
     return doRunCommand(command);
   }
 
   public ProcessExecutor.Result runJar(Path jar, String... args)
       throws IOException, InterruptedException {
-    return runJar(jar, ImmutableList.<String>of(), args);
+    return runJar(jar, ImmutableList.of(), args);
   }
 
   public ProcessExecutor.Result runCommand(String exe, String... args)
       throws IOException, InterruptedException {
-    List<String> command = ImmutableList.<String>builder()
-        .add(exe)
-        .addAll(ImmutableList.copyOf(args))
-        .build();
+    List<String> command =
+        ImmutableList.<String>builder().add(exe).addAll(ImmutableList.copyOf(args)).build();
+    return runCommand(command);
+  }
+
+  public ProcessExecutor.Result runCommand(Iterable<String> command)
+      throws IOException, InterruptedException {
     return doRunCommand(command);
   }
 
-  private ProcessExecutor.Result doRunCommand(List<String> command)
+  private ProcessExecutor.Result doRunCommand(Iterable<String> command)
       throws IOException, InterruptedException {
-    String[] commandArray = command.toArray(new String[command.size()]);
-    Process process = Runtime.getRuntime().exec(commandArray);
-    ProcessExecutor executor = new ProcessExecutor(new TestConsole());
-    String currentDir = System.getProperty("user.dir");
-    try {
-      System.setProperty("user.dir", destPath.toAbsolutePath().toString());
-      return executor.execute(process);
-    } finally {
-      System.setProperty("user.dir", currentDir);
-    }
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(command)
+            .setDirectory(destPath.toAbsolutePath())
+            .build();
+    return processExecutor.launchAndExecute(params);
   }
 
   /**
    * Runs Buck with the specified list of command-line arguments.
+   *
    * @param args to pass to {@code buck}, so that could be {@code ["build", "//path/to:target"]},
-   *   {@code ["project"]}, etc.
+   *     {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
-  public ProcessResult runBuckCommand(String... args)
-      throws IOException {
-    return runBuckCommandWithEnvironmentAndContext(
-        destPath,
-        Optional.<NGContext>absent(),
-        Optional.<ImmutableMap<String, String>>absent(),
-        args);
+  @Override
+  public ProcessResult runBuckCommand(String... args) throws IOException {
+    return runBuckCommandWithEnvironmentOverridesAndContext(
+        destPath, Optional.empty(), ImmutableMap.of(), args);
   }
 
-  public ProcessResult runBuckCommand(Path repoRoot, String... args)
+  @Override
+  public ProcessResult runBuckCommand(ImmutableMap<String, String> environment, String... args)
       throws IOException {
-    return runBuckCommandWithEnvironmentAndContext(
-        repoRoot,
-        Optional.<NGContext>absent(),
-        Optional.<ImmutableMap<String, String>>absent(),
-        args);
+    return runBuckCommandWithEnvironmentOverridesAndContext(
+        destPath, Optional.empty(), environment, args);
+  }
+
+  public ProcessResult runBuckCommand(Path repoRoot, String... args) throws IOException {
+    return runBuckCommandWithEnvironmentOverridesAndContext(
+        repoRoot, Optional.empty(), ImmutableMap.of(), args);
   }
 
   public ProcessResult runBuckdCommand(String... args) throws IOException {
@@ -332,200 +435,210 @@ public class ProjectWorkspace {
     }
   }
 
+  public ProcessResult runBuckdCommand(Path repoRoot, String... args) throws IOException {
+    try (TestContext context = new TestContext()) {
+      return runBuckdCommand(repoRoot, context, args);
+    }
+  }
+
   public ProcessResult runBuckdCommand(NGContext context, String... args) throws IOException {
-    return runBuckdCommand(context, new CapturingPrintStream(), args);
+    return runBuckdCommand(destPath, context, new CapturingPrintStream(), args);
+  }
+
+  public ProcessResult runBuckdCommand(Path repoRoot, NGContext context, String... args)
+      throws IOException {
+    return runBuckdCommand(repoRoot, context, new CapturingPrintStream(), args);
   }
 
   public ProcessResult runBuckdCommand(
-      NGContext context,
-      CapturingPrintStream stderr,
-      String... args)
+      Path repoRoot, NGContext context, CapturingPrintStream stderr, String... args)
       throws IOException {
     assumeTrue(
         "watchman must exist to run buckd",
-        new ExecutableFinder(Platform.detect()).getOptionalExecutable(
-            Paths.get("watchman"),
-            ImmutableMap.copyOf(System.getenv())).isPresent());
-    return runBuckCommandWithEnvironmentAndContext(
-        destPath,
-        Optional.of(context),
-        Optional.<ImmutableMap<String, String>>absent(),
-        stderr,
-        args);
+        new ExecutableFinder(Platform.detect())
+            .getOptionalExecutable(Paths.get("watchman"), EnvVariablesProvider.getSystemEnv())
+            .isPresent());
+    return runBuckCommandWithEnvironmentOverridesAndContext(
+        repoRoot, Optional.of(context), ImmutableMap.of(), stderr, args);
   }
 
-  public ProcessResult runBuckCommandWithEnvironmentAndContext(
+  public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
       Path repoRoot,
       Optional<NGContext> context,
-      Optional<ImmutableMap<String, String>> env,
+      ImmutableMap<String, String> environmentOverrides,
       String... args)
       throws IOException {
-    return runBuckCommandWithEnvironmentAndContext(
-        repoRoot,
-        context,
-        env,
-        new CapturingPrintStream(),
-        args);
+    return runBuckCommandWithEnvironmentOverridesAndContext(
+        repoRoot, context, environmentOverrides, new CapturingPrintStream(), args);
   }
 
-  public ProcessResult runBuckCommandWithEnvironmentAndContext(
+  public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
       Path repoRoot,
       Optional<NGContext> context,
-      Optional<ImmutableMap<String, String>> env,
+      ImmutableMap<String, String> environmentOverrides,
       CapturingPrintStream stderr,
-      String... args)
-    throws IOException {
-    assertTrue("setUp() must be run before this method is invoked", isSetUp);
-    CapturingPrintStream stdout = new CapturingPrintStream();
-    InputStream stdin = new ByteArrayInputStream("".getBytes());
-
-    // Construct a limited view of the parent environment for the child.
-    //
-    // TODO(#5754812): we should eventually get tests working without requiring these be set.
-    ImmutableList<String> inheritedEnvVars = ImmutableList.of(
-        "ANDROID_HOME",
-        "ANDROID_NDK",
-        "ANDROID_NDK_REPOSITORY",
-        "ANDROID_SDK",
-        // TODO(grumpyjames) Write an equivalent of the groovyc and startGroovy
-        // scripts provided by the groovy distribution in order to remove these two.
-        "GROOVY_HOME",
-        "JAVA_HOME",
-
-        "NDK_HOME",
-        "PATH",
-        "PATHEXT",
-
-        // Needed by ndk-build on Windows
-        "OS",
-        "ProgramW6432",
-        "ProgramFiles(x86)",
-
-        // The haskell integration tests call into GHC, which needs HOME to be set.
-        "HOME",
-
-        // TODO(#6586154): set TMP variable for ShellSteps
-        "TMP");
-    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
-    for (String variable : inheritedEnvVars) {
-      String value = System.getenv(variable);
-      if (value != null) {
-        envBuilder.put(variable, value);
-      }
-    }
-    ImmutableMap<String, String> sanizitedEnv = envBuilder.build();
-
-    Main main = new Main(stdout, stderr, stdin);
-    int exitCode;
+      String... args) {
     try {
-      exitCode = main.runMainWithExitCode(
-          new BuildId(),
-          repoRoot,
-          context,
-          env.or(sanizitedEnv),
-          /* setupLogging */ false,
-          args);
-    } catch (InterruptedException e) {
-      e.printStackTrace(stderr);
-      exitCode = Main.FAIL_EXIT_CODE;
-      Thread.currentThread().interrupt();
-    }
+      assertTrue("setUp() must be run before this method is invoked", isSetUp);
+      CapturingPrintStream stdout = new CapturingPrintStream();
+      InputStream stdin = new ByteArrayInputStream("".getBytes());
 
-    return new ProcessResult(
-        exitCode,
-        stdout.getContentsAsString(Charsets.UTF_8),
-        stderr.getContentsAsString(Charsets.UTF_8));
-  }
+      // Construct a limited view of the parent environment for the child.
+      // TODO(#5754812): we should eventually get tests working without requiring these be set.
+      ImmutableList<String> inheritedEnvVars =
+          ImmutableList.of(
+              "ANDROID_HOME",
+              "ANDROID_NDK",
+              "ANDROID_NDK_REPOSITORY",
+              "ANDROID_SDK",
+              // TODO(grumpyjames) Write an equivalent of the groovyc and startGroovy
+              // scripts provided by the groovy distribution in order to remove these two.
+              "GROOVY_HOME",
+              "JAVA_HOME",
+              "NDK_HOME",
+              "PATH",
+              "PATHEXT",
 
-  public Path getDestPath() {
-    return destPath;
-  }
+              // Needed by ndk-build on Windows
+              "OS",
+              "ProgramW6432",
+              "ProgramFiles(x86)",
 
-  public Path getPath(Path pathRelativeToProjectRoot) {
-    return destPath.resolve(pathRelativeToProjectRoot);
-  }
+              // The haskell integration tests call into GHC, which needs HOME to be set.
+              "HOME",
 
-  public Path getPath(String pathRelativeToProjectRoot) {
-    return destPath.resolve(pathRelativeToProjectRoot);
-  }
+              // TODO(#6586154): set TMP variable for ShellSteps
+              "TMP");
+      Map<String, String> envBuilder = new HashMap<>();
+      for (String variable : inheritedEnvVars) {
+        String value = EnvVariablesProvider.getSystemEnv().get(variable);
+        if (value != null) {
+          envBuilder.put(variable, value);
+        }
+      }
+      envBuilder.putAll(environmentOverrides);
+      ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
 
-  public String getFileContents(Path pathRelativeToProjectRoot) throws IOException {
-    return getFileContentsWithAbsolutePath(getPath(pathRelativeToProjectRoot));
-  }
+      Main main =
+          knownRuleTypesFactoryFactory == null
+              ? new Main(stdout, stderr, stdin, context)
+              : new Main(stdout, stderr, stdin, knownRuleTypesFactoryFactory, context);
+      ExitCode exitCode;
 
-  public String getFileContents(String pathRelativeToProjectRoot) throws IOException {
-    return getFileContentsWithAbsolutePath(getPath(pathRelativeToProjectRoot));
-  }
+      // TODO (buck_team): this code repeats the one in Main and thus wants generalization
+      HumanReadableExceptionAugmentor augmentor =
+          new HumanReadableExceptionAugmentor(ImmutableMap.of());
+      StringBuilder errorMessage = new StringBuilder();
+      ErrorLogger logger =
+          new ErrorLogger(
+              new LogImpl() {
+                @Override
+                public void logUserVisible(String message) {
+                  errorMessage.append("\n");
+                  errorMessage.append(message);
+                }
 
-  private String getFileContentsWithAbsolutePath(Path path) throws IOException {
-    String platformExt = null;
-    switch (Platform.detect()) {
-      case LINUX:
-        platformExt = "linux";
-        break;
-      case MACOS:
-        platformExt = "macos";
-        break;
-      case WINDOWS:
-        platformExt = "win";
-        break;
-      case UNKNOWN:
-        // Leave platformExt as null.
-        break;
-    }
-    if (platformExt != null) {
-      String extension = com.google.common.io.Files.getFileExtension(path.toString());
-      String basename = com.google.common.io.Files.getNameWithoutExtension(path.toString());
-      Path platformPath = extension.length() > 0 ?
-          path.getParent().resolve(String.format("%s.%s.%s", basename, platformExt, extension)) :
-          path.getParent().resolve(String.format("%s.%s", basename, platformExt));
-      if (platformPath.toFile().exists()) {
-        path = platformPath;
+                @Override
+                public void logUserVisibleInternalError(String message) {
+                  errorMessage.append("\n");
+                  errorMessage.append(linesToText("Buck encountered an internal error", message));
+                }
+
+                @Override
+                public void logVerbose(Throwable e) {
+                  // yes, do nothing
+                }
+              },
+              augmentor);
+
+      try {
+        exitCode =
+            main.runMainWithExitCode(
+                new BuildId(),
+                repoRoot,
+                sanizitedEnv,
+                CommandMode.TEST,
+                WatchmanWatcher.FreshInstanceAction.NONE,
+                System.nanoTime(),
+                ImmutableList.copyOf(args));
+      } catch (InterruptedException e) {
+        e.printStackTrace(stderr);
+        exitCode = ExitCode.BUILD_ERROR;
+        Threads.interruptCurrentThread();
+      } catch (CommandLineException e) {
+        stderr.println(e.getMessage());
+        exitCode = ExitCode.COMMANDLINE_ERROR;
+      } catch (BuildFileParseException e) {
+        stderr.println(e.getHumanReadableErrorMessage());
+        exitCode = ExitCode.PARSE_ERROR;
+      } catch (Throwable t) {
+        logger.logException(t);
+        exitCode = ExceptionHandlerRegistryFactory.create().handleException(t);
+      }
+
+      return new ProcessResult(
+          exitCode,
+          stdout.getContentsAsString(Charsets.UTF_8),
+          stderr.getContentsAsString(Charsets.UTF_8) + errorMessage.toString());
+    } finally {
+      if (JavaVersion.getMajorVersion() < 9) {
+        // javac has a global cache of zip/jar file content listings. It determines the validity of
+        // a given cache entry based on the modification time of the zip file in question. In normal
+        // usage, this is fine. However, in tests, we often will do a build, change something, and
+        // then rapidly do another build. If this happens quickly, javac can be operating from
+        // incorrect information when reading a jar file, resulting in "bad class file" or
+        // "corrupted zip file" errors. We work around this for testing purposes by reaching inside
+        // the compiler and clearing the cache.
+        try {
+          Class<?> cacheClass =
+              Class.forName(
+                  "com.sun.tools.javac.file.ZipFileIndexCache",
+                  false,
+                  ToolProvider.getSystemToolClassLoader());
+
+          Method getSharedInstanceMethod = cacheClass.getMethod("getSharedInstance");
+          Method clearCacheMethod = cacheClass.getMethod("clearCache");
+
+          Object cache = getSharedInstanceMethod.invoke(cacheClass);
+          clearCacheMethod.invoke(cache);
+        } catch (ClassNotFoundException
+            | IllegalAccessException
+            | InvocationTargetException
+            | NoSuchMethodException e) {
+          throw new RuntimeException(e);
+        }
       }
     }
-    return new String(Files.readAllBytes(path), UTF_8);
-  }
-
-  public void enableDirCache() throws IOException {
-    writeContentsToPath("[cache]\n  mode = dir", ".buckconfig.local");
-  }
-
-  public void copyFile(String source, String dest) throws IOException {
-    Path destination = getPath(dest);
-    Files.deleteIfExists(destination);
-    Files.copy(getPath(source), destination);
-  }
-
-  public void copyRecursively(Path source, Path pathRelativeToProjectRoot) throws IOException {
-    MoreFiles.copyRecursively(source, destPath.resolve(pathRelativeToProjectRoot));
-  }
-
-  public void move(String source, String dest) throws IOException {
-    Files.move(getPath(source), getPath(dest));
-  }
-
-  public void replaceFileContents(String pathRelativeToProjectRoot,
-      String target,
-      String replacement) throws IOException {
-    String fileContents = getFileContents(pathRelativeToProjectRoot);
-    fileContents = fileContents.replace(target, replacement);
-    writeContentsToPath(fileContents, pathRelativeToProjectRoot);
-  }
-
-  public void writeContentsToPath(String contents, String pathRelativeToProjectRoot)
-      throws IOException {
-    Files.write(getPath(pathRelativeToProjectRoot), contents.getBytes(UTF_8));
   }
 
   /**
-   * @return the specified path resolved against the root of this workspace.
+   * Runs an event-driven parser on {@code buck-out/log/build.trace}, which is a symlink to the
+   * trace of the most recent invocation of Buck (which may not have been a {@code buck build}).
+   *
+   * <p>Warning: If running buckd, make sure `daemon.flush_events_before_exit=true` so that the
+   * trace is materialized before this is ran.
+   *
+   * @see ChromeTraceParser#parse(Path, Set)
    */
-  public Path resolve(Path pathRelativeToWorkspaceRoot) {
-    return destPath.resolve(pathRelativeToWorkspaceRoot);
+  public Map<ChromeTraceEventMatcher<?>, Object> parseTraceFromMostRecentBuckInvocation(
+      Set<ChromeTraceEventMatcher<?>> matchers) throws InterruptedException, IOException {
+    ProjectFilesystem projectFilesystem = getProjectFilesystemAndConfig().projectFilesystem;
+    ChromeTraceParser parser = new ChromeTraceParser(projectFilesystem);
+    return parser.parse(
+        projectFilesystem.getBuckPaths().getLogDir().resolve("build.trace"), matchers);
   }
 
-  public Path resolve(String pathRelativeToWorkspaceRoot) {
-    return destPath.resolve(pathRelativeToWorkspaceRoot);
+  public void enableDirCache() throws IOException {
+    addBuckConfigLocalOption("cache", "mode", "dir");
+  }
+
+  public void disableThreadLimitOverride() throws IOException {
+    removeBuckConfigLocalOption("build", "threads");
+  }
+
+  public void setKnownRuleTypesFactoryFactory(
+      @Nullable Main.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory) {
+    this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
   }
 
   public void resetBuildLogFile() throws IOException {
@@ -533,120 +646,55 @@ public class ProjectWorkspace {
   }
 
   public BuckBuildLog getBuildLog() throws IOException {
+    return getBuildLog(getDestPath());
+  }
+
+  public BuckBuildLog getBuildLog(Path root) throws IOException {
     return BuckBuildLog.fromLogContents(
-        getDestPath(),
-        Files.readAllLines(getPath(PATH_TO_BUILD_LOG), UTF_8));
+        root, Files.readAllLines(root.resolve(PATH_TO_BUILD_LOG), UTF_8));
+  }
+
+  public Config getConfig() throws IOException, InterruptedException {
+    return getProjectFilesystemAndConfig().config;
   }
 
   public Cell asCell() throws IOException, InterruptedException {
-    Config config = Configs.createDefaultConfig(getDestPath(), RawConfig.of());
+    ProjectFilesystemAndConfig filesystemAndConfig = getProjectFilesystemAndConfig();
+    ProjectFilesystem filesystem = filesystemAndConfig.projectFilesystem;
+    Config config = filesystemAndConfig.config;
 
-    ProjectFilesystem filesystem = new ProjectFilesystem(getDestPath(), config);
-    TestConsole console = new TestConsole();
-    ImmutableMap<String, String> env = ImmutableMap.copyOf(System.getenv());
-    DefaultAndroidDirectoryResolver directoryResolver = new DefaultAndroidDirectoryResolver(
-        filesystem,
-        Optional.<String>absent(),
-        Optional.<String>absent(),
-        new DefaultPropertyFinder(filesystem, env));
-    return Cell.createCell(
-        filesystem,
-        console,
-        Watchman.NULL_WATCHMAN,
-        new BuckConfig(config, filesystem, Architecture.detect(), Platform.detect(), env),
-        new KnownBuildRuleTypesFactory(
-            new ProcessExecutor(console),
-            directoryResolver,
-            Optional.<Path>absent()),
-        directoryResolver,
-        new DefaultClock());
+    DefaultCellPathResolver rootCellCellPathResolver =
+        DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+
+    ImmutableMap<String, String> env = EnvVariablesProvider.getSystemEnv();
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(config.getRawConfig())
+            .setFilesystem(filesystem)
+            .build();
+
+    PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+    ExecutableFinder executableFinder = new ExecutableFinder();
+
+    ToolchainProviderFactory toolchainProviderFactory =
+        new DefaultToolchainProviderFactory(pluginManager, env, processExecutor, executableFinder);
+
+    return LocalCellProviderFactory.create(
+            filesystem,
+            buckConfig,
+            CellConfig.of(),
+            rootCellCellPathResolver.getPathMapping(),
+            rootCellCellPathResolver,
+            TestBuckModuleManagerFactory.create(pluginManager),
+            toolchainProviderFactory,
+            new DefaultProjectFilesystemFactory())
+        .getCellByPath(filesystem.getRootPath());
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName)
       throws IOException, InterruptedException {
-    return BuildTargetFactory.newInstance(asCell().getFilesystem(), fullyQualifiedName);
-  }
-
-  /** The result of running {@code buck} from the command line. */
-  public static class ProcessResult {
-    private final int exitCode;
-    private final String stdout;
-    private final String stderr;
-
-    private ProcessResult(
-        int exitCode,
-        String stdout,
-        String stderr) {
-      this.exitCode = exitCode;
-      this.stdout = Preconditions.checkNotNull(stdout);
-      this.stderr = Preconditions.checkNotNull(stderr);
-    }
-
-    /**
-     * Returns the exit code from the process.
-     * <p>
-     * Currently, in practice, any time a client might want to use it, it is more appropriate to
-     * use {@link #assertSuccess()} or {@link #assertFailure()} instead.
-     */
-    public int getExitCode() {
-      return exitCode;
-    }
-
-    public String getStdout() {
-      return stdout;
-    }
-
-    public String getStderr() {
-      return stderr;
-    }
-
-    public ProcessResult assertSuccess() {
-      return assertExitCode(null, 0);
-    }
-
-    public ProcessResult assertSuccess(String message) {
-      return assertExitCode(message, 0);
-    }
-
-    public ProcessResult assertFailure() {
-      return assertExitCode(null, Main.FAIL_EXIT_CODE);
-    }
-
-    public ProcessResult assertTestFailure() {
-      return assertExitCode(null, TestRunning.TEST_FAILURES_EXIT_CODE);
-    }
-
-    public ProcessResult assertTestFailure(String message) {
-      return assertExitCode(message, TestRunning.TEST_FAILURES_EXIT_CODE);
-    }
-
-    public ProcessResult assertFailure(String message) {
-      return assertExitCode(message, 1);
-    }
-
-    private ProcessResult assertExitCode(@Nullable String message, int exitCode) {
-      if (exitCode == getExitCode()) {
-        return this;
-      }
-
-      String failureMessage = String.format(
-          "Expected exit code %d but was %d.", exitCode, getExitCode());
-      if (message != null) {
-        failureMessage = message + " " + failureMessage;
-      }
-
-      System.err.println("=== " + failureMessage + " ===");
-      System.err.println("=== STDERR ===");
-      System.err.println(getStderr());
-      System.err.println("=== STDOUT ===");
-      System.err.println(getStdout());
-      fail(failureMessage);
-      return this;
-    }
-
-    public ProcessResult assertSpecialExitCode(String message, int exitCode) {
-      return assertExitCode(message, exitCode);
-    }
+    return BuildTargetFactory.newInstance(
+        asCell().getFilesystem().getRootPath(), fullyQualifiedName);
   }
 
   public void assertFilesEqual(Path expected, Path actual) throws IOException {
@@ -661,14 +709,14 @@ public class ProjectWorkspace {
     }
 
     String extension = MorePaths.getFileExtension(actual);
-    String cleanPathToObservedFile = MoreStrings.withoutSuffix(
-        templatePath.relativize(expected).toString(), EXPECTED_SUFFIX);
+    String cleanPathToObservedFile =
+        MoreStrings.withoutSuffix(templatePath.relativize(expected).toString(), EXPECTED_SUFFIX);
 
     switch (extension) {
-      // For Apple .plist and .stringsdict files, we define equivalence if:
-      // 1. The two files are the same type (XML or binary)
-      // 2. If binary: unserialized objects are deeply-equivalent.
-      //    Otherwise, fall back to exact string match.
+        // For Apple .plist and .stringsdict files, we define equivalence if:
+        // 1. The two files are the same type (XML or binary)
+        // 2. If binary: unserialized objects are deeply-equivalent.
+        //    Otherwise, fall back to exact string match.
       case "plist":
       case "stringsdict":
         NSObject expectedObject;
@@ -690,25 +738,23 @@ public class ProjectWorkspace {
         assertTrue(
             String.format(
                 "In %s, expected plist to be of %s type.",
-                cleanPathToObservedFile,
-                (expectedObject != null) ? "binary" : "XML"),
+                cleanPathToObservedFile, (expectedObject != null) ? "binary" : "XML"),
             (expectedObject != null) == (observedObject != null));
 
         if (expectedObject != null) {
           // These keys depend on the locally installed version of Xcode, so ignore them
           // in comparisons.
           String[] ignoredKeys = {
-              "DTSDKName",
-              "DTPlatformName",
-              "DTPlatformVersion",
-              "MinimumOSVersion",
-              "DTSDKBuild",
-              "DTPlatformBuild",
-              "DTXcode",
-              "DTXcodeBuild"
+            "DTSDKName",
+            "DTPlatformName",
+            "DTPlatformVersion",
+            "MinimumOSVersion",
+            "DTSDKBuild",
+            "DTPlatformBuild",
+            "DTXcode",
+            "DTXcodeBuild"
           };
-          if (observedObject instanceof NSDictionary &&
-              expectedObject instanceof NSDictionary) {
+          if (observedObject instanceof NSDictionary && expectedObject instanceof NSDictionary) {
             for (String key : ignoredKeys) {
               ((NSDictionary) observedObject).remove(key);
               ((NSDictionary) expectedObject).remove(key);
@@ -717,8 +763,7 @@ public class ProjectWorkspace {
 
           assertEquals(
               String.format(
-                  "In %s, expected binary plist contents to match.",
-                  cleanPathToObservedFile),
+                  "In %s, expected binary plist contents to match.", cleanPathToObservedFile),
               expectedObject,
               observedObject);
           break;
@@ -733,10 +778,11 @@ public class ProjectWorkspace {
   }
 
   private void assertFileContentsEqual(Path expectedFile, Path observedFile) throws IOException {
-    String cleanPathToObservedFile = MoreStrings.withoutSuffix(
-        templatePath.relativize(expectedFile).toString(), EXPECTED_SUFFIX);
+    String cleanPathToObservedFile =
+        MoreStrings.withoutSuffix(
+            templatePath.relativize(expectedFile).toString(), EXPECTED_SUFFIX);
 
-    String expectedFileContent = new String(Files.readAllBytes(expectedFile), UTF_8);
+    String expectedFileContent = getFileContents(expectedFile);
     String observedFileContent = new String(Files.readAllBytes(observedFile), UTF_8);
     // It is possible, on Windows, to have Git keep "\n"-style newlines, or convert them to
     // "\r\n"-style newlines.  Support both ways by normalizing to "\n"-style newlines.
@@ -746,9 +792,7 @@ public class ProjectWorkspace {
     assertEquals(
         String.format(
             "In %s, expected content of %s to match that of %s.",
-            cleanPathToObservedFile,
-            expectedFileContent,
-            observedFileContent),
+            cleanPathToObservedFile, expectedFileContent, observedFileContent),
         expectedFileContent,
         observedFileContent);
   }
@@ -758,33 +802,34 @@ public class ProjectWorkspace {
    * equivalent file has been written in the same place under the destination directory.
    *
    * @param templateSubdirectory An optional subdirectory to check. Only files in this directory
-   *                     will be compared.
+   *     will be compared.
    */
-  private void assertPathsEqual(final Path templateSubdirectory, final Path destinationSubdirectory)
+  private void assertPathsEqual(Path templateSubdirectory, Path destinationSubdirectory)
       throws IOException {
-    SimpleFileVisitor<Path> copyDirVisitor = new SimpleFileVisitor<Path>() {
-      @Override
-      public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        String fileName = file.getFileName().toString();
-        if (fileName.endsWith(EXPECTED_SUFFIX)) {
-          // Get File for the file that should be written, but without the ".expected" suffix.
-          Path generatedFileWithSuffix =
-              destinationSubdirectory.resolve(templateSubdirectory.relativize(file));
-          Path directory = generatedFileWithSuffix.getParent();
-          Path observedFile = directory.resolve(MorePaths.getNameWithoutExtension(file));
-          assertFilesEqual(file, observedFile);
-        }
-        return FileVisitResult.CONTINUE;
-      }
-    };
+    SimpleFileVisitor<Path> copyDirVisitor =
+        new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            String fileName = file.getFileName().toString();
+            if (fileName.endsWith(EXPECTED_SUFFIX) && !fileName.endsWith(SKIP_SUFFIX)) {
+              // Get File for the file that should be written, but without the ".expected" suffix.
+              Path generatedFileWithSuffix =
+                  destinationSubdirectory.resolve(templateSubdirectory.relativize(file));
+              Path directory = generatedFileWithSuffix.getParent();
+              Path observedFile = directory.resolve(MorePaths.getNameWithoutExtension(file));
+              assertFilesEqual(file, observedFile);
+            }
+            return FileVisitResult.CONTINUE;
+          }
+        };
 
     Files.walkFileTree(templateSubdirectory, copyDirVisitor);
   }
 
   public void verify(Path templateSubdirectory, Path destinationSubdirectory) throws IOException {
     assertPathsEqual(
-        templatePath.resolve(templateSubdirectory),
-        destPath.resolve(destinationSubdirectory));
+        templatePath.resolve(templateSubdirectory), destPath.resolve(destinationSubdirectory));
   }
 
   public void verify() throws IOException {
@@ -792,6 +837,10 @@ public class ProjectWorkspace {
   }
 
   public void verify(Path subdirectory) throws IOException {
+    Preconditions.checkArgument(
+        !subdirectory.isAbsolute(),
+        "'verify(subdirectory)' takes a relative path, but received '%s'",
+        subdirectory);
     assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory));
   }
 }

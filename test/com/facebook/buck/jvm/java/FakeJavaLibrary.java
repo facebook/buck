@@ -16,98 +16,85 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.rules.BuildableProperties.Kind.LIBRARY;
-
-import com.facebook.buck.android.AndroidPackageable;
-import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableProperties;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbiInfo;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
-
-import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
-  private static final BuildableProperties OUTPUT_TYPE = new BuildableProperties(LIBRARY);
-
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+  private Optional<String> mavenCoords = Optional.empty();
 
   public FakeJavaLibrary(
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ProjectFilesystem filesystem,
-      ImmutableSortedSet<BuildRule> deps) {
-    super(target, filesystem, resolver, deps.toArray(new BuildRule[deps.size()]));
+      BuildTarget target, ProjectFilesystem filesystem, ImmutableSortedSet<BuildRule> deps) {
+    super(target, filesystem, deps.toArray(new BuildRule[0]));
   }
 
-  public FakeJavaLibrary(
-      BuildTarget target,
-      SourcePathResolver resolver,
-      ImmutableSortedSet<BuildRule> deps) {
-    super(target, resolver, deps);
+  public FakeJavaLibrary(BuildTarget target, ImmutableSortedSet<BuildRule> deps) {
+    super(target, deps);
   }
 
-  public FakeJavaLibrary(BuildTarget target, SourcePathResolver resolver) {
-    super(target, resolver);
+  public FakeJavaLibrary(BuildTarget target) {
+    super(target);
   }
 
   @Override
-  public BuildableProperties getProperties() {
-    return OUTPUT_TYPE;
+  public ImmutableSet<SourcePath> getOutputClasspaths() {
+    return ImmutableSet.of();
   }
 
   @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getOutputClasspathEntries() {
-    return ImmutableSetMultimap.of();
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return getBuildDeps();
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return getDeps();
-  }
-
-  @Override
-  public ImmutableSetMultimap<JavaLibrary, Path> getTransitiveClasspathEntries() {
-    return JavaLibraryClasspathProvider.getTransitiveClasspathEntries(
-        this,
-        getResolver(),
-        Optional.<SourcePath>of(new BuildTargetSourcePath(getBuildTarget(),
-            getPathToOutput())));
+  public ImmutableSet<SourcePath> getTransitiveClasspaths() {
+    return JavaLibraryClasspathProvider.getClasspathsFromLibraries(
+        this.getTransitiveClasspathDeps());
   }
 
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
-    return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(
-        this,
-        Optional.<SourcePath>of(new BuildTargetSourcePath(getBuildTarget(),
-            getPathToOutput())));
+    return JavaLibraryClasspathProvider.getTransitiveClasspathDeps(this);
   }
 
   @Override
-  public Path getPathToOutput() {
-    return BuildTargets.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar");
+  public ImmutableSet<SourcePath> getImmediateClasspaths() {
+    return ImmutableSet.of(getSourcePathToOutput());
   }
 
   @Override
-  public ImmutableSortedSet<Path> getJavaSrcs() {
-    return ImmutableSortedSet.copyOf(getResolver().deprecatedAllPaths(srcs));
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(
+        getBuildTarget(),
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s.jar"));
+  }
+
+  @Override
+  public JavaAbiInfo getAbiInfo() {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public ImmutableSortedSet<SourcePath> getJavaSrcs() {
+    return srcs;
   }
 
   @Override
@@ -115,22 +102,35 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
     return srcs;
   }
 
-  public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<Path> srcs) {
-    Preconditions.checkNotNull(srcs);
-    this.srcs = FluentIterable.from(srcs)
-        .transform(SourcePaths.toSourcePath(new FakeProjectFilesystem()))
-        .toSortedSet(Ordering.natural());
+  @Override
+  public ImmutableSortedSet<SourcePath> getResources() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public Optional<String> getResourcesRoot() {
+    return Optional.empty();
+  }
+
+  public FakeJavaLibrary setJavaSrcs(ImmutableSortedSet<SourcePath> srcs) {
+    Objects.requireNonNull(srcs);
+    this.srcs = srcs;
     return this;
   }
 
   @Override
-  public Optional<Path> getGeneratedSourcePath() {
-    return Optional.absent();
+  public Optional<SourcePath> getGeneratedAnnotationSourcePath() {
+    return Optional.empty();
   }
 
   @Override
-  public Optional<SourcePath> getAbiJar() {
-    return Optional.absent();
+  public boolean hasAnnotationProcessing() {
+    return false;
+  }
+
+  @Override
+  public Optional<BuildTarget> getAbiJar() {
+    return Optional.empty();
   }
 
   @Override
@@ -139,17 +139,22 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(getDeps());
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+    return AndroidPackageableCollector.getPackageableRules(getBuildDeps());
   }
 
   @Override
   public void addToCollector(AndroidPackageableCollector collector) {
-    collector.addClasspathEntry(this, new BuildTargetSourcePath(getBuildTarget()));
+    collector.addClasspathEntry(this, getSourcePathToOutput());
   }
 
   @Override
   public Optional<String> getMavenCoords() {
-    return Optional.absent();
+    return mavenCoords;
+  }
+
+  public FakeJavaLibrary setMavenCoords(String mavenCoords) {
+    this.mavenCoords = Optional.of(mavenCoords);
+    return this;
   }
 }

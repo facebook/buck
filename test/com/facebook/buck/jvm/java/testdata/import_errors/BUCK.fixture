@@ -1,0 +1,22 @@
+# When javac attempts to resolve an imported member type, but it doesn't have access to all
+# superclasses of the enclosing type, it wants to NPE. When invoked normally, javac
+# swallows that exception. When invoked via JavacTask.enter, it does not.
+java_library(
+    name = "errors",
+    srcs = ["Test.java"],
+    deps = [":dep"],
+)
+
+java_library(
+    name = "dep",
+    srcs = [
+        "Dep.java",
+        "Super.java",
+    ],
+    deps = [":supersuper"],
+)
+
+java_library(
+    name = "supersuper",
+    srcs = ["SuperSuper.java"],
+)

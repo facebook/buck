@@ -1,0 +1,10 @@
+kotlin_library(
+    name = "example",
+    srcs = [
+        "Example.kt",
+        "JavaClass.java",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

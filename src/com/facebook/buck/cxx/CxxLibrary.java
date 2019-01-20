@@ -16,58 +16,78 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.android.AndroidPackageable;
-import com.facebook.buck.android.AndroidPackageableCollector;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.android.packageable.AndroidPackageable;
+import com.facebook.buck.android.packageable.AndroidPackageableCollector;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.concurrent.Parallelizer;
+import com.facebook.buck.util.function.QuadFunction;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.cache.LoadingCache;
-import com.google.common.collect.FluentIterable;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
- * An action graph representation of a C/C++ library from the target graph, providing the
- * various interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
+ * An action graph representation of a C/C++ library from the target graph, providing the various
+ * interfaces to make it consumable by C/C++ preprocessing and native linkable rules.
  */
-public class CxxLibrary
-    extends NoopBuildRule
-    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, SharedNativeLinkTarget {
+public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
+    implements AbstractCxxLibrary, HasRuntimeDeps, NativeTestable, NativeLinkTarget {
 
-  private final BuildRuleParams params;
-  private final BuildRuleResolver ruleResolver;
-  private final Iterable<? extends BuildRule> exportedDeps;
-  private final Predicate<CxxPlatform> hasExportedHeaders;
+  private static final Logger LOG = Logger.get(CxxLibrary.class);
+
+  private final CxxDeps deps;
+  private final CxxDeps exportedDeps;
   private final Predicate<CxxPlatform> headerOnly;
-  private final Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
-      exportedPreprocessorFlags;
-  private final Function<? super CxxPlatform, Iterable<Arg>> exportedLinkerFlags;
-  private final Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput;
+  private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
+      exportedLinkerFlags;
+  private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
+      postExportedLinkerFlags;
+  private final QuadFunction<
+          ? super CxxPlatform,
+          ActionGraphBuilder,
+          SourcePathResolver,
+          SourcePathRuleFinder,
+          NativeLinkableInput>
+      linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
@@ -76,27 +96,42 @@ public class CxxLibrary
   private final Optional<String> soname;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final boolean canBeAsset;
+  private final boolean reexportAllHeaderDependencies;
+  private final boolean supportsOmnibusLinking;
 
-  private final Map<Pair<Flavor, Linker.LinkableDepType>, NativeLinkableInput> nativeLinkableCache =
-      new HashMap<>();
+  private final Optional<CxxLibraryDescriptionDelegate> delegate;
 
-  private final LoadingCache<
-          CxxPreprocessables.CxxPreprocessorInputCacheKey,
-          ImmutableMap<BuildTarget, CxxPreprocessorInput>
-        > transitiveCxxPreprocessorInputCache =
-      CxxPreprocessables.getTransitiveCxxPreprocessorInputCache(this);
+  /**
+   * Whether Native Linkable dependencies should be propagated for the purpose of computing objects
+   * to link at link time. Setting this to false makes this library invisible to linking, so it and
+   * its link-time dependencies are ignored.
+   */
+  private final boolean propagateLinkables;
+
+  private final Cache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
+      CacheBuilder.newBuilder().build();
+
+  private final TransitiveCxxPreprocessorInputCache transitiveCxxPreprocessorInputCache;
 
   public CxxLibrary(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      BuildRuleResolver ruleResolver,
-      SourcePathResolver pathResolver,
-      Iterable<? extends BuildRule> exportedDeps,
-      Predicate<CxxPlatform> hasExportedHeaders,
+      Parallelizer preprocessorInputCacheParallelizer,
+      CxxDeps deps,
+      CxxDeps exportedDeps,
       Predicate<CxxPlatform> headerOnly,
-      Function<? super CxxPlatform, ImmutableMultimap<CxxSource.Type, String>>
-          exportedPreprocessorFlags,
-      Function<? super CxxPlatform, Iterable<Arg>> exportedLinkerFlags,
-      Function<? super CxxPlatform, NativeLinkableInput> linkTargetInput,
+      BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
+          exportedLinkerFlags,
+      BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
+          postExportedLinkerFlags,
+      QuadFunction<
+              ? super CxxPlatform,
+              ActionGraphBuilder,
+              SourcePathResolver,
+              SourcePathRuleFinder,
+              NativeLinkableInput>
+          linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -104,15 +139,17 @@ public class CxxLibrary
       boolean linkWhole,
       Optional<String> soname,
       ImmutableSortedSet<BuildTarget> tests,
-      boolean canBeAsset) {
-    super(params, pathResolver);
-    this.params = params;
-    this.ruleResolver = ruleResolver;
+      boolean canBeAsset,
+      boolean propagateLinkables,
+      boolean reexportAllHeaderDependencies,
+      boolean supportsOmnibusLinking,
+      Optional<CxxLibraryDescriptionDelegate> delegate) {
+    super(buildTarget, projectFilesystem, params);
+    this.deps = deps;
     this.exportedDeps = exportedDeps;
-    this.hasExportedHeaders = hasExportedHeaders;
     this.headerOnly = headerOnly;
-    this.exportedPreprocessorFlags = exportedPreprocessorFlags;
     this.exportedLinkerFlags = exportedLinkerFlags;
+    this.postExportedLinkerFlags = postExportedLinkerFlags;
     this.linkTargetInput = linkTargetInput;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
     this.frameworks = frameworks;
@@ -122,94 +159,174 @@ public class CxxLibrary
     this.soname = soname;
     this.tests = tests;
     this.canBeAsset = canBeAsset;
+    this.propagateLinkables = propagateLinkables;
+    this.reexportAllHeaderDependencies = reexportAllHeaderDependencies;
+    this.supportsOmnibusLinking = supportsOmnibusLinking;
+    this.delegate = delegate;
+    this.transitiveCxxPreprocessorInputCache =
+        new TransitiveCxxPreprocessorInputCache(this, preprocessorInputCacheParallelizer);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {
-    return !supportedPlatformsRegex.isPresent() ||
-        supportedPlatformsRegex.get()
-            .matcher(cxxPlatform.getFlavor().toString())
-            .find();
+    return !supportedPlatformsRegex.isPresent()
+        || supportedPlatformsRegex.get().matcher(cxxPlatform.getFlavor().toString()).find();
   }
 
   @Override
-  public Iterable<? extends CxxPreprocessorDep> getCxxPreprocessorDeps(CxxPlatform cxxPlatform) {
+  public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getDeps())
-        .filter(CxxPreprocessorDep.class);
+    return RichStream.from(exportedDeps.get(ruleResolver, cxxPlatform))
+        .concat(
+            this.reexportAllHeaderDependencies
+                ? RichStream.from(deps.get(ruleResolver, cxxPlatform))
+                : Stream.empty())
+        .filter(CxxPreprocessorDep.class)
+        .toImmutableList();
+  }
+
+  private CxxPreprocessorInput getCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, HeaderVisibility headerVisibility, ActionGraphBuilder graphBuilder) {
+    // Handle via metadata query.
+    return CxxLibraryDescription.queryMetadataCxxPreprocessorInput(
+            graphBuilder, getBuildTarget(), cxxPlatform, headerVisibility)
+        .orElseThrow(IllegalStateException::new);
   }
 
   @Override
   public CxxPreprocessorInput getCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) throws NoSuchBuildTargetException {
-    boolean hasHeaderSymlinkTree =
-        headerVisibility != HeaderVisibility.PUBLIC || hasExportedHeaders.apply(cxxPlatform);
-    return CxxPreprocessables.getCxxPreprocessorInput(
-        params,
-        ruleResolver,
-        hasHeaderSymlinkTree,
-        cxxPlatform.getFlavor(),
-        headerVisibility,
-        CxxPreprocessables.IncludeType.LOCAL,
-        exportedPreprocessorFlags.apply(cxxPlatform),
-        frameworks);
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    CxxPreprocessorInput publicHeaders =
+        getPublicCxxPreprocessorInputExcludingDelegate(cxxPlatform, graphBuilder);
+    Optional<CxxPreprocessorInput> pluginHeaders =
+        delegate.flatMap(p -> p.getPreprocessorInput(getBuildTarget(), graphBuilder, cxxPlatform));
+
+    if (pluginHeaders.isPresent()) {
+      return CxxPreprocessorInput.concat(ImmutableList.of(publicHeaders, pluginHeaders.get()));
+    }
+
+    return publicHeaders;
+  }
+
+  /**
+   * Returns public headers excluding contribution from any {@link CxxLibraryDescriptionDelegate}.
+   */
+  public CxxPreprocessorInput getPublicCxxPreprocessorInputExcludingDelegate(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PUBLIC, graphBuilder);
   }
 
   @Override
-  public Optional<HeaderSymlinkTree> getExportedHeaderSymlinkTree(CxxPlatform cxxPlatform) {
-    if (hasExportedHeaders.apply(cxxPlatform)) {
-      return Optional.of(
-          CxxPreprocessables.requireHeaderSymlinkTreeForLibraryTarget(
-              ruleResolver,
-              getBuildTarget(),
-              cxxPlatform.getFlavor()));
-    } else {
-      return Optional.absent();
+  public CxxPreprocessorInput getPrivateCxxPreprocessorInput(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    CxxPreprocessorInput privateInput =
+        getCxxPreprocessorInput(cxxPlatform, HeaderVisibility.PRIVATE, graphBuilder);
+    Optional<CxxPreprocessorInput> delegateInput =
+        delegate.flatMap(
+            p -> p.getPrivatePreprocessorInput(getBuildTarget(), graphBuilder, cxxPlatform));
+
+    if (delegateInput.isPresent()) {
+      return CxxPreprocessorInput.concat(ImmutableList.of(privateInput, delegateInput.get()));
     }
+
+    return privateInput;
   }
 
   @Override
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getTransitiveCxxPreprocessorInput(
-      CxxPlatform cxxPlatform,
-      HeaderVisibility headerVisibility) {
-    return transitiveCxxPreprocessorInputCache.getUnchecked(
-        ImmutableCxxPreprocessorInputCacheKey.of(cxxPlatform, headerVisibility));
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
   }
 
   @Override
-  public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-    if (!isPlatformSupported(cxxPlatform)) {
+  public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+    if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(getDeclaredDeps())
-        .filter(NativeLinkable.class);
+    return RichStream.from(deps.getForAllPlatforms(ruleResolver))
+        .filter(NativeLinkable.class)
+        .toImmutableList();
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
+  public Iterable<NativeLinkable> getNativeLinkableDepsForPlatform(
+      CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    if (!propagateLinkables) {
+      return ImmutableList.of();
+    }
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return FluentIterable.from(exportedDeps)
-        .filter(NativeLinkable.class);
+    return RichStream.from(deps.get(ruleResolver, cxxPlatform))
+        .filter(NativeLinkable.class)
+        .toImmutableList();
   }
 
-  public NativeLinkableInput getNativeLinkableInputUncached(
-      CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type) throws NoSuchBuildTargetException {
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
+      BuildRuleResolver ruleResolver) {
+    if (!propagateLinkables) {
+      return ImmutableList.of();
+    }
+    return RichStream.from(exportedDeps.getForAllPlatforms(ruleResolver))
+        .filter(NativeLinkable.class)
+        .toImmutableList();
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkableExportedDepsForPlatform(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    if (!propagateLinkables) {
+      return ImmutableList.of();
+    }
+    if (!isPlatformSupported(cxxPlatform)) {
+      return ImmutableList.of();
+    }
+
+    ImmutableList<NativeLinkable> delegateLinkables =
+        delegate
+            .flatMap(
+                d -> d.getNativeLinkableExportedDeps(getBuildTarget(), graphBuilder, cxxPlatform))
+            .orElse(ImmutableList.of());
+
+    return RichStream.from(exportedDeps.get(graphBuilder, cxxPlatform))
+        .filter(NativeLinkable.class)
+        .concat(RichStream.from(delegateLinkables))
+        .toImmutableList();
+  }
+
+  private NativeLinkableInput computeNativeLinkableInputUncached(
+      NativeLinkableCacheKey key, ActionGraphBuilder graphBuilder) {
+    CxxPlatform cxxPlatform = key.getCxxPlatform();
 
     if (!isPlatformSupported(cxxPlatform)) {
+      LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return NativeLinkableInput.of();
     }
+
+    Linker.LinkableDepType type = key.getType();
+    boolean forceLinkWhole = key.getForceLinkWhole();
 
     // Build up the arguments used to link this library.  If we're linking the
     // whole archive, wrap the library argument in the necessary "ld" flags.
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
-    linkerArgsBuilder.addAll(Preconditions.checkNotNull(exportedLinkerFlags.apply(cxxPlatform)));
+    linkerArgsBuilder.addAll(
+        Objects.requireNonNull(exportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
 
-    if (!headerOnly.apply(cxxPlatform)) {
+    boolean delegateWantsArtifact =
+        delegate
+            .map(d -> d.getShouldProduceLibraryArtifact(getBuildTarget(), graphBuilder))
+            .orElse(false);
+    boolean headersOnly = headerOnly.test(cxxPlatform);
+    boolean shouldProduceArtifact = (!headersOnly || delegateWantsArtifact) && propagateLinkables;
+
+    Preconditions.checkState(
+        shouldProduceArtifact || !delegateWantsArtifact,
+        "Delegate wants artifact but will not produce one");
+
+    if (shouldProduceArtifact) {
       boolean isStatic;
       switch (linkage) {
         case STATIC:
@@ -226,14 +343,18 @@ public class CxxLibrary
       }
       if (isStatic) {
         Archive archive =
-            (Archive) requireBuildRule(
-                cxxPlatform.getFlavor(),
-                type == Linker.LinkableDepType.STATIC ?
-                    CxxDescriptionEnhancer.STATIC_FLAVOR :
-                    CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
-        if (linkWhole) {
-          Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
-          linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg()));
+            (Archive)
+                requireBuildRule(
+                    graphBuilder,
+                    cxxPlatform.getFlavor(),
+                    type == Linker.LinkableDepType.STATIC
+                        ? CxxDescriptionEnhancer.STATIC_FLAVOR
+                        : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
+        if (linkWhole || forceLinkWhole) {
+          SourcePathResolver pathResolver =
+              DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+          Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
+          linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg(), pathResolver));
         } else {
           Arg libraryArg = archive.toArg();
           if (libraryArg instanceof SourcePathArg) {
@@ -246,47 +367,63 @@ public class CxxLibrary
       } else {
         BuildRule rule =
             requireBuildRule(
+                graphBuilder,
                 cxxPlatform.getFlavor(),
-                CxxDescriptionEnhancer.SHARED_FLAVOR);
-        linkerArgsBuilder.add(
-            new SourcePathArg(getResolver(), new BuildTargetSourcePath(rule.getBuildTarget())));
+                cxxPlatform.getSharedLibraryInterfaceParams().isPresent()
+                    ? CxxLibraryDescription.Type.SHARED_INTERFACE.getFlavor()
+                    : CxxLibraryDescription.Type.SHARED.getFlavor());
+        SourcePath sourcePathForLinking =
+            rule instanceof CxxLink
+                ? ((CxxLink) rule).getSourcePathToOutputForLinking()
+                : rule.getSourcePathToOutput();
+        linkerArgsBuilder.add(SourcePathArg.of(Objects.requireNonNull(sourcePathForLinking)));
       }
     }
 
-    final ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
+    // Add the postExportedLinkerFlags.
+    linkerArgsBuilder.addAll(
+        Objects.requireNonNull(postExportedLinkerFlags.apply(cxxPlatform, graphBuilder)));
+
+    ImmutableList<Arg> linkerArgs = linkerArgsBuilder.build();
 
     return NativeLinkableInput.of(
-        linkerArgs,
-        Preconditions.checkNotNull(frameworks),
-        Preconditions.checkNotNull(libraries));
+        linkerArgs, Objects.requireNonNull(frameworks), Objects.requireNonNull(libraries));
   }
 
   @Override
   public NativeLinkableInput getNativeLinkableInput(
       CxxPlatform cxxPlatform,
-      Linker.LinkableDepType type)
-      throws NoSuchBuildTargetException {
-    Pair<Flavor, Linker.LinkableDepType> key = new Pair<>(cxxPlatform.getFlavor(), type);
-    NativeLinkableInput input = nativeLinkableCache.get(key);
-    if (input == null) {
-      input = getNativeLinkableInputUncached(cxxPlatform, type);
-      nativeLinkableCache.put(key, input);
+      Linker.LinkableDepType type,
+      boolean forceLinkWhole,
+      ActionGraphBuilder graphBuilder) {
+    NativeLinkableCacheKey key =
+        NativeLinkableCacheKey.of(cxxPlatform.getFlavor(), type, forceLinkWhole, cxxPlatform);
+    try {
+      return nativeLinkableCache.get(
+          key, () -> computeNativeLinkableInputUncached(key, graphBuilder));
+    } catch (ExecutionException e) {
+      throw new UncheckedExecutionException(e.getCause());
     }
-    return input;
   }
 
-  public BuildRule requireBuildRule(Flavor... flavors) throws NoSuchBuildTargetException {
-    return ruleResolver.requireRule(getBuildTarget().withAppendedFlavors(flavors));
+  /** Require a flavored version of this build rule */
+  public BuildRule requireBuildRule(ActionGraphBuilder graphBuilder, Flavor... flavors) {
+    return graphBuilder.requireRule(getBuildTarget().withAppendedFlavors(flavors));
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+  public NativeLinkable.Linkage getPreferredLinkage(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return linkage;
   }
 
   @Override
-  public Iterable<AndroidPackageable> getRequiredPackageables() {
-    return AndroidPackageableCollector.getPackageableRules(params.getDeps());
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+    // Both iterables we are concatting are ImmutableSets, so the returned iterator does not support
+    // remove
+    return AndroidPackageableCollector.getPackageableRules(
+        Iterables.concat(
+            deps.getForAllPlatforms(ruleResolver), exportedDeps.getForAllPlatforms(ruleResolver)));
   }
 
   @Override
@@ -300,24 +437,21 @@ public class CxxLibrary
 
   @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(
-      CxxPlatform cxxPlatform) throws NoSuchBuildTargetException {
-    if (headerOnly.apply(cxxPlatform)) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    if (headerOnly.test(cxxPlatform)) {
       return ImmutableMap.of();
     }
     if (!isPlatformSupported(cxxPlatform)) {
+      LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return ImmutableMap.of();
     }
     ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
-    String sharedLibrarySoname = CxxDescriptionEnhancer.getSharedLibrarySoname(
-        soname,
-        getBuildTarget(),
-        cxxPlatform);
-    BuildRule sharedLibraryBuildRule = requireBuildRule(
-        cxxPlatform.getFlavor(),
-        CxxDescriptionEnhancer.SHARED_FLAVOR);
-    libs.put(
-        sharedLibrarySoname,
-        new BuildTargetSourcePath(sharedLibraryBuildRule.getBuildTarget()));
+    String sharedLibrarySoname =
+        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, getBuildTarget(), cxxPlatform);
+    BuildRule sharedLibraryBuildRule =
+        requireBuildRule(
+            graphBuilder, cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
+    libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
     return libs.build();
   }
 
@@ -327,36 +461,64 @@ public class CxxLibrary
   }
 
   @Override
-  public Iterable<? extends NativeLinkable> getSharedNativeLinkTargetDeps(CxxPlatform cxxPlatform) {
+  public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
+    return NativeLinkTargetMode.library(
+        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, getBuildTarget(), cxxPlatform));
+  }
+
+  @Override
+  public Iterable<? extends NativeLinkable> getNativeLinkTargetDeps(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return Iterables.concat(
-        getNativeLinkableDeps(cxxPlatform),
-        getNativeLinkableExportedDeps(cxxPlatform));
+        getNativeLinkableDepsForPlatform(cxxPlatform, graphBuilder),
+        getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder));
   }
 
   @Override
-  public Optional<String> getSharedNativeLinkTargetLibraryName(CxxPlatform cxxPlatform) {
-    return Optional.of(
-        CxxDescriptionEnhancer.getSharedLibrarySoname(
-            soname,
-            getBuildTarget(),
-            cxxPlatform));
+  public NativeLinkableInput getNativeLinkTargetInput(
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      SourcePathResolver pathResolver,
+      SourcePathRuleFinder ruleFinder) {
+    if (!isPlatformSupported(cxxPlatform)) {
+      LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
+      return NativeLinkableInput.of();
+    }
+    return linkTargetInput.apply(cxxPlatform, graphBuilder, pathResolver, ruleFinder);
   }
 
   @Override
-  public NativeLinkableInput getSharedNativeLinkTargetInput(CxxPlatform cxxPlatform) {
-    return linkTargetInput.apply(cxxPlatform);
+  public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
+    return Optional.empty();
   }
 
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
+  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return supportsOmnibusLinking;
+  }
+
+  @Override
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     // We export all declared deps as runtime deps, to setup a transitive runtime dep chain which
     // will pull in runtime deps (e.g. other binaries) or transitive C/C++ libraries.  Since the
     // `CxxLibrary` rules themselves are noop meta rules, they shouldn't add any unnecessary
     // overhead.
-    return ImmutableSortedSet.<BuildRule>naturalOrder()
-        .addAll(getDeclaredDeps())
-        .addAll(exportedDeps)
-        .build();
+    return RichStream.from(getDeclaredDeps().stream())
+        // Make sure to use the rule ruleFinder that's passed in rather than the field we're
+        // holding, since we need to access nodes already created by the previous build rule
+        // ruleFinder in the incremental action graph scenario, and {@see #updateBuildRuleResolver}
+        // may already have been called.
+        .concat(exportedDeps.getForAllPlatforms(ruleFinder.getRuleResolver()).stream())
+        .map(BuildRule::getBuildTarget);
   }
 
+  public Iterable<? extends Arg> getExportedLinkerFlags(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return exportedLinkerFlags.apply(cxxPlatform, graphBuilder);
+  }
+
+  public Iterable<? extends Arg> getExportedPostLinkerFlags(
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    return postExportedLinkerFlags.apply(cxxPlatform, graphBuilder);
+  }
 }

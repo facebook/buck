@@ -16,47 +16,48 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.NoopBuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-
-import java.util.SortedSet;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
- * Description for an apple_asset_catalog rule, which identifies an asset
- * catalog for an iOS or Mac OS X library or binary.
+ * Description for an apple_asset_catalog rule, which identifies an asset catalog for an iOS or Mac
+ * OS X library or binary.
  */
-public class AppleAssetCatalogDescription implements Description<AppleAssetCatalogDescription.Arg> {
-  public static final BuildRuleType TYPE = BuildRuleType.of("apple_asset_catalog");
+public class AppleAssetCatalogDescription
+    implements DescriptionWithTargetGraph<AppleAssetCatalogDescriptionArg> {
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<AppleAssetCatalogDescriptionArg> getConstructorArgType() {
+    return AppleAssetCatalogDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> NoopBuildRule createBuildRule(
-      TargetGraph targetGraph,
+  public NoopBuildRuleWithDeclaredAndExtraDeps createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    return new NoopBuildRule(params, new SourcePathResolver(resolver));
+      AppleAssetCatalogDescriptionArg args) {
+    return new NoopBuildRuleWithDeclaredAndExtraDeps(
+        buildTarget, context.getProjectFilesystem(), params);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public SortedSet<SourcePath> dirs;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAppleAssetCatalogDescriptionArg extends CommonDescriptionArg {
+    @Value.NaturalOrder
+    ImmutableSortedSet<SourcePath> getDirs();
+
+    Optional<String> getAppIcon();
+
+    Optional<String> getLaunchImage();
   }
 }

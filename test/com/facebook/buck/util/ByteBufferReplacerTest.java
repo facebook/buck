@@ -23,15 +23,13 @@ import static org.junit.Assume.assumeThat;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ByteBufferReplacerTest {
 
@@ -55,22 +53,17 @@ public class ByteBufferReplacerTest {
             Charsets.UTF_16LE);
 
     for (Charset charset : charSets) {
-      ByteBufferReplacer replacer = ByteBufferReplacer.fromPaths(
-          ImmutableMap.of(original, replacement),
-          File.separatorChar,
-          charset);
+      ByteBufferReplacer replacer =
+          ByteBufferReplacer.fromPaths(
+              ImmutableMap.of(original, replacement), File.separatorChar, charset);
       byte[] rawBytes = blob.getBytes(charset);
       int numReplacements = replacer.replace(ByteBuffer.wrap(rawBytes));
       assertEquals(String.format("Charset %s", charset), 1, numReplacements);
       assertArrayEquals(
           String.format(
-              "Charset %s: \'%s\' != \'%s\'",
-              charset,
-              fixedBlob,
-              new String(rawBytes, charset)),
+              "Charset %s: \'%s\' != \'%s\'", charset, fixedBlob, new String(rawBytes, charset)),
           fixedBlob.getBytes(charset),
           rawBytes);
     }
   }
-
 }

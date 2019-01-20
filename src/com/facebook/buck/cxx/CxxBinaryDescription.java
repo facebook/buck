@@ -16,370 +16,148 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.FlavorDomain;
-import com.facebook.buck.model.Flavored;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.ImplicitFlavorsInferringDescription;
-import com.facebook.buck.rules.MetadataProvidingDescription;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.MetadataProvidingDescription;
+import com.facebook.buck.core.description.arg.HasDepsQuery;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.core.description.impl.DescriptionCache;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.versions.HasVersionUniverse;
+import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionRoot;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-import java.util.Set;
+public class CxxBinaryDescription
+    implements DescriptionWithTargetGraph<CxxBinaryDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<CxxBinaryDescription.AbstractCxxBinaryDescriptionArg>,
+        ImplicitFlavorsInferringDescription,
+        MetadataProvidingDescription<CxxBinaryDescriptionArg>,
+        VersionRoot<CxxBinaryDescriptionArg> {
 
-public class CxxBinaryDescription implements
-    Description<CxxBinaryDescription.Arg>,
-    Flavored,
-    ImplicitDepsInferringDescription<CxxBinaryDescription.Arg>,
-    ImplicitFlavorsInferringDescription,
-    MetadataProvidingDescription<CxxBinaryDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("cxx_binary");
-
-  private final CxxBuckConfig cxxBuckConfig;
-  private final InferBuckConfig inferBuckConfig;
-  private final CxxPlatform defaultCxxPlatform;
-  private final FlavorDomain<CxxPlatform> cxxPlatforms;
+  private final ToolchainProvider toolchainProvider;
+  private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
+  private final CxxBinaryFactory cxxBinaryFactory;
+  private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
+  private final CxxBinaryFlavored cxxBinaryFlavored;
 
   public CxxBinaryDescription(
-      CxxBuckConfig cxxBuckConfig,
-      InferBuckConfig inferBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
-    this.cxxBuckConfig = cxxBuckConfig;
-    this.inferBuckConfig = inferBuckConfig;
-    this.defaultCxxPlatform = defaultCxxPlatform;
-    this.cxxPlatforms = cxxPlatforms;
+      ToolchainProvider toolchainProvider,
+      CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
+      CxxBinaryFactory cxxBinaryFactory,
+      CxxBinaryMetadataFactory cxxBinaryMetadataFactory,
+      CxxBinaryFlavored cxxBinaryFlavored) {
+    this.toolchainProvider = toolchainProvider;
+    this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
+    this.cxxBinaryFactory = cxxBinaryFactory;
+    this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
+    this.cxxBinaryFlavored = cxxBinaryFlavored;
   }
 
-  /**
-   * @return a {@link com.facebook.buck.cxx.HeaderSymlinkTree} for the headers of this C/C++ binary.
-   */
-  public static <A extends Arg> HeaderSymlinkTree createHeaderSymlinkTreeBuildRule(
+  @Override
+  public Class<CxxBinaryDescriptionArg> getConstructorArgType() {
+    return CxxBinaryDescriptionArg.class;
+  }
+
+  @Override
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      CxxPlatform cxxPlatform,
-      A args) {
-    return CxxDescriptionEnhancer.createHeaderSymlinkTree(
-        params,
-        resolver,
-        new SourcePathResolver(resolver),
-        cxxPlatform,
-        CxxDescriptionEnhancer.parseHeaders(
-            params.getBuildTarget(),
-            new SourcePathResolver(resolver),
-            Optional.of(cxxPlatform),
-            args),
-        HeaderVisibility.PRIVATE);
+      CxxBinaryDescriptionArg args) {
+    return cxxBinaryFactory.createBuildRule(
+        buildTarget,
+        context.getProjectFilesystem(),
+        context.getActionGraphBuilder(),
+        context.getCellPathResolver(),
+        args,
+        ImmutableSortedSet.of());
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @SuppressWarnings("PMD.PrematureDeclaration")
-  @Override
-  public <A extends Arg> BuildRule createBuildRule(
-      TargetGraph targetGraph,
-      BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-
-    // We explicitly remove strip flavor from params to make sure rule
-    // has the same output regardless if we will strip or not.
-    Optional<StripStyle> flavoredStripStyle =
-        StripStyle.FLAVOR_DOMAIN.getValue(params.getBuildTarget());
-    params = CxxStrip.removeStripStyleFlavorInParams(params, flavoredStripStyle);
-
-    // Extract the platform from the flavor, falling back to the default platform if none are
-    // found.
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(params.getBuildTarget().getFlavors());
-    CxxPlatform cxxPlatform = cxxPlatforms
-        .getValue(flavors)
-        .or(defaultCxxPlatform);
-    if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
-      flavors = ImmutableSet.copyOf(
-          Sets.difference(
-              flavors,
-              ImmutableSet.of(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)));
-      BuildTarget target = BuildTarget
-          .builder(params.getBuildTarget().getUnflavoredBuildTarget())
-          .addAllFlavors(flavors)
-          .build();
-      BuildRuleParams typeParams =
-          params.copyWithChanges(
-              target,
-              params.getDeclaredDeps(),
-              params.getExtraDeps());
-
-      return createHeaderSymlinkTreeBuildRule(
-          typeParams,
-          resolver,
-          cxxPlatform,
-          args);
-    }
-
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      BuildRuleParams paramsWithoutFlavor =
-          params.withoutFlavor(CxxCompilationDatabase.COMPILATION_DATABASE);
-      CxxLinkAndCompileRules cxxLinkAndCompileRules = CxxDescriptionEnhancer
-          .createBuildRulesForCxxBinaryDescriptionArg(
-              paramsWithoutFlavor,
-              resolver,
-              cxxBuckConfig,
-              cxxPlatform,
-              args,
-              flavoredStripStyle);
-      return CxxCompilationDatabase.createCompilationDatabase(
-          params,
-          pathResolver,
-          cxxBuckConfig.getPreprocessMode(),
-          cxxLinkAndCompileRules.compileRules,
-          CxxDescriptionEnhancer.requireTransitiveCompilationDatabaseHeaderSymlinkTreeDeps(
-              paramsWithoutFlavor,
-              resolver,
-              pathResolver,
-              cxxPlatform,
-              args));
-    }
-
-    if (flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
-      return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          cxxPlatforms.getValue(flavors).isPresent() ?
-              params :
-              params.withFlavor(defaultCxxPlatform.getFlavor()),
-          resolver);
-    }
-
-    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER.get())) {
-      return CxxInferEnhancer.requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
-          params,
-          resolver,
-          pathResolver,
-          cxxBuckConfig,
-          cxxPlatform,
-          args,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig));
-    }
-
-    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get())) {
-      return CxxInferEnhancer.requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-          params,
-          resolver,
-          pathResolver,
-          cxxBuckConfig,
-          cxxPlatform,
-          args,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig));
-    }
-
-    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get())) {
-      return CxxInferEnhancer.requireAllTransitiveCaptureBuildRules(
-          params,
-          resolver,
-          cxxBuckConfig,
-          cxxPlatform,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig),
-          args);
-    }
-
-    if (flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ONLY.get())) {
-      return CxxInferEnhancer.requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
-          params,
-          resolver,
-          pathResolver,
-          cxxBuckConfig,
-          cxxPlatform,
-          args,
-          inferBuckConfig,
-          new CxxInferSourceFilter(inferBuckConfig));
-    }
-
-    CxxLinkAndCompileRules cxxLinkAndCompileRules =
-        CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
-            params,
-            resolver,
-            cxxBuckConfig,
-            cxxPlatform,
-            args,
-            flavoredStripStyle);
-
-    // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
-    // rule above for a couple reasons:
-    //  1) CxxBinary extends BinaryBuildRule whereas CxxLink does not, so the former can be used
-    //     as executables for genrules.
-    //  2) In some cases, users add dependencies from some rules onto other binary rules, typically
-    //     if the binary is executed by some test or library code at test time.  These target graph
-    //     deps should *not* become build time dependencies on the CxxLink step, otherwise we'd
-    //     have to wait for the dependency binary to link before we could link the dependent binary.
-    //     By using another BuildRule, we can keep the original target graph dependency tree while
-    //     preventing it from affecting link parallelism.
-
-    params = CxxStrip.restoreStripStyleFlavorInParams(params, flavoredStripStyle);
-    CxxBinary cxxBinary = new CxxBinary(
-        params.appendExtraDeps(cxxLinkAndCompileRules.executable.getDeps(pathResolver)),
-        resolver,
-        pathResolver,
-        cxxLinkAndCompileRules.getBinaryRule(),
-        cxxLinkAndCompileRules.executable,
-        args.frameworks.get(),
-        args.tests.get());
-    resolver.addToIndex(cxxBinary);
-    return cxxBinary;
-  }
-
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
-  }
-
-  @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
+      AbstractCxxBinaryDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    extraDepsBuilder.addAll(
+        CxxPlatforms.findDepsForTargetFromConstructorArgs(
+            getCxxPlatformsProvider(), buildTarget, constructorArg.getDefaultPlatform()));
+    constructorArg
+        .getDepsQuery()
+        .ifPresent(
+            depsQuery ->
+                QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, depsQuery)
+                    .forEach(targetGraphOnlyDepsBuilder::add));
+  }
 
-    // Get any parse time deps from the C/C++ platforms.
-    deps.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            cxxPlatforms
-                .getValue(buildTarget.getFlavors())
-                .or(defaultCxxPlatform)));
-
-    Iterable<Iterable<String>> macroStrings =
-        ImmutableList.<Iterable<String>>builder()
-            .add(constructorArg.linkerFlags.get())
-            .addAll(constructorArg.platformLinkerFlags.get().getValues())
-            .build();
-    for (String macroString : Iterables.concat(macroStrings)) {
-      try {
-        deps.addAll(
-            CxxDescriptionEnhancer.MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget,
-                cellRoots,
-                macroString));
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
-      }
-    }
-
-    return deps.build();
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+    return cxxBinaryFlavored.flavorDomains();
   }
 
   @Override
   public boolean hasFlavors(ImmutableSet<Flavor> inputFlavors) {
-    Set<Flavor> flavors = inputFlavors;
-
-    Set<Flavor> platformFlavors = Sets.intersection(flavors, cxxPlatforms.getFlavors());
-    if (platformFlavors.size() > 1) {
-      return false;
-    }
-    flavors = Sets.difference(flavors, platformFlavors);
-
-    flavors = Sets.difference(
-        flavors,
-        ImmutableSet.of(
-            CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
-            CxxCompilationDatabase.COMPILATION_DATABASE,
-            CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
-            CxxInferEnhancer.InferFlavors.INFER.get(),
-            CxxInferEnhancer.InferFlavors.INFER_ANALYZE.get(),
-            CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.get(),
-            StripStyle.ALL_SYMBOLS.getFlavor(),
-            StripStyle.DEBUGGING_SYMBOLS.getFlavor(),
-            StripStyle.NON_GLOBAL_SYMBOLS.getFlavor()));
-
-    return flavors.isEmpty();
-  }
-
-  public FlavorDomain<CxxPlatform> getCxxPlatforms() {
-    return cxxPlatforms;
-  }
-
-  public CxxPlatform getDefaultCxxPlatform() {
-    return defaultCxxPlatform;
+    return cxxBinaryFlavored.hasFlavors(inputFlavors);
   }
 
   @Override
-  public <A extends Arg, U> Optional<U> createMetadata(
+  public <U> Optional<U> createMetadata(
       BuildTarget buildTarget,
-      BuildRuleResolver resolver,
-      A args,
-      final Class<U> metadataClass) throws NoSuchBuildTargetException {
-    if (!metadataClass.isAssignableFrom(CxxCompilationDatabaseDependencies.class) ||
-        !buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {
-      return Optional.absent();
-    }
-    return CxxDescriptionEnhancer
-        .createCompilationDatabaseDependencies(buildTarget, cxxPlatforms, resolver, args)
-        .transform(
-            new Function<CxxCompilationDatabaseDependencies, U>() {
-              @Override
-              public U apply(CxxCompilationDatabaseDependencies input) {
-                return metadataClass.cast(input);
-              }
-            }
-        );
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxBinaryDescriptionArg args,
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      Class<U> metadataClass) {
+    return cxxBinaryMetadataFactory.createMetadata(
+        buildTarget, graphBuilder, args.getDeps(), metadataClass);
   }
 
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
       ImmutableSortedSet<Flavor> argDefaultFlavors) {
-    return addImplicitFlavorsForRuleTypes(argDefaultFlavors, TYPE);
+    return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
+        argDefaultFlavors, DescriptionCache.getRuleType(this));
   }
 
-  public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
-      ImmutableSortedSet<Flavor> argDefaultFlavors,
-      BuildRuleType... types) {
-    Optional<Flavor> platformFlavor = getCxxPlatforms().getFlavor(argDefaultFlavors);
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
 
-    for (BuildRuleType type : types) {
-      ImmutableMap<String, Flavor> libraryDefaults =
-          cxxBuckConfig.getDefaultFlavorsForRuleType(type);
+  private CxxPlatformsProvider getCxxPlatformsProvider() {
+    return toolchainProvider.getByName(
+        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+  }
 
-      if (!platformFlavor.isPresent()) {
-        platformFlavor = Optional.fromNullable(
-            libraryDefaults.get(CxxBuckConfig.DEFAULT_FLAVOR_PLATFORM));
-      }
-    }
-
-    if (platformFlavor.isPresent()) {
-      return ImmutableSortedSet.of(platformFlavor.get());
-    } else {
-      // To avoid changing the output path of binaries built without a flavor,
-      // we'll default to no flavor, which implicitly builds the default platform.
-      return ImmutableSortedSet.of();
+  public interface CommonArg extends LinkableCxxConstructorArg, HasVersionUniverse, HasDepsQuery {
+    @Value.Default
+    default boolean getLinkDepsQueryWhole() {
+      return false;
     }
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends LinkableCxxConstructorArg {
-  }
-
+  @BuckStyleImmutable
+  @Value.Immutable(copy = true)
+  interface AbstractCxxBinaryDescriptionArg extends CxxBinaryDescription.CommonArg {}
 }

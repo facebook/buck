@@ -1,0 +1,13 @@
+# Purposely in a different directory; we want to verify that the include paths
+# for the pch library (in the parent dir) get inherited by rules using the pch.
+# Putting this in a different directory will induce such a change in include paths.
+cxx_library(
+    name = "some_lib",
+    srcs = [
+        "some_lib.cpp",
+    ],
+    exported_headers = [
+        "some_lib.h",
+    ],
+    visibility = ["PUBLIC"],
+)

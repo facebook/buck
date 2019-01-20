@@ -16,21 +16,18 @@
 
 package com.facebook.buck.counters;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Map;
+import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.util.Map;
 
 public class SamplingCounterTest {
 
   private static final String CATEGORY = "Counter_Category";
   private static final String NAME = "Counter_Name";
-  public static final ImmutableMap<String, String> TAGS = ImmutableMap.of(
-      "My super Tag Key", "And the according value!"
-  );
+  public static final ImmutableMap<String, String> TAGS =
+      ImmutableMap.of("My super Tag Key", "And the according value!");
 
   @Test
   public void testAddSample() {

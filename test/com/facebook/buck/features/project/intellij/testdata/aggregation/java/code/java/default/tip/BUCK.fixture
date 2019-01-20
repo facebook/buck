@@ -1,0 +1,10 @@
+java_library(
+    name = "tip",
+    srcs = glob(
+        ["src/**/*.java"],
+        excludes = ["src/module/**/*.java"],
+    ),
+    visibility = [
+        "PUBLIC",
+    ],
+)

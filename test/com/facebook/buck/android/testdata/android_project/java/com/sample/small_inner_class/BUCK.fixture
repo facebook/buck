@@ -1,0 +1,16 @@
+android_library(
+    name = "small_inner_class",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_library(
+    name = "small_inner_class_with_no_resource_deps",
+    # Seriously, do not add resource deps.
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

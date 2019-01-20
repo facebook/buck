@@ -1,0 +1,12 @@
+cxx_library(
+    name = "quus",
+    srcs = ["quus.cpp"],
+)
+
+d_binary(
+    name = "test",
+    srcs = ["test.d"],
+    deps = [
+        ":quus",
+    ],
+)

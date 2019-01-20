@@ -16,43 +16,36 @@
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.HumanReadableException;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class AndroidBinaryFlavorsIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_project",
-        temporaryFolder);
+    workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", temporaryFolder);
     workspace.setUp();
   }
 
@@ -61,14 +54,13 @@ public class AndroidBinaryFlavorsIntegrationTest {
     String target = "//apps/sample:app_comp_str#package_string_assets";
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
-    Path path = BuildTargets.getScratchPath(
-        filesystem,
-        BuildTargetFactory.newInstance(target),
-        PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
+    Path path =
+        BuildTargetPaths.getScratchPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target),
+            PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
     result.assertSuccess();
-    assertThat(
-        result.getStdout().trim().split(" ")[1],
-        equalTo(path.toString()));
+    assertThat(result.getStdout().trim().split(" ")[1], equalTo(path.toString()));
   }
 
   @Test
@@ -76,24 +68,20 @@ public class AndroidBinaryFlavorsIntegrationTest {
     String target = "//apps/sample:app_str#package_string_assets";
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
-    Path path = BuildTargets.getScratchPath(
-        filesystem,
-        BuildTargetFactory.newInstance(target),
-        PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
+    Path path =
+        BuildTargetPaths.getScratchPath(
+            filesystem,
+            BuildTargetFactory.newInstance(target),
+            PackageStringAssets.STRING_ASSETS_DIR_FORMAT);
     result.assertSuccess();
-    assertThat(
-        result.getStdout().trim().split(" ")[1],
-        equalTo(path.toString()));
+    assertThat(result.getStdout().trim().split(" ")[1], equalTo(path.toString()));
   }
 
   @Test
   public void testPackageStringAssetsFlavorDoesNotExist() throws IOException {
-    try {
-      String target = "//apps/sample:app#package_string_assets";
-      workspace.runBuckCommand("targets", "--show-output", target);
-      fail("The targets command should have thrown an exception");
-    } catch (HumanReadableException e) {
-      assertTrue(e.getHumanReadableErrorMessage().contains("flavor does not exist"));
-    }
+    String target = "//apps/sample:app#package_string_assets";
+    ProcessResult processResult = workspace.runBuckCommand("targets", "--show-output", target);
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("could not be resolved"));
   }
 }

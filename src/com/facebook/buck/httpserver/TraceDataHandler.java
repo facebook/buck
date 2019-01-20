@@ -16,13 +16,10 @@
 
 package com.facebook.buck.httpserver;
 
+import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.CharStreams;
 import com.google.common.net.MediaType;
-
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -30,33 +27,28 @@ import java.io.Writer;
 import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 
-/**
- * HTTP handler for requests to the {@code /tracedata} path.
- */
+/** HTTP handler for requests to the {@code /tracedata} path. */
 class TraceDataHandler extends AbstractHandler {
 
   static final Pattern ID_PATTERN = Pattern.compile("/([0-9a-zA-Z-]+)");
 
-  @VisibleForTesting
-  static final Pattern CALLBACK_PATTERN = Pattern.compile("[\\w\\.]+");
+  @VisibleForTesting static final Pattern CALLBACK_PATTERN = Pattern.compile("[\\w\\.]+");
 
-  private final TracesHelper tracesHelper;
+  private final BuildTraces buildTraces;
 
-  TraceDataHandler(TracesHelper tracesHelper) {
-    this.tracesHelper = tracesHelper;
+  TraceDataHandler(BuildTraces buildTraces) {
+    this.buildTraces = buildTraces;
   }
 
   @Override
-  public void handle(String target,
-      Request baseRequest,
-      HttpServletRequest request,
-      HttpServletResponse response)
-      throws IOException, ServletException {
+  public void handle(
+      String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response)
+      throws IOException {
     if ("GET".equals(baseRequest.getMethod())) {
       doGet(baseRequest, response);
     } else {
@@ -64,8 +56,7 @@ class TraceDataHandler extends AbstractHandler {
     }
   }
 
-  private void doGet(Request baseRequest, HttpServletResponse response)
-      throws ServletException, IOException {
+  private void doGet(Request baseRequest, HttpServletResponse response) throws IOException {
     String path = baseRequest.getPathInfo();
     Matcher matcher = ID_PATTERN.matcher(path);
 
@@ -93,7 +84,7 @@ class TraceDataHandler extends AbstractHandler {
 
     responseWriter.write("[");
 
-    Iterator<InputStream> traceStreams = tracesHelper.getInputsForTraces(id).iterator();
+    Iterator<InputStream> traceStreams = buildTraces.getInputsForTraces(id).iterator();
     boolean isFirst = true;
 
     while (traceStreams.hasNext()) {
@@ -102,8 +93,7 @@ class TraceDataHandler extends AbstractHandler {
       } else {
         isFirst = false;
       }
-      try (
-          InputStream input = traceStreams.next();
+      try (InputStream input = traceStreams.next();
           InputStreamReader inputStreamReader = new InputStreamReader(input)) {
         CharStreams.copy(inputStreamReader, responseWriter);
       }

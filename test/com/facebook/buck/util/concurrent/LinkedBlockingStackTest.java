@@ -23,20 +23,16 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
+import java.util.NoSuchElementException;
+import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.util.ArrayList;
-import java.util.NoSuchElementException;
-import java.util.concurrent.TimeUnit;
-
 public class LinkedBlockingStackTest {
 
-  @Rule
-  public ExpectedException exception = ExpectedException.none();
+  @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test
   public void worksAsAStack() throws InterruptedException {
@@ -159,14 +155,14 @@ public class LinkedBlockingStackTest {
     LinkedBlockingStack<Integer> stack = new LinkedBlockingStack<>();
 
     stack.addAll(ImmutableList.of(5, 8, 3, 6, 7));
-    assertThat(stack.toArray(), is(arrayContaining((Object) 7, 6, 3, 8, 5)));
+    assertThat(stack.toArray(), is(arrayContaining(7, 6, 3, 8, 5)));
     assertThat(stack.toArray(new Integer[7]), is(arrayContaining(7, 6, 3, 8, 5, null, null)));
   }
 
   @Test
   public void drainTo() {
     LinkedBlockingStack<Integer> stack = new LinkedBlockingStack<>();
-    ArrayList<Integer> list = Lists.newArrayList();
+    ArrayList<Integer> list = new ArrayList<>();
 
     stack.addAll(ImmutableList.of(5, 8, 3, 6, 7));
     stack.drainTo(list);

@@ -1,0 +1,10 @@
+# The package_name by default is set to "different_package/some-pkg"
+# where declared package name (in the .go sources) is "somepkg".
+#
+# the declared package name is taken from the first file in srcs via go list
+cgo_library(
+    name = "lib",
+    srcs = ["cgosrc.go"],
+    go_srcs = ["bar.go"],
+    visibility = ["PUBLIC"],
+)

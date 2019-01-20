@@ -28,16 +28,13 @@ package com.facebook.buck.util;
 /**
  * Helps quote arguments when launching a process on Windows.
  *
- * Unix's process spawning syscall accepts an array of arguments, but Windows'
- * equivalent accepts a single string and splits the strings according to some
- * different rules.
+ * <p>Unix's process spawning syscall accepts an array of arguments, but Windows' equivalent accepts
+ * a single string and splits the strings according to some different rules.
  */
 class WindowsCreateProcessEscape {
   private WindowsCreateProcessEscape() {}
 
-  /**
-   * Same as {@link #quote(String)} except appends to a {@code StringBuilder}.
-   */
+  /** Same as {@link #quote(String)} except appends to a {@code StringBuilder}. */
   public static void quote(StringBuilder buf, String arg) {
     if (!mightNeedQuotes(arg)) {
       buf.append(arg);
@@ -77,15 +74,12 @@ class WindowsCreateProcessEscape {
   }
 
   /**
-   * Given a string X, this function returns a string that, when passed through
-   * the Windows implementation of Java's {@link Runtime#exec(String[])} or
-   * {@link java.lang.ProcessBuilder}, will appear to the spawned process as X.
+   * Given a string X, this function returns a string that, when passed through the Windows
+   * implementation of Java's {@link Runtime#exec(String[])} or {@link java.lang.ProcessBuilder},
+   * will appear to the spawned process as X.
    *
-   * @param arg
-   *    The argument to quote.
-   *
-   * @return
-   *    The quote version of 'arg'.
+   * @param arg The argument to quote.
+   * @return The quote version of 'arg'.
    */
   public static String quote(String arg) {
     StringBuilder buf = new StringBuilder(2 + arg.length() * 2);

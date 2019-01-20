@@ -1,11 +1,11 @@
 genrule(
-  name = 'foo_example',
-  cmd = 'echo foo > $OUT',
-  out = 'foo.txt',
+    name = "foo_example",
+    out = "foo.txt",
+    cmd = "echo foo > $OUT",
 )
 
 genrule(
-  name = 'bar_example',
-  cmd = 'echo bar > $OUT',
-  out = 'bar.txt',
+    name = "bar_example",
+    out = "bar.txt",
+    cmd = "echo bar > $OUT",
 )

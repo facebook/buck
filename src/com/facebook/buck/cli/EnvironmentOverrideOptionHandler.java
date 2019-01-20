@@ -15,21 +15,16 @@
  */
 package com.facebook.buck.cli;
 
+import java.util.Map;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.OptionDef;
 import org.kohsuke.args4j.spi.MapOptionHandler;
 import org.kohsuke.args4j.spi.Setter;
 
-import java.util.Map;
-
-/**
- * OptionHandler used for specifying environment overrides.
- */
+/** OptionHandler used for specifying environment overrides. */
 public class EnvironmentOverrideOptionHandler extends MapOptionHandler {
   public EnvironmentOverrideOptionHandler(
-      CmdLineParser parser,
-      OptionDef option,
-      Setter<? super Map<?, ?>> setter) {
+      CmdLineParser parser, OptionDef option, Setter<? super Map<?, ?>> setter) {
     super(parser, option, setter);
   }
 

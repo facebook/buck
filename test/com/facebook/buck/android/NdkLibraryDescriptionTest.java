@@ -18,24 +18,21 @@ package com.facebook.buck.android;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.cxx.Linker;
-import com.facebook.buck.cxx.NativeLinkable;
-import com.facebook.buck.cxx.NativeLinkableInput;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
-
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -43,87 +40,71 @@ public class NdkLibraryDescriptionTest {
 
   private static class FakeNativeLinkable extends FakeBuildRule implements NativeLinkable {
 
-    private final BuildTargetSourcePath input;
+    private final SourcePath input;
 
-    public FakeNativeLinkable(
-        String target,
-        SourcePathResolver resolver,
-        BuildTargetSourcePath input,
-        BuildRule... deps) {
-      super(target, resolver, deps);
+    public FakeNativeLinkable(String target, SourcePath input, BuildRule... deps) {
+      super(target, deps);
       this.input = input;
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableDeps(CxxPlatform cxxPlatform) {
-      return FluentIterable.from(getDeclaredDeps())
-          .filter(NativeLinkable.class);
+    public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
     }
 
     @Override
-    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(CxxPlatform cxxPlatform) {
-      return FluentIterable.from(getDeclaredDeps())
-          .filter(NativeLinkable.class);
+    public Iterable<NativeLinkable> getNativeLinkableExportedDeps(BuildRuleResolver ruleResolver) {
+      return FluentIterable.from(getDeclaredDeps()).filter(NativeLinkable.class);
     }
 
     @Override
     public NativeLinkableInput getNativeLinkableInput(
         CxxPlatform cxxPlatform,
-        Linker.LinkableDepType type) {
-      return NativeLinkableInput.builder()
-          .addArgs(new SourcePathArg(getResolver(), input))
-          .build();
+        Linker.LinkableDepType type,
+        boolean forceLinkWhole,
+        ActionGraphBuilder graphBuilder) {
+      return NativeLinkableInput.builder().addArgs(SourcePathArg.of(input)).build();
     }
 
     @Override
-    public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
+    public NativeLinkable.Linkage getPreferredLinkage(
+        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
       return Linkage.ANY;
     }
 
     @Override
     public ImmutableMap<String, SourcePath> getSharedLibraries(
-        CxxPlatform cxxPlatform) {
+        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
       return ImmutableMap.of();
     }
-
   }
 
   @Test
-  public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() throws Exception {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+  public void transitiveCxxLibraryDepsBecomeFirstOrderDepsOfNdkBuildRule() {
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
-    FakeBuildRule transitiveInput = resolver.addToIndex(
-        new FakeBuildRule("//:transitive_input", pathResolver));
+    FakeBuildRule transitiveInput =
+        graphBuilder.addToIndex(new FakeBuildRule("//:transitive_input"));
     transitiveInput.setOutputFile("out");
     FakeNativeLinkable transitiveDep =
-        resolver.addToIndex(
-            new FakeNativeLinkable(
-                "//:transitive_dep",
-                pathResolver,
-                new BuildTargetSourcePath(transitiveInput.getBuildTarget())));
-    FakeBuildRule firstOrderInput = resolver.addToIndex(
-        new FakeBuildRule("//:first_order_input", pathResolver));
+        graphBuilder.addToIndex(
+            new FakeNativeLinkable("//:transitive_dep", transitiveInput.getSourcePathToOutput()));
+    FakeBuildRule firstOrderInput =
+        graphBuilder.addToIndex(new FakeBuildRule("//:first_order_input"));
     firstOrderInput.setOutputFile("out");
     FakeNativeLinkable firstOrderDep =
-        resolver.addToIndex(
+        graphBuilder.addToIndex(
             new FakeNativeLinkable(
-                "//:first_order_dep",
-                pathResolver,
-                new BuildTargetSourcePath(firstOrderInput.getBuildTarget()),
-                transitiveDep));
+                "//:first_order_dep", firstOrderInput.getSourcePathToOutput(), transitiveDep));
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    BuildRule ndkLibrary = new NdkLibraryBuilder(target)
-        .addDep(firstOrderDep.getBuildTarget())
-        .build(resolver);
+    BuildRule ndkLibrary =
+        new NdkLibraryBuilder(target).addDep(firstOrderDep.getBuildTarget()).build(graphBuilder);
 
     assertThat(
-        ndkLibrary.getDeps(),
+        ndkLibrary.getBuildDeps(),
         Matchers.allOf(
             Matchers.<BuildRule>hasItem(firstOrderInput),
             Matchers.<BuildRule>hasItem(transitiveInput)));
   }
-
 }

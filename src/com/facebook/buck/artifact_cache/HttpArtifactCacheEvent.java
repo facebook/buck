@@ -16,47 +16,44 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.model.BuildId;
-import com.facebook.buck.rules.RuleKey;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
+import com.google.common.collect.Iterables;
+import java.util.Objects;
+import java.util.Optional;
+import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
-import java.util.List;
-import java.util.Map;
-
-/**
- * Event produced for HttpArtifactCache operations containing different stats.
- */
+/** Event produced for HttpArtifactCache operations containing different stats. */
 public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
-  public static final ArtifactCacheEvent.CacheMode CACHE_MODE =
-      ArtifactCacheEvent.CacheMode.http;
+  public static final ArtifactCacheEvent.CacheMode CACHE_MODE = ArtifactCacheEvent.CacheMode.http;
 
   protected HttpArtifactCacheEvent(
       EventKey eventKey,
       ArtifactCacheEvent.Operation operation,
       Optional<String> target,
       ImmutableSet<RuleKey> ruleKeys,
-      ArtifactCacheEvent.InvocationType invocationType) {
-    super(
-        eventKey,
-        CACHE_MODE,
-        operation,
-        target,
-        ruleKeys,
-        invocationType);
+      ArtifactCacheEvent.InvocationType invocationType,
+      StoreType storeType) {
+    super(eventKey, CACHE_MODE, operation, target, ruleKeys, invocationType, storeType);
   }
 
-  public static Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
-    return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys);
+  public static Started newFetchStartedEvent(@Nullable BuildTarget target, RuleKey ruleKey) {
+    return new Started(
+        ArtifactCacheEvent.Operation.FETCH,
+        target != null ? ImmutableSet.of(target) : ImmutableSet.of(),
+        ImmutableSet.of(ruleKey),
+        StoreType.NOT_APPLICABLE);
   }
 
   public static Started newStoreStartedEvent(Scheduled scheduled) {
@@ -64,9 +61,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   }
 
   public static Scheduled newStoreScheduledEvent(
-      Optional<String> target,
-      ImmutableSet<RuleKey> ruleKeys) {
-    return new Scheduled(ArtifactCacheEvent.Operation.STORE, target, ruleKeys);
+      Optional<String> target, ImmutableSet<RuleKey> ruleKeys, StoreType storeType) {
+    return new Scheduled(ArtifactCacheEvent.Operation.STORE, target, ruleKeys, storeType);
   }
 
   public static Shutdown newShutdownEvent() {
@@ -77,17 +73,25 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     return new Finished.Builder(event);
   }
 
+  public static HttpArtifactCacheEvent.MultiFetchStarted newMultiFetchStartedEvent(
+      ImmutableList<BuildTarget> targets, ImmutableList<RuleKey> ruleKeys) {
+    return new MultiFetchStarted(ImmutableSet.copyOf(targets), ImmutableSet.copyOf(ruleKeys));
+  }
+
   public static class Scheduled extends HttpArtifactCacheEvent {
 
-    public Scheduled(ArtifactCacheEvent.Operation operation,
+    public Scheduled(
+        ArtifactCacheEvent.Operation operation,
         Optional<String> target,
-        ImmutableSet<RuleKey> ruleKeys) {
+        ImmutableSet<RuleKey> ruleKeys,
+        StoreType storeType) {
       super(
           EventKey.unique(),
           operation,
           target,
           ruleKeys,
-          ArtifactCacheEvent.InvocationType.ASYNCHRONOUS);
+          ArtifactCacheEvent.InvocationType.ASYNCHRONOUS,
+          storeType);
     }
 
     @Override
@@ -104,17 +108,25 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           event.getOperation(),
           event.getTarget(),
           event.getRuleKeys(),
-          event.getInvocationType());
+          event.getInvocationType(),
+          event.getStoreType());
     }
 
-    public Started(ArtifactCacheEvent.Operation operation, ImmutableSet<RuleKey> ruleKeys) {
+    public Started(
+        ArtifactCacheEvent.Operation operation,
+        ImmutableSet<BuildTarget> targets,
+        ImmutableSet<RuleKey> ruleKeys,
+        StoreType storeType) {
       super(
           EventKey.unique(),
           CACHE_MODE,
           operation,
-          Optional.<String>absent(),
+          targets.size() == 1
+              ? Optional.of(targets.iterator().next().getFullyQualifiedName())
+              : Optional.empty(),
           ruleKeys,
-          ArtifactCacheEvent.InvocationType.SYNCHRONOUS);
+          ArtifactCacheEvent.InvocationType.SYNCHRONOUS,
+          storeType);
     }
 
     @Override
@@ -135,28 +147,38 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
     @Override
     protected String getValueString() {
-      return getEventName() + getEventKey().toString();
+      return getEventName() + getEventKey();
     }
   }
 
   public static class Finished extends ArtifactCacheEvent.Finished {
 
-    @JsonProperty("event_info")
-    private final ImmutableMap<String, Object> eventInfo;
+    @JsonIgnore private final Started startedEvent;
 
-    @JsonIgnore
-    private final Started startedEvent;
+    @JsonIgnore private final Optional<HttpArtifactCacheEventFetchData> fetchData;
+
+    @JsonIgnore private final Optional<HttpArtifactCacheEventStoreData> storeData;
 
     @JsonProperty("request_duration_millis")
     private long requestDurationMillis;
 
-    @JsonIgnore
-    private boolean wasUploadSuccessful;
+    public Finished(Started event, Optional<String> target, HttpArtifactCacheEventFetchData data) {
+      super(
+          event.getEventKey(),
+          CACHE_MODE,
+          event.getOperation(),
+          Objects.requireNonNull(target),
+          event.getRuleKeys(),
+          event.getInvocationType(),
+          data.getFetchResult(),
+          StoreType.NOT_APPLICABLE);
+      this.startedEvent = event;
+      this.requestDurationMillis = -1;
+      this.fetchData = Optional.of(data);
+      this.storeData = Optional.empty();
+    }
 
-    private Finished(Started event,
-        ImmutableMap<String, Object> data,
-        boolean wasUploadSuccessful,
-        Optional<CacheResult> cacheResult) {
+    public Finished(Started event, HttpArtifactCacheEventStoreData data) {
       super(
           event.getEventKey(),
           CACHE_MODE,
@@ -164,26 +186,41 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           event.getTarget(),
           event.getRuleKeys(),
           event.getInvocationType(),
-          cacheResult);
+          Optional.empty(),
+          event.getStoreType());
       this.startedEvent = event;
-      this.eventInfo = data;
       this.requestDurationMillis = -1;
-      this.wasUploadSuccessful = wasUploadSuccessful;
+      this.fetchData = Optional.empty();
+      this.storeData = Optional.of(data);
     }
 
     public long getRequestDurationMillis() {
       return requestDurationMillis;
     }
 
-    public ImmutableMap<String, Object> getEventInfo() {
-      return eventInfo;
+    public HttpArtifactCacheEventFetchData getFetchData() {
+      Preconditions.checkState(fetchData.isPresent());
+      return fetchData.get();
+    }
+
+    public Started getStartedEvent() {
+      return startedEvent;
+    }
+
+    public HttpArtifactCacheEventStoreData getStoreData() {
+      Preconditions.checkState(storeData.isPresent());
+      return storeData.get();
     }
 
     @Override
     public void configure(
-        long timestamp, long nanoTime, long threadId, BuildId buildId) {
-      super.configure(timestamp, nanoTime, threadId, buildId);
-      requestDurationMillis = timestamp - startedEvent.getTimestamp();
+        long timestampMillis,
+        long nanoTime,
+        long userThreadNanoTime,
+        long threadId,
+        BuildId buildId) {
+      super.configure(timestampMillis, nanoTime, userThreadNanoTime, threadId, buildId);
+      requestDurationMillis = timestampMillis - startedEvent.getTimestamp();
     }
 
     @Override
@@ -191,72 +228,92 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       return "HttpArtifactCacheEvent.Finished";
     }
 
-    public boolean wasUploadSuccessful() {
-      return wasUploadSuccessful;
-    }
-
     public static class Builder {
-      private final Map<String, Object> data;
-      private boolean wasUploadSuccessful;
-      private Optional<CacheResult> cacheResult = Optional.absent();
-
       private final Started startedEvent;
+      private HttpArtifactCacheEventFetchData.Builder fetchDataBuilder;
+      private HttpArtifactCacheEventStoreData.Builder storeDataBuilder;
+      private Optional<String> target;
 
       private Builder(Started event) {
-        this.data = Maps.newHashMap();
         this.startedEvent = event;
+        this.storeDataBuilder = HttpArtifactCacheEventStoreData.builder();
+        this.fetchDataBuilder = HttpArtifactCacheEventFetchData.builder();
+        this.target = event.getTarget();
       }
 
       public HttpArtifactCacheEvent.Finished build() {
-        return new HttpArtifactCacheEvent.Finished(
-            startedEvent, ImmutableMap.copyOf(data), wasUploadSuccessful, cacheResult);
+        if (startedEvent.getOperation() == Operation.FETCH) {
+          RuleKey requestsRuleKey =
+              Objects.requireNonNull(Iterables.getFirst(startedEvent.getRuleKeys(), null));
+          fetchDataBuilder.setRequestedRuleKey(requestsRuleKey);
+          return new HttpArtifactCacheEvent.Finished(
+              startedEvent, target, fetchDataBuilder.build());
+        } else {
+          storeDataBuilder.setRuleKeys(startedEvent.getRuleKeys());
+          storeDataBuilder.setStoreType(startedEvent.getStoreType());
+          return new HttpArtifactCacheEvent.Finished(startedEvent, storeDataBuilder.build());
+        }
       }
 
-      public Builder setArtifactSizeBytes(long artifactSizeBytes) {
-        data.put("artifact_size_bytes", artifactSizeBytes);
+      public HttpArtifactCacheEventFetchData.Builder getFetchBuilder() {
+        return fetchDataBuilder;
+      }
+
+      public HttpArtifactCacheEventStoreData.Builder getStoreBuilder() {
+        return storeDataBuilder;
+      }
+
+      public Builder setFetchDataBuilder(HttpArtifactCacheEventFetchData.Builder fetchDataBuilder) {
+        this.fetchDataBuilder = fetchDataBuilder;
         return this;
       }
 
-      public Builder setArtifactContentHash(String contentHash) {
-        data.put("artifact_content_hash", contentHash);
+      public Builder setTarget(Optional<String> target) {
+        this.target = target;
         return this;
       }
+    }
+  }
 
-      public Builder setRuleKeys(Iterable<RuleKey> ruleKeys) {
-        // Make sure we expand any lazy evaluation Iterators so Json serialization works correctly.
-        List<String> keysAsStrings = FluentIterable.from(ruleKeys)
-            .transform(Functions.toStringFunction())
-            .toList();
-        data.put("rule_keys", keysAsStrings);
-        return this;
-      }
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractHttpArtifactCacheEventFetchData {
+    Optional<Long> getResponseSizeBytes();
 
-      public Builder setErrorMessage(String errorMessage) {
-        data.put("error_msg", errorMessage);
-        return this;
-      }
+    Optional<CacheResult> getFetchResult();
 
-      public Builder setWasUploadSuccessful(boolean wasUploadSuccessful) {
-        data.put("was_upload_successful", wasUploadSuccessful);
-        this.wasUploadSuccessful = wasUploadSuccessful;
-        return this;
-      }
+    RuleKey getRequestedRuleKey();
 
-      public Builder setRequestSizeBytes(long sizeBytes) {
-        data.put("request_size_bytes", sizeBytes);
-        return this;
-      }
+    Optional<String> getArtifactContentHash();
 
-      public Builder setFetchResult(CacheResult cacheResult) {
-        data.put("fetch_result", cacheResult.toString());
-        this.cacheResult = Optional.of(cacheResult);
-        return this;
-      }
+    Optional<Long> getArtifactSizeBytes();
 
-      public Builder setResponseSizeBytes(long sizeBytes) {
-        data.put("response_size_bytes", sizeBytes);
-        return this;
-      }
+    Optional<String> getErrorMessage();
+
+    ImmutableSet<RuleKey> getAssociatedRuleKeys();
+  }
+
+  @Value.Immutable
+  @BuckStyleImmutable
+  interface AbstractHttpArtifactCacheEventStoreData {
+    Optional<Long> getRequestSizeBytes();
+
+    Optional<Boolean> wasStoreSuccessful();
+
+    ImmutableSet<RuleKey> getRuleKeys();
+
+    Optional<String> getArtifactContentHash();
+
+    Optional<Long> getArtifactSizeBytes();
+
+    Optional<String> getErrorMessage();
+
+    StoreType getStoreType();
+  }
+
+  static class MultiFetchStarted extends Started {
+    public MultiFetchStarted(ImmutableSet<BuildTarget> targets, ImmutableSet<RuleKey> ruleKeys) {
+      super(Operation.MULTI_FETCH, targets, ruleKeys, StoreType.NOT_APPLICABLE);
     }
   }
 }

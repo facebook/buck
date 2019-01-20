@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
+
+java_library_with_plugins(
+    name = "platform",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
+        "//src/com/facebook/buck/core/rules/config:config",
+    ],
+    tests = [
+        "//src/com/facebook/buck/core/rules/platform:platform",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

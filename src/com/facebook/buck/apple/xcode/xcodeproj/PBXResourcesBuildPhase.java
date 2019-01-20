@@ -17,10 +17,10 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 /**
- * Lists the files to be copied into the output resources directory for the containing
- * {@link PBXTarget}. Has no effect in library rules.
+ * Lists the files to be copied into the output resources directory for the containing {@link
+ * PBXTarget}. Has no effect in library rules.
  *
- * A target should contain at most one of this build phase.
+ * <p>A target should contain at most one of this build phase.
  */
 public class PBXResourcesBuildPhase extends PBXBuildPhase {
   @Override

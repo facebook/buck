@@ -16,51 +16,66 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.log.Logger;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.nio.file.Path;
+import java.util.Optional;
 
-public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
+public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
 
   private static final Logger LOG = Logger.get(HeaderSymlinkTreeWithHeaderMap.class);
 
   @AddToRuleKey(stringify = true)
   private final Path headerMapPath;
 
-  public HeaderSymlinkTreeWithHeaderMap(
-      BuildRuleParams params,
-      SourcePathResolver resolver,
+  private HeaderSymlinkTreeWithHeaderMap(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
       Path root,
+      ImmutableMap<Path, SourcePath> links,
       Path headerMapPath,
-      ImmutableMap<Path, SourcePath> links) {
-    super(params, resolver, root, links);
+      SourcePathRuleFinder ruleFinder) {
+    super(target, filesystem, root, links, ruleFinder);
     this.headerMapPath = headerMapPath;
   }
 
-  @Override
-  public Path getPathToOutput() {
-    return headerMapPath;
+  public static HeaderSymlinkTreeWithHeaderMap create(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      Path root,
+      ImmutableMap<Path, SourcePath> links,
+      SourcePathRuleFinder ruleFinder) {
+    Path headerMapPath = getPath(filesystem, target);
+    return new HeaderSymlinkTreeWithHeaderMap(
+        target, filesystem, root, links, headerMapPath, ruleFinder);
   }
 
-  // We generate the symlink tree and the header map using post-build steps for reasons explained in
-  // the superclass.
   @Override
-  public ImmutableList<Step> getPostBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+  public SourcePath getSourcePathToOutput() {
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), headerMapPath);
+  }
+
+  @Override
+  public ImmutableList<Step> getBuildSteps(
+      BuildContext context, BuildableContext buildableContext) {
     LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
     Path buckOut =
         getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
+
     ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
     for (Path key : getLinks().keySet()) {
       // The key is the path that will be referred to in headers. It can be anything. However, the
@@ -70,20 +85,27 @@ public class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       // aligning in order to get this to work. May we find peace in another life.
       headerMapEntries.put(key, buckOut.relativize(getRoot().resolve(key)));
     }
-    return ImmutableList.<Step>builder()
-        .addAll(super.getPostBuildSteps(context, buildableContext))
-        .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()))
-        .build();
+    ImmutableList.Builder<Step> builder =
+        ImmutableList.<Step>builder()
+            .addAll(super.getBuildSteps(context, buildableContext))
+            .add(
+                new HeaderMapStep(getProjectFilesystem(), headerMapPath, headerMapEntries.build()));
+    return builder.build();
   }
 
   @Override
-  public Path getIncludePath() {
-    return getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
+  public PathSourcePath getIncludeSourcePath() {
+    return PathSourcePath.of(
+        getProjectFilesystem(), getProjectFilesystem().getBuckPaths().getBuckOut());
   }
 
   @Override
-  public Optional<Path> getHeaderMap() {
-    return Optional.of(getProjectFilesystem().resolve(headerMapPath));
+  public Optional<SourcePath> getHeaderMapSourcePath() {
+    return Optional.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), headerMapPath));
   }
 
+  @VisibleForTesting
+  static Path getPath(ProjectFilesystem filesystem, BuildTarget target) {
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s.hmap");
+  }
 }

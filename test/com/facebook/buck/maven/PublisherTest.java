@@ -16,20 +16,25 @@
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.jvm.java.JavaLibrary;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.MavenPublishable;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableSet;
-
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.eclipse.aether.deployment.DeploymentException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -37,31 +42,25 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import java.net.URL;
-import java.nio.file.Paths;
-
 public class PublisherTest {
 
   private static final String MVN_COORDS_A = "com.facebook.buck.maven:a:jar:42";
   private static final String MVN_COORDS_B = "com.facebook.buck.maven:b:jar:10";
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private Publisher publisher;
-  private BuildRuleResolver ruleResolver;
 
   @Before
   public void setUp() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    publisher = new Publisher(
-        filesystem,
-        /* remoteRepoUrl */ Optional.<URL>absent(),
-        /* dryRun */ true);
-
-    ruleResolver = new BuildRuleResolver(
-        TargetGraph.EMPTY,
-        new DefaultTargetNodeToBuildRuleTransformer());
+    publisher =
+        new Publisher(
+            filesystem.getRootPath(),
+            /* remoteRepoUrl */ Publisher.MAVEN_CENTRAL,
+            /* username */ Optional.empty(),
+            /* password */ Optional.empty(),
+            /* dryRun */ true);
   }
 
   @Test
@@ -71,44 +70,47 @@ public class PublisherTest {
     // A   B
     //  \ /
     //   C
-    BuildTarget publishableTargetA = BuildTargetFactory.newInstance("//:a")
-        .withFlavors(JavaLibrary.MAVEN_JAR);
-    BuildTarget publishableTargetB = BuildTargetFactory.newInstance("//:b")
-        .withFlavors(JavaLibrary.MAVEN_JAR);
+    BuildTarget publishableTargetA =
+        BuildTargetFactory.newInstance("//:a").withFlavors(JavaLibrary.MAVEN_JAR);
+    BuildTarget publishableTargetB =
+        BuildTargetFactory.newInstance("//:b").withFlavors(JavaLibrary.MAVEN_JAR);
     BuildTarget targetC = BuildTargetFactory.newInstance("//:c");
 
-    JavaLibraryBuilder.createBuilder(targetC)
-        .addSrc(Paths.get("c.java"))
-        .build(ruleResolver);
-    MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
-        .createBuilder(publishableTargetA)
-        .addSrc(Paths.get("a.java"))
-        .setMavenCoords(MVN_COORDS_A)
-        .addDep(targetC)
-        .build(ruleResolver);
-    MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
-        .createBuilder(publishableTargetB)
-        .addSrc(Paths.get("b.java"))
-        .setMavenCoords(MVN_COORDS_B)
-        .addDep(targetC)
-        .build(ruleResolver);
+    TargetNode<?> depNode =
+        JavaLibraryBuilder.createBuilder(targetC).addSrc(Paths.get("c.java")).build();
+    TargetNode<?> publishableANode =
+        JavaLibraryBuilder.createBuilder(publishableTargetA)
+            .addSrc(Paths.get("a.java"))
+            .setMavenCoords(MVN_COORDS_A)
+            .addDep(targetC)
+            .build();
+    TargetNode<?> publishableBNode =
+        JavaLibraryBuilder.createBuilder(publishableTargetB)
+            .addSrc(Paths.get("b.java"))
+            .setMavenCoords(MVN_COORDS_B)
+            .addDep(targetC)
+            .build();
 
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(depNode, publishableANode, publishableBNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+
+    MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(
-        Matchers.containsString(targetC
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(targetC.getUnflavoredBuildTarget().getFullyQualifiedName()));
     expectedException.expectMessage(
-        Matchers.containsString(publishableTargetA
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(
+            publishableTargetA.getUnflavoredBuildTarget().getFullyQualifiedName()));
     expectedException.expectMessage(
-        Matchers.containsString(publishableTargetB
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(
+            publishableTargetB.getUnflavoredBuildTarget().getFullyQualifiedName()));
 
-    publisher.publish(ImmutableSet.of(publishableA, publishableB));
+    publisher.publish(pathResolver, ImmutableSet.of(publishableA, publishableB));
   }
 
   @Test
@@ -120,49 +122,55 @@ public class PublisherTest {
     // C   |
     //  \ /
     //   D
-    BuildTarget publishableTargetA = BuildTargetFactory.newInstance("//:a")
-        .withFlavors(JavaLibrary.MAVEN_JAR);
-    BuildTarget publishableTargetB = BuildTargetFactory.newInstance("//:b")
-        .withFlavors(JavaLibrary.MAVEN_JAR);
+    BuildTarget publishableTargetA =
+        BuildTargetFactory.newInstance("//:a").withFlavors(JavaLibrary.MAVEN_JAR);
+    BuildTarget publishableTargetB =
+        BuildTargetFactory.newInstance("//:b").withFlavors(JavaLibrary.MAVEN_JAR);
     BuildTarget targetC = BuildTargetFactory.newInstance("//:c");
     BuildTarget targetD = BuildTargetFactory.newInstance("//:d");
 
-    JavaLibraryBuilder.createBuilder(targetD)
-        .addSrc(Paths.get("d.java"))
-        .build(ruleResolver);
-    JavaLibraryBuilder.createBuilder(targetC)
-        .addSrc(Paths.get("c.java"))
-        .addDep(targetD)
-        .build(ruleResolver);
-    MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
-        .createBuilder(publishableTargetA)
-        .addSrc(Paths.get("a.java"))
-        .setMavenCoords(MVN_COORDS_A)
-        .addDep(targetC)
-        .build(ruleResolver);
-    MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
-        .createBuilder(publishableTargetB)
-        .addSrc(Paths.get("b.java"))
-        .setMavenCoords(MVN_COORDS_B)
-        .addDep(targetD)
-        .build(ruleResolver);
+    TargetNode<?> transitiveDepNode =
+        JavaLibraryBuilder.createBuilder(targetD).addSrc(Paths.get("d.java")).build();
+    TargetNode<?> depNode =
+        JavaLibraryBuilder.createBuilder(targetC)
+            .addSrc(Paths.get("c.java"))
+            .addDep(targetD)
+            .build();
+    TargetNode<?> publishableANode =
+        JavaLibraryBuilder.createBuilder(publishableTargetA)
+            .addSrc(Paths.get("a.java"))
+            .setMavenCoords(MVN_COORDS_A)
+            .addDep(targetC)
+            .build();
+    TargetNode<?> publishableBNode =
+        JavaLibraryBuilder.createBuilder(publishableTargetB)
+            .addSrc(Paths.get("b.java"))
+            .setMavenCoords(MVN_COORDS_B)
+            .addDep(targetD)
+            .build();
 
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            transitiveDepNode, depNode, publishableANode, publishableBNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+
+    MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(
-        Matchers.containsString(targetD
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(targetD.getUnflavoredBuildTarget().getFullyQualifiedName()));
     expectedException.expectMessage(
-        Matchers.containsString(publishableTargetA
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(
+            publishableTargetA.getUnflavoredBuildTarget().getFullyQualifiedName()));
     expectedException.expectMessage(
-        Matchers.containsString(publishableTargetB
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(
+            publishableTargetB.getUnflavoredBuildTarget().getFullyQualifiedName()));
 
-    publisher.publish(ImmutableSet.of(publishableA, publishableB));  }
+    publisher.publish(pathResolver, ImmutableSet.of(publishableA, publishableB));
+  }
 
   @Test
   public void errorRaisedForDuplicateTransitiveDeps()
@@ -173,52 +181,59 @@ public class PublisherTest {
     // C   D
     //  \ /
     //   E
-    BuildTarget publishableTargetA = BuildTargetFactory.newInstance("//:a")
-        .withFlavors(JavaLibrary.MAVEN_JAR);
-    BuildTarget publishableTargetB = BuildTargetFactory.newInstance("//:b")
-        .withFlavors(JavaLibrary.MAVEN_JAR);
+    BuildTarget publishableTargetA =
+        BuildTargetFactory.newInstance("//:a").withFlavors(JavaLibrary.MAVEN_JAR);
+    BuildTarget publishableTargetB =
+        BuildTargetFactory.newInstance("//:b").withFlavors(JavaLibrary.MAVEN_JAR);
     BuildTarget targetC = BuildTargetFactory.newInstance("//:c");
     BuildTarget targetD = BuildTargetFactory.newInstance("//:d");
     BuildTarget targetE = BuildTargetFactory.newInstance("//:e");
 
-    JavaLibraryBuilder.createBuilder(targetE)
-        .addSrc(Paths.get("e.java"))
-        .build(ruleResolver);
-    JavaLibraryBuilder.createBuilder(targetC)
-        .addSrc(Paths.get("c.java"))
-        .addDep(targetE)
-        .build(ruleResolver);
-    JavaLibraryBuilder.createBuilder(targetD)
-        .addSrc(Paths.get("d.java"))
-        .addDep(targetE)
-        .build(ruleResolver);
-    MavenPublishable publishableA = (MavenPublishable) JavaLibraryBuilder
-        .createBuilder(publishableTargetA)
-        .addSrc(Paths.get("a.java"))
-        .setMavenCoords(MVN_COORDS_A)
-        .addDep(targetC)
-        .build(ruleResolver);
-    MavenPublishable publishableB = (MavenPublishable) JavaLibraryBuilder
-        .createBuilder(publishableTargetB)
-        .addSrc(Paths.get("b.java"))
-        .setMavenCoords(MVN_COORDS_B)
-        .addDep(targetD)
-        .build(ruleResolver);
+    TargetNode<?> transitiveDepNode =
+        JavaLibraryBuilder.createBuilder(targetE).addSrc(Paths.get("e.java")).build();
+    TargetNode<?> dep1Node =
+        JavaLibraryBuilder.createBuilder(targetC)
+            .addSrc(Paths.get("c.java"))
+            .addDep(targetE)
+            .build();
+    TargetNode<?> dep2Node =
+        JavaLibraryBuilder.createBuilder(targetD)
+            .addSrc(Paths.get("d.java"))
+            .addDep(targetE)
+            .build();
+    TargetNode<?> publishableANode =
+        JavaLibraryBuilder.createBuilder(publishableTargetA)
+            .addSrc(Paths.get("a.java"))
+            .setMavenCoords(MVN_COORDS_A)
+            .addDep(targetC)
+            .build();
+    TargetNode<?> publishableBNode =
+        JavaLibraryBuilder.createBuilder(publishableTargetB)
+            .addSrc(Paths.get("b.java"))
+            .setMavenCoords(MVN_COORDS_B)
+            .addDep(targetD)
+            .build();
 
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            transitiveDepNode, dep1Node, dep2Node, publishableANode, publishableBNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+
+    MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
+    MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
 
     expectedException.expect(DeploymentException.class);
     expectedException.expectMessage(
-        Matchers.containsString(targetE
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(targetE.getUnflavoredBuildTarget().getFullyQualifiedName()));
     expectedException.expectMessage(
-        Matchers.containsString(publishableTargetA
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(
+            publishableTargetA.getUnflavoredBuildTarget().getFullyQualifiedName()));
     expectedException.expectMessage(
-        Matchers.containsString(publishableTargetB
-            .getUnflavoredBuildTarget()
-            .getFullyQualifiedName()));
+        Matchers.containsString(
+            publishableTargetB.getUnflavoredBuildTarget().getFullyQualifiedName()));
 
-    publisher.publish(ImmutableSet.of(publishableA, publishableB));  }
+    publisher.publish(pathResolver, ImmutableSet.of(publishableA, publishableB));
+  }
 }

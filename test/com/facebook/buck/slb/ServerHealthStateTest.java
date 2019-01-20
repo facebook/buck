@@ -16,10 +16,11 @@
 
 package com.facebook.buck.slb;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static com.facebook.buck.slb.AbstractClientSideSlbConfig.MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE;
 
 import java.net.URI;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ServerHealthStateTest {
   private static final URI SERVER = URI.create("http://localhost:4242");
@@ -48,16 +49,14 @@ public class ServerHealthStateTest {
     ServerHealthState state = new ServerHealthState(SERVER);
     reportSamples(state, NOW_MILLIS, 21);
     Assert.assertEquals(21, state.getPingLatencyMillis(NOW_MILLIS, RANGE_MILLIS));
-    Assert.assertEquals(
-        1f,
-        state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS),
-        DELTA);
+    Assert.assertEquals(1f, state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS), DELTA);
   }
 
   @Test
   public void testAgainstMemoryLeak() {
     int maxSamples = 42;
-    ServerHealthState state = new ServerHealthState(SERVER, maxSamples);
+    ServerHealthState state =
+        new ServerHealthState(SERVER, maxSamples, MIN_SAMPLES_TO_REPORT_ERROR_DEFAULT_VALUE);
     for (int i = 0; i < maxSamples * 2; ++i) {
       reportSamples(state, NOW_MILLIS, 1);
     }
@@ -81,8 +80,8 @@ public class ServerHealthStateTest {
     state.reportRequestError(NOW_MILLIS);
     Assert.assertEquals(0.75, state.getErrorPercentage(NOW_MILLIS, RANGE_MILLIS), DELTA);
 
-    Assert.assertEquals(0,
-        state.getErrorPercentage(NOW_MILLIS + RANGE_MILLIS + 1, RANGE_MILLIS), DELTA);
+    Assert.assertEquals(
+        0, state.getErrorPercentage(NOW_MILLIS + RANGE_MILLIS + 1, RANGE_MILLIS), DELTA);
   }
 
   @Test

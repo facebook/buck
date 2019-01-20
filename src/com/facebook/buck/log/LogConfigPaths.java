@@ -16,44 +16,33 @@
 
 package com.facebook.buck.log;
 
-import com.google.common.base.Optional;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
-/**
- * Utility class containing constants for logging configuration paths.
- */
+/** Utility class containing constants for logging configuration paths. */
 public class LogConfigPaths {
-  /**
-   * System property holding the path to the logging.properties.st file in the Buck repo.
-   */
+  /** System property holding the path to the logging.properties.st file in the Buck repo. */
   public static final String BUCK_CONFIG_STRING_TEMPLATE_FILE_PROPERTY = "buck.logging_config_file";
 
-  /**
-   * If present, the path to the logging.properties.st file.
-   */
+  /** If present, the path to the logging.properties.st file. */
   public static final Optional<Path> MAIN_PATH;
 
-  /**
-   * The path to the per-project logging.properties file.
-   */
+  /** The path to the per-project logging.properties file. */
   public static final Path PROJECT_PATH = Paths.get(".bucklogging.properties");
 
-  /**
-   * The path to the per-project local (git ignored) logging.properties file.
-   */
+  /** The path to the per-project local (git ignored) logging.properties file. */
   public static final Path LOCAL_PATH = Paths.get(".bucklogging.local.properties");
 
   static {
     String buckConfigFileProperty = System.getProperty(BUCK_CONFIG_STRING_TEMPLATE_FILE_PROPERTY);
     if (buckConfigFileProperty == null) {
-      MAIN_PATH = Optional.absent();
+      MAIN_PATH = Optional.empty();
     } else {
       MAIN_PATH = Optional.of(Paths.get(buckConfigFileProperty));
     }
   }
 
   // Utility class. Do not instantiate.
-  private LogConfigPaths() { }
+  private LogConfigPaths() {}
 }

@@ -1,0 +1,21 @@
+java_library(
+    name = "util",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
+        "//src/com/facebook/buck/util:exceptions",
+        "//src/com/facebook/buck/util:io",
+        "//src/com/facebook/buck/util:process_executor",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/util/filesystem:filesystem",
+        "//src/com/facebook/buck/util/function:function",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

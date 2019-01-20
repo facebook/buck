@@ -1,0 +1,10 @@
+cxx_library(
+    name = "test",
+    srcs = [
+        "test.cpp",
+    ],
+    raw_headers = [
+        "used.h",
+        "unused.h",
+    ],
+)

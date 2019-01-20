@@ -4,7 +4,7 @@
     "name": "four"
   },
   "//example:one": {
-    "deps": [":two", ":three"],
+    "deps": [":three", ":two"],
     "name": "one"
   }
 }

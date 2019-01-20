@@ -16,23 +16,27 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.jvm.core.HasMavenCoordinates;
+import java.util.Optional;
 
 /**
- * A {@link BuildRule} that can have its output({@link #getPathToOutput}) published to a
- * maven repository under the maven coordinates provided by {@link #getMavenCoords}
+ * A {@link BuildRule} that can have its output({@link #getSourcePathToOutput}) published to a maven
+ * repository under the maven coordinates provided by {@link #getMavenCoords}
  */
 public interface MavenPublishable extends HasMavenCoordinates {
 
-  /**
-   * When published, these will be listed in pom.xml as dependencies
-   */
+  /** When published, these will be listed in pom.xml as dependencies */
   Iterable<HasMavenCoordinates> getMavenDeps();
 
   /**
-   * When published, these will be included in the artifact.  This, {@link #getMavenDeps()}, and the
+   * When published, these will be included in the artifact. This, {@link #getMavenDeps()}, and the
    * transitive dependencies of those maven deps would form the complete set of transitive
    * dependencies for the artifact.
    */
   Iterable<BuildRule> getPackagedDependencies();
+
+  /** @return A template for the pom.xml to be generated when publishing this artifact. */
+  Optional<SourcePath> getPomTemplate();
 }

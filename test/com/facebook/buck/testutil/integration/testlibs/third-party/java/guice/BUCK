@@ -1,0 +1,34 @@
+prebuilt_jar(
+    name = "guice",
+    binary_jar = "guice-3.0.jar",
+    licenses = [
+        "COPYING",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":assisted-inject",
+        ":multibindings",
+        "//third-party/java/jsr:jsr330",
+    ],
+)
+
+prebuilt_jar(
+    name = "assisted-inject",
+    binary_jar = "guice-assistedinject-3.0.jar",
+    licenses = [
+        "COPYING",
+    ],
+    deps = [
+        "//third-party/java/aopalliance:aopalliance",
+    ],
+)
+
+prebuilt_jar(
+    name = "multibindings",
+    binary_jar = "guice-multibindings-3.0.jar",
+    licenses = [
+        "COPYING",
+    ],
+)

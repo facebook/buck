@@ -16,60 +16,54 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.util.XmlDomParser;
-import com.google.common.collect.Lists;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
+import com.facebook.buck.util.xml.XmlDomParser;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 public class DefaultAndroidManifestReader implements AndroidManifestReader {
 
   /**
-   * XPath expression to retrieve the names of activities with an intent-filter that gets them
-   * to show up in the launcher.
+   * XPath expression to retrieve the names of activities with an intent-filter that gets them to
+   * show up in the launcher.
    */
   private static final String XPATH_LAUNCHER_ACTIVITIES =
-      "/manifest/application/*" +
-      "  [self::activity[not(@android:enabled) or @android:enabled='true'] or " +
-      "                 self::activity-alias[not(@android:enabled) or @android:enabled='true']]" +
-      "  [intent-filter[action/@android:name='android.intent.action.MAIN' and " +
-      "                 category/@android:name='android.intent.category.LAUNCHER']]" +
-      "  /@android:name";
+      "/manifest/application/*"
+          + "  [self::activity[not(@android:enabled) or @android:enabled='true'] or "
+          + "                 self::activity-alias[not(@android:enabled) or @android:enabled='true']]"
+          + "  [intent-filter[action/@android:name='android.intent.action.MAIN' and "
+          + "                 category/@android:name='android.intent.category.LAUNCHER']]"
+          + "  /@android:name";
 
   /**
-   * XPath expression to get the package.
-   * For a manifest as {@code <manifest package="com.facebook.katana" />}, this results in
-   * {@code com.facebook.katana}.
+   * XPath expression to get the package. For a manifest as {@code <manifest
+   * package="com.facebook.katana" />}, this results in {@code com.facebook.katana}.
    */
   private static final String XPATH_PACKAGE = "/manifest/@package";
 
   /**
-   * XPath expression to get the version code.
-   * For a manifest as {@code <manifest android:versionCode="1" />}, this results in
-   * {@code 1}.
+   * XPath expression to get the version code. For a manifest as {@code <manifest
+   * android:versionCode="1" />}, this results in {@code 1}.
    */
   private static final String XPATH_VERSION_CODE = "/manifest/@android:versionCode";
 
-  /**
-   * XPath expression to get the instrumentation test runner.
-   */
+  /** XPath expression to get the instrumentation test runner. */
   private static final String XPATH_INSTRUMENTATION_TEST_RUNNER =
       "/manifest/instrumentation/@android:name";
 
@@ -102,7 +96,7 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
       NodeList nodes;
       nodes = (NodeList) launchableActivitiesExpression.evaluate(doc, XPathConstants.NODESET);
 
-      List<String> activities = Lists.newArrayList();
+      List<String> activities = new ArrayList<>();
       for (int i = 0; i < nodes.getLength(); i++) {
         activities.add(nodes.item(i).getTextContent());
       }
@@ -140,45 +134,47 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
     }
   }
 
-  /**
-   * This allows querying the AndroidManifest for e.g. attributes like android:name using XPath
-   */
-  private static NamespaceContext androidNamespaceContext = new NamespaceContext() {
-    @Override
-    public Iterator<String> getPrefixes(String namespaceURI) {
-      throw new UnsupportedOperationException();
-    }
+  /** This allows querying the AndroidManifest for e.g. attributes like android:name using XPath */
+  private static NamespaceContext androidNamespaceContext =
+      new NamespaceContext() {
+        @Override
+        public Iterator<String> getPrefixes(String namespaceURI) {
+          throw new UnsupportedOperationException();
+        }
 
-    @Override
-    public String getPrefix(String namespaceURI) {
-      throw new UnsupportedOperationException();
-    }
+        @Override
+        public String getPrefix(String namespaceURI) {
+          throw new UnsupportedOperationException();
+        }
 
-    @Override
-    public String getNamespaceURI(String prefix) {
-      if (prefix.equals("android")) {
-        return "http://schemas.android.com/apk/res/android";
-      } else {
-        throw new IllegalArgumentException();
-      }
-    }
-  };
+        @Override
+        public String getNamespaceURI(String prefix) {
+          if (prefix.equals("android")) {
+            return "http://schemas.android.com/apk/res/android";
+          } else {
+            throw new IllegalArgumentException();
+          }
+        }
+      };
 
   /**
    * Parses an XML given via its path and returns an {@link AndroidManifestReader} for it.
-   * @param path path to an AndroidManifest.xml file
+   *
+   * @param absolutePath absolute path to an AndroidManifest.xml file
    * @return an {@code AndroidManifestReader} for {@code path}
    * @throws IOException
    */
-  public static AndroidManifestReader forPath(Path path, ProjectFilesystem projectFilesystem)
-      throws IOException {
-    try (Reader reader = projectFilesystem.getReaderIfFileExists(path).get()) {
+  public static AndroidManifestReader forPath(Path absolutePath) throws IOException {
+    Preconditions.checkArgument(
+        absolutePath.isAbsolute(), "Must be passed absolute path, got %s", absolutePath);
+    try (Reader reader = Files.newBufferedReader(absolutePath)) {
       return forReader(reader);
     }
   }
 
   /**
    * Parses an XML given as a string and returns an {@link AndroidManifestReader} for it.
+   *
    * @param xmlString a string representation of an XML document
    * @return an {@code AndroidManifestReader} for the XML document
    * @throws IOException
@@ -190,5 +186,4 @@ public class DefaultAndroidManifestReader implements AndroidManifestReader {
   private static AndroidManifestReader forReader(Reader reader) throws IOException {
     return new DefaultAndroidManifestReader(new InputSource(reader));
   }
-
 }

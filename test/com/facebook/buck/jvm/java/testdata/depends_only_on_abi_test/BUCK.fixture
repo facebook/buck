@@ -1,0 +1,36 @@
+java_library(
+    name = "a",
+    srcs = [
+        "A.java",
+    ],
+    exported_deps = [
+        ":c",
+    ],
+    provided_deps = [
+        ":d",
+    ],
+    deps = [
+        ":b",
+    ],
+)
+
+java_library(
+    name = "b",
+    srcs = [
+        "B.java",
+    ],
+)
+
+java_library(
+    name = "c",
+    srcs = [
+        "C.java",
+    ],
+)
+
+java_library(
+    name = "d",
+    srcs = [
+        "D.java",
+    ],
+)

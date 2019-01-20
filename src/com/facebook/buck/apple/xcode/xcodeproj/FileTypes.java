@@ -19,17 +19,13 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-/**
- * File types used in Apple targets.
- */
+/** File types used in Apple targets. */
 public final class FileTypes {
 
   // Utility class. Do not instantiate.
-  private FileTypes() { }
+  private FileTypes() {}
 
-  /**
-   * Map of file extension to Xcode identifiers.
-   */
+  /** Map of file extension to Xcode identifiers. */
   public static final ImmutableMap<String, String> FILE_EXTENSION_TO_IDENTIFIER =
       ImmutableMap.<String, String>builder()
           .put("1", "text.man")
@@ -183,6 +179,7 @@ public final class FileTypes {
           .put("png", "image.png")
           .put("pp", "sourcecode.pascal")
           .put("ppob", "archive.ppob")
+          .put("prefpane", "wrapper.cfbundle")
           .put("proto", "text")
           .put("py", "text.script.python")
           .put("qtz", "video.quartz-composer")
@@ -196,6 +193,7 @@ public final class FileTypes {
           .put("rtf", "text.rtf")
           .put("rtfd", "wrapper.rtfd")
           .put("s", "sourcecode.asm")
+          .put("scnassets", "wrapper.scnassets")
           .put("scriptSuite", "text.plist.scriptSuite")
           .put("scriptTerminology", "text.plist.scriptTerminology")
           .put("sh", "text.script.sh")
@@ -247,15 +245,24 @@ public final class FileTypes {
           .build();
 
   /**
-   * Set of identifiers which only work as "lastKnownFileType" and not "explicitFileType"
-   * in a PBXFileReference.
+   * Set of identifiers which only work as "lastKnownFileType" and not "explicitFileType" in a
+   * PBXFileReference.
    *
-   * Yes, really. Because Xcode.
+   * <p>Yes, really. Because Xcode.
    */
   public static final ImmutableSet<String> EXPLICIT_FILE_TYPE_BROKEN_IDENTIFIERS =
-    ImmutableSet.of(
-        "file.xib",
-        "file.storyboard"
-    );
+      ImmutableSet.of("file.xib", "file.storyboard", "wrapper.scnassets");
 
+  /**
+   * Set of identifiers for which we will use "lastKnownFileType" instead of "explicitFileType" in a
+   * PBXFileReference to allow the user to change the type by renaming the file.
+   */
+  public static final ImmutableSet<String> MODIFIABLE_FILE_TYPE_IDENTIFIERS =
+      ImmutableSet.of(
+          "sourcecode.c.c",
+          "sourcecode.c.h",
+          "sourcecode.cpp.cpp",
+          "sourcecode.cpp.h",
+          "sourcecode.c.objc",
+          "sourcecode.cpp.objcpp");
 }

@@ -1,0 +1,8 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  ignore = buck-out
+[build]
+  allow_empty_globs = false

@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="com.sample.simple">
+    <!-- higher target sdk-->
+    <uses-sdk
+            android:minSdkVersion="8"
+            android:targetSdkVersion="19"/>
     <application>
-        <activity android:name="com.sample.simple.activity.SimpleActivity">
+        <activity android:name="com.sample.simple.activity.SimpleActivity" android:label="Simple Activity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

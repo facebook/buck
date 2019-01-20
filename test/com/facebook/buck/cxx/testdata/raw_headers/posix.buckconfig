@@ -1,0 +1,7 @@
+[cxx]
+  untracked_headers=error
+  untracked_headers_whitelist=/usr/include/.*
+  cppflags=-Wall -Werror
+  cxxppflags=-Wall -Werror
+  cflags=-Wall -Werror
+  cxxflags=-Wall -Werror

@@ -104,6 +104,7 @@ public final class CodeReader {
             case TYPE_REF:   visitor = typeVisitor;   break;
             case FIELD_REF:  visitor = fieldVisitor;  break;
             case METHOD_REF: visitor = methodVisitor; break;
+            default: // fall out
         }
 
         if (visitor == null) {

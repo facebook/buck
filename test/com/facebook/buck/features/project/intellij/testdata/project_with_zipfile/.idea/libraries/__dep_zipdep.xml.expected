@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="//dep:zipdep">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/buck-out/gen/dep/lib__zipdep__output/zipdep.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

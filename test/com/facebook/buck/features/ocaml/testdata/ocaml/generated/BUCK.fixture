@@ -1,0 +1,13 @@
+genrule(
+    name = "generated",
+    out = "generated.ml",
+    cmd = "echo \"let f x y = x + y;;\" > $OUT",
+)
+
+ocaml_binary(
+    name = "binary",
+    srcs = [
+        "test.ml",
+        ":generated",
+    ],
+)

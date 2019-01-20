@@ -16,71 +16,67 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.SourcePaths;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import org.immutables.value.Value;
 
 public class PrebuiltNativeLibraryDescription
-    implements Description<PrebuiltNativeLibraryDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("prebuilt_native_library");
+    implements DescriptionWithTargetGraph<PrebuiltNativeLibraryDescriptionArg> {
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<PrebuiltNativeLibraryDescriptionArg> getConstructorArgType() {
+    return PrebuiltNativeLibraryDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> PrebuiltNativeLibrary createBuildRule(
-      TargetGraph targetGraph,
+  public PrebuiltNativeLibrary createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    ImmutableSortedSet<SourcePath> librarySources;
+      PrebuiltNativeLibraryDescriptionArg args) {
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    ImmutableSortedSet<? extends SourcePath> librarySources;
     try {
       librarySources =
-          FluentIterable.from(params.getProjectFilesystem().getFilesUnderPath(args.nativeLibs))
-          .transform(SourcePaths.toSourcePath(params.getProjectFilesystem()))
-          .toSortedSet(Ordering.<SourcePath>natural());
+          FluentIterable.from(projectFilesystem.getFilesUnderPath(args.getNativeLibs()))
+              .transform(p -> PathSourcePath.of(projectFilesystem, p))
+              .toSortedSet(Ordering.natural());
     } catch (IOException e) {
-      throw new HumanReadableException(e, "Error traversing directory %s.", args.nativeLibs);
+      throw new HumanReadableException(e, "Error traversing directory %s.", args.getNativeLibs());
     }
 
     return new PrebuiltNativeLibrary(
+        buildTarget,
+        projectFilesystem,
         params,
-        new SourcePathResolver(resolver),
-        args.nativeLibs,
-        args.isAsset.or(false),
-        librarySources
-    );
+        args.getNativeLibs(),
+        args.getIsAsset(),
+        librarySources);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<Boolean> isAsset;
-    public Path nativeLibs;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractPrebuiltNativeLibraryDescriptionArg
+      extends CommonDescriptionArg, HasDeclaredDeps {
+    @Value.Default
+    default boolean getIsAsset() {
+      return false;
+    }
 
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+    Path getNativeLibs();
   }
 }

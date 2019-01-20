@@ -20,30 +20,27 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.google.common.collect.ImmutableList;
-
+import java.io.File;
+import java.nio.file.Path;
+import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-
-import java.io.File;
-import java.nio.file.Path;
-import java.util.List;
 
 public class PublisherIntegrationTest {
 
-  @Rule
-  public TemporaryFolder temp = new TemporaryFolder();
+  @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   private static Path localRepo;
   private TestPublisher publisher;
 
   @BeforeClass
-  public static void setUpStatic() throws Exception {
+  public static void setUpStatic() {
     Path testDataDir = TestDataHelper.getTestDataDirectory(PublisherIntegrationTest.class);
     localRepo = testDataDir.resolve("first-party");
   }
@@ -75,13 +72,10 @@ public class PublisherIntegrationTest {
     List<String> putRequestsInvoked = publisher.getPutRequestsHandler().getPutRequestsPaths();
     assertFalse(putRequestsInvoked.isEmpty());
 
-    String urlTemplate = String.format(
-        "/%s/%s/%s/%s-%s.%%s",
-        groupId.replace('.', '/'),
-        artifactName,
-        version,
-        artifactName,
-        version);
+    String urlTemplate =
+        String.format(
+            "/%s/%s/%s/%s-%s.%%s",
+            groupId.replace('.', '/'), artifactName, version, artifactName, version);
     assertThat(putRequestsInvoked, hasItem(String.format(urlTemplate, extension)));
     assertThat(putRequestsInvoked, hasItem(String.format(urlTemplate, extension + ".sha1")));
     assertThat(putRequestsInvoked, hasItem(String.format(urlTemplate, "pom")));

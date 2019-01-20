@@ -15,7 +15,6 @@
  */
 
 import com.google.common.io.Closeables;
-
 import java.io.Reader;
 
 public class A {

@@ -1,0 +1,22 @@
+TESTNG_DEPS = [
+    "buck//third-party/java/hamcrest:hamcrest",
+    "buck//third-party/java/testng:testng",
+]
+
+java_test(
+    name = "testng-logging",
+    srcs = [
+        "TestNGLoggingTest.java",
+    ],
+    test_type = "testng",
+    deps = TESTNG_DEPS,
+)
+
+java_test(
+    name = "testng-test-output-parameters",
+    srcs = [
+        "TestNGParametersTest.java",
+    ],
+    test_type = "testng",
+    deps = TESTNG_DEPS,
+)

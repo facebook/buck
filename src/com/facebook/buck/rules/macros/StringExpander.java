@@ -16,57 +16,31 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.collect.ImmutableList;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 
-public class StringExpander implements MacroExpander {
+/** Expands macros into fixed strings. */
+public class StringExpander<M extends Macro> extends SimpleMacroExpander<M> {
 
-  private final String toReturn;
+  private final Class<M> clazz;
+  private final StringArg toReturn;
 
-  public StringExpander(String toReturn) {
+  public StringExpander(Class<M> clazz, StringArg toReturn) {
+    this.clazz = clazz;
     this.toReturn = toReturn;
   }
 
   @Override
-  public String expand(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String input)
-      throws MacroException {
+  public Class<M> getInputClass() {
+    return clazz;
+  }
+
+  @Override
+  public Arg expandFrom(
+      BuildTarget target, CellPathResolver cellNames, BuildRuleResolver resolver) {
     return toReturn;
   }
-
-  @Override
-  public ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String input)
-      throws MacroException {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public ImmutableList<BuildTarget> extractParseTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      String input)
-      throws MacroException {
-    return ImmutableList.of();
-  }
-
-  @Override
-  public Object extractRuleKeyAppendables(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String input)
-      throws MacroException {
-    return toReturn;
-  }
-
 }

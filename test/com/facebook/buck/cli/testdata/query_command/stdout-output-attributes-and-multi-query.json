@@ -1,0 +1,48 @@
+{
+  "//example:application-test-lib" : {
+    "name" : "application-test-lib"
+  },
+  "//example:five" : {
+    "name" : "five",
+    "srcs" : [ "5.txt", ":six" ]
+  },
+  "//example:four" : {
+    "name" : "four",
+    "srcs" : [ "4.txt" ]
+  },
+  "//example:four-application-tests" : {
+    "name" : "four-application-tests",
+    "srcs" : [ "4-application-test.txt" ]
+  },
+  "//example:four-tests" : {
+    "name" : "four-tests",
+    "srcs" : [ "4-test.txt" ]
+  },
+  "//example:one" : {
+    "name" : "one",
+    "srcs" : [ "1.txt" ]
+  },
+  "//example:one-tests" : {
+    "name" : "one-tests",
+    "srcs" : [ "1-test.txt" ]
+  },
+  "//example:six" : {
+    "name" : "six",
+    "srcs" : [ "6.txt" ]
+  },
+  "//example:six-tests" : {
+    "name" : "six-tests",
+    "srcs" : [ "6-test.txt" ]
+  },
+  "//example:test-lib-lib" : {
+    "name" : "test-lib-lib"
+  },
+  "//example:three" : {
+    "name" : "three",
+    "srcs" : [ "3.txt" ]
+  },
+  "//example:two" : {
+    "name" : "two",
+    "srcs" : [ "2.txt" ]
+  }
+}

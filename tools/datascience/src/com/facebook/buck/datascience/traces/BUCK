@@ -1,0 +1,18 @@
+kotlin_library(
+    name = "traces",
+    srcs = glob(["*.kt"]),
+    deps = [
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
+    ],
+)
+
+java_binary(
+    name = "analyzer-cli",
+    main_class = "com.facebook.buck.datascience.traces.TraceAnalyzerKt",
+    deps = [
+        ":traces",
+    ],
+)

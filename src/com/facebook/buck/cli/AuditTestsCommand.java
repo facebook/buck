@@ -16,76 +16,106 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.query.QueryException;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.PerBuildStateFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
-import java.io.IOException;
-import java.util.List;
-
 public class AuditTestsCommand extends AbstractCommand {
 
-  @Option(name = "--json",
-      usage = "Output in JSON format")
+  @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
   }
 
-  @Argument
-  private List<String> arguments = Lists.newArrayList();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
   }
 
-  public List<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
+  public ImmutableList<String> getArgumentsFormattedAsBuildTargets(BuckConfig buckConfig) {
     return getCommandLineBuildTargetNormalizer(buckConfig).normalizeAll(getArguments());
   }
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    final ImmutableSet<String> fullyQualifiedBuildTargets = ImmutableSet.copyOf(
-        getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+    ImmutableSet<String> fullyQualifiedBuildTargets =
+        ImmutableSet.copyOf(getArgumentsFormattedAsBuildTargets(params.getBuckConfig()));
 
     if (fullyQualifiedBuildTargets.isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Must specify at least one build target."));
-      return 1;
+      throw new CommandLineException("must specify at least one build target");
     }
 
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
-      params.getBuckEventBus().post(ConsoleEvent.info(
-          "'buck audit tests' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n" +
-          "The query language is documented at https://buckbuild.com/command/query.html",
-          QueryCommand.buildAuditTestsQueryExpression(getArguments(), shouldGenerateJsonOutput())));
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  "'buck audit tests' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n"
+                      + "The query language is documented at https://buckbuild.com/command/query.html",
+                  QueryCommand.buildAuditTestsQueryExpression(
+                      getArguments(), shouldGenerateJsonOutput())));
     }
 
-    BuckQueryEnvironment env = new BuckQueryEnvironment(params, getEnableParserProfiling());
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Audit",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
-        getConcurrencyLimit(params.getBuckConfig()))) {
+    try (CommandThreadManager pool =
+            new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
+        PerBuildState parserState =
+            PerBuildStateFactory.createFactory(
+                    params.getTypeCoercerFactory(),
+                    new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    params.getKnownRuleTypesProvider(),
+                    new ParserPythonInterpreterProvider(
+                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                    params.getCell().getBuckConfig(),
+                    params.getWatchman(),
+                    params.getBuckEventBus(),
+                    params.getManifestServiceSupplier(),
+                    params.getFileHashCache())
+                .create(
+                    params.getParser().getPermState(),
+                    pool.getListeningExecutorService(),
+                    params.getCell(),
+                    getTargetPlatforms(),
+                    getEnableParserProfiling(),
+                    SpeculativeParsing.ENABLED)) {
+      BuckQueryEnvironment env =
+          BuckQueryEnvironment.from(
+              params,
+              parserState,
+              pool.getListeningExecutorService(),
+              getEnableParserProfiling(),
+              getExcludeIncompatibleTargets());
       return QueryCommand.runMultipleQuery(
           params,
           env,
-          pool.getExecutor(),
           "testsof('%s')",
           getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
-          shouldGenerateJsonOutput());
-    } catch (QueryException e) {
+          shouldGenerateJsonOutput(),
+          ImmutableSet.of());
+    } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();
       }
-      params.getBuckEventBus().post(
-          ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return 1;
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      // TODO(buck_team): catch specific exceptions and output appropriate exit codes
+      return ExitCode.BUILD_ERROR;
     }
   }
 
@@ -98,5 +128,4 @@ public class AuditTestsCommand extends AbstractCommand {
   public String getShortDescription() {
     return "provides facilities to audit build targets' tests";
   }
-
 }

@@ -1,0 +1,17 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "impl",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/log/views:views",
+        "//src/com/facebook/buck/util/string:string",
+        "//third-party/java/jackson:jackson-annotations",
+    ],
+)

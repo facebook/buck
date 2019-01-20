@@ -17,55 +17,49 @@
 package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.Lists;
-
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 public class XCVersionGroup extends PBXReference {
-  private Optional<PBXFileReference> currentVersion;
+  @Nullable private PBXFileReference currentVersion;
 
   private final List<PBXFileReference> children;
 
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
 
-
   public XCVersionGroup(String name, @Nullable String path, SourceTree sourceTree) {
     super(name, path, sourceTree);
-    children = Lists.newArrayList();
+    children = new ArrayList<>();
 
-    fileReferencesBySourceTreePath = CacheBuilder.newBuilder().build(
-        new CacheLoader<SourceTreePath, PBXFileReference>() {
-          @Override
-          public PBXFileReference load(SourceTreePath key) throws Exception {
-            PBXFileReference ref = key.createFileReference();
-            children.add(ref);
-            return ref;
-          }
-        });
+    fileReferencesBySourceTreePath =
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<SourceTreePath, PBXFileReference>() {
+                  @Override
+                  public PBXFileReference load(SourceTreePath key) {
+                    PBXFileReference ref = key.createFileReference();
+                    children.add(ref);
+                    return ref;
+                  }
+                });
 
-    currentVersion = Optional.absent();
+    currentVersion = null;
   }
 
   public Optional<String> getVersionGroupType() {
-    if (currentVersion.isPresent()) {
-      return currentVersion.get().getExplicitFileType();
+    if (currentVersion != null) {
+      return currentVersion.getExplicitFileType();
     }
-    return Optional.absent();
+    return Optional.empty();
   }
 
-  public Optional<PBXFileReference> getCurrentVersion() {
-    return currentVersion;
-  }
-
-  public void setCurrentVersion(Optional<PBXFileReference> v) {
+  public void setCurrentVersion(PBXFileReference v) {
     currentVersion = v;
   }
 
@@ -86,17 +80,11 @@ public class XCVersionGroup extends PBXReference {
   public void serializeInto(XcodeprojSerializer s) {
     super.serializeInto(s);
 
-    Collections.sort(children, new Comparator<PBXReference>() {
-          @Override
-          public int compare(PBXReference o1, PBXReference o2) {
-          return o1.getName().compareTo(o2.getName());
-        }
-      });
+    children.sort(Comparator.comparing(PBXReference::getName));
     s.addField("children", children);
 
-
-    if (currentVersion.isPresent()) {
-      s.addField("currentVersion", currentVersion.get());
+    if (currentVersion != null) {
+      s.addField("currentVersion", currentVersion);
     }
 
     Optional<String> versionGroupType = getVersionGroupType();

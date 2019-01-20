@@ -1,4 +1,4 @@
 sh_binary(
-  name = 'command',
-  main = 'command.sh'
+    name = "command",
+    main = "command.sh",
 )

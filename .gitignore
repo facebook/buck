@@ -1,57 +1,34 @@
 # Ant
-/build/
+/ant-out/
 
 # IntelliJ build
-/build-ij/
-/build-ij/plugin/out
-src/com/facebook/buck/intellij/plugin/*.zip
-
-# IntelliJ Plugin
-src/com/facebook/buck/intellij/plugin/buck-out
-src/com/facebook/buck/intellij/plugin/buck-cache
-src/com/facebook/buck/intellij/plugin/.buckd/
-src/com/facebook/buck/intellij/plugin/third-party/*.iml
+/intellij-out/
 
 # Buck
 /buck-out
-/local.properties
 /.buckconfig.local
 /.buckd
+/.buckjavaargs.local
+/.bucklogging.local.properties
 .fakebuckversion
+/.nobuckcheck
+
+# Files created during tests
+/test/com/facebook/buck/testutil/integration/testlibs/buck-out/
+/test/**/testdata/**/buck-out/
+/test/**/testdata/**/.buckd/
 
 # Compiled Python
 *.pyc
 *py.class
 
+# mypy cache files
+.mypy_cache
+
 # buckconfig in Ocaml test project directory to override compiler paths.
 /test/com/facebook/buck/ocaml/testdata/ocaml/.buckconfig
 # bootstrapper test is run in the source tree
 /test/com/facebook/buck/cli/bootstrapper/testdata/old_guava/buck-out/
-
-# Eclipse
-/.settings/
-/.apt_generated/
-
-# IntelliJ, based on http://devnet.jetbrains.net/docs/DOC-1186
-/.idea/ant.xml
-/.idea/dictionaries
-/.idea/inspectionProfiles
-/.idea/tasks.xml
-/.idea/uiDesigner.xml
-/.idea/workspace.xml
-/.idea/misc.xml
-/.idea/runConfigurations
-/.idea/copyright/profiles_settings.xml
-src/com/facebook/buck/intellij/plugin/.idea/ant.xml
-src/com/facebook/buck/intellij/plugin/.idea/dictionaries
-src/com/facebook/buck/intellij/plugin/.idea/inspectionProfiles
-src/com/facebook/buck/intellij/plugin/.idea/tasks.xml
-src/com/facebook/buck/intellij/plugin/.idea/uiDesigner.xml
-src/com/facebook/buck/intellij/plugin/.idea/workspace.xml
-src/com/facebook/buck/intellij/plugin/.idea/misc.xml
-src/com/facebook/buck/intellij/plugin/.idea/runConfigurations
-src/com/facebook/buck/intellij/plugin/.idea/copyright/profiles_settings.xml
-
 
 # From building Emma with Ant.
 /third-party/java/emma-2.0.5312/out/
@@ -64,18 +41,23 @@ src/com/facebook/buck/intellij/plugin/.idea/copyright/profiles_settings.xml
 /third-party/py/pywatchman/pywatchman.egg-info/
 /third-party/py/pywatchman/dist/
 
+# From building skylib with buck
+/third-party/skylark/bazel-skylib/buck-out
+
 # OS X
 .DS_Store
 
 # vim swp files
-.*.swp
-.*.swo
+.*.sw[a-p]
 
+# Vim editing-state session files
+Session.vim
 
 # Emacs backup files
 *~
 \#*
 
 # IntelliJ plugin generated syntax source files
-src/com/facebook/buck/intellij/plugin/src/com/facebook/buck/intellij/plugin/lang/_BuckLexer.java
-src/com/facebook/buck/intellij/plugin/gen
+tools/ideabuck/src/com/facebook/buck/intellij/ideabuck/lang/_BuckLexer.java
+tools/ideabuck/gen
+

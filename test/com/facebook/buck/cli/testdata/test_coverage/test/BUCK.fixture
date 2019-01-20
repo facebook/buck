@@ -1,0 +1,11 @@
+java_test(
+    name = "simple_test",
+    srcs = [
+        "MockTest.java",
+        "MockTest2.java",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        "//:foo",
+    ],
+)

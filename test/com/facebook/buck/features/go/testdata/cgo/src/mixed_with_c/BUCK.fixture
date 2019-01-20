@@ -1,0 +1,30 @@
+go_binary(
+    name = "bin",
+    srcs = ["main.go"],
+    deps = [":cgo"],
+)
+
+cgo_library(
+    name = "cgo",
+    package_name = "cgo",
+    srcs = ["cgosrc.go"],
+    deps = [":lib"],
+)
+
+cxx_library(
+    name = "lib",
+    srcs = ["lib.c"],
+    exported_headers = ["lib.h"],
+    header_namespace = "",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+# shared link style
+go_binary(
+    name = "bin-shared",
+    srcs = ["main.go"],
+    link_style = "shared",
+    deps = [":cgo"],
+)

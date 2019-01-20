@@ -16,16 +16,16 @@
 
 package com.facebook.buck.testrunner;
 
+import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.concurrent.MostExecutors;
-
-import org.junit.runner.Description;
-import org.junit.runner.Runner;
-import org.junit.runner.notification.RunNotifier;
-
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.runner.Description;
+import org.junit.runner.Runner;
+import org.junit.runner.notification.RunNotifier;
 
 /**
  * {@link Runner} that composes a {@link Runner} that enforces a default timeout when running a
@@ -35,54 +35,55 @@ class DelegateRunnerWithTimeout extends Runner {
 
   /**
    * {@link ExecutorService} on which all tests run by this {@link Runner} are executed.
-   * <p>
-   * In Robolectric, the {@code ShadowLooper.resetThreadLoopers()} asserts that the current thread
-   * is the same as the thread on which the {@code ShadowLooper} class was loaded. Therefore, to
-   * preserve the behavior of the {@code org.robolectric.RobolectricTestRunner}, we use an
-   * {@link ExecutorService} to create and run the test on. This has the unfortunate side effect of
+   *
+   * <p>In Robolectric, the {@code ShadowLooper.resetThreadLoopers()} asserts that the current
+   * thread is the same as the thread on which the {@code ShadowLooper} class was loaded. Therefore,
+   * to preserve the behavior of the {@code org.robolectric.RobolectricTestRunner}, we use an {@link
+   * ExecutorService} to create and run the test on. This has the unfortunate side effect of
    * creating one thread per runner, but JUnit ensures that they're all called serially, so the
    * overall effect is that of having only a single thread.
-   * <p>
-   * We use a {@link ThreadLocal} so that if a test spawns more tests that create their own runners
-   * we don't deadlock.
+   *
+   * <p>We use a {@link ThreadLocal} so that if a test spawns more tests that create their own
+   * runners we don't deadlock.
    */
-  private static final ThreadLocal<ExecutorService> executor = new ThreadLocal<ExecutorService>() {
-    @Override
-    protected ExecutorService initialValue() {
-      return MostExecutors.newSingleThreadExecutor(DelegateRunnerWithTimeout.class.getSimpleName());
-    }
-  };
+  private static final ThreadLocal<ExecutorService> executor =
+      new ThreadLocal<ExecutorService>() {
+        @Override
+        protected ExecutorService initialValue() {
+          return MostExecutors.newSingleThreadExecutor(
+              DelegateRunnerWithTimeout.class.getSimpleName());
+        }
+      };
 
   private final Runner delegate;
   private final long defaultTestTimeoutMillis;
 
   DelegateRunnerWithTimeout(Runner delegate, long defaultTestTimeoutMillis) {
     if (defaultTestTimeoutMillis <= 0) {
-      throw new IllegalArgumentException(String.format(
-          "defaultTestTimeoutMillis must be greater than zero but was: %s.",
-          defaultTestTimeoutMillis));
+      throw new IllegalArgumentException(
+          String.format(
+              "defaultTestTimeoutMillis must be greater than zero but was: %s.",
+              defaultTestTimeoutMillis));
     }
     this.delegate = delegate;
     this.defaultTestTimeoutMillis = defaultTestTimeoutMillis;
   }
 
-  /**
-   * @return the description from the original {@link Runner} wrapped by this {@link Runner}.
-   */
+  /** @return the description from the original {@link Runner} wrapped by this {@link Runner}. */
   @Override
   public Description getDescription() {
     return delegate.getDescription();
   }
 
   /**
-   * Runs the tests for this runner, but wraps the specified {@code notifier} with a
-   * {@link DelegateRunNotifier} that intercepts calls to the original {@code notifier}.
-   * The {@link DelegateRunNotifier} is what enables us to impose our default timeout.
+   * Runs the tests for this runner, but wraps the specified {@code notifier} with a {@link
+   * DelegateRunNotifier} that intercepts calls to the original {@code notifier}. The {@link
+   * DelegateRunNotifier} is what enables us to impose our default timeout.
    */
   @Override
   public void run(RunNotifier notifier) {
-    final DelegateRunNotifier wrapper = new DelegateRunNotifier(
-        delegate, notifier, defaultTestTimeoutMillis);
+    DelegateRunNotifier wrapper =
+        new DelegateRunNotifier(delegate, notifier, defaultTestTimeoutMillis);
 
     if (wrapper.hasJunitTimeout(getDescription())) {
       runWithoutBuckManagedTimeout(wrapper);
@@ -91,8 +92,8 @@ class DelegateRunnerWithTimeout extends Runner {
     }
   }
 
-  private void runWithBuckManagedTimeout(final DelegateRunNotifier wrapper) {
-    final Semaphore completionSemaphore = new Semaphore(1);
+  private void runWithBuckManagedTimeout(DelegateRunNotifier wrapper) {
+    Semaphore completionSemaphore = new Semaphore(1);
 
     // Acquire the one permit so later tryAcquire attempts lock
     // until they either time out or this permit is released by
@@ -100,36 +101,50 @@ class DelegateRunnerWithTimeout extends Runner {
     try {
       completionSemaphore.acquire();
     } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
+      Threads.interruptCurrentThread();
       shutdown();
       return;
     }
 
-    final AtomicBoolean testsCompleted = new AtomicBoolean(false);
+    CompletableFuture<Boolean> testCompleted = new CompletableFuture<>();
 
     // We run the Runner in an Executor so that we can tear it down if we need to.
-    executor.get().submit(
-        new Runnable() {
-          @Override
-          public void run() {
-            try {
-              delegate.run(wrapper);
-            } finally {
-              if (!wrapper.hasTestThatExceededTimeout()) {
-                testsCompleted.set(true);
+    executor
+        .get()
+        .submit(
+            () -> {
+              try {
+                delegate.run(wrapper);
+                if (!wrapper.hasTestThatExceededTimeout()) {
+                  testCompleted.complete(true);
+                }
+              } catch (Throwable t) {
+                testCompleted.completeExceptionally(t);
+              } finally {
+                completionSemaphore.release();
               }
-              completionSemaphore.release();
-            }
-          }
-        });
+            });
 
     // We poll the Executor to see if the Runner is complete. In the event that a test has exceeded
     // the default timeout, we cancel the Runner to protect against the case where the test hangs
     // forever.
     while (true) {
-      if (testsCompleted.get()) {
-        // Normal termination: hooray!
-        return;
+      if (testCompleted.isDone()) {
+        try {
+          testCompleted.join();
+          // Normal termination: hooray!
+          return;
+        } catch (CompletionException completionException) {
+          // Unwrap and re-throw original RuntimeException or Error
+          if (completionException.getCause() instanceof RuntimeException) {
+            throw (RuntimeException) completionException.getCause();
+          } else if (completionException.getCause() instanceof Error) {
+            throw (Error) completionException.getCause();
+          } else {
+            // Checked exception should never be thrown from Runner.
+            throw completionException;
+          }
+        }
       }
 
       if (wrapper.hasTestThatExceededTimeout()) {
@@ -146,19 +161,18 @@ class DelegateRunnerWithTimeout extends Runner {
           completionSemaphore.release();
         }
       } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
+        Threads.interruptCurrentThread();
         shutdown();
         return;
       }
     }
   }
 
-  private void runWithoutBuckManagedTimeout(final DelegateRunNotifier wrapper) {
+  private void runWithoutBuckManagedTimeout(DelegateRunNotifier wrapper) {
     delegate.run(wrapper);
   }
 
   private void shutdown() {
     executor.get().shutdownNow();
   }
-
 }

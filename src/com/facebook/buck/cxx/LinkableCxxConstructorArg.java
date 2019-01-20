@@ -16,10 +16,16 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-@SuppressFieldNotInitialized
-public class LinkableCxxConstructorArg extends CxxConstructorArg {
-  public Optional<Linker.LinkableDepType> linkStyle;
+public interface LinkableCxxConstructorArg extends CxxConstructorArg {
+  Optional<Linker.LinkableDepType> getLinkStyle();
+
+  @Value.Default
+  default boolean getThinLto() {
+    return false;
+  }
+
 }

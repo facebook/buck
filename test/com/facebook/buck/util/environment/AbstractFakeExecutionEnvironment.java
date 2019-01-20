@@ -16,17 +16,12 @@
 
 package com.facebook.buck.util.environment;
 
-import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.Map;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
-/**
- * Test utility implementation of {@link ExecutionEnvironment} based
- * on an immutable value type.
- */
+/** Test utility implementation of {@link ExecutionEnvironment} based on an immutable value type. */
 @Value.Immutable
 @BuckStyleTuple
 abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment {
@@ -46,30 +41,15 @@ abstract class AbstractFakeExecutionEnvironment implements ExecutionEnvironment 
   public abstract Platform getPlatform();
 
   @Override
+  public abstract Network getLikelyActiveNetwork();
+
+  @Override
   public abstract Optional<String> getWifiSsid();
 
   public abstract Map<String, String> getEnvironment();
-  public abstract Map<String, String> getProperties();
 
   @Override
-  public String getenv(String key, String defaultValue) {
-    return getWithDefault(getEnvironment(), key, defaultValue);
-  }
-
-  @Override
-  public String getProperty(String key, String defaultValue) {
-    return getWithDefault(getProperties(), key, defaultValue);
-  }
-
-  private static String getWithDefault(
-      Map<String, String> values,
-      String key,
-      String defaultValue) {
-    String result = values.get(key);
-    if (result != null) {
-      return result;
-    } else {
-      return defaultValue;
-    }
+  public Optional<String> getenv(String key) {
+    return Optional.ofNullable(getEnvironment().get(key));
   }
 }

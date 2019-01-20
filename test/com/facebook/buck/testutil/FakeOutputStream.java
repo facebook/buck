@@ -19,9 +19,7 @@ package com.facebook.buck.testutil;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-/**
- * Specialization of {@link ByteArrayOutputStream} which knows if it's been closed.
- */
+/** Specialization of {@link ByteArrayOutputStream} which knows if it's been closed. */
 public class FakeOutputStream extends ByteArrayOutputStream {
   private boolean isClosed = false;
   private int lastFlushSize = 0;

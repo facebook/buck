@@ -16,12 +16,16 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import java.nio.file.Path;
 
-public class CoreDataModelBuilder extends AbstractNodeBuilder<CoreDataModelDescription.Arg> {
+public class CoreDataModelBuilder
+    extends AbstractNodeBuilder<
+        AppleWrapperResourceArg.Builder,
+        AppleWrapperResourceArg,
+        CoreDataModelDescription,
+        CoreDataModel> {
 
   protected CoreDataModelBuilder(BuildTarget target) {
     super(new CoreDataModelDescription(), target);
@@ -32,8 +36,7 @@ public class CoreDataModelBuilder extends AbstractNodeBuilder<CoreDataModelDescr
   }
 
   public CoreDataModelBuilder setPath(Path path) {
-    arg.path = path;
+    getArgForPopulating().setPath(path);
     return this;
   }
-
 }

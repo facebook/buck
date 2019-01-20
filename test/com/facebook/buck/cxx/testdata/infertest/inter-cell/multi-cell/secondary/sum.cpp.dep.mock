@@ -1,0 +1,1 @@
+sum.o: sum.cpp

@@ -16,28 +16,45 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.types.Either;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
-import javax.annotation.Nullable;
-
-public class WorkerToolBuilder extends AbstractNodeBuilder<WorkerToolDescription.Arg> {
+public class WorkerToolBuilder
+    extends AbstractNodeBuilder<
+        WorkerToolDescriptionArg.Builder,
+        WorkerToolDescriptionArg,
+        WorkerToolDescription,
+        DefaultWorkerTool> {
   private WorkerToolBuilder(BuildTarget target) {
-    super(new WorkerToolDescription(), target);
+    super(new WorkerToolDescription(FakeBuckConfig.builder().build()), target);
   }
 
   public static WorkerToolBuilder newWorkerToolBuilder(BuildTarget target) {
     return new WorkerToolBuilder(target);
   }
 
-  public WorkerToolBuilder setExe(BuildTarget exe) {
-    arg.exe = exe;
+  public WorkerToolBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {
+    getArgForPopulating().setEnv(env);
     return this;
   }
 
-  public WorkerToolBuilder setArgs(@Nullable String args) {
-    arg.args = Optional.fromNullable(args);
+  public WorkerToolBuilder setExe(BuildTarget exe) {
+    getArgForPopulating().setExe(exe);
+    return this;
+  }
+
+  public WorkerToolBuilder setArgs(StringWithMacros... args) {
+    getArgForPopulating().setArgs(Either.ofRight(ImmutableList.copyOf(args)));
+    return this;
+  }
+
+  public WorkerToolBuilder setMaxWorkers(int maxWorkers) {
+    getArgForPopulating().setMaxWorkers(maxWorkers);
     return this;
   }
 }

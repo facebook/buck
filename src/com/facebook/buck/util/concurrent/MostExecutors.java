@@ -18,8 +18,9 @@ package com.facebook.buck.util.concurrent;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -32,8 +33,8 @@ public class MostExecutors {
   }
 
   /**
-   * A ThreadFactory which gives each thread a meaningful and distinct name.
-   * ThreadFactoryBuilder is not used to avoid a dependency on Guava in the junit target.
+   * A ThreadFactory which gives each thread a meaningful and distinct name. ThreadFactoryBuilder is
+   * not used to avoid a dependency on Guava in the junit target.
    */
   public static class NamedThreadFactory implements ThreadFactory {
 
@@ -43,33 +44,11 @@ public class MostExecutors {
     public NamedThreadFactory(String threadName) {
       this.threadName = threadName;
     }
-    @Override
-    public Thread newThread(Runnable r) {
-      Thread newThread = Executors.defaultThreadFactory().newThread(r);
-      newThread.setName(String.format(threadName + "-%d", threadCount.incrementAndGet()));
-      return newThread;
-    }
-  }
-  /**
-   * A ThreadFactory which gives each thread a meaningful and distinct name and priority.
-   * ThreadFactoryBuilder is not used to avoid a dependency on Guava in the junit target.
-   */
-  public static class NamedAndPriorityThreadFactory implements ThreadFactory {
-
-    private final AtomicInteger threadCount = new AtomicInteger(0);
-    private final String threadName;
-    private final int threadPriority;
-
-    public NamedAndPriorityThreadFactory(String threadName, int threadPriority) {
-      this.threadName = threadName;
-      this.threadPriority = threadPriority;
-    }
 
     @Override
     public Thread newThread(Runnable r) {
       Thread newThread = Executors.defaultThreadFactory().newThread(r);
       newThread.setName(String.format(threadName + "-%d", threadCount.incrementAndGet()));
-      newThread.setPriority(threadPriority);
       return newThread;
     }
   }
@@ -83,7 +62,7 @@ public class MostExecutors {
    * @return A single-threaded executor that silently discards rejected tasks.
    * @param threadName a thread name prefix used to easily identify threads when debugging.
    */
-  public static ExecutorService newSingleThreadExecutor(final String threadName) {
+  public static ExecutorService newSingleThreadExecutor(String threadName) {
     return newSingleThreadExecutor(new NamedThreadFactory(threadName));
   }
 
@@ -91,7 +70,8 @@ public class MostExecutors {
     return new ThreadPoolExecutor(
         /* corePoolSize */ 1,
         /* maximumPoolSize */ 1,
-        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
+        /* keepAliveTime */ 0L,
+        TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
         /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
@@ -99,11 +79,12 @@ public class MostExecutors {
 
   /**
    * Creates a multi-threaded executor with meaningfully named threads.
+   *
    * @param threadName a thread name prefix used to easily identify threads when debugging.
    * @param count the number of threads that should be created in the pool.
    * @return A multi-threaded executor.
    */
-  public static ExecutorService newMultiThreadExecutor(final String threadName, int count) {
+  public static ExecutorService newMultiThreadExecutor(String threadName, int count) {
     return newMultiThreadExecutor(new NamedThreadFactory(threadName), count);
   }
 
@@ -111,31 +92,20 @@ public class MostExecutors {
     return new ThreadPoolExecutor(
         /* corePoolSize */ count,
         /* maximumPoolSize */ count,
-        /* keepAliveTime */ 0L, TimeUnit.MILLISECONDS,
+        /* keepAliveTime */ 0L,
+        TimeUnit.MILLISECONDS,
         /* workQueue */ new LinkedBlockingQueue<Runnable>(),
         /* threadFactory */ threadFactory,
         /* handler */ new ThreadPoolExecutor.DiscardPolicy());
   }
 
   /**
-   * Creates a single threaded scheduled executor with meaningfully named threads.
-   * @param threadName a thread name prefix used to easily identify threads when debugging.
-   * @return The single-threaded scheduled executor.
+   * Shutdown {@code service} and wait for all it's tasks to terminate. In the event of {@link
+   * InterruptedException}, propagate the interrupt to all tasks, wait for them to finish, then
+   * re-throw the exception.
    */
-  public static ScheduledExecutorService newSingleThreadScheduledExecutor(
-      String threadName) {
-    return Executors.newScheduledThreadPool(1, new NamedThreadFactory(threadName));
-  }
-
-  /**
-   * Shutdown {@code service} and wait for all it's tasks to terminate.  In the event of
-   * {@link InterruptedException}, propagate the interrupt to all tasks, wait for them to
-   * finish, then re-throw the exception.
-   */
-  public static boolean shutdown(
-      ExecutorService service,
-      long timeout,
-      TimeUnit unit) throws InterruptedException {
+  public static boolean shutdown(ExecutorService service, long timeout, TimeUnit unit)
+      throws InterruptedException {
     service.shutdown();
     try {
       return service.awaitTermination(timeout, unit);
@@ -146,19 +116,12 @@ public class MostExecutors {
     }
   }
 
-  public static void shutdown(ExecutorService service) throws InterruptedException {
-    shutdown(service, Long.MAX_VALUE, TimeUnit.DAYS);
-  }
-
   /**
    * Cancel the processing being carried out by the given service and waits for the processing to
    * complete. If processing has still not terminated the method throws the given exception.
    */
   public static void shutdownOrThrow(
-      ExecutorService service,
-      long timeout,
-      TimeUnit unit,
-      RuntimeException exception) {
+      ExecutorService service, long timeout, TimeUnit unit, RuntimeException exception) {
     boolean terminated = false;
     service.shutdown();
     try {
@@ -178,5 +141,42 @@ public class MostExecutors {
     if (!terminated) {
       throw exception;
     }
+  }
+
+  /**
+   * Construct a ForkJoinPool with a stricter thread limit.
+   *
+   * <p>ForkJoinPool by default will create a new thread to handle pending work whenever an existing
+   * thread becomes blocked on a task and cannot work steal. In cases when many tasks would block on
+   * a slow running dependency, it can trigger thread creation for all those tasks.
+   *
+   * <p>Note that limiting the maximum threads will impact the ability for ManagedBlockers to cause
+   * the pool to create new worker threads, leading to potential deadlock if many ManagedBlockers
+   * are used.
+   */
+  public static ForkJoinPool forkJoinPoolWithThreadLimit(int parallelism, int spares) {
+    AtomicInteger activeThreads = new AtomicInteger(0);
+    return new ForkJoinPool(
+        parallelism,
+        pool -> {
+          if (activeThreads.get() > parallelism + spares) {
+            return null;
+          }
+          return new ForkJoinWorkerThread(pool) {
+            @Override
+            protected void onStart() {
+              super.onStart();
+              activeThreads.incrementAndGet();
+            }
+
+            @Override
+            protected void onTermination(Throwable exception) {
+              activeThreads.decrementAndGet();
+              super.onTermination(exception);
+            }
+          };
+        },
+        /* handler */ null,
+        /* asyncMode */ false);
   }
 }

@@ -1,0 +1,22 @@
+android_resource(
+    name = "dep1",
+    assets = subdir_glob([("assets", "**")]),
+    package = "com.test",
+    project_assets = "proj-assets",
+    project_res = "proj-res",
+    res = subdir_glob([("res", "**")]),
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_library(
+    name = "dep2",
+    srcs = glob(["src/**/*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep1",
+    ],
+)

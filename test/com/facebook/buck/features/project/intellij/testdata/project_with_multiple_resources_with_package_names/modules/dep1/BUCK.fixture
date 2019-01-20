@@ -1,0 +1,18 @@
+android_resource(
+    name = "assets",
+    assets = subdir_glob([("assets", "**")]),
+    project_assets = "proj-assets",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_resource(
+    name = "dep1",
+    package = "com.test",
+    project_res = "proj-res",
+    res = subdir_glob([("res", "**")]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

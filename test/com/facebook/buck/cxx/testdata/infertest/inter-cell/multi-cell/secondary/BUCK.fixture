@@ -1,0 +1,6 @@
+cxx_library(
+    name = "cxxlib",
+    srcs = ["sum.cpp"],
+    compiler_flags = ["-g"],
+    visibility = ["PUBLIC"],
+)

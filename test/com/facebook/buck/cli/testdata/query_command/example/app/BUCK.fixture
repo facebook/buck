@@ -1,23 +1,21 @@
-apple_library(
-  name = 'seven',
-  srcs = [ '7.txt' ],
-  deps = [ ],
-  tests = [
-    ':seven-tests',
-    '//other:eight-tests'
-  ],
+java_library(
+    name = "seven",
+    srcs = ["7.txt"],
+    tests = [
+        ":seven-tests",
+        "//other:eight-tests",
+    ],
+    deps = [],
 )
 
-apple_test(
-  name = 'seven-tests',
-  extension = 'xctest',
-  info_plist = 'Test.plist',
-  srcs = [ '7-test.txt' ],
-  deps = [ ':seven' ],
+java_test(
+    name = "seven-tests",
+    srcs = ["7-test.txt"],
+    deps = [":seven"],
 )
 
-apple_library(
-  name = 'nine',
-  srcs = [ 'lib/9.txt' ],
-  deps = [ ],
+java_library(
+    name = "nine",
+    srcs = ["lib/9.txt"],
+    deps = [],
 )

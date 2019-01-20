@@ -1,0 +1,58 @@
+PYTHON_PROD_SRCS = glob(
+    ["buck_parser/**/*.py"],
+    exclude = ["buck_parser/**/*_test.py"],
+)
+
+java_library(
+    name = "resources",
+    resources = PYTHON_PROD_SRCS,
+    resources_root = ".",
+    visibility = ["PUBLIC"],
+)
+
+python_library(
+    name = "buck_parser",
+    srcs = PYTHON_PROD_SRCS,
+    base_module = "",
+    deps = [
+        "//third-party/py/pathlib:pathlib",
+        "//third-party/py/pywatchman:pywatchman",
+        "//third-party/py/six:six",
+    ],
+)
+
+python_library(
+    name = "deterministic_set",
+    srcs = ["buck_parser/deterministic_set.py"],
+    base_module = "",
+)
+
+python_test(
+    name = "deterministic_set_test",
+    srcs = ["buck_parser/deterministic_set_test.py"],
+    base_module = "",
+    deps = [":deterministic_set"],
+)
+
+python_test(
+    name = "buck_test",
+    srcs = glob(["buck_parser/**/*_test.py"]),
+    base_module = "",
+    deps = [
+        ":buck_parser",
+        "//third-party/py:typing",
+        "//third-party/py/pathlib:pathlib",
+        "//third-party/py/pywatchman:pywatchman",
+        "//third-party/py/six:six",
+    ],
+)
+
+# Main binary for testing.
+python_binary(
+    name = "standalone",
+    base_module = "",
+    main_module = "buck_parser",
+    deps = [
+        ":buck_parser",
+    ],
+)

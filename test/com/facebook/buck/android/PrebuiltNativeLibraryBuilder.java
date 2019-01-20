@@ -16,38 +16,44 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSortedSet;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
 public class PrebuiltNativeLibraryBuilder
-    extends AbstractNodeBuilder<PrebuiltNativeLibraryDescription.Arg> {
+    extends AbstractNodeBuilder<
+        PrebuiltNativeLibraryDescriptionArg.Builder,
+        PrebuiltNativeLibraryDescriptionArg,
+        PrebuiltNativeLibraryDescription,
+        PrebuiltNativeLibrary> {
 
   private PrebuiltNativeLibraryBuilder(BuildTarget target) {
-    super(new PrebuiltNativeLibraryDescription(), target);
+    this(target, new FakeProjectFilesystem());
+  }
+
+  private PrebuiltNativeLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
+    super(new PrebuiltNativeLibraryDescription(), target, filesystem);
   }
 
   public static PrebuiltNativeLibraryBuilder newBuilder(BuildTarget buildTarget) {
     return new PrebuiltNativeLibraryBuilder(buildTarget);
   }
 
-  public PrebuiltNativeLibraryBuilder setIsAsset(@Nullable Boolean isAsset) {
-    arg.isAsset = Optional.fromNullable(isAsset);
+  public static PrebuiltNativeLibraryBuilder newBuilder(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
+    return new PrebuiltNativeLibraryBuilder(buildTarget, filesystem);
+  }
+
+  public PrebuiltNativeLibraryBuilder setIsAsset(boolean isAsset) {
+    getArgForPopulating().setIsAsset(isAsset);
     return this;
   }
 
   public PrebuiltNativeLibraryBuilder setNativeLibs(@Nullable Path nativeLibs) {
-    arg.nativeLibs = nativeLibs;
-    return this;
-  }
-
-  public PrebuiltNativeLibraryBuilder setDeps(@Nullable ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.fromNullable(deps);
+    getArgForPopulating().setNativeLibs(nativeLibs);
     return this;
   }
 }

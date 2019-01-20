@@ -17,14 +17,11 @@
 package com.facebook.buck.slb;
 
 import com.facebook.buck.event.BuckEventBus;
-import com.squareup.okhttp.Request;
-
+import java.io.IOException;
 import org.easymock.EasyMock;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class RetryingHttpServiceTest {
 
@@ -41,12 +38,12 @@ public class RetryingHttpServiceTest {
 
   @Test
   public void testRetryOnce() throws IOException {
-    EasyMock.expect(
-        mockService.makeRequest(EasyMock.<String>isNull(), EasyMock.<Request.Builder>isNull()))
-        .andThrow(new IOException()).once();
-    EasyMock.expect(
-        mockService.makeRequest(EasyMock.<String>isNull(), EasyMock.<Request.Builder>isNull()))
-        .andReturn(null).once();
+    EasyMock.expect(mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
+        .andThrow(new IOException())
+        .once();
+    EasyMock.expect(mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
+        .andReturn(null)
+        .once();
     EasyMock.replay(mockService);
 
     try (RetryingHttpService service = createRetryingService(1)) {
@@ -58,11 +55,30 @@ public class RetryingHttpServiceTest {
   }
 
   @Test
+  public void testRetryOnceWithRetryInterval() throws IOException {
+    EasyMock.expect(mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
+        .andThrow(new IOException())
+        .once();
+    EasyMock.expect(mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
+        .andReturn(null)
+        .once();
+    EasyMock.replay(mockService);
+
+    try (RetryingHttpService service =
+        new RetryingHttpService(eventBus, mockService, "counterCategory", 1, 1)) {
+      HttpResponse response = service.makeRequest(null, null);
+      Assert.assertNull(response);
+    }
+
+    EasyMock.verify(mockService);
+  }
+
+  @Test
   public void testAllRetriesFailed() throws IOException {
     String errorMessage = "Super cool and amazing error msg.";
-    EasyMock.expect(
-        mockService.makeRequest(EasyMock.<String>isNull(), EasyMock.<Request.Builder>isNull()))
-        .andThrow(new IOException(errorMessage)).times(2);
+    EasyMock.expect(mockService.makeRequest(EasyMock.isNull(), EasyMock.isNull()))
+        .andThrow(new IOException(errorMessage))
+        .times(2);
     EasyMock.replay(mockService);
 
     try (RetryingHttpService service = createRetryingService(1)) {
@@ -84,17 +100,17 @@ public class RetryingHttpServiceTest {
     service1.close();
 
     // Positive argument is fine.
-    RetryingHttpService  service2 = createRetryingService(1);
+    RetryingHttpService service2 = createRetryingService(1);
     service2.close();
 
     try (RetryingHttpService service3 = createRetryingService(-1)) {
       Assert.fail("The argument is not legal ao an exception should be thrown.");
     } catch (IllegalArgumentException exception) {
-        Assert.assertTrue(exception.getMessage().contains("-1"));
+      Assert.assertTrue(exception.getMessage().contains("-1"));
     }
   }
 
   private RetryingHttpService createRetryingService(int retryCount) {
-    return new RetryingHttpService(eventBus, mockService, retryCount);
+    return new RetryingHttpService(eventBus, mockService, "counterCategory", retryCount);
   }
 }

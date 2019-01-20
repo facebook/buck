@@ -16,67 +16,82 @@
 
 package com.facebook.buck.jvm.java;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.jar.Attributes.Name.IMPLEMENTATION_VERSION;
 import static java.util.jar.Attributes.Name.MANIFEST_VERSION;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.event.BuckEventBusFactory;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.testutil.Zip;
-import com.facebook.buck.testutil.integration.TemporaryPaths;
-import com.facebook.buck.zip.CustomZipOutputStream;
-import com.facebook.buck.zip.ZipConstants;
-import com.facebook.buck.zip.ZipOutputStreams;
+import com.facebook.buck.testutil.ZipArchive;
+import com.facebook.buck.util.zip.CustomZipOutputStream;
+import com.facebook.buck.util.zip.ZipConstants;
+import com.facebook.buck.util.zip.ZipOutputStreams;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
-
-import org.apache.commons.compress.archivers.zip.ZipUtil;
-import org.junit.Rule;
-import org.junit.Test;
-
+import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.Attributes;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import java.util.jar.JarInputStream;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
+import org.apache.commons.compress.archivers.zip.ZipUtil;
+import org.junit.Rule;
+import org.junit.Test;
 
 public class JarDirectoryStepTest {
 
   @Rule public TemporaryPaths folder = new TemporaryPaths();
 
   @Test
-  public void shouldNotThrowAnExceptionWhenAddingDuplicateEntries() throws IOException {
+  public void shouldNotThrowAnExceptionWhenAddingDuplicateEntries()
+      throws InterruptedException, IOException {
     Path zipup = folder.newFolder("zipup");
 
     Path first = createZip(zipup.resolve("a.zip"), "example.txt");
     Path second = createZip(zipup.resolve("b.zip"), "example.txt", "com/example/Main.class");
 
-    JarDirectoryStep step = new JarDirectoryStep(
-        new ProjectFilesystem(zipup),
-        Paths.get("output.jar"),
-        ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
-        "com.example.Main",
-        /* manifest file */ null);
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            TestProjectFilesystems.createProjectFilesystem(zipup),
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
+                .setMainClass(Optional.of("com.example.Main"))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
@@ -92,80 +107,92 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotifyEventBusWhenDuplicateClassesAreFound() throws IOException {
+  public void shouldNotifyEventBusWhenDuplicateClassesAreFound()
+      throws InterruptedException, IOException {
     Path jarDirectory = folder.newFolder("jarDir");
 
-    Path first = createZip(
-        jarDirectory.resolve("a.jar"),
-        "com/example/Main.class",
-        "com/example/common/Helper.class");
-    Path second = createZip(
-        jarDirectory.resolve("b.jar"),
-        "com/example/common/Helper.class");
+    Path first =
+        createZip(
+            jarDirectory.resolve("a.jar"),
+            "com/example/Main.class",
+            "com/example/common/Helper.class");
+    Path second = createZip(jarDirectory.resolve("b.jar"), "com/example/common/Helper.class");
 
-    final Path outputPath = Paths.get("output.jar");
-    JarDirectoryStep step = new JarDirectoryStep(
-        new ProjectFilesystem(jarDirectory),
-        outputPath,
-        ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
-        "com.example.Main",
-        /* manifest file */ null);
+    Path outputPath = Paths.get("output.jar");
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(jarDirectory);
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            filesystem,
+            JarParameters.builder()
+                .setJarPath(outputPath)
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
+                .setMainClass(Optional.of("com.example.Main"))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    final BuckEventBusFactory.CapturingConsoleEventListener listener =
-        new BuckEventBusFactory.CapturingConsoleEventListener();
+    BuckEventBusForTests.CapturingConsoleEventListener listener =
+        new BuckEventBusForTests.CapturingConsoleEventListener();
     context.getBuckEventBus().register(listener);
 
     step.execute(context);
-    final String expectedMessage = String.format(
-        "Duplicate found when adding 'com/example/common/Helper.class' to '%s' from '%s'",
-        outputPath.toAbsolutePath(),
-        second.toAbsolutePath());
+    String expectedMessage =
+        String.format(
+            "Duplicate found when adding 'com/example/common/Helper.class' to '%s' from '%s'",
+            filesystem.getPathForRelativePath(outputPath), second.toAbsolutePath());
     assertThat(listener.getLogMessages(), hasItem(expectedMessage));
   }
 
-  @Test
-  public void shouldFailIfMainClassMissing() throws IOException {
+  @Test(expected = HumanReadableException.class)
+  public void shouldFailIfMainClassMissing() throws InterruptedException, IOException {
     Path zipup = folder.newFolder("zipup");
 
     Path zip = createZip(zipup.resolve("a.zip"), "com/example/Main.class");
 
-    JarDirectoryStep step = new JarDirectoryStep(
-        new ProjectFilesystem(zipup),
-        Paths.get("output.jar"),
-        ImmutableSortedSet.of(zip.getFileName()),
-        "com.example.MissingMain",
-        /* manifest file */ null);
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            TestProjectFilesystems.createProjectFilesystem(zipup),
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(zip.getFileName()))
+                .setMainClass(Optional.of("com.example.MissingMain"))
+                .setMergeManifests(true)
+                .build());
     TestConsole console = new TestConsole();
-    ExecutionContext context = TestExecutionContext.newBuilder()
-        .setConsole(console)
-        .build();
+    ExecutionContext context = TestExecutionContext.newBuilder().setConsole(console).build();
 
-    int returnCode = step.execute(context).getExitCode();
-
-    assertEquals(1, returnCode);
-    assertEquals(
-        "ERROR: Main class com.example.MissingMain does not exist.\n",
-        console.getTextWrittenToStdErr());
+    try {
+      step.execute(context);
+    } catch (HumanReadableException e) {
+      assertEquals(
+          "ERROR: Main class com.example.MissingMain does not exist.",
+          e.getHumanReadableErrorMessage());
+      throw e;
+    }
   }
 
   @Test
-  public void shouldNotComplainWhenDuplicateDirectoryNamesAreAdded() throws IOException {
+  public void shouldNotComplainWhenDuplicateDirectoryNamesAreAdded()
+      throws InterruptedException, IOException {
     Path zipup = folder.newFolder();
 
     Path first = createZip(zipup.resolve("first.zip"), "dir/example.txt", "dir/root1file.txt");
-    Path second = createZip(
-        zipup.resolve("second.zip"),
-        "dir/example.txt",
-        "dir/root2file.txt",
-        "com/example/Main.class");
+    Path second =
+        createZip(
+            zipup.resolve("second.zip"),
+            "dir/example.txt",
+            "dir/root2file.txt",
+            "com/example/Main.class");
 
-    JarDirectoryStep step = new JarDirectoryStep(
-        new ProjectFilesystem(zipup),
-        Paths.get("output.jar"),
-        ImmutableSortedSet.of(first.getFileName(), second.getFileName()),
-        "com.example.Main",
-        /* manifest file */ null);
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            TestProjectFilesystems.createProjectFilesystem(zipup),
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName(), second.getFileName()))
+                .setMainClass(Optional.of("com.example.Main"))
+                .setMergeManifests(true)
+                .build());
 
     ExecutionContext context = TestExecutionContext.newInstance();
 
@@ -181,7 +208,8 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void entriesFromTheGivenManifestShouldOverrideThoseInTheJars() throws IOException {
+  public void entriesFromTheGivenManifestShouldOverrideThoseInTheJars()
+      throws InterruptedException, IOException {
     String expected = "1.4";
     // Write the manifest, setting the implementation version
     Path tmp = folder.newFolder();
@@ -207,19 +235,20 @@ public class JarDirectoryStepTest {
     }
 
     Path output = tmp.resolve("output.jar");
-    JarDirectoryStep step = new JarDirectoryStep(
-        new ProjectFilesystem(tmp),
-        Paths.get("output.jar"),
-        ImmutableSortedSet.of(Paths.get("input.jar")),
-        /* main class */ null,
-        Paths.get("manifest"),
-        /* merge manifest */ true,
-        /* blacklist */ ImmutableSet.<String>of());
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            TestProjectFilesystems.createProjectFilesystem(tmp),
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(Paths.get("input.jar")))
+                .setManifestFile(Optional.of(tmp.resolve("manifest")))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
     assertEquals(0, step.execute(context).getExitCode());
 
-    try (Zip zip = new Zip(output, false)) {
-      byte[] rawManifest = zip.readFully("META-INF/MANIFEST.MF");
+    try (ZipArchive zipArchive = new ZipArchive(output, false)) {
+      byte[] rawManifest = zipArchive.readFully("META-INF/MANIFEST.MF");
       manifest = new Manifest(new ByteArrayInputStream(rawManifest));
       String version = manifest.getMainAttributes().getValue(IMPLEMENTATION_VERSION);
 
@@ -228,19 +257,21 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void jarsShouldContainDirectoryEntries() throws IOException {
+  public void jarsShouldContainDirectoryEntries() throws InterruptedException, IOException {
     Path zipup = folder.newFolder("dir-zip");
 
     Path subdir = zipup.resolve("dir/subdir");
     Files.createDirectories(subdir);
     Files.write(subdir.resolve("a.txt"), "cake".getBytes());
 
-    JarDirectoryStep step = new JarDirectoryStep(
-        new ProjectFilesystem(zipup),
-        Paths.get("output.jar"),
-        ImmutableSortedSet.of(zipup),
-        /* main class */ null,
-        /* manifest file */ null);
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            TestProjectFilesystems.createProjectFilesystem(zipup),
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(zipup))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
 
     int returnCode = step.execute(context).getExitCode();
@@ -261,7 +292,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldNotMergeManifestsIfRequested() throws IOException {
+  public void shouldNotMergeManifestsIfRequested() throws InterruptedException, IOException {
     Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
     Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
 
@@ -271,52 +302,113 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldMergeManifestsIfAsked() throws IOException {
+  public void shouldMergeManifestsIfAsked() throws InterruptedException, IOException {
     Manifest fromJar = createManifestWithExampleSection(ImmutableMap.of("Not-Seen", "ever"));
     Manifest fromUser = createManifestWithExampleSection(ImmutableMap.of("cake", "cheese"));
 
     Manifest seenManifest = jarDirectoryAndReadManifest(fromJar, fromUser, true);
 
     Manifest expectedManifest = new Manifest(fromJar);
-    expectedManifest.getEntries().putAll(fromUser.getEntries());
+    Attributes attrs = new Attributes();
+    attrs.putValue("Not-Seen", "ever");
+    attrs.putValue("cake", "cheese");
+    expectedManifest.getEntries().put("example", attrs);
     assertEquals(expectedManifest.getEntries(), seenManifest.getEntries());
   }
 
   @Test
-  public void shouldNotIncludeFilesInBlacklist() throws IOException {
+  public void shouldSortManifestAttributesAndEntries() throws InterruptedException, IOException {
+    Manifest fromJar =
+        createManifestWithExampleSection(ImmutableMap.of("foo", "bar", "baz", "waz"));
+    Manifest fromUser =
+        createManifestWithExampleSection(ImmutableMap.of("bar", "foo", "waz", "baz"));
+
+    String seenManifest =
+        new String(jarDirectoryAndReadManifestContents(fromJar, fromUser, true), UTF_8);
+
+    assertEquals(
+        Joiner.on("\r\n")
+            .join(
+                "Manifest-Version: 1.0",
+                "",
+                "Name: example",
+                "bar: foo",
+                "baz: waz",
+                "foo: bar",
+                "waz: baz",
+                "",
+                ""),
+        seenManifest);
+  }
+
+  @Test
+  public void shouldNotIncludeFilesInBlacklist() throws InterruptedException, IOException {
     Path zipup = folder.newFolder();
+    Path first =
+        createZip(
+            zipup.resolve("first.zip"),
+            "dir/file1.txt",
+            "dir/file2.class",
+            "com/example/Main.class");
 
-    Path first = createZip(
-        zipup.resolve("first.zip"),
-        "dir/file1.txt",
-        "dir/file2.txt",
-        "com/example/Main.class");
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            TestProjectFilesystems.createProjectFilesystem(zipup),
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName()))
+                .setMainClass(Optional.of("com.example.Main"))
+                .setMergeManifests(true)
+                .setRemoveEntryPredicate(
+                    new RemoveClassesPatternsMatcher(ImmutableSet.of(Pattern.compile(".*2.*"))))
+                .build());
 
-    JarDirectoryStep step = new JarDirectoryStep(
-        new ProjectFilesystem(zipup),
-        Paths.get("output.jar"),
-        ImmutableSortedSet.of(first.getFileName()),
-        "com.example.Main",
-        /* manifest file */ null,
-        /* merge manifests */ true,
-        /* blacklist */ ImmutableSet.of(".*2.*"));
-
-    ExecutionContext context = TestExecutionContext.newInstance();
-
-    int returnCode = step.execute(context).getExitCode();
-
-    assertEquals(0, returnCode);
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     Path zip = zipup.resolve("output.jar");
-
-    // file1.txt, Main.class, plus the manifest.
+    // 3 files in total: file1.txt, & com/example/Main.class & the manifest.
     assertZipFileCountIs(3, zip);
     assertZipContains(zip, "dir/file1.txt");
     assertZipDoesNotContain(zip, "dir/file2.txt");
   }
 
   @Test
-  public void timesAreSanitized() throws IOException {
+  public void shouldNotIncludeFilesInClassesToRemoveFromJar()
+      throws InterruptedException, IOException {
+    Path zipup = folder.newFolder();
+    Path first =
+        createZip(
+            zipup.resolve("first.zip"),
+            "com/example/A.class",
+            "com/example/B.class",
+            "com/example/C.class");
+
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            TestProjectFilesystems.createProjectFilesystem(zipup),
+            JarParameters.builder()
+                .setJarPath(Paths.get("output.jar"))
+                .setEntriesToJar(ImmutableSortedSet.of(first.getFileName()))
+                .setMainClass(Optional.of("com.example.A"))
+                .setMergeManifests(true)
+                .setRemoveEntryPredicate(
+                    new RemoveClassesPatternsMatcher(
+                        ImmutableSet.of(
+                            Pattern.compile("com.example.B"), Pattern.compile("com.example.C"))))
+                .build());
+
+    assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
+
+    Path zip = zipup.resolve("output.jar");
+    // 2 files in total: com/example/A/class & the manifest.
+    assertZipFileCountIs(2, zip);
+    assertZipContains(zip, "com/example/A.class");
+    assertZipDoesNotContain(zip, "com/example/B.class");
+    assertZipDoesNotContain(zip, "com/example/C.class");
+  }
+
+  @Test
+  public void timesAreSanitized() throws InterruptedException, IOException {
     Path zipup = folder.newFolder("dir-zip");
 
     // Create a jar file with a file and a directory.
@@ -326,11 +418,12 @@ public class JarDirectoryStepTest {
     Path outputJar = folder.getRoot().resolve("output.jar");
     JarDirectoryStep step =
         new JarDirectoryStep(
-            new ProjectFilesystem(folder.getRoot()),
-            outputJar,
-            ImmutableSortedSet.of(zipup),
-            /* main class */ null,
-            /* manifest file */ null);
+            TestProjectFilesystems.createProjectFilesystem(folder.getRoot()),
+            JarParameters.builder()
+                .setJarPath(outputJar)
+                .setEntriesToJar(ImmutableSortedSet.of(zipup))
+                .setMergeManifests(true)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
     int returnCode = step.execute(context).getExitCode();
     assertEquals(0, returnCode);
@@ -345,6 +438,94 @@ public class JarDirectoryStepTest {
     }
   }
 
+  /**
+   * From the constructor of {@link JarInputStream}:
+   *
+   * <p>This implementation assumes the META-INF/MANIFEST.MF entry should be either the first or the
+   * second entry (when preceded by the dir META-INF/). It skips the META-INF/ and then "consumes"
+   * the MANIFEST.MF to initialize the Manifest object.
+   *
+   * <p>A simple implementation of {@link JarDirectoryStep} would iterate over all entries to be
+   * included, adding them to the output jar, while merging manifest files, writing the merged
+   * manifest as the last item in the jar. That will generate jars the {@code JarInputStream} won't
+   * be able to find the manifest for.
+   */
+  @Test
+  public void manifestShouldBeSecondEntryInJar() throws Exception {
+    Path manifestPath = Paths.get(JarFile.MANIFEST_NAME);
+
+    // Create a directory with a manifest in it and more than two files.
+    Path dir = folder.newFolder();
+    Manifest dirManifest = new Manifest();
+    Attributes attrs = new Attributes();
+    attrs.putValue("From-Dir", "cheese");
+    dirManifest.getEntries().put("Section", attrs);
+
+    Files.createDirectories(dir.resolve(manifestPath).getParent());
+    try (OutputStream out = Files.newOutputStream(dir.resolve(manifestPath))) {
+      dirManifest.write(out);
+    }
+    Files.write(dir.resolve("A.txt"), "hello world".getBytes(UTF_8));
+    Files.write(dir.resolve("B.txt"), "hello world".getBytes(UTF_8));
+    Files.write(dir.resolve("aa.txt"), "hello world".getBytes(UTF_8));
+    Files.write(dir.resolve("bb.txt"), "hello world".getBytes(UTF_8));
+
+    // Create a jar with a manifest and more than two other files.
+    Path inputJar = folder.newFile("example.jar");
+    try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(inputJar))) {
+      byte[] data = "hello world".getBytes(UTF_8);
+      ZipEntry entry = new ZipEntry("C.txt");
+      zos.putNextEntry(entry);
+      zos.write(data, 0, data.length);
+      zos.closeEntry();
+
+      entry = new ZipEntry("cc.txt");
+      zos.putNextEntry(entry);
+      zos.write(data, 0, data.length);
+      zos.closeEntry();
+
+      entry = new ZipEntry("META-INF/");
+      zos.putNextEntry(entry);
+      zos.closeEntry();
+
+      // Note: at end of the stream. Technically invalid.
+      entry = new ZipEntry(JarFile.MANIFEST_NAME);
+      zos.putNextEntry(entry);
+      Manifest zipManifest = new Manifest();
+      attrs = new Attributes();
+      attrs.putValue("From-Zip", "peas");
+      zipManifest.getEntries().put("Section", attrs);
+      zipManifest.write(zos);
+      zos.closeEntry();
+    }
+
+    // Merge and check that the manifest includes everything
+    Path output = folder.newFile("output.jar");
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            new FakeProjectFilesystem(folder.getRoot()),
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(dir, inputJar))
+                .setMergeManifests(true)
+                .build());
+    int exitCode = step.execute(TestExecutionContext.newInstance()).getExitCode();
+
+    assertEquals(0, exitCode);
+
+    Manifest manifest;
+    try (InputStream is = Files.newInputStream(output);
+        JarInputStream jis = new JarInputStream(is)) {
+      manifest = jis.getManifest();
+    }
+
+    assertNotNull(manifest);
+    Attributes readAttributes = manifest.getAttributes("Section");
+    assertEquals(2, readAttributes.size());
+    assertEquals("cheese", readAttributes.getValue("From-Dir"));
+    assertEquals("peas", readAttributes.getValue("From-Zip"));
+  }
+
   private Manifest createManifestWithExampleSection(Map<String, String> attributes) {
     Manifest manifest = new Manifest();
     Attributes attrs = new Attributes();
@@ -356,14 +537,18 @@ public class JarDirectoryStepTest {
   }
 
   private Manifest jarDirectoryAndReadManifest(
-      Manifest fromJar,
-      Manifest fromUser,
-      boolean mergeEntries)
-      throws IOException {
+      Manifest fromJar, Manifest fromUser, boolean mergeEntries)
+      throws InterruptedException, IOException {
+    byte[] contents = jarDirectoryAndReadManifestContents(fromJar, fromUser, mergeEntries);
+    return new Manifest(new ByteArrayInputStream(contents));
+  }
+
+  private byte[] jarDirectoryAndReadManifestContents(
+      Manifest fromJar, Manifest fromUser, boolean mergeEntries)
+      throws InterruptedException, IOException {
     // Create a jar with a manifest we'd expect to see merged.
     Path originalJar = folder.newFile("unexpected.jar");
-    JarOutputStream ignored =
-        new JarOutputStream(Files.newOutputStream(originalJar), fromJar);
+    JarOutputStream ignored = new JarOutputStream(Files.newOutputStream(originalJar), fromJar);
     ignored.close();
 
     // Now create the actual manifest
@@ -374,25 +559,29 @@ public class JarDirectoryStepTest {
 
     Path tmp = folder.newFolder();
     Path output = tmp.resolve("example.jar");
-    JarDirectoryStep step = new JarDirectoryStep(
-        new ProjectFilesystem(tmp),
-        output,
-        ImmutableSortedSet.of(originalJar),
-        /* main class */ null,
-        manifestFile,
-        mergeEntries,
-        /* blacklist */ ImmutableSet.<String>of());
+    JarDirectoryStep step =
+        new JarDirectoryStep(
+            TestProjectFilesystems.createProjectFilesystem(tmp),
+            JarParameters.builder()
+                .setJarPath(output)
+                .setEntriesToJar(ImmutableSortedSet.of(originalJar))
+                .setManifestFile(Optional.of(manifestFile))
+                .setMergeManifests(mergeEntries)
+                .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY)
+                .build());
     ExecutionContext context = TestExecutionContext.newInstance();
     step.execute(context);
 
-    // Now verify that the created manifest matches the expected one.
-    try (JarInputStream jis = new JarInputStream(Files.newInputStream(output))) {
-      return jis.getManifest();
+    try (JarFile jf = new JarFile(output.toFile())) {
+      JarEntry manifestEntry = jf.getJarEntry(JarFile.MANIFEST_NAME);
+      try (InputStream manifestStream = jf.getInputStream(manifestEntry)) {
+        return ByteStreams.toByteArray(manifestStream);
+      }
     }
   }
 
   private Path createZip(Path zipFile, String... fileNames) throws IOException {
-    try (Zip zip = new Zip(zipFile, true)) {
+    try (ZipArchive zip = new ZipArchive(zipFile, true)) {
       for (String fileName : fileNames) {
         zip.add(fileName, "");
       }
@@ -407,7 +596,7 @@ public class JarDirectoryStepTest {
   }
 
   private void assertZipContains(Path zip, String... files) throws IOException {
-    final Set<String> contents = getFileNames(zip);
+    Set<String> contents = getFileNames(zip);
 
     for (String file : files) {
       assertTrue(String.format("%s -> %s", file, contents), contents.contains(file));
@@ -415,7 +604,7 @@ public class JarDirectoryStepTest {
   }
 
   private void assertZipDoesNotContain(Path zip, String... files) throws IOException {
-    final Set<String> contents = getFileNames(zip);
+    Set<String> contents = getFileNames(zip);
 
     for (String file : files) {
       assertFalse(String.format("%s -> %s", file, contents), contents.contains(file));
@@ -423,9 +612,8 @@ public class JarDirectoryStepTest {
   }
 
   private Set<String> getFileNames(Path zipFile) throws IOException {
-    try (Zip zip = new Zip(zipFile, false)) {
+    try (ZipArchive zip = new ZipArchive(zipFile, false)) {
       return zip.getFileNames();
     }
   }
-
 }

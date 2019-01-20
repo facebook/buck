@@ -1,0 +1,16 @@
+
+README for fbsimctl
+=====================
+
+This test depends on having the fbsimctl binary and its supporting frameworks
+present in this directory.
+
+(We may eventually include this as source and build it with Xcode
+or Buck, but it would add a few minutes to every build.)
+
+Tested with:
+Project URL: https://github.com/facebook/FBSimulatorControl
+License: BSD
+Upstream Revision: 05dabaabef3c3f27ed792db328fcb62daa20d9d5
+Built with Xcode 8.2.1 (8C1002)
+Built With: `build.sh fbsimctl build`

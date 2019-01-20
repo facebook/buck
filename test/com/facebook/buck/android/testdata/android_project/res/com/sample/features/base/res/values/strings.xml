@@ -1,0 +1,5 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<resources>
+  <string name='feature1_title'>Feature 1 Title</string>
+  <string name='feature2_title'>Feature 2 Title</string>
+</resources>

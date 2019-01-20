@@ -16,13 +16,13 @@
 
 package com.facebook.buck.testrunner;
 
-import org.junit.runners.model.Statement;
-
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import org.junit.runners.model.Statement;
 
 class SameThreadFailOnTimeout extends Statement {
   private final ExecutorService executor;
@@ -31,24 +31,19 @@ class SameThreadFailOnTimeout extends Statement {
   private final Callable<Throwable> callable;
 
   public SameThreadFailOnTimeout(
-      ExecutorService executor,
-      long timeout,
-      String testName,
-      final Statement next) {
+      ExecutorService executor, long timeout, String testName, Statement next) {
     this.executor = executor;
     this.timeout = timeout;
     this.testName = testName;
-    this.callable = new Callable<Throwable>() {
-      @Override
-      public Throwable call() {
-        try {
-          next.evaluate();
-          return null;
-        } catch (Throwable throwable) {
-          return throwable;
-        }
-      }
-    };
+    this.callable =
+        () -> {
+          try {
+            next.evaluate();
+            return null;
+          } catch (Throwable throwable) {
+            return throwable;
+          }
+        };
   }
 
   @Override
@@ -56,16 +51,28 @@ class SameThreadFailOnTimeout extends Statement {
     Future<Throwable> submitted = executor.submit(callable);
     try {
       Throwable result = submitted.get(timeout, TimeUnit.MILLISECONDS);
-      if (result != null) {
-        throw result;
+      if (result == null) {
+        return;
       }
+      if (result instanceof TimeoutException) {
+        throw new Exception("A timeout occurred inside of the test case", result);
+      }
+      throw result;
     } catch (TimeoutException e) {
+      System.err.printf("Dumping threads for timed-out test %s:%n", testName);
+      for (Map.Entry<Thread, StackTraceElement[]> t : Thread.getAllStackTraces().entrySet()) {
+        Thread thread = t.getKey();
+        System.err.printf("\"%s\" #%d%n", thread.getName(), thread.getId());
+        System.err.printf("\tjava.lang.Thread.State: %s%n", thread.getState());
+        for (StackTraceElement element : t.getValue()) {
+          System.err.printf("\t\t at %s%n", element);
+        }
+      }
+
       submitted.cancel(true);
+
       // The default timeout doesn't indicate which test was running.
-      String message = String.format(
-          "test %s timed out after %d milliseconds",
-          testName,
-          timeout);
+      String message = String.format("test %s timed out after %d milliseconds", testName, timeout);
 
       throw new Exception(message);
     }

@@ -16,45 +16,55 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assume.assumeTrue;
+
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-
+import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import java.io.IOException;
 
 public class BadAndroidConfigIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
-
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
 
   /**
-   * In this scenario, the local.properties file contains an sdk.dir property that points to a
-   * non-existent directory. When a {@code java_library()} rule is built that has no dependency on
-   * the Android SDK, the build should succeed even though the Android SDK is misconfigured.
-   * <p>
-   * However, when an {@code android_library()} rule is built that does depend on the Android SDK,
-   * the build should fail, alerting the user to the issue with the local.properties file.
+   * In this scenario, the {@code ANDROID_SDK} environment variable points to a non-existent
+   * directory. When a {@code java_library()} rule is built that has no dependency on the Android
+   * SDK, the build should succeed even though the Android SDK is misconfigured.
+   *
+   * <p>However, when an {@code android_library()} rule is built that does depend on the Android
+   * SDK, the build should fail, alerting the user to the issue.
    */
   @Test
   public void testBadAndroidConfigDoesNotInterfereNonAndroidBuild() throws IOException {
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "bad_android_config", tmp);
+    assumeTrue(Platform.detect() != Platform.WINDOWS);
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "bad_android_config", tmp);
     workspace.setUp();
-    workspace.runBuckBuild("//:hello_java").assertSuccess();
+    ImmutableMap<String, String> badEnvironment =
+        ImmutableMap.of("ANDROID_SDK", "/this/directory/does/not/exist");
+    workspace.runBuckCommand(badEnvironment, "build", "//:hello_java").assertSuccess();
 
-    expectedException.expect(NoAndroidSdkException.class);
-    expectedException.expectMessage("Must define a local.properties file with a property " +
-        "named 'sdk.dir' that points to the absolute path of your Android SDK directory, " +
-        "or set ANDROID_HOME or ANDROID_SDK.");
-    workspace.runBuckBuild("//:hello_android").assertFailure();
+    ProcessResult processResult =
+        workspace.runBuckCommand(badEnvironment, "build", "//:hello_android");
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        allOf(
+            containsString("BUILD FAILED"),
+            containsString("'ANDROID_SDK'"),
+            anyOf(
+                containsString("'/this/directory/does/not/exist'"),
+                containsString("'\\this\\directory\\does\\not\\exist'"))));
   }
 }

@@ -1,0 +1,41 @@
+rust_library(
+    name = "messenger",
+    srcs = [
+        "lib.rs",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+rust_library(
+    name = "messenger_flags",
+    srcs = [
+        "lib.rs",
+    ],
+    rustc_flags = ["--this-is-a-bad-option"],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+# Should fail - ambiguous root source
+rust_library(
+    name = "messenger_ambig",
+    srcs = [
+        "lib.rs",
+        "messenger.rs",
+    ],
+    crate = "messenger",
+)
+
+# Should work - explicit override
+rust_library(
+    name = "messenger_ambig_ovr",
+    srcs = [
+        "lib.rs",
+        "messenger.rs",
+    ],
+    crate = "messenger",
+    crate_root = "messenger.rs",
+)

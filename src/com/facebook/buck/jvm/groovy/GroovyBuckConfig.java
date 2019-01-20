@@ -15,47 +15,52 @@
  */
 package com.facebook.buck.jvm.groovy;
 
-import com.facebook.buck.cli.BuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.Tool;
-import com.facebook.buck.util.HumanReadableException;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class GroovyBuckConfig {
+  private static final String SECTION = "groovy";
+  private static final String GROOVY_HOME_CONFIG = "groovy_home";
+
   private final BuckConfig delegate;
 
   public GroovyBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
   }
 
-  Supplier<Tool> getGroovyCompiler() {
+  public BuckConfig getDelegate() {
+    return delegate;
+  }
 
-    Optional<Path> path = delegate.getPath("groovy", "groovy_home");
-    final Path groovyHomePath;
-    if (path.isPresent()) {
-      groovyHomePath = path.get();
+  Tool getGroovyc() {
+    Optional<SourcePath> sourcePath = delegate.getSourcePath(SECTION, GROOVY_HOME_CONFIG);
+    if (sourcePath.isPresent()) {
+      return new Groovyc(sourcePath.get(), false);
     } else {
       String defaultGroovyHome = delegate.getEnvironment().get("GROOVY_HOME");
       if (defaultGroovyHome == null) {
         throw new HumanReadableException(
-            "Unable to locate groovy compiler:" +
-                " GROOVY_HOME is not set, and groovy.groovy_home was not provided");
-      } else {
-        groovyHomePath = Paths.get(defaultGroovyHome);
+            "Unable to locate groovy compiler:"
+                + " GROOVY_HOME is not set, and groovy.groovy_home was not provided");
       }
+
+      Path groovyHomePath = Paths.get(defaultGroovyHome);
+      Path compiler =
+          new ExecutableFinder()
+              .getExecutable(
+                  groovyHomePath.resolve(Groovyc.BIN_GROOVYC), delegate.getEnvironment());
+      return new Groovyc(delegate.getPathSourcePath(compiler), true);
     }
+  }
 
-    Path compiler =
-        new ExecutableFinder().getExecutable(
-            groovyHomePath.resolve("bin/groovyc"),
-            delegate.getEnvironment());
-
-    return Suppliers.<Tool>ofInstance(new HashedFileTool(compiler));
+  public Optional<BuildTarget> getGroovycTarget() {
+    return delegate.getMaybeBuildTarget(SECTION, GROOVY_HOME_CONFIG);
   }
 }

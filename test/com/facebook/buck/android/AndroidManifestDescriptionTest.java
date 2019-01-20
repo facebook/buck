@@ -18,55 +18,55 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.junit.Test;
-
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class AndroidManifestDescriptionTest {
 
   @Test
   public void testGeneratedSkeletonAppearsInDeps() {
-    BuildRuleResolver buildRuleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
-    BuildRule ruleWithOutput = new FakeBuildRule(
-        BuildTargetFactory.newInstance("//foo:bar"),
-        new SourcePathResolver(buildRuleResolver)) {
-      @Override
-      public Path getPathToOutput() {
-        return Paths.get("buck-out/gen/foo/bar/AndroidManifest.xml");
-      }
-    };
-    BuildTargetSourcePath skeleton = new BuildTargetSourcePath(ruleWithOutput.getBuildTarget());
-    buildRuleResolver.addToIndex(ruleWithOutput);
+    BuildRule ruleWithOutput =
+        new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar")) {
+          @Override
+          public SourcePath getSourcePathToOutput() {
+            return ExplicitBuildTargetSourcePath.of(
+                getBuildTarget(), Paths.get("buck-out/gen/foo/bar/AndroidManifest.xml"));
+          }
+        };
+    SourcePath skeleton = ruleWithOutput.getSourcePathToOutput();
+    graphBuilder.addToIndex(ruleWithOutput);
 
-    AndroidManifestDescription.Arg arg = new AndroidManifestDescription.Arg();
-    arg.skeleton = skeleton;
-    arg.deps = Optional.of(ImmutableSortedSet.<BuildTarget>of());
+    AndroidManifestDescriptionArg arg =
+        AndroidManifestDescriptionArg.builder().setName("baz").setSkeleton(skeleton).build();
 
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder("//foo:baz")
-        .setDeclaredDeps(buildRuleResolver.getAllRules(arg.deps.get()))
-        .build();
-    BuildRule androidManifest = new AndroidManifestDescription()
-        .createBuildRule(TargetGraph.EMPTY, params, buildRuleResolver, arg);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:baz");
+    BuildRuleParams params =
+        TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
+    BuildRule androidManifest =
+        new AndroidManifestDescription(new AndroidManifestFactory())
+            .createBuildRule(
+                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
+                buildTarget,
+                params,
+                arg);
 
-    assertEquals(
-        ImmutableSortedSet.of(ruleWithOutput),
-        androidManifest.getDeps());
+    assertEquals(ImmutableSortedSet.of(ruleWithOutput), androidManifest.getBuildDeps());
   }
 }

@@ -15,61 +15,47 @@
  */
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-
 import org.immutables.value.Value;
 
-/**
- * Resources to be bundled into a bundle.
- */
+/** Resources to be bundled into a bundle. */
 @Value.Immutable
 @BuckStyleImmutable
-abstract class AbstractAppleBundleResources implements RuleKeyAppendable {
+abstract class AbstractAppleBundleResources implements AddsToRuleKey {
   /**
    * Directories that should be copied into the bundle as directories of files with the same name.
    */
+  @AddToRuleKey
   public abstract ImmutableSet<SourcePath> getResourceDirs();
 
   /**
    * Directories whose contents should be copied into the root of the resources subdirectory.
-   * <p/>
-   * This is useful when the directory contents are not known beforehand, such as when a rule
+   *
+   * <p>This is useful when the directory contents are not known beforehand, such as when a rule
    * generates a directory of files.
    */
+  @AddToRuleKey
   public abstract ImmutableSet<SourcePath> getDirsContainingResourceDirs();
 
-  /**
-   * Files that are copied to the root of the resources subdirectory.
-   */
+  /** Files that are copied to the root of the resources subdirectory. */
+  @AddToRuleKey
   public abstract ImmutableSet<SourcePath> getResourceFiles();
 
-  /**
-   * Resource files with localization variants.
-   */
+  /** Resource files with localization variants. */
+  @AddToRuleKey
   public abstract ImmutableSet<SourcePath> getResourceVariantFiles();
 
-  /**
-   * Returns all the SourcePaths from the different types of resources.
-   */
+  /** Returns all the SourcePaths from the different types of resources. */
   public Iterable<SourcePath> getAll() {
     return Iterables.concat(
         getResourceDirs(),
         getDirsContainingResourceDirs(),
         getResourceFiles(),
         getResourceVariantFiles());
-  }
-
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("resourceDirs", getResourceDirs())
-        .setReflectively("dirContainingResourceDirs", getDirsContainingResourceDirs())
-        .setReflectively("resourceFiles", getResourceFiles())
-        .setReflectively("resourceVariantFiles", getResourceVariantFiles());
   }
 }

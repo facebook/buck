@@ -1,102 +1,100 @@
 java_binary(
-  name = 'bin-fat',
-  main_class = 'Lib',
-  deps = [
-    ':lib',
-  ],
+    name = "bin-fat",
+    main_class = "Lib",
+    deps = [
+        ":lib",
+    ],
 )
 
 java_library(
-  name = 'lib',
-  srcs = [
-    'Lib.java',
-  ],
-  deps = [
-    ':native',
-  ],
+    name = "lib",
+    srcs = [
+        "Lib.java",
+    ],
+    deps = [
+        ":native",
+    ],
 )
 
 cxx_library(
-  name = 'native',
-  srcs = [
-    'Native.cpp',
-  ],
-  deps = [
-    ':dep',
-  ],
+    name = "native",
+    srcs = [
+        "Native.cpp",
+    ],
+    deps = [
+        ":dep",
+    ],
 )
 
 cxx_library(
-  name = 'dep',
-  srcs = [
-    'Dep.cpp',
-  ],
-  exported_headers = [
-    'Dep.h',
-  ],
+    name = "dep",
+    srcs = [
+        "Dep.cpp",
+    ],
+    exported_headers = [
+        "Dep.h",
+    ],
 )
 
 java_binary(
-  name = 'bin-output',
-  main_class = 'LibOutput',
-  deps = [
-    ':lib-output',
-  ],
+    name = "bin-output",
+    main_class = "LibOutput",
+    deps = [
+        ":lib-output",
+    ],
 )
 
 java_library(
-  name = 'lib-output',
-  srcs = [
-    'LibOutput.java',
-  ],
+    name = "lib-output",
+    srcs = [
+        "LibOutput.java",
+    ],
 )
 
 java_binary(
-  name = 'bin-exit-code',
-  main_class = 'LibExitCode',
-  deps = [
-    ':lib-exit-code',
-  ],
+    name = "bin-exit-code",
+    main_class = "LibExitCode",
+    deps = [
+        ":lib-exit-code",
+    ],
 )
 
 java_library(
-  name = 'lib-exit-code',
-  srcs = [
-    'LibExitCode.java',
-  ],
+    name = "lib-exit-code",
+    srcs = [
+        "LibExitCode.java",
+    ],
 )
 
 java_binary(
-  name = 'bin-jvm-args',
-  main_class = 'LibJvmArgs',
-  deps = [
-    ':lib-jvm-args',
-  ],
+    name = "bin-jvm-args",
+    main_class = "LibJvmArgs",
+    deps = [
+        ":lib-jvm-args",
+    ],
 )
 
 java_library(
-  name = 'lib-jvm-args',
-  srcs = [
-    'LibJvmArgs.java',
-  ],
+    name = "lib-jvm-args",
+    srcs = [
+        "LibJvmArgs.java",
+    ],
 )
 
 java_binary(
-  name = 'bin-alternate-java',
-  main_class = 'LibAlternateJava',
-  deps = [
-    ':lib-alternate-java',
-  ],
+    name = "bin-alternate-java",
+    main_class = "LibAlternateJava",
+    deps = [
+        ":lib-alternate-java",
+    ],
 )
 
 java_library(
-  name = 'lib-alternate-java',
-  srcs = [
-    'LibAlternateJava.java',
-  ],
-  deps = [
-    ':lib',
-  ],
+    name = "lib-alternate-java",
+    srcs = [
+        "LibAlternateJava.java",
+    ],
+    deps = [
+        ":lib",
+    ],
 )
-
-

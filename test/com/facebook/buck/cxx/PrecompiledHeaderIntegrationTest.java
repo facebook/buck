@@ -19,33 +19,25 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.rules.BuildRuleSuccessType;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
-
-import org.hamcrest.CustomTypeSafeMatcher;
-import org.hamcrest.Matcher;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class PrecompiledHeaderIntegrationTest {
 
   private ProjectWorkspace workspace;
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
   public void setUp() throws IOException {
@@ -55,68 +47,61 @@ public class PrecompiledHeaderIntegrationTest {
 
   @Test
   public void compilesWithPrecompiledHeaders() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     findPchTarget();
   }
 
   @Test
   public void pchDepFileHasReferencedHeaders() throws IOException {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_library#default,static").assertSuccess();
     BuildTarget target = findPchTarget();
-    String depFileContents = workspace.getFileContents(
-        "buck-out/gen/" + target.getShortNameAndFlavorPostfix() + ".gch.dep");
+    String depFileContents =
+        workspace.getFileContents(
+            "buck-out/gen/" + target.getShortNameAndFlavorPostfix() + ".h.gch.dep");
     assertThat(depFileContents, containsString("referenced_by_prefix_header.h"));
   }
 
   @Test
   public void changingPrefixHeaderCausesRecompile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
-        "#pragma once\n" +
-            "#include <stdio.h>\n" +
-            "#include \"referenced_by_prefix_header.h\"\n" +
-            "#include <referenced_by_prefix_header_from_dependency.h>\n" +
-            "#define FOO 100\n",
+        "#pragma once\n"
+            + "#include <stdio.h>\n"
+            + "#include \"referenced_by_prefix_header.h\"\n"
+            + "#include <referenced_by_prefix_header_from_dependency.h>\n"
+            + "#define FOO 100\n",
         "prefix_header.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
   @Test
   public void changingPchReferencedHeaderFromSameTargetCausesLibraryToRecompile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
-        "#pragma once\n#define REFERENCED_BY_PREFIX_HEADER 3\n",
-        "referenced_by_prefix_header.h");
+        "#pragma once\n#define REFERENCED_BY_PREFIX_HEADER 3\n", "referenced_by_prefix_header.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
   @Test
   public void changingPchReferencedHeaderFromDependencyCausesLibraryToRecompile() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     workspace.writeContentsToPath(
@@ -124,69 +109,54 @@ public class PrecompiledHeaderIntegrationTest {
         "referenced_by_prefix_header_from_dependency.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.BUILT_LOCALLY));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
   @Test
   public void touchingPchReferencedHeaderShouldNotCauseClangToRejectPch() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     workspace.resetBuildLogFile();
     // Change this file (not in the pch) to trigger recompile.
-    workspace.writeContentsToPath(
-        "int lib_func() { return 0; }",
-        "lib.c");
+    workspace.writeContentsToPath("int lib_func() { return 0; }", "lib.c");
     // Touch this file that contributes to the PCH without changing its contents.
     workspace.writeContentsToPath(
         workspace.getFileContents("referenced_by_prefix_header_from_dependency.h"),
         "referenced_by_prefix_header_from_dependency.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        "PCH should not change as no pch input file contents has changed.",
-        buildLog,
-        reportedTargetSuccessType(findPchTarget(), BuildRuleSuccessType.MATCHING_RULE_KEY));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetHadMatchingRuleKey(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
-
 
   @Test
   public void changingCodeUsingPchWhenPchIsCachedButNotBuiltShouldBuildPch() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
     workspace.enableDirCache();
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
-    workspace.runBuckCommand("clean");
-    workspace.writeContentsToPath(
-        "int lib_func() { return 0; }",
-        "lib.c");
+    workspace.runBuckCommand("clean", "--keep-cache");
+    workspace.writeContentsToPath("int lib_func() { return 0; }", "lib.c");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            findPchTarget(),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
     assertThat(
         workspace.asCell().getFilesystem(),
         ProjectFilesystemMatchers.pathExists(
             workspace.getPath(
-                "buck-out/gen/" + findPchTarget().getShortNameAndFlavorPostfix() + ".gch")));
-    assertThat(
-        buildLog,
-        reportedTargetSuccessType(
-            workspace.newBuildTarget("//:some_library#default,static"),
-            BuildRuleSuccessType.BUILT_LOCALLY));
+                "buck-out/gen/" + findPchTarget().getShortNameAndFlavorPostfix() + ".h.gch")));
+    buildLog.assertTargetBuiltLocally("//:some_library#default,static");
+  }
+
+  @Test
+  public void testBuildUsingPrecompiledHeaderInOtherCell() throws Exception {
+    CxxPrecompiledHeaderTestUtils.assumePrecompiledHeadersAreSupported();
+
+    BuildTarget target = workspace.newBuildTarget("//:library_multicell_pch#default");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
   }
 
   private BuildTarget findPchTarget() throws IOException {
@@ -200,18 +170,4 @@ public class PrecompiledHeaderIntegrationTest {
     fail("should have generated a pch target");
     return null;
   }
-
-  private static Matcher<BuckBuildLog> reportedTargetSuccessType(
-      final BuildTarget target,
-      final BuildRuleSuccessType successType) {
-    return new CustomTypeSafeMatcher<BuckBuildLog>(
-        "target: " + target.toString() + " with result: " + successType) {
-
-      @Override
-      protected boolean matchesSafely(BuckBuildLog buckBuildLog) {
-        return buckBuildLog.getLogEntry(target).getSuccessType().equals(Optional.of(successType));
-      }
-    };
-  }
-
 }

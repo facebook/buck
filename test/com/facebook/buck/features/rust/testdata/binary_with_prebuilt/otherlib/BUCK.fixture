@@ -1,0 +1,17 @@
+prebuilt_rust_library(
+    name = "bar",
+    rlib = ":generated_bar",
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_rust_library(
+    name = "hidden_bar",
+    rlib = ":generated_bar",
+)
+
+genrule(
+    name = "generated_bar",
+    srcs = ["bar.rs"],
+    out = "libbar.rlib",
+    cmd = "rustc --crate-type=rlib --crate-name=bar -o $OUT $SRCS",
+)

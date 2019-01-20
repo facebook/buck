@@ -1,0 +1,12 @@
+java_library(
+    name = "tip",
+    srcs = [
+        ":generated",
+    ],
+)
+
+genrule(
+    name = "generated",
+    out = "Test.java",
+    cmd = "echo class Test {} > $OUT",
+)

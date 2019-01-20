@@ -1,8 +1,33 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace rust_common}
 
 /***/
 {template .supported_language_version}
-Note: Buck is currently tested with (and therefore supports) version 1.1.0 of Rust.
+Note: Buck is currently tested with (and therefore supports) version 1.17.0 of Rust.
+{/template}
+
+/***/
+{template .check_flavor}
+If you invoke a build with the <code>check</code> flavor, then Buck will invoke rustc
+to check the code (typecheck, produce warnings, etc), but won't generate an executable code.
+When applied to binaries it produces no output; for libraries it produces metadata for
+consumers of the library. When building with <code>check</code>, extra compiler flags from
+the <code>rust.rustc_check_flags</code> are added to the compiler's command line options,
+to allow for extra warnings, etc.
 {/template}
 
 /***/
@@ -11,7 +36,8 @@ Note: Buck is currently tested with (and therefore supports) version 1.1.0 of Ru
   {param name : 'deps' /}
   {param default : '[]' /}
   {param desc}
-  The set of dependencies of this rule.  Currently, this only supports rust_library rules.
+  The set of dependencies of this rule.  Currently, this supports rust_library
+  and prebuilt_rust_library rules.
  {/param}
 {/call}
 {/template}
@@ -25,8 +51,10 @@ Note: Buck is currently tested with (and therefore supports) version 1.1.0 of Ru
     The set of Rust source files to be compiled by this rule.
   </p>
   <p>
-    One of these files must be named <code>{lb}name{rb}.rs</code> or <code>main.rs</code>.  This
-    file will be passed to <code>rustc</code> as the crate root.
+    One of the source files is the root module of the crate. By default this is{sp}
+    <code>lib.rs</code> for libraries, <code>main.rs</code> for executables, or
+    the crate's name with <code>.rs</code> appended. This can be overridden with the{sp}
+    <code>crate_root</code> rule parameter.
   </p>
   {/param}
 {/call}
@@ -42,8 +70,8 @@ Note: Buck is currently tested with (and therefore supports) version 1.1.0 of Ru
     The set of features to be enabled for this rule.
   </p>
   <p>
-    These are passed to <code>rustc</code> with <code>--cfg feature="{lb}feature{rb}"</code>, and
-    can be used in the code with <code>#[cfg(feature = "{lb}feature{rb}")]</code>.
+    These are passed to <code>rustc</code> with <code>--cfg feature="{lb}feature{rb}"</code>,{sp}
+    and can be used in the code with <code>#[cfg(feature = "{lb}feature{rb}")]</code>.
   </p>
   {/param}
 {/call}
@@ -56,6 +84,45 @@ Note: Buck is currently tested with (and therefore supports) version 1.1.0 of Ru
   {param default : '[]' /}
   {param desc}
   The set of additional compiler flags to pass to <code>rustc</code>.
+ {/param}
+{/call}
+{/template}
+
+/***/
+{template .linker_flags_arg}
+{call buck.arg}
+  {param name : 'linker_flags' /}
+  {param default : '[]' /}
+  {param desc}
+  The set of additional flags to pass to the linker.
+ {/param}
+{/call}
+{/template}
+
+/***/
+{template .crate}
+{call buck.arg}
+  {param name : 'crate' /}
+  {param default : 'rule name' /}
+  {param desc}
+  <p>
+    Set the generated crate name (for libraries) or executable name (for binaries), independent
+    of the rule name. Defaults to the rule name.
+  </p>
+ {/param}
+{/call}
+{/template}
+
+/***/
+{template .crate_root}
+{call buck.arg}
+  {param name : 'crate_root' /}
+  {param default : 'derived from crate name' /}
+  {param desc}
+  <p>
+    Set the name of the top-level source file for the crate, which can be used to override the
+    default (see <code>srcs</code>).
+  </p>
  {/param}
 {/call}
 {/template}

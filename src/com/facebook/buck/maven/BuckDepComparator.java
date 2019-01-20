@@ -17,12 +17,9 @@
 package com.facebook.buck.maven;
 
 import com.google.common.base.Preconditions;
-
 import java.util.Comparator;
 
-/**
- * Order dependencies in the same way that Buck expects: ":target", "//alpha:other".
- */
+/** Order dependencies in the same way that Buck expects: ":target", "//alpha:other". */
 class BuckDepComparator implements Comparator<String> {
 
   @Override

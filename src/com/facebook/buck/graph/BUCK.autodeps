@@ -1,9 +1,0 @@
-#@# GENERATED FILE: DO NOT MODIFY 079574fdc8d433ddab6ba86e7f7a75ecade3c4af #@#
-{
-  "graph" : {
-    "deps" : [ ],
-    "exported_deps" : [
-      "//third-party/java/guava:guava"
-    ]
-  }
-}

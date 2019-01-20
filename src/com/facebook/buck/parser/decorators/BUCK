@@ -1,0 +1,20 @@
+java_library(
+    name = "decorators",
+    srcs = glob([
+        "*.java",
+    ]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/json:json",
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/events:events",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/skylark/io:io",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

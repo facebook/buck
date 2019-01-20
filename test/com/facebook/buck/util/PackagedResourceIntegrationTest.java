@@ -19,17 +19,14 @@ package com.facebook.buck.util;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil;
-
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class PackagedResourceIntegrationTest {
   @Test
-  public void testPackagedResourceOnIndividualFile() throws IOException {
+  public void testPackagedResourceOnIndividualFile() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PackagedResource packagedResource =
         PackagedResourceTestUtil.getPackagedResource(filesystem, "testdata/packaged_resource_one");
@@ -38,11 +35,11 @@ public class PackagedResourceIntegrationTest {
 
     assertThat(
         packagedResource.getResourceIdentifier(),
-        is("com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil" +
-                "#testdata/packaged_resource_one"));
+        is(
+            "com.facebook.buck.testutil.packaged_resource.PackagedResourceTestUtil"
+                + "#testdata/packaged_resource_one"));
 
-    String fileContent =
-        filesystem.readFileIfItExists(packagedResource.get()).get();
+    String fileContent = filesystem.readFileIfItExists(packagedResource.get()).get();
     assertThat(fileContent, is("abc"));
   }
 }

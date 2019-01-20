@@ -18,9 +18,7 @@ package com.facebook.buck.util;
 
 import java.lang.reflect.Method;
 
-/**
- * Fetches the user ID of the running process.
- */
+/** Fetches the user ID of the running process. */
 public class UnixUserIdFetcher implements UserIdFetcher {
   @Override
   public long getUserId() {

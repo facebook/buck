@@ -1,0 +1,16 @@
+apple_test(
+    name = "test",
+    srcs = ["FooXCTest.m"],
+    info_plist = "Test.plist",
+    frameworks = [
+        "$PLATFORM_DIR/Developer/Library/Frameworks/XCTest.framework",
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    deps = ["//prebuilt:BuckTest"],
+)
+
+xcode_workspace_config(
+    name = "workspace",
+    workspace_name = "testworkspace",
+    extra_tests = [":test"],
+)

@@ -1,0 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+
+java_test(
+    name = "json",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/util/json:json",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -16,18 +16,14 @@
 
 package com.facebook.buck.log;
 
-import com.facebook.buck.util.BestCompressionGZIPOutputStream;
-import com.google.common.base.Throwables;
-
+import com.facebook.buck.util.zip.BestCompressionGZIPOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.logging.FileHandler;
 
 public class CompressingFileHandler extends FileHandler {
 
-  public CompressingFileHandler() throws IOException, SecurityException {
-    super();
-  }
+  public CompressingFileHandler() throws IOException, SecurityException {}
 
   @Override
   protected synchronized void setOutputStream(OutputStream out) throws SecurityException {
@@ -35,8 +31,7 @@ public class CompressingFileHandler extends FileHandler {
     try {
       stream = new BestCompressionGZIPOutputStream(out, true);
     } catch (IOException e) {
-      Throwables.propagate(e);
-      return;
+      throw new RuntimeException(e);
     }
     super.setOutputStream(stream);
   }

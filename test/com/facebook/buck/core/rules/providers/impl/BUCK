@@ -1,0 +1,11 @@
+java_test(
+    name = "impl",
+    srcs = glob(
+        ["*.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/rules/providers/impl:impl",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

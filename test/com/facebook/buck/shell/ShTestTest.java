@@ -16,101 +16,56 @@
 
 package com.facebook.buck.shell;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRule;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.rules.impl.FakeBuildRule;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.args.SourcePathArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-
-import org.easymock.EasyMockSupport;
-import org.hamcrest.Matchers;
-import org.junit.After;
+import java.util.Optional;
 import org.junit.Test;
 
-import java.io.IOException;
-
-public class ShTestTest extends EasyMockSupport {
-
-  @After
-  public void tearDown() {
-    // I don't understand why EasyMockSupport doesn't do this by default.
-    verifyAll();
-  }
-
-  @Test
-  public void testHasTestResultFiles() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
-    ShTest shTest = new ShTest(
-        new FakeBuildRuleParamsBuilder("//test/com/example:my_sh_test")
-            .setProjectFilesystem(filesystem)
-            .build(),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        new FakeSourcePath("run_test.sh"),
-        /* args */ ImmutableList.<Arg>of(),
-        /* env */ ImmutableMap.<String, Arg>of(),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.<Long>absent(),
-        /* labels */ ImmutableSet.<Label>of());
-    filesystem.touch(shTest.getPathToTestOutputResult());
-
-    assertTrue(
-        "hasTestResultFiles() should return true if result.json exists.",
-        shTest.hasTestResultFiles());
-  }
+public class ShTestTest {
 
   @Test
   public void depsAreRuntimeDeps() {
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
-    BuildRule extraDep = new FakeBuildRule("//:extra_dep", pathResolver);
-    BuildRule dep = new FakeBuildRule("//:dep", pathResolver);
+    BuildRule extraDep = new FakeBuildRule("//:extra_dep");
+    BuildRule dep = new FakeBuildRule("//:dep");
 
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    ShTest shTest = new ShTest(
-        new FakeBuildRuleParamsBuilder(target)
-            .setDeclaredDeps(ImmutableSortedSet.of(dep))
-            .setExtraDeps(ImmutableSortedSet.of(extraDep))
-            .build(),
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
-        new FakeSourcePath("run_test.sh"),
-        /* args */ ImmutableList.<Arg>of(),
-        /* env */ ImmutableMap.<String, Arg>of(),
-        /* resources */ ImmutableSortedSet.<SourcePath>of(),
-        Optional.<Long>absent(),
-        /* labels */ ImmutableSet.<Label>of());
+    ShTest shTest =
+        new ShTest(
+            target,
+            new FakeProjectFilesystem(),
+            TestBuildRuleParams.create()
+                .withDeclaredDeps(ImmutableSortedSet.of(dep))
+                .withExtraDeps(ImmutableSortedSet.of(extraDep)),
+            /* args */ ImmutableList.of(SourcePathArg.of(FakeSourcePath.of("run_test.sh"))),
+            /* env */ ImmutableMap.of(),
+            /* resources */ ImmutableSortedSet.of(),
+            Optional.empty(),
+            /* runTestSeparately */ false,
+            /* labels */ ImmutableSet.of(),
+            /* type */ Optional.of("custom"),
+            /* contacts */ ImmutableSet.of());
 
     assertThat(
-        shTest.getRuntimeDeps(),
-        Matchers.containsInAnyOrder(dep, extraDep));
+        shTest.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
+        containsInAnyOrder(dep.getBuildTarget(), extraDep.getBuildTarget()));
   }
-
 }

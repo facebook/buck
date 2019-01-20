@@ -1,17 +1,20 @@
 apple_library(
-  name = 'TestLibrary',
-  info_plist = 'Info.plist',
-  srcs = ['lib.c'],
-  exported_headers = ['lib.h'],
-  visibility = ['//Apps/...'],
+    name = "TestLibrary",
+    srcs = ["lib.c"],
+    exported_headers = ["lib.h"],
+    info_plist = "Info.plist",
+    visibility = ["//Apps/..."],
 )
 
 apple_library(
-  name = 'BadTestLibrary',
-  srcs = ['lib.c'],
-  exported_headers = ['lib.h'],
-  visibility = ['//Apps/...'],
-  exported_platform_linker_flags = [
-    ('def.*', ['-Wl,--bad-flag']),
-  ],
+    name = "BadTestLibrary",
+    srcs = ["lib.c"],
+    exported_headers = ["lib.h"],
+    exported_platform_linker_flags = [
+        (
+            "def.*",
+            ["-Wl,--bad-flag"],
+        ),
+    ],
+    visibility = ["//Apps/..."],
 )

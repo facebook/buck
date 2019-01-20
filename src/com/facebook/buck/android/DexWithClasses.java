@@ -16,29 +16,27 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.rules.Sha1HashCode;
-import com.google.common.base.Function;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
-
-import java.nio.file.Path;
 import java.util.Comparator;
-
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
  * Object that represents a {@code .dex.jar} file that knows what {@code .class} files went into it,
- * as well as its estimated linear alloc size.
+ * as well as its estimated dex weight.
  */
 public interface DexWithClasses {
 
   /** @return path from the project root where the {@code .dex.jar} file can be found. */
-  Path getPathToDexFile();
+  SourcePath getSourcePathToDexFile();
 
   /** @return the names of the {@code .class} files that went into the DEX file. */
   ImmutableSet<String> getClassNames();
 
-  /** @return a hash of the {@code .class} files that went into the DEX file.*/
+  /** @return a hash of the {@code .class} files that went into the DEX file. */
   Sha1HashCode getClassesHash();
 
   /**
@@ -47,59 +45,46 @@ public interface DexWithClasses {
    *     consistent with those used by {@link PreDexedFilesSorter} to determine how secondary DEX
    *     files should be packed.
    */
-  int getSizeEstimate();
+  int getWeightEstimate();
 
   Function<DexProducedFromJavaLibrary, DexWithClasses> TO_DEX_WITH_CLASSES =
       new Function<DexProducedFromJavaLibrary, DexWithClasses>() {
-    @Override
-    @Nullable
-    public DexWithClasses apply(DexProducedFromJavaLibrary preDex) {
-      if (!preDex.hasOutput()) {
-        return null;
-      }
-
-      final Path pathToDex = preDex.getPathToDex();
-      final ImmutableSet<String> classNames = preDex.getClassNames().keySet();
-      final Sha1HashCode classesHash = Sha1HashCode.fromHashCode(
-          Hashing.combineOrdered(preDex.getClassNames().values()));
-      final int linearAllocEstimate = preDex.getLinearAllocEstimate();
-      return new DexWithClasses() {
         @Override
-        public Path getPathToDexFile() {
-          return pathToDex;
-        }
+        @Nullable
+        public DexWithClasses apply(DexProducedFromJavaLibrary preDex) {
+          if (!preDex.hasOutput()) {
+            return null;
+          }
 
-        @Override
-        public ImmutableSet<String> getClassNames() {
-          return classNames;
-        }
+          SourcePath sourcePathToDex = preDex.getSourcePathToDex();
+          ImmutableSet<String> classNames = preDex.getClassNames().keySet();
+          Sha1HashCode classesHash =
+              Sha1HashCode.fromHashCode(Hashing.combineOrdered(preDex.getClassNames().values()));
+          int weightEstimate = preDex.getWeightEstimate();
+          return new DexWithClasses() {
+            @Override
+            public SourcePath getSourcePathToDexFile() {
+              return sourcePathToDex;
+            }
 
-        @Override
-        public Sha1HashCode getClassesHash() {
-          return classesHash;
-        }
+            @Override
+            public ImmutableSet<String> getClassNames() {
+              return classNames;
+            }
 
-        @Override
-        public int getSizeEstimate() {
-          return linearAllocEstimate;
+            @Override
+            public Sha1HashCode getClassesHash() {
+              return classesHash;
+            }
+
+            @Override
+            public int getWeightEstimate() {
+              return weightEstimate;
+            }
+          };
         }
       };
-    }
-  };
 
   Comparator<DexWithClasses> DEX_WITH_CLASSES_COMPARATOR =
-      new Comparator<DexWithClasses>() {
-        @Override
-        public int compare(DexWithClasses o1, DexWithClasses o2) {
-          return o1.getPathToDexFile().compareTo(o2.getPathToDexFile());
-        }
-      };
-
-  Function <DexWithClasses, Path> TO_PATH =
-      new Function<DexWithClasses, Path>() {
-        @Override
-        public Path apply(DexWithClasses input) {
-          return input.getPathToDexFile();
-        }
-      };
+      (o1, o2) -> o1.getSourcePathToDexFile().compareTo(o2.getSourcePathToDexFile());
 }

@@ -16,48 +16,51 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
+public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationModeTest {
 
-public class AndroidInstrumentationApkIntegrationTest {
-
-  @Rule
-  public DebuggableTemporaryFolder tmpFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
   @Test
-  public void testCxxLibraryDep() throws IOException {
+  public void testCxxLibraryDep() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
     AssumeAndroidPlatform.assumeNdkIsAvailable();
 
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this,
-        "android_instrumentation_apk_integration_test",
-        tmpFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_instrumentation_apk_integration_test", tmpFolder);
     workspace.setUp();
-    ProjectFilesystem filesystem = new ProjectFilesystem(workspace.getDestPath());
+    setWorkspaceCompilationMode(workspace);
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     String target = "//:app_cxx_lib_dep";
     workspace.runBuckCommand("build", target).assertSuccess();
 
-    ZipInspector zipInspector = new ZipInspector(
-        workspace.getPath(
-            BuildTargets.getGenPath(filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    zipInspector.assertFileExists("lib/armeabi/libcxx.so");
-    zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
+    ZipInspector zipInspector =
+        new ZipInspector(
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
+    if (AssumeAndroidPlatform.isArmAvailable()) {
+      zipInspector.assertFileExists("lib/armeabi/libcxx.so");
+      zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
+    }
     zipInspector.assertFileExists("lib/armeabi-v7a/libcxx.so");
     zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/x86/libcxx.so");
     zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
   }
-
 }

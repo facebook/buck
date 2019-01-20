@@ -1,0 +1,5 @@
+[cxx]
+default_platform = iphonesimulator-x86_64
+
+[swift]
+compiler_flags = -enable-testing

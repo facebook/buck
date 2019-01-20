@@ -16,66 +16,69 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class AnnotationProcessingEventTest {
 
   @Test
-  public void testEquals() throws Exception {
+  public void testEquals() {
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
     BuildTarget targetTwo = BuildTargetFactory.newInstance("//fake:rule2");
     String annotationProcessorName = "com.facebook.FakeProcessor";
     String annotationProcessorName2 = "com.facebook.FakeProcessor2";
 
-
-    AnnotationProcessingEvent.Started initStartedEventOne = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.INIT,
-            0,
-            false));
-    AnnotationProcessingEvent.Started initStartedEventTwo = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.INIT,
-            0,
-            false));
-    AnnotationProcessingEvent targetTwoInitStartedEvent = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            targetTwo,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.INIT,
-            0,
-            false));
-    AnnotationProcessingEvent annotationProcessorTwoInitStartedEvent = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName2,
-            AnnotationProcessingEvent.Operation.INIT,
-            0,
-            false));
-    AnnotationProcessingEvent getSupportedOptionsStartedEvent = configureTestEvent(
-        AnnotationProcessingEvent.started(
-            target,
-            annotationProcessorName,
-            AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS,
-            0,
-            false));
-    AnnotationProcessingEvent finishedInitEventOne = configureTestEvent(
-        AnnotationProcessingEvent.finished(initStartedEventOne));
-    AnnotationProcessingEvent finishedInitEventTwo = configureTestEvent(
-        AnnotationProcessingEvent.finished(initStartedEventTwo));
+    AnnotationProcessingEvent.Started initStartedEventOne =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                target,
+                annotationProcessorName,
+                AnnotationProcessingEvent.Operation.INIT,
+                0,
+                false));
+    AnnotationProcessingEvent.Started initStartedEventTwo =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                target,
+                annotationProcessorName,
+                AnnotationProcessingEvent.Operation.INIT,
+                0,
+                false));
+    AnnotationProcessingEvent targetTwoInitStartedEvent =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                targetTwo,
+                annotationProcessorName,
+                AnnotationProcessingEvent.Operation.INIT,
+                0,
+                false));
+    AnnotationProcessingEvent annotationProcessorTwoInitStartedEvent =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                target,
+                annotationProcessorName2,
+                AnnotationProcessingEvent.Operation.INIT,
+                0,
+                false));
+    AnnotationProcessingEvent getSupportedOptionsStartedEvent =
+        configureTestEvent(
+            AnnotationProcessingEvent.started(
+                target,
+                annotationProcessorName,
+                AnnotationProcessingEvent.Operation.GET_SUPPORTED_OPTIONS,
+                0,
+                false));
+    AnnotationProcessingEvent finishedInitEventOne =
+        configureTestEvent(AnnotationProcessingEvent.finished(initStartedEventOne));
+    AnnotationProcessingEvent finishedInitEventTwo =
+        configureTestEvent(AnnotationProcessingEvent.finished(initStartedEventTwo));
     assertEquals(initStartedEventOne, initStartedEventOne);
     assertNotEquals(initStartedEventOne, initStartedEventTwo);
     assertNotEquals(initStartedEventOne, targetTwoInitStartedEvent);

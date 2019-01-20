@@ -16,10 +16,9 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Throwables;
-
+import com.google.common.io.ByteStreams;
 import java.io.PrintStream;
 
 public class Console {
@@ -31,11 +30,17 @@ public class Console {
   private final DirtyPrintStreamDecorator stdErr;
   private final Ansi ansi;
 
-  public Console(
-      Verbosity verbosity,
-      PrintStream stdOut,
-      PrintStream stdErr,
-      Ansi ansi) {
+  private static final PrintStream NULL_PRINT_STREAM =
+      new PrintStream(ByteStreams.nullOutputStream());
+  private static final Console NULL_CONSOLE =
+      new Console(Verbosity.SILENT, NULL_PRINT_STREAM, NULL_PRINT_STREAM, Ansi.withoutTty());
+
+  /** Returns a {@link Console} that simply discards written bytes. */
+  public static Console createNullConsole() {
+    return NULL_CONSOLE;
+  }
+
+  public Console(Verbosity verbosity, PrintStream stdOut, PrintStream stdErr, Ansi ansi) {
     this.verbosity = verbosity;
     this.stdOut = new DirtyPrintStreamDecorator(stdOut);
     this.stdErr = new DirtyPrintStreamDecorator(stdErr);
@@ -63,47 +68,27 @@ public class Console {
    *     a terminal, then this will append an ANSI reset escape sequence followed by a newline.
    */
   public void printSuccess(String successMessage) {
-    Preconditions.checkArgument(!successMessage.endsWith("\n"),
-        "Trailing newline will be added by this method");
+    Preconditions.checkArgument(
+        !successMessage.endsWith("\n"), "Trailing newline will be added by this method");
     LOG.debug("Build success: %s", successMessage);
     ansi.printHighlightedSuccessText(stdErr, successMessage);
     stdErr.print('\n');
   }
 
-  /**
-   * Prints an error message to stderr that will be highlighted in red if stderr is a tty.
-   */
+  /** Prints a formatted success message. {@see #printSuccess(String)} */
+  public void printSuccess(String successMessage, Object... args) {
+    printSuccess(String.format(successMessage, args));
+  }
+
+  /** Prints an error message to stderr that will be highlighted in red if stderr is a tty. */
   public void printErrorText(String message) {
     LOG.warn("Build error: %s", message);
     stdErr.println(ansi.asErrorText(message));
   }
 
-  /**
-   * Prints the root cause of the {@link Throwable} with its stacktrace as a build failure.
-   * @see #printBuildFailure(String)
-   */
-  public void printBuildFailureWithStacktrace(Throwable t) {
-    LOG.warn(t, "Build error caused by exception");
-    t.printStackTrace(stdErr);
-    printBuildFailureInternal(
-        "Unexpected internal error (if you are using buckd, you should restart it).");
-  }
-
-  /**
-   * Prints the message of the root cause of the {@link Throwable} as a build failure.
-   * @see #printBuildFailure(String)
-   */
-  public void printBuildFailureWithoutStacktrace(Throwable t) {
-    printBuildFailureWithoutStacktraceDontUnwrap(Throwables.getRootCause(t));
-  }
-
-  /**
-   * Prints the message of the {@link Throwable} as a build failure.
-   * @see #printBuildFailure(String)
-   */
-  public void printBuildFailureWithoutStacktraceDontUnwrap(Throwable t) {
-    LOG.warn(t, "Build error caused by exception");
-    printBuildFailureInternal(t.getMessage());
+  /** Prints a formatted error message. {@see #printErrorText(String)} */
+  public void printErrorText(String message, Object... args) {
+    printErrorText(String.format(message, args));
   }
 
   /**
@@ -112,10 +97,12 @@ public class Console {
    */
   public void printBuildFailure(String failureMessage) {
     LOG.warn("Build failure: %s", failureMessage);
-    printBuildFailureInternal(failureMessage);
+    ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
   }
 
-  private void printBuildFailureInternal(String failureMessage) {
-    ansi.printlnHighlightedFailureText(stdErr, String.format("BUILD FAILED: %s", failureMessage));
+  /** Prints error message to console in red, also logs stacktrace but does not display it */
+  public void printFailure(String failureMessage) {
+    LOG.warn("Command failure: %s", failureMessage);
+    ansi.printlnHighlightedFailureText(stdErr, failureMessage);
   }
 }

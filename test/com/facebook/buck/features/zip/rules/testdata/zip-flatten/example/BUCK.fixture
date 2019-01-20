@@ -1,0 +1,8 @@
+zip_file(
+    name = "flatten",
+    srcs = [
+        "beans.txt",
+        "subdir/cake.txt",
+    ],
+    flatten = True,
+)

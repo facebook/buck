@@ -1,8 +1,57 @@
 java_test(
-  name = 'test',
-  test_type = 'testng',
-  srcs = glob(['*.java']),
-  deps = [
-    '//lib:testng',
-  ],
+    name = "simple-test",
+    srcs = ["SimpleTest.java"],
+    test_type = "testng",
+    deps = [
+        "buck//third-party/java/hamcrest:hamcrest",
+        "buck//third-party/java/testng:testng",
+    ],
+)
+
+java_test(
+    name = "simple-failing-test",
+    srcs = ["SimpleFailingTest.java"],
+    test_type = "testng",
+    deps = [
+        "buck//third-party/java/testng:testng",
+    ],
+)
+
+java_test(
+    name = "simple-skipped-test",
+    srcs = ["SimpleSkippedTest.java"],
+    test_type = "testng",
+    deps = [
+        "buck//third-party/java/testng:testng",
+    ],
+)
+
+java_test(
+    name = "simple-before-test-skip",
+    srcs = ["SimpleBeforeTestSkip.java"],
+    test_type = "testng",
+    deps = [
+        "buck//third-party/java/testng:testng",
+    ],
+)
+
+java_test(
+    name = "simple-before-test-fail",
+    srcs = ["SimpleBeforeTestFail.java"],
+    test_type = "testng",
+    deps = [
+        "buck//third-party/java/testng:testng",
+    ],
+)
+
+java_test(
+    name = "injection-test",
+    srcs = ["InjectionTest.java"],
+    test_type = "testng",
+    deps = [
+        "buck//third-party/java/guice:guice",
+        "buck//third-party/java/hamcrest:hamcrest",
+        "buck//third-party/java/jsr:jsr330",
+        "buck//third-party/java/testng:testng",
+    ],
 )

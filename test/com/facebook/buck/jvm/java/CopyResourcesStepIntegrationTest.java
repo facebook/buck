@@ -17,28 +17,26 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ProcessExecutor;
-
+import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.nio.file.Path;
-
 public class CopyResourcesStepIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Test
   public void testGeneratedResourceIsAlongsideClassFiles()
       throws IOException, InterruptedException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "generated_resources", temporaryFolder);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "generated_resources", temporaryFolder);
     workspace.setUp();
 
     Path exampleJar = workspace.buildAndReturnOutput("//java/com/example:example");
@@ -48,7 +46,7 @@ public class CopyResourcesStepIntegrationTest {
 
     Path helloWorldJar = workspace.buildAndReturnOutput("//java/com/example:HelloWorld");
     ProcessExecutor.Result result = workspace.runJar(helloWorldJar);
-    assertEquals("hello world\n", result.getStdout().get());
+    assertEquals("hello world" + System.lineSeparator(), result.getStdout().get());
     assertEquals("", result.getStderr().get());
   }
 }

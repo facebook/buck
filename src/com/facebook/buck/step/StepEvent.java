@@ -23,20 +23,16 @@ import com.facebook.buck.event.WorkAdvanceEvent;
 import com.facebook.buck.event.external.events.StepEventExternalInterface;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Objects;
-
 import java.util.UUID;
 
-/**
- * Base class for events about steps.
- */
+/** Base class for events about steps. */
 public abstract class StepEvent extends AbstractBuckEvent
     implements LeafEvent, StepEventExternalInterface, WorkAdvanceEvent {
 
   private final String shortName;
   private final String description;
 
-  @JsonIgnore
-  private final UUID uuid;
+  @JsonIgnore private final UUID uuid;
 
   protected StepEvent(String shortName, String description, UUID uuid) {
     super(EventKey.slowValueKey("StepEvent", uuid));

@@ -1,0 +1,25 @@
+cxx_binary(
+    name = "c-as-cxx",
+    srcs = [
+        (
+            "main.c",
+            [
+                "-x",
+                "c++",
+            ],
+        ),
+    ],
+)
+
+cxx_binary(
+    name = "c-as-c",
+    srcs = [
+        (
+            "main.c",
+            [
+                "-x",
+                "c",
+            ],
+        ),
+    ],
+)

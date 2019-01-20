@@ -16,69 +16,62 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ObjectMappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-
-import org.junit.Rule;
-import org.junit.Test;
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.junit.Rule;
+import org.junit.Test;
 
-/**
- * Verifies that {@code buck build --keep-going} works as intended.
- */
+/** Verifies that {@code buck build --keep-going} works as intended. */
 public class BuildKeepGoingIntegrationTest {
 
-  private static final String GENRULE_OUTPUT =
-      "buck-out/gen/rule_with_output/rule_with_output.txt";
+  private static final String GENRULE_OUTPUT = "buck-out/gen/rule_with_output/rule_with_output.txt";
   private static final String GENRULE_OUTPUT_PATH =
       MorePaths.pathWithPlatformSeparators("buck-out/gen/rule_with_output/rule_with_output.txt");
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule
-  public DebuggableTemporaryFolder tmpFolderForBuildReport = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmpFolderForBuildReport = new TemporaryPaths();
 
   @Test
   public void testKeepGoingWithMultipleSuccessfulTargets() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "keep_going", tmp).setUp();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
 
     ProcessResult result = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH + "\n" +
-        "OK   //:rule_without_output BUILT_LOCALLY\n";
+        linesToText(
+            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_without_output BUILT_LOCALLY",
+            "");
     assertThat(result.getStderr(), containsString(expectedReport));
   }
 
   @Test
   public void testKeepGoingWithOneFailingTarget() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "keep_going", tmp).setUp();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
 
-    ProcessResult result = workspace.runBuckBuild(
-        "--keep-going",
-        "//:rule_with_output",
-        "//:failing_rule")
-        .assertFailure();
+    ProcessResult result =
+        workspace
+            .runBuckBuild("--keep-going", "//:rule_with_output", "//:failing_rule")
+            .assertFailure();
     String expectedReport =
-        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH + "\n" +
-        "FAIL //:failing_rule\n";
+        linesToText(
+            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "FAIL //:failing_rule",
+            "");
     assertThat(result.getStderr(), containsString(expectedReport));
     Path outputFile = workspace.getPath(GENRULE_OUTPUT);
     assertTrue(Files.exists(outputFile));
@@ -86,75 +79,61 @@ public class BuildKeepGoingIntegrationTest {
 
   @Test
   public void testVariousSuccessTypesInReport() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "keep_going", tmp).setUp();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
     workspace.enableDirCache();
 
     ProcessResult result1 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport1 =
-        "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH + "\n" +
-        "OK   //:rule_without_output BUILT_LOCALLY\n";
+        linesToText(
+            "OK   //:rule_with_output BUILT_LOCALLY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_without_output BUILT_LOCALLY",
+            "");
     assertThat(result1.getStderr(), containsString(expectedReport1));
 
     ProcessResult result2 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport2 =
-        "OK   //:rule_with_output MATCHING_RULE_KEY " + GENRULE_OUTPUT_PATH + "\n" +
-        "OK   //:rule_without_output MATCHING_RULE_KEY\n";
+        linesToText(
+            "OK   //:rule_with_output MATCHING_RULE_KEY " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_without_output MATCHING_RULE_KEY",
+            "");
     assertThat(result2.getStderr(), containsString(expectedReport2));
 
-    workspace.runBuckCommand("clean").assertSuccess();
+    workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
     ProcessResult result3 = buildTwoGoodRulesAndAssertSuccess(workspace);
     String expectedReport3 =
-        "OK   //:rule_with_output FETCHED_FROM_CACHE " + GENRULE_OUTPUT_PATH + "\n" +
-        "OK   //:rule_without_output BUILT_LOCALLY\n";
+        linesToText(
+            "OK   //:rule_with_output FETCHED_FROM_CACHE " + GENRULE_OUTPUT_PATH,
+            "OK   //:rule_without_output BUILT_LOCALLY",
+            "");
     assertThat(result3.getStderr(), containsString(expectedReport3));
   }
 
   @Test
   public void testKeepGoingWithBuildReport() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "keep_going", tmp).setUp();
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
 
-    File buildReport = new File(tmpFolderForBuildReport.getRoot(), "build-report.txt");
-    workspace.runBuckBuild(
-        "--build-report",
-        buildReport.getAbsolutePath(),
-        "--keep-going",
-        "//:rule_with_output",
-        "//:failing_rule")
+    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    workspace
+        .runBuckBuild(
+            "--build-report",
+            buildReport.toAbsolutePath().toString(),
+            "--keep-going",
+            "//:rule_with_output",
+            "//:failing_rule")
         .assertFailure();
 
-    assertTrue(buildReport.exists());
-    String buildReportContents = com.google.common.io.Files.toString(buildReport, Charsets.UTF_8);
-    ObjectMapper mapper = ObjectMappers.newDefaultInstance();
-    String expectedReport = Joiner.on(System.lineSeparator()).join(
-        "{",
-        "  \"success\" : false,",
-        "  \"results\" : {",
-        "    \"//:rule_with_output\" : {",
-        "      \"success\" : true,",
-        "      \"type\" : \"BUILT_LOCALLY\",",
-        "      \"output\" : " + mapper.valueToTree(GENRULE_OUTPUT_PATH),
-        "    },",
-        "    \"//:failing_rule\" : {",
-        "      \"success\" : false",
-        "    }",
-        "  },",
-        "  \"failures\" : {",
-        "    \"//:failing_rule\" : \"//:failing_rule failed with exit code 2:\\ngenrule" +
-            "\\nstderr: \"",
-        "  }",
-        "}");
-    assertEquals(expectedReport, buildReportContents);
+    assertTrue(Files.exists(buildReport));
+    String buildReportContents = new String(Files.readAllBytes(buildReport), Charsets.UTF_8);
+    assertEquals(workspace.getFileContents("expected_build_report.json"), buildReportContents);
   }
 
   private static ProcessResult buildTwoGoodRulesAndAssertSuccess(ProjectWorkspace workspace)
       throws IOException {
-    return workspace.runBuckBuild(
-        "--keep-going",
-        "//:rule_with_output",
-        "//:rule_without_output")
+    return workspace
+        .runBuckBuild("--keep-going", "//:rule_with_output", "//:rule_without_output")
         .assertSuccess();
   }
 }

@@ -1,0 +1,11 @@
+android_library(
+    name = "feature2",
+    srcs = glob(["*.java"]),
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//res/com/sample/features/feature2:feature2",
+    ],
+)

@@ -1,0 +1,23 @@
+android_resource(
+    name = "res",
+    assets = "assets",
+    manifest = "AndroidManifestSkeleton.xml",
+    package = "com.example",
+    res = "res",
+)
+
+android_library(
+    name = "lib",
+    srcs = glob(["*.java"]),
+    deps = [
+        ":res",
+    ],
+)
+
+android_aar(
+    name = "app",
+    manifest_skeleton = "AndroidManifestSkeleton.xml",
+    deps = [
+        ":lib",
+    ],
+)

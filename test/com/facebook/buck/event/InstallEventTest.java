@@ -16,45 +16,35 @@
 
 package com.facebook.buck.event;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.model.BuildTargetFactory;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.model.BuildTargetFactory;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class InstallEventTest {
   @Test
-  public void testEquals() throws Exception {
-    InstallEvent.Started started = configureTestEvent(
-        InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
-    InstallEvent.Started startedTwo = configureTestEvent(
-        InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
-    InstallEvent.Started startedDifferentEvent = configureTestEvent(
-        InstallEvent.started(BuildTargetFactory.newInstance("//foo:raz")));
-    InstallEvent finished = configureTestEvent(
-        InstallEvent.finished(
-            started,
-            true,
-            Optional.<Long>absent(),
-            Optional.<String>absent()));
-    InstallEvent finishedDifferentEvent = configureTestEvent(
-        InstallEvent.finished(
-            startedDifferentEvent,
-            true,
-            Optional.<Long>absent(),
-            Optional.<String>absent()));
-    InstallEvent finishedFail = configureTestEvent(
-        InstallEvent.finished(
-            started,
-            false,
-            Optional.<Long>absent(),
-            Optional.<String>absent()));
+  public void testEquals() {
+    InstallEvent.Started started =
+        configureTestEvent(InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
+    InstallEvent.Started startedTwo =
+        configureTestEvent(InstallEvent.started(BuildTargetFactory.newInstance("//foo:bar")));
+    InstallEvent.Started startedDifferentEvent =
+        configureTestEvent(InstallEvent.started(BuildTargetFactory.newInstance("//foo:raz")));
+    InstallEvent finished =
+        configureTestEvent(
+            InstallEvent.finished(started, true, Optional.empty(), Optional.empty()));
+    InstallEvent finishedDifferentEvent =
+        configureTestEvent(
+            InstallEvent.finished(startedDifferentEvent, true, Optional.empty(), Optional.empty()));
+    InstallEvent finishedFail =
+        configureTestEvent(
+            InstallEvent.finished(started, false, Optional.empty(), Optional.empty()));
 
     assertNotEquals(started, startedTwo);
     assertNotEquals(finished, finishedDifferentEvent);

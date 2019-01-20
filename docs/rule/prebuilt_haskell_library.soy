@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace prebuilt_haskell_library}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'prebuilt_haskell_library()' /}
+    {param navid: 'rule_prebuilt_haskell_library' /}
     {param prettify: true /}
     {param description}
       A prebuilt_haskell_library() rule represents prebuilt Haskell library
@@ -80,6 +96,14 @@ prebuilt libraries and their associated interface files.
 {/call}
 
 {call haskell_common.exported_linker_flags_arg /}
+
+{call buck.arg}
+  {param name: 'cxxHeaderDirs' /}
+  {param default : '[]' /}
+  {param desc}
+  Directories with C/C++ headers which can be included by dependent C/C++ rules.
+  {/param}
+{/call}
 
 {/param} // close args
 

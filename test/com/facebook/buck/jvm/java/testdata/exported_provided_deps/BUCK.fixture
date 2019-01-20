@@ -1,0 +1,39 @@
+java_library(
+    name = "exported_provided_lib",
+    srcs = ["ExportedProvidedLibraryClass.java"],
+)
+
+java_library(
+    name = "lib_that_use_provided_lib",
+    srcs = ["ClassThatUseExportedProvidedLibraryClass.java"],
+    exported_provided_deps = [":exported_provided_lib"],
+)
+
+java_library(
+    name = "lib_with_implicit_dep_on_provided_lib",
+    srcs = ["ClassWithImplicitDependencyOnExportedProvidedLibraryClass.java"],
+    deps = [":lib_that_use_provided_lib"],
+)
+
+java_library(
+    name = "lib_with_implicit_dep_on_provided_lib_through_exported_deps",
+    srcs = ["ClassWithImplicitDependencyOnExportedProvidedLibraryClass.java"],
+    exported_deps = [":lib_that_use_provided_lib"],
+)
+
+java_library(
+    name = "lib_with_implicit_dep_on_provided_lib_through_provided_deps",
+    srcs = ["ClassWithImplicitDependencyOnExportedProvidedLibraryClass.java"],
+    provided_deps = [":lib_that_use_provided_lib"],
+)
+
+java_library(
+    name = "lib_with_implicit_dep_on_provided_lib_through_exported_library_deps",
+    srcs = ["ClassWithImplicitDependencyOnExportedProvidedLibraryClassThroughExportedDeps.java"],
+    deps = [":lib_with_implicit_dep_on_provided_lib_through_exported_deps"],
+)
+
+java_binary(
+    name = "binary_without_exported_provided_dep",
+    deps = [":lib_with_implicit_dep_on_provided_lib"],
+)

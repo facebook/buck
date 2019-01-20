@@ -17,95 +17,160 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.hash.HashCode;
-
 import java.nio.file.Path;
+import java.util.Optional;
 
-public class JavaLibraryBuilder extends AbstractNodeBuilder<JavaLibraryDescription.Arg> {
+public class JavaLibraryBuilder
+    extends AbstractNodeBuilder<
+        JavaLibraryDescriptionArg.Builder,
+        JavaLibraryDescriptionArg,
+        JavaLibraryDescription,
+        DefaultJavaLibrary> {
 
-  protected JavaLibraryBuilder(BuildTarget target, HashCode hashCode) {
-    super(new JavaLibraryDescription(DEFAULT_JAVAC_OPTIONS), target, hashCode);
+  private final ProjectFilesystem projectFilesystem;
+
+  protected JavaLibraryBuilder(BuildTarget target, ProjectFilesystem projectFilesystem) {
+    super(
+        new JavaLibraryDescription(createToolchainProviderForJavaLibrary(), DEFAULT_JAVA_CONFIG),
+        target,
+        projectFilesystem,
+        createToolchainProviderForJavaLibrary());
+    this.projectFilesystem = projectFilesystem;
+  }
+
+  protected JavaLibraryBuilder(
+      BuildTarget target, JavaBuckConfig javaBuckConfig, ProjectFilesystem projectFilesystem) {
+    super(
+        new JavaLibraryDescription(createToolchainProviderForJavaLibrary(), javaBuckConfig),
+        target,
+        projectFilesystem,
+        createToolchainProviderForJavaLibrary());
+    this.projectFilesystem = projectFilesystem;
+  }
+
+  public static JavaLibraryBuilder createBuilder(String qualifiedTarget) {
+    return createBuilder(BuildTargetFactory.newInstance(qualifiedTarget));
   }
 
   public static JavaLibraryBuilder createBuilder(BuildTarget target) {
-    return new JavaLibraryBuilder(target, null);
+    return new JavaLibraryBuilder(target, new FakeProjectFilesystem());
   }
 
+  public static JavaLibraryBuilder createBuilder(
+      BuildTarget target, JavaBuckConfig javaBuckConfig) {
+    return new JavaLibraryBuilder(target, javaBuckConfig, new FakeProjectFilesystem());
+  }
 
-  public static JavaLibraryBuilder createBuilder(BuildTarget target, HashCode hashCode) {
-    return new JavaLibraryBuilder(target, hashCode);
+  public static JavaLibraryBuilder createBuilder(
+      BuildTarget target, ProjectFilesystem projectFilesystem) {
+    return new JavaLibraryBuilder(target, projectFilesystem);
+  }
+
+  public static JavaLibraryBuilder createBuilder(
+      BuildTarget target, JavaBuckConfig javaBuckConfig, ProjectFilesystem projectFilesystem) {
+    return new JavaLibraryBuilder(target, javaBuckConfig, projectFilesystem);
   }
 
   public JavaLibraryBuilder addDep(BuildTarget rule) {
-    arg.deps = amend(arg.deps, rule);
+    getArgForPopulating().addDeps(rule);
+    return this;
+  }
+
+  public JavaLibraryBuilder addAnnotationProcessorDep(BuildTarget rule) {
+    getArgForPopulating().addAnnotationProcessorDeps(rule);
     return this;
   }
 
   public JavaLibraryBuilder addExportedDep(BuildTarget rule) {
-    arg.exportedDeps = amend(arg.exportedDeps, rule);
+    getArgForPopulating().addExportedDeps(rule);
     return this;
   }
 
   public JavaLibraryBuilder addProvidedDep(BuildTarget rule) {
-    arg.providedDeps = amend(arg.providedDeps, rule);
+    getArgForPopulating().addProvidedDeps(rule);
     return this;
   }
 
   public JavaLibraryBuilder addResource(SourcePath sourcePath) {
-    arg.resources = amend(arg.resources, sourcePath);
+    getArgForPopulating().addResources(sourcePath);
     return this;
   }
 
   public JavaLibraryBuilder setResourcesRoot(Path root) {
-    arg.resourcesRoot = Optional.of(root);
+    getArgForPopulating().setResourcesRoot(Optional.of(root));
     return this;
   }
 
   public JavaLibraryBuilder setMavenCoords(String mavenCoords) {
-    arg.mavenCoords = Optional.of(mavenCoords);
+    getArgForPopulating().setMavenCoords(Optional.of(mavenCoords));
     return this;
   }
 
   public JavaLibraryBuilder addSrc(SourcePath path) {
-    arg.srcs = amend(arg.srcs, path);
+    getArgForPopulating().addSrcs(path);
     return this;
   }
 
   public JavaLibraryBuilder addSrc(Path path) {
-    return addSrc(new PathSourcePath(new FakeProjectFilesystem(), path));
+    return addSrc(PathSourcePath.of(projectFilesystem, path));
   }
 
   public JavaLibraryBuilder addSrcTarget(BuildTarget target) {
-    return addSrc(new BuildTargetSourcePath(target));
+    return addSrc(DefaultBuildTargetSourcePath.of(target));
   }
 
-  public JavaLibraryBuilder setProguardConfig(Path proguardConfig) {
-    arg.proguardConfig = Optional.of(proguardConfig);
+  public JavaLibraryBuilder setProguardConfig(SourcePath proguardConfig) {
+    getArgForPopulating().setProguardConfig(Optional.of(proguardConfig));
     return this;
   }
 
-  public JavaLibraryBuilder setCompiler(BuildRule javac) {
-    SourcePath right =
-        new BuildTargetSourcePath(javac.getBuildTarget());
-    Either<BuiltInJavac, SourcePath> value = Either.ofRight(right);
+  public JavaLibraryBuilder setCompiler(SourcePath javac) {
+    Either<BuiltInJavac, SourcePath> value = Either.ofRight(javac);
+    getArgForPopulating().setCompiler(Optional.of(value));
+    return this;
+  }
 
-    arg.compiler = Optional.of(value);
+  public JavaLibraryBuilder setSourceLevel(String sourceLevel) {
+    getArgForPopulating().setSource(Optional.of(sourceLevel));
+    return this;
+  }
+
+  public JavaLibraryBuilder setTargetLevel(String targetLevel) {
+    getArgForPopulating().setTarget(Optional.of(targetLevel));
     return this;
   }
 
   public JavaLibraryBuilder setAnnotationProcessors(ImmutableSet<String> annotationProcessors) {
-    arg.annotationProcessors = Optional.of(annotationProcessors);
+    getArgForPopulating().setAnnotationProcessors(annotationProcessors);
     return this;
+  }
+
+  public JavaLibraryBuilder addTest(BuildTarget test) {
+    getArgForPopulating().addTests(test);
+    return this;
+  }
+
+  public static ToolchainProvider createToolchainProviderForJavaLibrary() {
+    return new ToolchainProviderBuilder()
+        .withToolchain(
+            JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+        .withToolchain(JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
+        .build();
   }
 }

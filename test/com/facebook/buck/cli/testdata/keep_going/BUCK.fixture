@@ -1,35 +1,35 @@
 genrule(
-  name = 'rule_with_output',
-  out = 'rule_with_output.txt',
-  bash = 'touch $OUT',
-  cmd_exe = 'echo tmp >> %OUT%',
-  srcs = [
-    ':common_dependency',
-  ],
+    name = "rule_with_output",
+    srcs = [
+        ":common_dependency",
+    ],
+    out = "rule_with_output.txt",
+    bash = "touch $OUT",
+    cmd_exe = "echo tmp >> %OUT%",
 )
 
 python_library(
-  name = 'rule_without_output',
-  srcs = ['main.py'],
-  deps = [
-    ':common_dependency',
-  ],
+    name = "rule_without_output",
+    srcs = ["main.py"],
+    deps = [
+        ":common_dependency",
+    ],
 )
 
 genrule(
-  name = 'failing_rule',
-  out = 'failing_rule.txt',
-  bash = 'touch $OUT && exit 2',
-  cmd_exe = 'echo tmp >> %OUT% && exit /B 2',
-  srcs = [
-    ':common_dependency',
-  ],
+    name = "failing_rule",
+    srcs = [
+        ":common_dependency",
+    ],
+    out = "failing_rule.txt",
+    bash = "touch $OUT && exit 2",
+    cmd_exe = "echo tmp >> %OUT% && exit /B 2",
 )
 
 genrule(
-  name = 'common_dependency',
-  srcs = ['main.py'],
-  out = 'common_dependency.txt',
-  bash = 'cp $SRCS $OUT',
-  cmd_exe = 'copy %SRCS% %OUT%'
+    name = "common_dependency",
+    srcs = ["main.py"],
+    out = "common_dependency.txt",
+    bash = "cp $SRCS $OUT",
+    cmd_exe = "copy %SRCS% %OUT%",
 )

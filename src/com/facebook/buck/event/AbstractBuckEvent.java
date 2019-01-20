@@ -16,44 +16,46 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.model.BuildId;
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-
 import java.util.Objects;
-
 import javax.annotation.Nullable;
 
 /**
- * Base class for all build events. Using this makes it easy to add a wildcard listener
- * to the event bus.
+ * Base class for all build events. Using this makes it easy to add a wildcard listener to the event
+ * bus.
  */
 public abstract class AbstractBuckEvent implements BuckEvent {
 
   private boolean isConfigured;
   private long timestamp;
   private long nanoTime;
+  private long threadUserNanoTime;
   private long threadId;
-  @Nullable
-  private BuildId buildId;
+  @Nullable private BuildId buildId;
   private final EventKey eventKey;
 
   protected AbstractBuckEvent(EventKey eventKey) {
     this.isConfigured = false;
-    this.eventKey = Preconditions.checkNotNull(eventKey);
+    this.eventKey = Objects.requireNonNull(eventKey);
   }
 
   /**
-   * Method to configure an event before posting it to the {@link BuckEventBus}.  This method should
+   * Method to configure an event before posting it to the {@link BuckEventBus}. This method should
    * only be invoked once per event, and only by the {@link BuckEventBus} in production code.
    */
   @Override
   @VisibleForTesting
-  public void configure(long timestamp, long nanoTime, long threadId, BuildId buildId) {
+  public void configure(
+      long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
     Preconditions.checkState(!isConfigured, "Events can only be configured once.");
     this.timestamp = timestamp;
     this.nanoTime = nanoTime;
+    this.threadUserNanoTime = threadUserNanoTime;
     this.threadId = threadId;
     this.buildId = buildId;
     isConfigured = true;
@@ -65,6 +67,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   }
 
   @Override
+  @JsonView(JsonViews.MachineReadableLog.class)
   public long getTimestamp() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
     return timestamp;
@@ -74,6 +77,11 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   public long getNanoTime() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
     return nanoTime;
+  }
+
+  @Override
+  public long getThreadUserNanoTime() {
+    return threadUserNanoTime;
   }
 
   @Override
@@ -90,7 +98,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   @Override
   public BuildId getBuildId() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return Preconditions.checkNotNull(buildId);
+    return Objects.requireNonNull(buildId);
   }
 
   @Override
@@ -113,7 +121,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
   /**
    * The default implementation of equals checks to see if two events are related, are on the same
-   * thread, and are the same concrete class.  Subclasses therefore can simply override isRelatedTo,
+   * thread, and are the same concrete class. Subclasses therefore can simply override isRelatedTo,
    * and the equals method will work correctly.
    */
   @Override
@@ -127,8 +135,7 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
     AbstractBuckEvent that = (AbstractBuckEvent) o;
 
-    return isRelatedTo(that) &&
-        Objects.equals(getClass(), that.getClass());
+    return isRelatedTo(that) && Objects.equals(getClass(), that.getClass());
   }
 
   @Override

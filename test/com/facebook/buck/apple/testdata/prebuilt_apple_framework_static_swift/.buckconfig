@@ -1,0 +1,4 @@
+[cxx]
+  default_platform = macosx-x86_64
+[apple]
+  use_swift_delegate = false

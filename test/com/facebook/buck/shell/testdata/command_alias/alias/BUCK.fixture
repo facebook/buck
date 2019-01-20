@@ -1,0 +1,9 @@
+command_alias(
+    name = "inner",
+    env = {"ENV_A": "1"},
+    exe = "//scripts:echo.sh",
+    platform_exe = {
+        "windows": "//scripts:echo.bat",
+    },
+    visibility = ["PUBLIC"],
+)

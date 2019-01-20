@@ -17,7 +17,6 @@
 package com.facebook.buck.util;
 
 import com.google.common.collect.ImmutableList;
-
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.regex.Matcher;
@@ -26,13 +25,12 @@ import java.util.regex.Pattern;
 /**
  * Compares version strings such as "4.2.2", "17.0", "r10e-rc4".
  *
- * Comparing different schemas e.g. "r10e-rc4" vs "4.2.2" is undefined.
+ * <p>Comparing different schemas e.g. "r10e-rc4" vs "4.2.2" is undefined.
  */
 public class VersionStringComparator implements Comparator<String> {
 
-  private static final Pattern VERSION_STRING_PATTERN = Pattern.compile(
-          "^[rR]?(\\d+)[a-zA-Z]*(\\.\\d+)*?([-_]rc\\d+)*?(?:-preview)?$"
-  );
+  private static final Pattern VERSION_STRING_PATTERN =
+      Pattern.compile("^[rR]?(\\d+)[a-zA-Z]*(\\.\\d+)*?([-_]rc\\d+)*?(?:-preview)?$");
   private static final Pattern IGNORED_FIELDS_PATTERN = Pattern.compile("(?:^[rR])|(?:-preview)");
   private static final Pattern DELIMITER_PATTERN = Pattern.compile("\\.|(?:[-_]rc[0-9]+)");
   private static final Pattern RC_DELIMITER_PATTERN = Pattern.compile("(\\.|\\d+|[a-zA-Z])*[-_]rc");

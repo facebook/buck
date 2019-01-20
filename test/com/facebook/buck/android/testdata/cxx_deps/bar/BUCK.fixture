@@ -1,13 +1,13 @@
 cxx_library(
-  name = 'bar',
-  header_namespace = 'test',
-  exported_headers = [
-    'bar.h',
-  ],
-  srcs = [
-    'bar.cpp',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "bar",
+    srcs = [
+        "bar.cpp",
+    ],
+    exported_headers = [
+        "bar.h",
+    ],
+    header_namespace = "test",
+    visibility = [
+        "PUBLIC",
+    ],
 )

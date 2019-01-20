@@ -1,0 +1,12 @@
+apple_library(
+    name = "Foo",
+    srcs = ["Foo.swift"],
+    swift_version = "4",
+)
+
+apple_library(
+    name = "Bar",
+    srcs = ["Bar.swift"],
+    swift_version = "4",
+    deps = [":Foo"],
+)

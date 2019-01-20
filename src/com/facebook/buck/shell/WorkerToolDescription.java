@@ -16,124 +16,164 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BinaryBuildRule;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.tool.BinaryBuildRule;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.rules.args.ProxyArg;
+import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
-import com.facebook.buck.rules.macros.MacroException;
-import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.rules.macros.MacroHandler;
-import com.facebook.buck.util.HumanReadableException;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.util.types.Either;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
+import org.immutables.value.Value;
 
-public class WorkerToolDescription implements Description<WorkerToolDescription.Arg>,
-    ImplicitDepsInferringDescription<WorkerToolDescription.Arg> {
+public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerToolDescriptionArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("worker_tool");
+  private static final String CONFIG_SECTION = "worker";
+  private static final String CONFIG_PERSISTENT_KEY = "persistent";
 
-  public static final MacroHandler MACRO_HANDLER = new MacroHandler(
-      ImmutableMap.<String, MacroExpander>builder()
-          .put("location", new LocationMacroExpander())
-          .put("classpath", new ClasspathMacroExpander())
-          .put("exe", new ExecutableMacroExpander())
-          .build());
+  public static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(
+          new LocationMacroExpander(), new ClasspathMacroExpander(), new ExecutableMacroExpander());
 
-  @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  private final BuckConfig buckConfig;
+
+  public WorkerToolDescription(BuckConfig buckConfig) {
+    this.buckConfig = buckConfig;
   }
 
   @Override
-  public WorkerToolDescription.Arg createUnpopulatedConstructorArg() {
-    return new WorkerToolDescription.Arg();
+  public Class<WorkerToolDescriptionArg> getConstructorArgType() {
+    return WorkerToolDescriptionArg.class;
   }
 
   @Override
-  public <A extends Arg> WorkerTool createBuildRule(
-      TargetGraph targetGraph,
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
+      WorkerToolDescriptionArg args) {
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
-    BuildRule rule = resolver.requireRule(args.exe);
-    if (!(rule instanceof BinaryBuildRule)) {
-      throw new HumanReadableException("The 'exe' argument of %s, %s, needs to correspond to a " +
-          "binary rule, such as sh_binary().",
-          params.getBuildTarget(),
-          args.exe.getFullyQualifiedName());
+    CommandTool.Builder builder;
+    if (args.getExe().isPresent()) {
+      BuildRule rule = graphBuilder.requireRule(args.getExe().get());
+      if (!(rule instanceof BinaryBuildRule)) {
+        throw new HumanReadableException(
+            "The 'exe' argument of %s, %s, needs to correspond to a "
+                + "binary rule, such as sh_binary().",
+            buildTarget, args.getExe().get().getFullyQualifiedName());
+      }
+
+      builder = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
+    } else {
+      builder = new CommandTool.Builder();
     }
 
-    String expandedStartupArgs;
-    try {
-      expandedStartupArgs = MACRO_HANDLER.expand(
-          params.getBuildTarget(),
-          params.getCellRoots(),
-          resolver,
-          args.args.or(""));
-    } catch (MacroException e) {
-      throw new HumanReadableException(e, "%s: %s", params.getBuildTarget(), e.getMessage());
-    }
+    builder.addInputs(
+        params
+            .getBuildDeps()
+            .stream()
+            .map(BuildRule::getSourcePathToOutput)
+            .filter(Objects::nonNull)
+            .collect(ImmutableList.toImmutableList()));
 
-    Iterable<BuildRule> rulesReferencedInStartupArgs = resolver.requireAllRules(
-        getTargetsFromStartupArgs(
-            params.getBuildTarget(),
-            params.getCellRoots(),
-            args.args));
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(context.getCellPathResolver())
+            .setExpanders(MACRO_EXPANDERS)
+            .build();
 
-    return new WorkerTool(
-        params,
-        new SourcePathResolver(resolver),
-        (BinaryBuildRule) rule,
-        rulesReferencedInStartupArgs,
-        expandedStartupArgs);
-  }
-
-  @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
-      BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      WorkerToolDescription.Arg constructorArg) {
-    return getTargetsFromStartupArgs(
-        buildTarget,
-        cellRoots,
-        constructorArg.args);
-  }
-
-  private Iterable<BuildTarget> getTargetsFromStartupArgs(
-      BuildTarget buildTarget,
-      CellPathResolver cellRoots,
-      Optional<String> startupArgs) {
-    ImmutableSet.Builder<BuildTarget> targets = ImmutableSet.builder();
-    if (startupArgs.isPresent()) {
-      try {
-        targets.addAll(
-            MACRO_HANDLER.extractParseTimeDeps(
-                buildTarget, cellRoots, startupArgs.get()));
-      } catch (MacroException e) {
-        throw new HumanReadableException(e, "%s: %s", buildTarget, e.getMessage());
+    if (args.getArgs().isLeft()) {
+      builder.addArg(
+          new ProxyArg(macrosConverter.convert(args.getArgs().getLeft(), graphBuilder)) {
+            @Override
+            public void appendToCommandLine(
+                Consumer<String> consumer, SourcePathResolver pathResolver) {
+              ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
+              super.appendToCommandLine(subBuilder::add, pathResolver);
+              for (String arg : subBuilder.build()) {
+                for (String splitArg : arg.split("\\s+")) {
+                  consumer.accept(splitArg);
+                }
+              }
+            }
+          });
+    } else {
+      for (StringWithMacros arg : args.getArgs().getRight()) {
+        builder.addArg(macrosConverter.convert(arg, graphBuilder));
       }
     }
-    return targets.build();
+    for (Map.Entry<String, StringWithMacros> e : args.getEnv().entrySet()) {
+      builder.addEnv(e.getKey(), macrosConverter.convert(e.getValue(), graphBuilder));
+    }
+
+    Preconditions.checkArgument(
+        !(args.getMaxWorkers().isPresent() && args.getMaxWorkersPerThreadPercent().isPresent()),
+        "max_workers and max_workers_per_thread_percent must not be used together.");
+
+    int maxWorkers;
+    if (args.getMaxWorkersPerThreadPercent().isPresent()) {
+      int percent = args.getMaxWorkersPerThreadPercent().get();
+      Preconditions.checkArgument(
+          percent > 0, "max_workers_per_thread_percent must be greater than 0.");
+      Preconditions.checkArgument(
+          percent <= 100, "max_workers_per_thread_percent must not be greater than 100.");
+      maxWorkers = (int) Math.max(1, percent / 100.0 * buckConfig.getNumThreads());
+    } else {
+      // negative or zero: unlimited number of worker processes
+      maxWorkers = args.getMaxWorkers().map(x -> x < 1 ? buckConfig.getNumThreads() : x).orElse(1);
+    }
+
+    CommandTool tool = builder.build();
+    return new DefaultWorkerTool(
+        buildTarget,
+        context.getProjectFilesystem(),
+        new SourcePathRuleFinder(graphBuilder),
+        tool,
+        maxWorkers,
+        args.getPersistent()
+            .orElse(buckConfig.getBooleanValue(CONFIG_SECTION, CONFIG_PERSISTENT_KEY, false)));
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<String> args;
-    public BuildTarget exe;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractWorkerToolDescriptionArg extends CommonDescriptionArg {
+    ImmutableMap<String, StringWithMacros> getEnv();
+
+    @Value.Default
+    default Either<StringWithMacros, ImmutableList<StringWithMacros>> getArgs() {
+      return Either.ofRight(ImmutableList.of());
+    }
+
+    Optional<BuildTarget> getExe();
+
+    Optional<Integer> getMaxWorkers();
+
+    Optional<Integer> getMaxWorkersPerThreadPercent();
+
+    Optional<Boolean> getPersistent();
   }
 }

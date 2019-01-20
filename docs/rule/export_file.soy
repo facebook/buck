@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.export_file}
 
 /***/
 {template .soyweb}
 {call buck.page}
   {param title: 'export_file()' /}
+  {param navid: 'rule_export_file' /}
   {param prettify: true /}
   {param description}
     An export_file() rule takes a single file or folder and exposes it so other rules can use it.
@@ -13,9 +29,10 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-  An <code>export_file()</code> is takes a single file or folder and exposes it so other rules can
-  use it.  This is especially useful to work around package boundary violations where you want to
-  use a file that is owned by a different {call buck.build_file /}.
+  <p><b>Warning:</b> this build rule is deprecated.
+  Use {call buck.ruleLink}{param name : 'filegroup' /}{/call} instead.</p>
+  <p>An <code>export_file()</code> takes a single file or folder and exposes it so other rules can
+  use it.</p>
 {/param}
 
 {param args}
@@ -42,6 +59,18 @@
   {param desc}
     The name which the file will be called if another rule depends on it instead of the name it
     already has.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'mode' /}
+  {param default: 'copy' /}
+  {param desc}
+    How files are referenced internally in buck. 
+    If set to 'copy', then a full copy will be made into the new location in buck-out.
+    If set to 'reference', the original file will be used by internal build rules in-place. 
+    However, this mode does not work across repositories or if the 'out' property is set.
+    For read-only operations, 'reference' can be more performant.
   {/param}
 {/call}
 

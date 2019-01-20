@@ -17,17 +17,15 @@
 package com.facebook.buck.util.hash;
 
 import com.google.common.hash.Hasher;
-
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-
 import javax.annotation.Nonnull;
 
 /**
- * An {@link OutputStream} which appends the hash of the data written to it to a {@link Hasher}.
- * As opposed to {@link com.google.common.hash.HashingOutputStream}, users can wrap an existing
- * {@link Hasher} which makes this more flexible when building more complex hashes.
+ * An {@link OutputStream} which appends the hash of the data written to it to a {@link Hasher}. As
+ * opposed to {@link com.google.common.hash.HashingOutputStream}, users can wrap an existing {@link
+ * Hasher} which makes this more flexible when building more complex hashes.
  */
 public class HasherOutputStream extends FilterOutputStream {
 
@@ -54,5 +52,4 @@ public class HasherOutputStream extends FilterOutputStream {
   public void close() throws IOException {
     out.close();
   }
-
 }

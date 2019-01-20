@@ -16,17 +16,14 @@
 
 package com.facebook.buck.util;
 
-import static com.facebook.buck.zip.Unzip.ExistingFileMode.OVERWRITE;
+import static com.facebook.buck.util.unarchive.ExistingFileMode.OVERWRITE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.zip.Unzip;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Resources;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +31,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * Represents a zip that has been packaged as a resource with Buck, but which should be expanded at
@@ -48,26 +47,16 @@ public class PackagedResource implements Supplier<Path> {
   private final Supplier<Path> supplier;
 
   public PackagedResource(
-      ProjectFilesystem filesystem,
-      Class<?> relativeTo,
-      String pathRelativeToClass) {
+      ProjectFilesystem filesystem, Class<?> relativeTo, String pathRelativeToClass) {
     this.filesystem = filesystem;
-
     this.relativeTo = relativeTo;
+
     // We could magically detect the class we're relative to by examining the stacktrace but that
     // would be incredibly fragile. So we won't.
-
     this.name = pathRelativeToClass;
-
     this.filename = Paths.get(pathRelativeToClass).getFileName();
 
-    this.supplier = Suppliers.memoize(
-        new Supplier<Path>() {
-          @Override
-          public Path get() {
-            return unpack();
-          }
-        });
+    this.supplier = MoreSuppliers.memoize(this::unpack);
   }
 
   @Override
@@ -77,8 +66,9 @@ public class PackagedResource implements Supplier<Path> {
 
   /**
    * Use this as unique ID for resource when hashing is not enabled
-   * @return Class name followed by relative file path.
-   * E.g. com.facebook.buck.MyClass#some_resource_file.abc
+   *
+   * @return Class name followed by relative file path. E.g.
+   *     com.facebook.buck.MyClass#some_resource_file.abc
    */
   public String getResourceIdentifier() {
     return relativeTo.getName() + "#" + name;
@@ -86,6 +76,7 @@ public class PackagedResource implements Supplier<Path> {
 
   /**
    * Use this combined with file hash as unique ID when hashing is enabled.
+   *
    * @return {@link Path} representing filename of packaged resource
    */
   public Path getFilenamePath() {
@@ -93,14 +84,16 @@ public class PackagedResource implements Supplier<Path> {
   }
 
   private Path unpack() {
-    try (
-        InputStream inner = Preconditions.checkNotNull(
-            Resources.getResource(relativeTo, name),
-            "Unable to find: %s", name).openStream();
+    try (InputStream inner =
+            Preconditions.checkNotNull(
+                    Resources.getResource(relativeTo, name), "Unable to find: %s", name)
+                .openStream();
         BufferedInputStream stream = new BufferedInputStream(inner)) {
 
       Path outputPath =
-          filesystem.getBuckPaths().getResDir()
+          filesystem
+              .getBuckPaths()
+              .getResDir()
               .resolve(relativeTo.getCanonicalName())
               .resolve(filename);
 
@@ -116,14 +109,15 @@ public class PackagedResource implements Supplier<Path> {
         Path zip = Files.createTempFile(filename.toString(), ".zip");
         // Ensure we tidy up
         Files.copy(stream, zip, REPLACE_EXISTING);
-        Unzip.extractZipFile(zip, filesystem, outputPath, OVERWRITE);
+        ArchiveFormat.ZIP
+            .getUnarchiver()
+            .extractArchive(zip, filesystem, outputPath, Optional.empty(), OVERWRITE);
         Files.delete(zip);
       } else {
         filesystem.createParentDirs(outputPath);
         Path tempFilePath =
             filesystem.createTempFile(
-                outputPath.getParent(),
-                outputPath.getFileName().toString() + ".", ".tmp");
+                outputPath.getParent(), outputPath.getFileName() + ".", ".tmp");
         try (OutputStream outputStream = filesystem.newFileOutputStream(tempFilePath)) {
           ByteStreams.copy(stream, outputStream);
         }
@@ -134,5 +128,4 @@ public class PackagedResource implements Supplier<Path> {
       throw new RuntimeException("Unable to unpack " + name, ioe);
     }
   }
-
 }

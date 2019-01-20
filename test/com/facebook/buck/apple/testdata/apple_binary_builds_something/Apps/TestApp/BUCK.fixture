@@ -1,11 +1,29 @@
 apple_binary(
-  name = 'TestApp',
-  info_plist = 'Info.plist',
-  srcs = ['main.c', 'answer.s'],
+    name = "TestApp",
+    srcs = [
+        "answer.s",
+        "main.c",
+    ],
+    info_plist = "Info.plist",
 )
 
 apple_binary(
-  name = 'TestAppWithNonstandardMain',
-  srcs = ['nonstandard_main.c'],
-  platform_linker_flags = [('iphonesimulator', ['-e', '_nonstandard_main'])],
+    name = "TestAppWithNonstandardMain",
+    srcs = ["nonstandard_main.c"],
+    platform_linker_flags = [(
+        "iphonesimulator",
+        [
+            "-e",
+            "_nonstandard_main",
+        ],
+    )],
+)
+
+apple_binary(
+    name = "TestAppWithEntitlements",
+    srcs = [
+        "answer.s",
+        "main.c",
+    ],
+    entitlements_file = "entitlements.plist",
 )

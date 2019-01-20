@@ -1,0 +1,87 @@
+apple_bundle(
+    name = "bundle",
+    binary = ":binary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_binary(
+    name = "binary",
+    srcs = ["main.m"],
+    deps = [
+        ":lib_with_resource",
+    ],
+)
+
+apple_library(
+    name = "lib_with_resource",
+    deps = [
+        ":resource",
+    ],
+)
+
+apple_resource(
+    name = "resource",
+    resources_from_deps = [
+        ":other_lib_with_resource",
+    ],
+)
+
+apple_library(
+    name = "other_lib_with_resource",
+    deps = [
+        ":other_resource",
+    ],
+)
+
+apple_resource(
+    name = "other_resource",
+    files = ["other_resource.txt"],
+)
+
+export_file(
+    name = "sim.txt",
+)
+
+export_file(
+    name = "device.txt",
+)
+
+apple_resource(
+    name = "simresource",
+    files = [":sim.txt"],
+)
+
+apple_resource(
+    name = "deviceresource",
+    files = [":device.txt"],
+)
+
+apple_library(
+    name = "PlatformDepsWrapper",
+    platform_deps = [
+        (
+            "iphonesimulator",
+            [":simresource"],
+        ),
+        (
+            "iphoneos",
+            [":deviceresource"],
+        ),
+    ],
+)
+
+apple_library(
+    name = "unimportantbinary",
+    srcs = ["dummy.c"],
+)
+
+apple_bundle(
+    name = "mybundle",
+    binary = ":unimportantbinary#shared",
+    extension = "framework",
+    info_plist = "Info.plist",
+    product_name = "unimportantbinary",
+    visibility = ["PUBLIC"],
+    deps = [":PlatformDepsWrapper"],
+)

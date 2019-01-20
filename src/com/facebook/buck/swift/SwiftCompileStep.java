@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -26,17 +26,13 @@ import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
-
 import java.util.Map;
+import java.util.Optional;
 
-/**
- * A step that compiles Swift sources to a single module.
- */
-public class SwiftCompileStep implements Step {
+/** A step that compiles Swift sources to a single module. */
+class SwiftCompileStep implements Step {
 
   private static final Logger LOG = Logger.get(SwiftCompileStep.class);
 
@@ -44,10 +40,8 @@ public class SwiftCompileStep implements Step {
   private final ImmutableMap<String, String> compilerEnvironment;
   private final ImmutableList<String> compilerCommand;
 
-  public SwiftCompileStep(
-      Path compilerCwd,
-      Map<String, String> compilerEnvironment,
-      Iterable<String> compilerCommand) {
+  SwiftCompileStep(
+      Path compilerCwd, Map<String, String> compilerEnvironment, Iterable<String> compilerCommand) {
     this.compilerCwd = compilerCwd;
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
     this.compilerCommand = ImmutableList.copyOf(compilerCommand);
@@ -60,31 +54,27 @@ public class SwiftCompileStep implements Step {
 
   private ProcessExecutorParams makeProcessExecutorParams() {
     ProcessExecutorParams.Builder builder = ProcessExecutorParams.builder();
-    builder.setDirectory(compilerCwd.toAbsolutePath().toFile());
+    builder.setDirectory(compilerCwd.toAbsolutePath());
     builder.setEnvironment(compilerEnvironment);
     builder.setCommand(compilerCommand);
     return builder.build();
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context)
+      throws IOException, InterruptedException {
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
     ProcessExecutorParams params = makeProcessExecutorParams();
     SimpleProcessListener listener = new SimpleProcessListener();
 
-    // TODO(ryu2): parse the output, print build failure errors, etc.
-    try {
-      LOG.debug("%s", compilerCommand);
-      ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
-      int result = executor.waitForProcess(process, Long.MAX_VALUE, TimeUnit.SECONDS);
-      if (result != 0) {
-        LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
-      }
-      return StepExecutionResult.of(result);
-    } catch (IOException e) {
-      LOG.error(e, "Could not execute command %s", compilerCommand);
-      return StepExecutionResult.ERROR;
+    // TODO(markwang): parse the output, print build failure errors, etc.
+    LOG.debug("%s", compilerCommand);
+    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
+    int result = executor.waitForProcess(process);
+    if (result != 0) {
+      LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
     }
+    return StepExecutionResult.of(result, Optional.of(listener.getStderr()));
   }
 
   @Override

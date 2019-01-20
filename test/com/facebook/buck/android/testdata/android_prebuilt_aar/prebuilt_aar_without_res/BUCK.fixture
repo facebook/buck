@@ -1,0 +1,5 @@
+android_prebuilt_aar(
+    name = "play-services-base-license",
+    aar = "play-services-base-license-11.8.0.aar",
+    visibility = ["PUBLIC"],
+)

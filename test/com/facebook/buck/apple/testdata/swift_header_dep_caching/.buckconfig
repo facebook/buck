@@ -1,0 +1,9 @@
+[cache]
+  mode = dir
+[cxx]
+  default_platform = iphonesimulator-x86_64
+  cflags = -g
+[apple]
+  default_debug_info_format_for_binaries = dwarf_and_dsym
+  default_debug_info_format_for_libraries = dwarf_and_dsym
+  default_debug_info_format_for_tests = dwarf_and_dsym

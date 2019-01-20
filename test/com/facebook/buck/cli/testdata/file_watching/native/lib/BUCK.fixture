@@ -1,0 +1,14 @@
+cxx_library(
+    name = "lib",
+    srcs = [
+        "lib.cpp",
+    ],
+    exported_headers = [
+        "lib.h",
+    ],
+    header_namespace = "",
+    preprocessor_flags = [
+        "-D THE_STRING=\"my_string_123_my_string\"",
+    ],
+    visibility = ["PUBLIC"],
+)

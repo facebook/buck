@@ -16,15 +16,18 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.squareup.okhttp.Call;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
 
 public class LoadBalancedService implements HttpService {
+  private static final Logger LOG = Logger.get(LoadBalancedService.class);
+
   private final HttpLoadBalancer slb;
   private final OkHttpClient client;
   private final BuckEventBus eventBus;
@@ -36,19 +39,22 @@ public class LoadBalancedService implements HttpService {
   }
 
   @Override
-  public HttpResponse makeRequest(
-      String path, Request.Builder requestBuilder) throws IOException {
+  public HttpResponse makeRequest(String path, Request.Builder requestBuilder) throws IOException {
     URI server = slb.getBestServer();
-    LoadBalancedServiceEventData.Builder data = LoadBalancedServiceEventData.builder()
-        .setServer(server);
-    requestBuilder.url(SingleUriService.getFullUrl(server, path));
+    long startRequestNanos = System.nanoTime();
+    LoadBalancedServiceEventData.Builder data =
+        LoadBalancedServiceEventData.builder().setServer(server);
+    URL fullUrl = SingleUriService.getFullUrl(server, path);
+    requestBuilder.url(fullUrl);
     Request request = requestBuilder.build();
     if (request.body() != null && request.body().contentLength() != -1) {
       data.setRequestSizeBytes(request.body().contentLength());
     }
+    LOG.verbose("Making call to %s", fullUrl);
     Call call = client.newCall(request);
     try {
-      HttpResponse response = new LoadBalancedHttpResponse(server, slb, call.execute());
+      HttpResponse response =
+          LoadBalancedHttpResponse.createLoadBalancedResponse(server, slb, call);
       if (response.contentLength() != -1) {
         data.setResponseSizeBytes(response.contentLength());
       }
@@ -57,6 +63,7 @@ public class LoadBalancedService implements HttpService {
       data.setException(e);
       throw new IOException(e);
     } finally {
+      data.setLatencyMicros((System.nanoTime() - startRequestNanos) / 1000);
       eventBus.post(new LoadBalancedServiceEvent(data.build()));
     }
   }

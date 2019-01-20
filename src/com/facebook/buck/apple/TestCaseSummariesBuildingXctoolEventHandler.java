@@ -16,25 +16,23 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestStatusMessage;
-
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableListMultimap;
 import java.util.Collection;
 import java.util.Map;
-
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Implementation of {@link XctoolOutputParsing.XctoolEventCallback} that
- * collects {@code xctool} events and converts them to {@link TestCaseSummary} objects,
- * reporting progress to a {@code TestRule.TestReportingCallback}.
+ * Implementation of {@link XctoolOutputParsing.XctoolEventCallback} that collects {@code xctool}
+ * events and converts them to {@link TestCaseSummary} objects, reporting progress to a {@code
+ * TestRule.TestReportingCallback}.
  */
 class TestCaseSummariesBuildingXctoolEventHandler
     implements XctoolOutputParsing.XctoolEventCallback {
@@ -60,35 +58,31 @@ class TestCaseSummariesBuildingXctoolEventHandler
   public void handleEndOcunitEvent(XctoolOutputParsing.EndOcunitEvent event) {
     boolean testsDidEndChangedToTrue = testsDidEnd.compareAndSet(false, true);
     Preconditions.checkState(
-        testsDidEndChangedToTrue,
-        "handleEndOcunitEvent() should not be called twice");
+        testsDidEndChangedToTrue, "handleEndOcunitEvent() should not be called twice");
     Optional<TestResultSummary> internalError =
         XctoolOutputParsing.internalErrorForEndOcunitEvent(event);
     if (internalError.isPresent()) {
       testResultSummariesBuilder.put("Internal error from test runner", internalError.get());
     }
     for (Map.Entry<String, Collection<TestResultSummary>> testCaseSummary :
-         testResultSummariesBuilder.build().asMap().entrySet()) {
+        testResultSummariesBuilder.build().asMap().entrySet()) {
       testCaseSummariesBuilder.add(
           new TestCaseSummary(
-              testCaseSummary.getKey(),
-              ImmutableList.copyOf(testCaseSummary.getValue())));
+              testCaseSummary.getKey(), ImmutableList.copyOf(testCaseSummary.getValue())));
     }
     testReportingCallback.testsDidEnd(testCaseSummariesBuilder.build());
   }
 
   @Override
-  public void handleBeginTestSuiteEvent(XctoolOutputParsing.BeginTestSuiteEvent event) {
-  }
+  public void handleBeginTestSuiteEvent(XctoolOutputParsing.BeginTestSuiteEvent event) {}
 
   @Override
-  public void handleEndTestSuiteEvent(XctoolOutputParsing.EndTestSuiteEvent event) {
-  }
+  public void handleEndTestSuiteEvent(XctoolOutputParsing.EndTestSuiteEvent event) {}
 
   @Override
   public void handleBeginStatusEvent(XctoolOutputParsing.StatusEvent event) {
-    Optional<TestStatusMessage> message = XctoolOutputParsing.testStatusMessageForStatusEvent(
-        event);
+    Optional<TestStatusMessage> message =
+        XctoolOutputParsing.testStatusMessageForStatusEvent(event);
     if (message.isPresent()) {
       testReportingCallback.statusDidBegin(message.get());
     }
@@ -96,8 +90,8 @@ class TestCaseSummariesBuildingXctoolEventHandler
 
   @Override
   public void handleEndStatusEvent(XctoolOutputParsing.StatusEvent event) {
-    Optional<TestStatusMessage> message = XctoolOutputParsing.testStatusMessageForStatusEvent(
-        event);
+    Optional<TestStatusMessage> message =
+        XctoolOutputParsing.testStatusMessageForStatusEvent(event);
     if (message.isPresent()) {
       testReportingCallback.statusDidEnd(message.get());
     }
@@ -106,24 +100,20 @@ class TestCaseSummariesBuildingXctoolEventHandler
   @Override
   public void handleBeginTestEvent(XctoolOutputParsing.BeginTestEvent event) {
     testReportingCallback.testDidBegin(
-        Preconditions.checkNotNull(event.className),
-        Preconditions.checkNotNull(event.test));
+        Objects.requireNonNull(event.className), Objects.requireNonNull(event.test));
   }
 
   @Override
   public void handleEndTestEvent(XctoolOutputParsing.EndTestEvent event) {
     TestResultSummary testResultSummary =
         XctoolOutputParsing.testResultSummaryForEndTestEvent(event);
-    testResultSummariesBuilder.put(
-        Preconditions.checkNotNull(event.className),
-        testResultSummary);
+    testResultSummariesBuilder.put(Objects.requireNonNull(event.className), testResultSummary);
     testReportingCallback.testDidEnd(testResultSummary);
   }
 
   public ImmutableList<TestCaseSummary> getTestCaseSummaries() {
     Preconditions.checkState(
-        testsDidEnd.get(),
-        "Call this method only after testsDidEnd() callback is invoked.");
+        testsDidEnd.get(), "Call this method only after testsDidEnd() callback is invoked.");
     return testCaseSummariesBuilder.build();
   }
 }

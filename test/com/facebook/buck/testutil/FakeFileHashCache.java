@@ -17,10 +17,10 @@
 package com.facebook.buck.testutil;
 
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.hash.HashCode;
-
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -28,58 +28,55 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * FileHashCache that is populated with a fixed set of entries.
- */
+/** FileHashCache that is populated with a fixed set of entries. */
 public class FakeFileHashCache implements FileHashCache {
 
   private final Map<Path, HashCode> pathsToHashes;
   private final Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes;
-
-  public static FakeFileHashCache withArchiveMemberPathHashes(
-      Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes) {
-    return new FakeFileHashCache(new HashMap<Path, HashCode>(), archiveMemberPathsToHashes);
-  }
+  private final Map<Path, Long> pathsToSizes;
+  private final boolean usePathsForArchives;
 
   public FakeFileHashCache(Map<Path, HashCode> pathsToHashes) {
-    this(pathsToHashes, new HashMap<ArchiveMemberPath, HashCode>());
+    this(pathsToHashes, new HashMap<>(), new HashMap<>());
   }
 
-  private FakeFileHashCache(
+  public FakeFileHashCache(
       Map<Path, HashCode> pathsToHashes,
-      Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes) {
-    this.archiveMemberPathsToHashes = archiveMemberPathsToHashes;
+      boolean usePathsForArchives,
+      Map<Path, Long> pathsToSizes) {
     this.pathsToHashes = pathsToHashes;
+    this.archiveMemberPathsToHashes = new HashMap<>();
+    this.pathsToSizes = pathsToSizes;
+    this.usePathsForArchives = usePathsForArchives;
+  }
+
+  public FakeFileHashCache(
+      Map<Path, HashCode> pathsToHashes,
+      Map<ArchiveMemberPath, HashCode> archiveMemberPathsToHashes,
+      Map<Path, Long> pathsToSizes) {
+    this.pathsToHashes = pathsToHashes;
+    this.archiveMemberPathsToHashes = archiveMemberPathsToHashes;
+    this.pathsToSizes = pathsToSizes;
+    this.usePathsForArchives = false;
   }
 
   public static FakeFileHashCache createFromStrings(Map<String, String> pathsToHashes) {
     return createFromStrings(new FakeProjectFilesystem(), pathsToHashes);
   }
 
-  public static FakeFileHashCache createFromStrings(
-      ProjectFilesystem filesystem,
-      Map<String, String> pathsToHashes) {
+  private static FakeFileHashCache createFromStrings(
+      ProjectFilesystem filesystem, Map<String, String> pathsToHashes) {
     Map<Path, HashCode> cachedValues = new HashMap<>();
     for (Map.Entry<String, String> entry : pathsToHashes.entrySet()) {
       // Retain the original behaviour
       cachedValues.put(Paths.get(entry.getKey()), HashCode.fromString(entry.getValue()));
 
       // And ensure that the absolute path is also present.
-      if (!entry.getKey().startsWith("/")) {
+      if (!Paths.get(entry.getKey()).isAbsolute()) {
         cachedValues.put(filesystem.resolve(entry.getKey()), HashCode.fromString(entry.getValue()));
       }
     }
     return new FakeFileHashCache(cachedValues);
-  }
-
-  @Override
-  public boolean willGet(Path path) {
-    return true;
-  }
-
-  @Override
-  public boolean willGet(ArchiveMemberPath archiveMemberPath) {
-    throw new UnsupportedOperationException("Not yet implemented");
   }
 
   @Override
@@ -102,7 +99,19 @@ public class FakeFileHashCache implements FileHashCache {
   }
 
   @Override
+  public long getSize(Path path) throws IOException {
+    Long hashCode = pathsToSizes.get(path);
+    if (hashCode == null) {
+      throw new NoSuchFileException(path.toString());
+    }
+    return hashCode;
+  }
+
+  @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) throws IOException {
+    if (usePathsForArchives) {
+      return get(Paths.get(archiveMemberPath.toString()));
+    }
     HashCode hashCode = archiveMemberPathsToHashes.get(archiveMemberPath);
     if (hashCode == null) {
       throw new NoSuchFileException(archiveMemberPath.toString());
@@ -118,5 +127,4 @@ public class FakeFileHashCache implements FileHashCache {
   public boolean contains(Path path) {
     return pathsToHashes.containsKey(path);
   }
-
 }

@@ -16,83 +16,123 @@
 
 package com.facebook.buck.parser;
 
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.cli.BuckConfig;
-import com.facebook.buck.cli.BuckConfigTestUtils;
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.facebook.buck.util.HumanReadableException;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.BuckConfigTestUtils;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.io.watchman.WatchmanWatcher.CursorType;
+import com.facebook.buck.parser.implicit.ImplicitInclude;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
-import org.hamcrest.Matchers;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class ParserConfigTest {
 
-  @Rule
-  public DebuggableTemporaryFolder temporaryFolder = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testGetAllowEmptyGlobs() throws IOException {
-    assertTrue(new ParserConfig(FakeBuckConfig.builder().build()).getAllowEmptyGlobs());
-    Reader reader = new StringReader(
-        Joiner.on('\n').join(
-            "[build]",
-            "allow_empty_globs = false"));
-    ParserConfig config = new ParserConfig(
-        BuckConfigTestUtils.createWithDefaultFilesystem(
-            temporaryFolder,
-            reader));
+    assertTrue(FakeBuckConfig.builder().build().getView(ParserConfig.class).getAllowEmptyGlobs());
+    Reader reader = new StringReader(Joiner.on('\n').join("[build]", "allow_empty_globs = false"));
+    ParserConfig config =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+            .getView(ParserConfig.class);
     assertFalse(config.getAllowEmptyGlobs());
   }
 
   @Test
   public void testGetGlobHandler() throws IOException {
     assertThat(
-        new ParserConfig(FakeBuckConfig.builder().build()).getGlobHandler(),
-        Matchers.equalTo(ParserConfig.GlobHandler.PYTHON));
+        FakeBuckConfig.builder().build().getView(ParserConfig.class).getGlobHandler(),
+        equalTo(ParserConfig.GlobHandler.PYTHON));
 
     for (ParserConfig.GlobHandler handler : ParserConfig.GlobHandler.values()) {
-      Reader reader = new StringReader(
-          Joiner.on('\n').join(
-              "[project]",
-              "glob_handler = " + handler.toString()));
-      ParserConfig config = new ParserConfig(
-          BuckConfigTestUtils.createWithDefaultFilesystem(
-              temporaryFolder,
-              reader));
-      assertThat(config.getGlobHandler(), Matchers.equalTo(handler));
+      Reader reader =
+          new StringReader(Joiner.on('\n').join("[project]", "glob_handler = " + handler));
+      ParserConfig config =
+          BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+              .getView(ParserConfig.class);
+      assertThat(config.getGlobHandler(), equalTo(handler));
     }
   }
 
   @Test
-  public void shouldReturnThreadCountIfParallelParsingIsEnabled() {
-    BuckConfig config = FakeBuckConfig.builder()
-        .setSections(
-            "[project]",
-            "parsing_threads = 2",
-            "parallel_parsing = true")
-        .build();
+  public void testGetWatchCells() throws IOException {
+    assertTrue(
+        "watch_cells defaults to true",
+        FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchCells());
 
-    ParserConfig parserConfig = new ParserConfig(config);
+    Reader reader = new StringReader(Joiner.on('\n').join("[project]", "watch_cells = false"));
+    ParserConfig config =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+            .getView(ParserConfig.class);
+    assertFalse(config.getWatchCells());
+
+    reader = new StringReader(Joiner.on('\n').join("[project]", "watch_cells = true"));
+    config =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+            .getView(ParserConfig.class);
+    assertTrue(config.getWatchCells());
+  }
+
+  @Test
+  public void testGetWatchmanCursor() throws IOException {
+    assertEquals(
+        "watchman_cursor defaults to clock_id",
+        CursorType.CLOCK_ID,
+        FakeBuckConfig.builder().build().getView(ParserConfig.class).getWatchmanCursor());
+
+    Reader reader = new StringReader(Joiner.on('\n').join("[project]", "watchman_cursor = named"));
+    ParserConfig config =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+            .getView(ParserConfig.class);
+    assertEquals(CursorType.NAMED, config.getWatchmanCursor());
+
+    reader = new StringReader(Joiner.on('\n').join("[project]", "watchman_cursor = clock_id"));
+    config =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+            .getView(ParserConfig.class);
+    assertEquals(CursorType.CLOCK_ID, config.getWatchmanCursor());
+
+    reader =
+        new StringReader(Joiner.on('\n').join("[project]", "watchman_cursor = some_trash_value"));
+    config =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+            .getView(ParserConfig.class);
+
+    thrown.expect(HumanReadableException.class);
+    config.getWatchmanCursor();
+  }
+
+  @Test
+  public void shouldReturnThreadCountIfParallelParsingIsEnabled() {
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections("[project]", "parsing_threads = 2", "parallel_parsing = true")
+            .build();
+
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
 
     assertTrue(parserConfig.getEnableParallelParsing());
     assertEquals(2, parserConfig.getNumParsingThreads());
@@ -100,45 +140,110 @@ public class ParserConfigTest {
 
   @Test
   public void shouldReturnOneThreadCountIfParallelParsingIsNotEnabled() {
-    BuckConfig config = FakeBuckConfig.builder()
-        .setSections(
-            "[project]",
-            "parsing_threads = 3",
-            "parallel_parsing = false")
-        .build();
+    BuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections("[project]", "parsing_threads = 3", "parallel_parsing = false")
+            .build();
 
-    ParserConfig parserConfig = new ParserConfig(config);
+    ParserConfig parserConfig = config.getView(ParserConfig.class);
 
     assertFalse(parserConfig.getEnableParallelParsing());
     assertEquals(1, parserConfig.getNumParsingThreads());
   }
 
   @Test
-  public void shouldGetReadOnlyDirs() throws IOException {
-    temporaryFolder.newFolder("tmp");
-    temporaryFolder.newFolder("tmp2");
-    ArrayList<String> readOnlyPaths = new ArrayList<String>(2);
-    readOnlyPaths.add(temporaryFolder.getRootPath() + "/tmp");
-    readOnlyPaths.add(temporaryFolder.getRootPath() + "/tmp2");
+  public void shouldGetReadOnlyDirs() {
+    String existingPath1 = "tmp/tmp-file";
+    String existingPath2 = "tmp2/tmp2-file";
+    ImmutableSet<Path> readOnlyPaths =
+        ImmutableSet.of(Paths.get(existingPath1), Paths.get(existingPath2));
+    ProjectFilesystem filesystem = new FakeProjectFilesystem(readOnlyPaths);
 
-    ParserConfig parserConfig = new ParserConfig(FakeBuckConfig.builder()
-        .setSections(
-            "[project]",
-            "read_only_paths = " + readOnlyPaths.get(0) + "," + readOnlyPaths.get(1))
-        .build());
+    ParserConfig parserConfig =
+        FakeBuckConfig.builder()
+            .setSections("[project]", "read_only_paths = " + existingPath1 + "," + existingPath2)
+            .setFilesystem(filesystem)
+            .build()
+            .getView(ParserConfig.class);
 
+    assertTrue(parserConfig.getReadOnlyPaths().isPresent());
+    assertThat(
+        parserConfig.getReadOnlyPaths().get(),
+        is(equalTo(ImmutableList.of(Paths.get(existingPath1), Paths.get(existingPath2)))));
+
+    String notExistingDir = "not/existing/path";
+    parserConfig =
+        FakeBuckConfig.builder()
+            .setSections("[project]", "read_only_paths = " + notExistingDir)
+            .setFilesystem(filesystem)
+            .build()
+            .getView(ParserConfig.class);
+
+    assertTrue(parserConfig.getReadOnlyPaths().get().isEmpty());
+  }
+
+  @Test
+  public void testGetBuildFileImportWhitelist() throws IOException {
+    assertTrue(
+        FakeBuckConfig.builder()
+            .build()
+            .getView(ParserConfig.class)
+            .getBuildFileImportWhitelist()
+            .isEmpty());
+
+    Reader reader =
+        new StringReader(
+            Joiner.on('\n').join("[project]", "build_file_import_whitelist = os, foo"));
+    ParserConfig config =
+        BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader)
+            .getView(ParserConfig.class);
+    assertEquals(ImmutableList.of("os", "foo"), config.getBuildFileImportWhitelist());
+  }
+
+  @Test
+  public void whenParserPythonPathIsNotSetDefaultIsUsed() {
+    ParserConfig parserConfig = FakeBuckConfig.builder().build().getView(ParserConfig.class);
     assertEquals(
-        parserConfig.getReadOnlyPaths(),
-        ImmutableSet.<Path>of(Paths.get(readOnlyPaths.get(0)), Paths.get(readOnlyPaths.get(1))));
+        "Should return an empty optional",
+        "<not set>",
+        parserConfig.getPythonModuleSearchPath().orElse("<not set>"));
+  }
 
-    String notExistingDir = temporaryFolder.getRootPath() + "/not/existing/path";
-    parserConfig = new ParserConfig(FakeBuckConfig.builder()
-        .setSections("[project]", "read_only_paths = " + notExistingDir)
-        .build());
+  @Test
+  public void whenParserPythonPathIsSet() {
+    ParserConfig parserConfig =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("parser", ImmutableMap.of("python_path", "foobar:spamham")))
+            .build()
+            .getView(ParserConfig.class);
+    assertEquals(
+        "Should return the configured string",
+        "foobar:spamham",
+        parserConfig.getPythonModuleSearchPath().orElse("<not set>"));
+  }
 
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage("Path " + MorePaths.pathWithPlatformSeparators(notExistingDir) +
-        ", specified under read_only_paths does not exist.");
-    parserConfig.getReadOnlyPaths();
+  @Test
+  public void getImplicitIncludes() {
+    ImmutableMap<String, ImplicitInclude> actual =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "buildfile",
+                    ImmutableMap.of(
+                        "package_includes",
+                        "=>//:includes.bzl::get_name::get_value,foo/bar=>//foo/bar:includes.bzl::get_name::get_value")))
+            .build()
+            .getView(ParserConfig.class)
+            .getPackageImplicitIncludes();
+
+    ImmutableMap<String, ImplicitInclude> expected =
+        ImmutableMap.of(
+            "",
+            ImplicitInclude.fromConfigurationString("//:includes.bzl::get_name::get_value"),
+            "foo/bar",
+            ImplicitInclude.fromConfigurationString("//foo/bar:includes.bzl::get_name::get_value"));
+
+    assertEquals(expected, actual);
   }
 }

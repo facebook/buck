@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.multidex"
+    android:versionCode="1"
+    split="${split}" >
+
+    <dist:module xmlns:dist="http://schemas.android.com/apk/distribution"
+       dist:onDemand="true"
+       dist:title="@string/${split}_title"
+       />
+
+</manifest>

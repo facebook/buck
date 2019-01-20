@@ -1,37 +1,37 @@
 cxx_library(
-  name = 'lib2',
-  header_namespace = 'resolved',
-  exported_headers = [
-    'lib2.h',
-  ],
-  srcs = [
-    'lib2.cpp',
-  ],
+    name = "lib2",
+    srcs = [
+        "lib2.cpp",
+    ],
+    exported_headers = [
+        "lib2.h",
+    ],
+    header_namespace = "resolved",
 )
 
 cxx_library(
-  name = 'lib1',
-  header_namespace = 'resolved',
-  exported_headers = [
-    'lib1.h',
-  ],
-  deps = [
-    ':lib2',
-  ],
-  srcs = [
-    'lib1.cpp',
-  ],
+    name = "lib1",
+    srcs = [
+        "lib1.cpp",
+    ],
+    exported_headers = [
+        "lib1.h",
+    ],
+    header_namespace = "resolved",
+    deps = [
+        ":lib2",
+    ],
 )
 
 cxx_binary(
-  name='bin',
-  srcs=[
-    'bin.cpp',
-  ],
-  headers=[
-    'bin.h',
-  ],
-  deps = [
-    ':lib1',
-  ],
+    name = "bin",
+    srcs = [
+        "bin.cpp",
+    ],
+    headers = [
+        "bin.h",
+    ],
+    deps = [
+        ":lib1",
+    ],
 )

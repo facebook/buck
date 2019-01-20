@@ -16,24 +16,22 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.rules.TestRule;
+import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
-
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableList;
-
+import com.google.common.collect.ImmutableListMultimap;
 import java.util.Collection;
 import java.util.Map;
-
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Implementation of {@link XctestOutputParsing.XctestEventCallback} that
- * collects {@code xctest} events and converts them to {@link TestCaseSummary} objects,
- * reporting progress to a {@code TestRule.TestReportingCallback}.
+ * Implementation of {@link XctestOutputParsing.XctestEventCallback} that collects {@code xctest}
+ * events and converts them to {@link TestCaseSummary} objects, reporting progress to a {@code
+ * TestRule.TestReportingCallback}.
  */
 class TestCaseSummariesBuildingXctestEventHandler
     implements XctestOutputParsing.XctestEventCallback {
@@ -59,31 +57,27 @@ class TestCaseSummariesBuildingXctestEventHandler
   public void handleEndXctestEvent(XctestOutputParsing.EndXctestEvent event) {
     boolean testsDidEndChangedToTrue = testsDidEnd.compareAndSet(false, true);
     Preconditions.checkState(
-        testsDidEndChangedToTrue,
-        "handleEndXctestEvent() should not be called twice");
+        testsDidEndChangedToTrue, "handleEndXctestEvent() should not be called twice");
     for (Map.Entry<String, Collection<TestResultSummary>> testCaseSummary :
-         testResultSummariesBuilder.build().asMap().entrySet()) {
+        testResultSummariesBuilder.build().asMap().entrySet()) {
       testCaseSummariesBuilder.add(
           new TestCaseSummary(
-              testCaseSummary.getKey(),
-              ImmutableList.copyOf(testCaseSummary.getValue())));
+              testCaseSummary.getKey(), ImmutableList.copyOf(testCaseSummary.getValue())));
     }
     testReportingCallback.testsDidEnd(testCaseSummariesBuilder.build());
   }
 
   @Override
-  public void handleBeginTestSuiteEvent(XctestOutputParsing.BeginTestSuiteEvent event) {
-  }
+  public void handleBeginTestSuiteEvent(XctestOutputParsing.BeginTestSuiteEvent event) {}
 
   @Override
-  public void handleEndTestSuiteEvent(XctestOutputParsing.EndTestSuiteEvent event) {
-  }
+  public void handleEndTestSuiteEvent(XctestOutputParsing.EndTestSuiteEvent event) {}
 
   @Override
   public void handleBeginTestCaseEvent(XctestOutputParsing.BeginTestCaseEvent event) {
     testReportingCallback.testDidBegin(
-        Optional.fromNullable(event.className).or(Preconditions.checkNotNull(event.test)),
-        Optional.fromNullable(event.methodName).or(Preconditions.checkNotNull(event.test)));
+        Optional.ofNullable(event.className).orElse(Objects.requireNonNull(event.test)),
+        Optional.ofNullable(event.methodName).orElse(Objects.requireNonNull(event.test)));
   }
 
   @Override
@@ -91,15 +85,14 @@ class TestCaseSummariesBuildingXctestEventHandler
     TestResultSummary testResultSummary =
         XctestOutputParsing.testResultSummaryForEndTestCaseEvent(event);
     testResultSummariesBuilder.put(
-        Optional.fromNullable(event.className).or(Preconditions.checkNotNull(event.test)),
+        Optional.ofNullable(event.className).orElse(Objects.requireNonNull(event.test)),
         testResultSummary);
     testReportingCallback.testDidEnd(testResultSummary);
   }
 
   public ImmutableList<TestCaseSummary> getTestCaseSummaries() {
     Preconditions.checkState(
-        testsDidEnd.get(),
-        "Call this method only after testsDidEnd() callback is invoked.");
+        testsDidEnd.get(), "Call this method only after testsDidEnd() callback is invoked.");
     return testCaseSummariesBuilder.build();
   }
 }

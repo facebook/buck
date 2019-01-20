@@ -28,7 +28,7 @@ public class FakeScheduledFuture<V> implements ScheduledFuture<V>, Runnable {
   private final Object lock = new Object();
 
   private volatile boolean hasRun = false;
-  private volatile boolean isCancelled  = false;
+  private volatile boolean isCancelled = false;
   private Exception callableException = null;
   private V result = null;
 
@@ -86,7 +86,7 @@ public class FakeScheduledFuture<V> implements ScheduledFuture<V>, Runnable {
 
   @Override
   public V get(long timeout, TimeUnit unit)
-    throws InterruptedException, ExecutionException, TimeoutException {
+      throws InterruptedException, ExecutionException, TimeoutException {
     long timeoutMillis = unit.toMillis(timeout);
     long start = System.currentTimeMillis();
 
@@ -94,9 +94,7 @@ public class FakeScheduledFuture<V> implements ScheduledFuture<V>, Runnable {
       while (!hasRun) {
         lock.wait(timeoutMillis);
 
-        if (timeoutMillis > 0 &&
-            System.currentTimeMillis() - start >= timeoutMillis
-           ) {
+        if (timeoutMillis > 0 && System.currentTimeMillis() - start >= timeoutMillis) {
           throw new TimeoutException();
         }
       }
@@ -107,6 +105,5 @@ public class FakeScheduledFuture<V> implements ScheduledFuture<V>, Runnable {
     }
 
     return result;
-
   }
 }

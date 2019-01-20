@@ -19,33 +19,29 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 public class CxxTestStepTest {
 
-  @Rule
-  public TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private Path exitCode;
   private Path output;
@@ -54,7 +50,7 @@ public class CxxTestStepTest {
 
   private static int readExitCode(Path file) throws IOException {
     try (FileInputStream fileIn = new FileInputStream(file.toFile());
-         ObjectInputStream objIn = new ObjectInputStream(fileIn)) {
+        ObjectInputStream objIn = new ObjectInputStream(fileIn)) {
       return objIn.readInt();
     }
   }
@@ -67,22 +63,24 @@ public class CxxTestStepTest {
   public void setUp() throws IOException {
     exitCode = tmpDir.newFile("exitCode").toPath();
     output = tmpDir.newFile("output").toPath();
-    context = TestExecutionContext.newInstance();
+    context = TestExecutionContext.newInstanceWithRealProcessExecutor();
     filesystem = new FakeProjectFilesystem();
   }
 
   @Test
   public void success() throws IOException, InterruptedException {
-    ImmutableList<String> trueCmd = Platform.detect() == Platform.WINDOWS ?
-        ImmutableList.of("cmd", "/C", "(exit 0)") : ImmutableList.of("true");
+    ImmutableList<String> trueCmd =
+        Platform.detect() == Platform.WINDOWS
+            ? ImmutableList.of("cmd", "/C", "(exit 0)")
+            : ImmutableList.of("true");
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
             trueCmd,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.<Long>absent());
+            /* testRuleTimeoutMs */ Optional.empty());
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, "");
@@ -90,16 +88,18 @@ public class CxxTestStepTest {
 
   @Test
   public void failure() throws IOException, InterruptedException {
-    ImmutableList<String> falseCmd = Platform.detect() == Platform.WINDOWS ?
-        ImmutableList.of("cmd", "/C", "(exit 1)") : ImmutableList.of("false");
+    ImmutableList<String> falseCmd =
+        Platform.detect() == Platform.WINDOWS
+            ? ImmutableList.of("cmd", "/C", "(exit 1)")
+            : ImmutableList.of("false");
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
             falseCmd,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.<Long>absent());
+            /* testRuleTimeoutMs */ Optional.empty());
     step.execute(context);
     assertSame(1, readExitCode(exitCode));
     assertContents(output, "");
@@ -108,17 +108,18 @@ public class CxxTestStepTest {
   @Test
   public void output() throws IOException, InterruptedException {
     String stdout = "hello world";
-    ImmutableList<String> echoCmd = Platform.detect() == Platform.WINDOWS ?
-        ImmutableList.of("powershell", "-Command", "echo", "'" + stdout + "'") :
-        ImmutableList.of("echo", stdout);
+    ImmutableList<String> echoCmd =
+        Platform.detect() == Platform.WINDOWS
+            ? ImmutableList.of("powershell", "-Command", "echo", "'" + stdout + "'")
+            : ImmutableList.of("echo", stdout);
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
             echoCmd,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.<Long>absent());
+            /* testRuleTimeoutMs */ Optional.empty());
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, stdout + System.lineSeparator());
@@ -126,13 +127,15 @@ public class CxxTestStepTest {
 
   @Test
   public void timeout() throws IOException, InterruptedException {
-    ImmutableList<String> sleepCmd = Platform.detect() == Platform.WINDOWS ?
-        ImmutableList.of("powershell", "-Command", "sleep 10") : ImmutableList.of("sleep", "10");
+    ImmutableList<String> sleepCmd =
+        Platform.detect() == Platform.WINDOWS
+            ? ImmutableList.of("powershell", "-Command", "sleep 10")
+            : ImmutableList.of("sleep", "10");
     CxxTestStep step =
         new CxxTestStep(
             filesystem,
             sleepCmd,
-            ImmutableMap.<String, String>of(),
+            ImmutableMap.of(),
             exitCode,
             output,
             /* testRuleTimeoutMs */ Optional.of(10L));

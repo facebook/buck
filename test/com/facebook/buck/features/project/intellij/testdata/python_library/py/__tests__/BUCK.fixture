@@ -1,0 +1,5 @@
+python_test(
+    name = "tests",
+    srcs = glob(["*.py"]),
+    visibility = ["PUBLIC"],
+)

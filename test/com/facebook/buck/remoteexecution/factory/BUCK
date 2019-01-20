@@ -1,0 +1,22 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "remotexeecution",
+    srcs = glob([
+        "*.java",
+    ]),
+    has_immutable_types = True,
+    deps = [
+        "//src/com/facebook/buck/event:event",
+        "//src/com/facebook/buck/event/listener/interfaces:interfaces",
+        "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/remoteexecution/config:config",
+        "//src/com/facebook/buck/remoteexecution/factory:factory",
+        "//src/com/facebook/buck/remoteexecution/grpc:grpc",
+        "//src/com/facebook/buck/remoteexecution/util:util",
+        "//test/com/facebook/buck/core/config:testutil",
+        "//test/com/facebook/buck/event:testutil",
+        "//test/com/facebook/buck/util/timing:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

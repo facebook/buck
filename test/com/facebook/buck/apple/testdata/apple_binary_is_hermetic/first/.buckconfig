@@ -1,3 +1,2 @@
 [cxx]
-  preprocess_mode = piped
   separate_debug_symbols = true

@@ -25,9 +25,8 @@ public class SimpleTest {
     System.out.println("all i do is win");
   }
 
-  @Test
+  @Test(expectedExceptions = RuntimeException.class)
   public void defeat() {
     throw new RuntimeException();
   }
 }
-

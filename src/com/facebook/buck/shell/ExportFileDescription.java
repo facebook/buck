@@ -16,66 +16,129 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.UnflavoredBuildTarget;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitInputsInferringDescription;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-public class ExportFileDescription implements
-    Description<ExportFileDescription.Arg>,
-    ImplicitInputsInferringDescription<ExportFileDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("export_file");
+public class ExportFileDescription
+    implements DescriptionWithTargetGraph<ExportFileDescriptionArg>,
+        ImplicitInputsInferringDescription<ExportFileDescriptionArg> {
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<ExportFileDescriptionArg> getConstructorArgType() {
+    return ExportFileDescriptionArg.class;
+  }
+
+  private final ExportFileDirectoryAction directoryAction;
+
+  public ExportFileDescription(BuckConfig buckConfig) {
+    this.directoryAction = getDirectoryActionFromConfig(buckConfig);
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> ExportFile createBuildRule(
-      TargetGraph targetGraph,
+  public ExportFile createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    return new ExportFile(params, new SourcePathResolver(resolver), args);
+      ExportFileDescriptionArg args) {
+    Mode mode = args.getMode().orElse(Mode.COPY);
+
+    String name;
+    if (args.getOut().isPresent()) {
+      if (mode == ExportFileDescription.Mode.REFERENCE) {
+        throw new HumanReadableException(
+            "%s: must not set `out` for `export_file` when using `REFERENCE` mode", buildTarget);
+      }
+      name = args.getOut().get();
+    } else {
+      name = buildTarget.getShortNameAndFlavorPostfix();
+    }
+
+    SourcePath src;
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(context.getActionGraphBuilder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    if (args.getSrc().isPresent()) {
+      if (mode == ExportFileDescription.Mode.REFERENCE
+          && !pathResolver.getFilesystem(args.getSrc().get()).equals(projectFilesystem)) {
+        throw new HumanReadableException(
+            "%s: must use `COPY` mode for `export_file` when source (%s) uses a different cell",
+            buildTarget, args.getSrc().get());
+      }
+      src = args.getSrc().get();
+    } else {
+      src =
+          PathSourcePath.of(
+              projectFilesystem,
+              buildTarget.getBasePath().resolve(buildTarget.getShortNameAndFlavorPostfix()));
+    }
+
+    return new ExportFile(
+        buildTarget, projectFilesystem, ruleFinder, name, mode, src, directoryAction);
   }
 
-  /**
-   * If the src field is absent, add the name field to the list of inputs.
-   */
+  private static ExportFileDirectoryAction getDirectoryActionFromConfig(BuckConfig buckConfig) {
+    return buckConfig
+        .getEnum("export_file", "input_directory_action", ExportFileDirectoryAction.class)
+        .orElse(ExportFileDirectoryAction.ALLOW);
+  }
+
+  /** If the src field is absent, add the name field to the list of inputs. */
   @Override
   public Iterable<Path> inferInputsFromConstructorArgs(
-      UnflavoredBuildTarget buildTarget,
-      ExportFileDescription.Arg constructorArg) {
+      UnflavoredBuildTarget buildTarget, ExportFileDescriptionArg constructorArg) {
     ImmutableList.Builder<Path> inputs = ImmutableList.builder();
-    if (!constructorArg.src.isPresent()) {
-      String name = buildTarget.getBasePathWithSlash() + buildTarget.getShortName();
-      inputs.add(Paths.get(name));
+    if (!constructorArg.getSrc().isPresent()) {
+      inputs.add(buildTarget.getBasePath().resolve(buildTarget.getShortName()));
     }
     return inputs.build();
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    public Optional<SourcePath> src;
-    public Optional<String> out;
+  @Override
+  public boolean producesCacheableSubgraph() {
+    return true;
+  }
+
+  /** Controls how `export_file` exports it's wrapped source. */
+  public enum Mode {
+
+    /**
+     * Forward the wrapped {@link SourcePath} reference without any build time overhead (e.g.
+     * copying, caching, etc).
+     */
+    REFERENCE,
+
+    /**
+     * Create and export a copy of the wrapped {@link SourcePath} (incurring the cost of copying and
+     * caching this copy at build time).
+     */
+    COPY,
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractExportFileDescriptionArg extends CommonDescriptionArg {
+    Optional<SourcePath> getSrc();
+
+    Optional<String> getOut();
+
+    Optional<Mode> getMode();
   }
 }

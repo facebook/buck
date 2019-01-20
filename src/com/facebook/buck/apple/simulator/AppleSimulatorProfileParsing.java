@@ -18,30 +18,25 @@ package com.facebook.buck.apple.simulator;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
-import com.dd.plist.NSObject;
 import com.dd.plist.NSNumber;
+import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
-
-import com.facebook.buck.log.Logger;
-
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.util.log.Logger;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Optional;
 
-/**
- * Utility class to parse profile.plist from an iPhone simulator platform.
- */
+/** Utility class to parse profile.plist from an iPhone simulator platform. */
 public class AppleSimulatorProfileParsing {
 
   private static final Logger LOG = Logger.get(AppleSimulatorProfileParsing.class);
 
   // Utility class, do not instantiate.
-  private AppleSimulatorProfileParsing() { }
+  private AppleSimulatorProfileParsing() {}
 
   public static Optional<AppleSimulatorProfile> parseProfilePlistStream(InputStream inputStream)
-    throws IOException {
+      throws IOException {
     NSDictionary profile;
     try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
       try {
@@ -55,7 +50,7 @@ public class AppleSimulatorProfileParsing {
     if (!(supportedProductFamilyIDsObject instanceof NSArray)) {
       LOG.warn(
           "Invalid simulator profile.plist (supportedProductFamilyIDs missing or not an array)");
-      return Optional.absent();
+      return Optional.empty();
     }
     NSArray supportedProductFamilyIDs = (NSArray) supportedProductFamilyIDsObject;
 
@@ -68,14 +63,14 @@ public class AppleSimulatorProfileParsing {
         LOG.warn(
             "Invalid simulator profile.plist (supportedProductFamilyIDs contains non-number %s)",
             supportedProductFamilyID);
-        return Optional.absent();
+        return Optional.empty();
       }
     }
 
     NSObject supportedArchsObject = profile.objectForKey("supportedArchs");
     if (!(supportedArchsObject instanceof NSArray)) {
       LOG.warn("Invalid simulator profile.plist (supportedArchs missing or not an array)");
-      return Optional.absent();
+      return Optional.empty();
     }
     NSArray supportedArchs = (NSArray) supportedArchsObject;
     for (NSObject supportedArch : supportedArchs.getArray()) {

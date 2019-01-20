@@ -16,183 +16,169 @@
 
 package com.facebook.buck.jvm.scala;
 
-import com.facebook.buck.cxx.CxxPlatform;
-import com.facebook.buck.jvm.common.ResourceValidator;
-import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.JavaTestDescription;
+import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.TestType;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.CellPathResolver;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.ImplicitDepsInferringDescription;
-import com.facebook.buck.rules.Label;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.Tool;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
-import com.google.common.base.Supplier;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.util.Optionals;
+import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import java.util.Optional;
+import java.util.function.Supplier;
+import org.immutables.value.Value;
 
-import java.nio.file.Path;
-import java.util.logging.Level;
+public class ScalaTestDescription
+    implements DescriptionWithTargetGraph<ScalaTestDescriptionArg>,
+        ImplicitDepsInferringDescription<ScalaTestDescription.AbstractScalaTestDescriptionArg> {
 
-public class ScalaTestDescription implements Description<ScalaTestDescription.Arg>,
-    ImplicitDepsInferringDescription<ScalaTestDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("scala_test");
-
+  private final ToolchainProvider toolchainProvider;
   private final ScalaBuckConfig config;
-  private final JavaOptions javaOptions;
-  private final Optional<Long> defaultTestRuleTimeoutMs;
-  private final CxxPlatform cxxPlatform;
-  private final Optional<Path> testTempDirOverride;
+  private final JavaBuckConfig javaBuckConfig;
+  private final Supplier<JavaOptions> javaOptionsForTests;
+  private final JavacFactory javacFactory;
 
   public ScalaTestDescription(
-      ScalaBuckConfig config,
-      JavaOptions javaOptions,
-      Optional<Long> defaultTestRuleTimeoutMs,
-      CxxPlatform cxxPlatform,
-      Optional<Path> testTempDirOverride) {
+      ToolchainProvider toolchainProvider, ScalaBuckConfig config, JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.config = config;
-    this.javaOptions = javaOptions;
-    this.defaultTestRuleTimeoutMs = defaultTestRuleTimeoutMs;
-    this.cxxPlatform = cxxPlatform;
-    this.testTempDirOverride = testTempDirOverride;
+    this.javaBuckConfig = javaBuckConfig;
+    this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
+    this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<ScalaTestDescriptionArg> getConstructorArgType() {
+    return ScalaTestDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> JavaTest createBuildRule(
-      TargetGraph targetGraph,
-      final BuildRuleParams rawParams,
-      final BuildRuleResolver resolver,
-      A args) throws NoSuchBuildTargetException {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-
-    final BuildRule scalaLibrary = resolver.getRule(config.getScalaLibraryTarget());
-    BuildRuleParams params = rawParams.copyWithDeps(
-        new Supplier<ImmutableSortedSet<BuildRule>>() {
-          @Override
-          public ImmutableSortedSet<BuildRule> get() {
-            return ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(rawParams.getDeclaredDeps().get())
-                .add(scalaLibrary)
-                .build();
-          }
-        },
-        rawParams.getExtraDeps()
-    );
-
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      BuildRuleParams rawParams,
+      ScalaTestDescriptionArg args) {
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     JavaTestDescription.CxxLibraryEnhancement cxxLibraryEnhancement =
         new JavaTestDescription.CxxLibraryEnhancement(
-            params,
-            args.useCxxLibraries,
-            resolver,
-            pathResolver,
-            cxxPlatform);
-    params = cxxLibraryEnhancement.updatedParams;
+            buildTarget,
+            projectFilesystem,
+            rawParams,
+            args.getUseCxxLibraries(),
+            args.getCxxLibraryWhitelist(),
+            graphBuilder,
+            ruleFinder,
+            toolchainProvider
+                .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+                .getDefaultCxxPlatform());
+    BuildRuleParams params = cxxLibraryEnhancement.updatedParams;
+    BuildTarget javaLibraryBuildTarget =
+        buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);
 
-    Tool scalac = config.getScalac(resolver);
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            graphBuilder,
+            args);
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    CellPathResolver cellRoots = context.getCellPathResolver();
+    DefaultJavaLibraryRules scalaLibraryBuilder =
+        ScalaLibraryBuilder.newInstance(
+                javaLibraryBuildTarget,
+                projectFilesystem,
+                context.getToolchainProvider(),
+                params,
+                graphBuilder,
+                cellRoots,
+                config,
+                javaBuckConfig,
+                args,
+                javacFactory)
+            .setJavacOptions(javacOptions)
+            .build();
 
-    JavaTest test =
-        resolver.addToIndex(
-            new JavaTest(
-                params.appendExtraDeps(
-                    Iterables.concat(
-                        BuildRules.getExportedRules(
-                            Iterables.concat(
-                                params.getDeclaredDeps().get(),
-                                resolver.getAllRules(args.providedDeps.get()))),
-                        scalac.getDeps(pathResolver))),
-                pathResolver,
-                args.srcs.get(),
-                ResourceValidator.validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources.get()),
-                /* generatedSourceFolderName */ Optional.<Path>absent(),
-                args.labels.get(),
-                args.contacts.get(),
-                /* proguardConfig */ Optional.<SourcePath>absent(),
-                new BuildTargetSourcePath(abiJarTarget),
-                /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                args.testType.or(TestType.JUNIT),
-                new ScalacToJarStepFactory(
-                    scalac,
-                    ImmutableList.<String>builder()
-                        .addAll(config.getCompilerFlags())
-                        .addAll(args.extraArguments.get())
-                        .build()
-                ),
-                javaOptions.getJavaRuntimeLauncher(),
-                args.vmArgs.get(),
-                /* sourcesUnderTest */ cxxLibraryEnhancement.nativeLibsEnvironment,
-                ImmutableSet.<BuildRule>of(),
-                args.resourcesRoot,
-                args.mavenCoords,
-                args.testRuleTimeoutMs.or(defaultTestRuleTimeoutMs),
-                args.runTestSeparately.or(false),
-                args.stdOutLogLevel,
-                args.stdErrLogLevel,
-                testTempDirOverride));
+    if (JavaAbis.isAbiTarget(buildTarget)) {
+      return scalaLibraryBuilder.buildAbi();
+    }
 
-    resolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
-            pathResolver,
-            params,
-            new BuildTargetSourcePath(test.getBuildTarget())));
+    StringWithMacrosConverter macrosConverter =
+        StringWithMacrosConverter.builder()
+            .setBuildTarget(buildTarget)
+            .setCellPathResolver(cellRoots)
+            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
+            .build();
+    JavaLibrary testsLibrary = graphBuilder.addToIndex(scalaLibraryBuilder.buildLibrary());
 
-    return test;
+    return new JavaTest(
+        buildTarget,
+        projectFilesystem,
+        params.withDeclaredDeps(ImmutableSortedSet.of(testsLibrary)).withoutExtraDeps(),
+        testsLibrary,
+        Optional.empty(),
+        args.getLabels(),
+        args.getContacts(),
+        args.getTestType().isPresent() ? args.getTestType().get() : TestType.JUNIT,
+        javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder),
+        Lists.transform(args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)),
+        cxxLibraryEnhancement.nativeLibsEnvironment,
+        args.getTestRuleTimeoutMs()
+            .map(Optional::of)
+            .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
+        args.getTestCaseTimeoutMs(),
+        ImmutableMap.copyOf(
+            Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
+        args.getRunTestSeparately(),
+        args.getForkMode(),
+        args.getStdOutLogLevel(),
+        args.getStdErrLogLevel(),
+        args.getUnbundledResourcesRoot());
   }
 
   @Override
-  public Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(
+  public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
       CellPathResolver cellRoots,
-      Arg constructorArg) {
-    return ImmutableList.<BuildTarget>builder()
-        .add(config.getScalaLibraryTarget())
-        .addAll(config.getScalacTarget().asSet())
-        .build();
+      AbstractScalaTestDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    extraDepsBuilder.add(config.getScalaLibraryTarget());
+    Optionals.addIfPresent(config.getScalacTarget(), extraDepsBuilder);
+    javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends ScalaLibraryDescription.Arg {
-    public Optional<ImmutableSortedSet<String>> contacts;
-    public Optional<ImmutableSortedSet<Label>> labels;
-    public Optional<ImmutableList<String>> vmArgs;
-    public Optional<TestType> testType;
-    public Optional<Boolean> runTestSeparately;
-    public Optional<Level> stdErrLogLevel;
-    public Optional<Level> stdOutLogLevel;
-    public Optional<Boolean> useCxxLibraries;
-    public Optional<Long> testRuleTimeoutMs;
-  }
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractScalaTestDescriptionArg
+      extends ScalaLibraryDescription.CoreArg, JavaTestDescription.CoreArg {}
 }

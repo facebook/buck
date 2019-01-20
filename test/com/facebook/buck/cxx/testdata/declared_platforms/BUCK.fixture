@@ -1,0 +1,43 @@
+cxx_binary(
+    name = "simple",
+    srcs = [
+        "simple.cpp",
+    ],
+    deps = [
+        ":library#my-favorite-platform",
+    ],
+)
+
+cxx_library(
+    name = "library",
+    srcs = [
+        "bar.cpp",
+    ],
+    exported_headers = [
+        "bar.h",
+    ],
+)
+
+cxx_binary(
+    name = "defaults",
+    srcs = [
+        "simple.cpp",
+    ],
+    defaults = {
+        "platform": "my-favorite-platform",
+    },
+    deps = [
+        ":library",
+    ],
+)
+
+cxx_binary(
+    name = "default_platform",
+    srcs = [
+        "simple.cpp",
+    ],
+    default_platform = "my-favorite-platform",
+    deps = [
+        ":library",
+    ],
+)

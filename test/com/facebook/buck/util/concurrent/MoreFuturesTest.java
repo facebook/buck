@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
-
 import org.junit.Test;
 
 public class MoreFuturesTest {

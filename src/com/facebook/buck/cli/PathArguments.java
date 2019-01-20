@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.google.common.collect.ImmutableSet;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,15 +40,13 @@ public class PathArguments {
   }
 
   /**
-   * Filter files under the project root, and convert to canonical relative path style.
-   * For example, the project root is /project,
-   * 1. file path /project/./src/com/facebook/./test/../Test.java will be converted to
-   *    src/com/facebook/Test.java
-   * 2. file path /otherproject/src/com/facebook/Test.java will be ignored.
+   * Filter files under the project root, and convert to canonical relative path style. For example,
+   * the project root is /project, 1. file path /project/./src/com/facebook/./test/../Test.java will
+   * be converted to src/com/facebook/Test.java 2. file path
+   * /otherproject/src/com/facebook/Test.java will be ignored.
    */
   static ReferencedFiles getCanonicalFilesUnderProjectRoot(
-      Path projectRoot, Iterable<String> nonCanonicalFilePaths)
-      throws IOException {
+      Path projectRoot, Iterable<String> nonCanonicalFilePaths) throws IOException {
     // toRealPath() is used throughout to resolve symlinks or else the Path.startsWith() check will
     // not be reliable.
     ImmutableSet.Builder<Path> projectFiles = ImmutableSet.builder();
@@ -68,9 +65,9 @@ public class PathArguments {
 
       // Ignore files that aren't under project root.
       if (canonicalFullPath.startsWith(normalizedRoot)) {
-        Path relativePath = canonicalFullPath.subpath(
-            normalizedRoot.getNameCount(),
-            canonicalFullPath.getNameCount());
+        Path relativePath =
+            canonicalFullPath.subpath(
+                normalizedRoot.getNameCount(), canonicalFullPath.getNameCount());
         projectFiles.add(relativePath);
       } else {
         nonProjectFiles.add(canonicalFullPath);
@@ -78,6 +75,4 @@ public class PathArguments {
     }
     return new ReferencedFiles(projectFiles.build(), nonProjectFiles.build());
   }
-
-
 }

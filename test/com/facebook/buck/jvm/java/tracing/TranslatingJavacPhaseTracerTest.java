@@ -16,6 +16,10 @@
 
 package com.facebook.buck.jvm.java.tracing;
 
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+
+import com.google.common.collect.ImmutableList;
 import org.easymock.EasyMockRunner;
 import org.easymock.Mock;
 import org.easymock.MockType;
@@ -23,16 +27,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
-
-import com.google.common.collect.ImmutableList;
-
 @RunWith(EasyMockRunner.class)
 public class TranslatingJavacPhaseTracerTest {
 
   @Mock(type = MockType.STRICT)
   private JavacPhaseEventLogger mockLogger;
+
   private TranslatingJavacPhaseTracer tracer;
 
   @Before
@@ -48,12 +48,12 @@ public class TranslatingJavacPhaseTracerTest {
     mockLogger.endParse();
     mockLogger.beginEnter();
     mockLogger.endEnter(ImmutableList.of("file1", "file2"));
-    mockLogger.beginAnalyze("file1", "type1");
-    mockLogger.endAnalyze();
+    mockLogger.beginAnalyze();
+    mockLogger.endAnalyze(ImmutableList.of("file1"), ImmutableList.of("type1"));
     mockLogger.beginGenerate("file1", "type1");
     mockLogger.endGenerate();
-    mockLogger.beginAnalyze("file2", "type2");
-    mockLogger.endAnalyze();
+    mockLogger.beginAnalyze();
+    mockLogger.endAnalyze(ImmutableList.of("file2"), ImmutableList.of("type2"));
     mockLogger.beginGenerate("file2", "type2");
     mockLogger.endGenerate();
 
@@ -65,12 +65,12 @@ public class TranslatingJavacPhaseTracerTest {
     tracer.endParse();
     tracer.beginEnter();
     tracer.endEnter(ImmutableList.of("file1", "file2"));
-    tracer.beginAnalyze("file1", "type1");
-    tracer.endAnalyze();
+    tracer.beginAnalyze();
+    tracer.endAnalyze(ImmutableList.of("file1"), ImmutableList.of("type1"));
     tracer.beginGenerate("file1", "type1");
     tracer.endGenerate();
-    tracer.beginAnalyze("file2", "type2");
-    tracer.endAnalyze();
+    tracer.beginAnalyze();
+    tracer.endAnalyze(ImmutableList.of("file2"), ImmutableList.of("type2"));
     tracer.beginGenerate("file2", "type2");
     tracer.endGenerate();
     tracer.close();
@@ -100,18 +100,26 @@ public class TranslatingJavacPhaseTracerTest {
     mockLogger.endRunAnnotationProcessors();
     mockLogger.beginEnter();
     mockLogger.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
+    mockLogger.endAnnotationProcessingRound(false);
+    mockLogger.beginAnnotationProcessingRound(3);
+    mockLogger.beginRunAnnotationProcessors();
+    mockLogger.endRunAnnotationProcessors();
+    mockLogger.beginParse("lastRoundGenerated");
+    mockLogger.endParse();
+    mockLogger.beginEnter();
+    mockLogger.endEnter(ImmutableList.of("file1", "file2", "generatedFile1", "lastRoundGenerated"));
     mockLogger.endAnnotationProcessingRound(true);
     mockLogger.endAnnotationProcessing();
-    mockLogger.beginAnalyze("file1", "type1");
-    mockLogger.endAnalyze();
+    mockLogger.beginAnalyze();
+    mockLogger.endAnalyze(ImmutableList.of("file1"), ImmutableList.of("type1"));
     mockLogger.beginGenerate("file1", "type1");
     mockLogger.endGenerate();
-    mockLogger.beginAnalyze("file2", "type2");
-    mockLogger.endAnalyze();
+    mockLogger.beginAnalyze();
+    mockLogger.endAnalyze(ImmutableList.of("file2"), ImmutableList.of("type2"));
     mockLogger.beginGenerate("file2", "type2");
     mockLogger.endGenerate();
-    mockLogger.beginAnalyze("generatedFile1", "generatedType1");
-    mockLogger.endAnalyze();
+    mockLogger.beginAnalyze();
+    mockLogger.endAnalyze(ImmutableList.of("generatedFile1"), ImmutableList.of("generatedType1"));
     mockLogger.beginGenerate("generatedFile1", "generatedType1");
     mockLogger.endGenerate();
 
@@ -133,16 +141,23 @@ public class TranslatingJavacPhaseTracerTest {
     tracer.endAnnotationProcessingRound();
     tracer.beginEnter();
     tracer.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
-    tracer.beginAnalyze("file1", "type1");
-    tracer.endAnalyze();
+    tracer.beginAnnotationProcessingRound();
+    tracer.endAnnotationProcessingRound();
+    tracer.beginParse("lastRoundGenerated");
+    tracer.endParse();
+    tracer.setIsLastRound(true);
+    tracer.beginEnter();
+    tracer.endEnter(ImmutableList.of("file1", "file2", "generatedFile1", "lastRoundGenerated"));
+    tracer.beginAnalyze();
+    tracer.endAnalyze(ImmutableList.of("file1"), ImmutableList.of("type1"));
     tracer.beginGenerate("file1", "type1");
     tracer.endGenerate();
-    tracer.beginAnalyze("file2", "type2");
-    tracer.endAnalyze();
+    tracer.beginAnalyze();
+    tracer.endAnalyze(ImmutableList.of("file2"), ImmutableList.of("type2"));
     tracer.beginGenerate("file2", "type2");
     tracer.endGenerate();
-    tracer.beginAnalyze("generatedFile1", "generatedType1");
-    tracer.endAnalyze();
+    tracer.beginAnalyze();
+    tracer.endAnalyze(ImmutableList.of("generatedFile1"), ImmutableList.of("generatedType1"));
     tracer.beginGenerate("generatedFile1", "generatedType1");
     tracer.endGenerate();
     tracer.close();
@@ -175,7 +190,7 @@ public class TranslatingJavacPhaseTracerTest {
     verify(mockLogger);
   }
 
-  private void traceProcOnlyEvents(final TranslatingJavacPhaseTracer tracer) {
+  private void traceProcOnlyEvents(TranslatingJavacPhaseTracer tracer) {
     tracer.beginParse("file1");
     tracer.endParse();
     tracer.beginParse("file2");
@@ -190,10 +205,15 @@ public class TranslatingJavacPhaseTracerTest {
     tracer.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
     tracer.beginAnnotationProcessingRound();
     tracer.endAnnotationProcessingRound();
+    tracer.beginEnter();
+    tracer.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
+    tracer.beginAnnotationProcessingRound();
+    tracer.endAnnotationProcessingRound();
+    tracer.setIsLastRound(true);
     tracer.close();
   }
 
-  private void logDesiredEventStreamForProcOnly(final JavacPhaseEventLogger logger) {
+  private void logDesiredEventStreamForProcOnly(JavacPhaseEventLogger logger) {
     logger.beginParse("file1");
     logger.endParse();
     logger.beginParse("file2");
@@ -210,6 +230,12 @@ public class TranslatingJavacPhaseTracerTest {
     logger.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
     logger.endAnnotationProcessingRound(false);
     logger.beginAnnotationProcessingRound(2);
+    logger.beginRunAnnotationProcessors();
+    logger.endRunAnnotationProcessors();
+    logger.beginEnter();
+    logger.endEnter(ImmutableList.of("file1", "file2", "generatedFile1"));
+    logger.endAnnotationProcessingRound(false);
+    logger.beginAnnotationProcessingRound(3);
     logger.beginRunAnnotationProcessors();
     logger.endRunAnnotationProcessors();
     logger.endAnnotationProcessingRound(true);

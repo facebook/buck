@@ -1,0 +1,41 @@
+java_library(
+    name = "moduleclass",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/module/impl:impl",
+        "//src/com/facebook/buck/core/plugin/impl:impl",
+        "//test/com/facebook/buck/core/module/impl:test_extension",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+        "//third-party/java/slf4j:slf4j-api",
+    ],
+)
+
+java_binary(
+    name = "moduleclass-jar",
+    main_class = "com.facebook.buck.core.module.impl.jarwithouthash.ModuleClassTest",
+    deps = [
+        ":moduleclass",
+        "//third-party/java/slf4j:slf4j",
+    ],
+)
+
+# Copy modules to a place where they can be loaded by plugin manager
+genrule(
+    name = "copy-modules",
+    out = "modules",
+    cmd = "mkdir -p $OUT; cp $(location //test/com/facebook/buck/core/module/impl/jarwithouthash/test_module:test_module-module) $OUT",
+    cmd_exe = "mkdir $OUT && copy $(location //test/com/facebook/buck/core/module/impl/jarwithouthash/test_module:test_module-module) $OUT",
+)
+
+# Running tests as a shell script to reconstruct the layout of modules and how they are loaded
+sh_test(
+    name = "moduleclass-test",
+    args = [
+        "java",
+        "-Dpf4j.pluginsDir=$(location :copy-modules)",
+        "-jar",
+        "$(location :moduleclass-jar)",
+    ],
+    test = "//test/com/facebook/buck/core/module/impl:run.sh",
+)

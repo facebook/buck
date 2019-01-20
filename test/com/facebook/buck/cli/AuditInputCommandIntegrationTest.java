@@ -16,18 +16,17 @@
 
 package com.facebook.buck.cli;
 
-import static org.junit.Assert.assertEquals;
+import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.ProjectWorkspace.ProcessResult;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
 
 public class AuditInputCommandIntegrationTest {
 
@@ -36,42 +35,47 @@ public class AuditInputCommandIntegrationTest {
   private String expectedStdoutJson =
       Platform.detect() == Platform.WINDOWS ? "stdout-windows.json" : "stdout.json";
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void testBuckAuditInputAppleResourceDirs() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_input", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents(expectedStdout), result.getStdout());
+    assertThat(
+        workspace.getFileContents(expectedStdout),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
   public void testBuckAuditInputJsonAppleResourceDirs() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_input", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input", tmp);
     workspace.setUp();
 
     // Print all of the inputs to the rule in JSON format.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo", "--json");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents(expectedStdoutJson), result.getStdout());
+    assertThat(
+        workspace.getFileContents(expectedStdoutJson),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 
   @Test
   public void testBuckAuditInputExportFileWithoutSrc() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "audit_input_no_src", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_input_no_src", tmp);
     workspace.setUp();
 
-    // Print all of the inputs to the rule.
+    // Print all of the inputs to thAe rule.
     ProcessResult result = workspace.runBuckCommand("audit", "input", "//example:foo.plist");
     result.assertSuccess();
-    assertEquals(workspace.getFileContents(expectedStdout), result.getStdout());
+    assertThat(
+        workspace.getFileContents(expectedStdout),
+        equalToIgnoringPlatformNewlines(result.getStdout()));
   }
 }

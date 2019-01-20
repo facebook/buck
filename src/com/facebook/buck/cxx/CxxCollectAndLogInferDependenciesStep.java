@@ -16,22 +16,17 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.collect.ImmutableList;
-
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
-public final class CxxCollectAndLogInferDependenciesStep implements Step {
-
-  private static final String SPLIT_TOKEN = "\t";
+final class CxxCollectAndLogInferDependenciesStep implements Step {
 
   private Optional<CxxInferAnalyze> analysisRule;
   private Optional<CxxInferCaptureTransitive> captureOnlyRule;
@@ -50,14 +45,9 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   public static CxxCollectAndLogInferDependenciesStep fromAnalyzeRule(
-      CxxInferAnalyze analyzeRule,
-      ProjectFilesystem projectFilesystem,
-      Path outputFile) {
+      CxxInferAnalyze analyzeRule, ProjectFilesystem projectFilesystem, Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
-        Optional.of(analyzeRule),
-        Optional.<CxxInferCaptureTransitive>absent(),
-        projectFilesystem,
-        outputFile);
+        Optional.of(analyzeRule), Optional.empty(), projectFilesystem, outputFile);
   }
 
   public static CxxCollectAndLogInferDependenciesStep fromCaptureOnlyRule(
@@ -65,24 +55,13 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       ProjectFilesystem projectFilesystem,
       Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
-        Optional.<CxxInferAnalyze>absent(),
-        Optional.of(captureOnlyRule),
-        projectFilesystem,
-        outputFile);
-  }
-
-  private String computeOutput(
-      BuildTarget target,
-      Path output) {
-    return target.toString() +
-        SPLIT_TOKEN +
-        target.getFlavors().toString() +
-        SPLIT_TOKEN +
-        output.toString();
+        Optional.empty(), Optional.of(captureOnlyRule), projectFilesystem, outputFile);
   }
 
   private String processCaptureRule(CxxInferCapture captureRule) {
-    return computeOutput(captureRule.getBuildTarget(), captureRule.getPathToOutput());
+    return InferLogLine.fromBuildTarget(
+            captureRule.getBuildTarget(), captureRule.getAbsolutePathToOutput())
+        .toString();
   }
 
   private ImmutableList<String> processCaptureOnlyRule(CxxInferCaptureTransitive captureOnlyRule) {
@@ -94,18 +73,13 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   private void processAnalysisRuleHelper(
-      CxxInferAnalyze analysisRule,
-      ImmutableList.Builder<String> accumulator) {
-    accumulator.add(computeOutput(analysisRule.getBuildTarget(), analysisRule.getResultsDir()));
+      CxxInferAnalyze analysisRule, ImmutableList.Builder<String> accumulator) {
+    accumulator.add(
+        InferLogLine.fromBuildTarget(
+                analysisRule.getBuildTarget(), analysisRule.getAbsolutePathToResultsDir())
+            .toString());
     accumulator.addAll(
-        FluentIterable.from(analysisRule.getCaptureRules()).transform(
-            new Function<CxxInferCapture, String>() {
-              @Override
-              public String apply(CxxInferCapture captureRule) {
-                return processCaptureRule(captureRule);
-              }
-            }
-        ));
+        analysisRule.getCaptureRules().stream().map(this::processCaptureRule).iterator());
   }
 
   private ImmutableList<String> processAnalysisRule(CxxInferAnalyze analyzeRule) {
@@ -118,8 +92,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ImmutableList<String> output;
     if (analysisRule.isPresent()) {
       output = processAnalysisRule(analysisRule.get());
@@ -129,7 +102,7 @@ public final class CxxCollectAndLogInferDependenciesStep implements Step {
       throw new IllegalStateException("Expected non-empty analysis or capture rules in input");
     }
     projectFilesystem.writeLinesToPath(output, outputFile);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override

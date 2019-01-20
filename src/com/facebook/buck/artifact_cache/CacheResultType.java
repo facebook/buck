@@ -16,35 +16,44 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.google.common.base.Verify;
+
 public enum CacheResultType {
 
-    /** Artifact was successfully fetched from cache */
-    HIT(/* success */ true),
+  /** Artifact was successfully fetched from cache */
+  HIT(/* success */ true),
 
-    /** Artifact was missing from cache */
-    MISS(/* success */ false),
+  /** Artifact was missing from cache */
+  MISS(/* success */ false),
 
-    /** An error occurred when fetching artifact from cache*/
-    ERROR(/* success */ false),
+  /** An error occurred when fetching artifact from cache */
+  ERROR(/* success */ false),
 
-    /** The rule was uncachable */
-    IGNORED(/* success */ false),
+  /** The rule was uncachable */
+  IGNORED(/* success */ false),
 
-    /** Artifact cache not queried because the local cache key was unchanged. */
-    LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
+  /** The cache skipped checking this result */
+  SKIPPED(/* success */ false),
 
-    ;
+  /** The cache contains this artifact, but was not fetched */
+  CONTAINS(/* success */ true),
 
-    private boolean success;
+  /** Artifact cache not queried because the local cache key was unchanged. */
+  LOCAL_KEY_UNCHANGED_HIT(/* success */ true),
+  ;
 
-    CacheResultType(boolean success) {
-        this.success = success;
-    }
+  private boolean success;
 
-  /**
-   * Whether the artifact was successfully fetched.
-   */
+  CacheResultType(boolean success) {
+    this.success = success;
+  }
+
+  /** Whether the artifact was successfully fetched. */
   public boolean isSuccess() {
-        return success;
-    }
+    return success;
+  }
+
+  public void verifyValidFinalType() {
+    Verify.verify(this != CONTAINS, "CONTAINS is not a valid final cache result type.");
+  }
 }

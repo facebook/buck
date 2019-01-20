@@ -1,0 +1,63 @@
+rust_binary(
+    name = "hello",
+    srcs = ["hello.rs"],
+    deps = [
+        ":foo",
+    ],
+)
+
+rust_binary(
+    name = "hello_alias",
+    srcs = ["hello_alias.rs"],
+    deps = [
+        ":aliasedfoo",
+    ],
+)
+
+rust_binary(
+    name = "hello_foobar",
+    srcs = ["hello_foobar.rs"],
+    deps = [
+        ":foodep",
+    ],
+)
+
+# Prebuilts
+prebuilt_rust_library(
+    name = "foo",
+    rlib = ":generated_foo",
+)
+
+prebuilt_rust_library(
+    name = "foodep",
+    rlib = ":generated_foodep",
+    deps = ["//otherlib:bar"],
+)
+
+prebuilt_rust_library(
+    name = "aliasedfoo",
+    crate = "foo",
+    rlib = ":generated_aliasedfoo",
+)
+
+# Generate .rlib files
+genrule(
+    name = "generated_foo",
+    srcs = ["foo.rs"],
+    out = "libfoo.rlib",
+    cmd = "rustc --crate-type=rlib --crate-name=foo -o $OUT $SRCS",
+)
+
+genrule(
+    name = "generated_foodep",
+    srcs = ["foodep.rs"],
+    out = "libfoodep.rlib",
+    cmd = "rustc --crate-type=rlib --crate-name=foodep -o $OUT --extern bar=$(location //otherlib:bar) $SRCS",
+)
+
+genrule(
+    name = "generated_aliasedfoo",
+    srcs = ["foo.rs"],
+    out = "libfooalias.rlib",
+    cmd = "rustc --crate-type=rlib --crate-name=foo -o $OUT $SRCS",
+)

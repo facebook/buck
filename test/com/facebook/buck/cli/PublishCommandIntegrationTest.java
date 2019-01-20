@@ -17,24 +17,35 @@
 package com.facebook.buck.cli;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.jvm.java.Javac;
-import com.facebook.buck.maven.AetherUtil;
-import com.facebook.buck.maven.TestPublisher;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.maven.aether.AetherUtil;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.HttpdForTests;
+import com.facebook.buck.testutil.integration.HttpdForTests.DummyPutRequestsHandler;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.FluentIterable;
-
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSortedSet.Builder;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.util.List;
 
 public class PublishCommandIntegrationTest {
   public static final String EXPECTED_PUT_URL_PATH_BASE = "/com/example/foo/1.0/foo-1.0";
@@ -43,47 +54,48 @@ public class PublishCommandIntegrationTest {
   public static final String SRC_JAR = Javac.SRC_JAR;
   public static final String SHA1 = ".sha1";
   public static final String TARGET = "//:foo";
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
 
-  private TestPublisher publisher;
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  private DummyPutRequestsHandler requestsHandler;
+  private HttpdForTests httpd;
 
   @Before
   public void setUp() throws Exception {
-    publisher = TestPublisher.create(tmp);
+    requestsHandler = new DummyPutRequestsHandler();
+    httpd = new HttpdForTests();
+    httpd.addHandler(requestsHandler);
+    httpd.start();
   }
 
   @After
   public void tearDown() throws Exception {
-    publisher.close();
+    httpd.close();
   }
 
   @Test
   public void testDependenciesTriggerPomGeneration() throws IOException {
-    ProjectWorkspace.ProcessResult result = runValidBuckPublish("publish_fatjar");
+    ProcessResult result = runValidBuckPublish("publish_fatjar");
     result.assertSuccess();
-    List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
+    List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + POM));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + POM + SHA1));
   }
 
   @Test
   public void testBasicCase() throws IOException {
-    ProjectWorkspace.ProcessResult result = runValidBuckPublish("publish");
+    ProcessResult result = runValidBuckPublish("publish");
     result.assertSuccess();
   }
 
-  private ProjectWorkspace.ProcessResult runValidBuckPublish(String workspaceName)
-      throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, workspaceName, tmp);
+  private ProcessResult runValidBuckPublish(String workspaceName) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, workspaceName, tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = runBuckPublish(
-        workspace,
-        PublishCommand.INCLUDE_SOURCE_LONG_ARG);
+    ProcessResult result = runBuckPublish(workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG);
     result.assertSuccess();
-    List<String> putRequestsPaths = publisher.getPutRequestsHandler().getPutRequestsPaths();
+    List<String> putRequestsPaths = requestsHandler.getPutRequestsPaths();
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + JAR + SHA1));
     assertThat(putRequestsPaths, hasItem(EXPECTED_PUT_URL_PATH_BASE + SRC_JAR));
@@ -93,56 +105,119 @@ public class PublishCommandIntegrationTest {
 
   @Test
   public void testRequireRepoUrl() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "publish", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = workspace.runBuckCommand(
-        "publish",
-        "//:foo");
-    result.assertFailure();
+    ProcessResult result = workspace.runBuckCommand("publish", "//:foo");
+    result.assertExitCode("url is required", ExitCode.COMMANDLINE_ERROR);
     assertTrue(result.getStderr().contains(PublishCommand.REMOTE_REPO_LONG_ARG));
   }
 
   @Test
-  public void testDryDun() throws IOException {
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "publish", tmp);
+  public void testErrorOnMultiplePublishDest() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
     workspace.setUp();
 
-    ProjectWorkspace.ProcessResult result = runBuckPublish(
-        workspace,
-        PublishCommand.INCLUDE_SOURCE_LONG_ARG,
-        PublishCommand.DRY_RUN_LONG_ARG);
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "publish", "//:foo", "--remote-repo=http://foo.bar", "--to-maven-central");
+    result.assertExitCode("please specify only a single remote", ExitCode.COMMANDLINE_ERROR);
+    assertTrue(result.getStderr().contains(PublishCommand.REMOTE_REPO_LONG_ARG));
+    assertTrue(result.getStderr().contains(PublishCommand.TO_MAVEN_CENTRAL_LONG_ARG));
+  }
+
+  @Test
+  public void testDryDun() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        runBuckPublish(
+            workspace, PublishCommand.INCLUDE_SOURCE_LONG_ARG, PublishCommand.DRY_RUN_LONG_ARG);
     result.assertSuccess();
 
-    assertTrue(publisher.getPutRequestsHandler().getPutRequestsPaths().isEmpty());
+    assertTrue(requestsHandler.getPutRequestsPaths().isEmpty());
 
     String stdOut = result.getStdout();
     assertTrue(stdOut, stdOut.contains("com.example:foo:jar:1.0"));
-    assertTrue(stdOut,
-        stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
-    assertTrue(stdOut, stdOut.contains("/foo#maven.jar"));
+    assertTrue(
+        stdOut, stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
+    assertTrue(stdOut, stdOut.contains(MorePaths.pathWithPlatformSeparators("/foo#maven.jar")));
     assertTrue(stdOut, stdOut.contains(Javac.SRC_JAR));
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }
 
-  private ProjectWorkspace.ProcessResult runBuckPublish(
-      ProjectWorkspace workspace,
-      String... extraArgs) throws IOException {
+  @Test
+  public void testScalaPublish() throws IOException {
+    runValidBuckPublish("publish_scala");
+  }
+
+  @Test
+  public void testScalaPublishToFS() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "publish_scala", tmp);
+    workspace.setUp();
+
+    Path publishPath = tmp.newFolder();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            FluentIterable.from(new String[] {"publish"})
+                .append(PublishCommand.INCLUDE_SOURCE_LONG_ARG)
+                .append(PublishCommand.REMOTE_REPO_SHORT_ARG, publishPath.toUri().toString())
+                .append(TARGET)
+                .toArray(String.class));
+
+    result.assertSuccess();
+
+    File publisherRoot = publishPath.toFile();
+
+    File jarFile = new File(publisherRoot, EXPECTED_PUT_URL_PATH_BASE + JAR);
+    ImmutableSortedSet<ZipEntry> jarContents = getZipFilesFiltered(jarFile);
+    assertEquals(1, jarContents.size());
+    assertEquals("foo/bar/ScalaFoo.class", jarContents.first().getName());
+
+    File srcFile = new File(publisherRoot, EXPECTED_PUT_URL_PATH_BASE + SRC_JAR);
+    ImmutableSortedSet<ZipEntry> srcJarContents = getZipFilesFiltered(srcFile);
+    assertEquals(1, srcJarContents.size());
+    assertEquals("ScalaFoo.scala", srcJarContents.first().getName());
+  }
+
+  private static ImmutableSortedSet<ZipEntry> getZipFilesFiltered(File zipFile) throws IOException {
+    return getZipContents(zipFile)
+        .stream()
+        .filter(zipEntry -> !zipEntry.isDirectory())
+        .filter(zipEntry -> !zipEntry.getName().startsWith("META-INF"))
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(ZipEntry::getName)));
+  }
+
+  private static ImmutableSortedSet<ZipEntry> getZipContents(File zipFile) throws IOException {
+    assertTrue(zipFile + " should exits", zipFile.isFile());
+    ZipInputStream inputStream = new ZipInputStream(new FileInputStream(zipFile));
+    Builder<ZipEntry> zipEntries =
+        ImmutableSortedSet.orderedBy(Comparator.comparing(ZipEntry::getName));
+    ZipEntry entry = inputStream.getNextEntry();
+    while (entry != null) {
+      zipEntries.add(entry);
+      entry = inputStream.getNextEntry();
+    }
+    return zipEntries.build();
+  }
+
+  private ProcessResult runBuckPublish(ProjectWorkspace workspace, String... extraArgs)
+      throws IOException {
     return workspace.runBuckCommand(
-        FluentIterable
-            .of(new String[]{"publish"})
+        FluentIterable.from(new String[] {"publish"})
             .append(extraArgs)
-            .append(
-                PublishCommand.REMOTE_REPO_SHORT_ARG,
-                getMockRepoUrl(),
-                TARGET)
+            .append(PublishCommand.REMOTE_REPO_SHORT_ARG, getMockRepoUrl())
+            .append(TARGET)
             .toArray(String.class));
   }
 
   private String getMockRepoUrl() {
-    return publisher.getHttpd().getRootUri().toString();
+    return httpd.getRootUri().toString();
   }
-
 }

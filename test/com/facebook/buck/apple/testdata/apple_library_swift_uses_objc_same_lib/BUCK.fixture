@@ -1,0 +1,13 @@
+apple_library(
+    name = "Mixed",
+    srcs = [
+        "Hello.m",
+        "dummy.swift",
+    ],
+    bridging_header = "Bridging-Header.h",
+    exported_headers = ["Hello.h"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    swift_version = "4",
+)

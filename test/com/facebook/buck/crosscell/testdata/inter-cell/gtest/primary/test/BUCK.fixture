@@ -1,0 +1,12 @@
+cxx_test(
+    name = "cxxtest",
+    srcs = glob(["*.cpp"]),
+    compiler_flags = [
+        "-g",
+        "-std=c++11",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//lib:cxxlib",
+    ],
+)

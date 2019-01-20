@@ -21,18 +21,16 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Throwables;
-
-import org.junit.Test;
-
 import java.nio.file.AccessDeniedException;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class ThrowableConsoleEventTest {
 
   @Test
   public void throwableClassNameIsIncludedInDescription() {
-    ThrowableConsoleEvent event = new ThrowableConsoleEvent(
-        new AccessDeniedException("somefile"),
-        "message");
+    ThrowableConsoleEvent event =
+        new ThrowableConsoleEvent(new AccessDeniedException("somefile"), "message");
     assertTrue(event.getMessage().contains("AccessDeniedException"));
   }
 
@@ -41,5 +39,11 @@ public class ThrowableConsoleEventTest {
     Throwable throwable = new AccessDeniedException("somefile");
     ThrowableConsoleEvent event = new ThrowableConsoleEvent(throwable, "message");
     assertThat(event.getMessage(), containsString(Throwables.getStackTraceAsString(throwable)));
+  }
+
+  @Test
+  public void throwableMalformedFormatMessage() {
+    ThrowableConsoleEvent event = ThrowableConsoleEvent.create(new Throwable(), "%s %d", "a");
+    assertThat(event.getMessage(), Matchers.stringContainsInOrder("%s %d", "a"));
   }
 }

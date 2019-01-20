@@ -1,0 +1,16 @@
+cxx_binary(
+    name = "main",
+    srcs = ["main.cpp"],
+    compiler_flags = [
+        "-fno-PIC",
+        "-DFLOOB=123",
+    ],
+    precompiled_header = "//determinism/lib:pch",
+    deps = [":baz"],
+)
+
+cxx_library(
+    name = "baz",
+    srcs = ["baz.cpp"],
+    exported_headers = ["baz.h"],
+)

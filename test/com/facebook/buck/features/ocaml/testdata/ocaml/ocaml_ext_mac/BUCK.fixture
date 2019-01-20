@@ -1,0 +1,43 @@
+ocaml_binary(
+    name = "ocaml_ext",
+    srcs = [
+        "main_plus.ml",
+    ],
+    deps = [
+        ":plus",
+    ],
+)
+
+prebuilt_ocaml_library(
+    name = "plus",
+    bytecode_lib = "libplus_lib_bc.cma",
+    c_libs = ["libplus_lib.a"],
+    lib_dir = "third_party/lib",
+    native_lib = "libplus_lib.cmxa",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+ocaml_binary(
+    name = "ocaml_ext_native_bytecode",
+    srcs = [
+        "main_plus.ml",
+    ],
+    deps = [
+        ":plus_native_bytecode",
+    ],
+)
+
+prebuilt_ocaml_library(
+    name = "plus_native_bytecode",
+    bytecode_c_libs = ["libplus_lib.a"],
+    bytecode_lib = "libplus_lib_bc.cma",
+    c_libs = [],
+    lib_dir = "third_party/lib",
+    native_c_libs = ["libplus_lib.a"],
+    native_lib = "libplus_lib.cmxa",
+    visibility = [
+        "PUBLIC",
+    ],
+)

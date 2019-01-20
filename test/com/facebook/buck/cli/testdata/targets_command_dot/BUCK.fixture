@@ -1,0 +1,10 @@
+genrule(
+    name = "test1",
+    srcs = [":test2"],
+    out = "test-output1",
+)
+
+genrule(
+    name = "test2",
+    out = "test-output2",
+)

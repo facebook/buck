@@ -18,12 +18,10 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
-
 import javax.annotation.Nullable;
 
 public abstract class PBXObject {
-  @Nullable
-  private String globalID;
+  @Nullable private String globalID;
 
   @Nullable
   public String getGlobalID() {
@@ -34,16 +32,11 @@ public abstract class PBXObject {
     globalID = gid;
   }
 
-  /**
-   * @return  Type name of the serialized object.
-   */
+  /** @return Type name of the serialized object. */
   public abstract String isa();
 
-  /**
-   * Populates the serializer with the fields of this object.
-   */
-  public void serializeInto(@SuppressWarnings("unused") XcodeprojSerializer serializer) {
-  }
+  /** Populates the serializer with the fields of this object. */
+  public void serializeInto(@SuppressWarnings("unused") XcodeprojSerializer serializer) {}
 
   /**
    * This method is used to generate stable GIDs and must be stable for identical contents.
@@ -58,9 +51,7 @@ public abstract class PBXObject {
     return String.format("%s isa=%s gid=%s", super.toString(), isa(), getGlobalID());
   }
 
-  /**
-   * Generate a stable GID.
-   */
+  /** Generate a stable GID. */
   public final String generateGid(GidGenerator generator) {
     return generator.generateGid(isa(), stableHash());
   }

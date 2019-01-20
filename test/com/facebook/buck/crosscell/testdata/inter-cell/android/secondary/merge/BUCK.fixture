@@ -1,0 +1,28 @@
+# Before merging:
+#
+# G
+# |
+# H
+#
+# After merging:
+# 1(GH)
+#
+
+cxx_library(
+    name = "G",
+    srcs = ["G.c"],
+    can_be_asset = True,
+    soname = "lib1g.so",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":H",
+    ],
+)
+
+cxx_library(
+    name = "H",
+    srcs = ["H.c"],
+    can_be_asset = True,
+    soname = "lib1h.so",
+    visibility = ["PUBLIC"],
+)

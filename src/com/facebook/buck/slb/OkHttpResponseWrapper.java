@@ -16,10 +16,9 @@
 
 package com.facebook.buck.slb;
 
-import com.squareup.okhttp.Response;
-
 import java.io.IOException;
 import java.io.InputStream;
+import okhttp3.Response;
 
 public class OkHttpResponseWrapper implements HttpResponse {
   private final Response response;
@@ -29,8 +28,13 @@ public class OkHttpResponseWrapper implements HttpResponse {
   }
 
   @Override
-  public int code() {
+  public int statusCode() {
     return response.code();
+  }
+
+  @Override
+  public String statusMessage() {
+    return response.message();
   }
 
   @Override
@@ -39,13 +43,13 @@ public class OkHttpResponseWrapper implements HttpResponse {
   }
 
   @Override
-  public InputStream getBody() throws IOException {
+  public InputStream getBody() {
     return response.body().byteStream();
   }
 
   @Override
   public String requestUrl() {
-    return response.request().urlString();
+    return response.request().url().toString();
   }
 
   @Override

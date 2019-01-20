@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "rulekey",
+    srcs = glob(["*.java"]),
+    required_for_source_only_abi = True,  # TODO(jkeljo): Break out the annotations
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/log/views:views",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

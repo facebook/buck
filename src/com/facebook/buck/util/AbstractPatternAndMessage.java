@@ -16,12 +16,10 @@
 
 package com.facebook.buck.util;
 
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.Preconditions;
-
-import org.immutables.value.Value;
-
 import java.util.regex.Pattern;
+import org.immutables.value.Value;
 
 /**
  * A class that holds a pattern and a message related to this pattern. Example usage: if the pattern
@@ -39,6 +37,6 @@ abstract class AbstractPatternAndMessage {
   @Value.Check
   protected void check() {
     Preconditions.checkArgument(getPattern().toString().compareTo("*") != 0);
-    Preconditions.checkArgument(getMessage() != null && getMessage() != "");
+    Preconditions.checkArgument(getMessage() != null && !getMessage().isEmpty());
   }
 }

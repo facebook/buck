@@ -15,47 +15,31 @@
  */
 package com.facebook.buck.util.environment;
 
-import com.google.common.base.Optional;
+import java.util.Optional;
 
 public interface ExecutionEnvironment {
 
-  /**
-   * @return The current hostname or 'unknown'
-   */
-  public String getHostname();
+  /** @return The current hostname or 'unknown' */
+  String getHostname();
 
-  /**
-   * @return The current username or 'unknown'
-   */
-  public String getUsername();
+  /** @return The current username or 'unknown' */
+  String getUsername();
 
-  /**
-   * @return The number of cores on this machine.
-   */
-  public int getAvailableCores();
+  /** @return The number of cores on this machine. */
+  int getAvailableCores();
 
-  /**
-   * @return The amount of system memory on this machine in bytes.
-   */
-  public long getTotalMemory();
+  /** @return The amount of system memory on this machine in bytes. */
+  long getTotalMemory();
 
-  /**
-   * @return The current operating system.
-   */
-  public Platform getPlatform();
+  /** @return The current operating system. */
+  Platform getPlatform();
 
-  /**
-   * @return The SSID of the current wifi network if it can be determined.
-   */
-  public Optional<String> getWifiSsid() throws InterruptedException;
+  /** @return Whether an ethernet interface is available and enabled. */
+  Network getLikelyActiveNetwork();
 
-  /**
-   * Gets the environment variable indicated by the specified key.
-   */
-  public String getenv(String key, String defaultValue);
+  /** @return The SSID of the current wifi network if it can be determined. */
+  Optional<String> getWifiSsid();
 
-  /**
-   * Gets the java property indicated by the specified key.
-   */
-  public String getProperty(String key, String defaultValue);
+  /** Gets the environment variable indicated by the specified key. */
+  Optional<String> getenv(String key);
 }

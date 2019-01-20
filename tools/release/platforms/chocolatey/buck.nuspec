@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>buck</id>
+    <version>__REPLACE__</version>
+    <title>Buck</title>
+    <authors>Facebook Inc</authors>
+    <projectUrl>https://buckbuild.com</projectUrl>
+    <copyright>2012-present Facebook Inc</copyright>
+    <licenseUrl>https://github.com/facebook/buck/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/facebook/buck</projectSourceUrl>
+    <packageSourceUrl>https://github.com/facebook/buck</packageSourceUrl>
+    <bugTrackerUrl>https://github.com/facebook/buck/issues</bugTrackerUrl>
+    <tags>buck</tags>
+    <summary>A fast multi-language build system from Facebook</summary>
+    <description>A fast build system that encourages the creation of small, reusable modules over a variety of platforms and languages including iOS, Android, C++, Java, and more.</description>
+    <releaseNotes></releaseNotes>
+    <dependencies>
+      <dependency id="python2" version="[2.7.15, 3.0)" />
+      <dependency id="jdk8" version="8.0.172" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="LICENSE.txt" target="tools/LICENSE.txt" />
+    <file src="VERIFICATION.txt" target="tools/VERIFICATION.txt" />
+    <file src="README.md" target="README.md" />
+    <file src="buck.bat" target="tools/buck.bat" />
+    <file src="buck.pex" target="tools/buck.pex" />
+    <file src="chocolateyInstall.ps1" target="tools/chocolateyInstall.ps1" />
+    <file src="chocolateyUninstall.ps1" target="tools/chocolateyUninstall.ps1" />
+  </files>
+</package>
+

@@ -1,0 +1,12 @@
+java_library(
+    name = "labels_and_deps",
+    srcs = [
+        "Test.java",
+    ],
+    labels = [
+        "guava_generated_sources",
+    ],
+    deps = [
+        "buck//third-party/java/guava:guava",
+    ],
+)

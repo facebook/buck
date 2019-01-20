@@ -1,0 +1,14 @@
+# unsorted/BUCK
+
+export_file(
+  name = "0.txt",
+)
+
+export_file(
+  name = "a.txt",
+)
+
+export_file(
+  name = "z.txt",
+)
+

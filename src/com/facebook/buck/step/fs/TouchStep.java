@@ -16,17 +16,15 @@
 
 package com.facebook.buck.step.fs;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-
+import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/**
- * {@link com.facebook.buck.step.Step} that runs {@code touch <filename>} in the shell.
- */
+/** {@link com.facebook.buck.step.Step} that runs {@code touch <filename>} in the shell. */
 public class TouchStep implements Step {
 
   private final ProjectFilesystem filesystem;
@@ -43,15 +41,14 @@ public class TouchStep implements Step {
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context)
-      throws IOException, InterruptedException {
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
     filesystem.touch(fileToTouch);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "touch " + filesystem.resolve(fileToTouch).toString();
+    return "touch " + filesystem.resolve(fileToTouch);
   }
 
   @Override
@@ -73,5 +70,4 @@ public class TouchStep implements Step {
   public int hashCode() {
     return fileToTouch.hashCode();
   }
-
 }

@@ -24,9 +24,8 @@ import static com.facebook.buck.testutil.RegexMatcher.matchesRegex;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.not;
 
-import org.junit.Test;
-
 import java.util.regex.Pattern;
+import org.junit.Test;
 
 public class RegexMatcherTest {
 
@@ -50,15 +49,18 @@ public class RegexMatcherTest {
 
   @Test
   public void testBuckTestOutputLineRegex() {
-    assertThat("PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest",
+    assertThat(
+        "PASS    <100ms  1 Passed   0 Skipped   0 Failed   com.example.PassingTest",
         matchesRegex(createBuckTestOutputLineRegex("PASS", 1, 0, 0, "com.example.PassingTest")));
-    assertThat("FAIL       60s  0 Passed   0 Skipped   1 Failed   com.example.FailingTest",
+    assertThat(
+        "FAIL       60s  0 Passed   0 Skipped   1 Failed   com.example.FailingTest",
         matchesRegex(createBuckTestOutputLineRegex("FAIL", 0, 0, 1, "com.example.FailingTest")));
 
-    assertThat("foobar",
+    assertThat(
+        "foobar",
         not(matchesRegex(createBuckTestOutputLineRegex("PASS", 1, 0, 0, "com.example.Test"))));
-    assertThat("FAIL       60s  0 Passed   0 Skipped   1 Failed   com.example.Test",
+    assertThat(
+        "FAIL       60s  0 Passed   0 Skipped   1 Failed   com.example.Test",
         not(matchesRegex(createBuckTestOutputLineRegex("PASS", 1, 0, 0, "com.example.Test"))));
   }
-
 }

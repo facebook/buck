@@ -17,216 +17,92 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.model.BuildFileTree;
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.model.FilesystemBackedBuildFileTree;
-import com.facebook.buck.rules.TargetNode;
-import com.facebook.buck.util.Ansi;
+import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.PerBuildStateFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.SetMultimap;
-import com.google.common.collect.Sets;
-import com.google.common.collect.TreeMultimap;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 public class AuditOwnerCommand extends AbstractCommand {
 
-  private static final String FILE_INDENT = "    ";
-  private static final int BUILD_TARGET_ERROR = 13;
-
-  @VisibleForTesting
-  static final class OwnersReport {
-    final ImmutableSetMultimap<TargetNode<?>, Path> owners;
-    final ImmutableSet<Path> inputsWithNoOwners;
-    final ImmutableSet<String> nonExistentInputs;
-    final ImmutableSet<String> nonFileInputs;
-
-    public OwnersReport(SetMultimap<TargetNode<?>, Path> owners,
-        Set<Path> inputsWithNoOwners,
-        Set<String> nonExistentInputs,
-        Set<String> nonFileInputs) {
-      this.owners = ImmutableSetMultimap.copyOf(owners);
-      this.inputsWithNoOwners = ImmutableSet.copyOf(inputsWithNoOwners);
-      this.nonExistentInputs = ImmutableSet.copyOf(nonExistentInputs);
-      this.nonFileInputs = ImmutableSet.copyOf(nonFileInputs);
-    }
-
-    public static OwnersReport emptyReport() {
-      return new OwnersReport(
-          ImmutableSetMultimap.<TargetNode<?>, Path>of(),
-          Sets.<Path>newHashSet(),
-          Sets.<String>newHashSet(),
-          Sets.<String>newHashSet());
-    }
-
-    public OwnersReport updatedWith(OwnersReport other) {
-      SetMultimap<TargetNode<?>, Path> updatedOwners =
-          TreeMultimap.create(owners);
-      updatedOwners.putAll(other.owners);
-
-      return new OwnersReport(
-          updatedOwners,
-          Sets.intersection(inputsWithNoOwners, other.inputsWithNoOwners),
-          Sets.union(nonExistentInputs, other.nonExistentInputs),
-          Sets.union(nonFileInputs, other.nonFileInputs));
-    }
-  }
-
-  @Option(name = "--full",
-      aliases = { "-f" },
-      usage = "Full report with all details about what targets own what files.")
-  private boolean fullReport;
-
-  @Option(name = "--guess-for-missing",
-      aliases = { "-g" },
-      usage = "Guess targets for deleted files by including all rules from guessed BUCK files.")
-  private boolean guessForDeleted;
-
-  public boolean isFullReportEnabled() {
-    return fullReport;
-  }
-
-  public boolean isGuessForDeletedEnabled() {
-    return guessForDeleted;
-  }
-
-  @Option(name = "--json",
-      usage = "Output in JSON format")
+  @Option(name = "--json", usage = "Output in JSON format")
   private boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
   }
 
-  @Argument
-  private List<String> arguments = Lists.newArrayList();
+  @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
     return arguments;
   }
 
-  @VisibleForTesting
-  void setArguments(List<String> arguments) {
-    this.arguments = arguments;
-  }
-
-  /**
-   * @return relative paths under the project root
-   */
-  public static Iterable<Path> getArgumentsAsPaths(Path projectRoot, Iterable<String> args)
-      throws IOException {
-    return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, args)
-        .relativePathsUnderProjectRoot;
-  }
-
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
-    BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(
-        params.getCell().getFilesystem(),
-        params.getCell().getBuildFileName());
-    try {
-      OwnersReport report = buildOwnersReport(
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+    if (params.getConsole().getAnsi().isAnsiTerminal()) {
+      params
+          .getBuckEventBus()
+          .post(
+              ConsoleEvent.info(
+                  "'buck audit owner' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n"
+                      + "The query language is documented at https://buckbuild.com/command/query.html",
+                  QueryCommand.buildAuditOwnerQueryExpression(
+                      getArguments(), shouldGenerateJsonOutput())));
+    }
+
+    try (CommandThreadManager pool =
+            new CommandThreadManager("Audit", getConcurrencyLimit(params.getBuckConfig()));
+        PerBuildState parserState =
+            PerBuildStateFactory.createFactory(
+                    params.getTypeCoercerFactory(),
+                    new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                    params.getKnownRuleTypesProvider(),
+                    new ParserPythonInterpreterProvider(
+                        params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                    params.getCell().getBuckConfig(),
+                    params.getWatchman(),
+                    params.getBuckEventBus(),
+                    params.getManifestServiceSupplier(),
+                    params.getFileHashCache())
+                .create(
+                    params.getParser().getPermState(),
+                    pool.getListeningExecutorService(),
+                    params.getCell(),
+                    getTargetPlatforms(),
+                    getEnableParserProfiling(),
+                    SpeculativeParsing.ENABLED)) {
+      BuckQueryEnvironment env =
+          BuckQueryEnvironment.from(
+              params,
+              parserState,
+              pool.getListeningExecutorService(),
+              getEnableParserProfiling(),
+              getExcludeIncompatibleTargets());
+      return QueryCommand.runMultipleQuery(
           params,
-          buildFileTree,
+          env,
+          "owner('%s')",
           getArguments(),
-          isGuessForDeletedEnabled());
-      printReport(params, report);
-    } catch (BuildFileParseException | BuildTargetException e) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-      return BUILD_TARGET_ERROR;
+          shouldGenerateJsonOutput(),
+          ImmutableSet.of());
+    } catch (Exception e) {
+      if (e.getCause() instanceof InterruptedException) {
+        throw (InterruptedException) e.getCause();
+      }
+      params
+          .getBuckEventBus()
+          .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+      // TODO(buck_team): catch specific exceptions and output appropriate code
+      return ExitCode.BUILD_ERROR;
     }
-    return 0;
-  }
-
-  OwnersReport buildOwnersReport(
-      CommandRunnerParams params,
-      BuildFileTree buildFileTree,
-      Iterable<String> arguments,
-      boolean guessForDeletedEnabled)
-      throws IOException, InterruptedException, BuildFileParseException, BuildTargetException {
-    ProjectFilesystem cellFilesystem = params.getCell().getFilesystem();
-    final Path rootPath = cellFilesystem.getRootPath();
-    Preconditions.checkState(rootPath.isAbsolute());
-    Map<Path, ImmutableSet<TargetNode<?>>> targetNodes = Maps.newHashMap();
-    OwnersReport report = OwnersReport.emptyReport();
-
-    for (Path filePath : getArgumentsAsPaths(rootPath, arguments)) {
-      Optional<Path> basePath = buildFileTree.getBasePathOfAncestorTarget(filePath);
-      if (!basePath.isPresent()) {
-        report = report.updatedWith(
-            new OwnersReport(
-                ImmutableSetMultimap.<TargetNode<?>, Path>of(),
-                /* inputWithNoOwners */ ImmutableSet.of(filePath),
-                Sets.<String>newHashSet(),
-                Sets.<String>newHashSet()));
-        continue;
-      }
-
-      Path buckFile = cellFilesystem.resolve(basePath.get())
-          .resolve(params.getCell().getBuildFileName());
-      Preconditions.checkState(cellFilesystem.exists(buckFile));
-
-      // Parse buck files and load target nodes.
-      if (!targetNodes.containsKey(buckFile)) {
-        try (CommandThreadManager pool = new CommandThreadManager(
-            "AuditOwner",
-            params.getBuckConfig().getWorkQueueExecutionOrder(),
-            getConcurrencyLimit(params.getBuckConfig()))){
-          targetNodes.put(
-              buckFile,
-              params.getParser().getAllTargetNodes(
-                  params.getBuckEventBus(),
-                  params.getCell(),
-                  /* enable profiling */ false,
-                  pool.getExecutor(),
-                  buckFile));
-        } catch (BuildFileParseException e) {
-          Path targetBasePath = MorePaths.relativize(rootPath, rootPath.resolve(basePath.get()));
-          String targetBaseName = "//" + MorePaths.pathWithUnixSeparators(targetBasePath);
-
-          params
-              .getConsole()
-              .getStdErr()
-              .format("Could not parse build targets for %s", targetBaseName);
-          throw e;
-        }
-      }
-
-      for (TargetNode<?> targetNode : targetNodes.get(buckFile)) {
-        report = report.updatedWith(
-            generateOwnersReport(
-                params,
-                targetNode,
-                ImmutableList.of(filePath.toString()),
-                guessForDeletedEnabled));
-      }
-    }
-    return report;
   }
 
   @Override
@@ -234,146 +110,8 @@ public class AuditOwnerCommand extends AbstractCommand {
     return true;
   }
 
-  @VisibleForTesting
-  static OwnersReport generateOwnersReport(
-      CommandRunnerParams params,
-      TargetNode<?> targetNode,
-      Iterable<String> filePaths,
-      boolean guessForDeletedEnabled) {
-
-    // Process arguments assuming they are all relative file paths.
-    Set<Path> inputs = Sets.newHashSet();
-    Set<String> nonExistentInputs = Sets.newHashSet();
-    Set<String> nonFileInputs = Sets.newHashSet();
-
-    for (String filePath : filePaths) {
-      File file = params.getCell().getFilesystem().getFileForRelativePath(filePath);
-      if (!file.exists()) {
-        nonExistentInputs.add(filePath);
-      } else if (!file.isFile()) {
-        nonFileInputs.add(filePath);
-      } else {
-        inputs.add(Paths.get(filePath));
-      }
-    }
-
-    // Try to find owners for each valid and existing file.
-    Set<Path> inputsWithNoOwners = Sets.newHashSet(inputs);
-    SetMultimap<TargetNode<?>, Path> owners = TreeMultimap.create();
-    for (final Path commandInput : inputs) {
-      Predicate<Path> startsWith = new Predicate<Path>() {
-        @Override
-        public boolean apply(Path input) {
-          return !commandInput.equals(input) && commandInput.startsWith(input);
-        }
-      };
-
-      Set<Path> ruleInputs = targetNode.getInputs();
-      if (ruleInputs.contains(commandInput) ||
-          FluentIterable.from(ruleInputs).anyMatch(startsWith)) {
-        inputsWithNoOwners.remove(commandInput);
-        owners.put(targetNode, commandInput);
-      }
-    }
-
-    // Try to guess owners for nonexistent files.
-    if (guessForDeletedEnabled) {
-      for (String nonExistentInput : nonExistentInputs) {
-        owners.put(targetNode, new File(nonExistentInput).toPath());
-      }
-    }
-
-    return new OwnersReport(owners, inputsWithNoOwners, nonExistentInputs, nonFileInputs);
-  }
-
-  private void printReport(CommandRunnerParams params, OwnersReport report) throws IOException {
-    if (isFullReportEnabled()) {
-      printFullReport(params, report);
-    } else {
-      if (shouldGenerateJsonOutput()) {
-        printOwnersOnlyJsonReport(params, report);
-      } else {
-        printOwnersOnlyReport(params, report);
-      }
-    }
-  }
-
-  /**
-   * Print only targets which were identified as owners.
-   */
-  private void printOwnersOnlyReport(CommandRunnerParams params, OwnersReport report) {
-    Set<TargetNode<?>> sortedTargetNodes = report.owners.keySet();
-    for (TargetNode<?> targetNode : sortedTargetNodes) {
-      params.getConsole().getStdOut().println(targetNode.getBuildTarget().getFullyQualifiedName());
-    }
-  }
-
-  /**
-   * Print only targets which were identified as owners in JSON.
-   */
-  @VisibleForTesting
-  void printOwnersOnlyJsonReport(CommandRunnerParams params, OwnersReport report)
-      throws IOException {
-    final Multimap<String, String> output = TreeMultimap.create();
-
-    Set<TargetNode<?>> sortedTargetNodes = report.owners.keySet();
-    for (TargetNode<?> targetNode : sortedTargetNodes) {
-      Set<Path> files = report.owners.get(targetNode);
-      for (Path input : files) {
-        output.put(input.toString(), targetNode.getBuildTarget().getFullyQualifiedName());
-      }
-    }
-
-    params.getObjectMapper().writeValue(params.getConsole().getStdOut(), output.asMap());
-  }
-
-  /**
-   * Print detailed report on all owners.
-   */
-  private void printFullReport(CommandRunnerParams params, OwnersReport report) {
-    PrintStream out = params.getConsole().getStdOut();
-    Ansi ansi = params.getConsole().getAnsi();
-    if (report.owners.isEmpty()) {
-      out.println(ansi.asErrorText("No owners found"));
-    } else {
-      out.println(ansi.asSuccessText("Owners:"));
-      for (TargetNode<?> targetNode : report.owners.keySet()) {
-        out.println(targetNode.getBuildTarget().getFullyQualifiedName());
-        Set<Path> files = report.owners.get(targetNode);
-        for (Path input : files) {
-          out.println(FILE_INDENT + input);
-        }
-      }
-    }
-
-    if (!report.inputsWithNoOwners.isEmpty()) {
-      out.println();
-      out.println(ansi.asErrorText("Files without owners:"));
-      for (Path input : report.inputsWithNoOwners) {
-        out.println(FILE_INDENT + input);
-      }
-    }
-
-    if (!report.nonExistentInputs.isEmpty()) {
-      out.println();
-      out.println(ansi.asErrorText("Non existent files:"));
-      for (String input : report.nonExistentInputs) {
-        out.println(FILE_INDENT + input);
-      }
-    }
-
-    if (!report.nonFileInputs.isEmpty()) {
-      out.println();
-      out.println(ansi.asErrorText("Non-file inputs:"));
-      for (String input : report.nonFileInputs) {
-        out.println(FILE_INDENT + input);
-      }
-    }
-  }
-
   @Override
   public String getShortDescription() {
     return "prints targets that own specified files";
   }
-
 }

@@ -1,0 +1,4 @@
+PositionalXmlHandler came from https://github.com/GoogleCloudPlatform/google-cloud-eclipse/blob/master/plugins/com.google.cloud.tools.eclipse.appengine.validation/src/com/google/cloud/tools/eclipse/appengine/validation/PositionalXmlHandler.java
+
+Used in order to enable tracking of line & column numbers, specifically in the generation of an
+android resource index to support a new flavor.

@@ -16,32 +16,42 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.event.TestEventConfigerator.configureTestEvent;
+import static com.facebook.buck.event.TestEventConfigurator.configureTestEvent;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.event.CommandEvent;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
-
+import java.util.OptionalLong;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class CommandEventTest {
   @Test
-  public void testEquals() throws Exception {
-    CommandEvent.Started startedDaemon = configureTestEvent(
-        CommandEvent.started("build", ImmutableList.of("sample-app"), true));
-    CommandEvent.Started startedDaemonTwo = configureTestEvent(
-        CommandEvent.started("build", ImmutableList.of("sample-app"), true));
-    CommandEvent.Started startedNoDaemon = configureTestEvent(
-        CommandEvent.started("build", ImmutableList.of("sample-app"), false));
-    CommandEvent.Started startedDifferentName = configureTestEvent(
-        CommandEvent.started("test", ImmutableList.of("sample-app"), false));
-    CommandEvent finishedDaemon = configureTestEvent(
-        CommandEvent.finished(startedDaemon, 0));
-    CommandEvent finishedDaemonFailed = configureTestEvent(
-        CommandEvent.finished(startedDaemonTwo, 1));
-    CommandEvent finishedDifferentName = configureTestEvent(
-        CommandEvent.finished(startedDifferentName, 0));
+  public void testEquals() {
+    CommandEvent.Started startedDaemon =
+        configureTestEvent(
+            CommandEvent.started(
+                "build", ImmutableList.of("sample-app"), OptionalLong.of(12), 17L));
+    CommandEvent.Started startedDaemonTwo =
+        configureTestEvent(
+            CommandEvent.started(
+                "build", ImmutableList.of("sample-app"), OptionalLong.of(20), 23L));
+    CommandEvent.Started startedNoDaemon =
+        configureTestEvent(
+            CommandEvent.started(
+                "build", ImmutableList.of("sample-app"), OptionalLong.empty(), 3L));
+    CommandEvent.Started startedDifferentName =
+        configureTestEvent(
+            CommandEvent.started(
+                "test", ImmutableList.of("sample-app"), OptionalLong.empty(), 11L));
+    CommandEvent finishedDaemon =
+        configureTestEvent(CommandEvent.finished(startedDaemon, ExitCode.SUCCESS));
+    CommandEvent finishedDaemonFailed =
+        configureTestEvent(CommandEvent.finished(startedDaemonTwo, ExitCode.BUILD_ERROR));
+    CommandEvent finishedDifferentName =
+        configureTestEvent(CommandEvent.finished(startedDifferentName, ExitCode.SUCCESS));
 
     assertNotEquals(startedDaemon, startedDaemonTwo);
     assertNotEquals(startedDaemon, startedNoDaemon);

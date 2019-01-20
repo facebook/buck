@@ -1,0 +1,28 @@
+# Copyright 2018-present, Facebook, Inc.
+# All rights reserved.
+#
+# This source code is licensed under the license found in the
+# LICENSE file in the root directory of this source tree.
+
+genrule(
+    name = "catted_manifest",
+    srcs = [
+        "AndroidManifest.xml",
+    ],
+    out = "CattedManifest.xml",
+    bash = "cat $SRCS > $OUT",
+    cmd_exe = "type $SRCS > $OUT",
+)
+
+python_binary(
+    name = "py_cat",
+    main = "py_cat.py",
+)
+
+genrule(
+    name = "generated_manifest",
+    out = "GeneratedManifest.xml",
+    bash = "$(exe :py_cat) $(location :catted_manifest) > $OUT",
+    cmd_exe = "$(exe :py_cat) $(location :catted_manifest) > $OUT",
+    visibility = ["PUBLIC"],
+)

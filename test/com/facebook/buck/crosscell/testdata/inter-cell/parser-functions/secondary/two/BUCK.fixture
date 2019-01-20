@@ -1,0 +1,16 @@
+# Convoluted BUCK file that changes output depending on the cell
+
+base_path = get_base_path()
+
+cell_name = get_cell_name()
+
+export_file(
+    name = base_path,
+    src = cell_name + ".txt",
+    visibility = ["PUBLIC"],
+)
+
+export_file(
+    name = "one",
+    src = "primary//one:one",
+)

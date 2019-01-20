@@ -1,0 +1,35 @@
+test_suite(
+    name = "master_test_suite",
+    tests = [
+        "//:suite_ride",
+        "//tests:test3",
+    ],
+)
+
+test_suite(
+    name = "suite_ride",
+    tests = [
+        "//tests:test1",
+        "//tests:test2",
+    ],
+)
+
+test_suite(
+    name = "suite_with_binary",
+    tests = [
+        "//tests:bin1.sh",
+    ],
+)
+
+test_suite(
+    name = "suite_with_binaries",
+    tests = [
+        "//tests:bin1.sh",
+        "//tests:bin2.sh",
+        "//tests:bin3.sh",
+        "//tests:bin4.sh",
+        "//tests:bin5.sh",
+        "//tests:bin6.sh",
+        "//tests:bin7.sh",
+    ],
+)

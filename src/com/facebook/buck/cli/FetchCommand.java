@@ -16,123 +16,162 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.DefaultAndroidDirectoryResolver;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
+import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
+import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
+import com.facebook.buck.core.build.engine.impl.MetadataChecker;
+import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
+import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.transformer.impl.FetchTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.file.Downloader;
+import com.facebook.buck.file.HttpArchiveDescription;
+import com.facebook.buck.file.HttpFileDescription;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.file.StackedDownloader;
-import com.facebook.buck.json.BuildFileParseException;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetException;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.rules.ActionGraphAndResolver;
-import com.facebook.buck.rules.ActionGraphCache;
-import com.facebook.buck.rules.BuildEvent;
-import com.facebook.buck.rules.CachingBuildEngine;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.TargetGraphAndBuildTargets;
-import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.step.TargetDeviceOptions;
-import com.facebook.buck.util.DefaultPropertyFinder;
+import com.facebook.buck.file.downloader.Downloader;
+import com.facebook.buck.file.downloader.impl.StackedDownloader;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
+import com.facebook.buck.rules.keys.RuleKeyCacheScope;
+import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.step.DefaultStepRunner;
+import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.google.common.base.Optional;
-import com.google.common.base.Preconditions;
+import com.facebook.buck.versions.VersionException;
 import com.google.common.collect.ImmutableSet;
-
-import java.io.IOException;
-import java.nio.file.Path;
+import java.util.Objects;
+import java.util.Optional;
 
 public class FetchCommand extends BuildCommand {
 
   @Override
-  public int runWithoutHelp(CommandRunnerParams params) throws IOException, InterruptedException {
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
 
     if (getArguments().isEmpty()) {
-      params.getBuckEventBus().post(ConsoleEvent.severe(
-          "Must specify at least one build target to fetch."));
-      return 1;
+      throw new CommandLineException("must specify at least one build target");
     }
 
-    // Post the build started event, setting it to the Parser recorded start time if appropriate.
     BuildEvent.Started started = BuildEvent.started(getArguments());
-    if (params.getParser().getParseStartTime().isPresent()) {
-      params.getBuckEventBus().post(
-          started,
-          params.getParser().getParseStartTime().get());
-    } else {
-      params.getBuckEventBus().post(started);
-    }
+    params.getBuckEventBus().post(started);
 
     FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
-    int exitCode;
-    try (CommandThreadManager pool = new CommandThreadManager(
-        "Fetch",
-        params.getBuckConfig().getWorkQueueExecutionOrder(),
-        getConcurrencyLimit(params.getBuckConfig()))) {
-      ActionGraphAndResolver actionGraphAndResolver;
+    ExitCode exitCode;
+
+    try (CommandThreadManager pool =
+        new CommandThreadManager("Fetch", getConcurrencyLimit(params.getBuckConfig()))) {
+      ActionGraphAndBuilder actionGraphAndBuilder;
       ImmutableSet<BuildTarget> buildTargets;
       try {
-        TargetGraphAndBuildTargets result = params.getParser()
-            .buildTargetGraphForTargetNodeSpecs(
-                params.getBuckEventBus(),
-                params.getCell(),
-                getEnableParserProfiling(),
-                pool.getExecutor(),
-                parseArgumentsAsTargetNodeSpecs(
-                    params.getBuckConfig(),
-                    getArguments()),
-                /* ignoreBuckAutodepsFiles */ false,
-                Parser.ApplyDefaultFlavorsMode.ENABLED);
-        actionGraphAndResolver = Preconditions.checkNotNull(
-            ActionGraphCache.getFreshActionGraph(
-                params.getBuckEventBus(),
-                ruleGenerator,
-                result.getTargetGraph()));
+        ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
+        TargetGraphAndBuildTargets result =
+            params
+                .getParser()
+                .buildTargetGraphWithoutConfigurationTargets(
+                    params.getCell(),
+                    getEnableParserProfiling(),
+                    pool.getListeningExecutorService(),
+                    parseArgumentsAsTargetNodeSpecs(
+                        params.getCell().getCellPathResolver(),
+                        params.getBuckConfig(),
+                        getArguments()),
+                    getExcludeIncompatibleTargets(),
+                    parserConfig.getDefaultFlavorsMode());
+        if (params.getBuckConfig().getBuildVersions()) {
+          result = toVersionedTargetGraph(params, result);
+        }
+        actionGraphAndBuilder =
+            Objects.requireNonNull(
+                new ActionGraphProvider(
+                        params.getBuckEventBus(),
+                        ActionGraphFactory.create(
+                            params.getBuckEventBus(),
+                            params.getCell().getCellProvider(),
+                            params.getPoolSupplier(),
+                            params.getBuckConfig()),
+                        new ActionGraphCache(
+                            params.getBuckConfig().getMaxActionGraphCacheEntries()),
+                        params.getRuleKeyConfiguration(),
+                        params.getBuckConfig())
+                    .getFreshActionGraph(ruleGenerator, result.getTargetGraph()));
         buildTargets = ruleGenerator.getDownloadableTargets();
-      } catch (BuildTargetException | BuildFileParseException e) {
-        params.getBuckEventBus().post(ConsoleEvent.severe(
-            MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
-        return 1;
+      } catch (BuildFileParseException | VersionException e) {
+        params
+            .getBuckEventBus()
+            .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
+        return ExitCode.PARSE_ERROR;
       }
 
-      try (Build build = createBuild(
-          params.getBuckConfig(),
-          actionGraphAndResolver.getActionGraph(),
-          actionGraphAndResolver.getResolver(),
-          params.getAndroidPlatformTargetSupplier(),
-          new CachingBuildEngine(
-              pool.getExecutor(),
-              params.getFileHashCache(),
-              getBuildEngineMode().or(params.getBuckConfig().getBuildEngineMode()),
-              params.getBuckConfig().getDependencySchedulingOrder(),
-              params.getBuckConfig().getBuildDepFiles(),
-              params.getBuckConfig().getBuildMaxDepFileCacheEntries(),
-              params.getBuckConfig().getBuildArtifactCacheSizeLimit(),
-              params.getObjectMapper(),
-              actionGraphAndResolver.getResolver(),
-              Preconditions.checkNotNull(
-                  params.getExecutors().get(ExecutionContext.ExecutorPool.NETWORK)),
-              params.getBuckConfig().getKeySeed()),
-          params.getArtifactCache(),
-          params.getConsole(),
-          params.getBuckEventBus(),
-          Optional.<TargetDevice>absent(),
-          params.getPlatform(),
-          params.getEnvironment(),
-          params.getObjectMapper(),
-          params.getClock(),
-          Optional.<AdbOptions>absent(),
-          Optional.<TargetDeviceOptions>absent(),
-          params.getExecutors())) {
-        exitCode = build.executeAndPrintFailuresToEventBus(
-            buildTargets,
-            isKeepGoing(),
-            params.getBuckEventBus(),
-            params.getConsole(),
-            getPathToBuildReport(params.getBuckConfig()));
+      MetadataChecker.checkAndCleanIfNeeded(params.getCell());
+      CachingBuildEngineBuckConfig cachingBuildEngineBuckConfig =
+          params.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
+      LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
+          new LocalCachingBuildEngineDelegate(params.getFileHashCache());
+      SourcePathRuleFinder sourcePathRuleFinder =
+          new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder());
+      try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
+              getDefaultRuleKeyCacheScope(
+                  params,
+                  new RuleKeyCacheRecycler.SettingsAffectingCache(
+                      params.getBuckConfig().getKeySeed(),
+                      actionGraphAndBuilder.getActionGraph()));
+          CachingBuildEngine buildEngine =
+              new CachingBuildEngine(
+                  localCachingBuildEngineDelegate,
+                  Optional.empty(),
+                  pool.getWeightedListeningExecutorService(),
+                  new DefaultStepRunner(),
+                  getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
+                  cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
+                  cachingBuildEngineBuckConfig.getBuildDepFiles(),
+                  cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
+                  cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+                  actionGraphAndBuilder.getActionGraphBuilder(),
+                  sourcePathRuleFinder,
+                  DefaultSourcePathResolver.from(sourcePathRuleFinder),
+                  params.getBuildInfoStoreManager(),
+                  cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
+                  cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),
+                  RuleKeyFactories.of(
+                      params.getRuleKeyConfiguration(),
+                      localCachingBuildEngineDelegate.getFileHashCache(),
+                      actionGraphAndBuilder.getActionGraphBuilder(),
+                      params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+                      ruleKeyCacheScope.getCache()),
+                  new NoOpRemoteBuildRuleCompletionWaiter(),
+                  cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
+                      params.getManifestServiceSupplier()));
+          Build build =
+              new Build(
+                  actionGraphAndBuilder.getActionGraphBuilder(),
+                  params.getCell(),
+                  buildEngine,
+                  params.getArtifactCacheFactory().newInstance(),
+                  params
+                      .getBuckConfig()
+                      .getView(JavaBuckConfig.class)
+                      .createDefaultJavaPackageFinder(),
+                  params.getClock(),
+                  getExecutionContext(),
+                  isKeepGoing())) {
+        exitCode =
+            build.executeAndPrintFailuresToEventBus(
+                buildTargets,
+                params.getBuckEventBus(),
+                params.getConsole(),
+                getPathToBuildReport(params.getBuckConfig()));
       }
     }
 
@@ -147,24 +186,20 @@ public class FetchCommand extends BuildCommand {
   }
 
   private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
-    DefaultAndroidDirectoryResolver resolver = new DefaultAndroidDirectoryResolver(
-        params.getCell().getFilesystem(),
-        Optional.<String>absent(),
-        Optional.<String>absent(),
-        new DefaultPropertyFinder(params.getCell().getFilesystem(), params.getEnvironment()));
+    Downloader downloader =
+        StackedDownloader.createFromConfig(
+            params.getBuckConfig(), params.getCell().getToolchainProvider());
+    ImmutableSet<DescriptionWithTargetGraph<?>> fetchingDescriptions =
+        ImmutableSet.of(
+            new RemoteFileDescription(downloader),
+            new HttpFileDescription(downloader),
+            new HttpArchiveDescription(downloader));
 
-    Optional<Path> sdkDir = resolver.getSdkOrAbsent();
-
-    Downloader downloader = StackedDownloader.createFromConfig(params.getBuckConfig(), sdkDir);
-    Description<?> description = new RemoteFileDescription(downloader);
-    return new FetchTargetNodeToBuildRuleTransformer(
-        ImmutableSet.<Description<?>>of(description)
-    );
+    return new FetchTargetNodeToBuildRuleTransformer(fetchingDescriptions);
   }
 
   @Override
   public String getShortDescription() {
     return "downloads remote resources to your local machine";
   }
-
 }

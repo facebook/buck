@@ -1,0 +1,10 @@
+kotlin_library(
+    name = "child",
+    srcs = ["Bar.kt"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//com/example/good:example",
+    ],
+)

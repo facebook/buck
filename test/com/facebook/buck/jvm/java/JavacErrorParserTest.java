@@ -18,15 +18,15 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.google.common.base.Optional;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableSet;
-
+import java.nio.file.Paths;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
-
-import java.nio.file.Paths;
 
 public class JavacErrorParserTest {
 
@@ -35,20 +35,23 @@ public class JavacErrorParserTest {
 
   @Before
   public void setUp() {
-    projectFilesystem = new ProjectFilesystem(Paths.get(".").toAbsolutePath());
-    JavaPackageFinder javaPackageFinder = DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
-        ImmutableSet.of("/src/"));
+    projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+    JavaPackageFinder javaPackageFinder =
+        DefaultJavaPackageFinder.createDefaultJavaPackageFinder(ImmutableSet.of("/src/"));
     javacErrorParser = new JavacErrorParser(projectFilesystem, javaPackageFinder);
   }
 
   @Test
   public void shouldFindSymbolFromCannotFindSymbolError() {
     String error =
-        "Foo.java:22: error: cannot find symbol\n" +
-        "import com.facebook.buck.util.BuckConstant;\n" +
-        "                             ^\n" +
-        "  symbol:   class BuckConstant\n" +
-        "  location: package com.facebook.buck.util\n";
+        MoreStrings.linesToText(
+            "Foo.java:22: error: cannot find symbol",
+            "import com.facebook.buck.util.BuckConstant;",
+            "                             ^",
+            "  symbol:   class BuckConstant",
+            "  location: package com.facebook.buck.util",
+            "");
 
     assertEquals(
         "JavacErrorParser didn't find the right symbol.",
@@ -59,12 +62,13 @@ public class JavacErrorParserTest {
   @Test
   public void shouldFindSymbolFromCannotFindSymbolInCurrentPackageError() {
     String error =
-        projectFilesystem.getRootPath().toAbsolutePath().normalize() +
-        "/src/com/facebook/buck/jvm/java/DefaultJavaLibrary.java:277: error: cannot find symbol\n" +
-        "      final JavacStep javacStep;\n" +
-        "            ^\n" +
-        "  symbol:   class JavacStep\n" +
-        "  location: class com.facebook.buck.jvm.java.DefaultJavaLibrary";
+        projectFilesystem.getRootPath().toAbsolutePath().normalize()
+            + MoreStrings.linesToText(
+                "/src/com/facebook/buck/jvm/java/DefaultJavaLibrary.java:277: error: cannot find symbol",
+                "      final JavacStep javacStep;",
+                "            ^",
+                "  symbol:   class JavacStep",
+                "  location: class com.facebook.buck.jvm.java.DefaultJavaLibrary");
 
     assertEquals(
         "JavacErrorParser didn't find the right symbol.",
@@ -81,11 +85,12 @@ public class JavacErrorParserTest {
   @Test
   public void shouldFindSymbolFromPackageDoesNotExistInCurrentPackageError() {
     String error =
-        projectFilesystem.getRootPath().toAbsolutePath().normalize() +
-        "/src/com/facebook/Foo.java:60: error: package BarBaz does not exist\n" +
-        "      BarBaz.doStuff(),\n" +
-        "           ^\n";
-
+        projectFilesystem.getRootPath().toAbsolutePath().normalize()
+            + MoreStrings.linesToText(
+                "/src/com/facebook/Foo.java:60: error: package BarBaz does not exist",
+                "      BarBaz.doStuff(),",
+                "           ^",
+                "");
 
     assertEquals(
         "JavacErrorParser didn't find the right symbol.",
@@ -96,23 +101,26 @@ public class JavacErrorParserTest {
   @Test
   public void shouldFindSymbolFromImportPackageDoesNotExistError() {
     String error =
-        "Foo.java:24: error: package com.facebook.buck.step does not exist\n" +
-        "import com.facebook.buck.step.ExecutionContext;\n" +
-        "                             ^\n";
+        MoreStrings.linesToText(
+            "Foo.java:24: error: package com.facebook.buck.step does not exist",
+            "import com.facebook.buck.step.ExecutionContext;",
+            "                             ^,",
+            "");
 
-      assertEquals(
-          "JavacErrorParser didn't find the right symbol.",
-          Optional.of("com.facebook.buck.step.ExecutionContext"),
-          javacErrorParser.getMissingSymbolFromCompilerError(error));
-
+    assertEquals(
+        "JavacErrorParser didn't find the right symbol.",
+        Optional.of("com.facebook.buck.step.ExecutionContext"),
+        javacErrorParser.getMissingSymbolFromCompilerError(error));
   }
 
   @Test
   public void shouldFindSymbolFromStaticImportPackageDoesNotExistError() {
     String error =
-        "Foo.java:19: error: package com.facebook.buck.rules.BuildableProperties does not exist\n" +
-        "import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;\n" +
-        "                                                              ^\n";
+        MoreStrings.linesToText(
+            "Foo.java:19: error: package com.facebook.buck.rules.BuildableProperties does not exist",
+            "import static com.facebook.buck.rules.BuildableProperties.Kind.ANDROID;",
+            "                                                              ^",
+            "");
 
     assertEquals(
         "JavacErrorParser didn't find the right symbol.",
@@ -123,10 +131,12 @@ public class JavacErrorParserTest {
   @Test
   public void shouldFindSymbolFromCannotAccessError() {
     String error =
-        "Foo.java:46: error: cannot access com.facebook.buck.rules.Description\n" +
-        "public class SomeDescription implements Description<SomeDescription.Arg>,\n" +
-        "       ^\n" +
-        "  class file for com.facebook.buck.rules.Description not found\n";
+        MoreStrings.linesToText(
+            "Foo.java:46: error: cannot access com.facebook.buck.rules.Description",
+            "public class SomeDescription implements Description<SomeDescription.Arg>,",
+            "       ^",
+            "  class file for com.facebook.buck.rules.Description not found",
+            "");
 
     assertEquals(
         "JavacErrorParser didn't find the right symbol.",

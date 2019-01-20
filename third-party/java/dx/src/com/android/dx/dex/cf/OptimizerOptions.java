@@ -46,6 +46,9 @@ public class OptimizerOptions {
     /** true if the above lists have been loaded */
     private boolean optimizeListsLoaded;
 
+    public OptimizerOptions() {
+    }
+
     /**
      * Loads the optimize/don't optimize lists from files.
      *
@@ -119,7 +122,7 @@ public class OptimizerOptions {
      * @param advice {@code non-null;} translation advice
      * @param rmeth {@code non-null;} method with all optimization steps run.
      */
-    public static void compareOptimizerStep(RopMethod nonOptRmeth,
+    public void compareOptimizerStep(RopMethod nonOptRmeth,
             int paramSize, boolean isStatic, CfOptions args,
             TranslationAdvice advice, RopMethod rmeth) {
         EnumSet<Optimizer.OptionalStep> steps;
@@ -130,7 +133,7 @@ public class OptimizerOptions {
         steps.remove(Optimizer.OptionalStep.CONST_COLLECTOR);
 
         RopMethod skipRopMethod
-                = new Optimizer().optimize(nonOptRmeth,
+                = Optimizer.optimize(nonOptRmeth,
                         paramSize, isStatic, args.localInfo, advice, steps);
 
         int normalInsns

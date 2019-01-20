@@ -18,16 +18,23 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.cli.FakeBuckConfig;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleSuccessType;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
+import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.testutil.ParameterizedTests;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -35,89 +42,82 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Collection;
-
 @RunWith(Parameterized.class)
 public class CxxDependencyFileIntegrationTest {
 
-  @Parameterized.Parameters(name = "{0}")
-  public static Collection<Object[]> data() {
-    return ImmutableList.of(
-        new Object[]{CxxPreprocessMode.COMBINED},
-        new Object[]{CxxPreprocessMode.SEPARATE},
-        new Object[]{CxxPreprocessMode.PIPED});
-  }
-
-  @Parameterized.Parameter
-  public CxxPreprocessMode mode;
-
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
   private BuildTarget target;
-  private BuildTarget preprocessTarget;
+  private BuildTarget compileTarget;
+
+  @Parameterized.Parameters(name = "buckd={0}")
+  public static Collection<Object[]> data() {
+    return ParameterizedTests.getPermutations(ImmutableList.of(false, true));
+  }
+
+  @Parameterized.Parameter(value = 0)
+  public boolean buckd;
 
   @Before
   public void setUp() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "depfiles", tmp);
     workspace.setUp();
-    workspace.writeContentsToPath(
-        "[cxx]\n" +
-        "  preprocess_mode = " + mode.toString().toLowerCase() + "\n" +
-        "  cppflags = -Wall -Werror\n" +
-        "  cxxppflags = -Wall -Werror\n" +
-        "  cflags = -Wall -Werror\n" +
-        "  cxxflags = -Wall -Werror\n",
-        ".buckconfig");
+    CxxToolchainUtilsForTests.configureCxxToolchains(workspace);
 
     // Run a build and make sure it's successful.
-    workspace.runBuckBuild("//:test").assertSuccess();
+    runCommand("build", "//:test").assertSuccess();
 
     // Find the target used for preprocessing and verify it ran.
     target = BuildTargetFactory.newInstance(workspace.getDestPath(), "//:test");
-    CxxPlatform cxxPlatform = DefaultCxxPlatforms.build(
-        new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    CxxSourceRuleFactory cxxSourceRuleFactory = CxxSourceRuleFactoryHelper.of(
-        workspace.getDestPath(),
-        target,
-        cxxPlatform);
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxSourceRuleFactory cxxSourceRuleFactory =
+        CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target, cxxPlatform);
     String source = "test.cpp";
-    if (mode == CxxPreprocessMode.SEPARATE) {
-      preprocessTarget =
-          cxxSourceRuleFactory.createPreprocessBuildTarget(source, CxxSource.Type.CXX);
-    } else {
-      preprocessTarget = cxxSourceRuleFactory.createCompileBuildTarget(source);
-    }
-    workspace.getBuildLog().assertTargetBuiltLocally(preprocessTarget.toString());
+    compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(source);
+    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget.toString());
   }
 
   @Test
   public void modifyingUsedHeaderCausesRebuild() throws IOException {
     workspace.writeContentsToPath("#define SOMETHING", "used.h");
-    workspace.runBuckBuild(target.toString()).assertSuccess();
+    runCommand("build", target.toString()).assertSuccess();
     assertThat(
-        workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
 
   @Test
   public void modifyingUnusedHeaderDoesNotCauseRebuild() throws IOException {
     workspace.writeContentsToPath("#define SOMETHING", "unused.h");
-    workspace.runBuckBuild(target.toString()).assertSuccess();
+    runCommand("build", target.toString()).assertSuccess();
     assertThat(
-        workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY)));
   }
 
   @Test
   public void modifyingOriginalSourceCausesRebuild() throws IOException {
+    workspace.resetBuildLogFile();
     workspace.writeContentsToPath("int main() { return 1; }", "test.cpp");
-    workspace.runBuckBuild(target.toString()).assertSuccess();
+    runCommand("build", target.toString()).assertSuccess();
     assertThat(
-        workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    workspace.resetBuildLogFile();
+    workspace.writeContentsToPath("   int main() { return 1; }", "test.cpp");
+    runCommand("build", target.toString()).assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+
+    workspace.resetBuildLogFile();
+    workspace.writeContentsToPath("int main() { return 2; }", "test.cpp");
+    runCommand("build", target.toString()).assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
 
@@ -125,11 +125,36 @@ public class CxxDependencyFileIntegrationTest {
   public void removingUsedHeaderAndReferenceToItCausesRebuild() throws IOException {
     workspace.writeContentsToPath("int main() { return 1; }", "test.cpp");
     Files.delete(workspace.getPath("used.h"));
-    workspace.replaceFileContents("BUCK", "\'used.h\',", "");
-    workspace.runBuckBuild(target.toString()).assertSuccess();
+    workspace.replaceFileContents("BUCK", "\"used.h\",", "");
+    runCommand("build", target.toString()).assertSuccess();
     assertThat(
-        workspace.getBuildLog().getLogEntry(preprocessTarget).getSuccessType(),
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
         Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
   }
 
+  @Test
+  public void modifyingPreprocessorFlagLocationMacroSourceCausesRebuild() throws IOException {
+    workspace.writeContentsToPath("#define SOMETHING", "include.h");
+    runCommand("build", target.toString()).assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+  }
+
+  @Test
+  public void modifyingCompilerFlagLocationMacroSourceCausesRebuild() throws IOException {
+    workspace.writeContentsToPath("", "cc_bin_dir/some_extra_script");
+    runCommand("build", target.toString()).assertSuccess();
+    assertThat(
+        workspace.getBuildLog().getLogEntry(compileTarget).getSuccessType(),
+        Matchers.equalTo(Optional.of(BuildRuleSuccessType.BUILT_LOCALLY)));
+  }
+
+  private ProcessResult runCommand(String... args) throws IOException {
+    if (buckd) {
+      return workspace.runBuckdCommand(args);
+    } else {
+      return workspace.runBuckCommand(args);
+    }
+  }
 }

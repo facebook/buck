@@ -16,5 +16,4 @@
 
 package com.example;
 
-public class ClassWithoutTestsA {
-}
+public class ClassWithoutTestsA {}

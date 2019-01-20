@@ -1,0 +1,61 @@
+http_file(
+    name = "echo_bad_urls.sh",
+    executable = True,
+    sha256 = "2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca",
+    urls = [
+        "http://<HOST>:<PORT>/invalid_path",
+        "http://<HOST>:<PORT>/missing",
+    ],
+)
+
+http_file(
+    name = "echo_bad_hash.sh",
+    executable = True,
+    sha256 = "534be6d331e8f1ab7892f19e8fe23db4907bdc54f517a8b22adc82e69b6b1093",
+    urls = [
+        "http://<HOST>:<PORT>/foo/bar/echo.sh",
+    ],
+)
+
+http_file(
+    name = "echo_executable.sh",
+    executable = True,
+    sha256 = "2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca",
+    urls = [
+        "http://<HOST>:<PORT>/foo/bar/echo.sh",
+    ],
+)
+
+http_file(
+    name = "echo_nonexecutable.sh",
+    executable = False,
+    sha256 = "2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca",
+    urls = [
+        "http://<HOST>:<PORT>/foo/bar/echo.sh",
+    ],
+)
+
+http_file(
+    name = "echo.sh",
+    sha256 = "2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca",
+    urls = [
+        "http://<HOST>:<PORT>/foo/bar/echo.sh",
+    ],
+)
+
+http_file(
+    name = "echo_with_out.sh",
+    out = "some_file.sh",
+    sha256 = "2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca",
+    urls = [
+        "http://<HOST>:<PORT>/foo/bar/echo.sh",
+    ],
+)
+
+http_file(
+    name = "echo_from_maven.sh",
+    sha256 = "2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca",
+    urls = [
+        "mvn:package:artifact_name:zip:classifier:version",
+    ],
+)

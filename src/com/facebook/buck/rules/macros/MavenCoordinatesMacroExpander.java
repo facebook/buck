@@ -16,15 +16,27 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.jvm.java.HasMavenCoordinates;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.jvm.core.HasMavenCoordinates;
+import com.facebook.buck.rules.args.Arg;
+import com.google.common.collect.ImmutableList;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Resolves to the maven coordinates for a build target referencing a {@link HasMavenCoordinates}.
  */
-public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander {
+public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<MavenCoordinatesMacro> {
+
+  @Override
+  public Class<MavenCoordinatesMacro> getInputClass() {
+    return MavenCoordinatesMacro.class;
+  }
 
   protected String getMavenCoordinates(BuildRule rule) throws MacroException {
     if (!(rule instanceof HasMavenCoordinates)) {
@@ -37,16 +49,28 @@ public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander {
     if (!coordinates.isPresent()) {
       throw new MacroException(
           String.format(
-              "%s used in maven macro does not have maven coordinates",
-              rule.getBuildTarget()));
+              "%s used in maven macro does not have maven coordinates", rule.getBuildTarget()));
     }
     return coordinates.get();
   }
 
   @Override
-  public String expand(SourcePathResolver resolver, BuildRule rule)
+  protected MavenCoordinatesMacro parse(
+      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
       throws MacroException {
-    return getMavenCoordinates(rule);
+    return MavenCoordinatesMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
+  @Override
+  public Arg expand(SourcePathResolver resolver, MavenCoordinatesMacro ignored, BuildRule rule)
+      throws MacroException {
+    return new Arg() {
+      @AddToRuleKey private final String mavenCoordinates = getMavenCoordinates(rule);
+
+      @Override
+      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+        consumer.accept(mavenCoordinates);
+      }
+    };
+  }
 }

@@ -1,0 +1,11 @@
+cxx_binary(
+    name = "binary",
+    deps = [
+        ":echo",
+    ],
+)
+
+cxx_library(
+    name = "echo",
+    srcs = ["echo.cpp"],
+)

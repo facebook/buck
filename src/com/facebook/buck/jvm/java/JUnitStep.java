@@ -16,33 +16,34 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class JUnitStep extends ShellStep {
   private static final Logger LOG = Logger.get(JUnitStep.class);
 
   private final ProjectFilesystem filesystem;
-  private final JavaRuntimeLauncher javaRuntimeLauncher;
+  private final ImmutableList<String> javaRuntimeLauncher;
   private final ImmutableMap<String, String> nativeLibsEnvironment;
   private final Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> testCaseTimeoutMs;
+  private final ImmutableMap<String, String> env;
   private final JUnitJvmArgs junitJvmArgs;
 
   // Set when the junit command times out.
@@ -52,13 +53,17 @@ public class JUnitStep extends ShellStep {
       ProjectFilesystem filesystem,
       Map<String, String> nativeLibsEnvironment,
       Optional<Long> testRuleTimeoutMs,
-      JavaRuntimeLauncher javaRuntimeLauncher,
+      Optional<Long> testCaseTimeoutMs,
+      ImmutableMap<String, String> env,
+      ImmutableList<String> javaRuntimeLauncher,
       JUnitJvmArgs junitJvmArgs) {
     super(filesystem.getRootPath());
     this.filesystem = filesystem;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.testCaseTimeoutMs = testCaseTimeoutMs;
+    this.env = env;
     this.junitJvmArgs = junitJvmArgs;
   }
 
@@ -70,17 +75,17 @@ public class JUnitStep extends ShellStep {
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.add(javaRuntimeLauncher.getCommand());
+    args.addAll(javaRuntimeLauncher);
 
     junitJvmArgs.formatCommandLineArgsToList(
         args,
         filesystem,
         context.getVerbosity(),
-        context.getDefaultTestTimeoutMillis());
+        testCaseTimeoutMs.orElse(context.getDefaultTestTimeoutMillis()));
 
     if (junitJvmArgs.isDebugEnabled()) {
-      warnUser(context,
-          "Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.");
+      warnUser(
+          context, "Debugging. Suspending JVM. Connect a JDWP debugger to port 5005 to proceed.");
     }
 
     return args.build();
@@ -89,10 +94,9 @@ public class JUnitStep extends ShellStep {
   @Override
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
-    if (junitJvmArgs.getTmpDirectory().isPresent()) {
-      env.put("TMP", junitJvmArgs.getTmpDirectory().get().toString());
-    }
+    env.putAll(this.env);
     env.putAll(nativeLibsEnvironment);
+    env.putAll(junitJvmArgs.getEnvironment());
     return env.build();
   }
 
@@ -106,17 +110,17 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  protected Optional<Function<Process, Void>> getTimeoutHandler(final ExecutionContext context) {
-    return Optional.<Function<Process, Void>>of(
-        new Function<Process, Void>() {
-          @Override
-          public Void apply(Process process) {
-            Optional<Long> pid = Optional.absent();
-            Platform platform = context.getPlatform();
-            try {
-              switch(platform) {
-                case LINUX:
-                case MACOS: {
+  protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
+    return Optional.of(
+        process -> {
+          Optional<Long> pid = Optional.empty();
+          Platform platform = context.getPlatform();
+          try {
+            switch (platform) {
+              case LINUX:
+              case FREEBSD:
+              case MACOS:
+                {
                   Field field = process.getClass().getDeclaredField("pid");
                   field.setAccessible(true);
                   try {
@@ -126,7 +130,8 @@ public class JUnitStep extends ShellStep {
                   }
                   break;
                 }
-                case WINDOWS: {
+              case WINDOWS:
+                {
                   Field field = process.getClass().getDeclaredField("handle");
                   field.setAccessible(true);
                   try {
@@ -136,49 +141,48 @@ public class JUnitStep extends ShellStep {
                   }
                   break;
                 }
-                case UNKNOWN:
-                  LOG.info("Unknown platform; unable to obtain the process id!");
-                  break;
-              }
-            } catch (NoSuchFieldException e) {
-              LOG.error(e);
+              case UNKNOWN:
+                LOG.info("Unknown platform; unable to obtain the process id!");
+                break;
             }
+          } catch (NoSuchFieldException e) {
+            LOG.error(e);
+          }
 
-            Optional<Path> jstack = new ExecutableFinder(context.getPlatform())
-                .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
-            if (!pid.isPresent() || !jstack.isPresent()) {
-              LOG.info("Unable to print a stack trace for timed out test!");
-              return null;
-            }
+          Optional<Path> jstack =
+              new ExecutableFinder(context.getPlatform())
+                  .getOptionalExecutable(Paths.get("jstack"), context.getEnvironment());
+          if (!pid.isPresent() || !jstack.isPresent()) {
+            LOG.info("Unable to print a stack trace for timed out test!");
+            return;
+          }
 
-            context.getStdErr().print(
-                "Test has timed out!  Here is a trace of what it is currently doing:%n");
-            try {
-              context.getProcessExecutor().launchAndExecute(
-                  /* command */ ProcessExecutorParams.builder()
-                      .addCommand(jstack.get().toString(), "-l", pid.get().toString())
-                      .setEnvironment(context.getEnvironment())
-                      .build(),
-                  /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
-                      .add(ProcessExecutor.Option.PRINT_STD_OUT)
-                      .add(ProcessExecutor.Option.PRINT_STD_ERR)
-                      .build(),
-                  /* stdin */ Optional.<String>absent(),
-                  /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
-                  /* timeOutHandler */ Optional.<Function<Process, Void>>of(
-                      new Function<Process, Void>() {
-                        @Override
-                        public Void apply(Process input) {
-                          context.getStdErr().print(
-                              "Printing the stack took longer than 30 seconds. No longer trying.");
-                          return null;
-                        }
-                      }
-                  ));
-            } catch (Exception e) {
-              LOG.error(e);
-            }
-            return null;
+          context
+              .getStdErr()
+              .println("Test has timed out!  Here is a trace of what it is currently doing:");
+          try {
+            context
+                .getProcessExecutor()
+                .launchAndExecute(
+                    /* command */ ProcessExecutorParams.builder()
+                        .addCommand(jstack.get().toString(), "-l", pid.get().toString())
+                        .setEnvironment(context.getEnvironment())
+                        .build(),
+                    /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
+                        .add(ProcessExecutor.Option.PRINT_STD_OUT)
+                        .add(ProcessExecutor.Option.PRINT_STD_ERR)
+                        .build(),
+                    /* stdin */ Optional.empty(),
+                    /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
+                    /* timeOutHandler */ Optional.of(
+                        input -> {
+                          context
+                              .getStdErr()
+                              .print(
+                                  "Printing the stack took longer than 30 seconds. No longer trying.");
+                        }));
+          } catch (Exception e) {
+            LOG.error(e);
           }
         });
   }
@@ -202,5 +206,4 @@ public class JUnitStep extends ShellStep {
   public boolean hasTimedOut() {
     return hasTimedOut;
   }
-
 }

@@ -1,0 +1,15 @@
+filegroup(
+    name = "dir_txt",
+    srcs = glob(["dir/**/*.txt"]),
+)
+
+genrule(
+    name = "generate_dir",
+    out = "generated_dir",
+    cmd = "mkdir $OUT && echo generated > $OUT/generated_file.txt",
+)
+
+filegroup(
+    name = "dir_with_genrule",
+    srcs = glob(["dir/**/*.txt"]) + [":generate_dir"],
+)

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/buck-out/extra-intellij-output/modules/dep1/buck_out_extra_intellij_output_modules_dep1.iml" filepath="$PROJECT_DIR$/buck-out/extra-intellij-output/modules/dep1/buck_out_extra_intellij_output_modules_dep1.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/modules/dep1/modules_dep1.iml" filepath="$PROJECT_DIR$/modules/dep1/modules_dep1.iml" group="modules" />
+      <module fileurl="file://$PROJECT_DIR$/project_root.iml" filepath="$PROJECT_DIR$/project_root.iml" />
+    </modules>
+  </component>
+</project>

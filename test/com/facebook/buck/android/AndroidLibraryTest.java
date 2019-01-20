@@ -18,38 +18,42 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.TargetGraph;
-
-import org.junit.Test;
-
 import java.nio.file.Paths;
+import org.junit.Test;
 
 public class AndroidLibraryTest {
 
   @Test
-  public void testAndroidAnnotation() throws Exception {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-
+  public void testAndroidAnnotation() {
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
-    BuildRule processorRule = JavaLibraryBuilder
-        .createBuilder(processorTarget)
-        .addSrc(Paths.get("java/processor/processor.java"))
-        .build(ruleResolver);
+    TargetNode<?> processorNode =
+        JavaLibraryBuilder.createBuilder(processorTarget)
+            .addSrc(Paths.get("java/processor/processor.java"))
+            .build();
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
-    AndroidLibrary library = (AndroidLibrary) AndroidLibraryBuilder
-        .createBuilder(libTarget)
-        .addProcessor("MyProcessor")
-        .addProcessorBuildTarget(processorRule.getBuildTarget())
-        .build(ruleResolver);
+    TargetNode<?> libraryNode =
+        AndroidLibraryBuilder.createBuilder(libTarget)
+            .addProcessor("MyProcessor")
+            .addProcessorBuildTarget(processorNode.getBuildTarget())
+            .build();
 
-    assertTrue(library.getGeneratedSourcePath().isPresent());
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(processorNode, libraryNode);
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(
+            targetGraph, AndroidLibraryBuilder.createToolchainProviderForAndroidLibrary());
+
+    AndroidLibrary library = (AndroidLibrary) graphBuilder.requireRule(libTarget);
+
+    assertTrue(library.getGeneratedAnnotationSourcePath().isPresent());
+    assertTrue(library.hasAnnotationProcessing());
   }
 }

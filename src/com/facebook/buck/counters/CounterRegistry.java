@@ -18,28 +18,21 @@ package com.facebook.buck.counters;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
-
 import java.io.Closeable;
 import java.util.Collection;
 
 public interface CounterRegistry extends Closeable {
-  IntegerCounter newIntegerCounter(
-      String category,
-      String name,
-      ImmutableMap<String, String> tags);
+  IntegerCounter newIntegerCounter(String category, String name, ImmutableMap<String, String> tags);
 
   SamplingCounter newSamplingCounter(
-      String category,
-      String name,
-      ImmutableMap<String, String> tags);
+      String category, String name, ImmutableMap<String, String> tags);
 
-  TagSetCounter newTagSetCounter(
-      String category,
-      String name,
-      ImmutableMap<String, String> tags);
+  TagSetCounter newTagSetCounter(String category, String name, ImmutableMap<String, String> tags);
 
   void registerCounters(Collection<Counter> counters);
 
@@ -49,10 +42,12 @@ public interface CounterRegistry extends Closeable {
   class AsyncCounterRegistrationEvent extends AbstractBuckEvent {
 
     private ImmutableCollection<Counter> counters;
+    private final String countersString;
 
-    public AsyncCounterRegistrationEvent(ImmutableCollection<Counter> counters) {
+    public AsyncCounterRegistrationEvent(ImmutableList<Counter> counters) {
       super(EventKey.unique());
       this.counters = counters;
+      this.countersString = Joiner.on(",").join(counters); // CSV, based on List ordering.
     }
 
     public ImmutableCollection<Counter> getCounters() {
@@ -61,7 +56,7 @@ public interface CounterRegistry extends Closeable {
 
     @Override
     protected String getValueString() {
-      return toString();
+      return countersString;
     }
 
     @Override

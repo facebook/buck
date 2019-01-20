@@ -16,72 +16,96 @@
 
 package com.facebook.buck.jvm.java.abi;
 
-import static org.objectweb.asm.ClassReader.SKIP_CODE;
-import static org.objectweb.asm.ClassReader.SKIP_DEBUG;
-import static org.objectweb.asm.ClassReader.SKIP_FRAMES;
-
-import com.facebook.buck.io.HashingDeterministicJarWriter;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Preconditions;
-import com.google.common.io.ByteSource;
-
-import org.objectweb.asm.ClassReader;
-
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.java.lang.model.ElementsExtended;
+import com.facebook.buck.util.zip.JarBuilder;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.jar.JarOutputStream;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import javax.annotation.processing.Messager;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.util.Types;
 
 public class StubJar {
-
-  private final Path toMirror;
+  private final Supplier<LibraryReader> libraryReaderSupplier;
+  @Nullable private AbiGenerationMode compatibilityMode = null;
 
   public StubJar(Path toMirror) {
-    this.toMirror = Preconditions.checkNotNull(toMirror);
+    libraryReaderSupplier = () -> LibraryReader.of(toMirror);
+  }
+
+  /**
+   * @param targetVersion the class file version to output, expressed as the corresponding Java
+   *     source version
+   * @param types
+   * @param messager
+   * @param includeParameterMetadata
+   */
+  public StubJar(
+      SourceVersion targetVersion,
+      ElementsExtended elements,
+      Types types,
+      Messager messager,
+      Iterable<Element> topLevelElements,
+      boolean includeParameterMetadata) {
+    libraryReaderSupplier =
+        () ->
+            LibraryReader.of(
+                targetVersion,
+                elements,
+                types,
+                messager,
+                topLevelElements,
+                includeParameterMetadata);
+  }
+
+  /**
+   * Filters the stub jar through {@link SourceAbiCompatibleVisitor}. See that class for details.
+   *
+   * @param compatibilityMode
+   */
+  public StubJar setCompatibilityMode(AbiGenerationMode compatibilityMode) {
+    this.compatibilityMode = compatibilityMode;
+    return this;
   }
 
   public void writeTo(ProjectFilesystem filesystem, Path path) throws IOException {
-    Preconditions.checkState(!filesystem.exists(path), "Output file already exists: %s)", path);
-
-    if (path.getParent() != null && !filesystem.exists(path.getParent())) {
-      filesystem.createParentDirs(path);
-    }
-
-    Walker walker = Walkers.getWalkerFor(toMirror);
-    try (
-        HashingDeterministicJarWriter jar = new HashingDeterministicJarWriter(
-            new JarOutputStream(
-                filesystem.newFileOutputStream(path)))) {
-      final CreateStubAction createStubAction = new CreateStubAction(jar);
-      walker.walk(createStubAction);
+    // The order of these declarations is important -- FilesystemStubJarWriter actually uses
+    // the LibraryReader in its close method, and try-with-resources closes the items in the
+    // opposite order of their creation.
+    try (LibraryReader input = libraryReaderSupplier.get();
+        StubJarWriter writer = new FilesystemStubJarWriter(filesystem, path)) {
+      writeTo(input, writer);
     }
   }
 
-  private static class CreateStubAction implements FileAction {
-    private final HashingDeterministicJarWriter writer;
-
-    public CreateStubAction(HashingDeterministicJarWriter writer) {
-      this.writer = writer;
+  public void writeTo(JarBuilder jarBuilder) throws IOException {
+    try (LibraryReader input = libraryReaderSupplier.get();
+        StubJarWriter writer = new JarBuilderStubJarWriter(jarBuilder)) {
+      writeTo(input, writer);
     }
+  }
 
-    @Override
-    public void visit(Path relativizedPath, InputStream stream) throws IOException {
-      String fileName = MorePaths.pathWithUnixSeparators(relativizedPath);
-      if (!fileName.endsWith(".class")) {
-        return;
+  private void writeTo(LibraryReader input, StubJarWriter writer) throws IOException {
+    List<Path> paths =
+        input
+            .getRelativePaths()
+            .stream()
+            .sorted(Comparator.comparing(MorePaths::pathWithUnixSeparators))
+            .collect(Collectors.toList());
+
+    for (Path path : paths) {
+      StubJarEntry entry = StubJarEntry.of(input, path, compatibilityMode);
+      if (entry == null) {
+        continue;
       }
-
-      ByteSource stubClassBytes = getStubClassBytes(stream, fileName);
-      writer.writeEntry(fileName, stubClassBytes);
-    }
-
-    private ByteSource getStubClassBytes(InputStream stream,
-        String fileName) throws IOException {
-      ClassReader classReader = new ClassReader(stream);
-      ClassMirror visitor = new ClassMirror(fileName);
-      classReader.accept(visitor, SKIP_CODE | SKIP_DEBUG | SKIP_FRAMES);
-      return visitor.getStubClassBytes();
+      entry.write(writer);
     }
   }
 }

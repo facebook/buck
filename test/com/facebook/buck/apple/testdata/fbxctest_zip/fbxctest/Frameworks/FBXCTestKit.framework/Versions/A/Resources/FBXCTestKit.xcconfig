@@ -1,0 +1,9 @@
+// Import Shared & Framework Configuration
+#include "../../Configuration/Shared.xcconfig"
+#include "../../Configuration/Framework.xcconfig"
+
+// Target Specific Settings
+INFOPLIST_FILE = $(PROJECT_DIR)/FBXCTestKit/Info.plist
+LD_RUNPATH_SEARCH_PATHS = @executable_path
+PRODUCT_BUNDLE_IDENTIFIER = com.facebook.FBXCTestKit
+PRODUCT_NAME = FBXCTestKit

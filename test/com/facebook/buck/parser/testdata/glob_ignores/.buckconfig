@@ -1,0 +1,15 @@
+[color]
+  ui = false
+[alias]
+  root=//:root_repo
+[project]
+  # test ignoring a pattern
+  # test ignoring a whole directory
+  # test ignoring a whole directory with a trailing slash
+  ignore = buck-out, \
+           *.java, \
+           foo, \
+           bar/
+
+[build]
+  allow_empty_globs = false

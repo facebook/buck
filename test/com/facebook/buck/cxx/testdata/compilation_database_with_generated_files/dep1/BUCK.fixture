@@ -1,0 +1,37 @@
+cxx_library(
+    name = "dep1",
+    srcs = [
+        ":source",
+    ],
+    exported_headers = [
+        ":header",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "header",
+    out = "dep1.h",
+    cmd = """
+echo "
+  #ifndef DEP1_H_
+  #define DEP1_H_
+
+  int dep1(int x);
+
+  #endif
+" > $OUT
+  """,
+)
+
+genrule(
+    name = "source",
+    out = "dep1.cpp",
+    cmd = """
+echo "
+  int dep1(int x) {
+    return x + 6;
+  }
+" > $OUT
+  """,
+)

@@ -19,15 +19,13 @@ package com.facebook.buck.step;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Optional;
-
-import org.junit.Test;
-
+import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.Test;
 
 public class ExecutionOrderAwareFakeStepTest {
   @Test
-  public void eachStepHasIncrementingExecutionOrder() {
+  public void eachStepHasIncrementingExecutionOrder() throws Exception {
     AtomicInteger order = new AtomicInteger(0);
     ExecutionOrderAwareFakeStep step1 = new ExecutionOrderAwareFakeStep("name", "desc", 0, order);
     ExecutionOrderAwareFakeStep step2 = new ExecutionOrderAwareFakeStep("name", "desc", 0, order);
@@ -36,11 +34,11 @@ public class ExecutionOrderAwareFakeStepTest {
     step1.execute(context);
     step2.execute(context);
     step3.execute(context);
-    assertThat(step1.getExecutionBeginOrder(), equalTo(Optional.of(0)));
-    assertThat(step1.getExecutionEndOrder(), equalTo(Optional.of(1)));
-    assertThat(step2.getExecutionBeginOrder(), equalTo(Optional.of(2)));
-    assertThat(step2.getExecutionEndOrder(), equalTo(Optional.of(3)));
-    assertThat(step3.getExecutionBeginOrder(), equalTo(Optional.of(4)));
-    assertThat(step3.getExecutionEndOrder(), equalTo(Optional.of(5)));
+    assertThat(step1.getExecutionBeginOrder(), equalTo(OptionalInt.of(0)));
+    assertThat(step1.getExecutionEndOrder(), equalTo(OptionalInt.of(1)));
+    assertThat(step2.getExecutionBeginOrder(), equalTo(OptionalInt.of(2)));
+    assertThat(step2.getExecutionEndOrder(), equalTo(OptionalInt.of(3)));
+    assertThat(step3.getExecutionBeginOrder(), equalTo(OptionalInt.of(4)));
+    assertThat(step3.getExecutionEndOrder(), equalTo(OptionalInt.of(5)));
   }
 }

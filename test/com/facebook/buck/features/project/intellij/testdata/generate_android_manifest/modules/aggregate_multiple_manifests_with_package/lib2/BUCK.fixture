@@ -1,0 +1,9 @@
+android_library(
+    name = "lib2",
+    manifest = "AndroidManifest.xml",
+)
+
+android_resource(
+    name = "res",
+    package = "com.test",
+)

@@ -1,94 +1,96 @@
-apple_library(
-  name = 'one',
-  srcs = [ '1.txt' ],
-  deps = [
-    ':two',
-    ':three',
-  ],
-  tests = [ ':one-tests' ],
+java_library(
+    name = "one",
+    srcs = ["1.txt"],
+    tests = [":one-tests"],
+    deps = [
+        ":three",
+        ":two",
+    ],
 )
 
-apple_library(
-  name = 'two',
-  srcs = [ '2.txt' ],
-  deps = [
-    ':four',
-  ],
+java_library(
+    name = "two",
+    srcs = ["2.txt"],
+    deps = [
+        ":four",
+    ],
 )
 
-apple_library(
-  name = 'three',
-  srcs = [ '3.txt' ],
-  deps = [
-    ':four',
-    ':five',
-  ],
+java_library(
+    name = "three",
+    srcs = ["3.txt"],
+    deps = [
+        ":five",
+        ":four",
+        ":six",
+    ],
 )
 
-apple_library(
-  name = 'four',
-  srcs = [ '4.txt' ],
-  deps = [
-    ':six',
-  ],
-  tests = [
-    ':four-tests',
-    ':four-application-tests',
-  ],
+java_library(
+    name = "four",
+    srcs = ["4.txt"],
+    tests = [
+        ":four-application-tests",
+        ":four-tests",
+    ],
+    deps = [
+        ":six",
+    ],
 )
 
-apple_library(
-  name = 'five',
-  srcs = [
-    '5.txt',
-    ':six',
-  ],
+java_library(
+    name = "five",
+    srcs = [
+        "5.txt",
+        ":six",
+    ],
 )
 
-apple_library(
-  exported_headers = [ "header.h" ],
-  name = 'six',
-  srcs = [ '6.txt' ],
-  tests = [ ':six-tests' ],
+java_library(
+    name = "six",
+    srcs = ["6.txt"],
+    tests = [":six-tests"],
 )
 
-apple_test(
-  name = 'one-tests',
-  extension = 'xctest',
-  info_plist = 'Test.plist',
-  srcs = [ '1-test.txt' ],
-  deps = [ ':one' ],
+java_test(
+    name = "one-tests",
+    srcs = ["1-test.txt"],
+    deps = [":one"],
 )
 
-apple_test(
-  name = 'four-tests',
-  extension = 'xctest',
-  info_plist = 'Test.plist',
-  srcs = [ '4-test.txt' ],
-  deps = [ ':four' ],
+java_test(
+    name = "four-tests",
+    srcs = ["4-test.txt"],
+    deps = [":four"],
 )
 
-apple_test(
-  name = 'four-application-tests',
-  extension = 'xctest',
-  info_plist = 'Test.plist',
-  labels = [ 'e2e' ],
-  srcs = [ '4-application-test.txt' ],
-  deps = [
-    ':four',
-    ':application-test-lib',
-  ],
+java_test(
+    name = "four-application-tests",
+    srcs = ["4-application-test.txt"],
+    labels = ["e2e"],
+    deps = [
+        ":application-test-lib",
+        ":four",
+    ],
 )
 
-apple_test(
-  name = 'six-tests',
-  extension = 'xctest',
-  info_plist = 'Test.plist',
-  labels = [ 'e2e', 'other' ],
-  srcs = [ '6-test.txt' ],
-  deps = [ ':six' ],
+java_test(
+    name = "six-tests",
+    srcs = ["6-test.txt"],
+    labels = [
+        "e2e",
+        "other",
+    ],
+    deps = [":six"],
 )
 
-apple_library(
-  name = 'application-test-lib',
+java_library(
+    name = "application-test-lib",
+    labels = ["e2e_lib"],
+    deps = [":test-lib-lib"],
+)
+
+java_library(
+    name = "test-lib-lib",
+    labels = ["e2e_lib"],
 )

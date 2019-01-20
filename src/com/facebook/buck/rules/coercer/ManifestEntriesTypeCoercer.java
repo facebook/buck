@@ -15,11 +15,12 @@
  */
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Optional;
-
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import java.nio.file.Path;
 import java.util.Map;
 
@@ -30,15 +31,12 @@ import java.util.Map;
  */
 public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries> {
 
-  // Cached copy of the deserializer
-  private final ObjectMapper mapper;
-
-  public ManifestEntriesTypeCoercer(ObjectMapper mapper) {
-    this.mapper = mapper;
-  }
+  private final ObjectMapper objectMapper =
+      ObjectMappers.legacyCreate()
+          .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+          .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 
   @Override
-
   public Class<ManifestEntries> getOutputClass() {
     return ManifestEntries.class;
   }
@@ -48,21 +46,18 @@ public class ManifestEntriesTypeCoercer extends LeafTypeCoercer<ManifestEntries>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException {
+      Object object)
+      throws CoerceFailedException {
     if (!(object instanceof Map)) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
 
-    @SuppressWarnings("unchecked") Map<String, Object> value = (Map<String, Object>) object;
+    @SuppressWarnings("unchecked")
+    Map<String, Object> value = (Map<String, Object>) object;
     try {
-      return mapper.convertValue(value, ManifestEntries.class);
+      return objectMapper.convertValue(value, ManifestEntries.class);
     } catch (IllegalArgumentException e) {
       throw CoerceFailedException.simple(object, getOutputClass(), e.getLocalizedMessage());
     }
-  }
-
-  @Override
-  public Optional<ManifestEntries> getOptionalValue() {
-    return Optional.of(ManifestEntries.empty());
   }
 }

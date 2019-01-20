@@ -1,0 +1,6 @@
+python_library(
+    name = "py",
+    srcs = glob(["*.py"]),
+    tests = ["//py/__tests__:tests"],
+    visibility = ["PUBLIC"],
+)

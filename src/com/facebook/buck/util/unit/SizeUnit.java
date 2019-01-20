@@ -16,25 +16,25 @@
 
 package com.facebook.buck.util.unit;
 
-import com.facebook.buck.model.Pair;
-import com.facebook.buck.util.MoreStrings;
+import com.facebook.buck.util.string.MoreStrings;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
-
 import java.math.BigDecimal;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public enum SizeUnit {
-  BYTES(0, "B"),
-  KILOBYTES(1, "KB"),
-  MEGABYTES(2, "MB"),
-  GIGABYTES(3, "GB"),
-  TERABYTES(4, "TB");
+  BYTES(0, "bytes"),
+  KILOBYTES(1, "Kbytes"),
+  MEGABYTES(2, "Mbytes"),
+  GIGABYTES(3, "Gbytes"),
+  TERABYTES(4, "Tbytes");
 
   private final int ordinal;
   private final String abbreviation;
 
-  private SizeUnit(int ordinal, String abbreviation) {
+  SizeUnit(int ordinal, String abbreviation) {
     this.ordinal = ordinal;
     this.abbreviation = abbreviation;
   }
@@ -53,31 +53,31 @@ public enum SizeUnit {
     } else if (magnitude > 0) {
       return BigDecimal.valueOf(size).multiply(BigDecimal.valueOf(1024).pow(magnitude)).longValue();
     } else {
-      return BigDecimal.valueOf(size).divide(
-          BigDecimal.valueOf(1024).pow(-1 * magnitude)).longValue();
+      return BigDecimal.valueOf(size)
+          .divide(BigDecimal.valueOf(1024).pow(-1 * magnitude))
+          .longValue();
     }
   }
 
   private static final ImmutableMap<String, SizeUnit> SHORT_TO_CODE =
       ImmutableMap.<String, SizeUnit>builder()
-        .put("b", BYTES)
-        .put("kb", KILOBYTES)
-        .put("kilobytes", KILOBYTES)
-        .put("mb", MEGABYTES)
-        .put("megabytes", MEGABYTES)
-        .put("gb", GIGABYTES)
-        .put("gigabytes", GIGABYTES)
-        .put("tb", TERABYTES)
-        .put("terabytes", TERABYTES)
-        .build();
+          .put("b", BYTES)
+          .put("kb", KILOBYTES)
+          .put("kilobytes", KILOBYTES)
+          .put("mb", MEGABYTES)
+          .put("megabytes", MEGABYTES)
+          .put("gb", GIGABYTES)
+          .put("gigabytes", GIGABYTES)
+          .put("tb", TERABYTES)
+          .put("terabytes", TERABYTES)
+          .build();
 
-  private static final Pattern SIZE_PATTERN = Pattern.compile("([\\d]+(?:\\.[\\d]+)?)\\s*" +
-          MoreStrings.regexPatternForAny(SHORT_TO_CODE.keySet()),
+  private static final Pattern SIZE_PATTERN =
+      Pattern.compile(
+          "([\\d]+(?:\\.[\\d]+)?)\\s*" + MoreStrings.regexPatternForAny(SHORT_TO_CODE.keySet()),
           Pattern.CASE_INSENSITIVE);
 
-  /**
-   * Parses a string that represents a size into the number of bytes represented by that string.
-   */
+  /** Parses a string that represents a size into the number of bytes represented by that string. */
   public static long parseBytes(String input) throws NumberFormatException {
     Matcher matcher = SIZE_PATTERN.matcher(input);
     if (matcher.find()) {
@@ -118,7 +118,7 @@ public enum SizeUnit {
 
   public static Pair<Double, SizeUnit> getHumanReadableSize(double size, SizeUnit unit) {
     if (size == 0) {
-      return new Pair<>(size, unit);
+      return new Pair<>(0.0, unit);
     }
     int ordinal = unit.getOrdinal();
     double resultSize = size;
@@ -140,5 +140,9 @@ public enum SizeUnit {
       }
     }
     return new Pair<>(resultSize, SizeUnit.values()[ordinal]);
+  }
+
+  public static String toHumanReadableString(Pair<Double, SizeUnit> size, Locale locale) {
+    return String.format(locale, "%.2f %s", size.getFirst(), size.getSecond().getAbbreviation());
   }
 }

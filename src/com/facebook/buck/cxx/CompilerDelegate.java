@@ -16,61 +16,57 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Ordering;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
-/**
- * Helper class for generating compiler invocations for a cxx compilation rule.
- */
-class CompilerDelegate implements RuleKeyAppendable {
+/** Helper class for generating compiler invocations for a cxx compilation rule. */
+class CompilerDelegate implements AddsToRuleKey {
   // Fields that are added to rule key as is.
-  private final Compiler compiler;
-
-  // Fields that added to the rule key with some processing.
-  private final CxxToolFlags compilerFlags;
-
-  // Fields that are not added to the rule key.
-  private final SourcePathResolver resolver;
-  private final DebugPathSanitizer sanitizer;
+  @AddToRuleKey private final Compiler compiler;
+  @AddToRuleKey private final CxxToolFlags compilerFlags;
+  @AddToRuleKey private final DebugPathSanitizer sanitizer;
+  @AddToRuleKey private final Optional<Boolean> useArgFile;
 
   public CompilerDelegate(
-      SourcePathResolver resolver,
       DebugPathSanitizer sanitizer,
       Compiler compiler,
-      CxxToolFlags flags) {
-    this.resolver = resolver;
+      CxxToolFlags flags,
+      Optional<Boolean> useArgFile) {
     this.sanitizer = sanitizer;
     this.compiler = compiler;
     this.compilerFlags = flags;
+    this.useArgFile = useArgFile;
   }
 
-  @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink.setReflectively("compiler", compiler);
-    sink.setReflectively(
-        "platformCompilerFlags",
-        sanitizer.sanitizeFlags(compilerFlags.getPlatformFlags()));
-    sink.setReflectively(
-        "ruleCompilerFlags",
-        sanitizer.sanitizeFlags(compilerFlags.getRuleFlags()));
+  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+    return compiler.getCommandPrefix(resolver);
   }
 
-  /**
-   * Returns the argument list for executing the compiler.
-   */
-  public ImmutableList<String> getCommand(CxxToolFlags prependedFlags) {
-    return ImmutableList.<String>builder()
-        .addAll(compiler.getCommandPrefix(resolver))
+  public ImmutableList<Arg> getArguments(CxxToolFlags prependedFlags, Path cellPath) {
+    return ImmutableList.<Arg>builder()
         .addAll(CxxToolFlags.concat(prependedFlags, compilerFlags).getAllFlags())
         .addAll(
-            compiler.debugCompilationDirFlags(sanitizer.getCompilationDirectory())
-                .or(ImmutableList.<String>of()))
+            StringArg.from(
+                compiler.getFlagsForReproducibleBuild(
+                    sanitizer.getCompilationDirectory(), cellPath)))
         .build();
   }
 
@@ -78,16 +74,55 @@ class CompilerDelegate implements RuleKeyAppendable {
     return compilerFlags;
   }
 
-  public ImmutableMap<String, String> getEnvironment() {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     return compiler.getEnvironment(resolver);
   }
 
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
-    return Ordering.natural().immutableSortedCopy(compiler.getInputs());
+    Stream.Builder<SourcePath> inputs = Stream.builder();
+
+    // Add inputs from the compiler object.
+    BuildableSupport.deriveInputs(compiler).sorted().forEach(inputs);
+
+    // Args can contain things like location macros, so extract any inputs we find.
+    for (Arg arg : compilerFlags.getAllFlags()) {
+      BuildableSupport.deriveInputs(arg).forEach(inputs);
+    }
+
+    return inputs
+        .build()
+        .filter(
+            (SourcePath path) ->
+                !(path instanceof PathSourcePath)
+                    || !((PathSourcePath) path).getRelativePath().isAbsolute())
+        .collect(ImmutableList.toImmutableList());
   }
 
-  public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return compiler.getFlagsForColorDiagnostics();
+  public boolean isArgFileSupported() {
+    return useArgFile.orElse(compiler.isArgFileSupported());
   }
 
+  public DependencyTrackingMode getDependencyTrackingMode() {
+    return compiler.getDependencyTrackingMode();
+  }
+
+  public Compiler getCompiler() {
+    return compiler;
+  }
+
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    deps.addAll(BuildableSupport.getDepsCollection(getCompiler(), ruleFinder));
+    RichStream.from(getCompilerFlags().getAllFlags())
+        .flatMap(a -> BuildableSupport.getDeps(a, ruleFinder))
+        .forEach(deps::add);
+    return deps.build();
+  }
+
+  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
+    // TODO(cjhopman): this should not include tools (an actual compiler)
+    return (SourcePath path) ->
+        !(path instanceof PathSourcePath)
+            || !((PathSourcePath) path).getRelativePath().isAbsolute();
+  }
 }

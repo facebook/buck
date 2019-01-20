@@ -16,14 +16,16 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
 
 public class AndroidResourceRuleBuilder {
 
@@ -37,45 +39,41 @@ public class AndroidResourceRuleBuilder {
 
   public static class Builder {
 
-    private SourcePathResolver resolver;
-    private BuildRuleParams buildRuleParams;
+    private SourcePathRuleFinder ruleFinder;
+    private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    private BuildTarget buildTarget;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     private SourcePath res;
-    private ImmutableSortedSet<? extends SourcePath> resSrcs = ImmutableSortedSet.of();
+    private ImmutableSortedMap<Path, SourcePath> resSrcs = ImmutableSortedMap.of();
     private String rDotJavaPackage;
     private SourcePath assets;
-    private ImmutableSortedSet<? extends SourcePath> assetsSrcs = ImmutableSortedSet.of();
+    private ImmutableSortedMap<Path, SourcePath> assetsSrcs = ImmutableSortedMap.of();
     private SourcePath manifest;
     private boolean hasWhitelistedStrings = false;
 
     public AndroidResource build() {
       return new AndroidResource(
-          buildRuleParams,
-          resolver,
+          buildTarget,
+          projectFilesystem,
+          TestBuildRuleParams.create(),
+          ruleFinder,
           deps,
           res,
           resSrcs,
-          Optional.<SourcePath>absent(),
           rDotJavaPackage,
           assets,
           assetsSrcs,
-          Optional.<SourcePath>absent(),
           manifest,
           hasWhitelistedStrings);
     }
 
-    public Builder setBuildRuleParams(BuildRuleParams params) {
-      this.buildRuleParams = params;
-      return this;
-    }
-
-    public Builder setResolver(SourcePathResolver resolver) {
-      this.resolver = resolver;
+    public Builder setRuleFinder(SourcePathRuleFinder ruleFinder) {
+      this.ruleFinder = ruleFinder;
       return this;
     }
 
     public Builder setBuildTarget(BuildTarget buildTarget) {
-      buildRuleParams = new FakeBuildRuleParamsBuilder(buildTarget).build();
+      this.buildTarget = buildTarget;
       return this;
     }
 
@@ -89,7 +87,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setResSrcs(ImmutableSortedSet<? extends SourcePath> resSrcs) {
+    public Builder setResSrcs(ImmutableSortedMap<Path, SourcePath> resSrcs) {
       this.resSrcs = resSrcs;
       return this;
     }
@@ -104,7 +102,7 @@ public class AndroidResourceRuleBuilder {
       return this;
     }
 
-    public Builder setAssetsSrcs(ImmutableSortedSet<? extends SourcePath> assetsSrcs) {
+    public Builder setAssetsSrcs(ImmutableSortedMap<Path, SourcePath> assetsSrcs) {
       this.assetsSrcs = assetsSrcs;
       return this;
     }
@@ -113,7 +111,5 @@ public class AndroidResourceRuleBuilder {
       this.manifest = manifest;
       return this;
     }
-
   }
-
 }

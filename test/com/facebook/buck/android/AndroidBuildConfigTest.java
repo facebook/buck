@@ -19,39 +19,30 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.AndroidBuildConfig.ReadValuesStep;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.model.BuildTargets;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildContext;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.description.impl.DescriptionCache;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.TestBuildRuleParams;
+import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.google.common.base.Optional;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
-
-import org.easymock.EasyMock;
-import org.junit.Test;
-
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
+import org.junit.Test;
 
-/**
- * Unit test for {@link AndroidBuildConfig}.
- */
+/** Unit test for {@link AndroidBuildConfig}. */
 public class AndroidBuildConfigTest {
 
   public static final BuildTarget BUILD_TARGET =
@@ -62,70 +53,67 @@ public class AndroidBuildConfigTest {
   public void testGetPathToOutput() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
     assertEquals(
-        BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"),
-        buildConfig.getPathToOutput());
+        ExplicitBuildTargetSourcePath.of(
+            BUILD_TARGET,
+            BuildTargetPaths.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java")),
+        buildConfig.getSourcePathToOutput());
   }
 
   @Test
-  public void testBuildInternal() throws IOException {
+  public void testBuildInternal() {
     AndroidBuildConfig buildConfig = createSimpleBuildConfigRule();
-    List<Step> steps = buildConfig.getBuildSteps(
-        FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
-    Step generateBuildConfigStep = steps.get(1);
-    GenerateBuildConfigStep expectedStep = new GenerateBuildConfigStep(
-        new FakeProjectFilesystem(),
-        BuildTargetFactory.newInstance("//java/com/example:build_config")
-            .getUnflavoredBuildTarget(),
-        /* javaPackage */ "com.example",
-        /* useConstantExpressions */ false,
-        /* constants */ Suppliers.ofInstance(BuildConfigFields.empty()),
-        BuildTargets.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
+    List<Step> steps =
+        buildConfig.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, new FakeBuildableContext());
+    Step generateBuildConfigStep = steps.get(2);
+    GenerateBuildConfigStep expectedStep =
+        new GenerateBuildConfigStep(
+            new FakeProjectFilesystem(),
+            BuildTargetFactory.newInstance("//java/com/example:build_config")
+                .getUnflavoredBuildTarget(),
+            /* javaPackage */ "com.example",
+            /* useConstantExpressions */ false,
+            /* constants */ Suppliers.ofInstance(BuildConfigFields.of()),
+            BuildTargetPaths.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
     assertEquals(expectedStep, generateBuildConfigStep);
   }
 
   @Test
   public void testGetTypeMethodOfBuilder() {
-    assertEquals("android_build_config", AndroidBuildConfigDescription.TYPE.getName());
+    assertEquals(
+        "android_build_config",
+        DescriptionCache.getRuleType(AndroidBuildConfigDescription.class).getName());
   }
 
   @Test
-  @SuppressWarnings("PMD.UseAssertTrueInsteadOfAssertEquals") // PMD has a bad heuristic here.
-  public void testReadValuesStep() throws IOException {
+  public void testReadValuesStep() throws Exception {
     Path pathToValues = Paths.get("src/values.txt");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(pathToValues)).andReturn(
-        ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""));
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(
+        ImmutableList.of("boolean DEBUG = false", "String FOO = \"BAR\""), pathToValues);
 
     ReadValuesStep step = new ReadValuesStep(projectFilesystem, pathToValues);
-    ExecutionContext context = TestExecutionContext
-        .newBuilder()
-        .build();
+    ExecutionContext context = TestExecutionContext.newBuilder().build();
     int exitCode = step.execute(context).getExitCode();
     assertEquals(0, exitCode);
     assertEquals(
-        BuildConfigFields.fromFields(ImmutableList.of(
-            BuildConfigFields.Field.of("boolean", "DEBUG", "false"),
-            BuildConfigFields.Field.of("String", "FOO", "\"BAR\""))),
+        BuildConfigFields.fromFields(
+            ImmutableList.of(
+                BuildConfigFields.Field.of("boolean", "DEBUG", "false"),
+                BuildConfigFields.Field.of("String", "FOO", "\"BAR\""))),
         step.get());
-
-    EasyMock.verify(projectFilesystem);
   }
 
   private static AndroidBuildConfig createSimpleBuildConfigRule() {
     // First, create the BuildConfig object.
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(BUILD_TARGET).build();
+    BuildRuleParams params = TestBuildRuleParams.create();
     return new AndroidBuildConfig(
+        BUILD_TARGET,
+        new FakeProjectFilesystem(),
         params,
-        new SourcePathResolver(
-            new BuildRuleResolver(
-              TargetGraph.EMPTY,
-              new DefaultTargetNodeToBuildRuleTransformer())
-        ),
         /* javaPackage */ "com.example",
-        /* values */ BuildConfigFields.empty(),
-        /* valuesFile */ Optional.<SourcePath>absent(),
+        /* values */ BuildConfigFields.of(),
+        /* valuesFile */ Optional.empty(),
         /* useConstantExpressions */ false);
   }
 

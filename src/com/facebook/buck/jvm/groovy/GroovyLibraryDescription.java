@@ -16,122 +16,109 @@
 
 package com.facebook.buck.jvm.groovy;
 
-import static com.facebook.buck.jvm.common.ResourceValidator.validateResources;
-
-import com.facebook.buck.jvm.java.CalculateAbi;
-import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.AbstractGroovyLibraryDescriptionArg;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
+import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
-import com.facebook.buck.jvm.java.JvmLibraryArg;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildRules;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
+import java.util.Optional;
+import org.immutables.value.Value;
 
-import java.nio.file.Path;
+public class GroovyLibraryDescription
+    implements DescriptionWithTargetGraph<GroovyLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<AbstractGroovyLibraryDescriptionArg> {
 
-public class GroovyLibraryDescription implements Description<GroovyLibraryDescription.Arg> {
-
-  public static final BuildRuleType TYPE = BuildRuleType.of("groovy_library");
-
-  private final GroovyBuckConfig groovyBuckConfig;
-  // For cross compilation
-  private final JavacOptions defaultJavacOptions;
+  private final ToolchainProvider toolchainProvider;
+  private final JavaBuckConfig javaBuckConfig;
+  private final GroovyConfiguredCompilerFactory compilerFactory;
 
   public GroovyLibraryDescription(
+      ToolchainProvider toolchainProvider,
       GroovyBuckConfig groovyBuckConfig,
-      JavacOptions defaultJavacOptions) {
-    this.groovyBuckConfig = groovyBuckConfig;
-    this.defaultJavacOptions = defaultJavacOptions;
+      JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
+    this.javaBuckConfig = javaBuckConfig;
+    this.compilerFactory = new GroovyConfiguredCompilerFactory(groovyBuckConfig);
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<GroovyLibraryDescriptionArg> getConstructorArgType() {
+    return GroovyLibraryDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> BuildRule createBuildRule(
-      TargetGraph targetGraph,
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
+      GroovyLibraryDescriptionArg args) {
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+    JavacOptions javacOptions =
+        JavacOptionsFactory.create(
+            toolchainProvider
+                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getJavacOptions(),
+            buildTarget,
+            graphBuilder,
+            args);
+    DefaultJavaLibraryRules defaultJavaLibraryRules =
+        new DefaultJavaLibraryRules.Builder(
+                buildTarget,
+                projectFilesystem,
+                context.getToolchainProvider(),
+                params,
+                graphBuilder,
+                context.getCellPathResolver(),
+                compilerFactory,
+                javaBuckConfig,
+                args)
+            .setJavacOptions(javacOptions)
+            .build();
 
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
-
-    ImmutableSortedSet<BuildRule> exportedDeps = resolver.getAllRules(args.exportedDeps.get());
-    DefaultJavaLibrary defaultJavaLibrary =
-        resolver.addToIndex(
-            new DefaultJavaLibrary(
-                params.appendExtraDeps(
-                        BuildRules.getExportedRules(
-                            Iterables.concat(
-                                params.getDeclaredDeps().get(),
-                                exportedDeps,
-                                resolver.getAllRules(args.providedDeps.get())))),
-                pathResolver,
-                args.srcs.get(),
-                validateResources(
-                    pathResolver,
-                    params.getProjectFilesystem(),
-                    args.resources.get()),
-                Optional.<Path>absent(),
-                Optional.<SourcePath>absent(),
-                ImmutableList.<String>of(),
-                exportedDeps,
-                resolver.getAllRules(args.providedDeps.get()),
-                new BuildTargetSourcePath(abiJarTarget),
-                /* trackClassUsage */ false,
-                /* additionalClasspathEntries */ ImmutableSet.<Path>of(),
-                new GroovycToJarStepFactory(
-                    groovyBuckConfig.getGroovyCompiler().get(),
-                    args.extraGroovycArguments,
-                    JavacOptionsFactory.create(
-                        defaultJavacOptions,
-                        params,
-                        resolver,
-                        pathResolver,
-                        args)),
-                Optional.<Path>absent(),
-                Optional.<String>absent(),
-                ImmutableSortedSet.<BuildTarget>of()));
-
-    resolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
-            pathResolver,
-            params,
-            new BuildTargetSourcePath(defaultJavaLibrary.getBuildTarget())));
-
-    return defaultJavaLibrary;
+    return JavaAbis.isAbiTarget(buildTarget)
+        ? defaultJavaLibraryRules.buildAbi()
+        : graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends JvmLibraryArg {
-    public Optional<ImmutableSortedSet<SourcePath>> srcs;
-    public Optional<ImmutableSortedSet<SourcePath>> resources;
-    public Optional<ImmutableList<String>> extraGroovycArguments;
-    public Optional<ImmutableSortedSet<BuildTarget>> providedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> exportedDeps;
-    public Optional<ImmutableSortedSet<BuildTarget>> deps;
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AbstractGroovyLibraryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    compilerFactory.addTargetDeps(extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
+
+  public interface CoreArg extends JavaLibraryDescription.CoreArg {
+    // Groovyc may not play nice with source ABIs, so turning it off
+    @Override
+    default Optional<AbiGenerationMode> getAbiGenerationMode() {
+      return Optional.of(AbiGenerationMode.CLASS);
+    }
+
+    ImmutableList<String> getExtraGroovycArguments();
+  }
+
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractGroovyLibraryDescriptionArg extends CoreArg {}
 }

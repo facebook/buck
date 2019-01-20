@@ -16,13 +16,11 @@
 
 package com.facebook.buck.slb;
 
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Optional;
-
 import java.net.URI;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
 public class LoadBalancedServiceEvent extends AbstractBuckEvent {
@@ -51,8 +49,13 @@ public class LoadBalancedServiceEvent extends AbstractBuckEvent {
   @BuckStyleImmutable
   interface AbstractLoadBalancedServiceEventData {
     URI getServer();
+
     Optional<Exception> getException();
+
     Optional<Long> getRequestSizeBytes();
+
+    Optional<Long> getLatencyMicros();
+
     Optional<Long> getResponseSizeBytes();
   }
 }

@@ -1,43 +1,43 @@
 java_library(
-  name = 'A',
-  deps = [
-    ':B',
-    ':C',
-  ],
+    name = "A",
+    deps = [
+        ":B",
+        ":C",
+    ],
 )
 
 java_library(
-  name = 'B',
-  deps = [
-    ':D',
-    ':E',
-  ],
+    name = "B",
+    deps = [
+        ":D",
+        ":E",
+    ],
 )
 
 java_library(
-  name = 'C',
-  deps = [
-    ':E',
-  ],
+    name = "C",
+    deps = [
+        ":E",
+    ],
 )
 
 java_library(
-  name = 'D',
-  deps = [
-    ':F',
-  ],
+    name = "D",
+    deps = [
+        ":F",
+    ],
 )
 
 java_library(
-  name = 'E',
-  deps = [
-    ':F',
-  ],
+    name = "E",
+    deps = [
+        ":F",
+    ],
 )
 
 java_library(
-  name = 'F',
-  deps = [
-    ':C',
-  ],
+    name = "F",
+    deps = [
+        ":C",
+    ],
 )

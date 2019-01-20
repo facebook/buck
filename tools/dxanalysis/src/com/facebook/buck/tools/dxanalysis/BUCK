@@ -1,0 +1,20 @@
+java_binary(
+    name = "dxanalysis",
+    main_class = "com.facebook.buck.tools.dxanalysis.DxAnalysisMain",
+    deps = [
+        ":lib",
+        "//third-party/java/asm:asm",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
+
+java_library(
+    name = "lib",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//third-party/java/asm:asm",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

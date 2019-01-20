@@ -15,60 +15,167 @@
  */
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Either;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.jvm.core.JavaLibrary;
+import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
+import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
+import com.facebook.buck.jvm.java.JavacSpec.Builder;
+import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
+import org.immutables.value.Value;
 
-import java.nio.file.Path;
+public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSourceOnlyAbiArg {
+  Optional<String> getSource();
 
-@SuppressFieldNotInitialized
-public class JvmLibraryArg extends AbstractDescriptionArg {
-  public Optional<String> source;
-  public Optional<String> target;
-  public Optional<String> javaVersion;
-  public Optional<Path> javac;
-  public Optional<SourcePath> javacJar;
-  public Optional<Either<BuiltInJavac, SourcePath>> compiler;
-  public Optional<ImmutableList<String>> extraArguments;
-  public Optional<ImmutableSortedSet<BuildTarget>> annotationProcessorDeps;
-  public Optional<ImmutableList<String>> annotationProcessorParams;
-  public Optional<ImmutableSet<String>> annotationProcessors;
-  public Optional<Boolean> annotationProcessorOnly;
+  Optional<String> getTarget();
 
-  public AnnotationProcessingParams buildAnnotationProcessingParams(
-      BuildTarget owner,
-      ProjectFilesystem filesystem,
-      BuildRuleResolver resolver) {
-    ImmutableSet<String> annotationProcessors =
-        this.annotationProcessors.or(ImmutableSet.<String>of());
+  Optional<String> getJavaVersion();
 
-    if (annotationProcessors.isEmpty()) {
+  Optional<SourcePath> getJavac();
+
+  Optional<SourcePath> getJavacJar();
+
+  Optional<String> getCompilerClassName();
+
+  // TODO(cjhopman): Remove the compiler argument. It's behavior is an odd mix of javac and
+  // javac_jar.
+  Optional<Either<BuiltInJavac, SourcePath>> getCompiler();
+
+  ImmutableList<String> getExtraArguments();
+
+  ImmutableSet<Pattern> getRemoveClasses();
+
+  @Value.NaturalOrder
+  ImmutableSortedSet<BuildTarget> getAnnotationProcessorDeps();
+
+  ImmutableList<String> getAnnotationProcessorParams();
+
+  ImmutableSet<String> getAnnotationProcessors();
+
+  Optional<Boolean> getAnnotationProcessorOnly();
+
+  ImmutableList<BuildTarget> getPlugins();
+
+  Optional<AbiGenerationMode> getAbiGenerationMode();
+
+  Optional<CompileAgainstLibraryType> getCompileAgainst();
+
+  Optional<SourceAbiVerificationMode> getSourceAbiVerificationMode();
+
+  Optional<UnusedDependenciesAction> getOnUnusedDependencies();
+
+  /** Verifies some preconditions on the arguments. */
+  @Value.Check
+  default void verify() {
+    boolean javacJarIsSet = getJavacJar().isPresent();
+    boolean javacIsSet = getJavac().isPresent();
+
+    if (javacIsSet && javacJarIsSet) {
+      throw new HumanReadableException("Can only set one of javac/javac_jar.");
+    }
+  }
+
+  default boolean hasJavacSpec() {
+    return getCompiler().isPresent() || getJavac().isPresent() || getJavacJar().isPresent();
+  }
+
+  @Value.Derived
+  @Nullable
+  default JavacSpec getJavacSpec(SourcePathRuleFinder ruleFinder) {
+    if (!hasJavacSpec()) {
+      return null;
+    }
+
+    Builder builder = JavacSpec.builder();
+    builder.setCompilerClassName(getCompilerClassName());
+
+    if (getCompiler().isPresent()) {
+      if (getCompiler().get().isRight()) {
+        SourcePath sourcePath = getCompiler().get().getRight();
+        if (isValidJavacJar(sourcePath, ruleFinder.getRule(sourcePath))) {
+          builder.setJavacJarPath(sourcePath);
+        } else {
+          builder.setJavacPath(sourcePath);
+        }
+      }
+      // compiler's left case is handled as just an empty spec.
+    } else {
+      builder.setJavacPath(getJavac());
+      builder.setJavacJarPath(getJavacJar());
+    }
+    return builder.build();
+  }
+
+  default boolean isValidJavacJar(SourcePath sourcePath, Optional<BuildRule> possibleRule) {
+    if (!possibleRule.isPresent() || !(possibleRule.get() instanceof JavaLibrary)) {
+      return false;
+    }
+    SourcePath javacJarPath = possibleRule.get().getSourcePathToOutput();
+    if (javacJarPath == null) {
+      throw new HumanReadableException(
+          String.format(
+              "%s isn't a valid value for compiler because it isn't a java library", sourcePath));
+    }
+    return true;
+  }
+
+  @Value.Derived
+  default AnnotationProcessingParams buildAnnotationProcessingParams(
+      BuildTarget owner, BuildRuleResolver resolver) {
+    if (getAnnotationProcessors().isEmpty()
+        && getPlugins().isEmpty()
+        && getAnnotationProcessorDeps().isEmpty()) {
       return AnnotationProcessingParams.EMPTY;
     }
 
-    AnnotationProcessingParams.Builder builder = new AnnotationProcessingParams.Builder();
-    builder.setOwnerTarget(owner);
-    builder.addAllProcessors(annotationProcessors);
-    builder.setProjectFilesystem(filesystem);
-    ImmutableSortedSet<BuildRule> processorDeps =
-        resolver.getAllRules(annotationProcessorDeps.or(ImmutableSortedSet.<BuildTarget>of()));
-    for (BuildRule processorDep : processorDeps) {
-      builder.addProcessorBuildTarget(processorDep);
+    AbstractAnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
+    addLegacyProcessors(builder, resolver);
+    addProcessors(builder, resolver, owner);
+    for (String processorParam : getAnnotationProcessorParams()) {
+      builder.addParameters(processorParam);
     }
-    for (String processorParam : annotationProcessorParams.or(ImmutableList.<String>of())) {
-      builder.addParameter(processorParam);
-    }
-    builder.setProcessOnly(annotationProcessorOnly.or(Boolean.FALSE));
+    builder.setProcessOnly(getAnnotationProcessorOnly().orElse(Boolean.FALSE));
 
     return builder.build();
+  }
+
+  default void addProcessors(
+      AbstractAnnotationProcessingParams.Builder builder,
+      BuildRuleResolver resolver,
+      BuildTarget owner) {
+    for (BuildTarget pluginTarget : getPlugins()) {
+      BuildRule pluginRule = resolver.getRule(pluginTarget);
+      if (!(pluginRule instanceof JavaAnnotationProcessor)) {
+        throw new HumanReadableException(
+            String.format(
+                "%s: only java_annotation_processor rules can be specified as plugins. "
+                    + "%s is not a java_annotation_processor.",
+                owner, pluginTarget));
+      }
+      JavaAnnotationProcessor plugin = (JavaAnnotationProcessor) pluginRule;
+      builder.addModernProcessors(plugin.getProcessorProperties());
+    }
+  }
+
+  default void addLegacyProcessors(
+      AbstractAnnotationProcessingParams.Builder builder, BuildRuleResolver resolver) {
+    builder.setLegacyAnnotationProcessorNames(getAnnotationProcessors());
+    ImmutableSortedSet<BuildRule> processorDeps =
+        resolver.getAllRules(getAnnotationProcessorDeps());
+    for (BuildRule processorDep : processorDeps) {
+      builder.addLegacyAnnotationProcessorDeps(processorDep);
+    }
   }
 }

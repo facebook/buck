@@ -19,138 +19,164 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.FakeBuildRuleParamsBuilder;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.HashedFileTool;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleScheduleInfo;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.linker.GnuLinker;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.google.common.base.Optional;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
-import org.junit.Test;
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
+import org.junit.Test;
 
 public class CxxLinkTest {
 
-  private static final Linker DEFAULT_LINKER = new GnuLinker(new HashedFileTool(Paths.get("ld")));
   private static final Path DEFAULT_OUTPUT = Paths.get("test.exe");
-  private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
-      new SourcePathResolver(
-          new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer()));
   private static final ImmutableList<Arg> DEFAULT_ARGS =
       ImmutableList.of(
-          new StringArg("-rpath"),
-          new StringArg("/lib"),
-          new StringArg("libc.a"),
-          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("a.o")),
-          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("b.o")),
-          new SourcePathArg(DEFAULT_SOURCE_PATH_RESOLVER, new FakeSourcePath("libc.a")),
-          new StringArg("-L"),
-          new StringArg("/System/Libraries/libz.dynlib"),
-          new StringArg("-llibz.dylib"));
+          StringArg.of("-rpath"),
+          StringArg.of("/lib"),
+          StringArg.of("libc.a"),
+          SourcePathArg.of(FakeSourcePath.of("a.o")),
+          SourcePathArg.of(FakeSourcePath.of("b.o")),
+          SourcePathArg.of(FakeSourcePath.of("libc.a")),
+          StringArg.of("-L"),
+          StringArg.of("/System/Libraries/libz.dynlib"),
+          StringArg.of("-llibz.dylib"));
+
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final Linker DEFAULT_LINKER =
+      new GnuLinker(new HashedFileTool(PathSourcePath.of(projectFilesystem, Paths.get("ld"))));
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(
-        ImmutableMap.of(
-            "ld", Strings.repeat("0", 40),
-            "a.o", Strings.repeat("a", 40),
-            "b.o", Strings.repeat("b", 40),
-            "libc.a", Strings.repeat("c", 40),
-            "different", Strings.repeat("d", 40)));
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    FakeFileHashCache hashCache =
+        FakeFileHashCache.createFromStrings(
+            ImmutableMap.of(
+                "ld", Strings.repeat("0", 40),
+                "a.o", Strings.repeat("a", 40),
+                "b.o", Strings.repeat("b", 40),
+                "libc.a", Strings.repeat("c", 40),
+                "different", Strings.repeat("d", 40)));
 
     // Generate a rule key for the defaults.
 
-    RuleKey defaultRuleKey = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent(),
-            /* cacheable */ true));
+    RuleKey defaultRuleKey =
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+            .build(
+                new CxxLink(
+                    target,
+                    projectFilesystem,
+                    ruleFinder,
+                    TestCellPathResolver.get(projectFilesystem),
+                    DEFAULT_LINKER,
+                    DEFAULT_OUTPUT,
+                    ImmutableMap.of(),
+                    DEFAULT_ARGS,
+                    Optional.empty(),
+                    Optional.empty(),
+                    /* cacheable */ true,
+                    /* thinLto */ false));
 
     // Verify that changing the archiver causes a rulekey change.
 
-    RuleKey linkerChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
-        new CxxLink(
-            params,
-            pathResolver,
-            new GnuLinker(new HashedFileTool(Paths.get("different"))),
-            DEFAULT_OUTPUT,
-            DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent(),
-            /* cacheable */ true));
+    RuleKey linkerChange =
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+            .build(
+                new CxxLink(
+                    target,
+                    projectFilesystem,
+                    ruleFinder,
+                    TestCellPathResolver.get(projectFilesystem),
+                    new GnuLinker(
+                        new HashedFileTool(
+                            PathSourcePath.of(projectFilesystem, Paths.get("different")))),
+                    DEFAULT_OUTPUT,
+                    ImmutableMap.of(),
+                    DEFAULT_ARGS,
+                    Optional.empty(),
+                    Optional.empty(),
+                    /* cacheable */ true,
+                    /* thinLto */ false));
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
 
-    RuleKey outputChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            Paths.get("different"),
-            DEFAULT_ARGS,
-            Optional.<RuleScheduleInfo>absent(),
-            /* cacheable */ true));
+    RuleKey outputChange =
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+            .build(
+                new CxxLink(
+                    target,
+                    projectFilesystem,
+                    ruleFinder,
+                    TestCellPathResolver.get(projectFilesystem),
+                    DEFAULT_LINKER,
+                    Paths.get("different"),
+                    ImmutableMap.of(),
+                    DEFAULT_ARGS,
+                    Optional.empty(),
+                    Optional.empty(),
+                    /* cacheable */ true,
+                    /* thinLto */ false));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the flags causes a rulekey change.
 
-    RuleKey flagsChange = new DefaultRuleKeyBuilderFactory(0, hashCache, pathResolver).build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            ImmutableList.<Arg>of(
-                new SourcePathArg(
-                    new SourcePathResolver(
-                        new BuildRuleResolver(
-                            TargetGraph.EMPTY,
-                            new DefaultTargetNodeToBuildRuleTransformer())),
-                    new FakeSourcePath("different"))),
-            Optional.<RuleScheduleInfo>absent(),
-            /* cacheable */ true));
+    RuleKey flagsChange =
+        new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder)
+            .build(
+                new CxxLink(
+                    target,
+                    projectFilesystem,
+                    ruleFinder,
+                    TestCellPathResolver.get(projectFilesystem),
+                    DEFAULT_LINKER,
+                    DEFAULT_OUTPUT,
+                    ImmutableMap.of(),
+                    ImmutableList.of(SourcePathArg.of(FakeSourcePath.of("different"))),
+                    Optional.empty(),
+                    Optional.empty(),
+                    /* cacheable */ true,
+                    /* thinLto */ false));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
 
   @Test
   public void sanitizedPathsInFlagsDoNotAffectRuleKey() {
-    SourcePathResolver pathResolver = new SourcePathResolver(
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer())
-    );
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleParams params = new FakeBuildRuleParamsBuilder(target).build();
-    DefaultRuleKeyBuilderFactory ruleKeyBuilderFactory =
-        new DefaultRuleKeyBuilderFactory(
-            0,
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    DefaultRuleKeyFactory ruleKeyFactory =
+        new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
                 ImmutableMap.of(
                     "ld", Strings.repeat("0", 40),
@@ -158,59 +184,67 @@ public class CxxLinkTest {
                     "b.o", Strings.repeat("b", 40),
                     "libc.a", Strings.repeat("c", 40),
                     "different", Strings.repeat("d", 40))),
-            pathResolver);
+            pathResolver,
+            ruleFinder);
 
     // Set up a map to sanitize the differences in the flags.
     int pathSize = 10;
     DebugPathSanitizer sanitizer1 =
-        new DebugPathSanitizer(
+        new MungingDebugPathSanitizer(
             pathSize,
             File.separatorChar,
             Paths.get("PWD"),
-            ImmutableBiMap.of(Paths.get("something"), Paths.get("A")));
+            ImmutableBiMap.of(Paths.get("something"), "A"));
     DebugPathSanitizer sanitizer2 =
-        new DebugPathSanitizer(
+        new MungingDebugPathSanitizer(
             pathSize,
             File.separatorChar,
             Paths.get("PWD"),
-            ImmutableBiMap.of(Paths.get("different"), Paths.get("A")));
+            ImmutableBiMap.of(Paths.get("different"), "A"));
 
     // Generate a rule with a path we need to sanitize to a consistent value.
     ImmutableList<Arg> args1 =
-        ImmutableList.<Arg>of(
-            new SanitizedArg(
-                sanitizer1.sanitize(Optional.<Path>absent()),
-                "-Lsomething/foo"));
+        ImmutableList.of(
+            SanitizedArg.create(sanitizer1.sanitize(Optional.empty()), "-Lsomething/foo"));
 
-    RuleKey ruleKey1 = ruleKeyBuilderFactory.build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            args1,
-            Optional.<RuleScheduleInfo>absent(),
-            /* cacheable */ true));
+    RuleKey ruleKey1 =
+        ruleKeyFactory.build(
+            new CxxLink(
+                target,
+                projectFilesystem,
+                ruleFinder,
+                TestCellPathResolver.get(projectFilesystem),
+                DEFAULT_LINKER,
+                DEFAULT_OUTPUT,
+                ImmutableMap.of(),
+                args1,
+                Optional.empty(),
+                Optional.empty(),
+                /* cacheable */ true,
+                /* thinLto */ false));
 
     // Generate another rule with a different path we need to sanitize to the
     // same consistent value as above.
     ImmutableList<Arg> args2 =
-        ImmutableList.<Arg>of(
-            new SanitizedArg(
-                sanitizer2.sanitize(Optional.<Path>absent()),
-                "-Ldifferent/foo"));
+        ImmutableList.of(
+            SanitizedArg.create(sanitizer2.sanitize(Optional.empty()), "-Ldifferent/foo"));
 
-    RuleKey ruleKey2 = ruleKeyBuilderFactory.build(
-        new CxxLink(
-            params,
-            pathResolver,
-            DEFAULT_LINKER,
-            DEFAULT_OUTPUT,
-            args2,
-            Optional.<RuleScheduleInfo>absent(),
-            /* cacheable */ true));
+    RuleKey ruleKey2 =
+        ruleKeyFactory.build(
+            new CxxLink(
+                target,
+                projectFilesystem,
+                ruleFinder,
+                TestCellPathResolver.get(projectFilesystem),
+                DEFAULT_LINKER,
+                DEFAULT_OUTPUT,
+                ImmutableMap.of(),
+                args2,
+                Optional.empty(),
+                Optional.empty(),
+                /* cacheable */ true,
+                /* thinLto */ false));
 
     assertEquals(ruleKey1, ruleKey2);
   }
-
 }

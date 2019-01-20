@@ -1,53 +1,80 @@
+[repositories]
+    buck = .
+    bazel_skylib = ./third-party/skylark/bazel-skylib
 [java]
     ; Indicates that any folder named src or test
     ; are folders that contain Java code.
     src_roots = src, test
+    source_level = 8
+    target_level = 8
+    jar_spool_mode = direct_to_jar
+    abi_generation_mode = source_only
+    # There is some nondeterminism with the Immutables processor that causes verification to
+    # fail intermittently at the moment. Once we're generating source ABIs as part of compilation
+    # (instead of as a separate step), this can become an error again:
+    source_abi_verification_mode = fail
+    compile_against_abis = True
 [alias]
     buck = //programs:buck
-    buck-android-support = //src/com/facebook/buck/android/support:buck-android-support
+    buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
+    eden = //test/com/facebook/buck/eden/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
+    ideabuck = //tools/ideabuck:ideabuck
     maven-importer = //src/com/facebook/buck/maven:resolver
-[buildfile]
-    includes = //DEFS
-[cache]
-    ; Disable the default directory cache.
-    mode =
+[log]
+    rule_key_logger_enabled = True
+# [cache]
+#   ; Disable the default directory cache.
+#   mode =
+[build]
+    metadata_storage = sqlite
+    enable_manifest_service = false
 [download]
     maven_repo = https://repo1.maven.org/maven2
 [project]
     ; Directories that do not contain input files.
     ; All of these directories should also appear in the "ignore_dirs" list
     ; in .watchmanconfig, with the exception of ".git".
+    ; Common temp file patterns: vim, emacs, intelliJ
     ignore = \
       .git, \
       .buckd, \
-      build, \
-      bin
+      ant-out, \
+      bin, \
+      intellij-out, \
+      **/*.swp, \
+      **/*#, \
+      **/*$, \
+      **/*~, \
+      **/*___jb_bak___, \
+      **/*___jb_old___, \
+      **/*___jb_tmp___, \
+      **/.*.swp, \
+      **/.*.swx, \
+      **/.*.swpx, \
+      **/.*.swo, \
+      **/*.pyc, \
+      **/.#*, \
+      **/*~, \
+      **/4913, \
+      **/*.linted, \
+      **/*.iml
 
-    ; Common temp file patterns:
-    ; .*\.swp$ (vim)
-    ; ^#.*#$, .*~$ (emacs)
-    ; .*___jb_bak___$, .*___jb_old___$ (intellij idea)
-    temp_files = \
-      .*\.swp$, \
-      ^#.*#$, .*~$, \
-      .*___jb_bak___$, .*___jb_old___$,
-    ; Forbid symlinks for source files so Buck doesn't have to dump its
+    ; Forbid symlinks for source files so Buck does not have to dump its
     ; cache every time it encounters one.
     allow_symlinks = forbid
+    watchman_cursor = clock_id
+    glob_handler = watchman
+    embedded_cell_buck_out_enabled = true
 [test]
-    ; Maximum timeout of 1 minute per test.
-    timeout = 60000
-    ; Since watchman ignores buck-out and we need to use it for globs in
-    ; Buck's own integration tests, use a directory outside buck-out
-    ; for java.io.tmpdir when running tests.
-    temp_dir_env_vars = \
-      BUCK_ORIG_TEMPDIR, \
-      BUCK_ORIG_TEMP, \
-      BUCK_ORIG_TMPDIR, \
-      BUCK_ORIG_TMP, \
-      TEMPDIR, \
-      TEMP, \
-      TMPDIR, \
-      TMP
-       
+    ; Maximum timeout of 90 seconds per test.
+    timeout = 90000
+[resources]
+    resource_aware_scheduling_enabled = true
+[ui]
+     build_rule_minimum_duration_millis=500
+     maximum_target_typo_distance_allowed = 3
+     maximum_target_suggestions_display = 3
+[parser]
+     default_build_file_syntax=skylark
+     enable_configurable_attributes = true

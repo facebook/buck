@@ -15,24 +15,23 @@
  */
 package com.facebook.buck.rules.args;
 
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.google.common.collect.ImmutableCollection;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Path;
+import java.util.function.Consumer;
 
 /**
- * Arg that represents object file that should be linked into resulting binary using
- * normal mechanism, e.g. passed to the linker without any additional surrounding flags.
- * Sometimes these arguments can be grouped into a single text file that linker can pick up.
- * This is mostly to simplify and shorten command line that is used to invoke the linker.
- * This arg represents such kind of object file in the list of args, so later we can easily create
- * such file list for the linker.
+ * Arg that represents object file that should be linked into resulting binary using normal
+ * mechanism, e.g. passed to the linker without any additional surrounding flags. Sometimes these
+ * arguments can be grouped into a single text file that linker can pick up. This is mostly to
+ * simplify and shorten command line that is used to invoke the linker. This arg represents such
+ * kind of object file in the list of args, so later we can easily create such file list for the
+ * linker.
  */
-public class FileListableLinkerInputArg extends Arg {
-
-  private final SourcePathArg value;
+public class FileListableLinkerInputArg implements Arg, HasSourcePath {
+  @AddToRuleKey private final SourcePathArg value;
 
   public static Arg withSourcePathArg(SourcePathArg value) {
     return new FileListableLinkerInputArg(value);
@@ -51,18 +50,13 @@ public class FileListableLinkerInputArg extends Arg {
   }
 
   @Override
-  public ImmutableCollection<BuildRule> getDeps(SourcePathResolver resolver) {
-    return value.getDeps(resolver);
+  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    value.appendToCommandLine(consumer, pathResolver);
   }
 
-  @Override
-  public ImmutableCollection<SourcePath> getInputs() {
-    return value.getInputs();
-  }
-
-  @Override
-  public void appendToCommandLine(ImmutableCollection.Builder<String> builder) {
-    value.appendToCommandLine(builder);
+  public void appendToCommandLineRel(
+      Consumer<String> consumer, Path currentCellPath, SourcePathResolver pathResolver) {
+    value.appendToCommandLineRel(consumer, currentCellPath, pathResolver);
   }
 
   @Override
@@ -86,7 +80,7 @@ public class FileListableLinkerInputArg extends Arg {
   }
 
   @Override
-  public void appendToRuleKey(RuleKeyObjectSink sink) {
-    value.appendToRuleKey(sink);
+  public SourcePath getPath() {
+    return value.getPath();
   }
 }

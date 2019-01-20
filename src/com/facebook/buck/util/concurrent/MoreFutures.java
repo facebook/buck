@@ -16,24 +16,22 @@
 
 package com.facebook.buck.util.concurrent;
 
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
-
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.AsyncFunction;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
-
+import java.util.function.Consumer;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class MoreFutures {
 
@@ -41,19 +39,20 @@ public class MoreFutures {
   private MoreFutures() {}
 
   /**
-   * Invoke multiple callables on the provided executor and wait for all to return successfully.
-   * An exception is thrown (immediately) if any callable fails.
+   * Invoke multiple callables on the provided executor and wait for all to return successfully. An
+   * exception is thrown (immediately) if any callable fails.
+   *
    * @param executorService Executor service.
    * @param callables Callables to call.
    * @return List of values from each invoked callable in order if all callables execute without
    *     throwing.
-   * @throws ExecutionException If any callable throws an exception, the first of such is wrapped
-   *     in an ExecutionException and thrown.  Access via
-   *     {@link java.util.concurrent.ExecutionException#getCause()}}.
+   * @throws ExecutionException If any callable throws an exception, the first of such is wrapped in
+   *     an ExecutionException and thrown. Access via {@link
+   *     java.util.concurrent.ExecutionException#getCause()}}.
    */
   public static <V> List<V> getAll(
-      ListeningExecutorService executorService,
-      Iterable<Callable<V>> callables) throws ExecutionException, InterruptedException {
+      ListeningExecutorService executorService, Iterable<Callable<V>> callables)
+      throws ExecutionException, InterruptedException {
     // Invoke.
     ImmutableList.Builder<ListenableFuture<V>> futures = ImmutableList.builder();
     for (Callable<V> callable : callables) {
@@ -100,6 +99,7 @@ public class MoreFutures {
 
   /**
    * Returns the failure for a {@link ListenableFuture}.
+   *
    * @param future Must have completed unsuccessfully.
    */
   public static Throwable getFailure(ListenableFuture<?> future) throws InterruptedException {
@@ -116,10 +116,8 @@ public class MoreFutures {
   }
 
   public static <V> ListenableFuture<Void> addListenableCallback(
-      ListenableFuture<V> future,
-      final FutureCallback<? super V> callback,
-      Executor executor) {
-    final SettableFuture<Void> waiter = SettableFuture.create();
+      ListenableFuture<V> future, FutureCallback<? super V> callback, Executor executor) {
+    SettableFuture<Void> waiter = SettableFuture.create();
     Futures.addCallback(
         future,
         new FutureCallback<V>() {
@@ -149,43 +147,36 @@ public class MoreFutures {
     return waiter;
   }
 
-  public static <V> ListenableFuture<Void> addListenableCallback(
-      ListenableFuture<V> future,
-      final FutureCallback<? super V> callback) {
-    return addListenableCallback(
-        future,
-        callback,
-        directExecutor());
+  public static <X extends Throwable> void propagateCauseIfInstanceOf(Throwable e, Class<X> type) {
+    if (e.getCause() != null && type.isInstance(e)) {
+      Throwables.throwIfUnchecked(e.getCause());
+      throw new RuntimeException(e.getCause());
+    }
   }
 
   /**
-   * @return a {@link ListenableFuture} which fails if either input future fails or returns
-   *     the value contained in {@code to} if they both succeed.
+   * @return a {@link FutureCallback} which executes the given {@link Runnable} on both success and
+   *     error.
    */
-  public static <F, T> ListenableFuture<T> chainExceptions(
-      ListenableFuture<F> from,
-      final ListenableFuture<T> to) {
-    return chainExceptions(from, to, directExecutor());
+  public static <V> FutureCallback<V> finallyCallback(Runnable runnable) {
+    return finallyCallback(ignored -> runnable.run());
   }
 
   /**
-   * @return a {@link ListenableFuture} which fails if either input future fails or returns
-   *     the value contained in {@code to} if they both succeed.
+   * @return a {@link FutureCallback} which executes the given {@link Consumer} on both success and
+   *     error. This just makes it simpler to add unconditional callbacks.
    */
-  public static <F, T> ListenableFuture<T> chainExceptions(
-      ListenableFuture<F> from,
-      final ListenableFuture<T> to,
-      Executor executor) {
-    return Futures.transformAsync(
-        from,
-        new AsyncFunction<F, T>() {
-          @Override
-          public ListenableFuture<T> apply(@Nonnull F result)
-              throws Exception {
-            return to;
-          }
-        },
-        executor);
-  }
+  public static <V> FutureCallback<V> finallyCallback(Consumer<ListenableFuture<V>> callable) {
+    return new FutureCallback<V>() {
+      @Override
+      public void onSuccess(@Nullable V result) {
+        callable.accept(Futures.immediateFuture(result));
+      }
 
+      @Override
+      public void onFailure(@Nonnull Throwable t) {
+        callable.accept(Futures.immediateFailedFuture(t));
+      }
+    };
+  }
 }

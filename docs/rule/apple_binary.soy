@@ -1,29 +1,53 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace apple_binary}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'apple_binary()' /}
+    {param navid: 'rule_apple_binary' /}
     {param prettify: true /}
     {param description}
-      An apple_binary() rule builds a native Mac OSX or iOS executable.
+      An apple_binary() rule builds a native iOS or Mac OSX executable.
     {/param}
     {param content}
 
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-An <code>apple_binary()</code> rule builds a native executable from the supplied set of
-Objective-C/C++ source files and dependencies and is similar to
-a <a href="{ROOT}rule/cxx_binary.html"><code>cxx_binary()</code> rule</a> with which it shares many
-attributes. In addition to those common
-attributes, <code>apple_binary()</code> has a few more that are specific to binaries intended to
-be built using the Apple toolchain. Please also note that the way header files are
-imported differs between <code>apple_binary()</code> and <code>cxx_binary()</code> to better
-accommodate existing conventions (see the documentation
-of the <code>headers</code> and <code>exported_headers</code> attributes for more details).
-{/param}
+<p>
+An <code>apple_binary()</code> rule builds a native executable&mdash;such as an iOS or OSX app&mdash;from 
+the supplied set of Objective-C/C++ source files and dependencies. It is similar to
+a {call buck.cxx_binary /} rule with which it shares many attributes. In addition 
+to those common attributes, <code>apple_binary()</code> has a some additional attributes 
+that are specific to binaries intended to be built using the Apple toolchain. 
+Note, however, that <code>apple_binary()</code> and <code>cxx_binary()</code> differ 
+in the way that they import header files, in order to better accommodate existing conventions. 
+See the sections for the <code>headers</code> and <code>exported_headers</code> attributes for more details.
+</p>
 
+<p>
+Buck enables you to override components of the Apple toolchain with
+alternate tools, either from the Xcode search paths or from directories
+that you specify.
+See {call buckconfig.apple_replacement /} and {call buckconfig.apple_xcode_tool_name_override /} for more information.
+</p>
+
+{/param}
 {param args}
 
 {call buck.arg}
@@ -41,6 +65,15 @@ of the <code>headers</code> and <code>exported_headers</code> attributes for mor
 
 {call apple_common.headers_arg /}
 
+{call buck.arg}
+  {param name: 'entitlements_file' /}
+  {param desc}
+  An optional name of a plist file to be embedded in the binary.  Some platforms like
+  <code>iphonesimulator</code> require this to run properly.
+  {/param}
+{/call}
+
+
 {call apple_common.exported_headers_arg /}
 
 {call apple_common.header_path_prefix_arg /}
@@ -55,6 +88,8 @@ of the <code>headers</code> and <code>exported_headers</code> attributes for mor
 
 {call cxx_common.platform_compiler_flags_arg /}
 
+{call cxx_common.linker_extra_outputs_arg /}
+
 {call cxx_common.linker_flags_arg /}
 
 {call cxx_common.exported_linker_flags_arg /}
@@ -63,7 +98,11 @@ of the <code>headers</code> and <code>exported_headers</code> attributes for mor
 
 {call native_common.link_style /}
 
-{call buck.tests_arg /}
+{call buck.tests_apple_arg /}
+
+{call apple_common.extra_xcode_sources /}
+
+{call apple_common.extra_xcode_files /}
 
 {/param} // close args
 

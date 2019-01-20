@@ -16,37 +16,24 @@
 
 package com.facebook.buck.artifact_cache;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Optional;
 
 public class TestArtifactCaches {
-  private TestArtifactCaches() {
+  private TestArtifactCaches() {}
 
-  }
-
-  public static ArtifactCache createDirCacheForTest(
-      DebuggableTemporaryFolder cacheDir) throws IOException {
-    cacheDir.create();
+  public static ArtifactCache createDirCacheForTest(Path filesystemRoot, Path cacheDir)
+      throws IOException {
     return new DirArtifactCache(
         "dir",
-        new ProjectFilesystem(cacheDir.getRootPath()),
-        Paths.get("."),
-        true,
-        Optional.<Long>absent());
-  }
-
-  public static ArtifactCache createDirCacheForTest(
-      Path filesystemRoot, Path cacheDir) throws IOException {
-    return new DirArtifactCache(
-        "dir",
-        new ProjectFilesystem(filesystemRoot),
+        TestProjectFilesystems.createProjectFilesystem(filesystemRoot),
         cacheDir,
-        true,
-        Optional.<Long>absent());
+        CacheReadMode.READWRITE,
+        Optional.empty(),
+        MoreExecutors.newDirectExecutorService());
   }
 }

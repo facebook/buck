@@ -16,104 +16,130 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PathShortener;
+import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
-import com.google.common.base.Function;
-import com.google.common.base.Functions;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
+import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Ordering;
-
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
-
-@Value.Immutable
+@Value.Immutable(copy = true)
 @BuckStyleImmutable
-abstract class AbstractPreprocessorFlags {
+abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
-  /**
-   * File set via {@code -include}.
-   */
+  /** File set via {@code -include}. */
+  @AddToRuleKey
   @Value.Parameter
   public abstract Optional<SourcePath> getPrefixHeader();
 
-  /**
-   * Other flags included as is.
-   */
+  /** Other flags included as is. */
+  @AddToRuleKey
   @Value.Parameter
   @Value.Default
   public CxxToolFlags getOtherFlags() {
     return CxxToolFlags.of();
   }
 
+  /** Directories set via {@code -I}. */
+  @AddToRuleKey
   @Value.Parameter
   public abstract ImmutableList<CxxHeaders> getIncludes();
 
-  /**
-   * Directories set via {@code -F}.
-   */
+  /** Directories set via {@code -F}. */
+  @AddToRuleKey
   @Value.Parameter
-  public abstract ImmutableSet<FrameworkPath> getFrameworkPaths();
+  public abstract ImmutableList<FrameworkPath> getFrameworkPaths();
 
-  /**
-   * Directories set via {@code -isystem}.
-   */
-  @Value.Parameter
-  public abstract ImmutableSet<Path> getSystemIncludePaths();
+  @CustomFieldBehavior(DefaultFieldSerialization.class)
+  @Value.Derived
+  public CxxIncludePaths getCxxIncludePaths() {
+    return CxxIncludePaths.of(getIncludes(), getFrameworkPaths());
+  }
 
-  /**
-   * Append to rule key the members which are not handled elsewhere.
-   */
-  public void appendToRuleKey(RuleKeyObjectSink sink, DebugPathSanitizer sanitizer) {
-    sink.setReflectively("prefixHeader", getPrefixHeader());
-    sink.setReflectively("frameworkRoots", getFrameworkPaths());
+  public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
+    ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
+    deps.addAll(
+        Optionals.toStream(getPrefixHeader())
+            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+            .iterator());
+    for (CxxHeaders cxxHeaders : getIncludes()) {
+      cxxHeaders.getDeps(ruleFinder).forEachOrdered(deps::add);
+    }
+    for (FrameworkPath frameworkPath : getFrameworkPaths()) {
+      deps.addAll(frameworkPath.getDeps(ruleFinder));
+    }
+    for (Arg arg : getOtherFlags().getAllFlags()) {
+      deps.addAll(BuildableSupport.getDepsCollection(arg, ruleFinder));
+    }
+    return deps.build();
+  }
 
-    // Sanitize any relevant paths in the flags we pass to the preprocessor, to prevent them
-    // from contributing to the rule key.
-    sink.setReflectively(
-        "platformPreprocessorFlags",
-        sanitizer.sanitizeFlags(getOtherFlags().getPlatformFlags()));
-    sink.setReflectively(
-        "rulePreprocessorFlags",
-        sanitizer.sanitizeFlags(getOtherFlags().getRuleFlags()));
+  public CxxToolFlags getIncludePathFlags(
+      SourcePathResolver resolver,
+      PathShortener pathShortener,
+      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Preprocessor preprocessor) {
+    return CxxToolFlags.explicitBuilder()
+        .addAllRuleFlags(
+            StringArg.from(
+                getCxxIncludePaths()
+                    .getFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor)))
+        .build();
+  }
+
+  public CxxToolFlags getSanitizedIncludePathFlags(
+      DebugPathSanitizer sanitizer,
+      SourcePathResolver resolver,
+      PathShortener pathShortener,
+      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Preprocessor preprocessor) {
+    return CxxToolFlags.explicitBuilder()
+        .addAllRuleFlags(
+            StringArg.from(
+                sanitizer.sanitizeFlags(
+                    getCxxIncludePaths()
+                        .getFlags(
+                            resolver, pathShortener, frameworkPathTransformer, preprocessor))))
+        .build();
+  }
+
+  public CxxToolFlags getNonIncludePathFlags(
+      SourcePathResolver resolver, Optional<PrecompiledHeaderData> pch, Preprocessor preprocessor) {
+    ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
+    ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
+    if (pch.isPresent()) {
+      builder.addAllRuleFlags(
+          StringArg.from(
+              preprocessor.prefixOrPCHArgs(
+                  pch.get().isPrecompiled(), resolver.getAbsolutePath(pch.get().getHeader()))));
+    }
+    return builder.build();
   }
 
   public CxxToolFlags toToolFlags(
       SourcePathResolver resolver,
-      Function<Path, Path> pathShortener,
-      Function<FrameworkPath, Path> frameworkPathTransformer) {
-    ExplicitCxxToolFlags.Builder builder = CxxToolFlags.explicitBuilder();
-    ExplicitCxxToolFlags.addCxxToolFlags(builder, getOtherFlags());
-    builder.addAllRuleFlags(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle("-include"),
-            FluentIterable.from(getPrefixHeader().asSet())
-                .transform(resolver.getAbsolutePathFunction())
-                .transform(Functions.toStringFunction())));
-    builder.addAllRuleFlags(
-        CxxHeaders.getArgs(getIncludes(), resolver, Optional.of(pathShortener)));
-    builder.addAllRuleFlags(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle(CxxPreprocessables.IncludeType.SYSTEM.getFlag()),
-            Iterables.transform(
-                getSystemIncludePaths(),
-                Functions.compose(Functions.toStringFunction(), pathShortener))));
-    builder.addAllRuleFlags(
-        MoreIterables.zipAndConcat(
-            Iterables.cycle("-F"),
-            FluentIterable.from(getFrameworkPaths())
-                .transform(frameworkPathTransformer)
-                .transform(Functions.toStringFunction())
-                .toSortedSet(Ordering.natural())));
-    return builder.build();
+      PathShortener pathShortener,
+      Function<FrameworkPath, Path> frameworkPathTransformer,
+      Preprocessor preprocessor,
+      Optional<PrecompiledHeaderData> precompiledHeader) {
+    return CxxToolFlags.concat(
+        getNonIncludePathFlags(resolver, precompiledHeader, preprocessor),
+        getIncludePathFlags(resolver, pathShortener, frameworkPathTransformer, preprocessor));
   }
-
 }

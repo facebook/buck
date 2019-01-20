@@ -1,0 +1,23 @@
+cxx_binary(
+    name = "app",
+    srcs = ["MathClient.cpp"],
+    link_style = "shared",
+    deps = ["//implib:implib"],
+)
+
+cxx_binary(
+    name = "app_debug",
+    srcs = ["MathClient.cpp"],
+    link_style = "shared",
+    linker_flags = [
+        "/DEBUG",
+        "/INCREMENTAL:NO",
+    ],
+    deps = ["//implib:implib_debug"],
+)
+
+genrule(
+    name = "log",
+    out = "log.txt",
+    cmd_exe = "\"$(exe :app#windows-x86_64)\" > %OUT%",
+)

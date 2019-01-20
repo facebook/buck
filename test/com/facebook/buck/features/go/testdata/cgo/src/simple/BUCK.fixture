@@ -1,0 +1,15 @@
+go_binary(
+    name = "bin",
+    srcs = ["main.go"],
+    deps = [":cgo"],
+)
+
+cgo_library(
+    name = "cgo",
+    srcs = [
+        "cgosrc.go",
+        "hello.c",
+    ],
+    headers = ["hello.h"],
+    deps = ["//src/cxx:lib"],
+)

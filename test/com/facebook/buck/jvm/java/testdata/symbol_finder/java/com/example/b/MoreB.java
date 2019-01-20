@@ -17,7 +17,7 @@
 package com.example.b;
 
 public class MoreB {
-  private MoreB() { }
-  public static void conquerWorld() {
-  }
+  private MoreB() {}
+
+  public static void conquerWorld() {}
 }

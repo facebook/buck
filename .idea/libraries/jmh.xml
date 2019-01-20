@@ -1,0 +1,17 @@
+<component name="libraryTable">
+  <library name="jmh">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/commons-math3/commons-math3-3.6.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jopt-simple/jopt-simple-4.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jmh/jmh-core-1.19.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jmh/jmh-generator-annprocess-1.19.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/commons-math3/commons-math3-3.6.1-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jopt-simple/jopt-simple-4.6-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jmh/jmh-core-1.19-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/jmh/jmh-generator-annprocess-1.19-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

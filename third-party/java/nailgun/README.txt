@@ -1,13 +1,13 @@
-nailgun-server-0.9.2-SNAPSHOT.jar and nailgun-server-0.9.2-SNAPSHOT-sources.jar were
-built from https://github.com/bhamiltoncx/nailgun
+nailgun-server-1.0.0.jar and nailgun-server-1.0.0-sources.jar were
+built from https://github.com/facebook/nailgun
 
 To regenerate these jars:
 
  0) install maven (brew install maven)
- 1) git clone https://github.com/bhamiltoncx/nailgun
+ 1) git clone https://github.com/facebook/nailgun
  2) cd nailgun
- 3) git checkout c2788d68d67247a1b30ef7a857027f9b877827ea
+ 3) git checkout origin/master or any other revision you want to build nailgun from
  4) mvn clean package
- 5) copy nailgun-server/target/nailgun-server-0.9.2-SNAPSHOT.jar and
-    nailgun-server/target/nailgun-server-0.9.2-SNAPSHOT-sources.jar to your buck/third-party/java/nailgun directory
- 6) copy nailgun-client/ng.c to your buck/third-party/nailgun/nailgun-client directory
+ 5) copy nailgun-server/target/nailgun-server-1.0.0.jar and
+    nailgun-server/target/nailgun-server-1.0.0-sources.jar to your buck/third-party/java/nailgun directory
+ 6) update VERSION file with the current hash of facebook/nailgun (from which nailgun was built)

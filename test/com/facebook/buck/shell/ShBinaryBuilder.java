@@ -16,32 +16,32 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.SourcePath;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 
-public class ShBinaryBuilder extends AbstractNodeBuilder<ShBinaryDescription.Arg> {
+public class ShBinaryBuilder
+    extends AbstractNodeBuilder<
+        ShBinaryDescriptionArg.Builder, ShBinaryDescriptionArg, ShBinaryDescription, ShBinary> {
 
   public ShBinaryBuilder(BuildTarget target) {
     super(new ShBinaryDescription(), target);
   }
 
   public ShBinaryBuilder setMain(SourcePath path) {
-    arg.main = path;
+    getArgForPopulating().setMain(path);
     return this;
   }
 
   public ShBinaryBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
-    arg.deps = Optional.of(deps);
+    getArgForPopulating().setDeps(deps);
     return this;
   }
 
   public ShBinaryBuilder setResources(ImmutableSet<SourcePath> resources) {
-    arg.resources = Optional.of(resources);
+    getArgForPopulating().setResources(resources);
     return this;
   }
-
 }

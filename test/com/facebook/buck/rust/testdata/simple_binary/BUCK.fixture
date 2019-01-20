@@ -1,6 +1,0 @@
-rust_binary(
-  name = "xyzzy",
-  srcs = [
-    "main.rs",
-  ],
-)

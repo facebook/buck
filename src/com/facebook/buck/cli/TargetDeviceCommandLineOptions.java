@@ -19,16 +19,15 @@ package com.facebook.buck.cli;
 import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.TargetDeviceOptions;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Optional;
-
-import org.kohsuke.args4j.Option;
-
+import java.util.Optional;
 import javax.annotation.Nullable;
+import org.kohsuke.args4j.Option;
 
 public class TargetDeviceCommandLineOptions {
 
   @VisibleForTesting public static final String EMULATOR_MODE_SHORT_ARG = "-e";
   @VisibleForTesting static final String EMULATOR_MODE_LONG_ARG = "--emulator";
+
   @Option(
       name = EMULATOR_MODE_LONG_ARG,
       aliases = {EMULATOR_MODE_SHORT_ARG},
@@ -37,40 +36,39 @@ public class TargetDeviceCommandLineOptions {
 
   @VisibleForTesting static final String DEVICE_MODE_SHORT_ARG = "-d";
   @VisibleForTesting static final String DEVICE_MODE_LONG_ARG = "--device";
+
   @Option(
       name = DEVICE_MODE_LONG_ARG,
       aliases = {DEVICE_MODE_SHORT_ARG},
-      usage = "Use this option to use real devices only."
-  )
+      usage = "Use this option to use real devices only.")
   private boolean useRealDevicesOnlyMode;
 
   @VisibleForTesting static final String SERIAL_NUMBER_SHORT_ARG = "-s";
   @VisibleForTesting static final String SERIAL_NUMBER_LONG_ARG = "--serial";
   static final String UDID_ARG = "--udid";
+
   @Option(
       name = SERIAL_NUMBER_LONG_ARG,
       aliases = {SERIAL_NUMBER_SHORT_ARG, UDID_ARG},
       forbids = SIMULATOR_NAME_LONG_ARG,
       metaVar = "<serial-number>",
-      usage = "Use device or emulator with specific serial or UDID number."
-  )
+      usage = "Use device or emulator with specific serial or UDID number.")
   @Nullable
   private String serialNumber;
 
   static final String SIMULATOR_NAME_SHORT_ARG = "-n";
   static final String SIMULATOR_NAME_LONG_ARG = "--simulator-name";
+
   @Option(
       name = SIMULATOR_NAME_LONG_ARG,
       aliases = {SIMULATOR_NAME_SHORT_ARG},
       forbids = SERIAL_NUMBER_LONG_ARG,
       metaVar = "<name>",
-      usage = "Use simulator with specific name (Apple only)."
-  )
+      usage = "Use simulator with specific name (Apple only).")
   @Nullable
   private String simulatorName;
 
-  public TargetDeviceCommandLineOptions() {
-  }
+  public TargetDeviceCommandLineOptions() {}
 
   @VisibleForTesting
   TargetDeviceCommandLineOptions(String serial) {
@@ -85,35 +83,31 @@ public class TargetDeviceCommandLineOptions {
     return useRealDevicesOnlyMode;
   }
 
-  @Nullable
-  public String getSerialNumber() {
-    return serialNumber;
-  }
-
-  public boolean hasSerialNumber() {
-    return serialNumber != null;
+  public Optional<String> getSerialNumber() {
+    return Optional.ofNullable(serialNumber);
   }
 
   public Optional<String> getSimulatorName() {
-    return Optional.fromNullable(simulatorName);
+    return Optional.ofNullable(simulatorName);
   }
 
   public Optional<TargetDevice> getTargetDeviceOptional() {
-    if (!hasSerialNumber() && !isEmulatorsOnlyModeEnabled() && !isRealDevicesOnlyModeEnabled()) {
-      return Optional.absent();
+    if (!getSerialNumber().isPresent()
+        && !isEmulatorsOnlyModeEnabled()
+        && !isRealDevicesOnlyModeEnabled()) {
+      return Optional.empty();
     }
 
-    TargetDevice device = new TargetDevice(
-        isEmulatorsOnlyModeEnabled() ? TargetDevice.Type.EMULATOR : TargetDevice.Type.REAL_DEVICE,
-        getSerialNumber());
+    TargetDevice device =
+        new TargetDevice(
+            isEmulatorsOnlyModeEnabled()
+                ? TargetDevice.Type.EMULATOR
+                : TargetDevice.Type.REAL_DEVICE,
+            getSerialNumber());
     return Optional.of(device);
   }
 
   public TargetDeviceOptions getTargetDeviceOptions() {
-    return new TargetDeviceOptions(
-        useEmulatorsOnlyMode,
-        useRealDevicesOnlyMode,
-        serialNumber);
+    return new TargetDeviceOptions(useEmulatorsOnlyMode, useRealDevicesOnlyMode, getSerialNumber());
   }
-
 }

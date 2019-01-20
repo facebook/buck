@@ -67,19 +67,22 @@ function _buck_completion_run() {
       ;;
 
     *)
-      case "${words[1]}" in
-        audit)      _buck_completion_try_audit      "$@";;
-        build)      _buck_completion_try_build      "$@";;
-        cache)      _buck_completion_try_cache      "$@";;
-        clean)      _buck_completion_try_clean      "$@";;
-        install)    _buck_completion_try_install    "$@";;
-        project)    _buck_completion_try_project    "$@";;
-        quickstart) _buck_completion_try_quickstart "$@";;
-        run)        _buck_completion_try_run        "$@";;
-        targets)    _buck_completion_try_targets    "$@";;
-        test)       _buck_completion_try_test       "$@";;
-        uninstall)  _buck_completion_try_uninstall  "$@";;
-      esac
+      if [[ "${word:0:1}" == "@" ]]; then
+        _buck_completion_try_arg_file "${word:1}"
+      else
+        case "${words[1]}" in
+          audit)      _buck_completion_try_audit      "$@";;
+          build)      _buck_completion_try_build      "$@";;
+          cache)      _buck_completion_try_cache      "$@";;
+          clean)      _buck_completion_try_clean      "$@";;
+          install)    _buck_completion_try_install    "$@";;
+          project)    _buck_completion_try_project    "$@";;
+          run)        _buck_completion_try_run        "$@";;
+          targets)    _buck_completion_try_targets    "$@";;
+          test)       _buck_completion_try_test       "$@";;
+          uninstall)  _buck_completion_try_uninstall  "$@";;
+        esac
+      fi
       ;;
   esac
 
@@ -158,7 +161,6 @@ function _buck_completion_try_install() {
 
 function _buck_completion_try_project() {
   _buck_completion_try_long_arg "
-      --build-with-buck
       --combined-project
       --deprecated-ij-generation
       --help
@@ -167,11 +169,6 @@ function _buck_completion_try_project() {
       --process-annotations
       --verbose
       --without-tests"
-}
-
-function _buck_completion_try_quickstart() {
-  _buck_completion_try_long_arg "--android-sdk --dest-dir --help --no-cache --verbose" \
-    || _buck_completion_try_dest_dir "$@"
 }
 
 function _buck_completion_try_run() {
@@ -200,12 +197,10 @@ function _buck_completion_try_test() {
       --all
       --code-coverage
       --debug
-      --dry-run
       --help
       --ignore-when-dependencies-fail
       --jacoco
       --no-cache
-      --no-results-cache
       --num-threads
       --verbose
       --xml
@@ -267,6 +262,18 @@ function _buck_completion_try_file() {
 
   # Set return status
   [[ "${#COMPREPLY[@]}" > 0 ]]
+}
+
+function _buck_completion_try_arg_file() {
+  path="$1"
+  local -a raw_files; raw_files=( $(compgen -A file -- "$path") )
+  for p in "${raw_files[@]}"; do
+    if [[ -d "$p" ]]; then
+      _buck_completion_add_reply "@$p/"
+    else
+      _buck_completion_add_reply "@$p"
+    fi
+  done
 }
 
 function _buck_completion_try_serial() {
@@ -373,13 +380,22 @@ function _buck_completion_add_target_alias_or_relative_path() {
 }
 
 function _buck_completion_add_target_alias() {
-  local prog='/^\[/ { p=0 } /^\[alias]/ { p=1 } /^ *[a-zA-Z_-]* *= *\/\// { if (p) print $1 }'
+  local prog=$(cat <<EOF
+    /^\[/ {
+      p=0
+    }
+    /^\[alias]/ {
+      p=1
+    }
+    p && \$2 == "=" && substr(\$1, 0, length("$word")) == "$word" {
+      print \$1
+    }
+EOF
+)
   local -a aliases; aliases=($(awk "$prog" < "$root/.buckconfig"))
 
   for a in "${aliases[@]}"; do
-    if [[ "$a" == "$word"* ]]; then
-      _buck_completion_add_reply "$a"
-    fi
+    _buck_completion_add_reply "$a"
   done
 }
 
@@ -421,7 +437,7 @@ function _buck_completion_add_target_names() {
   local pattern="^ *name *= *[\'\"]\([^\'\"]*\)[\'\"] *, *$"
   local target_names
   if [[ -n "${BUCK_COMPLETION_HARDTARGETRESOLUTION-}" || -n "${BUCK_COMPLETION_USE_BUCK}" ]]; then
-    target_names=( $(_buck_completion_buck_output audit rules "$buck_file" 2>/dev/null | sed -n -e "s/$pattern/\\1/ p") )
+    target_names=( $(buck audit rules "$buck_file" 2>/dev/null | sed -n -e "s/$pattern/\\1/ p") )
   else
     target_names=( $(grep --color=none "$pattern" "$buck_file" | sed -n -e "s/$pattern/\\1/ p") )
   fi
@@ -436,21 +452,6 @@ function _buck_completion_add_target_names() {
       $log "    not adding '$name' because it does not have prefix '$name_prefix'"
     fi
   done
-}
-
-function _buck_completion_buck_output() {
-    local nobuckcheck="$root/.nobuckcheck"
-    local preexisting=$([[ -e "$nobuckcheck" ]] && echo "$nobuckcheck")
-    touch "$nobuckcheck"
-
-    $(type -P buck) "$@" 2>/dev/null
-
-    if [[ -z "$preexisting" ]]; then
-      $log "REMOVING '$nobuckcheck' because it did not exist before."
-      rm "$nobuckcheck" &>/dev/null
-    else
-      $log "LEAVING '$nobuckcheck' because it existed before."
-    fi
 }
 
 function _buck_completion_get_root() {
@@ -475,7 +476,7 @@ function _buck_completion_log() {
 }
 
 function _buck_completion_echo_buck_commands() {
-  echo "audit build cache clean install project quickstart run targets test uninstall --version --help -V"
+  echo "audit build cache clean install project run targets test uninstall --version --help -V"
 }
 
 function _buck_completion_internal_error() {

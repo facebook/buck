@@ -1,0 +1,10 @@
+[project]
+  ide = intellij
+
+[intellij]
+  android_module_sdk_name = Android API 25 Platform
+  android_module_sdk_type = AndroidSDK
+  jdk_name = 1.8
+  jdk_type = JavaSDK
+  extra_compiler_output_modules_path = buck-out/extra-intellij-output
+  keep_module_files_in_module_dirs = true

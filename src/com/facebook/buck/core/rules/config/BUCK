@@ -1,0 +1,14 @@
+java_library(
+    name = "config",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/description:description",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+    ],
+)

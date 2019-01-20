@@ -1,0 +1,12 @@
+go_binary(
+    name = "main",
+    srcs = [
+        ":gen-go",
+    ],
+)
+
+genrule(
+    name = "gen-go",
+    out = ".",
+    cmd = "echo 'package main\nfunc main() { A() }\n' > $OUT/main.go && echo 'package main\nfunc A() {}\n' > $OUT/a.go",
+)

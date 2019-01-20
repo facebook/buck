@@ -18,12 +18,10 @@ package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.step.TargetDevice;
-
 import org.junit.Test;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -43,7 +41,7 @@ public class TargetDeviceCommandLineOptionsTest {
     TargetDevice device = options.getTargetDeviceOptional().get();
 
     assertTrue(device.isEmulator());
-    assertNull(device.getIdentifier());
+    assertFalse(device.getIdentifier().isPresent());
   }
 
   @Test
@@ -53,7 +51,7 @@ public class TargetDeviceCommandLineOptionsTest {
     TargetDevice device = options.getTargetDeviceOptional().get();
 
     assertFalse(device.isEmulator());
-    assertNull(device.getIdentifier());
+    assertFalse(device.getIdentifier().isPresent());
   }
 
   @Test
@@ -63,7 +61,7 @@ public class TargetDeviceCommandLineOptionsTest {
     TargetDevice device = options.getTargetDeviceOptional().get();
 
     assertFalse(device.isEmulator());
-    assertEquals("1234", device.getIdentifier());
+    assertEquals("1234", device.getIdentifier().get());
   }
 
   @Test
@@ -72,7 +70,7 @@ public class TargetDeviceCommandLineOptionsTest {
 
     TargetDevice device = options.getTargetDeviceOptional().get();
 
-    assertEquals("1234", device.getIdentifier());
+    assertEquals("1234", device.getIdentifier().get());
 
     try {
       new CmdLineParser(options).parseArgument("-s", "5678");
@@ -82,7 +80,7 @@ public class TargetDeviceCommandLineOptionsTest {
 
     device = options.getTargetDeviceOptional().get();
 
-    assertEquals("5678", device.getIdentifier());
+    assertEquals("5678", device.getIdentifier().get());
   }
 
   private TargetDeviceCommandLineOptions buildOptions(String... args) {

@@ -1,0 +1,6 @@
+java_library(
+    name = "charset",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = ["//third-party/java/jsr:jsr305"],
+)

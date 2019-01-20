@@ -1,0 +1,13 @@
+cxx_binary(
+    name = "main",
+    srcs = [
+        "main.cpp",
+    ],
+    tests = [
+        "secondary//test:cxxtest",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "secondary//lib:cxxlib",
+    ],
+)

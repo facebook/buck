@@ -16,69 +16,132 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.FlavorDomain;
-import com.google.common.base.Optional;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.rules.coercer.FrameworkPath;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
+import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-
 import java.nio.file.Path;
+import java.util.Optional;
 
-public class CxxTestBuilder extends
-    AbstractCxxSourceBuilder<CxxTestDescription.Arg, CxxTestBuilder> {
+public class CxxTestBuilder
+    extends AbstractNodeBuilder<
+        CxxTestDescriptionArg.Builder, CxxTestDescriptionArg, CxxTestDescription, CxxTest> {
+
+  private static CxxTestDescription createCxxTestDescription(
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform defaultCxxPlatform,
+      FlavorDomain<CxxPlatform> cxxPlatforms) {
+    ToolchainProvider toolchainProvider =
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
+            .build();
+    return new CxxTestDescription(
+        toolchainProvider, cxxBuckConfig, new CxxBinaryMetadataFactory(toolchainProvider));
+  }
 
   public CxxTestBuilder(
       BuildTarget target,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform defaultCxxPlatform,
       FlavorDomain<CxxPlatform> cxxPlatforms) {
-    super(
-        new CxxTestDescription(
-            cxxBuckConfig,
-            defaultCxxPlatform,
-            cxxPlatforms,
-            /* testRuleTimeoutMs */ Optional.<Long>absent()),
-        target);
+    super(createCxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms), target);
   }
 
-  public CxxTestBuilder(BuildTarget target) {
-    this(target, createDefaultConfig(), createDefaultPlatform(), createDefaultPlatforms());
+  public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {
+    this(target, config, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
   }
 
-  public CxxTestBuilder setEnv(ImmutableMap<String, String> env) {
-    arg.env = Optional.of(env);
+  public CxxTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {
+    getArgForPopulating().setEnv(env);
     return this;
   }
 
-  public CxxTestBuilder setArgs(ImmutableList<String> args) {
-    arg.args = Optional.of(args);
+  public CxxTestBuilder setArgs(ImmutableList<StringWithMacros> args) {
+    getArgForPopulating().setArgs(args);
     return this;
   }
 
   public CxxTestBuilder setRunTestSeparately(boolean runTestSeparately) {
-    arg.runTestSeparately = Optional.of(runTestSeparately);
+    getArgForPopulating().setRunTestSeparately(Optional.of(runTestSeparately));
     return this;
   }
 
   public CxxTestBuilder setUseDefaultTestMain(boolean useDefaultTestMain) {
-    arg.useDefaultTestMain = Optional.of(useDefaultTestMain);
+    getArgForPopulating().setUseDefaultTestMain(Optional.of(useDefaultTestMain));
     return this;
   }
 
   public CxxTestBuilder setFramework(CxxTestType framework) {
-    arg.framework = Optional.of(framework);
+    getArgForPopulating().setFramework(Optional.of(framework));
     return this;
   }
 
   public CxxTestBuilder setResources(ImmutableSortedSet<Path> resources) {
-    arg.resources = Optional.of(resources);
+    getArgForPopulating().setResources(resources);
     return this;
   }
 
-  @Override
-  protected CxxTestBuilder getThis() {
+  public CxxTestBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+    getArgForPopulating().setSrcs(srcs);
     return this;
   }
 
+  public CxxTestBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
+    getArgForPopulating().setHeaders(SourceSortedSet.ofUnnamedSources(headers));
+    return this;
+  }
+
+  public CxxTestBuilder setHeaders(ImmutableSortedMap<String, SourcePath> headers) {
+    getArgForPopulating().setHeaders(SourceSortedSet.ofNamedSources(headers));
+    return this;
+  }
+
+  public CxxTestBuilder setCompilerFlags(ImmutableList<String> compilerFlags) {
+    getArgForPopulating().setCompilerFlags(StringWithMacrosUtils.fromStrings(compilerFlags));
+    return this;
+  }
+
+  public CxxTestBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+    getArgForPopulating().setLinkerFlags(linkerFlags);
+    return this;
+  }
+
+  public CxxTestBuilder setPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
+    getArgForPopulating().setPlatformLinkerFlags(platformLinkerFlags);
+    return this;
+  }
+
+  public CxxTestBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {
+    getArgForPopulating().setFrameworks(frameworks);
+    return this;
+  }
+
+  public CxxTestBuilder setLibraries(ImmutableSortedSet<FrameworkPath> libraries) {
+    getArgForPopulating().setLibraries(libraries);
+    return this;
+  }
+
+  public CxxTestBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
+    getArgForPopulating().setDeps(deps);
+    return this;
+  }
 }

@@ -1,21 +1,23 @@
 prebuilt_jar(
-  name = 'jsr305',
-  binary_jar = 'jsr305.jar',
-  licenses = [
-    'LICENSE-305',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "jsr305",
+    binary_jar = "jsr305.jar",
+    licenses = [
+        "LICENSE-305",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 prebuilt_jar(
-  name= 'jsr330',
-  binary_jar = 'javax.inject-1.jar',
-  licenses = [
-    'LICENSE-330',
-  ],
-  visibility = [
-    '//third-party/java/guice:guice',
-  ],
+    name = "jsr330",
+    binary_jar = "javax.inject-1.jar",
+    licenses = [
+        "LICENSE-330",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/testrunner:testng",
+        "//test/com/facebook/buck/testutil/integration/testlibs/...",
+        "//third-party/java/guice:guice",
+    ],
 )

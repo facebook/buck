@@ -1,0 +1,77 @@
+apple_library(
+    name = "LibObjC",
+    srcs = glob([
+        "*/*.m",
+    ]),
+    exported_headers = glob([
+        "LibObjC/**/*.h",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+)
+
+swift_library(
+    name = "LibSwift",
+    srcs = glob([
+        "LibSwift/**/*.swift",
+    ]),
+    bridging_header = "LibSwift/Swift-Bridging-Header.h",
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    module_name = "LibSwift",
+    deps = [
+        ":LibObjC",
+    ],
+)
+
+apple_library(
+    name = "BigLib",
+    srcs = glob([
+        "BigLib/**/*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "BigLib/**/*.h",
+    ]),
+    visibility = ["PUBLIC"],
+    deps = [
+        ":LibSwift",
+    ],
+)
+
+apple_library(
+    name = "LibObjCUsesLibSwift",
+    srcs = glob([
+        "*/*.m",
+    ]),
+    exported_headers = glob([
+        "LibObjCUsesLibSwift/**/*.h",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    deps = [
+        ":LibSwift",
+    ],
+)
+
+apple_library(
+    name = "BigLibTransitive",
+    srcs = glob([
+        "BigLibTransitive/**/*.m",
+    ]),
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/UIKit.framework",
+    ],
+    headers = glob([
+        "BigLibTransitive/**/*.h",
+    ]),
+    visibility = ["PUBLIC"],
+    deps = [
+        ":LibObjCUsesLibSwift",
+    ],
+)

@@ -16,12 +16,11 @@
 
 package com.facebook.buck.util.environment;
 
-import com.facebook.buck.util.TriState;
-import com.facebook.buck.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.base.StandardSystemProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -30,44 +29,58 @@ abstract class AbstractBuildEnvironmentDescription {
   public static final int PROTOCOL_VERSION = 1;
 
   public abstract String getUser();
+
   public abstract String getHostname();
+
   public abstract String getOs();
+
   public abstract int getAvailableCores();
+
   public abstract long getSystemMemory();
-  public abstract TriState getBuckDirty();
+
+  public abstract Optional<Boolean> getBuckDirty();
+
   public abstract String getBuckCommit();
+
   public abstract String getJavaVersion();
+
   public abstract ImmutableList<String> getCacheModes();
+
   public abstract ImmutableMap<String, String> getExtraData();
+
   @Value.Default
   public int getJsonProtocolVersion() {
     return PROTOCOL_VERSION;
+  }
+
+  @Value.Default
+  public String getBuildType() {
+    return BuckBuildType.CURRENT_BUCK_BUILD_TYPE.get().toString();
   }
 
   public static BuildEnvironmentDescription of(
       ExecutionEnvironment executionEnvironment,
       ImmutableList<String> cacheModes,
       ImmutableMap<String, String> extraData) {
-    TriState buckDirty;
-    String dirty = executionEnvironment.getProperty("buck.git_dirty", "unknown");
+    Optional<Boolean> buckDirty;
+    String dirty = System.getProperty("buck.git_dirty", "unknown");
     if (dirty.equals("1")) {
-      buckDirty = TriState.TRUE;
+      buckDirty = Optional.of(true);
     } else if (dirty.equals("0")) {
-      buckDirty = TriState.FALSE;
+      buckDirty = Optional.of(false);
     } else {
-      buckDirty = TriState.UNSPECIFIED;
+      buckDirty = Optional.empty();
     }
 
     return BuildEnvironmentDescription.builder()
         .setUser(executionEnvironment.getUsername())
         .setHostname(executionEnvironment.getHostname())
         .setOs(
-            executionEnvironment
-                .getPlatform().getPrintableName().toLowerCase().replace(' ', '_'))
+            executionEnvironment.getPlatform().getPrintableName().toLowerCase().replace(' ', '_'))
         .setAvailableCores(executionEnvironment.getAvailableCores())
         .setSystemMemory(executionEnvironment.getTotalMemory())
         .setBuckDirty(buckDirty)
-        .setBuckCommit(executionEnvironment.getProperty("buck.git_commit", "unknown"))
+        .setBuckCommit(System.getProperty("buck.git_commit", "unknown"))
         .setJavaVersion(StandardSystemProperty.JAVA_VM_VERSION.value())
         .setCacheModes(cacheModes)
         .setExtraData(extraData)

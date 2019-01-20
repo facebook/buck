@@ -16,15 +16,19 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.AbstractNodeBuilder;
-import com.facebook.buck.rules.PathSourcePath;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
 
-public class PrebuiltJarBuilder extends AbstractNodeBuilder<PrebuiltJarDescription.Arg> {
+public class PrebuiltJarBuilder
+    extends AbstractNodeBuilder<
+        PrebuiltJarDescriptionArg.Builder,
+        PrebuiltJarDescriptionArg,
+        PrebuiltJarDescription,
+        PrebuiltJar> {
 
   private PrebuiltJarBuilder(BuildTarget target) {
     super(new PrebuiltJarDescription(), target);
@@ -35,17 +39,16 @@ public class PrebuiltJarBuilder extends AbstractNodeBuilder<PrebuiltJarDescripti
   }
 
   public PrebuiltJarBuilder setBinaryJar(Path binaryJar) {
-    return setBinaryJar(new PathSourcePath(new FakeProjectFilesystem(), binaryJar));
+    return setBinaryJar(PathSourcePath.of(new FakeProjectFilesystem(), binaryJar));
   }
 
   public PrebuiltJarBuilder setBinaryJar(SourcePath binaryJar) {
-    arg.binaryJar = binaryJar;
+    getArgForPopulating().setBinaryJar(binaryJar);
     return this;
   }
 
   public PrebuiltJarBuilder addDep(BuildTarget dep) {
-    arg.deps = amend(arg.deps, dep);
+    getArgForPopulating().addDeps(dep);
     return this;
   }
-
 }

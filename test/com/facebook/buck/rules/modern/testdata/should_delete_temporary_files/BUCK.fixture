@@ -1,0 +1,3 @@
+temporary_writing(
+    name = "foo",
+)

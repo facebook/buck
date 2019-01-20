@@ -16,9 +16,4 @@
 
 package com.example;
 
-import com.example.other.Bar;
-import com.example.other.Foo;
-
-public class Example2 {
-
-}
+public class Example2 {}

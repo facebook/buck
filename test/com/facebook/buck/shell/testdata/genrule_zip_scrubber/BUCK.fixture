@@ -1,0 +1,39 @@
+script = "create_zip.py"
+
+genrule(
+    name = "genrule-one",
+    srcs = [
+        script,
+    ],
+    out = "output-one.zip",
+    cmd = "python $SRCS $OUT 0",
+)
+
+genrule(
+    name = "genrule-two",
+    srcs = [
+        script,
+    ],
+    out = "output-two.zip",
+    cmd = "python $SRCS $OUT 1",
+)
+
+genrule(
+    name = "extended-time-one",
+    srcs = [
+        "extended_time.zip",
+    ],
+    out = "output.zip",
+    bash = "cp $SRCS $OUT",
+    cmd_exe = "copy $SRCS $OUT",
+)
+
+genrule(
+    name = "extended-time-two",
+    srcs = [
+        "extended_time_2.zip",
+    ],
+    out = "output.zip",
+    bash = "cp $SRCS $OUT",
+    cmd_exe = "copy $SRCS $OUT",
+)

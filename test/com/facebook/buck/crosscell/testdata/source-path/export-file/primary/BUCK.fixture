@@ -1,0 +1,40 @@
+cxx_binary(
+    name = "cxx_bin",
+    srcs = [
+        "secondary//:main.cpp",
+    ],
+    deps = [
+        ":cxx_lib",
+    ],
+)
+
+cxx_library(
+    name = "cxx_lib",
+    srcs = [
+        "secondary//:lib.cpp",
+    ],
+)
+
+apple_binary(
+    name = "apple_bin",
+    srcs = [
+        "secondary//:main.m",
+    ],
+    deps = [
+        ":apple_lib",
+    ],
+)
+
+apple_library(
+    name = "apple_lib",
+    srcs = [
+        "secondary//:lib.m",
+    ],
+)
+
+java_library(
+    name = "java_lib",
+    srcs = [
+        "secondary//:Main.java",
+    ],
+)

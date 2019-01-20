@@ -16,7 +16,7 @@
 
 package com.facebook.buck.event;
 
-import com.facebook.buck.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.external.events.CompilerErrorEventExternalInterface;
 import com.google.common.collect.ImmutableSet;
 
@@ -29,9 +29,13 @@ public class CompilerErrorEvent extends AbstractBuckEvent
   public enum CompilerType {
     Java
   }
+
   CompilerType compilerType;
 
-  private CompilerErrorEvent(BuildTarget buildTarget, String error, CompilerType compilerType,
+  private CompilerErrorEvent(
+      BuildTarget buildTarget,
+      String error,
+      CompilerType compilerType,
       ImmutableSet<String> suggestions) {
     super(EventKey.unique());
     this.target = buildTarget;

@@ -16,83 +16,55 @@
 
 package com.facebook.buck.cxx;
 
+import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.testutil.integration.BuckBuildLog;
-import com.facebook.buck.testutil.integration.DebuggableTemporaryFolder;
+import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-
+import java.io.IOException;
+import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class PrebuiltCxxLibraryIntegrationTest {
 
-  @Rule
-  public DebuggableTemporaryFolder tmp = new DebuggableTemporaryFolder();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Test
   public void prebuiltCxxLibraryFromGenrule() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_cxx_from_genrule", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_from_genrule", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    final String binaryTargetString = "//core:binary";
-    final String staticBuildTargetString = "//test_lib:bar#static,default";
-    final String sharedBuildTargetString = "//test_lib:bar#shared,default";
+    String binaryTargetString = "//core:binary";
 
-    workspace.runBuckBuild(binaryTargetString).assertSuccess();
-
-    // Clean everything
-    workspace.runBuckCommand("clean").assertSuccess();
-
-    // After a clean make sure that everything was in cache.
-    workspace.runBuckBuild(binaryTargetString).assertSuccess();
-    BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetWasFetchedFromCache(binaryTargetString);
-
-    // Make sure that the static library isn't cached but can still be built.
-    workspace.runBuckBuild(staticBuildTargetString).assertSuccess();
-    buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(staticBuildTargetString);
-
-    workspace.runBuckBuild(sharedBuildTargetString).assertSuccess();
-    workspace.runBuckBuild(binaryTargetString).assertSuccess();
-    buildLog = workspace.getBuildLog();
-
-    // Now make sure that nothing is built.
-    // Since we haven't cleaned some will be just from cache.
-    // Others will be MATCHING_RULE_KEY
-    for (BuildTarget buildTarget : buildLog.getAllTargets()) {
-      buildLog.assertNotTargetBuiltLocally(buildTarget.toString());
-    }
+    ProcessResult result = workspace.runBuckCommand("run", binaryTargetString);
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.equalTo("5\n"));
   }
 
   @Test
   public void prebuiltCxxLibraryFromGenruleChangeFile() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(
-        this, "prebuilt_cxx_from_genrule", tmp);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "prebuilt_cxx_from_genrule", tmp);
     workspace.setUp();
     workspace.enableDirCache();
-    final String binaryTargetString = "//core:binary";
+    String binaryTargetString = "//core:binary";
 
-    workspace.runBuckBuild(binaryTargetString).assertSuccess();
-    // Clean everything
-    workspace.runBuckCommand("clean").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("run", binaryTargetString);
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.equalTo("5\n"));
 
     // Make sure that deps are pulled from the cache.
-    workspace.replaceFileContents(
-        "core/binary.cpp",
-        "return bar();",
-        "return bar() + 1;"
-    );
+    workspace.replaceFileContents("test_lib/bar.cpp", "return 5;", "return 6;");
 
-    workspace.runBuckBuild(binaryTargetString).assertSuccess();
+    result = workspace.runBuckCommand("run", binaryTargetString);
+    result.assertSuccess();
+    assertThat(result.getStdout(), Matchers.equalTo("6\n"));
   }
 }

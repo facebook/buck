@@ -17,51 +17,34 @@
 package com.facebook.buck.util.versioncontrol;
 
 import com.google.common.collect.ImmutableSet;
+import java.io.InputStream;
 
-/***
- * This is used if the project being built doesn't use a supported VCS.
- */
+/** * This is used if the project being built doesn't use a supported VCS. */
 public class NoOpCmdLineInterface implements VersionControlCmdLineInterface {
   @Override
   public boolean isSupportedVersionControlSystem() {
     return false;
   }
 
-  @Override
-  public String revisionId(String name)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return "";
+  public String currentRevisionId() throws VersionControlCommandFailedException {
+    throw new VersionControlCommandFailedException("");
   }
 
   @Override
-  public String currentRevisionId()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return "";
-  }
-
-  @Override
-  public String commonAncestor(
-      String revisionIdOne,
-      String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return "";
-  }
-
-  @Override
-  public boolean hasWorkingDirectoryChanges()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return false;
-  }
-
-  @Override
-  public long timestampSeconds(String revisionId)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return 0;
+  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+      String baseRevision, String tipRevision) throws VersionControlCommandFailedException {
+    throw new VersionControlCommandFailedException("");
   }
 
   @Override
   public ImmutableSet<String> changedFiles(String fromRevisionId)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return ImmutableSet.of();
+      throws VersionControlCommandFailedException {
+    throw new VersionControlCommandFailedException("");
+  }
+
+  @Override
+  public FastVersionControlStats fastVersionControlStats()
+      throws VersionControlCommandFailedException {
+    throw new VersionControlCommandFailedException("");
   }
 }

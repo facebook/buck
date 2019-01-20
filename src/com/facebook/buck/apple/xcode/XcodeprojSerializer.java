@@ -22,11 +22,9 @@ import com.dd.plist.NSObject;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXObject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
-import com.facebook.buck.log.Logger;
-import com.google.common.base.Preconditions;
-
+import com.facebook.buck.core.util.log.Logger;
 import java.util.List;
-
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.NotThreadSafe;
 
@@ -34,7 +32,7 @@ import javax.annotation.concurrent.NotThreadSafe;
  * Serializer that handles conversion of an in-memory object graph representation of an xcode
  * project (instances of {@link PBXObject}) into an Apple property list.
  *
- * Serialization proceeds from the root object, a ${link PBXProject} instance, to all of its
+ * <p>Serialization proceeds from the root object, a ${link PBXProject} instance, to all of its
  * referenced objects. Each object being visited calls back into this class ({@link #addField}) to
  * populate the plist representation with its fields.
  */
@@ -45,8 +43,7 @@ public class XcodeprojSerializer {
   private final PBXProject rootObject;
   private final NSDictionary objects;
   private final GidGenerator gidGenerator;
-  @Nullable
-  private NSDictionary currentObject;
+  @Nullable private NSDictionary currentObject;
 
   public XcodeprojSerializer(GidGenerator gidGenerator, PBXProject project) {
     rootObject = project;
@@ -54,9 +51,7 @@ public class XcodeprojSerializer {
     this.gidGenerator = gidGenerator;
   }
 
-  /**
-   * Generate a plist serialization of project bound to this serializer.
-   */
+  /** Generate a plist serialization of project bound to this serializer. */
   public NSDictionary toPlist() {
     serializeObject(rootObject);
 
@@ -74,7 +69,6 @@ public class XcodeprojSerializer {
    * Serialize a {@link PBXObject} and its recursive descendants into the object dictionary.
    *
    * @return the GID of the serialized object
-   *
    * @see PBXObject#serializeInto
    */
   @Nullable
@@ -108,19 +102,19 @@ public class XcodeprojSerializer {
 
   public void addField(String name, PBXObject obj) {
     String gid = serializeObject(obj);
-    Preconditions.checkNotNull(currentObject).put(name, gid);
+    Objects.requireNonNull(currentObject).put(name, gid);
   }
 
   public void addField(String name, int val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, String val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, boolean val) {
-    Preconditions.checkNotNull(currentObject).put(name, val);
+    Objects.requireNonNull(currentObject).put(name, val);
   }
 
   public void addField(String name, List<? extends PBXObject> objectList) {
@@ -129,10 +123,10 @@ public class XcodeprojSerializer {
       String gid = serializeObject(objectList.get(i));
       array.setValue(i, new NSString(gid));
     }
-    Preconditions.checkNotNull(currentObject).put(name, array);
+    Objects.requireNonNull(currentObject).put(name, array);
   }
 
   public void addField(String name, NSObject v) {
-    Preconditions.checkNotNull(currentObject).put(name, v);
+    Objects.requireNonNull(currentObject).put(name, v);
   }
 }

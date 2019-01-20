@@ -17,75 +17,76 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.StringResources.Gender;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.XmlDomParser;
+import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Maps;
-
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.Nullable;
-
 /**
  * This {@link Step} takes a list of string resource files (strings.xml), groups them by locales,
- * and for each locale generates a file with all the string resources for that locale.
- * Strings.xml files without a resource qualifier are mapped to the "en" locale.
+ * and for each locale generates a file with all the string resources for that locale. Strings.xml
+ * files without a resource qualifier are mapped to the "en" locale.
  *
  * <p>A typical strings.xml file looks like:
- * <pre>
- *   {@code
- *   <?xml version="1.0" encoding="utf-8"?>
- *   <resources>
- *     <string name="resource_name1">I am a string.</string>
- *     <string name="resource_name2">I am another string.</string>
- *     <plurals name="time_hours_ago">
- *       <item quantity="one">1 minute ago</item>
- *       <item quantity="other">%d minutes ago</item>
- *     </plurals>
- *     <string-array name="logging_levels">
- *       <item>Default</item>
- *       <item>Verbose</item>
- *       <item>Debug</item>
- *     </string-array>
- *   </resources>
- *   }
- * </pre>
  *
- * <p>For more information on the xml file format, refer to:
- * <a href="http://developer.android.com/guide/topics/resources/string-resource.html">
- *   String Resources - Android Developers
- * </a></p>
+ * <pre>{@code
+ * <?xml version="1.0" encoding="utf-8"?>
+ * <resources>
+ *   <string name="resource_name1">I am a string.</string>
+ *   <string name="resource_name2">I am another string.</string>
+ *   <plurals name="time_hours_ago">
+ *     <item quantity="one">1 minute ago</item>
+ *     <item quantity="other">%d minutes ago</item>
+ *   </plurals>
+ *   <string-array name="logging_levels">
+ *     <item>Default</item>
+ *     <item>Verbose</item>
+ *     <item>Debug</item>
+ *   </string-array>
+ * </resources>
+ *
+ * }</pre>
+ *
+ * <p>For more information on the xml file format, refer to: <a
+ * href="http://developer.android.com/guide/topics/resources/string-resource.html">String Resources
+ * - Android Developers </a>
  *
  * <p>So for each supported locale in a project, this step goes through all such xml files for that
  * locale, and builds a map of resource name to resource value, where resource value is either:
+ *
  * <ol>
- *   <li> a string </li>
- *   <li> a map of plurals </li>
- *   <li> a list of strings </li>
+ *   <li>a string
+ *   <li>a map of plurals
+ *   <li>a list of strings
  * </ol>
+ *
  * and dumps this map into the output file. See {@link StringResources} for the file format.
  */
 public class CompileStringsStep implements Step {
@@ -98,16 +99,16 @@ public class CompileStringsStep implements Step {
   private static final int MALE_SUFFIX_LENGTH = MALE_SUFFIX.length();
 
   @VisibleForTesting
-  static final Pattern NON_ENGLISH_STRING_FILE_PATTERN = Pattern.compile(
-      ".*res/values-([a-z]{2})(?:-r([A-Z]{2}))*/strings.xml");
+  static final Pattern NON_ENGLISH_STRING_FILE_PATTERN =
+      Pattern.compile(".*res/values-([a-z]{2})(?:-r([A-Z]{2}))*/strings.xml");
 
   @VisibleForTesting
-  static final Pattern R_DOT_TXT_STRING_RESOURCE_PATTERN = Pattern.compile(
-      "^int (string|plurals|array) (\\w+) 0x([0-9a-f]+)$");
+  static final Pattern R_DOT_TXT_STRING_RESOURCE_PATTERN =
+      Pattern.compile("^int (string|plurals|array) (\\w+) 0x([0-9a-f]+)$");
 
   private final ProjectFilesystem filesystem;
   private final ImmutableList<Path> stringFiles;
-  private final Path rDotTxtDir;
+  private final Path rDotTxtFile;
   private final Map<String, String> regionSpecificToBaseLocaleMap;
   private final Map<String, Integer> stringResourceNameToIdMap;
   private final Map<String, Integer> pluralsResourceNameToIdMap;
@@ -119,49 +120,43 @@ public class CompileStringsStep implements Step {
    * output .fbstr file, in the event of multiple xml files of a locale sharing the same string
    * resource name - file that appears first in the list wins.
    *
-   * @param stringFiles Set containing paths to strings.xml files matching
-   *                    {@link GetStringsFilesStep#STRINGS_FILE_PATH}
-   * @param rDotTxtDir Path to the directory where aapt generates R.txt file along with the
-   *     final R.java files per package.
+   * @param stringFiles Set containing paths to strings.xml files matching {@link
+   *     GetStringsFilesStep#STRINGS_FILE_PATH}
+   * @param rDotTxtFile Path to the R.txt file generated by aapt.
    * @param pathBuilder Builds a path to store a .fbstr file at.
    */
   public CompileStringsStep(
       ProjectFilesystem filesystem,
       ImmutableList<Path> stringFiles,
-      Path rDotTxtDir,
+      Path rDotTxtFile,
       Function<String, Path> pathBuilder) {
     this.filesystem = filesystem;
     this.stringFiles = stringFiles;
-    this.rDotTxtDir = rDotTxtDir;
+    this.rDotTxtFile = rDotTxtFile;
     this.pathBuilder = pathBuilder;
-    this.regionSpecificToBaseLocaleMap = Maps.newHashMap();
-    this.stringResourceNameToIdMap = Maps.newHashMap();
-    this.pluralsResourceNameToIdMap = Maps.newHashMap();
-    this.arrayResourceNameToIdMap = Maps.newHashMap();
+    this.regionSpecificToBaseLocaleMap = new HashMap<>();
+    this.stringResourceNameToIdMap = new HashMap<>();
+    this.pluralsResourceNameToIdMap = new HashMap<>();
+    this.arrayResourceNameToIdMap = new HashMap<>();
   }
 
   @Override
-  public StepExecutionResult execute(ExecutionContext context) {
-    try {
-      buildResourceNameToIdMap(
-          filesystem,
-          rDotTxtDir.resolve("R.txt"),
-          stringResourceNameToIdMap,
-          pluralsResourceNameToIdMap,
-          arrayResourceNameToIdMap);
-    } catch (IOException e) {
-      context.logError(e, "Failure parsing R.txt file.");
-      return StepExecutionResult.ERROR;
-    }
+  public StepExecutionResult execute(ExecutionContext context) throws IOException {
+    buildResourceNameToIdMap(
+        filesystem,
+        rDotTxtFile,
+        stringResourceNameToIdMap,
+        pluralsResourceNameToIdMap,
+        arrayResourceNameToIdMap);
 
     ImmutableMultimap<String, Path> filesByLocale = groupFilesByLocale(stringFiles);
-    Map<String, StringResources> resourcesByLocale = Maps.newHashMap();
+    Map<String, StringResources> resourcesByLocale = new HashMap<>();
     for (String locale : filesByLocale.keySet()) {
       try {
         resourcesByLocale.put(locale, compileStringFiles(filesystem, filesByLocale.get(locale)));
       } catch (IOException | SAXException e) {
         context.logError(e, "Error parsing string file for locale: %s", locale);
-        return StepExecutionResult.ERROR;
+        return StepExecutionResults.ERROR;
       }
     }
 
@@ -179,46 +174,44 @@ public class CompileStringsStep implements Step {
         continue;
       }
 
-      resourcesByLocale.put(regionSpecificLocale,
-          resourcesByLocale.get(regionSpecificLocale)
+      resourcesByLocale.put(
+          regionSpecificLocale,
+          resourcesByLocale
+              .get(regionSpecificLocale)
               .getMergedResources(resourcesByLocale.get(baseLocale)));
     }
 
     for (String locale : filesByLocale.keySet()) {
       try {
         filesystem.writeBytesToPath(
-            Preconditions.checkNotNull(resourcesByLocale.get(locale)).getBinaryFileContent(),
+            Objects.requireNonNull(resourcesByLocale.get(locale)).getBinaryFileContent(),
             pathBuilder.apply(locale));
       } catch (IOException e) {
         context.logError(e, "Error creating binary file for locale: %s", locale);
-        return StepExecutionResult.ERROR;
+        return StepExecutionResults.ERROR;
       }
     }
 
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   /**
-   * Groups a list of strings.xml files by locale.
-   * String files with no resource qualifier (eg. values/strings.xml) are mapped to the "en" locale
+   * Groups a list of strings.xml files by locale. String files with no resource qualifier (eg.
+   * values/strings.xml) are mapped to the "en" locale
    *
-   * eg. given the following list:
+   * <p>eg. given the following list:
    *
-   * ImmutableList.of(
-   *   Paths.get("one/res/values-es/strings.xml"),
-   *   Paths.get("two/res/values-es/strings.xml"),
-   *   Paths.get("three/res/values-pt-rBR/strings.xml"),
-   *   Paths.get("four/res/values-pt-rPT/strings.xml"),
-   *   Paths.get("five/res/values/strings.xml"));
+   * <p>ImmutableList.of( Paths.get("one/res/values-es/strings.xml"),
+   * Paths.get("two/res/values-es/strings.xml"), Paths.get("three/res/values-pt-rBR/strings.xml"),
+   * Paths.get("four/res/values-pt-rPT/strings.xml"), Paths.get("five/res/values/strings.xml"));
    *
-   * returns:
+   * <p>returns:
    *
-   * ImmutableMap.of(
-   *   "es", ImmutableList.of(Paths.get("one/res/values-es/strings.xml"),
-   *        Paths.get("two/res/values-es/strings.xml")),
-   *   "pt_BR", ImmutableList.of(Paths.get("three/res/values-pt-rBR/strings.xml'),
-   *   "pt_PT", ImmutableList.of(Paths.get("four/res/values-pt-rPT/strings.xml"),
-   *   "en", ImmutableList.of(Paths.get("five/res/values/strings.xml")));
+   * <p>ImmutableMap.of( "es", ImmutableList.of(Paths.get("one/res/values-es/strings.xml"),
+   * Paths.get("two/res/values-es/strings.xml")), "pt_BR",
+   * ImmutableList.of(Paths.get("three/res/values-pt-rBR/strings.xml'), "pt_PT",
+   * ImmutableList.of(Paths.get("four/res/values-pt-rPT/strings.xml"), "en",
+   * ImmutableList.of(Paths.get("five/res/values/strings.xml")));
    */
   @VisibleForTesting
   ImmutableMultimap<String, Path> groupFilesByLocale(ImmutableList<Path> files) {
@@ -250,17 +243,16 @@ public class CompileStringsStep implements Step {
   }
 
   /**
-   * Parses the R.txt file generated by aapt, looks for resources of type {@code string},
-   * {@code plurals} and {@code array}, and builds a map of resource names to their corresponding
-   * ids.
+   * Parses the R.txt file generated by aapt, looks for resources of type {@code string}, {@code
+   * plurals} and {@code array}, and builds a map of resource names to their corresponding ids.
    */
   public static void buildResourceNameToIdMap(
       ProjectFilesystem filesystem,
       Path pathToRDotTxtFile,
       Map<String, Integer> stringResourceNameToIdMap,
       Map<String, Integer> pluralsResourceNameToIdMap,
-      Map<String, Integer> arrayResourceNameToIdMap
-  ) throws IOException {
+      Map<String, Integer> arrayResourceNameToIdMap)
+      throws IOException {
     List<String> fileLines = filesystem.readLines(pathToRDotTxtFile);
     for (String line : fileLines) {
       Matcher matcher = R_DOT_TXT_STRING_RESOURCE_PATTERN.matcher(line);
@@ -288,11 +280,10 @@ public class CompileStringsStep implements Step {
   }
 
   private StringResources compileStringFiles(
-      ProjectFilesystem filesystem,
-      Collection<Path> filepaths) throws IOException, SAXException {
-    TreeMap<Integer, EnumMap<Gender, String>> stringsMap = Maps.newTreeMap();
-    TreeMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = Maps.newTreeMap();
-    TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = Maps.newTreeMap();
+      ProjectFilesystem filesystem, Collection<Path> filepaths) throws IOException, SAXException {
+    TreeMap<Integer, EnumMap<Gender, String>> stringsMap = new TreeMap<>();
+    TreeMap<Integer, EnumMap<Gender, ImmutableMap<String, String>>> pluralsMap = new TreeMap<>();
+    TreeMap<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap = new TreeMap<>();
 
     for (Path stringFilePath : filepaths) {
       Document dom = XmlDomParser.parse(filesystem.getPathForRelativePath(stringFilePath));
@@ -310,10 +301,9 @@ public class CompileStringsStep implements Step {
     return new StringResources(stringsMap, pluralsMap, arraysMap);
   }
 
-
   /**
-   * Scrapes string resource names and values from the list of xml nodes passed and populates
-   * {@code stringsMap}, ignoring resource names that are already present in the map.
+   * Scrapes string resource names and values from the list of xml nodes passed and populates {@code
+   * stringsMap}, ignoring resource names that are already present in the map.
    *
    * @param stringNodes A list of {@code <string></string>} nodes.
    * @param stringsMap Map from string resource id to its values.
@@ -332,7 +322,7 @@ public class CompileStringsStep implements Step {
       }
 
       EnumMap<Gender, String> genderMap = stringsMap.get(resId);
-      if (genderMap == null)  {
+      if (genderMap == null) {
         genderMap = Maps.newEnumMap(Gender.class);
       } else if (genderMap.containsKey(gender)) { // Ignore a resource if it has already been found
         continue;
@@ -343,9 +333,7 @@ public class CompileStringsStep implements Step {
     }
   }
 
-  /**
-   * Similar to {@code scrapeStringNodes}, but for plurals nodes.
-   */
+  /** Similar to {@code scrapeStringNodes}, but for plurals nodes. */
   @VisibleForTesting
   void scrapePluralsNodes(
       NodeList pluralNodes,
@@ -363,7 +351,7 @@ public class CompileStringsStep implements Step {
       }
 
       EnumMap<Gender, ImmutableMap<String, String>> genderMap = pluralsMap.get(resourceId);
-      if (genderMap == null)  {
+      if (genderMap == null) {
         genderMap = Maps.newEnumMap(Gender.class);
       } else if (genderMap.containsKey(gender)) { // Ignore a resource if it has already been found
         continue;
@@ -383,13 +371,10 @@ public class CompileStringsStep implements Step {
     }
   }
 
-  /**
-   * Similar to {@code scrapeStringNodes}, but for string array nodes.
-   */
+  /** Similar to {@code scrapeStringNodes}, but for string array nodes. */
   @VisibleForTesting
   void scrapeStringArrayNodes(
-      NodeList arrayNodes,
-      Map<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap) {
+      NodeList arrayNodes, Map<Integer, EnumMap<Gender, ImmutableList<String>>> arraysMap) {
 
     for (int i = 0; i < arrayNodes.getLength(); ++i) {
       Element element = (Element) arrayNodes.item(i);
@@ -403,7 +388,7 @@ public class CompileStringsStep implements Step {
       }
 
       EnumMap<Gender, ImmutableList<String>> genderMap = arraysMap.get(resourceId);
-      if (genderMap == null)  {
+      if (genderMap == null) {
         genderMap = Maps.newEnumMap(Gender.class);
       } else if (genderMap.containsKey(gender)) { // Ignore a resource if it has already been found
         continue;
@@ -423,9 +408,7 @@ public class CompileStringsStep implements Step {
     }
   }
 
-  /**
-   * Used in unit tests to inject the resource name to id map.
-   */
+  /** Used in unit tests to inject the resource name to id map. */
   @VisibleForTesting
   void addStringResourceNameToIdMap(Map<String, Integer> nameToIdMap) {
     stringResourceNameToIdMap.putAll(nameToIdMap);
@@ -451,10 +434,9 @@ public class CompileStringsStep implements Step {
     return "Combine, parse string resource xml files into one binary file per locale.";
   }
 
-  @Nullable private static Integer getResourceId(
-      String name,
-      Gender gender,
-      Map<String, Integer> resourceToIdMap) {
+  @Nullable
+  private static Integer getResourceId(
+      String name, Gender gender, Map<String, Integer> resourceToIdMap) {
     Integer resId = null;
     if (name.endsWith(FEMALE_SUFFIX) && gender.equals(Gender.female)) {
       resId = resourceToIdMap.get(name.substring(0, name.length() - FEMALE_SUFFIX_LENGTH));
@@ -471,6 +453,7 @@ public class CompileStringsStep implements Step {
 
   /**
    * Returns the Gender present in the passed in element's attribute, defaults to unknown gender
+   *
    * @param element the element for which gender attribute is to be determined
    * @return gender present in the element and unknown gender if not
    */

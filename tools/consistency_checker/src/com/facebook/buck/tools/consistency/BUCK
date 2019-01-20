@@ -1,0 +1,11 @@
+java_library(
+    name = "consistency",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src-gen:thrift",
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/guava:guava",
+        "//third-party/java/thrift:libthrift",
+    ],
+)

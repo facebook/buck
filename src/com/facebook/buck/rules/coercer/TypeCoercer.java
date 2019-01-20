@@ -16,21 +16,21 @@
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.rules.CellPathResolver;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.coercer.concat.Concatable;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 /**
  * Class defining an interpretation of some dynamically typed Java object as a specific class.
  *
- * Used to coerce JSON parser output from BUCK files into the proper type to populate Description
+ * <p>Used to coerce JSON parser output from BUCK files into the proper type to populate Description
  * rule args.
  *
  * @param <T> resulting type
  */
-public interface TypeCoercer<T> {
+public interface TypeCoercer<T> extends Concatable<T> {
 
   Class<T> getOutputClass();
 
@@ -43,28 +43,28 @@ public interface TypeCoercer<T> {
   /**
    * Traverse an object guided by this TypeCoercer.
    *
-   * #{link Traversal#traverse} function will be called once for the object.
-   * If the object is a collection or map, it will also recursively traverse all elements of the
-   * map.
+   * <p>#{link Traversal#traverse} function will be called once for the object. If the object is a
+   * collection or map, it will also recursively traverse all elements of the map.
    */
-  void traverse(T object, Traversal traversal);
+  void traverse(CellPathResolver cellRoots, T object, Traversal traversal);
 
-  /**
-   * @throws CoerceFailedException Input object cannot be coerced into the given type.
-   */
+  /** @throws CoerceFailedException Input object cannot be coerced into the given type. */
   T coerce(
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
-      Object object) throws CoerceFailedException;
+      Object object)
+      throws CoerceFailedException;
 
   /**
-   * Get a value suitable for an Optional field. This will typically be {@link Optional#absent()},
-   * but may be some other value, such as an empty collection.
-   *
-   * @return A value suitable for fields of type Optional when no value has been set.
+   * Implementation of concatenation for this type. <code>null</code> indicates that concatenation
+   * isn't supported by the type.
    */
-  Optional<T> getOptionalValue();
+  @Nullable
+  @Override
+  default T concat(Iterable<T> elements) {
+    return null;
+  }
 
   interface Traversal {
     void traverse(Object object);

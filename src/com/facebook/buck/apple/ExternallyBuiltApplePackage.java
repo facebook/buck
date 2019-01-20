@@ -16,82 +16,93 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.RuleKeyAppendable;
-import com.facebook.buck.rules.RuleKeyObjectSink;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.SourceSet;
+import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.Genrule;
-import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.util.immutables.BuckStyleTuple;
-import com.google.common.base.Function;
-import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-
+import java.nio.file.Path;
+import java.util.Optional;
 import org.immutables.value.Value;
 
-import java.nio.file.Path;
-
-/**
- * Rule for generating an apple package via external script.
- */
-public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppendable {
+/** Rule for generating an apple package via external script. */
+public class ExternallyBuiltApplePackage extends Genrule {
   private ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo;
 
   public ExternallyBuiltApplePackage(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      BuildRuleResolver resolver,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       ApplePackageConfigAndPlatformInfo packageConfigAndPlatformInfo,
-      SourcePath bundle) {
+      SourcePath bundle,
+      boolean cacheable,
+      Optional<String> environmentExpansionSeparator,
+      Optional<AndroidPlatformTarget> androidPlatformTarget,
+      Optional<AndroidNdk> androidNdk,
+      Optional<AndroidSdkLocation> androidSdkLocation) {
     super(
-        params,
+        buildTarget,
+        projectFilesystem,
         resolver,
-        ImmutableList.of(bundle),
+        params,
+        sandboxExecutionStrategy,
+        SourceSet.ofUnnamedSources(ImmutableSortedSet.of(bundle)),
         Optional.of(packageConfigAndPlatformInfo.getExpandedArg()),
-        Optional.<Arg>absent(),
-        Optional.<Arg>absent(),
-        params.getBuildTarget().getShortName() + "." +
-            packageConfigAndPlatformInfo.getConfig().getExtension(),
-        ImmutableSortedSet.<BuildTarget>of());
+        /* bash */ Optional.empty(),
+        /* cmdExe */ Optional.empty(),
+        /* type */ Optional.empty(),
+        buildTarget.getShortName() + "." + packageConfigAndPlatformInfo.getConfig().getExtension(),
+        false,
+        cacheable,
+        environmentExpansionSeparator,
+        androidPlatformTarget,
+        androidNdk,
+        androidSdkLocation,
+        false);
     this.packageConfigAndPlatformInfo = packageConfigAndPlatformInfo;
   }
 
   @Override
   protected void addEnvironmentVariables(
-      ExecutionContext context,
+      SourcePathResolver pathResolver,
       ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
-    super.addEnvironmentVariables(context, environmentVariablesBuilder);
+    super.addEnvironmentVariables(pathResolver, environmentVariablesBuilder);
     environmentVariablesBuilder.put(
-        "SDKROOT",
-        packageConfigAndPlatformInfo.getSdkPath().toString());
+        "SDKROOT", packageConfigAndPlatformInfo.getSdkPath().toString());
   }
 
   @Override
   public void appendToRuleKey(RuleKeyObjectSink sink) {
-    sink
-        .setReflectively("sdkVersion", packageConfigAndPlatformInfo.getSdkVersion())
+    sink.setReflectively("sdkVersion", packageConfigAndPlatformInfo.getSdkVersion())
         .setReflectively("buildVersion", packageConfigAndPlatformInfo.getPlatformBuildVersion());
   }
 
-  /**
-   * Value type for tracking a package config and information about the platform.
-   */
+  /** Value type for tracking a package config and information about the platform. */
   @Value.Immutable
   @BuckStyleTuple
   abstract static class AbstractApplePackageConfigAndPlatformInfo {
     public abstract ApplePackageConfig getConfig();
 
-    @Value.Auxiliary
-    protected abstract Function<String, Arg> getMacroExpander();
-
     /**
      * The apple cxx platform in question.
      *
-     * As this value is architecture specific, it is omitted from equality computation, via
+     * <p>As this value is architecture specific, it is omitted from equality computation, via
      * {@code Value.Auxiliary}. Since the actual apple "Platform" is architecture agnostic, proxy
      * values for the actual platform are used for equality comparison instead.
      */
@@ -101,7 +112,7 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     /**
      * The sdk version of the platform.
      *
-     * This is used as a proxy for the version of the external packager.
+     * <p>This is used as a proxy for the version of the external packager.
      */
     @Value.Derived
     public String getSdkVersion() {
@@ -111,29 +122,24 @@ public class ExternallyBuiltApplePackage extends Genrule implements RuleKeyAppen
     /**
      * The build version of the platform.
      *
-     * This is used as a proxy for the version of the external packager.
+     * <p>This is used as a proxy for the version of the external packager.
      */
     @Value.Derived
     public Optional<String> getPlatformBuildVersion() {
       return getPlatform().getBuildVersion();
     }
 
-    /**
-     * Returns the Apple SDK path.
-     */
+    /** Returns the Apple SDK path. */
     @Value.Derived
     public Path getSdkPath() {
       return getPlatform().getAppleSdkPaths().getSdkPath();
     }
 
-    /**
-     * Command after passing through argument expansion.
-     */
+    /** Command after passing through argument expansion. */
     @Value.Derived
     @Value.Auxiliary
     public Arg getExpandedArg() {
-      return getMacroExpander().apply(getConfig().getCommand());
+      return StringArg.of(getConfig().getCommand());
     }
   }
-
 }

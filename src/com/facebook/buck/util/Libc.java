@@ -25,26 +25,24 @@ import com.sun.jna.ptr.IntByReference;
 
 public interface Libc extends Library {
 
-  Libc INSTANCE = (Libc) Native.loadLibrary(Platform.C_LIBRARY_NAME, Libc.class);
+  Libc INSTANCE = Native.loadLibrary(Platform.C_LIBRARY_NAME, Libc.class);
 
   Pointer signal(int signal, Pointer function);
+
   int kill(int pid, int sig) throws LastErrorException;
 
-  public interface OpenPtyLibrary extends Library {
-    void openpty(
-        IntByReference master,
-        IntByReference slave,
-        Pointer name,
-        Pointer terp,
-        Pointer winp) throws LastErrorException;
+  interface OpenPtyLibrary extends Library {
+    int openpty(
+        IntByReference master, IntByReference slave, Pointer name, Pointer terp, Pointer winp);
   }
 
   int setsid();
 
-  void ioctl(int fd, Pointer request, Object... args) throws LastErrorException;
+  int ioctl(int fd, Pointer request, Object... args);
+
   int fcntl(int fd, int cmd, Object... args);
 
-  public static final class Constants {
+  final class Constants {
     public static final int LINUX_TIOCSCTTY = 0x540E;
     public static final int DARWIN_TIOCSCTTY = 0x20007461;
     public static int rTIOCSCTTY;
@@ -62,6 +60,6 @@ public interface Libc extends Library {
     public static int rFSETFD;
 
     public static final int SIGHUP = 1;
+    public static final int SIGINT = 2;
   }
-
 }

@@ -27,21 +27,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
- * This test verifies that all junit before/after functions
- * gets called in correct order:
+ * This test verifies that all junit before/after functions gets called in correct
+ * order: @BeforeClass - oneTimeSetUp @Before - setUp @Test - testSomething(1 or 2) @After -
+ * tearDown @Before - setUp @Test - testSomething(1 or 2) @After - tearDown @AfterClass -
+ * oneTimeTearDown
  *
- * @BeforeClass - oneTimeSetUp
- * @Before - setUp
- * @Test - testSomething(1 or 2)
- * @After - tearDown
- * @Before - setUp
- * @Test - testSomething(1 or 2)
- * @After - tearDown
- * @AfterClass - oneTimeTearDown
- *
- * JUnit don't fail a test when @AfterClass or @BeforeClass methods throw an Exception
- * so making assertions within those methods doesn't make sense. Instead we call System.exit
- * from @AfterClass and will verify if test fails due to invalid return code.
+ * <p>JUnit don't fail a test when @AfterClass or @BeforeClass methods throw an Exception so making
+ * assertions within those methods doesn't make sense. Instead we call System.exit from @AfterClass
+ * and will verify if test fails due to invalid return code.
  */
 public class CallFlowTest {
 
@@ -70,7 +63,9 @@ public class CallFlowTest {
 
   @AfterClass
   public static void oneTimeTearDown() throws Exception {
-    if (!afterClassCalled && beforeClassCallCounter == 1 && testCallCounter == 2
+    if (!afterClassCalled
+        && beforeClassCallCounter == 1
+        && testCallCounter == 2
         && !isWithinBeforeAndAfter) {
       System.exit(42);
     }
@@ -91,5 +86,4 @@ public class CallFlowTest {
   public void testSomething2() {
     something();
   }
-
 }

@@ -16,60 +16,48 @@
 
 package com.facebook.buck.jvm.java;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.parser.NoSuchBuildTargetException;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.FakeBuildableContext;
-import com.facebook.buck.rules.FakeSourcePath;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
-import org.junit.Test;
-
 import java.util.List;
+import org.junit.Test;
 
 public class KeystoreTest {
 
   private static Keystore createKeystoreRuleForTest() throws NoSuchBuildTargetException {
-    BuildRuleResolver ruleResolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    return (Keystore) KeystoreBuilder.createBuilder(
-        BuildTargetFactory.newInstance("//keystores:debug"))
-        .setStore(new FakeSourcePath("keystores/debug.keystore"))
-        .setProperties(new FakeSourcePath("keystores/debug.keystore.properties"))
-        .build(ruleResolver);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    return KeystoreBuilder.createBuilder(BuildTargetFactory.newInstance("//keystores:debug"))
+        .setStore(FakeSourcePath.of("keystores/debug.keystore"))
+        .setProperties(FakeSourcePath.of("keystores/debug.keystore.properties"))
+        .build(graphBuilder);
   }
 
   @Test
-  public void testObservers() throws Exception {
+  public void testObservers() {
     Keystore keystore = createKeystoreRuleForTest();
     assertEquals("keystore", keystore.getType());
 
-    assertEquals(new FakeSourcePath("keystores/debug.keystore"), keystore.getPathToStore());
-    assertEquals(new FakeSourcePath("keystores/debug.keystore.properties"),
+    assertEquals(FakeSourcePath.of("keystores/debug.keystore"), keystore.getPathToStore());
+    assertEquals(
+        FakeSourcePath.of("keystores/debug.keystore.properties"),
         keystore.getPathToPropertiesFile());
   }
 
   @Test
-  public void testBuildInternal() throws Exception {
-    BuildContext buildContext = createMock(BuildContext.class);
+  public void testBuildInternal() {
+    BuildContext buildContext = FakeBuildContext.NOOP_CONTEXT;
 
-    replay(buildContext);
-
-    BuildRule keystore = createKeystoreRuleForTest();
-    List<Step> buildSteps = keystore.getBuildSteps(buildContext,
-        new FakeBuildableContext());
+    Keystore keystore = createKeystoreRuleForTest();
+    List<Step> buildSteps = keystore.getBuildSteps(buildContext, new FakeBuildableContext());
     assertEquals(ImmutableList.<Step>of(), buildSteps);
-
-    verify(buildContext);
   }
 }

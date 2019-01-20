@@ -25,5 +25,4 @@ public class LameGenfile {
   public static String getTestString() {
     return TEST_STRING;
   }
-
 }

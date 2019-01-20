@@ -1,78 +1,24 @@
 java_library(
-  name = 'tracing',
-  srcs = [
-    'JavacPhaseEvent.java',
-    'JavacPhaseEventLogger.java',
-    'TranslatingJavacPhaseTracer.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
-  resources = [
-    ':javac-tracing-compiler-plugin',
-  ],
-  exported_deps = [
-    # Have to export this manually. `buck autodeps` does not export it because it is in the
-    # provided_deps. This should be fixed in `buck autodeps`.
-    ':api',
-  ],
-  provided_deps = [
-    # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
-    ':api',
-  ],
-  autodeps = True,
-  visibility = [
-    '//src/com/facebook/buck/event/listener:listener',
-    '//src/com/facebook/buck/jvm/java:support',
-    '//test/com/facebook/buck/event/listener:listener',
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-    '//test/com/facebook/buck/simulate:simulate',
-  ],
-)
-
-java_binary(
-  name = 'javac-tracing-compiler-plugin',
-  deps = [
-    ':compiler-plugin',
-  ],
-)
-
-java_library(
-  name = 'compiler-plugin',
-  srcs = [
-    'TracingTaskListener.java',
-    '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
-    '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
-  ],
-  tests = [
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
-  provided_deps = [
-    # Tools.jar is the compiler itself, and will already be present at runtime;
-    # don't need to depend on it strongly.
-    '//third-party/java/jdk:compiler-tree-api',
-
-    # The API module is part of the bootstrapper at runtime; don't need to depend on it directly
-    ':api',
-  ],
-  visibility = [
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
-)
-
-java_library(
-  name = 'api',
-  srcs = [
-    'JavacPhaseTracer.java',
-    '//src/com/facebook/buck/util/exportedfiles:Nullable.java',
-    '//src/com/facebook/buck/util/exportedfiles:Preconditions.java',
-  ],
-  # Don't add deps; this is a super-light API that is loaded within javac. It can't access
-  # code outside of Buck's bootstrapper.
-  autodeps = False,
-  visibility = [
-    '//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib',
-    '//src/com/facebook/buck/jvm/java:support',
-    '//test/com/facebook/buck/jvm/java/tracing:tracing',
-  ],
+    name = "tracing",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
+    visibility = [
+        "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/jvm/java:support",
+        "//test/com/facebook/buck/event/listener:listener",
+        "//test/com/facebook/buck/jvm/java/tracing:tracing",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/jvm/java:javac-sink",
+        "//src/com/facebook/buck/jvm/java/plugin:plugin",
+        "//src/com/facebook/buck/jvm/java/plugin/api:api",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
 )

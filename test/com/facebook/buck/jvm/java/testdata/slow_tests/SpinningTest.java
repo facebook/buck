@@ -23,5 +23,4 @@ public class SpinningTest {
   public void test() {
     while (true) {}
   }
-
 }

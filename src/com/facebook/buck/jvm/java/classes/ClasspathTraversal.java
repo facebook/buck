@@ -16,27 +16,28 @@
 
 package com.facebook.buck.jvm.java.classes;
 
-import com.facebook.buck.io.DirectoryTraversal;
-import com.facebook.buck.io.MorePaths;
-import com.facebook.buck.io.ProjectFilesystem;
+import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ZipFileTraversal;
-
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitOption;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Nullable;
-
 /**
- * Traversal strategy for traversing a set of paths that themselves are traversed.  The provided
+ * Traversal strategy for traversing a set of paths that themselves are traversed. The provided
  * paths can point to zip/jar files, directories of resource/class files, or individual files
  * themselves.
- * <p>
- * For example, given the input paths of { foo.zip, foo/, and foo.txt }, traverse would first
+ *
+ * <p>For example, given the input paths of { foo.zip, foo/, and foo.txt }, traverse would first
  * expand foo.zip and traverse its contents, then list the files recursively in foo/, and finally
  * visit the single file foo.txt.
  */
@@ -51,16 +52,6 @@ public abstract class ClasspathTraversal {
 
   public abstract void visit(FileLike fileLike) throws IOException;
 
-  /**
-   * Subclasses can override this method to return a value of any type. This often represents some
-   * sort of cumulative value that is computed as a result of the traversal.
-   */
-  // TODO(bolinfest): Change this from Object to a generic <T>.
-  @Nullable
-  public Object getResult() {
-    return null;
-  }
-
   public final void traverse() throws IOException {
     for (Path path : paths) {
       ClasspathTraverser adapter = createTraversalAdapter(filesystem.getPathForRelativePath(path));
@@ -70,12 +61,14 @@ public abstract class ClasspathTraversal {
 
   private ClasspathTraverser createTraversalAdapter(Path path) {
     String extension = MorePaths.getFileExtension(path);
-    if (extension.equalsIgnoreCase("jar") || extension.equalsIgnoreCase("zip")) {
-      return new ZipFileTraversalAdapter(path);
-    } else if (Files.isDirectory(path)) {
-      return new DirectoryTraversalAdapter(path);
-    } else if (Files.isRegularFile(path)) {
-      return new FileTraversalAdapter(path);
+    if (filesystem.isDirectory(path)) {
+      return new DirectoryTraversalAdapter(filesystem, path);
+    } else if (filesystem.isFile(path)) {
+      if (extension.equalsIgnoreCase("jar") || extension.equalsIgnoreCase("zip")) {
+        return new ZipFileTraversalAdapter(path);
+      } else {
+        return new FileTraversalAdapter(path);
+      }
     } else {
       throw new IllegalArgumentException("Unsupported classpath traversal input: " + path);
     }
@@ -89,13 +82,14 @@ public abstract class ClasspathTraversal {
     }
 
     @Override
-    public void traverse(final ClasspathTraversal traversal) throws IOException {
-      ZipFileTraversal impl = new ZipFileTraversal(file) {
-        @Override
-        public void visit(ZipFile zipFile, ZipEntry zipEntry) throws IOException {
-          traversal.visit(new FileLikeInZip(file, zipFile, zipEntry));
-        }
-      };
+    public void traverse(ClasspathTraversal traversal) throws IOException {
+      ZipFileTraversal impl =
+          new ZipFileTraversal(file) {
+            @Override
+            public void visit(ZipFile zipFile, ZipEntry zipEntry) throws IOException {
+              traversal.visit(new FileLikeInZip(file, zipFile, zipEntry));
+            }
+          };
       impl.traverse();
     }
 
@@ -133,21 +127,29 @@ public abstract class ClasspathTraversal {
   }
 
   private static class DirectoryTraversalAdapter implements ClasspathTraverser {
-    private final Path file;
+    private final ProjectFilesystem filesystem;
+    private final Path directory;
 
-    public DirectoryTraversalAdapter(Path file) {
-      this.file = file;
+    public DirectoryTraversalAdapter(ProjectFilesystem filesystem, Path directory) {
+      this.filesystem = filesystem;
+      this.directory = directory;
     }
 
     @Override
-    public void traverse(final ClasspathTraversal traversal) throws IOException {
-      DirectoryTraversal impl = new DirectoryTraversal(file) {
-        @Override
-        public void visit(Path file, String relativePath) throws IOException {
-          traversal.visit(new FileLikeInDirectory(file, relativePath));
-        }
-      };
-      impl.traverse();
+    public void traverse(ClasspathTraversal traversal) throws IOException {
+      filesystem.walkFileTree(
+          directory,
+          ImmutableSet.of(FileVisitOption.FOLLOW_LINKS),
+          new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              String relativePath =
+                  MorePaths.pathWithUnixSeparators(MorePaths.relativize(directory, file));
+              traversal.visit(new FileLikeInDirectory(file, relativePath));
+              return FileVisitResult.CONTINUE;
+            }
+          });
     }
   }
 
@@ -196,4 +198,3 @@ public abstract class ClasspathTraversal {
     }
   }
 }
-

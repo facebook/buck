@@ -1,0 +1,8 @@
+android_resource(
+    name = "android_res_custom_package",
+    package = "com.test.custom",
+    project_res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+)

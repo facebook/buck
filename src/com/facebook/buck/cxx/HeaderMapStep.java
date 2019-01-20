@@ -17,19 +17,19 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class HeaderMapStep implements Step {
+class HeaderMapStep implements Step {
 
   private static final Logger LOG = Logger.get(HeaderMapStep.class);
 
@@ -38,9 +38,7 @@ public class HeaderMapStep implements Step {
   private final ImmutableMap<Path, Path> entries;
 
   public HeaderMapStep(
-      ProjectFilesystem filesystem,
-      Path output,
-      ImmutableMap<Path, Path> entries) {
+      ProjectFilesystem filesystem, Path output, ImmutableMap<Path, Path> entries) {
     this.filesystem = filesystem;
     this.output = output;
     this.entries = entries;
@@ -48,7 +46,7 @@ public class HeaderMapStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return "header map @ " + output.toString();
+    return "header map @ " + output;
   }
 
   @Override
@@ -65,7 +63,7 @@ public class HeaderMapStep implements Step {
     }
     HeaderMap headerMap = builder.build();
     filesystem.writeBytesToPath(headerMap.getBytes(), output);
-    return StepExecutionResult.SUCCESS;
+    return StepExecutionResults.SUCCESS;
   }
 
   @Override
@@ -81,5 +79,4 @@ public class HeaderMapStep implements Step {
   public int hashCode() {
     return Objects.hashCode(output, entries);
   }
-
 }

@@ -1,0 +1,21 @@
+apple_binary(
+    name = "TestApp",
+    srcs = ["main.m"],
+    frameworks = ["$SDKROOT/System/Library/Frameworks/Foundation.framework"],
+    visibility = ["PUBLIC"],
+    deps = ["//prebuilt:BuckTest"],
+)
+
+apple_bundle(
+    name = "TestAppBundle",
+    binary = ":TestApp",
+    extension = "app",
+    info_plist = "Info.plist",
+    product_name = "TestAppBundle",
+    deps = [":TestApp"],
+)
+
+xcode_workspace_config(
+    name = "workspace",
+    src_target = ":TestAppBundle",
+)

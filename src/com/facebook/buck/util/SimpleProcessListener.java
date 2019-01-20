@@ -18,18 +18,17 @@ package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CoderResult;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
-
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * Implementation of {@link ListeningProcessExecutor.ProcessListener} which decodes
- * bytes to and from Java String data and stores the result in memory.
+ * Implementation of {@link ListeningProcessExecutor.ProcessListener} which decodes bytes to and
+ * from Java String data and stores the result in memory.
  */
 public class SimpleProcessListener extends AbstractCharsetProcessListener {
   private @Nullable ListeningProcessExecutor.LaunchedProcess process;
@@ -39,35 +38,34 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
   private final StringBuilder stderr;
 
   /**
-   * Constructs a {@link SimpleProcessListener} which closes stdin immediately
-   * and stores UTF-8 data received on stdout and stderr in memory.
+   * Constructs a {@link SimpleProcessListener} which closes stdin immediately and stores UTF-8 data
+   * received on stdout and stderr in memory.
    */
   public SimpleProcessListener() {
     this((Iterator<CharBuffer>) null, StandardCharsets.UTF_8);
   }
 
   /**
-   * Constructs a {@link SimpleProcessListener} which writes {@code nextStdInToWrite}
-   * to stdin encoded in UTF-8, closes it, and stores UTF-8 data
-   * received on stdout and stderr in memory.
+   * Constructs a {@link SimpleProcessListener} which writes {@code nextStdInToWrite} to stdin
+   * encoded in UTF-8, closes it, and stores UTF-8 data received on stdout and stderr in memory.
    */
   public SimpleProcessListener(CharSequence stdinToWrite) {
     this(stdinToWrite, StandardCharsets.UTF_8);
   }
 
   /**
-   * Constructs a {@link SimpleProcessListener} which writes {@code nextStdInToWrite}
-   * to stdin encoded using {@code charset}, closes it, and stores data
-   * decoded using {@code charset} received on stdout and stderr in memory.
+   * Constructs a {@link SimpleProcessListener} which writes {@code nextStdInToWrite} to stdin
+   * encoded using {@code charset}, closes it, and stores data decoded using {@code charset}
+   * received on stdout and stderr in memory.
    */
   public SimpleProcessListener(CharSequence stdinToWrite, Charset charset) {
     this(ImmutableList.of(CharBuffer.wrap(stdinToWrite)).iterator(), charset);
   }
 
   /**
-   * Constructs a {@link SimpleProcessListener} which writes data from {@code nextStdInToWrite}
-   * to stdin encoded using {@code charset}, closes it, and stores data
-   * decoded using {@code charset} received on stdout and stderr in memory.
+   * Constructs a {@link SimpleProcessListener} which writes data from {@code nextStdInToWrite} to
+   * stdin encoded using {@code charset}, closes it, and stores data decoded using {@code charset}
+   * received on stdout and stderr in memory.
    */
   public SimpleProcessListener(@Nullable Iterator<CharBuffer> stdinToWrite, Charset charset) {
     super(charset);
@@ -78,8 +76,8 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
   }
 
   /**
-   * Gets the entire contents of stdout sent by the process. Only call this after the
-   * process has exited.
+   * Gets the entire contents of stdout sent by the process. Only call this after the process has
+   * exited.
    */
   public String getStdout() {
     Preconditions.checkState(process != null, "Process didn't start yet");
@@ -88,8 +86,8 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
   }
 
   /**
-   * Gets the entire contents of stderr sent by the process. Only call this after the
-   * process has exited.
+   * Gets the entire contents of stderr sent by the process. Only call this after the process has
+   * exited.
    */
   public String getStderr() {
     Preconditions.checkState(process != null, "Process didn't start yet");
@@ -101,7 +99,7 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
   public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
     this.process = process;
     if (nextStdInToWrite == null) {
-      this.process.closeStdin(/* force */ true);
+      this.process.closeStdin(/* force */ false);
     }
   }
 
@@ -141,7 +139,7 @@ public class SimpleProcessListener extends AbstractCharsetProcessListener {
     }
 
     if (stdInToWrite == null) {
-      process.closeStdin(/* force */ false);
+      Objects.requireNonNull(process, "Process didn't start yet").closeStdin(/* force */ false);
       nextStdInToWrite = null;
     }
 

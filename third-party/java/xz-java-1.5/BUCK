@@ -1,0 +1,9 @@
+prebuilt_jar(
+    name = "xz",
+    binary_jar = "xz-1.5.jar",
+    licenses = [
+        "COPYING",
+    ],
+    source_jar = "xz-1.5-sources.jar",
+    visibility = ["PUBLIC"],
+)

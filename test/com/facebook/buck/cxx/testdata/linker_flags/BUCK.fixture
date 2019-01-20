@@ -1,87 +1,87 @@
 cxx_binary(
-  name = 'binary_with_linker_flag',
-  srcs = [
-    'main.cpp',
-  ],
-  linker_flags = [
-    '-Wl,--bad-flag',
-  ],
+    name = "binary_with_linker_flag",
+    srcs = [
+        "main.cpp",
+    ],
+    linker_flags = [
+        "-Wl,--bad-flag",
+    ],
 )
 
 cxx_binary(
-  name = 'binary_with_library_dep',
-  srcs = [
-    'main.cpp',
-  ],
-  deps = [
-    ':library_with_linker_flag',
-  ],
+    name = "binary_with_library_dep",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        ":library_with_linker_flag",
+    ],
 )
 
 cxx_binary(
-  name = 'binary_with_exported_flags_library_dep',
-  srcs = [
-    'main.cpp',
-  ],
-  deps = [
-    ':library_with_exported_linker_flag',
-  ],
+    name = "binary_with_exported_flags_library_dep",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        ":library_with_exported_linker_flag",
+    ],
 )
 
 cxx_library(
-  name = 'library_with_linker_flag',
-  srcs = [
-    'lib.cpp',
-  ],
-  linker_flags = [
-    '-Wl,--bad-flag',
-  ],
+    name = "library_with_linker_flag",
+    srcs = [
+        "lib.cpp",
+    ],
+    linker_flags = [
+        "-Wl,--bad-flag",
+    ],
 )
 
 cxx_library(
-  name = 'library_with_exported_linker_flag',
-  srcs = [
-    'lib.cpp',
-  ],
-  exported_linker_flags = [
-    '-Wl,--bad-flag',
-  ],
+    name = "library_with_exported_linker_flag",
+    srcs = [
+        "lib.cpp",
+    ],
+    exported_linker_flags = [
+        "-Wl,--bad-flag",
+    ],
 )
 
 cxx_binary(
-  name = 'binary_with_prebuilt_library_dep',
-  srcs = [
-    'main.cpp',
-  ],
-  deps = [
-    ':prebuilt_library_with_linker_flag',
-  ],
+    name = "binary_with_prebuilt_library_dep",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        ":prebuilt_library_with_linker_flag",
+    ],
 )
 
 prebuilt_cxx_library(
-  name = 'prebuilt_library_with_linker_flag',
-  header_only = True,
-  exported_linker_flags = [
-    '-Wl,--bad-flag',
-  ],
+    name = "prebuilt_library_with_linker_flag",
+    exported_linker_flags = [
+        "-Wl,--bad-flag",
+    ],
+    header_only = True,
 )
 
 cxx_binary(
-  name = 'binary_with_unresolved_symbols_linux',
-  srcs = [
-    'bin.cpp',
-  ],
-  linker_flags = [
-    '-Wl,--unresolved-symbols=ignore-all',
-  ],
+    name = "binary_with_unresolved_symbols_linux",
+    srcs = [
+        "bin.cpp",
+    ],
+    linker_flags = [
+        "-Wl,--unresolved-symbols=ignore-all",
+    ],
 )
 
 cxx_binary(
-  name = 'binary_with_unresolved_symbols_macos',
-  srcs = [
-    'bin.cpp',
-  ],
-  linker_flags = [
-    '-Wl,-flat_namespace,-undefined,suppress',
-  ],
+    name = "binary_with_unresolved_symbols_macos",
+    srcs = [
+        "bin.cpp",
+    ],
+    linker_flags = [
+        "-Wl,-flat_namespace,-undefined,suppress",
+    ],
 )

@@ -1,0 +1,3 @@
+[repositories]
+    bazel_skylib = .
+    buck = ../../..

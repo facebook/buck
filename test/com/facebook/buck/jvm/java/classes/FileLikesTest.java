@@ -20,13 +20,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.base.Preconditions;
-
-import org.junit.Test;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.Objects;
+import org.junit.Test;
 
 public class FileLikesTest {
 
@@ -43,9 +40,11 @@ public class FileLikesTest {
 
   @Test
   public void testGetFileNameWithoutClassSuffix() {
-    assertEquals("com/example/Bar",
+    assertEquals(
+        "com/example/Bar",
         FileLikes.getFileNameWithoutClassSuffix(new FakeFileLike("com/example/Bar.class")));
-    assertEquals("com/example/Foo$1",
+    assertEquals(
+        "com/example/Foo$1",
         FileLikes.getFileNameWithoutClassSuffix(new FakeFileLike("com/example/Foo$1.class")));
   }
 
@@ -54,7 +53,7 @@ public class FileLikesTest {
     private final String relativePath;
 
     private FakeFileLike(String relativePath) {
-      this.relativePath = Preconditions.checkNotNull(relativePath);
+      this.relativePath = Objects.requireNonNull(relativePath);
     }
 
     @Override
@@ -73,7 +72,7 @@ public class FileLikesTest {
     }
 
     @Override
-    public InputStream getInput() throws IOException {
+    public InputStream getInput() {
       throw new UnsupportedOperationException();
     }
   }

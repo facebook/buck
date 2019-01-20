@@ -1,0 +1,13 @@
+java_library(
+    name = "pretend_this_is_an_expensive_rule",
+    srcs = [
+        "Thing1.java",
+    ],
+)
+
+java_library(
+    name = "pretend_this_is_a_cheap_rule",
+    srcs = [
+        "Thing2.java",
+    ],
+)

@@ -18,25 +18,30 @@ package com.facebook.buck.log;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Test;
-
+import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import org.junit.Before;
+import org.junit.Test;
 
-/**
- * Unit tests for {@link LogFormatter}.
- */
+/** Unit tests for {@link LogFormatter}. */
 public class LogFormatterTest {
+  private ConcurrentHashMap<Long, String> threadIdToCommandId;
+  private ThreadIdToCommandIdMapper mapper;
+
+  @Before
+  public void setUp() {
+    threadIdToCommandId = new ConcurrentHashMap<>();
+    mapper = threadId -> threadIdToCommandId.get(threadId);
+  }
+
   @Test
   public void logFormatIncludesMessageAndTimestamp() {
-    ConcurrentHashMap<Long, String> threadIdToCommandId = new ConcurrentHashMap<>();
-    LogFormatter logFormatter = new LogFormatter(
-        threadIdToCommandId,
-        Locale.US,
-        TimeZone.getTimeZone("America/Los_Angeles"));
+    LogFormatter logFormatter =
+        new LogFormatter(mapper, Locale.US, TimeZone.getTimeZone("America/Los_Angeles"));
     threadIdToCommandId.put(64738L, "testCommandId");
     LogRecord record = logRecord(Level.INFO, "Test", "testLogger", 64738, 1409072580000L);
     assertEquals(
@@ -45,11 +50,7 @@ public class LogFormatterTest {
   }
 
   private static LogRecord logRecord(
-      Level level,
-      String message,
-      String loggerName,
-      int tid,
-      long millis) {
+      Level level, String message, String loggerName, int tid, long millis) {
     LogRecord result = new LogRecord(level, message);
     result.setLoggerName(loggerName);
     result.setMillis(millis);

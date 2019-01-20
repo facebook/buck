@@ -16,45 +16,69 @@
 
 package com.facebook.buck.util;
 
+import static org.junit.Assert.fail;
+
+import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class MoreSuppliersTest {
   @Test
   public void weakMemoizeShouldMemoize() {
-    Supplier<Object> supplier = MoreSuppliers.weakMemoize(new Supplier<Object>() {
-      @Override
-      public Object get() {
-        return new Object();
-      }
-    });
+    Supplier<Object> supplier = MoreSuppliers.weakMemoize(Object::new);
     Object a = supplier.get();
     Object b = supplier.get();
     Assert.assertSame("Supplier should have cached the instance", a, b);
   }
 
   @Test
+  public void memoizingSupplierShouldMemoizeResult() {
+    Supplier<Object> supplier = MoreSuppliers.memoize(Object::new);
+    Object a = supplier.get();
+    Object b = supplier.get();
+    Assert.assertSame("Supplier should have cached the instance", a, b);
+  }
+
+  @Test
+  public void memoizingSupplierShouldMemoizeRuntimeException() {
+    Supplier<Object> supplier =
+        MoreSuppliers.memoize(
+            () -> {
+              throw new RuntimeException();
+            });
+    try {
+      supplier.get();
+      fail("Expected runtime exception");
+    } catch (RuntimeException e1) {
+      try {
+        supplier.get();
+        fail("Expected runtime exception");
+      } catch (RuntimeException e2) {
+        Assert.assertSame("Supplier should have cached the instance", e1, e2);
+      }
+    }
+  }
+
+  @Test
   public void weakMemoizeShouldRunDelegateOnlyOnceOnConcurrentAccess() throws Exception {
     final int numFetchers = 10;
 
-    final Semaphore semaphore = new Semaphore(0);
+    Semaphore semaphore = new Semaphore(0);
 
     class TestDelegate implements Supplier<Object> {
       private int timesCalled = 0;
@@ -80,7 +104,7 @@ public class MoreSuppliersTest {
     }
 
     TestDelegate delegate = new TestDelegate();
-    final Supplier<Object> supplier = MoreSuppliers.weakMemoize(delegate);
+    Supplier<Object> supplier = MoreSuppliers.weakMemoize(delegate);
     ExecutorService threadPool = Executors.newFixedThreadPool(numFetchers);
 
     try {
@@ -109,13 +133,10 @@ public class MoreSuppliersTest {
 
       Assert.assertEquals("should only have been called once", 1, delegate.getTimesCalled());
       Assert.assertThat(
-          "all result items are the same",
-          ImmutableSet.copyOf(results),
-          Matchers.hasSize(1));
+          "all result items are the same", ImmutableSet.copyOf(results), Matchers.hasSize(1));
 
       Preconditions.checkState(
-          threadPool.shutdownNow().isEmpty(),
-          "All jobs should have completed");
+          threadPool.shutdownNow().isEmpty(), "All jobs should have completed");
       Preconditions.checkState(
           threadPool.awaitTermination(10, TimeUnit.SECONDS),
           "Thread pool should terminate in a reasonable amount of time");
@@ -128,13 +149,49 @@ public class MoreSuppliersTest {
 
   @Test
   public void weakMemoizeShouldNotMemoizeSupplierThatIsAlreadyWeakMemoized() {
-    Supplier<Object> supplier = MoreSuppliers.weakMemoize(new Supplier<Object>() {
-      @Override
-      public Object get() {
-        return new Object();
-      }
-    });
+    Supplier<Object> supplier = MoreSuppliers.weakMemoize(Object::new);
     Supplier<Object> twiceMemoized = MoreSuppliers.weakMemoize(supplier);
     Assert.assertSame("should have just returned the same instance", supplier, twiceMemoized);
+  }
+
+  @Test
+  public void throwingSupplierShouldMemoizeValueReturned() throws Exception {
+    ThrowingSupplier<Object, Exception> throwingSupplier =
+        MoreSuppliers.memoize(Object::new, Exception.class);
+
+    Assert.assertSame(
+        "Calling supplier twice should get the same object instance",
+        throwingSupplier.get(),
+        throwingSupplier.get());
+  }
+
+  @Test
+  public void throwingSupplierShouldMemoizeException() {
+    ThrowingSupplier<Object, Exception> throwingSupplier =
+        MoreSuppliers.memoize(
+            () -> {
+              throw new Exception();
+            },
+            Exception.class);
+
+    Exception e1 = null;
+    Exception e2 = null;
+    try {
+      throwingSupplier.get();
+      fail("Supplier should throw");
+    } catch (Exception e) {
+      e1 = e;
+    }
+    try {
+      throwingSupplier.get();
+      fail("Supplier should throw");
+    } catch (Exception e) {
+      e2 = e;
+    }
+
+    Assert.assertNotNull(e1);
+    Assert.assertNotNull(e2);
+
+    Assert.assertSame("Calling supplier twice should get the same exception instance", e1, e2);
   }
 }

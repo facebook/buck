@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.apple_asset_catalog}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'apple_asset_catalog()' /}
+    {param navid: 'rule_apple_asset_catalog' /}
     {param prettify: true /}
     {param description}
       A rule that is used to bundle Apple asset catalogs.
@@ -38,6 +54,26 @@ that the bundle rule depends on are merged and placed into the final output bund
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'app_icon' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional reference to a <code>.appiconset</code> containing a image set representing an
+  application icon.  (The extension itself should not be included.)  This parameter
+  may be specified at most once in a given <code>apple_bundle</code>'s transitive dependencies.
+  {/param}
+{/call}
+
+{call buck.arg}
+  {param name: 'launch_image' /}
+  {param default: 'None' /}
+  {param desc}
+  An optional reference to a <code>.launchimage</code> containing a image set representing an
+  application launch image.  (The extension itself should not be included.)  This parameter
+  may be specified at most once in a given <code>apple_bundle</code>'s transitive dependencies.
+  {/param}
+{/call}
+
 {/param} // args
 
 {param examples}
@@ -47,6 +83,14 @@ apple_asset_catalog(
   dirs = [
     'MyResources.xcassets',
   ],
+)
+
+# A asset catalog with a app icon and launch image
+apple_asset_catalog(
+  name = 'AssetCatalog',
+  dirs = [ 'AssetCatalog.xcassets' ],
+  app_icon = 'Icon',
+  launch_image = 'LaunchImage',
 )
 </pre>{/literal}
 {/param} // examples

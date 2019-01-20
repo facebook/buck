@@ -1,0 +1,74 @@
+java_library(
+    name = "main",
+    srcs = [
+        "Main.java",
+    ],
+    deps = [
+        ":lib",
+    ],
+)
+
+java_library(
+    name = "lib",
+    srcs = [
+        "Lib.java",
+        "Lib2.java",
+    ],
+    plugins = [
+        ":ap",
+    ],
+)
+
+java_library(
+    name = "main-errors",
+    deps = [
+        ":lib-errors",
+    ],
+)
+
+java_library(
+    name = "lib-errors",
+    srcs = [
+        "LibErrors.java",
+    ],
+)
+
+java_library(
+    name = "main-stripped",
+    srcs = [
+        "Main.java",
+    ],
+    deps = [
+        ":lib-stripped",
+    ],
+)
+
+java_library(
+    name = "lib-stripped",
+    srcs = [
+        "Lib.java",
+    ],
+    plugins = [
+        ":ap",
+    ],
+    remove_classes = [
+        "com.example.buck.Test",
+        "^com.example.buck$",  # This line should not result in anything getting removed
+    ],
+)
+
+java_annotation_processor(
+    name = "ap",
+    processor_class = "com.example.buck.AnnotationProcessor",
+    supports_abi_generation_from_source = True,
+    deps = [
+        ":ap-lib",
+    ],
+)
+
+java_library(
+    name = "ap-lib",
+    srcs = [
+        "AnnotationProcessor.java",
+    ],
+)

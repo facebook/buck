@@ -1,0 +1,10 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "filesystem",
+    deps = [
+        "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
+        "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
+    ],
+)

@@ -20,6 +20,11 @@
       statically import many methods, which we allow.
     -->
     <exclude name="TooManyStaticImports" />
+
+    <!--
+      google-java-format covers this one; we don't need two messages.
+    -->
+    <exclude name="UnusedImports" />
   </rule>
 
   <rule ref="rulesets/java/coupling.xml/LooseCoupling" />
@@ -39,13 +44,8 @@
   </rule>
 
   <rule ref="rulesets/java/unusedcode.xml">
-    <!--
-      Including the public keyword in interface methods is acceptable: this
-      makes it easier to copy/paste them.
-    -->
-    <exclude name="UnusedModifier" />
-
     <!-- This rule is buggy (http://sourceforge.net/p/pmd/bugs/792/ and others). -->
+    <exclude name="UnusedPrivateField" />
     <exclude name="UnusedPrivateMethod" />
   </rule>
 
@@ -179,6 +179,101 @@ interface Bar {
           <property name="BlacklistMethods.BlacklistedMethods" value="
             java.lang.ProcessBuilder:start:0;BgProcessKiller.startProcess(ProcessBuilder),com.zaxxer.nuprocess.NuProcessBuilder:start:0;BgProcessKiller.startProcess(NuProcessBuilder)
           "/>
+    </properties>
+  </rule>
+  <rule name="BlacklistedJavaUtilLoggerUsage"
+        message="Use com.facebook.buck.core.util.log.Logger instead of java.util.logging.Logger"
+        class="com.liveramp.pmd_extensions.BlacklistClassUsages">
+    <description>
+      Buck uses a custom Logger which does custom formatting and maybe other things.
+      java.util.logging.Logger bypasses this.
+    </description>
+    <priority>1</priority>
+    <properties>
+      <property name="BlacklistClassUsages.BlacklistedClasses" value="java.util.logging.Logger" />
+    </properties>
+    <example>
+      <![CDATA[
+// OK
+import com.facebook.buck.log.Logger;
+private static final Logger LOG = Logger.getLogger(Main.class);
+
+// Bad
+import java.util.logging.Logger;
+private static final Logger LOG = Logger.getLogger(Main.class.getName());
+      ]]>
+    </example>
+  </rule>
+  <rule name="BlacklistedPrintWriterUsage"
+        message="Use com.facebook.buck.util.ThrowingPrintWriter instead of java.io.PrintWriter"
+        class="com.liveramp.pmd_extensions.BlacklistClassUsages">
+    <description>
+java.io.PrintWriter eats IOExceptions. Using it when writing build artifacts and metadata risks
+generation of corrupted artifacts when I/O operations fail (such as in low-disk-space situations).
+    </description>
+    <priority>1</priority>
+    <properties>
+      <property name="BlacklistClassUsages.BlacklistedClasses" value="java.io.PrintWriter" />
+      <property name="violationSuppressRegex" value=".*/buck/test/.*" />
+    </properties>
+  </rule>
+  <rule name="SimplifyStringReplace"
+        message="[perf] Use String.replace(char, char) for one-character replacements"
+        class="net.sourceforge.pmd.lang.rule.XPathRule"
+        language="java">
+    <description>Use String.replace('\\', '/') instead of String.replace("\\", "/")
+
+String#replace(char, char) is extremely efficient.
+String#replace(String, String) has to compile and execute a regular expression.
+Always prefer the former when doing single-character replacements.
+    </description>
+    <priority>1</priority>
+    <properties>
+      <property name="xpath">
+        <value>
+          <!--
+              Match calls to str.replace("x", "y") or str.replace("\n", "\r")
+              but not str.replace("foo", "bar")
+          -->
+          <![CDATA[
+             (//PrimaryPrefix/Name[ends-with(@Image, '.replace')]/../..|
+             //PrimarySuffix[ends-with(@Image, 'replace')]/..)
+             /PrimarySuffix/Arguments/ArgumentList
+             [Expression[1]/PrimaryExpression/PrimaryPrefix/Literal[@SingleCharacterStringLiteral='true']]
+             [Expression[2]/PrimaryExpression/PrimaryPrefix/Literal[@SingleCharacterStringLiteral='true']]
+          ]]>
+        </value>
+      </property>
+    </properties>
+    <example>
+      <![CDATA[
+// OK
+class Foo {
+  public void bar(String s) {
+    return s.replace('\r', '\n');
+  }
+}
+
+// Bad: using expensive regular expressions to replace single characters
+class Foo {
+  public void bar(String s) {
+    return s.replace("\r", "\n");
+  }
+}
+      ]]>
+    </example>
+  </rule>
+  <rule name="BlacklistedSystemGetenv"
+    message="Use com.facebook.buck.util.environment.EnvVariablesProvider instead of System.getenv()"
+    class="com.liveramp.pmd_extensions.BlacklistMethods">
+    <description>
+      System.getenv() returns environment variables with names that may be case-insensitive on some
+      OSes (for example, Windows). EnvVariablesProvider.getSystemEnv() returns unified variables
+      with names converted to upper cases.
+    </description>
+    <priority>1</priority>
+    <properties>
+      <property name="BlacklistMethods.BlacklistedMethods" value="System:getenv:0;com.facebook.buck.util.environment.EnvVariablesProvider:getSystemEnv"/>
     </properties>
   </rule>
 </ruleset>

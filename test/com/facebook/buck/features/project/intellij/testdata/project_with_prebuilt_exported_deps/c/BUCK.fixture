@@ -1,0 +1,6 @@
+prebuilt_jar(
+    name = "c",
+    binary_jar = "c.jar",
+    visibility = ["PUBLIC"],
+    deps = ["//d:d"],
+)

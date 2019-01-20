@@ -16,27 +16,35 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.util.log.Logger;
+import com.google.common.base.Throwables;
 import com.sun.jna.NativeLibrary;
 import com.sun.jna.Platform;
 import com.zaxxer.nuprocess.NuProcess;
 import com.zaxxer.nuprocess.NuProcessBuilder;
 import java.io.IOException;
+import javax.annotation.concurrent.GuardedBy;
 
 /**
- * Safely kill background processes on nailgun client exit.  All process creation must synchronize
- * on the class object's monitor lock to make sure children inherit the correct signal handler set.
+ * Safely kill background processes on nailgun client exit. All process creation must synchronize on
+ * the class object's monitor lock to make sure children inherit the correct signal handler set.
  */
 public class BgProcessKiller {
 
+  private static final Logger LOG = Logger.get(BgProcessKiller.class);
+
+  @GuardedBy("BgProcessKiller.class")
   private static boolean initialized;
+
+  @GuardedBy("BgProcessKiller.class")
   private static boolean armed;
 
-  public static void init() {
+  public static synchronized void init() {
     NativeLibrary libcLibrary = NativeLibrary.getInstance(Platform.C_LIBRARY_NAME);
 
-    // We kill subprocesses by sending SIGHUP to our process group; we want our subprocesses to die
-    // on SIGHUP while we ourselves stay around.  We can't just set SIGHUP to SIG_IGN, because
-    // subprocesses would inherit the SIG_IGN signal disposition and be immune to the SIGHUP we
+    // We kill subprocesses by sending SIGINT to our process group; we want our subprocesses to die
+    // on SIGINT while we ourselves stay around.  We can't just set SIGINT to SIG_IGN, because
+    // subprocesses would inherit the SIG_IGN signal disposition and be immune to the SIGINT we
     // direct toward the process group.  We need _some_ signal handler that does nothing --- i.e.,
     // acts like SIG_IGN --- but that doesn't kill its host process.  When we spawn a subprocess,
     // the kernel replaces any signal handler that is not SIG_IGN with SIG_DFL, automatically
@@ -65,7 +73,7 @@ public class BgProcessKiller {
     // [1] Win32 32-bit x86 stdcall is an exception to this general rule --- because the callee
     //      cleans up its stack --- but we don't run this code on Windows.
     //
-    Libc.INSTANCE.signal(Libc.Constants.SIGHUP, libcLibrary.getFunction("getpid"));
+    Libc.INSTANCE.signal(Libc.Constants.SIGINT, libcLibrary.getFunction("getpid"));
     initialized = true;
   }
 
@@ -73,18 +81,25 @@ public class BgProcessKiller {
     armed = false;
   }
 
-  public static synchronized void killBgProcesses() {
+  /** Sends SIGINT to all background processes */
+  public static synchronized void interruptBgProcesses() {
     if (initialized) {
       armed = true;
-      Libc.INSTANCE.kill(0 /* my process group */, Libc.Constants.SIGHUP);
+      Libc.INSTANCE.kill(0 /* my process group */, Libc.Constants.SIGINT);
     }
   }
 
   private BgProcessKiller() {}
 
-  private static void checkArmedStatus() throws IOException {
+  @GuardedBy("BgProcessKiller.class")
+  private static void checkArmedStatus() {
     if (armed) {
-      throw new IOException("process creation blocked due to pending nailgun exit");
+      BuckIsDyingException e =
+          new BuckIsDyingException("process creation blocked due to pending nailgun exit");
+      LOG.info(
+          "BuckIsDyingException: process creation blocked due to pending nailgun exit at:"
+              + Throwables.getStackTraceAsString(e));
+      throw e;
     }
   }
 
@@ -92,6 +107,7 @@ public class BgProcessKiller {
    * Use this method instead of {@link ProcessBuilder#start} in order to properly synchronize with
    * signal handling.
    */
+  @SuppressWarnings("PMD.BlacklistedDefaultProcessMethod")
   public static synchronized Process startProcess(ProcessBuilder pb) throws IOException {
     checkArmedStatus();
     return pb.start();
@@ -101,7 +117,7 @@ public class BgProcessKiller {
    * Use this method instead of {@link NuProcessBuilder#start} in order to properly synchronize with
    * signal handling.
    */
-  public static synchronized NuProcess startProcess(NuProcessBuilder pb) throws IOException {
+  public static synchronized NuProcess startProcess(NuProcessBuilder pb) {
     checkArmedStatus();
     return pb.start();
   }

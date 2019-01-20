@@ -1,0 +1,11 @@
+java_library(
+    name = "lib",
+    srcs = glob(["*.java"]),
+)
+
+# The resources force an output jar to be created
+java_library(
+    name = "empty-lib",
+    srcs = [],
+    resources = ["hello.txt"],
+)

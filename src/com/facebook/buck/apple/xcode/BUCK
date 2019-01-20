@@ -1,14 +1,22 @@
-standard_java_library(
-  srcs = [
-    'GidGenerator.java',
-    'XcodeprojSerializer.java',
-    'XCScheme.java',
-  ] + glob(['util/*.java', 'xcodeproj/*.java']),
-  immutable_types = [
-    'xcodeproj.CopyFilePhaseDestinationSpec',
-    'xcodeproj.ProductType',
-  ],
-  tests = [
-    '//test/com/facebook/buck/apple/xcode:xcode',
-  ],
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "xcode",
+    srcs = [
+        "GidGenerator.java",
+        "XcodeprojSerializer.java",
+        "XCScheme.java",
+    ] + glob([
+        "xcodeproj/*.java",
+    ]),
+    tests = [
+        "//test/com/facebook/buck/apple/xcode:xcode",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util:util",
+        "//third-party/java/dd-plist:dd-plist",
+    ],
 )

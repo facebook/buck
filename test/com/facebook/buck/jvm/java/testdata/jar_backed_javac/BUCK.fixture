@@ -1,0 +1,25 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "Test.java",
+    ],
+    compiler_class_name = "Compiler",
+    javac_jar = ":javac_jar",
+)
+
+java_library(
+    name = "javac_jar",
+    srcs = [
+        "Empty.java",
+    ],
+    deps = [
+        ":javac_jar_impl",
+    ],
+)
+
+java_library(
+    name = "javac_jar_impl",
+    srcs = [
+        "Compiler.java",
+    ],
+)

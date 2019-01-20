@@ -17,18 +17,17 @@
 package com.facebook.buck.android;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.google.common.base.Optional;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
-
-import org.easymock.EasyMock;
-import org.junit.Test;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
+import org.junit.Test;
 
 public class ProguardTranslatorFactoryTest {
 
@@ -36,26 +35,27 @@ public class ProguardTranslatorFactoryTest {
   public void testEnableObfuscation() throws IOException {
     Path proguardConfigFile = Paths.get("the/configuration.txt");
     Path proguardMappingFile = Paths.get("the/mapping.txt");
-    List<String> linesInMappingFile = ImmutableList.of(
-        "foo.bar.MappedPrimary -> foo.bar.a:",
-        "foo.bar.UnmappedPrimary -> foo.bar.UnmappedPrimary:",
-        "foo.primary.MappedPackage -> x.a:");
+    List<String> linesInMappingFile =
+        ImmutableList.of(
+            "foo.bar.MappedPrimary -> foo.bar.a:",
+            "foo.bar.UnmappedPrimary -> foo.bar.UnmappedPrimary:",
+            "foo.primary.MappedPackage -> x.a:");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
-        .andReturn(ImmutableList.<String>of());
-    EasyMock.expect(projectFilesystem.readLines(proguardMappingFile))
-        .andReturn(linesInMappingFile);
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(ImmutableList.of(), proguardConfigFile);
+    projectFilesystem.writeLinesToPath(linesInMappingFile, proguardMappingFile);
 
-    ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
-        projectFilesystem,
-        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+    ProguardTranslatorFactory translatorFactory =
+        ProguardTranslatorFactory.create(
+            projectFilesystem,
+            Optional.of(proguardConfigFile),
+            Optional.of(proguardMappingFile),
+            false);
     checkMapping(translatorFactory, "foo/bar/MappedPrimary", "foo/bar/a");
     checkMapping(translatorFactory, "foo/bar/UnmappedPrimary", "foo/bar/UnmappedPrimary");
     checkMapping(translatorFactory, "foo/primary/MappedPackage", "x/a");
 
-    EasyMock.verify(projectFilesystem);
+    assertNull(translatorFactory.createNullableObfuscationFunction().apply("foo/bar/NotInMapping"));
   }
 
   @Test
@@ -63,24 +63,22 @@ public class ProguardTranslatorFactoryTest {
     Path proguardConfigFile = Paths.get("the/configuration.txt");
     Path proguardMappingFile = Paths.get("the/mapping.txt");
 
-    ProjectFilesystem projectFilesystem = EasyMock.createMock(ProjectFilesystem.class);
-    EasyMock.expect(projectFilesystem.readLines(proguardConfigFile))
-        .andReturn(ImmutableList.of("-dontobfuscate"));
-    EasyMock.replay(projectFilesystem);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    projectFilesystem.writeLinesToPath(ImmutableList.of("-dontobfuscate"), proguardConfigFile);
 
-    ProguardTranslatorFactory translatorFactory = ProguardTranslatorFactory.create(
-        projectFilesystem,
-        Optional.of(proguardConfigFile), Optional.of(proguardMappingFile));
+    ProguardTranslatorFactory translatorFactory =
+        ProguardTranslatorFactory.create(
+            projectFilesystem,
+            Optional.of(proguardConfigFile),
+            Optional.of(proguardMappingFile),
+            false);
     checkMapping(translatorFactory, "anything", "anything");
-
-    EasyMock.verify(projectFilesystem);
   }
 
   private void checkMapping(
-      ProguardTranslatorFactory translatorFactory,
-      String original,
-      String obfuscated) {
+      ProguardTranslatorFactory translatorFactory, String original, String obfuscated) {
     assertEquals(original, translatorFactory.createDeobfuscationFunction().apply(obfuscated));
     assertEquals(obfuscated, translatorFactory.createObfuscationFunction().apply(original));
+    assertEquals(obfuscated, translatorFactory.createNullableObfuscationFunction().apply(original));
   }
 }

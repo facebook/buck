@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace buck.troubleshooting}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'Troubleshooting' /}
+    {param navid: 'concept_troubleshooting' /}
     {param description}
       How to debug problems and fix them with Buck.
     {/param}
@@ -45,23 +61,6 @@ In this case, give <code>buck clean</code> a shot and file a bug if you have
 found a reproducible bug.
 
 
-<h2>Make sure you do not have a .nobuckcheck file</h2>
-
-If you have been working on Buck itself, you had to create
-a <a href="nobuckcheck.html"><code>.nobuckcheck</code></a> file to disable
-Buck's autoupdating capability
-(assuming you are working on a project that uses
-{sp}<a href="buckversion.html"><code>.buckversion</code></a>).
-Once you are done modifying Buck, you should delete the
-{sp}<code>.nobuckcheck</code> file so that Buck autoupdates again.
-<p>
-If you forget to do this, it is inevitable that someone will update your
-project such that it requires a newer version of Buck, and your local build
-will inexplicably stop working because your are using an outdated version of
-Buck. The alternative is to periodically <code>git pull --rebase</code> to
-update your checkout of Buck manually, but that is error-prone.
-
-
 <h2>Delete all generated files in your project.</h2>
 
 Buck is designed so that all generated files are written to the
@@ -80,9 +79,9 @@ not under version control. The <code>-n</code> switch is for "dry run,"
 which means that Git will not delete any files when you run
 {sp}<code>git clean</code>. If you want to use Git to remove the generated
 files while preserving some non-versioned files (such
-as <code>local.properties</code>), then use it with the <code>-e</code> switch:
+as <code>.buckconfig.local</code>), then use it with the <code>-e</code> switch:
 
-<pre>git clean -xfd -e local.properties</pre>
+<pre>git clean -xfd -e .buckconfig.local</pre>
 
 Note that <code>-e</code> can be specified multiple times.
 

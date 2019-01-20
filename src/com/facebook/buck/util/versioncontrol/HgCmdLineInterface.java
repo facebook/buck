@@ -16,170 +16,193 @@
 
 package com.facebook.buck.util.versioncontrol;
 
-import com.facebook.buck.log.Logger;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Function;
 import com.google.common.base.Joiner;
-import com.google.common.base.Optional;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 public class HgCmdLineInterface implements VersionControlCmdLineInterface {
+
   private static final Logger LOG = Logger.get(VersionControlCmdLineInterface.class);
 
-  private static final Map<String, String> HG_ENVIRONMENT_VARIABLES = ImmutableMap.of(
-      // Set HGPLAIN to prevent user-defined Hg aliases from interfering with the expected behavior.
-      "HGPLAIN", "1"
-  );
+  private static final Map<String, String> HG_ENVIRONMENT_VARIABLES =
+      ImmutableMap.of(
+          // Set HGPLAIN to prevent user-defined Hg aliases from interfering with the expected
+          // behavior.
+          "HGPLAIN", "1");
+
   private static final Pattern HG_REVISION_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9]+$");
-  private static final Pattern HG_DATE_PATTERN = Pattern.compile("(\\d+)\\s([\\-\\+]?\\d+)");
-  private static final int HG_UNIX_TS_GROUP_INDEX = 1;
 
   private static final String HG_CMD_TEMPLATE = "{hg}";
-  private static final String NO_CHANGES_STATUS = "";
-  private static final String NAME_TEMPLATE = "{name}";
   private static final String REVISION_ID_TEMPLATE = "{revision}";
-  private static final String REVISION_IDS_TEMPLATE = "{revisions}";
+
 
   private static final ImmutableList<String> CURRENT_REVISION_ID_COMMAND =
       ImmutableList.of(HG_CMD_TEMPLATE, "log", "-l", "1", "--template", "{node|short}");
 
-  private static final ImmutableList<String> REVISION_ID_FOR_NAME_COMMAND_TEMPLATE =
-      ImmutableList.of(HG_CMD_TEMPLATE, "log", "-r", NAME_TEMPLATE, "--template", "{node|short}");
-
-  private static final ImmutableList<String> STATUS_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "status");
-
+  // -mardu: Track modified, added, deleted, unknown
   private static final ImmutableList<String> CHANGED_FILES_COMMAND =
-      ImmutableList.of(HG_CMD_TEMPLATE, "status", "-0", "--rev", REVISION_ID_TEMPLATE);
+      ImmutableList.of(HG_CMD_TEMPLATE, "status", "-mardu", "-0", "--rev", REVISION_ID_TEMPLATE);
 
-  private static final ImmutableList<String> COMMON_ANCESTOR_COMMAND_TEMPLATE =
+  private static final ImmutableList<String> FAST_STATS_COMMAND =
       ImmutableList.of(
           HG_CMD_TEMPLATE,
           "log",
           "--rev",
-          "ancestor(" + REVISION_IDS_TEMPLATE + ")",
+          ". + ancestor(.,present(remote/master))",
           "--template",
-          "'{node|short}'");
-
-  private static final ImmutableList<String> REVISION_AGE_COMMAND =
-      ImmutableList.of(
-          HG_CMD_TEMPLATE,
-          "log",
-          "-r",
-          REVISION_ID_TEMPLATE,
-          "--template",
-          "'{date|hgdate}'");
+          "{node|short} {date|hgdate} {remotebookmarks}\\n");
 
   private ProcessExecutorFactory processExecutorFactory;
-  private final File projectRoot;
+  private final Path projectRoot;
   private final String hgCmd;
   private final ImmutableMap<String, String> environment;
 
   public HgCmdLineInterface(
       ProcessExecutorFactory processExecutorFactory,
-      File projectRoot,
+      Path projectRoot,
       String hgCmd,
       ImmutableMap<String, String> environment) {
     this.processExecutorFactory = processExecutorFactory;
     this.projectRoot = projectRoot;
     this.hgCmd = hgCmd;
-    this.environment = MoreMaps.merge(
-        environment,
-        HG_ENVIRONMENT_VARIABLES);
+    this.environment = MoreMaps.merge(environment, HG_ENVIRONMENT_VARIABLES);
   }
 
   @Override
   public boolean isSupportedVersionControlSystem() {
-    return true; // Mercurial is supported
+    return true;
   }
 
-  @Override
-  public boolean hasWorkingDirectoryChanges()
-      throws VersionControlCommandFailedException, InterruptedException {
-    return !executeCommand(STATUS_COMMAND).equals(NO_CHANGES_STATUS);
-  }
-
-  @Override
   public String currentRevisionId()
-      throws VersionControlCommandFailedException, InterruptedException  {
+      throws VersionControlCommandFailedException, InterruptedException {
     return validateRevisionId(executeCommand(CURRENT_REVISION_ID_COMMAND));
   }
 
   @Override
-  public String revisionId(String name)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return validateRevisionId(
+  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+      String baseRevision, String tipRevision) throws VersionControlCommandFailedException {
+    validateRevisionId(baseRevision);
+    validateRevisionId(tipRevision);
+
+    return () -> {
+      try {
+        File diffFile = File.createTempFile("diff", ".tmp");
         executeCommand(
-            replaceTemplateValue(
-                REVISION_ID_FOR_NAME_COMMAND_TEMPLATE,
-                NAME_TEMPLATE,
-                name)));
-  }
-
-  @Override
-  public String commonAncestor(String revisionIdOne, String revisionIdTwo)
-      throws VersionControlCommandFailedException, InterruptedException {
-    return validateRevisionId(
-        executeCommand(
-            replaceTemplateValue(
-                COMMON_ANCESTOR_COMMAND_TEMPLATE,
-                REVISION_IDS_TEMPLATE,
-                (revisionIdOne + "," + revisionIdTwo))));
-  }
-
-  @Override
-  public long timestampSeconds(String revisionId)
-      throws VersionControlCommandFailedException, InterruptedException {
-    String hgTimeString = executeCommand(replaceTemplateValue(
-            REVISION_AGE_COMMAND,
-            REVISION_ID_TEMPLATE,
-            revisionId));
-
-    // hgdate is UTC timestamp + local offset,
-    // e.g. 1440601290 -7200 (for France, which is UTC + 2H)
-    // We only care about the UTC bit.
-    return extractUnixTimestamp(hgTimeString);
+            ImmutableList.of(
+                HG_CMD_TEMPLATE,
+                "export",
+                "-o",
+                diffFile.toString(),
+                "--rev",
+                baseRevision + "::" + tipRevision + " - " + baseRevision));
+        return new BufferedInputStream(new FileInputStream(diffFile)) {
+          @Override
+          public void close() throws IOException {
+            super.close();
+            diffFile.delete();
+          }
+        };
+      } catch (IOException e) {
+        LOG.debug(e.getMessage());
+        throw new VersionControlCommandFailedException(e.getMessage());
+      }
+    };
   }
 
   @Override
   public ImmutableSet<String> changedFiles(String fromRevisionId)
       throws VersionControlCommandFailedException, InterruptedException {
-    String hgChangedFilesString = executeCommand(replaceTemplateValue(
-        CHANGED_FILES_COMMAND,
-        REVISION_ID_TEMPLATE,
-        fromRevisionId));
-    return ImmutableSet.copyOf(hgChangedFilesString.split("\0"));
+    String hgChangedFilesString =
+        executeCommand(
+            replaceTemplateValue(CHANGED_FILES_COMMAND, REVISION_ID_TEMPLATE, fromRevisionId));
+    return Arrays.stream(hgChangedFilesString.split("\0"))
+        .filter(s -> !s.isEmpty())
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
+  @Override
+  public FastVersionControlStats fastVersionControlStats()
+      throws InterruptedException, VersionControlCommandFailedException {
+    String output = executeCommand(FAST_STATS_COMMAND, false);
+    String[] lines = output.split("\n");
+    switch (lines.length) {
+      case 1:
+        return parseFastStats(lines[0], lines[0]);
+      case 2:
+        return parseFastStats(lines[0], lines[1]);
+    }
+    throw new VersionControlCommandFailedException(
+        String.format(
+            "Unexpected number of lines output from '%s':\n%s",
+            String.join(" ", FAST_STATS_COMMAND), output));
+  }
+
+  private FastVersionControlStats parseFastStats(
+      String currentRevisionLine, String baseRevisionLine)
+      throws VersionControlCommandFailedException {
+    String numberOfWordsMismatchFormat =
+        String.format(
+            "Unexpected number of words output from '%s', expected 3 or more:\n%%s",
+            String.join(" ", FAST_STATS_COMMAND));
+    String[] currentRevisionWords = currentRevisionLine.split(" ", 4);
+    if (currentRevisionWords.length < 3) {
+      throw new VersionControlCommandFailedException(
+          String.format(numberOfWordsMismatchFormat, currentRevisionLine));
+    }
+    String[] baseRevisionWords = baseRevisionLine.split(" ", 4);
+    if (baseRevisionWords.length < 3) {
+      throw new VersionControlCommandFailedException(
+          String.format(numberOfWordsMismatchFormat, baseRevisionLine));
+    }
+    return FastVersionControlStats.of(
+        currentRevisionWords[0],
+        baseRevisionWords.length == 4
+            ? ImmutableSet.copyOf(baseRevisionWords[3].split(" "))
+            : ImmutableSet.of(),
+        baseRevisionWords[0],
+        Long.valueOf(baseRevisionWords[1]));
   }
 
   private String executeCommand(Iterable<String> command)
+      throws VersionControlCommandFailedException, InterruptedException {
+    return executeCommand(command, true);
+  }
+
+  private String executeCommand(Iterable<String> command, boolean cleanOutput)
       throws VersionControlCommandFailedException, InterruptedException {
     command = replaceTemplateValue(command, HG_CMD_TEMPLATE, hgCmd);
     String commandString = commandAsString(command);
     LOG.debug("Executing command: " + commandString);
 
-    ProcessExecutorParams processExecutorParams = ProcessExecutorParams.builder()
-        .setCommand(command)
-        .setDirectory(projectRoot)
-        .setEnvironment(environment)
-        .build();
+    ProcessExecutorParams processExecutorParams =
+        ProcessExecutorParams.builder()
+            .setCommand(command)
+            .setDirectory(projectRoot)
+            .setEnvironment(environment)
+            .build();
 
     ProcessExecutor.Result result;
-    try (
-        PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
+    try (PrintStream stdout = new PrintStream(new ByteArrayOutputStream());
         PrintStream stderr = new PrintStream(new ByteArrayOutputStream())) {
 
       ProcessExecutor processExecutor =
@@ -194,20 +217,19 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
 
     if (!resultString.isPresent()) {
       throw new VersionControlCommandFailedException(
-          "Received no output from launched process for command: " + commandString
-      );
+          "Received no output from launched process for command: " + commandString);
     }
 
     if (result.getExitCode() != 0) {
-      Optional<String> stderr = result.getStderr();
-      String stdErrString = stderr.isPresent() ? stderr.get() : "";
       throw new VersionControlCommandFailedException(
-          "Received non-zero exit for for command:" + commandString +
-          "\nStdErr: " + stdErrString
-      );
+          result.getMessageForUnexpectedResult(commandString));
     }
 
-    return cleanResultString(resultString.get());
+    if (cleanOutput) {
+      return cleanResultString(resultString.get());
+    } else {
+      return resultString.get();
+    }
   }
 
   private static String validateRevisionId(String revisionId)
@@ -219,30 +241,11 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
     return revisionId;
   }
 
-  private static long extractUnixTimestamp(String hgTimestampString)
-      throws VersionControlCommandFailedException {
-    Matcher tsMatcher = HG_DATE_PATTERN.matcher(hgTimestampString);
-
-    if (!tsMatcher.matches()) {
-      throw new VersionControlCommandFailedException(
-          hgTimestampString + " is not a valid Mercurial timestamp.");
-    }
-
-    return Long.valueOf(tsMatcher.group(HG_UNIX_TS_GROUP_INDEX));
-  }
-
   private static Iterable<String> replaceTemplateValue(
-      Iterable<String> values, final String template, final String replacement) {
-    return FluentIterable
-        .from(values)
-        .transform(
-            new Function<String, String>() {
-              @Override
-              public String apply(String text) {
-                return text.contains(template) ? text.replace(template, replacement) : text;
-              }
-            })
-        .toList();
+      Iterable<String> values, String template, String replacement) {
+    return StreamSupport.stream(values.spliterator(), false)
+        .map(text -> text.contains(template) ? text.replace(template, replacement) : text)
+        .collect(ImmutableList.toImmutableList());
   }
 
   private static String commandAsString(Iterable<String> command) {

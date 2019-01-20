@@ -16,9 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
-
 import org.kohsuke.args4j.Option;
 
 public class AdbCommandLineOptions {
@@ -28,27 +30,26 @@ public class AdbCommandLineOptions {
 
   @Option(
       name = ADB_THREADS_LONG_ARG,
-      aliases = { ADB_THREADS_SHORT_ARG },
-      usage = "Number of threads to use for adb operations. " +
-              "Defaults to number of connected devices.")
+      aliases = {ADB_THREADS_SHORT_ARG},
+      usage =
+          "Number of threads to use for adb operations. "
+              + "Defaults to number of connected devices.")
   private int adbThreadCount = 0;
 
   @VisibleForTesting static final String MULTI_INSTALL_MODE_SHORT_ARG = "-x";
   @VisibleForTesting static final String MULTI_INSTALL_MODE_LONG_ARG = "-all";
+
   @Option(
       name = MULTI_INSTALL_MODE_LONG_ARG,
-      aliases =  {MULTI_INSTALL_MODE_SHORT_ARG},
-      usage = "Install .apk on all connected devices and/or emulators (multi-install mode)"
-  )
+      aliases = {MULTI_INSTALL_MODE_SHORT_ARG},
+      usage = "Install .apk on all connected devices and/or emulators (multi-install mode)")
   private boolean multiInstallMode;
 
   public AdbOptions getAdbOptions(BuckConfig buckConfig) {
     if (buckConfig.getMultiInstallMode()) {
       multiInstallMode = true;
     }
-    return new AdbOptions(
-        adbThreadCount,
-        multiInstallMode);
+    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
+    return new AdbOptions(adbThreadCount, multiInstallMode, androidBuckConfig.getAdbTimeout());
   }
-
 }

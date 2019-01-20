@@ -1,0 +1,64 @@
+rust_test(
+    name = "test_failure",
+    srcs = [
+        "test_failure.rs",
+    ],
+    crate = "test_failure",
+)
+
+rust_test(
+    name = "test_success",
+    srcs = [
+        "test_success.rs",
+    ],
+    contacts = ["hello world"],
+    crate = "test_success",
+    labels = [
+        "bar",
+        "expensive",
+        "foo",
+    ],
+)
+
+rust_test(
+    name = "test_success_linkerflags",
+    srcs = [
+        "test_success.rs",
+    ],
+    crate = "test_success",
+    linker_flags = ["--this-is-a-bad-option"],
+)
+
+rust_test(
+    name = "test_ignore",
+    srcs = [
+        "test_ignore.rs",
+    ],
+    crate = "test_ignore",
+)
+
+rust_test(
+    name = "test_many_modules",
+    srcs = [
+        "test_another_module.rs",
+        "test_many_modules.rs",
+    ],
+    crate = "test_many_modules",
+)
+
+rust_test(
+    name = "success_failure",
+    srcs = [
+        "test_success_failure.rs",
+    ],
+    crate = "test_success_failure",
+)
+
+rust_test(
+    name = "with_crate_root",
+    srcs = [
+        "test_crate_root.rs",
+    ],
+    crate = "with_crate_root",
+    crate_root = "test_crate_root.rs",
+)

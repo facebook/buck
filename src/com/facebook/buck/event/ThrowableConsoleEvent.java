@@ -16,16 +16,18 @@
 
 package com.facebook.buck.event;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
-
+import java.util.IllegalFormatException;
 import java.util.logging.Level;
 
 /**
- * Event for tracking {@link Throwable}
+ * Event for tracking {@link Throwable}.
+ *
+ * <p>Deprecated, use ErrorLogger.
  */
+@Deprecated
 public class ThrowableConsoleEvent extends ConsoleEvent {
-
-  private final Throwable throwable;
 
   protected ThrowableConsoleEvent(Throwable throwable, String message) {
     this(throwable, Level.SEVERE, message);
@@ -33,10 +35,7 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
 
   protected ThrowableConsoleEvent(Throwable throwable, Level level, String message) {
     super(
-        level,
-        /* containsAnsiEscapeCodes */ false,
-        combineThrowableAndMessage(throwable, message));
-    this.throwable = throwable;
+        level, /* containsAnsiEscapeCodes */ false, combineThrowableAndMessage(throwable, message));
   }
 
   private static String combineThrowableAndMessage(Throwable throwable, String message) {
@@ -48,11 +47,13 @@ public class ThrowableConsoleEvent extends ConsoleEvent {
     return desc;
   }
 
-  public Throwable getThrowable() {
-    return throwable;
-  }
-
   public static ThrowableConsoleEvent create(Throwable throwable, String message, Object... args) {
-    return new ThrowableConsoleEvent(throwable, String.format(message, args));
+    String format;
+    try {
+      format = String.format(message, args);
+    } catch (IllegalFormatException e) {
+      format = "Malformed message: '" + message + "' args: [" + Joiner.on(",").join(args) + "]";
+    }
+    return new ThrowableConsoleEvent(throwable, format);
   }
 }

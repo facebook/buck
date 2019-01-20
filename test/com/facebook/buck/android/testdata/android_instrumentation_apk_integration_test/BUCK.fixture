@@ -1,41 +1,41 @@
 android_binary(
-  name = 'app',
-  manifest = 'AndroidManifest.xml',
-  keystore = ':keystore',
-  deps = [
-    '//java/com/sample/lib:lib',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "app",
+    keystore = ":keystore",
+    manifest = "AndroidManifest.xml",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+    ],
 )
 
 keystore(
-  name = 'keystore',
-  store = 'debug.keystore',
-  properties = 'debug.keystore.properties',
-  visibility = ['PUBLIC'],
+    name = "keystore",
+    properties = "debug.keystore.properties",
+    store = "debug.keystore",
+    visibility = ["PUBLIC"],
 )
 
 cxx_library(
-  name = 'cxx',
-  headers = [
-    'lib.h',
-  ],
-  srcs = [
-    'lib.cpp',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "cxx",
+    srcs = [
+        "lib.cpp",
+    ],
+    headers = [
+        "lib.h",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 android_instrumentation_apk(
-  name = 'app_cxx_lib_dep',
-  manifest = 'AndroidManifest.xml',
-  apk = ':app',
-  deps = [
-    '//java/com/sample/app:app',
-    '//:cxx',
-  ],
+    name = "app_cxx_lib_dep",
+    apk = ":app",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//:cxx",
+        "//java/com/sample/app:app",
+    ],
 )

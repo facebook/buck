@@ -1,0 +1,17 @@
+java_library(
+    name = "simple-lib",
+    srcs = ["SimpleClass.java"],
+)
+
+java_binary(
+    name = "broken_01",
+    deps = [
+        ":simple-lib",
+    ],
+)
+
+genrule(
+    name = "wrapper_01",
+    out = "wrapper_01",
+    cmd = "cat $(location :broken_01) > $OUT",
+)

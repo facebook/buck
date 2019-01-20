@@ -1,11 +1,11 @@
 cxx_test(
-  name = 'spinning',
-  srcs = [
-    'spinning.cpp',
-  ],
-  test_rule_timeout_ms = 100,
+    name = "spinning",
+    srcs = [
+        "spinning.cpp",
+    ],
+    test_rule_timeout_ms = 100,
 )
 
 cxx_library(
-  name = 'fake-gtest',
+    name = "fake-gtest",
 )

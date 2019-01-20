@@ -20,17 +20,12 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.WorkAdvanceEvent;
-import com.facebook.buck.util.concurrent.TimeSpan;
-import com.google.common.base.Function;
 import com.google.common.util.concurrent.SettableFuture;
-
-import org.hamcrest.Matchers;
-import org.junit.Test;
-
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.annotation.Nullable;
+import org.hamcrest.Matchers;
+import org.junit.Test;
 
 public class HangMonitorTest {
 
@@ -53,40 +48,32 @@ public class HangMonitorTest {
 
   @Test
   public void reportContainsCurrentThread() throws Exception {
-    final AtomicBoolean sleepingThreadShouldRun = new AtomicBoolean(true);
-    final SettableFuture<Void> sleepingThreadRunning = SettableFuture.create();
+    AtomicBoolean sleepingThreadShouldRun = new AtomicBoolean(true);
+    SettableFuture<Void> sleepingThreadRunning = SettableFuture.create();
     try {
-      Thread sleepingThread = new Thread("testThread") {
-        @Override
-        public void run() {
-          hangForHangMonitorTestReport();
-        }
-
-        private void hangForHangMonitorTestReport() {
-          sleepingThreadRunning.set(null);
-          try {
-            while (sleepingThreadShouldRun.get()) {
-              Thread.sleep(1000);
+      Thread sleepingThread =
+          new Thread("testThread") {
+            @Override
+            public void run() {
+              hangForHangMonitorTestReport();
             }
-          } catch (InterruptedException e) {
-            // Ignore.
-          }
-        }
-      };
+
+            private void hangForHangMonitorTestReport() {
+              sleepingThreadRunning.set(null);
+              try {
+                while (sleepingThreadShouldRun.get()) {
+                  Thread.sleep(1000);
+                }
+              } catch (InterruptedException e) {
+                // Ignore.
+              }
+            }
+          };
       sleepingThread.start();
       sleepingThreadRunning.get(1, TimeUnit.SECONDS);
 
-      final SettableFuture<String> result = SettableFuture.create();
-      HangMonitor hangMonitor = new HangMonitor(
-          new Function<String, Void>() {
-            @Nullable
-            @Override
-            public Void apply(String input) {
-              result.set(input);
-              return null;
-            }
-          },
-          new TimeSpan(10, TimeUnit.MILLISECONDS));
+      SettableFuture<String> result = SettableFuture.create();
+      HangMonitor hangMonitor = new HangMonitor(result::set, Duration.ofMillis(10));
       hangMonitor.runOneIteration();
       assertThat(result.isDone(), Matchers.is(true));
       String report = result.get();
@@ -97,18 +84,10 @@ public class HangMonitorTest {
   }
 
   @Test
-  public void workAdvanceEventsSuppressReport() throws Exception {
-    final AtomicBoolean didGetReport = new AtomicBoolean(false);
-    HangMonitor hangMonitor = new HangMonitor(
-        new Function<String, Void>() {
-          @Nullable
-          @Override
-          public Void apply(String input) {
-            didGetReport.set(true);
-            return null;
-          }
-        },
-        new TimeSpan(10, TimeUnit.MILLISECONDS));
+  public void workAdvanceEventsSuppressReport() {
+    AtomicBoolean didGetReport = new AtomicBoolean(false);
+    HangMonitor hangMonitor =
+        new HangMonitor(input -> didGetReport.set(true), Duration.ofMillis(10));
     hangMonitor.onWorkAdvance(new WorkEvent());
     hangMonitor.runOneIteration();
     assertThat(didGetReport.get(), Matchers.is(false));

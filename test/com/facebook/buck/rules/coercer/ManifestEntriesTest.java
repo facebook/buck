@@ -15,62 +15,109 @@
  */
 package com.facebook.buck.rules.coercer;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.RuleKeyBuilder;
-import com.google.common.base.Optional;
-
+import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
+import com.facebook.buck.rules.keys.AlterRuleKeys;
+import com.google.common.collect.ImmutableMap;
+import java.nio.file.Path;
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nullable;
 import org.junit.Test;
 
-/**
- * Test functionality for the ManifestEntries class that goes beyond basic key/value get/set
- */
+/** Test functionality for the ManifestEntries class that goes beyond basic key/value get/set */
 public class ManifestEntriesTest {
 
   @Test
-  public void hasAnyRespectsAllParams() throws Exception {
+  public void hasAnyRespectsAllParams() {
     assertFalse(ManifestEntries.builder().build().hasAny());
     assertTrue(ManifestEntries.builder().setMinSdkVersion(1).build().hasAny());
     assertTrue(ManifestEntries.builder().setTargetSdkVersion(1).build().hasAny());
     assertTrue(ManifestEntries.builder().setVersionCode(1).build().hasAny());
     assertTrue(ManifestEntries.builder().setVersionName("").build().hasAny());
     assertTrue(ManifestEntries.builder().setDebugMode(false).build().hasAny());
+    assertTrue(
+        ManifestEntries.builder()
+            .setPlaceholders(ImmutableMap.of("key1", "val1"))
+            .build()
+            .hasAny());
   }
-
 
   @Test
-  public void shouldUpdateRuleKey() throws Exception {
+  public void shouldUpdateRuleKey() {
 
-    @SuppressWarnings("unchecked")
-    RuleKeyBuilder<RuleKey> ruleKeyBuilder = createMock(RuleKeyBuilder.class);
+    AtomicBoolean minSdkVersionSet = new AtomicBoolean(false);
+    AtomicBoolean targetSdkVersionSet = new AtomicBoolean(false);
+    AtomicBoolean versionCodeSet = new AtomicBoolean(false);
+    AtomicBoolean versionNameSet = new AtomicBoolean(false);
+    AtomicBoolean debugModeSet = new AtomicBoolean(false);
+    AtomicBoolean placeholdersSet = new AtomicBoolean(false);
+    AtomicBoolean classSet = new AtomicBoolean(false);
 
-    expect(ruleKeyBuilder.setReflectively("minSdkVersion", Optional.of(5)))
-        .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("targetSdkVersion", Optional.of(7)))
-        .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("versionCode", Optional.of(11)))
-        .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("versionName", Optional.of("thirteen")))
-        .andReturn(ruleKeyBuilder);
-    expect(ruleKeyBuilder.setReflectively("debugMode", Optional.absent()))
-        .andReturn(ruleKeyBuilder);
+    RuleKeyObjectSink ruleKeyBuilder =
+        new RuleKeyObjectSink() {
+          @Override
+          public RuleKeyObjectSink setReflectively(String key, @Nullable Object val) {
+            if ("minSdkVersion".equals(key)) {
+              assertEquals(OptionalInt.of(5), val);
+              minSdkVersionSet.set(true);
+              return this;
+            } else if ("targetSdkVersion".equals(key)) {
+              assertEquals(OptionalInt.of(7), val);
+              targetSdkVersionSet.set(true);
+              return this;
+            } else if ("versionCode".equals(key)) {
+              assertEquals(OptionalInt.of(11), val);
+              versionCodeSet.set(true);
+              return this;
+            } else if ("versionName".equals(key)) {
+              assertEquals(Optional.of("thirteen"), val);
+              versionNameSet.set(true);
+              return this;
+            } else if ("debugMode".equals(key)) {
+              assertEquals(Optional.empty(), val);
+              debugModeSet.set(true);
+              return this;
+            } else if ("placeholders".equals(key)) {
+              assertEquals(Optional.empty(), val);
+              placeholdersSet.set(true);
+              return this;
+            } else if (".class".equals(key)) {
+              assertEquals(ManifestEntries.class.getCanonicalName(), val);
+              classSet.set(true);
+              return this;
+            }
+            throw new IllegalArgumentException(key);
+          }
 
-    replay(ruleKeyBuilder);
+          @Override
+          public RuleKeyObjectSink setPath(Path absolutePath, Path ideallyRelative) {
+            throw new UnsupportedOperationException();
+          }
+        };
 
-    ManifestEntries entries = ManifestEntries.builder()
-        .setMinSdkVersion(5)
-        .setTargetSdkVersion(7)
-        .setVersionCode(11)
-        .setVersionName("thirteen")
-        .build();
+    ManifestEntries entries =
+        ManifestEntries.builder()
+            .setMinSdkVersion(5)
+            .setTargetSdkVersion(7)
+            .setVersionCode(11)
+            .setVersionName("thirteen")
+            .build();
 
     // The appendToRuleKey should set both present and absent properties
-    entries.appendToRuleKey(ruleKeyBuilder);
-  }
+    AlterRuleKeys.amendKey(ruleKeyBuilder, entries);
 
+    assertTrue(
+        minSdkVersionSet.get()
+            && targetSdkVersionSet.get()
+            && versionCodeSet.get()
+            && versionNameSet.get()
+            && debugModeSet.get()
+            && placeholdersSet.get()
+            && classSet.get());
+  }
 }

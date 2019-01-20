@@ -40,7 +40,7 @@ public abstract class InsnFormat {
      * temporary measure until VM support for the salient opcodes is
      * added. TODO: Remove this declaration when the VM can deal.
      */
-    public static boolean ALLOW_EXTENDED_OPCODES = true;
+    public static final boolean ALLOW_EXTENDED_OPCODES = true;
 
     /**
      * Returns the string form, suitable for inclusion in a listing

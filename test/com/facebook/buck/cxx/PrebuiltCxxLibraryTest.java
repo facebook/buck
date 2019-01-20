@@ -18,56 +18,70 @@ package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertNotNull;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.rules.RuleKey;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
-import com.facebook.buck.rules.keys.DefaultRuleKeyBuilderFactory;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
+import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
+import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.shell.GenruleBuilder;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-import com.facebook.buck.util.cache.DefaultFileHashCache;
-
+import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.cache.FileHashCacheMode;
+import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
+import com.facebook.buck.util.cache.impl.StackedFileHashCache;
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
-
-import java.io.File;
-
 
 public class PrebuiltCxxLibraryTest {
 
   @Test
   public void testGetNativeLinkWithDep() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    BuildRuleResolver resolver =
-        new BuildRuleResolver(TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer());
-    SourcePathResolver pathResolver = new SourcePathResolver(resolver);
-    CxxPlatform platform = CxxLibraryBuilder.createDefaultPlatform();
+    CxxPlatform platform = CxxPlatformUtils.DEFAULT_PLATFORM;
 
-    BuildRule genSrc =
+    GenruleBuilder genSrcBuilder =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen_libx"))
-            .setOut("gen_libx")
-            .setCmd("something")
-            .build(resolver, filesystem);
-    filesystem.writeContentsToPath(
-        "class Test {}",
-        new File(filesystem.resolve(genSrc.getPathToOutput()).toString(), "libx.a").toPath());
-
+            .setOut("libx.a")
+            .setCmd("something");
     BuildTarget target = BuildTargetFactory.newInstance("//:x");
-    PrebuiltCxxLibraryBuilder builder = new PrebuiltCxxLibraryBuilder(target)
-        .setLibName("x")
-        .setLibDir("$(location //:gen_libx)");
-    PrebuiltCxxLibrary lib = (PrebuiltCxxLibrary) builder.build(resolver, filesystem);
-    lib.getNativeLinkableInput(
-        platform,
-        Linker.LinkableDepType.STATIC);
+    PrebuiltCxxLibraryBuilder builder =
+        new PrebuiltCxxLibraryBuilder(target)
+            .setStaticLib(DefaultBuildTargetSourcePath.of(genSrcBuilder.getTarget()));
 
-    DefaultFileHashCache originalHashCache = new DefaultFileHashCache(filesystem);
-    DefaultRuleKeyBuilderFactory factory =
-        new DefaultRuleKeyBuilderFactory(0, originalHashCache, pathResolver);
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(genSrcBuilder.build(), builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+
+    BuildRule genSrc = genSrcBuilder.build(graphBuilder, filesystem, targetGraph);
+    filesystem.writeContentsToPath(
+        "class Test {}", pathResolver.getAbsolutePath(genSrc.getSourcePathToOutput()));
+
+    PrebuiltCxxLibrary lib =
+        (PrebuiltCxxLibrary) builder.build(graphBuilder, filesystem, targetGraph);
+    lib.getNativeLinkableInput(platform, Linker.LinkableDepType.STATIC, graphBuilder);
+
+    FileHashCache originalHashCache =
+        new StackedFileHashCache(
+            ImmutableList.of(
+                DefaultFileHashCache.createDefaultFileHashCache(
+                    filesystem, FileHashCacheMode.DEFAULT)));
+    DefaultRuleKeyFactory factory =
+        new TestDefaultRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
 
     RuleKey ruleKey = factory.build(lib);
     assertNotNull(ruleKey);

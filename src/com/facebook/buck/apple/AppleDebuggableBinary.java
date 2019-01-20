@@ -15,78 +15,129 @@
  */
 package com.facebook.buck.apple;
 
-import com.facebook.buck.cxx.BuildRuleWithBinary;
-import com.facebook.buck.cxx.ProvidesLinkedBinaryDeps;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.file.WriteFile;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.HasRuntimeDeps;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.keys.SupportsInputBasedRuleKey;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-
-import java.nio.file.Path;
-
-import javax.annotation.Nullable;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.SortedSet;
+import java.util.stream.Stream;
 
 /**
  * This build rule wraps the usual build rule and should be treated as top-level binary rule for
  * apple platform. Depending on the debug format, it should depend on dsym and stripped cxx binary,
  * or just on stripped binary.
  */
-public class AppleDebuggableBinary
-    extends AbstractBuildRule
-    implements BuildRuleWithBinary, SupportsInputBasedRuleKey, HasRuntimeDeps {
+public class AppleDebuggableBinary extends AbstractBuildRule
+    implements BuildRuleWithBinary, HasRuntimeDeps, HasDeclaredAndExtraDeps {
 
-  public static final Flavor RULE_FLAVOR = ImmutableFlavor.of("apple-debuggable-binary");
+  public static final Flavor RULE_FLAVOR = InternalFlavor.of("apple-debuggable-binary");
 
   /**
    * Binary rule could be stripped and unstripped, depending on requirements. See AppleDebugFormat.
    */
   private final BuildRule binaryRule;
 
-  @AddToRuleKey
-  private final SourcePath binarySourcePath;
+  private final Optional<AppleDsym> appleDsym;
+  private final ImmutableSortedSet<BuildRule> runtimeDeps;
 
-  public AppleDebuggableBinary(
-      BuildRuleParams buildRuleParams,
-      SourcePathResolver resolver,
-      BuildRule binaryRule) {
-    super(buildRuleParams, resolver);
-    this.binaryRule = binaryRule;
-    this.binarySourcePath = new BuildTargetSourcePath(binaryRule.getBuildTarget());
-    performChecks(buildRuleParams, binaryRule);
-  }
-
-  private void performChecks(BuildRuleParams buildRuleParams, BuildRule cxxStrip) {
-    Preconditions.checkArgument(
-        buildRuleParams.getBuildTarget().getFlavors().contains(RULE_FLAVOR),
-        "Rule %s should contain flavor %s", this, RULE_FLAVOR);
-    Preconditions.checkArgument(
-        AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildRuleParams.getBuildTarget().getFlavors()),
-        "Rule %s should contain some of AppleDebugFormat flavors", this);
-    Preconditions.checkArgument(
-        getDeps().contains(cxxStrip),
-        "Rule %s should depend on its stripped rule %s", this, cxxStrip);
+  /**
+   * Create with runtime dependencies to the binary itself and its static library constituents.
+   *
+   * <p>This is necessary as macho binaries have pointers to debug information stored in object
+   * files, rather than copying the debug info into the binary itself.
+   */
+  static AppleDebuggableBinary createFromUnstrippedBinary(
+      ProjectFilesystem filesystem,
+      BuildTarget baseTarget,
+      HasAppleDebugSymbolDeps unstrippedBinaryRule) {
+    return new AppleDebuggableBinary(
+        filesystem,
+        baseTarget.withAppendedFlavors(RULE_FLAVOR, AppleDebugFormat.DWARF.getFlavor()),
+        unstrippedBinaryRule,
+        Optional.empty(),
+        unstrippedBinaryRule.getAppleDebugSymbolDeps());
   }
 
   /**
-   * Indicates whether its possible to wrap given _binary_ rule.
+   * Create with runtime dependencies including the dsym rule. Dsym holds all the debug info
+   * collected from object files, so object files are not needed for debugging at runtime.
    */
+  static AppleDebuggableBinary createWithDsym(
+      ProjectFilesystem filesystem,
+      BuildTarget baseTarget,
+      BuildRule strippedBinaryRule,
+      AppleDsym dsym) {
+    return new AppleDebuggableBinary(
+        filesystem,
+        baseTarget.withAppendedFlavors(RULE_FLAVOR, AppleDebugFormat.DWARF_AND_DSYM.getFlavor()),
+        strippedBinaryRule,
+        Optional.of(dsym),
+        Stream.empty());
+  }
+
+  /** Create with no additional runtime deps. */
+  static AppleDebuggableBinary createWithoutDebugging(
+      ProjectFilesystem filesystem, BuildTarget baseTarget, BuildRule binaryRule) {
+    return new AppleDebuggableBinary(
+        filesystem,
+        baseTarget.withAppendedFlavors(RULE_FLAVOR, AppleDebugFormat.NONE.getFlavor()),
+        binaryRule,
+        Optional.empty(),
+        Stream.empty());
+  }
+
+  private AppleDebuggableBinary(
+      ProjectFilesystem projectFilesystem,
+      BuildTarget buildTarget,
+      BuildRule binaryRule,
+      Optional<AppleDsym> dsymRule,
+      Stream<BuildRule> otherDeps) {
+    super(buildTarget, projectFilesystem);
+    this.binaryRule = binaryRule;
+    this.appleDsym = dsymRule;
+    this.runtimeDeps =
+        ImmutableSortedSet.<BuildRule>naturalOrder()
+            .add(binaryRule)
+            .addAll(dsymRule.map(ImmutableList::of).orElse(ImmutableList.of()))
+            .addAll(otherDeps.iterator())
+            .build();
+
+    Preconditions.checkArgument(
+        buildTarget.getFlavors().contains(RULE_FLAVOR),
+        "Rule %s should contain flavor %s",
+        this,
+        RULE_FLAVOR);
+    Preconditions.checkArgument(
+        AppleDebugFormat.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        "Rule %s should contain some of AppleDebugFormat flavors",
+        this);
+    Preconditions.checkArgument(
+        getBuildDeps().contains(binaryRule),
+        "Rule %s should depend on its stripped rule %s",
+        this,
+        binaryRule);
+  }
+
+  /** Indicates whether its possible to wrap given _binary_ rule. */
   public static boolean canWrapBinaryBuildRule(BuildRule binaryBuildRule) {
-    return binaryBuildRule instanceof ProvidesLinkedBinaryDeps;
+    return binaryBuildRule instanceof HasAppleDebugSymbolDeps;
   }
 
   public static boolean isBuildRuleDebuggable(BuildRule buildRule) {
@@ -96,54 +147,22 @@ public class AppleDebuggableBinary
     }
 
     // fat/thin binaries and dynamic libraries may have dSYMs
-    if (buildRule instanceof ProvidesLinkedBinaryDeps ||
-        buildRule instanceof AppleDebuggableBinary) {
-      return true;
-    }
-
-    return false;
-  }
-
-  // Defines all rules that AppleDebuggableBinary should depend on, depending on debug format.
-  // For no-debug:  only stripped binary.
-  // For dwarf:     on unstripped binary and all static libs, because these files must be accessible
-  //                during debug session.
-  // For dsym:      on stripped binary and dsym rule, because dSYM must be accessible during debug
-  //                session.
-  public static ImmutableSortedSet<BuildRule> getRequiredRuntimeDeps(
-      AppleDebugFormat debugFormat,
-      BuildRule strippedBinaryRule,
-      ProvidesLinkedBinaryDeps unstrippedBinaryRule,
-      Optional<AppleDsym> appleDsym) {
-    if (debugFormat == AppleDebugFormat.NONE) {
-      return ImmutableSortedSet.of(strippedBinaryRule);
-    }
-    ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.<BuildRule>naturalOrder();
-    if (debugFormat == AppleDebugFormat.DWARF) {
-      builder.add(unstrippedBinaryRule);
-      builder.addAll(unstrippedBinaryRule.getCompileDeps());
-      builder.addAll(unstrippedBinaryRule.getStaticLibraryDeps());
-    } else if (debugFormat == AppleDebugFormat.DWARF_AND_DSYM) {
-      Preconditions.checkArgument(
-          appleDsym.isPresent(),
-          "debugFormat %s expects AppleDsym rule to be present", debugFormat);
-      builder.add(strippedBinaryRule);
-      builder.add(appleDsym.get());
-    }
-    return builder.build();
+    return buildRule instanceof HasAppleDebugSymbolDeps
+        || buildRule instanceof AppleDebuggableBinary;
   }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     return ImmutableList.of();
   }
 
-  @Nullable
   @Override
-  public Path getPathToOutput() {
-    return getResolver().getRelativePath(binarySourcePath);
+  public SourcePath getSourcePathToOutput() {
+    return ForwardingBuildTargetSourcePath.of(
+        getBuildTarget(),
+        Objects.requireNonNull(
+            binaryRule.getSourcePathToOutput(), "binary should always have an output path"));
   }
 
   @Override
@@ -151,8 +170,32 @@ public class AppleDebuggableBinary
     return binaryRule;
   }
 
+  public Optional<AppleDsym> getAppleDsym() {
+    return appleDsym;
+  }
+
   @Override
-  public ImmutableSortedSet<BuildRule> getRuntimeDeps() {
-    return getDeclaredDeps();
+  public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
+    return runtimeDeps.stream().map(BuildRule::getBuildTarget);
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return runtimeDeps;
+  }
+
+  @Override
+  public SortedSet<BuildRule> getDeclaredDeps() {
+    return runtimeDeps;
+  }
+
+  @Override
+  public SortedSet<BuildRule> deprecatedGetExtraDeps() {
+    return ImmutableSortedSet.of();
+  }
+
+  @Override
+  public ImmutableSortedSet<BuildRule> getTargetGraphOnlyDeps() {
+    return ImmutableSortedSet.of();
   }
 }

@@ -16,83 +16,106 @@
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.jvm.java.CalculateAbi;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
+import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.JavaAbis;
+import com.facebook.buck.jvm.java.CalculateClassAbi;
+import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.Flavor;
-import com.facebook.buck.model.ImmutableFlavor;
-import com.facebook.buck.rules.AbstractDescriptionArg;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.BuildRuleType;
-import com.facebook.buck.rules.BuildTargetSourcePath;
-import com.facebook.buck.rules.Description;
-import com.facebook.buck.rules.Hint;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
-import com.facebook.buck.rules.TargetGraph;
+import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
-import com.facebook.infer.annotation.SuppressFieldNotInitialized;
-import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableCollection;
+import java.util.Objects;
+import java.util.Optional;
+import org.immutables.value.Value;
 
 public class AndroidBuildConfigDescription
-    implements Description<AndroidBuildConfigDescription.Arg> {
+    implements DescriptionWithTargetGraph<AndroidBuildConfigDescriptionArg>,
+        ImplicitDepsInferringDescription<AndroidBuildConfigDescriptionArg> {
 
-  public static final BuildRuleType TYPE = BuildRuleType.of("android_build_config");
+  private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
 
-  private static final Flavor GEN_JAVA_FLAVOR = ImmutableFlavor.of("gen_java_android_build_config");
-  private final JavacOptions androidJavacOptions;
+  private final JavacFactory javacFactory;
 
-  public AndroidBuildConfigDescription(JavacOptions androidJavacOptions) {
-    this.androidJavacOptions = androidJavacOptions;
+  public AndroidBuildConfigDescription(ToolchainProvider toolchainProvider) {
+    javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
 
   @Override
-  public BuildRuleType getBuildRuleType() {
-    return TYPE;
+  public Class<AndroidBuildConfigDescriptionArg> getConstructorArgType() {
+    return AndroidBuildConfigDescriptionArg.class;
   }
 
   @Override
-  public Arg createUnpopulatedConstructorArg() {
-    return new Arg();
-  }
-
-  @Override
-  public <A extends Arg> BuildRule createBuildRule(
-      TargetGraph targetGraph,
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
       BuildRuleParams params,
-      BuildRuleResolver resolver,
-      A args) {
+      AndroidBuildConfigDescriptionArg args) {
+    ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    if (JavaAbis.isClassAbiTarget(buildTarget)) {
+      BuildTarget configTarget = JavaAbis.getLibraryTarget(buildTarget);
+      BuildRule configRule = graphBuilder.requireRule(configTarget);
+      return CalculateClassAbi.of(
+          buildTarget,
+          ruleFinder,
+          context.getProjectFilesystem(),
+          params,
+          Objects.requireNonNull(configRule.getSourcePathToOutput()));
+    }
+
     return createBuildRule(
+        buildTarget,
+        context.getProjectFilesystem(),
         params,
-        args.javaPackage,
-        args.values.get(),
-        args.valuesFile,
+        args.getPackage(),
+        args.getValues(),
+        args.getValuesFile(),
         /* useConstantExpressions */ false,
-        androidJavacOptions,
-        resolver);
+        javacFactory.create(ruleFinder, null),
+        context
+            .getToolchainProvider()
+            .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+            .getJavacOptions(),
+        graphBuilder);
   }
 
   /**
-   * @param values Collection whose entries identify fields for the generated
-   *     {@code BuildConfig} class. The values for fields can be overridden by values from the
-   *     {@code valuesFile} file, if present.
+   * @param values Collection whose entries identify fields for the generated {@code BuildConfig}
+   *     class. The values for fields can be overridden by values from the {@code valuesFile} file,
+   *     if present.
    * @param valuesFile Path to a file with values to override those in {@code values}.
-   * @param ruleResolver Any intermediate rules introduced by this method will be added to this
-   *     {@link BuildRuleResolver}.
+   * @param graphBuilder Any intermediate rules introduced by this method will be added to this
+   *     {@link ActionGraphBuilder}.
    */
   static AndroidBuildConfigJavaLibrary createBuildRule(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       String javaPackage,
       BuildConfigFields values,
       Optional<SourcePath> valuesFile,
       boolean useConstantExpressions,
+      Javac javac,
       JavacOptions javacOptions,
-      BuildRuleResolver ruleResolver) {
+      ActionGraphBuilder graphBuilder) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -109,73 +132,64 @@ public class AndroidBuildConfigDescription
     //
     // This fixes the issue, but deviates from the common pattern where a build rule has at most
     // one flavored version of itself for a given flavor.
-    SourcePathResolver pathResolver = new SourcePathResolver(ruleResolver);
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     BuildTarget buildConfigBuildTarget;
-    if (!params.getBuildTarget().isFlavored()) {
+    if (!buildTarget.isFlavored()) {
       // android_build_config() case.
       Preconditions.checkArgument(!useConstantExpressions);
-      buildConfigBuildTarget = params.getBuildTarget().withFlavors(GEN_JAVA_FLAVOR);
+      buildConfigBuildTarget = buildTarget.withFlavors(GEN_JAVA_FLAVOR);
     } else {
       // android_binary() graph enhancement case.
       Preconditions.checkArgument(useConstantExpressions);
-      buildConfigBuildTarget = params.getBuildTarget().withFlavors(
-          ImmutableFlavor.of(GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')));
+      buildConfigBuildTarget =
+          buildTarget.withFlavors(
+              InternalFlavor.of(GEN_JAVA_FLAVOR.getName() + '_' + javaPackage.replace('.', '_')));
     }
 
     // Create one build rule to generate BuildConfig.java.
-    BuildRuleParams buildConfigParams = params.copyWithChanges(
-        buildConfigBuildTarget,
-        params.getDeclaredDeps(),
-        /* extraDeps */ Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>naturalOrder()
-                .addAll(params.getExtraDeps().get())
-                .addAll(pathResolver.filterBuildRuleInputs(valuesFile.asSet()))
-                .build()));
-    AndroidBuildConfig androidBuildConfig = new AndroidBuildConfig(
-        buildConfigParams,
-        pathResolver,
-        javaPackage,
-        values,
-        valuesFile,
-        useConstantExpressions);
-    ruleResolver.addToIndex(androidBuildConfig);
-
-    BuildTarget abiJarTarget = params.getBuildTarget().withAppendedFlavors(CalculateAbi.FLAVOR);
+    BuildRuleParams buildConfigParams = params;
+    Optional<BuildRule> valuesFileRule = valuesFile.flatMap(ruleFinder::getRule);
+    if (valuesFileRule.isPresent()) {
+      buildConfigParams = buildConfigParams.copyAppendingExtraDeps(valuesFileRule.get());
+    }
+    AndroidBuildConfig androidBuildConfig =
+        new AndroidBuildConfig(
+            buildConfigBuildTarget,
+            projectFilesystem,
+            buildConfigParams,
+            javaPackage,
+            values,
+            valuesFile,
+            useConstantExpressions);
+    graphBuilder.addToIndex(androidBuildConfig);
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
-    BuildRuleParams javaLibraryParams = params.copyWithChanges(
-        params.getBuildTarget(),
-        /* declaredDeps */ Suppliers.ofInstance(
-            ImmutableSortedSet.<BuildRule>of(androidBuildConfig)),
-        /* extraDeps */ Suppliers.ofInstance(ImmutableSortedSet.<BuildRule>of()));
-    AndroidBuildConfigJavaLibrary library =
-        ruleResolver.addToIndex(
-            new AndroidBuildConfigJavaLibrary(
-                javaLibraryParams,
-                pathResolver,
-                javacOptions,
-                new BuildTargetSourcePath(abiJarTarget),
-                androidBuildConfig));
-
-    ruleResolver.addToIndex(
-        CalculateAbi.of(
-            abiJarTarget,
-            pathResolver,
-            params,
-            new BuildTargetSourcePath(library.getBuildTarget())));
-
-    return library;
+    return new AndroidBuildConfigJavaLibrary(
+        buildTarget, projectFilesystem, ruleFinder, javac, javacOptions, androidBuildConfig);
   }
 
-  @SuppressFieldNotInitialized
-  public static class Arg extends AbstractDescriptionArg {
-    @Hint(name = "package")
-    public String javaPackage;
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      AndroidBuildConfigDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+  }
 
-    /** This will never be absent after this Arg is populated. */
-    public Optional<BuildConfigFields> values;
+  @BuckStyleImmutable
+  @Value.Immutable
+  interface AbstractAndroidBuildConfigDescriptionArg extends CommonDescriptionArg {
+    /** For R.java */
+    String getPackage();
 
-    /** If present, contents of file can override those of {@link #values}. */
-    public Optional<SourcePath> valuesFile;
+    @Value.Default
+    default BuildConfigFields getValues() {
+      return BuildConfigFields.of();
+    }
+
+    /** If present, contents of file can override those of {@link #getValues}. */
+    Optional<SourcePath> getValuesFile();
   }
 }

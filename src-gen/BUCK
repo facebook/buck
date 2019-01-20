@@ -1,9 +1,35 @@
 java_library(
-  name = 'thrift',
-  srcs = glob(['**/*.java']),
-  deps = [
-    '//third-party/java/thrift:libthrift',
-    '//third-party/java/slf4j:slf4j-api',
-  ],
-  visibility = ['PUBLIC'],
+    name = "thrift",
+    srcs = glob(["**/thrift/**/*.java"]),
+    exported_deps = [
+        "//third-party/java/thrift:libthrift",
+    ],
+    abi_generation_mode = "source",
+    visibility = ["PUBLIC"],
+    deps = [
+        # This dep is looked up at runtime by reflection.
+        "//third-party/java/slf4j:slf4j",
+        "//third-party/java/slf4j:slf4j-api",
+        "//third-party/java/fbthrift:fbthrift",
+    ] + select({
+        "DEFAULT": [],
+        # Thrift generated .java files depend on javax.annotation.Generated, which has been removed 
+        # from the JCL in Java 11. Add it back via this third party library.
+        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+    }),
+)
+
+java_library(
+    name = "protobuf",
+    srcs = glob(["**/proto/**/*.java"]),
+    deps = select({
+        "DEFAULT": [],
+        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed 
+        # from the JCL in Java 11. Add it back via this third party library.
+        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+    }),
+    exported_deps = [
+        "//third-party/java/protobuf:protobuf",
+    ],
+    visibility = ["PUBLIC"],
 )

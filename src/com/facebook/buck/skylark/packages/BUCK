@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "packages",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/skylark/io:io",
+        "//third-party/java/bazel:bazel",
+    ],
+)

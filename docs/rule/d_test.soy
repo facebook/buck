@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace d_test}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'd_test()' /}
+    {param navid: 'rule_d_test' /}
     {param prettify: true /}
     {param description}
       A rule that is used to define a set of python files that contian tests
@@ -41,16 +57,6 @@ must provide a main() function.
   used to filter or include a specific <code>d_test()</code> rule
   when executing <a href="{ROOT}command/test.html"><code>buck
   test</code></a>.
-  {/param}
-{/call}
-
-{call buck.arg}
-  {param name: 'source_under_test' /}
-  {param default : '[]' /}
-  {param desc}
-  <code>d_library()</code> rules that the <code>d_test()</code> is
-  testing. These must be among the transitive dependencies of the
-  {sp}<code>d_test()</code>.
   {/param}
 {/call}
 

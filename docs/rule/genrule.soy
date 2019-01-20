@@ -1,9 +1,25 @@
+/*
+ * Copyright 2018-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
 {namespace genrule}
 
 /***/
 {template .soyweb}
   {call buck.page}
     {param title: 'genrule()' /}
+    {param navid: 'rule_genrule' /}
     {param prettify: true /}
     {param description}
       A rule that is used to generate files from a shell command. It must
@@ -35,7 +51,21 @@
 
 {call genrule_common.cmd_exe_arg /}
 
+{call genrule_common.type_arg /}
+
 {call genrule_common.out_arg /}
+
+{call genrule_common.environment_expansion_separator /}
+
+{call genrule_common.no_remote_arg /}
+
+{call buck.arg}
+  {param name: 'enable_sandbox' /}
+  {param default : 'False' /}
+  {param desc}
+  Whether this target should be executed in a sandbox or not.
+  {/param}
+{/call}
 
 {call buck.arg}
   {param name: 'executable' /}
@@ -55,7 +85,10 @@
 
 This genrule() uses a Python script to derive a new
 {sp}<code>AndroidManifest.xml</code> from an
-{sp}<code>AndroidManifest.xml</code> in the source tree.
+{sp}<code>AndroidManifest.xml</code> in the source tree. 
+Note you don't need to prepend execution commands with 
+{sp}<code>python</code>: Buck knows how to execute different 
+kinds of binaries using <code>$(exe)</code> command.
 
 {literal}<pre class="prettyprint lang-py">
 genrule(
@@ -63,9 +96,9 @@ genrule(
   srcs = [
     'AndroidManifest.xml',
   ],
-  bash = 'python $(exe //python/android:basic_to_full) ' \
+  bash = '$(exe //python/android:basic_to_full) ' \
       '$SRCDIR/AndroidManifest.xml > $OUT',
-  cmd_exe = 'python.exe $(exe //python/android:basic_to_full) ' \
+  cmd_exe = '$(exe //python/android:basic_to_full) ' \
       '%SRCDIR%\\AndroidManifest.xml > %OUT%',
   out = 'AndroidManifest.xml',
 )

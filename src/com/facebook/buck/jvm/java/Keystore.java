@@ -16,40 +16,37 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.rules.AbstractBuildRule;
-import com.facebook.buck.rules.AddToRuleKey;
-import com.facebook.buck.rules.BuildContext;
-import com.facebook.buck.rules.BuildRuleParams;
-import com.facebook.buck.rules.BuildableContext;
-import com.facebook.buck.rules.SourcePath;
-import com.facebook.buck.rules.SourcePathResolver;
+import com.facebook.buck.core.build.buildable.context.BuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
-
-import java.nio.file.Path;
-
 import javax.annotation.Nullable;
 
-public class Keystore extends AbstractBuildRule {
+public class Keystore extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  @AddToRuleKey
-  private final SourcePath pathToStore;
-  @AddToRuleKey
-  private final SourcePath pathToProperties;
+  @AddToRuleKey private final SourcePath pathToStore;
+  @AddToRuleKey private final SourcePath pathToProperties;
 
   public Keystore(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver resolver,
       SourcePath store,
       SourcePath properties) {
-    super(params, resolver);
+    super(buildTarget, projectFilesystem, params);
     this.pathToStore = store;
     this.pathToProperties = properties;
   }
 
   @Nullable
   @Override
-  public Path getPathToOutput() {
+  public SourcePath getSourcePathToOutput() {
     return null;
   }
 
@@ -63,8 +60,7 @@ public class Keystore extends AbstractBuildRule {
 
   @Override
   public ImmutableList<Step> getBuildSteps(
-      BuildContext context,
-      BuildableContext buildableContext) {
+      BuildContext context, BuildableContext buildableContext) {
     // Nothing to build: this is like a glorified exported_deps() rule.
     return ImmutableList.of();
   }

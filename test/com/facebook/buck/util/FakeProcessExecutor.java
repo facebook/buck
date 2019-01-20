@@ -16,24 +16,24 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Function;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
-public class FakeProcessExecutor extends ProcessExecutor {
+public class FakeProcessExecutor extends DefaultProcessExecutor {
 
   private final Function<? super ProcessExecutorParams, FakeProcess> processFunction;
   private final Set<ProcessExecutorParams> launchedProcesses;
 
   public FakeProcessExecutor() {
-    this(ImmutableMap.<ProcessExecutorParams, FakeProcess>of());
+    this(ImmutableMap.of());
   }
 
   public FakeProcessExecutor(Map<ProcessExecutorParams, FakeProcess> processMap) {
@@ -46,8 +46,7 @@ public class FakeProcessExecutor extends ProcessExecutor {
   }
 
   public FakeProcessExecutor(
-      final Iterable<Map.Entry<ProcessExecutorParams, FakeProcess>> processIterable,
-      Console console) {
+      Iterable<Map.Entry<ProcessExecutorParams, FakeProcess>> processIterable, Console console) {
     this(
         new Function<ProcessExecutorParams, FakeProcess>() {
           final Iterator<Map.Entry<ProcessExecutorParams, FakeProcess>> processIterator =
@@ -71,35 +70,57 @@ public class FakeProcessExecutor extends ProcessExecutor {
         console);
   }
 
-  public FakeProcessExecutor(
-      Map<ProcessExecutorParams, FakeProcess> processMap,
-      Console console) {
+  public FakeProcessExecutor(Map<ProcessExecutorParams, FakeProcess> processMap, Console console) {
     this(Functions.forMap(processMap), console);
   }
 
   public FakeProcessExecutor(
+      Function<? super ProcessExecutorParams, FakeProcess> processFunction, Console console) {
+    this(processFunction, console.getStdOut(), console.getStdErr(), console.getAnsi());
+  }
+
+  public FakeProcessExecutor(
       Function<? super ProcessExecutorParams, FakeProcess> processFunction,
-      Console console) {
-    super(console);
+      PrintStream stdOutStream,
+      PrintStream stdErrStream,
+      Ansi ansi) {
+    super(
+        stdOutStream,
+        stdErrStream,
+        ansi,
+        ProcessHelper.getInstance(),
+        ProcessRegistry.getInstance());
     this.processFunction = processFunction;
     this.launchedProcesses = new HashSet<>();
   }
 
   @Override
-  Process launchProcessInternal(ProcessExecutorParams params) throws IOException {
+  public LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
     try {
       FakeProcess fakeProcess = processFunction.apply(params);
       launchedProcesses.add(params);
-      return fakeProcess;
+      return new LaunchedProcessImpl(fakeProcess);
     } catch (IllegalArgumentException e) {
       throw new IOException(
           String.format(
-              "FakeProcessExecutor not configured to run process with params %s",
-              params));
+              "FakeProcessExecutor not configured to run process with params %s", params));
     }
+  }
+
+  @Override
+  public LaunchedProcess launchProcess(
+      ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
+    return launchProcess(params);
   }
 
   public boolean isProcessLaunched(ProcessExecutorParams params) {
     return launchedProcesses.contains(params);
+  }
+
+  @Override
+  public ProcessExecutor cloneWithOutputStreams(
+      PrintStream newStdOutStream, PrintStream newStdErrStream) {
+    return new FakeProcessExecutor(
+        processFunction, newStdOutStream, newStdErrStream, Ansi.withoutTty());
   }
 }

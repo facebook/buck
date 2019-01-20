@@ -16,78 +16,77 @@
 
 package com.facebook.buck.rules.coercer;
 
-import static com.facebook.buck.rules.TestCellBuilder.createCellRoots;
+import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.io.ProjectFilesystem;
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.model.BuildTargetFactory;
-import com.facebook.buck.testutil.FakeProjectFilesystem;
-
-import org.junit.Test;
-
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class BuildTargetTypeCoercerTest {
+
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path basePath = Paths.get("java/com/facebook/buck/example");
 
   @Test
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        "//foo:bar");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo:bar");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar"), seen);
   }
 
   @Test
+  public void failedCoerce() throws CoerceFailedException {
+    thrown.expect(CoerceFailedException.class);
+    thrown.expectMessage(containsString("Unable to find the target //foo::bar."));
+    new BuildTargetTypeCoercer()
+        .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo::bar");
+  }
+
+  @Test
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        ":bar");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, ":bar");
 
     assertEquals(BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar"), seen);
   }
 
   @Test
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        "//foo:bar#baz");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo:bar#baz");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz"), seen);
   }
 
   @Test
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        "//foo:bar#baz,qux");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, "//foo:bar#baz,qux");
 
     assertEquals(BuildTargetFactory.newInstance("//foo:bar#baz,qux"), seen);
   }
 
   @Test
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        basePath,
-        ":bar#baz");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, basePath, ":bar#baz");
 
     BuildTarget expected =
         BuildTargetFactory.newInstance("//java/com/facebook/buck/example:bar#baz");
@@ -100,26 +99,23 @@ public class BuildTargetTypeCoercerTest {
     // this using the MockBuilder failed with an InvocationTargetException. Turns out that easymock
     // just can't mock toString. So we're going to do this Old Skool using a dynamic proxy. *sigh*
     // And we can't build a partial mock from an interface. *sigh*
-    final Path concreteType = Paths.get("notused");
+    Path concreteType = Paths.get("notused");
 
-    Path stubPath = (Path) Proxy.newProxyInstance(
-        getClass().getClassLoader(),
-        new Class[]{Path.class},
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if ("toString".equals(method.getName())) {
-              return "foo\\bar";
-            }
-            return method.invoke(concreteType, args);
-          }
-        });
+    Path stubPath =
+        (Path)
+            Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[] {Path.class},
+                (proxy, method, args) -> {
+                  if ("toString".equals(method.getName())) {
+                    return "foo\\bar";
+                  }
+                  return method.invoke(concreteType, args);
+                });
 
-    BuildTarget seen = new BuildTargetTypeCoercer().coerce(
-        createCellRoots(filesystem),
-        filesystem,
-        stubPath,
-        ":baz");
+    BuildTarget seen =
+        new BuildTargetTypeCoercer()
+            .coerce(createCellRoots(filesystem), filesystem, stubPath, ":baz");
 
     BuildTarget expected = BuildTargetFactory.newInstance("//foo/bar:baz");
     assertEquals(expected, seen);

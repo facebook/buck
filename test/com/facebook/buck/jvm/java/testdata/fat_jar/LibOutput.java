@@ -22,5 +22,4 @@ public class LibOutput {
     System.out.println("output");
     System.err.println("error");
   }
-
 }

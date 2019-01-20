@@ -16,56 +16,21 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.model.BuildTarget;
-import com.facebook.buck.rules.BuildRule;
-import com.facebook.buck.rules.BuildRuleResolver;
-import com.facebook.buck.rules.CellPathResolver;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.collect.ImmutableList;
 
 public interface MacroExpander {
 
-  /**
-   * Expand the input given for the this macro to some string.
-   */
-  String expand(
+  /** Expand the input given for the this macro to an Arg. */
+  Arg expand(
       BuildTarget target,
       CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String input)
-      throws MacroException;
-
-  /**
-   * @return {@link BuildRule}s which provide output which is consumed by the expanded
-   *     form of this macro.  These are intended to become dependencies of {@code BuildRule}s that
-   *     use this macro.  In many cases, this may just be the {@link BuildRule}s resolved from the
-   *     {@link BuildTarget}s returned by {@link #extractParseTimeDeps}.
-   */
-  ImmutableList<BuildRule> extractBuildTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String input)
-      throws MacroException;
-
-  /**
-   * @return names of additional {@link com.facebook.buck.rules.TargetNode}s which must be followed
-   *     by the parser to support this macro when constructing the target graph.  To be used by
-   *     {@link com.facebook.buck.rules.ImplicitDepsInferringDescription#findDepsForTargetFromConstructorArgs}
-   *     to extract implicit dependencies hidden behind macros.
-   */
-  ImmutableList<BuildTarget> extractParseTimeDeps(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      String input)
-      throws MacroException;
-
-  /**
-   * @return something that should be added to the rule key of the rule that expands this macro.
-   */
-  Object extractRuleKeyAppendables(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      BuildRuleResolver resolver,
-      String input)
+      ActionGraphBuilder graphBuilder,
+      ImmutableList<String> input,
+      Object precomputedWork)
       throws MacroException;
 }
