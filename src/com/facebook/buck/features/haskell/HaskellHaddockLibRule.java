@@ -188,6 +188,10 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     return getOutputDir().resolve(name + "-haddock-interface");
   }
 
+  private Path getHaddockOuptutDir() {
+    return getOutputDir().resolve("ALL");
+  }
+
   private Path getOutputDir() {
     Path p = BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
     // Haddock doesn't like commas in its file-paths for --read-interface
@@ -200,8 +204,9 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     return ImmutableSet.of(sp);
   }
 
-  public ImmutableSet<SourcePath> getOutputDirs() {
-    return ImmutableSet.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir()));
+  public ImmutableSet<SourcePath> getHaddockOutputDirs() {
+    SourcePath sp = ExplicitBuildTargetSourcePath.of(getBuildTarget(), getHaddockOuptutDir());
+    return ImmutableSet.of(sp);
   }
 
   @Override
@@ -269,7 +274,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
     protected ImmutableList<String> getOutputDirFlags() {
       ImmutableList.Builder<String> flags = ImmutableList.builder();
-      flags.add("--odir", getProjectFilesystem().resolve(getOutputDir()).toString());
+      flags.add("--odir", getProjectFilesystem().resolve(getHaddockOuptutDir()).toString());
       return flags.build();
     }
 

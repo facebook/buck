@@ -111,7 +111,7 @@ public class HaskellPrebuiltLibraryDescription
       public HaskellHaddockInput getHaddockInput(HaskellPlatform platform) {
         return HaskellHaddockInput.builder()
             .addAllInterfaces(ImmutableList.of())
-            .addAllOutputDirs(ImmutableList.of())
+            .addAllHaddockOutputDirs(ImmutableList.of())
             .build();
       }
 

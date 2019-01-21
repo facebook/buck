@@ -33,5 +33,5 @@ interface AbstractHaskellHaddockInput {
   ImmutableSet<SourcePath> getInterfaces();
 
   /** @return any output directories used */
-  ImmutableSet<SourcePath> getOutputDirs();
+  ImmutableSet<SourcePath> getHaddockOutputDirs();
 }

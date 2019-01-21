@@ -87,7 +87,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableSet.Builder<SourcePath> outDirsBuilder = ImmutableSet.builder();
     for (HaskellHaddockInput i : inputs) {
       ifacesBuilder.addAll(i.getInterfaces());
-      outDirsBuilder.addAll(i.getOutputDirs());
+      outDirsBuilder.addAll(i.getHaddockOutputDirs());
     }
     ImmutableSet<SourcePath> ifaces = ifacesBuilder.build();
     ImmutableSet<SourcePath> outDirs = outDirsBuilder.build();
@@ -114,6 +114,10 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
+  private Path getHaddockOuptutDir() {
+    return getOutputDir().resolve("ALL");
+  }
+
   @Override
   public SourcePath getSourcePathToOutput() {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputDir());
@@ -125,7 +129,6 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     SourcePathResolver resolver = context.getSourcePathResolver();
     String name = getBuildTarget().getShortName();
-    Path dir = getOutputDir();
 
     LOG.info(name);
 
@@ -134,20 +137,21 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), dir)));
+                context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())));
     steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context));
 
     // Copy the generated data from dependencies into our output directory
+    Path haddockOutputDir = getHaddockOuptutDir();
     for (SourcePath odir : outputDirs) {
       steps.add(
           CopyStep.forDirectory(
               getProjectFilesystem(),
               resolver.getRelativePath(odir),
-              dir,
-              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+              haddockOutputDir,
+              CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
 
-    buildableContext.recordArtifact(dir);
+    buildableContext.recordArtifact(getOutputDir());
     return steps.build();
   }
 
@@ -179,7 +183,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                   RichStream.from(interfaces)
                       .map(sp -> resolver.getAbsolutePath(sp).toString())
                       .toImmutableList()))
-          .add("-o", getOutputDir().resolve("HTML").toString())
+          .add("-o", getHaddockOuptutDir().toString())
           .build();
     }
 

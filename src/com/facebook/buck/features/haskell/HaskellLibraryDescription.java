@@ -822,7 +822,7 @@ public class HaskellLibraryDescription
         HaskellHaddockLibRule rule = (HaskellHaddockLibRule) graphBuilder.requireRule(target);
         return HaskellHaddockInput.builder()
             .addAllInterfaces(rule.getInterfaces())
-            .addAllOutputDirs(rule.getOutputDirs())
+            .addAllHaddockOutputDirs(rule.getHaddockOutputDirs())
             .build();
       }
 
