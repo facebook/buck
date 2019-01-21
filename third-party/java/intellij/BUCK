@@ -14,6 +14,9 @@ java_library(
         ":platform-impl",
         ":serviceMessages",
         ":util",
+        # IntelliJ will provide these, too...
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
     visibility = [
         "PUBLIC",

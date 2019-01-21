@@ -58,9 +58,6 @@ java_library(
     ),
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
-        # IntelliJ will provide these, too...
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
     ],
     source = "1.8",
     target = "1.8",
@@ -89,9 +86,6 @@ java_library(
     ],
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
-        # IntelliJ will provide these, too...
-        "//third-party/java/guava:guava",
-        "//third-party/java/jsr:jsr305",
     ],
     source = "1.8",
     target = "1.8",
