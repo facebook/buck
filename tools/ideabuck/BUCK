@@ -1,25 +1,57 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
+# =========================================================
+# 'src' directory layout:
+# =========================================================
+
+# Classes considered to be stable for public use
+API_SOURCE_FILES = glob([
+    "src/com/facebook/buck/intellij/ideabuck/api/**/*.java",
+])
+
+# Minimal set of ideabuck files needed to compile grammar
+# Keep as small as possible to permit the possibility of
+# extracting a standalone grammar from ideabuck.
+GRAMMAR_SOURCE_FILES = [
+    "src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java",
+    "src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckPsiUtils.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java",
+]
+
+BUCK_BNF = "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf"
+
+BUCK_FLEX = "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex"
+
+# Implementation classes that should not be used by other plugins.
+PLUGIN_SOURCE_FILES = glob(
+    ["src/**/*.java"],
+    exclude = API_SOURCE_FILES + GRAMMAR_SOURCE_FILES,
+)
+
+# =========================================================
+# Grammar artifacts (JFlex lexer, GrammarKit parser)
+# =========================================================
+
 genrule(
     name = "generate_bnf",
-    srcs = [
-        "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf",
-    ],
+    srcs = [BUCK_BNF],
     out = ".",
     cmd = "$(exe //third-party/java/grammar-kit:grammar-kit) $OUT $SRCS",
 )
 
 genrule(
     name = "generate_flex",
-    srcs = [
-        "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex",
-    ],
+    srcs = [BUCK_FLEX],
     out = ".",
     cmd = (
         "$(exe //third-party/java/grammar-kit:jflex)" +
         " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
         " -d $OUT/com/facebook/buck/intellij/ideabuck/lang" +
-        " src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex"
+        " $SRCS"
     ),
 )
 
@@ -34,14 +66,7 @@ zip_file(
 
 java_library(
     name = "bundle_generated_lib",
-    srcs = [
-        "src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java",
-        "src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java",
-        "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
-        "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
-        "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
-        "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckPsiUtils.java",
-        "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java",
+    srcs = GRAMMAR_SOURCE_FILES + [
         ":generate_zip",
     ],
     provided_deps = [
@@ -51,11 +76,7 @@ java_library(
 
 java_library(
     name = "api",
-    srcs = glob(
-        [
-            "src/com/facebook/buck/intellij/ideabuck/api/**/*.java",
-        ],
-    ),
+    srcs = API_SOURCE_FILES,
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
     ],
@@ -68,19 +89,7 @@ java_library(
 
 java_library(
     name = "ideabuck-lib",
-    srcs = glob(
-        [
-            "src/**/*.java",
-        ],
-        exclude = [
-            "src/com/facebook/buck/intellij/ideabuck/api/**/*.java",
-            "src/com/facebook/buck/intellij/ideabuck/file/BuckFileType.java",
-            "src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java",
-            "src/com/facebook/buck/intellij/ideabuck/lang/psi/*.java",
-            "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
-            "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
-        ],
-    ),
+    srcs = PLUGIN_SOURCE_FILES,
     exported_deps = [
         ":api",
     ],
