@@ -33,7 +33,6 @@ import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.test.selectors.Nullable;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -51,6 +50,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import javax.annotation.Nullable;
 
 /**
  * Merges resources into a final Android App Bundle. This code is based off of the now deprecated
@@ -342,7 +342,7 @@ public class AabBuilderStep implements Step {
     return possibleName;
   }
 
-  private String resolve(String path, String fileName) {
+  private String resolve(@Nullable String path, String fileName) {
     return path == null ? fileName : path + File.separator + fileName;
   }
 
