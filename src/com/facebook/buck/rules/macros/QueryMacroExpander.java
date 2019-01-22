@@ -70,11 +70,6 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
   }
 
   @Override
-  public Class<QueryResults> getPrecomputedWorkClass() {
-    return QueryResults.class;
-  }
-
-  @Override
   public QueryResults precomputeWorkFrom(
       BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException {

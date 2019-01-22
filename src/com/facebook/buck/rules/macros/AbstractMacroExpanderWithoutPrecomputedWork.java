@@ -27,11 +27,6 @@ public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
   private static final Object NO_PRECOMPUTED_WORK = new Object();
 
   @Override
-  public final Class<Object> getPrecomputedWorkClass() {
-    return Object.class;
-  }
-
-  @Override
   public final Object precomputeWorkFrom(
       BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input) {
     return NO_PRECOMPUTED_WORK;

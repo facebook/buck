@@ -26,9 +26,6 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
   /** @return the class for the parsed macro input type. */
   public abstract Class<T> getInputClass();
 
-  /** @return the class for the precomputed work type */
-  public abstract Class<P> getPrecomputedWorkClass();
-
   /** @return the precomputed work that can be re-used between invocations */
   public abstract P precomputeWorkFrom(
       BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
