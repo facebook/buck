@@ -36,44 +36,62 @@ PLUGIN_SOURCE_FILES = glob(
 # Grammar artifacts (JFlex lexer, GrammarKit parser)
 # =========================================================
 
+# Make the output artifact be a directory named "com"
+# so when it gets included in the zip_file, it appears
+# at the right prefix to be used as a Java source zip file.
+
 genrule(
-    name = "generate_bnf",
+    name = "buck_parser",
     srcs = [BUCK_BNF],
-    out = ".",
-    cmd = "$(exe //third-party/java/grammar-kit:grammar-kit) $OUT $SRCS",
+    out = "com",
+    cmd = (
+        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
+    ),
+)
+
+zip_file(
+    name = "buck_parser.src",
+    srcs = [":buck_parser"],
 )
 
 genrule(
-    name = "generate_flex",
+    name = "buck_lexer",
     srcs = [BUCK_FLEX],
-    out = ".",
+    out = "com",
     cmd = (
         "$(exe //third-party/java/grammar-kit:jflex)" +
         " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
-        " -d $OUT/com/facebook/buck/intellij/ideabuck/lang" +
+        " -d $OUT/facebook/buck/intellij/ideabuck/lang" +
         " $SRCS"
     ),
 )
 
 zip_file(
-    name = "generate_zip",
-    srcs = [
-        ":generate_bnf",
-        ":generate_flex",
-    ],
-    out = "generated_bnf.src.zip",
+    name = "buck_lexer.src",
+    srcs = [":buck_lexer"],
 )
 
 java_library(
-    name = "bundle_generated_lib",
+    name = "grammar",
     srcs = GRAMMAR_SOURCE_FILES + [
-        ":generate_zip",
+        ":buck_lexer.src",
+        ":buck_parser.src",
     ],
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
     ],
 )
 
+# ================================================================
+# Classes considered to be part of ideabuck's public/reusable API.
+# Other IntelliJ plugins that wish to declare a dependency on
+# ideabuck to reference its classes should limit themselves to
+# classes defined here.
+#
+# Note that the API does not have dependencies on generated
+# grammar artifacts.  This is intentional to enforce that the
+# public API does not leak grammar implementation details.
+# ================================================================
 java_library(
     name = "api",
     srcs = API_SOURCE_FILES,
@@ -102,7 +120,7 @@ java_library(
         "//tools/ideabuck/...",
     ],
     deps = [
-        ":bundle_generated_lib",
+        ":grammar",
         "//src/com/facebook/buck/event/external:external_lib",
         "//third-party/java/android:ddmlib",
         "//third-party/java/gson:gson",

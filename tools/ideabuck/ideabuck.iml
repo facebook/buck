@@ -22,12 +22,12 @@
     <orderEntry type="module-library">
       <library name="ideabuck-grammar">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/lib__bundle_generated_lib__output/bundle_generated_lib.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/lib__grammar__output/grammar.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES>
-          <root url="file://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/generate_bnf" />
-          <root url="file://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/generate_flex" />
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/buck_lexer.src__/buck_lexer.src.zip!" />
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/buck_parser.src__/buck_parser.src.zip!" />
         </SOURCES>
       </library>
     </orderEntry>
