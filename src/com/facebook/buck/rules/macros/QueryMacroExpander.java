@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 
 /** Abstract base class for the query_targets and query_outputs macros */
 public abstract class QueryMacroExpander<T extends QueryMacro>
-    extends AbstractMacroExpander<T, QueryMacroExpander.QueryResults> {
+    implements MacroExpander<T, QueryMacroExpander.QueryResults> {
 
   private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
 

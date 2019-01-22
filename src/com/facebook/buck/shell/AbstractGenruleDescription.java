@@ -35,13 +35,13 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.SourceSet;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathAbiMacroExpander;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.MavenCoordinatesMacroExpander;
 import com.facebook.buck.rules.macros.QueryOutputsMacroExpander;
 import com.facebook.buck.rules.macros.QueryPathsMacroExpander;
@@ -127,7 +127,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
    * @return the {@link com.facebook.buck.rules.macros.MacroExpander}s which apply to the macros in
    *     this description.
    */
-  protected Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> getMacroHandler(
+  protected Optional<ImmutableList<MacroExpander<? extends Macro, ?>>> getMacroHandler(
       @SuppressWarnings("unused") BuildTarget buildTarget,
       @SuppressWarnings("unused") ProjectFilesystem filesystem,
       @SuppressWarnings("unused") BuildRuleResolver resolver,
@@ -154,7 +154,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       BuildRuleParams params,
       T args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> maybeExpanders =
+    Optional<ImmutableList<MacroExpander<? extends Macro, ?>>> maybeExpanders =
         getMacroHandler(
             buildTarget,
             context.getProjectFilesystem(),
@@ -162,7 +162,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             context.getTargetGraph(),
             args);
     if (maybeExpanders.isPresent()) {
-      ImmutableList<AbstractMacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
+      ImmutableList<MacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       StringWithMacrosConverter converter =
           StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), expanders);

@@ -50,9 +50,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.Escaper;
@@ -84,7 +84,7 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
               + MoreStrings.regexPatternForAny("mk", "h", "hpp", "c", "cpp", "cc", "cxx")
               + "$");
 
-  public static final ImmutableList<AbstractMacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+  public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(new EnvironmentVariableMacroExpander(Platform.detect()));
 
   @Override

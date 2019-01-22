@@ -53,7 +53,7 @@ abstract class AbstractStringWithMacrosConverter {
   abstract CellPathResolver getCellPathResolver();
 
   @Value.Parameter
-  abstract ImmutableList<AbstractMacroExpander<? extends Macro, ?>> getExpanders();
+  abstract ImmutableList<MacroExpander<? extends Macro, ?>> getExpanders();
 
   abstract Optional<Function<String, String>> getSanitizer();
 
@@ -65,21 +65,18 @@ abstract class AbstractStringWithMacrosConverter {
   }
 
   @Value.Derived
-  ImmutableMap<Class<? extends Macro>, AbstractMacroExpander<? extends Macro, ?>>
-      getClassExpanders() {
-    ImmutableMap.Builder<Class<? extends Macro>, AbstractMacroExpander<? extends Macro, ?>>
-        builder = ImmutableMap.builder();
-    for (AbstractMacroExpander<? extends Macro, ?> expander : getExpanders()) {
+  ImmutableMap<Class<? extends Macro>, MacroExpander<? extends Macro, ?>> getClassExpanders() {
+    ImmutableMap.Builder<Class<? extends Macro>, MacroExpander<? extends Macro, ?>> builder =
+        ImmutableMap.builder();
+    for (MacroExpander<? extends Macro, ?> expander : getExpanders()) {
       builder.put(expander.getInputClass(), expander);
     }
     return builder.build();
   }
 
   @SuppressWarnings("unchecked")
-  private <M extends Macro, P> AbstractMacroExpander<M, P> getExpander(M macro)
-      throws MacroException {
-    AbstractMacroExpander<M, P> expander =
-        (AbstractMacroExpander<M, P>) getClassExpanders().get(macro.getClass());
+  private <M extends Macro, P> MacroExpander<M, P> getExpander(M macro) throws MacroException {
+    MacroExpander<M, P> expander = (MacroExpander<M, P>) getClassExpanders().get(macro.getClass());
     if (expander == null) {
       throw new MacroException(String.format("unexpected macro %s", macro.getClass()));
     }
@@ -89,7 +86,7 @@ abstract class AbstractStringWithMacrosConverter {
   @SuppressWarnings("unchecked")
   private <T extends Macro, P> Arg expand(T macro, ActionGraphBuilder ruleResolver)
       throws MacroException {
-    AbstractMacroExpander<T, P> expander = getExpander(macro);
+    MacroExpander<T, P> expander = getExpander(macro);
 
     // Calculate precomputed work.
     P precomputedWork = (P) getPrecomputedWorkCache().get(macro);

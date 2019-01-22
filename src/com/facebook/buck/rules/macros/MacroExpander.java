@@ -16,4 +16,27 @@
 
 package com.facebook.buck.rules.macros;
 
-public interface MacroExpander {}
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.macros.MacroException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.rules.args.Arg;
+
+public interface MacroExpander<T, P> {
+
+  /** @return the class for the parsed macro input type. */
+  Class<T> getInputClass();
+
+  /** @return the precomputed work that can be re-used between invocations */
+  P precomputeWorkFrom(
+      BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
+      throws MacroException;
+
+  Arg expandFrom(
+      BuildTarget target,
+      CellPathResolver cellNames,
+      ActionGraphBuilder graphBuilder,
+      T input,
+      P precomputedWork)
+      throws MacroException;
+}

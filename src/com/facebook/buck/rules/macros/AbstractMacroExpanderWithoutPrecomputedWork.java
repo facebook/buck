@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.rules.args.Arg;
 
 public abstract class AbstractMacroExpanderWithoutPrecomputedWork<T>
-    extends AbstractMacroExpander<T, Object> {
+    implements MacroExpander<T, Object> {
 
   private static final Object NO_PRECOMPUTED_WORK = new Object();
 

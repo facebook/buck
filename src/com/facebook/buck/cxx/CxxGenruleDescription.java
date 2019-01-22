@@ -57,7 +57,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.args.ToolArg;
-import com.facebook.buck.rules.macros.AbstractMacroExpander;
 import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
@@ -75,6 +74,7 @@ import com.facebook.buck.rules.macros.LdflagsStaticMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicFilterMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticPicMacro;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.PlatformNameMacro;
 import com.facebook.buck.rules.macros.SimpleMacroExpander;
 import com.facebook.buck.rules.macros.StringExpander;
@@ -198,7 +198,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   @Override
-  protected Optional<ImmutableList<AbstractMacroExpander<? extends Macro, ?>>> getMacroHandler(
+  protected Optional<ImmutableList<MacroExpander<? extends Macro, ?>>> getMacroHandler(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
       BuildRuleResolver resolver,
@@ -211,8 +211,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     CxxPlatform cxxPlatform = maybeCxxPlatform.get();
-    ImmutableList.Builder<AbstractMacroExpander<? extends Macro, ?>> expanders =
-        ImmutableList.builder();
+    ImmutableList.Builder<MacroExpander<? extends Macro, ?>> expanders = ImmutableList.builder();
 
     expanders.add(new ExecutableMacroExpander());
     expanders.add(new CxxLocationMacroExpander(cxxPlatform));
