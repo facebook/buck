@@ -1003,6 +1003,48 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
   {/param}
 {/call}
 
+
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'artifact_cache_size_limit' /}
+  {param description}
+
+    <p>
+      Specifies the maximum size, in bytes, of a build artifact (output file) that Buck caches.
+    </p>
+
+<p>
+<pre>
+{literal}
+#
+# Use a limit of 50 MB. 
+#
+artifact_cache_size_limit = 52428800
+{/literal}
+</pre>
+</p>
+
+    <p>
+      This value is optional. If you do not specify a value, then it
+      sets no limit to the size of an artifact that Buck caches&mdash;but
+      see note below regarding distributed caches.
+    </p>
+
+    <p>
+      <strong>Note:</strong> This value sets an upper bound on artifact 
+      size for all values of {call buckconfig.cache_mode /}.  
+      The parameter {call buckconfig.http_max_store_size /} sets 
+      an artifact size limit <em>only</em> for distributed cache modes 
+      (<code>http</code> and <code>thrift_over_http</code>).
+      Therefore, it is not meaningful to set a value 
+      for <code>http_max_store_size</code> which is larger 
+      than the value of <code>artifact_cache_size_limit</code>.
+    </p>
+
+  {/param}
+{/call}
+
+
 {call buckconfig.entry}
   {param section: 'build' /}
   {param name: 'engine' /}
@@ -1223,7 +1265,7 @@ osx_toolchains_override = tools.stable,tools.swift40,tools.common
         <code>http</code>: Use an http-based cache. See {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Binary HTTP Cache API' /}{param navid:'binary_http' /}{/call}.
       </li>
       <li>
-        <code>http</code>: Use an http-based cache that uses thrift for object metadata. See {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}.
+        <code>thrift_over_http</code>: Use an http-based cache that uses thrift for object metadata. See {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}.
       </li>
       <li>
         <code>sqlite</code>: Use a SQLite-based cache that inlines small artifacts in the database
