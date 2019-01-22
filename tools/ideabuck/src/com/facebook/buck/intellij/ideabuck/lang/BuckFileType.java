@@ -16,13 +16,15 @@
 
 package com.facebook.buck.intellij.ideabuck.lang;
 
-import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.intellij.openapi.fileTypes.LanguageFileType;
+import com.intellij.openapi.util.IconLoader;
 import javax.swing.Icon;
 import org.jetbrains.annotations.NotNull;
 
 /** Buck language type */
 public class BuckFileType extends LanguageFileType {
+
+  public static Icon DEFAULT_ICON = IconLoader.getIcon("/icons/buck_icon.png", BuckFileType.class);
 
   public static final BuckFileType INSTANCE = new BuckFileType();
 
@@ -56,6 +58,6 @@ public class BuckFileType extends LanguageFileType {
 
   @Override
   public Icon getIcon() {
-    return BuckIcons.FILE_TYPE;
+    return DEFAULT_ICON;
   }
 }

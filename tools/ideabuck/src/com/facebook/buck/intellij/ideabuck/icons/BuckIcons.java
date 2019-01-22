@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.icons;
 
+import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.intellij.icons.AllIcons.Actions;
 import com.intellij.icons.AllIcons.RunConfigurations.TestState;
 import com.intellij.openapi.util.IconLoader;
@@ -29,7 +30,7 @@ public final class BuckIcons {
     return IconLoader.getIcon(path, BuckIcons.class);
   }
 
-  public static final Icon FILE_TYPE = load("/icons/buck_icon.png"); // 16x16
+  public static final Icon FILE_TYPE = BuckFileType.DEFAULT_ICON; // 16x16
   public static final Icon BUCK_TOOL_WINDOW_ICON =
       load("/icons/buck_tool_window_icon.png"); // 13x13
   public static final Icon ACTION_DEBUG = load("/icons/actions/Debug.png");

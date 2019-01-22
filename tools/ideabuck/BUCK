@@ -13,7 +13,6 @@ API_SOURCE_FILES = glob([
 # Keep as small as possible to permit the possibility of
 # extracting a standalone grammar from ideabuck.
 GRAMMAR_SOURCE_FILES = [
-    "src/com/facebook/buck/intellij/ideabuck/icons/BuckIcons.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/BuckFileType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
@@ -80,6 +79,8 @@ java_library(
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
     ],
+    resources = ["resources/icons/buck_icon.png"],
+    resources_root = "resources/",
 )
 
 # ================================================================
