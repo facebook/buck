@@ -59,7 +59,7 @@ abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
                 () ->
                     new IllegalStateException(
                         "Cannot find target node for build target " + getBuildTarget()));
-    return ImmutableMap.of(getBuildTarget(), firstMatchingNode);
+    return ImmutableMap.of(firstMatchingNode.getBuildTarget(), firstMatchingNode);
   }
 
   @Override
