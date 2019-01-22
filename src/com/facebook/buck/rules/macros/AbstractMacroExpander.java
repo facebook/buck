@@ -20,7 +20,6 @@ import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
 
@@ -30,31 +29,10 @@ public abstract class AbstractMacroExpander<T, P> implements MacroExpander {
   /** @return the class for the precomputed work type */
   public abstract Class<P> getPrecomputedWorkClass();
 
-  /** @return parse the input arguments into a type that will be used on the interfaces below. */
-  protected abstract T parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException;
-
   /** @return the precomputed work that can be re-used between invocations */
   public abstract P precomputeWorkFrom(
       BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, T input)
       throws MacroException;
-
-  @Override
-  public final Arg expand(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      ImmutableList<String> input,
-      Object precomputedWork)
-      throws MacroException {
-    return expandFrom(
-        target,
-        cellNames,
-        graphBuilder,
-        parse(target, cellNames, input),
-        getPrecomputedWorkClass().cast(precomputedWork));
-  }
 
   public abstract Arg expandFrom(
       BuildTarget target,

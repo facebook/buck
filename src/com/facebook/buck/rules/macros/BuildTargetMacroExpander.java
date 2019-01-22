@@ -17,17 +17,14 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 
 /**
@@ -48,19 +45,6 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
       throw new MacroException(String.format("no rule %s", input.getTarget()));
     }
     return rule.get();
-  }
-
-  BuildTarget parseBuildTarget(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
-    if (input.size() != 1) {
-      throw new MacroException(String.format("expected a single argument: %s", input));
-    }
-    try {
-      return BuildTargetParser.INSTANCE.parse(cellNames, input.get(0), target.getBaseName(), false);
-    } catch (BuildTargetParseException e) {
-      throw new MacroException(e.getMessage(), e);
-    }
   }
 
   @Override

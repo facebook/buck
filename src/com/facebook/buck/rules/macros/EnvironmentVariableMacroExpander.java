@@ -16,12 +16,10 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.collect.ImmutableList;
 
 /**
  * Expands $(env XYZ) to use the appropriate shell expansion for the current platform. It does not
@@ -40,16 +38,6 @@ public class EnvironmentVariableMacroExpander
   @Override
   public Class<EnvMacro> getInputClass() {
     return EnvMacro.class;
-  }
-
-  @Override
-  protected EnvMacro parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
-    if (input.size() != 1) {
-      throw new MacroException(String.format("expected a single argument: %s", input));
-    }
-    return EnvMacro.of(input.get(0));
   }
 
   @Override

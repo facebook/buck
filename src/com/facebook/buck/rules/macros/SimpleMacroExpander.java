@@ -21,19 +21,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableList;
-import javax.annotation.Nullable;
 
 /** A macro expander with no inputs or precomputed work */
 public abstract class SimpleMacroExpander<M extends Macro>
     extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
-
-  @Override
-  @Nullable
-  protected final M parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input) {
-    return null;
-  }
 
   @Override
   public final Arg expandFrom(

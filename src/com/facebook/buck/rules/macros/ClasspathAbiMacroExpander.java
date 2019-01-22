@@ -47,13 +47,6 @@ public class ClasspathAbiMacroExpander extends BuildTargetMacroExpander<Classpat
     return ClasspathAbiMacro.class;
   }
 
-  @Override
-  protected ClasspathAbiMacro parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
-    return ClasspathAbiMacro.of(parseBuildTarget(target, cellNames, input));
-  }
-
   private HasClasspathEntries getHasClasspathEntries(BuildRule rule) throws MacroException {
     if (!(rule instanceof HasClasspathEntries)) {
       throw new MacroException(

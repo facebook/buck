@@ -16,16 +16,13 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ToolArg;
-import com.google.common.collect.ImmutableList;
 
 /** Resolves to the executable command for a build target referencing a {@link BinaryBuildRule}. */
 public class ExecutableMacroExpander extends BuildTargetMacroExpander<ExecutableMacro> {
@@ -42,13 +39,6 @@ public class ExecutableMacroExpander extends BuildTargetMacroExpander<Executable
               rule.getBuildTarget()));
     }
     return ((BinaryBuildRule) rule).getExecutableCommand();
-  }
-
-  @Override
-  protected ExecutableMacro parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
-    return ExecutableMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   @Override

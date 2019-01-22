@@ -16,15 +16,12 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -52,13 +49,6 @@ public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<Mave
               "%s used in maven macro does not have maven coordinates", rule.getBuildTarget()));
     }
     return coordinates.get();
-  }
-
-  @Override
-  protected MavenCoordinatesMacro parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
-    return MavenCoordinatesMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   @Override

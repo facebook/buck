@@ -16,21 +16,4 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.macros.MacroException;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableList;
-
-public interface MacroExpander {
-
-  /** Expand the input given for the this macro to an Arg. */
-  Arg expand(
-      BuildTarget target,
-      CellPathResolver cellNames,
-      ActionGraphBuilder graphBuilder,
-      ImmutableList<String> input,
-      Object precomputedWork)
-      throws MacroException;
-}
+public interface MacroExpander {}

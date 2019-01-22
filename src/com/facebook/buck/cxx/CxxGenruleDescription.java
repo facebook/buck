@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -84,7 +83,6 @@ import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.Genrule;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -96,10 +94,8 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -242,36 +238,19 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         new CxxPreprocessorFlagsExpander<>(CxxppFlagsMacro.class, cxxPlatform, CxxSource.Type.CXX));
     expanders.add(new ToolExpander<>(LdMacro.class, cxxPlatform.getLd().resolve(resolver)));
 
-    for (Map.Entry<Class<? extends CxxGenruleFilterAndTargetsMacro>, Pair<LinkableDepType, Filter>>
-        ent :
-            ImmutableMap
-                .<Class<? extends CxxGenruleFilterAndTargetsMacro>, Pair<LinkableDepType, Filter>>
-                    builder()
-                .put(LdflagsSharedMacro.class, new Pair<>(LinkableDepType.SHARED, Filter.NONE))
-                .put(
-                    LdflagsSharedFilterMacro.class,
-                    new Pair<>(LinkableDepType.SHARED, Filter.PARAM))
-                .put(LdflagsStaticMacro.class, new Pair<>(LinkableDepType.STATIC, Filter.NONE))
-                .put(
-                    LdflagsStaticFilterMacro.class,
-                    new Pair<>(LinkableDepType.STATIC, Filter.PARAM))
-                .put(
-                    LdflagsStaticPicMacro.class,
-                    new Pair<>(LinkableDepType.STATIC_PIC, Filter.NONE))
-                .put(
-                    LdflagsStaticPicFilterMacro.class,
-                    new Pair<>(LinkableDepType.STATIC_PIC, Filter.PARAM))
-                .build()
-                .entrySet()) {
+    for (Map.Entry<Class<? extends CxxGenruleFilterAndTargetsMacro>, LinkableDepType> ent :
+        ImmutableMap.<Class<? extends CxxGenruleFilterAndTargetsMacro>, LinkableDepType>builder()
+            .put(LdflagsSharedMacro.class, LinkableDepType.SHARED)
+            .put(LdflagsSharedFilterMacro.class, LinkableDepType.SHARED)
+            .put(LdflagsStaticMacro.class, LinkableDepType.STATIC)
+            .put(LdflagsStaticFilterMacro.class, LinkableDepType.STATIC)
+            .put(LdflagsStaticPicMacro.class, LinkableDepType.STATIC_PIC)
+            .put(LdflagsStaticPicFilterMacro.class, LinkableDepType.STATIC_PIC)
+            .build()
+            .entrySet()) {
       expanders.add(
           new CxxLinkerFlagsExpander<>(
-              ent.getKey(),
-              buildTarget,
-              filesystem,
-              cxxPlatform,
-              ent.getValue().getFirst(),
-              args.getOut(),
-              ent.getValue().getSecond()));
+              ent.getKey(), buildTarget, filesystem, cxxPlatform, ent.getValue(), args.getOut()));
     }
 
     return Optional.of(expanders.build());
@@ -369,49 +348,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   private abstract static class FilterAndTargetsExpander<M extends CxxGenruleFilterAndTargetsMacro>
       extends AbstractMacroExpanderWithoutPrecomputedWork<M> {
 
-    private final Filter filter;
-
-    FilterAndTargetsExpander(Filter filter) {
-      this.filter = filter;
-    }
-
-    /** @return an instance of the subclass represented by T. */
-    @SuppressWarnings("unchecked")
-    public <T extends CxxGenruleFilterAndTargetsMacro> T create(
-        Class<T> clazz, Optional<Pattern> filter, ImmutableList<BuildTarget> targets) {
-      try {
-        return (T)
-            clazz
-                .getMethod("of", Optional.class, ImmutableList.class)
-                .invoke(null, filter, targets);
-      } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-        throw new RuntimeException(e);
-      }
-    }
-
-    @Override
-    protected final M parse(
-        BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-        throws MacroException {
-
-      if (this.filter == Filter.PARAM && input.size() < 1) {
-        throw new MacroException("expected at least 1 argument");
-      }
-
-      Iterator<String> itr = input.iterator();
-
-      Optional<Pattern> filter =
-          this.filter == Filter.PARAM ? Optional.of(Pattern.compile(itr.next())) : Optional.empty();
-
-      ImmutableList.Builder<BuildTarget> targets = ImmutableList.builder();
-      while (itr.hasNext()) {
-        targets.add(
-            BuildTargetParser.INSTANCE.parse(cellNames, itr.next(), target.getBaseName(), false));
-      }
-
-      return create(getInputClass(), filter, targets.build());
-    }
-
     protected ImmutableList<BuildRule> resolve(
         BuildRuleResolver resolver, ImmutableList<BuildTarget> input) throws MacroException {
       ImmutableList.Builder<BuildRule> rules = ImmutableList.builder();
@@ -448,7 +384,6 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     CxxPreprocessorFlagsExpander(
         Class<M> clazz, CxxPlatform cxxPlatform, CxxSource.Type sourceType) {
-      super(Filter.NONE);
       this.clazz = clazz;
       this.cxxPlatform = cxxPlatform;
       this.sourceType = sourceType;
@@ -554,9 +489,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         ProjectFilesystem filesystem,
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType depType,
-        String out,
-        Filter filter) {
-      super(filter);
+        String out) {
       this.clazz = clazz;
       this.buildTarget = buildTarget;
       this.filesystem = filesystem;
@@ -681,10 +614,5 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
       consumer.accept(shquoteJoin(Arg.stringify(args, pathResolver)));
     }
-  }
-
-  private enum Filter {
-    NONE,
-    PARAM,
   }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -28,7 +27,6 @@ import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
-import com.google.common.collect.ImmutableList;
 import java.util.function.Consumer;
 
 /** Handles '$(output ...)' macro which expands to the path of a named supplementary output. */
@@ -45,17 +43,6 @@ public class OutputMacroExpander extends AbstractMacroExpanderWithoutPrecomputed
   @Override
   public Class<OutputMacro> getInputClass() {
     return OutputMacro.class;
-  }
-
-  @Override
-  protected OutputMacro parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> args)
-      throws MacroException {
-    if (args.size() != 1) {
-      throw new MacroException(
-          String.format("expected exactly one argument (found %d)", args.size()));
-    }
-    return OutputMacro.of(args.get(0));
   }
 
   private static class OutputArg implements Arg {

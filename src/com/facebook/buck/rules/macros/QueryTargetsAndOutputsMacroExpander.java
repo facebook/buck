@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -98,24 +97,6 @@ public class QueryTargetsAndOutputsMacroExpander
   @Override
   boolean detectsTargetGraphOnlyDeps() {
     return false;
-  }
-
-  @Override
-  protected QueryTargetsAndOutputsMacro parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
-    String separator = " ";
-    String query;
-    if (input.size() == 2) {
-      separator = input.get(0);
-      query = input.get(1);
-    } else if (input.size() == 1) {
-      query = input.get(0);
-    } else {
-      throw new MacroException(
-          "One quoted query expression is expected, or a separator and a query");
-    }
-    return QueryTargetsAndOutputsMacro.of(separator, Query.of(query, target.getBaseName()));
   }
 
   private class QueriedTargestAndOutputsArg implements Arg {

@@ -145,11 +145,7 @@ public class ClasspathMacroExpanderTest {
     CellPathResolver cellRoots = createCellRoots(filesystem);
     Arg ruleKeyAppendables =
         expander.expandFrom(
-            forTarget,
-            cellRoots,
-            graphBuilder,
-            expander.parse(
-                forTarget, cellRoots, ImmutableList.of(rule.getBuildTarget().toString())));
+            forTarget, cellRoots, graphBuilder, ClasspathMacro.of(rule.getBuildTarget()));
 
     ImmutableList<BuildRule> deps =
         BuildableSupport.deriveDeps(ruleKeyAppendables, new SourcePathRuleFinder(graphBuilder))

@@ -136,13 +136,9 @@ public class ClasspathAbiMacroExpanderTest {
 
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
     CellPathResolver cellRoots = createCellRoots(filesystem);
+    ClasspathAbiMacro classpathAbiMacro = ClasspathAbiMacro.of(rule.getBuildTarget());
     Arg ruleKeyAppendables =
-        expander.expandFrom(
-            forTarget,
-            cellRoots,
-            graphBuilder,
-            expander.parse(
-                forTarget, cellRoots, ImmutableList.of(rule.getBuildTarget().toString())));
+        expander.expandFrom(forTarget, cellRoots, graphBuilder, classpathAbiMacro);
 
     ImmutableList<String> deps =
         BuildableSupport.deriveDeps(ruleKeyAppendables, new SourcePathRuleFinder(graphBuilder))

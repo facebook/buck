@@ -16,16 +16,13 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.WorkerTool;
-import com.google.common.collect.ImmutableList;
 import java.util.function.Consumer;
 
 /** Macro expander for the `$(worker ...)` macro. */
@@ -34,13 +31,6 @@ public class WorkerMacroExpander extends BuildTargetMacroExpander<WorkerMacro> {
   @Override
   public Class<WorkerMacro> getInputClass() {
     return WorkerMacro.class;
-  }
-
-  @Override
-  protected WorkerMacro parse(
-      BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
-    return WorkerMacro.of(parseBuildTarget(target, cellNames, input));
   }
 
   protected Tool getTool(BuildRule rule) throws MacroException {

@@ -85,15 +85,6 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
 
   abstract T fromQuery(Query query);
 
-  @Override
-  protected T parse(BuildTarget target, CellPathResolver cellNames, ImmutableList<String> input)
-      throws MacroException {
-    if (input.size() != 1) {
-      throw new MacroException("One quoted query expression is expected");
-    }
-    return fromQuery(Query.of(input.get(0), target.getBaseName()));
-  }
-
   abstract boolean detectsTargetGraphOnlyDeps();
 
   protected static final class QueryResults {
