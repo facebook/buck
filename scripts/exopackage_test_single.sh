@@ -74,10 +74,13 @@ EOF
 export NO_BUCKD=1
 
 # Clear out the phone.
+(
+set +e
 adb uninstall com.facebook.buck.android.agent
 adb uninstall buck.exotest
 adb uninstall buck.exotest.meta
 adb shell 'rm -r /data/local/tmp/exopackage/buck.exotest || rm -f -r /data/local/tmp/exopackage/buck.exotest'
+)
 
 EXP_APP_NAME='Exo Test App'
 
