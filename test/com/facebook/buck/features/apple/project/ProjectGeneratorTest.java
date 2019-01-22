@@ -1356,7 +1356,7 @@ public class ProjectGeneratorTest {
             .setExportedPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
                     .build())
@@ -1366,7 +1366,7 @@ public class ProjectGeneratorTest {
             .setPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
                     .build())
@@ -1408,7 +1408,7 @@ public class ProjectGeneratorTest {
             .setExportedPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
                     .build())
@@ -1418,7 +1418,7 @@ public class ProjectGeneratorTest {
             .setPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
                     .build())
@@ -1462,7 +1462,7 @@ public class ProjectGeneratorTest {
             .setExportedPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
                     .build())
@@ -1472,7 +1472,7 @@ public class ProjectGeneratorTest {
             .setPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
                     .build())
@@ -1528,7 +1528,7 @@ public class ProjectGeneratorTest {
             .setExportedPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofNamedSources(
                             ImmutableSortedMap.of(
                                 "any/name2.h", FakeSourcePath.of("HeaderGroup2/foo2.h"))))
@@ -1541,7 +1541,83 @@ public class ProjectGeneratorTest {
             .setPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
+                        SourceSortedSet.ofNamedSources(
+                            ImmutableSortedMap.of(
+                                "any/name1.h", FakeSourcePath.of("HeaderGroup1/foo1.h"))))
+                    .build())
+            .setSrcs(ImmutableSortedSet.of())
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(ImmutableSet.of(node, privateGeneratedNode, publicGeneratedNode));
+
+    projectGenerator.createXcodeProjects();
+
+    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
+    assertThat(headerSymlinkTrees, hasSize(2));
+
+    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
+        ImmutableMap.of(
+            "foo/yet/another/name.h", "foo/dir1/bar.h",
+            "foo/and/one/more.h", "foo/generated2.h",
+            "foo/any/name2.h", "HeaderGroup2/foo2.h"));
+
+    assertThat(
+        headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
+    assertThatHeaderSymlinkTreeContains(
+        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
+        ImmutableMap.of(
+            "foo/any/name.h", "foo/dir1/foo.h",
+            "foo/different/name.h", "foo/dir2/baz.h",
+            "foo/one/more/name.h", "foo/generated1.h",
+            "foo/any/name1.h", "HeaderGroup1/foo1.h"));
+  }
+
+  @Test
+  public void testCxxLibraryHeaderGroupsWithMapsOfHeadersAndNotMatchingPlatform()
+      throws IOException {
+    BuildTarget privateGeneratedTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "generated1.h");
+    BuildTarget publicGeneratedTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "generated2.h");
+
+    TargetNode<?> privateGeneratedNode = new ExportFileBuilder(privateGeneratedTarget).build();
+    TargetNode<?> publicGeneratedNode = new ExportFileBuilder(publicGeneratedTarget).build();
+
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?> node =
+        new CxxLibraryBuilder(buildTarget)
+            .setExportedHeaders(
+                ImmutableSortedMap.of(
+                    "yet/another/name.h",
+                    FakeSourcePath.of("foo/dir1/bar.h"),
+                    "and/one/more.h",
+                    DefaultBuildTargetSourcePath.of(publicGeneratedTarget)))
+            .setExportedPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("default"),
+                        SourceSortedSet.ofNamedSources(
+                            ImmutableSortedMap.of(
+                                "any/name2.h", FakeSourcePath.of("HeaderGroup2/foo2.h"))))
+                    .add(
+                        Pattern.compile("unknown"),
+                        SourceSortedSet.ofNamedSources(
+                            ImmutableSortedMap.of(
+                                "any/name2.h", FakeSourcePath.of("HeaderGroup2/unknown/foo2.h"))))
+                    .build())
+            .setHeaders(
+                ImmutableSortedMap.of(
+                    "any/name.h", FakeSourcePath.of("foo/dir1/foo.h"),
+                    "different/name.h", FakeSourcePath.of("foo/dir2/baz.h"),
+                    "one/more/name.h", DefaultBuildTargetSourcePath.of(privateGeneratedTarget)))
+            .setPlatformHeaders(
+                PatternMatchedCollection.<SourceSortedSet>builder()
+                    .add(
+                        Pattern.compile("default"),
                         SourceSortedSet.ofNamedSources(
                             ImmutableSortedMap.of(
                                 "any/name1.h", FakeSourcePath.of("HeaderGroup1/foo1.h"))))
@@ -1598,7 +1674,7 @@ public class ProjectGeneratorTest {
             .setExportedPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofNamedSources(
                             ImmutableSortedMap.of(
                                 "any/name2.h", FakeSourcePath.of("HeaderGroup2/foo2.h"))))
@@ -1611,7 +1687,7 @@ public class ProjectGeneratorTest {
             .setPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofNamedSources(
                             ImmutableSortedMap.of(
                                 "any/name1.h", FakeSourcePath.of("HeaderGroup1/foo1.h"))))
@@ -2035,14 +2111,14 @@ public class ProjectGeneratorTest {
             .setPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
                     .build())
             .setExportedPlatformHeaders(
                 PatternMatchedCollection.<SourceSortedSet>builder()
                     .add(
-                        Pattern.compile("iphone.*"),
+                        Pattern.compile("default"),
                         SourceSortedSet.ofUnnamedSources(
                             ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
                     .build())

@@ -1185,7 +1185,7 @@ public class ProjectGenerator {
   public static ImmutableMap<Path, SourcePath> parseAllPlatformHeaders(
       BuildTarget buildTarget,
       SourcePathResolver sourcePathResolver,
-      PatternMatchedCollection<SourceSortedSet> platformHeaders,
+      ImmutableList<SourceSortedSet> platformHeaders,
       boolean export,
       CxxLibraryDescription.CommonArg args) {
     ImmutableMap.Builder<String, SourcePath> parsed = ImmutableMap.builder();
@@ -1193,7 +1193,7 @@ public class ProjectGenerator {
     String parameterName = (export) ? "exported_platform_headers" : "platform_headers";
 
     // Include all platform specific headers.
-    for (SourceSortedSet sourceList : platformHeaders.getValues()) {
+    for (SourceSortedSet sourceList : platformHeaders) {
       parsed.putAll(
           sourceList.toNameMap(
               buildTarget, sourcePathResolver, parameterName, path -> true, path -> path));
@@ -2447,6 +2447,10 @@ public class ProjectGenerator {
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
+      String platform = defaultCxxPlatform.getFlavor().toString();
+      ImmutableList<SourceSortedSet> platformHeaders =
+          arg.getExportedPlatformHeaders().getMatchingValues(platform);
+
       return allHeadersBuilder
           .putAll(
               CxxDescriptionEnhancer.parseExportedHeaders(
@@ -2458,11 +2462,7 @@ public class ProjectGenerator {
                   arg))
           .putAll(
               ProjectGenerator.parseAllPlatformHeaders(
-                  targetNode.getBuildTarget(),
-                  pathResolver,
-                  arg.getExportedPlatformHeaders(),
-                  true,
-                  arg))
+                  targetNode.getBuildTarget(), pathResolver, platformHeaders, true, arg))
           .build();
     }
   }
@@ -2515,6 +2515,10 @@ public class ProjectGenerator {
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
+      String platform = defaultCxxPlatform.getFlavor().toString();
+      ImmutableList<SourceSortedSet> platformHeaders =
+          arg.getPlatformHeaders().getMatchingValues(platform);
+
       return allHeadersBuilder
           .putAll(
               CxxDescriptionEnhancer.parseHeaders(
@@ -2526,7 +2530,7 @@ public class ProjectGenerator {
                   arg))
           .putAll(
               ProjectGenerator.parseAllPlatformHeaders(
-                  targetNode.getBuildTarget(), pathResolver, arg.getPlatformHeaders(), false, arg))
+                  targetNode.getBuildTarget(), pathResolver, platformHeaders, false, arg))
           .build();
     }
   }
