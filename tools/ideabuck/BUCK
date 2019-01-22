@@ -17,7 +17,6 @@ GRAMMAR_SOURCE_FILES = [
     "src/com/facebook/buck/intellij/ideabuck/lang/BuckFileType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckPsiUtils.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java",
 ]
 

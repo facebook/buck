@@ -15,14 +15,12 @@
  */
 package com.facebook.buck.intellij.ideabuck.navigation;
 
-import static org.junit.Assert.*;
-
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.endtoend.BuckTestCase;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
+import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;

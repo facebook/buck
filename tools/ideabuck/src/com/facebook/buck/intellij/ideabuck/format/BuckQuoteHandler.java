@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.format;
 
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils;
+import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.codeInsight.editorActions.SimpleTokenSetQuoteHandler;
 
 public class BuckQuoteHandler extends SimpleTokenSetQuoteHandler {

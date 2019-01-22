@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.format;
 
-import static com.facebook.buck.intellij.ideabuck.lang.psi.BuckPsiUtils.hasElementType;
+import static com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils.hasElementType;
 
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgumentList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListElements;
