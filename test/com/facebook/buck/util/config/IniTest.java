@@ -35,7 +35,7 @@ public class IniTest {
 
   @Test
   public void testSecondaryLoadOverridesOriginalDefs() throws IOException {
-    Ini ini = new Ini();
+    Ini ini = Inis.makeIniParser(false);
     Reader originalInput =
         new StringReader(
             Joiner.on("\n")

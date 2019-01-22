@@ -30,7 +30,7 @@ import org.ini4j.Ini;
 import org.ini4j.InvalidFileFormatException;
 import org.ini4j.Profile;
 
-class Inis {
+public class Inis {
 
   private Inis() {}
 
@@ -63,20 +63,23 @@ class Inis {
   // buck config.  The includes are not enabled in this case (since include
   // location, particularly relative includes, is not well defined).
   @VisibleForTesting
-  static ImmutableMap<String, ImmutableMap<String, String>> read(Reader reader) throws IOException {
+  public static ImmutableMap<String, ImmutableMap<String, String>> read(Reader reader)
+      throws IOException {
     Ini ini = makeIniParser(/*enable_includes=*/ false);
     ini.load(reader);
     return toMap(ini);
   }
 
   // Creates and configures ini parser.
-  private static Ini makeIniParser(boolean enable_includes) {
+  @VisibleForTesting
+  public static Ini makeIniParser(boolean enable_includes) {
     Ini ini = new Ini();
-    Config config = ini.getConfig();
+    Config config = new Config();
     config.setEscape(false);
     config.setEscapeNewline(true);
     config.setMultiOption(false);
     config.setInclude(enable_includes);
+    ini.setConfig(config);
     return ini;
   }
 

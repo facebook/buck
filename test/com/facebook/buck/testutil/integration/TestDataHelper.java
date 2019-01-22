@@ -19,6 +19,7 @@ package com.facebook.buck.testutil.integration;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.config.Inis;
 import com.google.common.base.Splitter;
 import java.io.File;
 import java.io.IOException;
@@ -108,7 +109,8 @@ public class TestDataHelper {
       Map<String, ? extends Map<String, String>> buckconfigOverrides)
       throws IOException {
     String config = projectWorkspace.getFileContents(".buckconfig");
-    Ini ini = new Ini(new StringReader(config));
+    Ini ini = Inis.makeIniParser(true);
+    ini.load(new StringReader(config));
     for (Map.Entry<String, ? extends Map<String, String>> section :
         buckconfigOverrides.entrySet()) {
       for (Map.Entry<String, String> entry : section.getValue().entrySet()) {

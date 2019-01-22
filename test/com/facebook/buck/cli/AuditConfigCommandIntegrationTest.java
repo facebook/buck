@@ -26,6 +26,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.config.Inis;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
@@ -193,12 +194,13 @@ public class AuditConfigCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("audit", "config");
 
     // Use low level ini parser to build config.
-    Ini audit_ini = new Ini(new StringReader(result.getStdout()));
+    Ini auditIni = Inis.makeIniParser(true);
+    auditIni.load(new StringReader(result.getStdout()));
     // Ini object doesn't really provide a good way to compare 2 ini files.
     // Convert that into immutable map so that we can compare sorted maps instead.
     ImmutableMap.Builder<String, ImmutableMap<String, String>> audit_config =
         ImmutableMap.builder();
-    audit_ini.forEach(
+    auditIni.forEach(
         (section_name, section) -> {
           ImmutableMap.Builder<String, String> section_builder = ImmutableMap.builder();
           section.forEach((k, v) -> section_builder.put(k, v));
