@@ -16,7 +16,7 @@
 
 package com.facebook.buck.remoteexecution;
 
-import com.facebook.buck.remoteexecution.Protocol.Digest;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;

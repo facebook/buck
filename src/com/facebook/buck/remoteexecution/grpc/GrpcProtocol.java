@@ -18,7 +18,7 @@ package com.facebook.buck.remoteexecution.grpc;
 
 import build.bazel.remote.execution.v2.Command.EnvironmentVariable;
 import build.bazel.remote.execution.v2.OutputFile.Builder;
-import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;

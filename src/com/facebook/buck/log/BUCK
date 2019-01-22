@@ -28,6 +28,7 @@ java_immutables_library(
         "//src/com/facebook/buck/log/memory:memory",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
+        "//src/com/facebook/buck/remoteexecution/event/listener:listener",
         "//src/com/facebook/buck/remoteexecution/factory:factory",
         "//src/com/facebook/buck/remoteexecution/grpc:grpc",
         "//src/com/facebook/buck/rules/modern/builders:builders",

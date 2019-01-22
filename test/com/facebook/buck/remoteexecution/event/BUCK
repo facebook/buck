@@ -9,10 +9,9 @@ java_test(
     deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/event:interfaces",
-        "//src/com/facebook/buck/event/listener/interfaces:interfaces",
-        "//src/com/facebook/buck/remoteexecution:remoteexecution",
+        "//src/com/facebook/buck/remoteexecution/event:event",
+        "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
         "//src/com/facebook/buck/util:util",
-        "//test/com/facebook/buck/core/config:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//third-party/java/junit:junit",

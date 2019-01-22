@@ -27,11 +27,11 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
-import com.facebook.buck.remoteexecution.Protocol;
-import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.remoteexecution.Protocol.FileNode;
-import com.facebook.buck.remoteexecution.Protocol.SymlinkNode;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.rules.modern.Buildable;

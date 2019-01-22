@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution;
+package com.facebook.buck.remoteexecution.event;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;

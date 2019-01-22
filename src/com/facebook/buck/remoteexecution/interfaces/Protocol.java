@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution;
+package com.facebook.buck.remoteexecution.interfaces;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -17,8 +17,8 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
-import com.facebook.buck.remoteexecution.Protocol.Digest;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import org.immutables.value.Value;

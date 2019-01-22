@@ -14,14 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution;
+package com.facebook.buck.remoteexecution.event;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.LeafEvent;
-import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.Subscribe;

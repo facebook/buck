@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution;
 
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import java.io.Closeable;
 
 /**

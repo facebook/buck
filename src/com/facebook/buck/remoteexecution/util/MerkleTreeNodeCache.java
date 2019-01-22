@@ -15,12 +15,12 @@
  */
 package com.facebook.buck.remoteexecution.util;
 
-import com.facebook.buck.remoteexecution.Protocol;
-import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.remoteexecution.Protocol.Directory;
-import com.facebook.buck.remoteexecution.Protocol.DirectoryNode;
-import com.facebook.buck.remoteexecution.Protocol.FileNode;
-import com.facebook.buck.remoteexecution.Protocol.SymlinkNode;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.DirectoryNode;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;

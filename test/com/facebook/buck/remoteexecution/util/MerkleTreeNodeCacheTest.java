@@ -20,12 +20,12 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.remoteexecution.Protocol.Directory;
-import com.facebook.buck.remoteexecution.Protocol.DirectoryNode;
-import com.facebook.buck.remoteexecution.Protocol.FileNode;
-import com.facebook.buck.remoteexecution.Protocol.SymlinkNode;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.DirectoryNode;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.NodeData;
 import com.facebook.buck.testutil.MoreAsserts;

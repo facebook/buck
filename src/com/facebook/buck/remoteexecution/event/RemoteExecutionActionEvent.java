@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution;
+package com.facebook.buck.remoteexecution.event;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.WorkAdvanceEvent;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.util.Scope;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -61,10 +62,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
   /** Takes care of sending both Started and Finished events within a Scope. */
   public static Scope sendEvent(
-      BuckEventBus eventBus,
-      State state,
-      BuildTarget buildTarget,
-      Optional<Protocol.Digest> actionDigest) {
+      BuckEventBus eventBus, State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
     final Started startedEvent = new Started(state, buildTarget, actionDigest);
     eventBus.post(startedEvent);
     final Scope leftEventScope = LeafEvents.scope(eventBus, state.toString().toLowerCase());
@@ -76,10 +74,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
   /** Sends the terminal event of an action [FAIL|SUCCESS]. */
   public static void sendTerminalEvent(
-      BuckEventBus eventBus,
-      State state,
-      BuildTarget buildTarget,
-      Optional<Protocol.Digest> actionDigest) {
+      BuckEventBus eventBus, State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
     final Terminal event = new Terminal(state, buildTarget, actionDigest);
     eventBus.post(event);
   }
@@ -98,10 +93,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   public static class Terminal extends RemoteExecutionActionEvent {
     private final State state;
     private final BuildTarget buildTarget;
-    private final Optional<Protocol.Digest> actionDigest;
+    private final Optional<Digest> actionDigest;
 
     @VisibleForTesting
-    Terminal(State state, BuildTarget buildTarget, Optional<Protocol.Digest> actionDigest) {
+    Terminal(State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -120,7 +115,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       return buildTarget;
     }
 
-    public Optional<Protocol.Digest> getActionDigest() {
+    public Optional<Digest> getActionDigest() {
       return actionDigest;
     }
 
@@ -134,10 +129,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
   public static class Started extends RemoteExecutionActionEvent {
     private final State state;
     private final BuildTarget buildTarget;
-    private final Optional<Protocol.Digest> actionDigest;
+    private final Optional<Digest> actionDigest;
 
     @VisibleForTesting
-    Started(State state, BuildTarget buildTarget, Optional<Protocol.Digest> actionDigest) {
+    Started(State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           !RemoteExecutionActionEvent.isTerminalState(state),
@@ -156,7 +151,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       return buildTarget;
     }
 
-    public Optional<Protocol.Digest> getActionDigest() {
+    public Optional<Digest> getActionDigest() {
       return actionDigest;
     }
 
@@ -215,7 +210,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     return getClass().getSimpleName();
   }
 
-  public static String actionDigestToString(Protocol.Digest actionDigest) {
+  public static String actionDigestToString(Digest actionDigest) {
     return String.format("%s:%d", actionDigest.getHash(), actionDigest.getSize());
   }
 }

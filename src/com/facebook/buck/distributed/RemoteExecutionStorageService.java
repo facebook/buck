@@ -27,7 +27,7 @@ import com.facebook.buck.distributed.thrift.RemoteExecutionFetchRequest;
 import com.facebook.buck.distributed.thrift.RemoteExecutionStoreRequest;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
-import com.facebook.buck.remoteexecution.Protocol.Digest;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.slb.HybridThriftOverHttpService;
 import com.facebook.buck.slb.HybridThriftRequestHandler;
 import com.facebook.buck.slb.HybridThriftResponseHandler;

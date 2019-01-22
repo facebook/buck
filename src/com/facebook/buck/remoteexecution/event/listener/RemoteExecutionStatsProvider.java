@@ -14,9 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution;
+package com.facebook.buck.remoteexecution.event.listener;
 
-import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.google.common.collect.ImmutableMap;
 
 /** Provides statistics about the ongoing remote execution flow. */

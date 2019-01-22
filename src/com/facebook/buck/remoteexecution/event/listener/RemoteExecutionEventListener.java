@@ -14,11 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution;
+package com.facebook.buck.remoteexecution.event.listener;
 
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.event.BuckEventListener;
-import com.facebook.buck.remoteexecution.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
+import com.facebook.buck.remoteexecution.event.CasBlobUploadEvent.Finished;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -64,7 +67,7 @@ public class RemoteExecutionEventListener
 
   /** Event specific subscriber method. */
   @Subscribe
-  public void onCasUploadEvent(CasBlobUploadEvent.Finished event) {
+  public void onCasUploadEvent(Finished event) {
     hasFirstRemoteActionStarted.set(true);
     uploads.addAndGet(event.getStartedEvent().getBlobCount());
     uploadBytes.addAndGet(event.getStartedEvent().getSizeBytes());

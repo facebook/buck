@@ -18,11 +18,11 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.remoteexecution.Protocol;
-import com.facebook.buck.remoteexecution.Protocol.Digest;
-import com.facebook.buck.remoteexecution.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;

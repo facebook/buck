@@ -18,8 +18,8 @@ package com.facebook.buck.remoteexecution.grpc;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
-import com.facebook.buck.remoteexecution.CasBlobDownloadEvent;
-import com.facebook.buck.remoteexecution.Protocol;
+import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.util.Scope;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.Futures;

@@ -17,9 +17,9 @@
 package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
-import com.facebook.buck.remoteexecution.Protocol;
-import com.facebook.buck.remoteexecution.Protocol.Directory;
-import com.facebook.buck.remoteexecution.Protocol.OutputDirectory;
+import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
