@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.file;
 
+import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.google.common.base.MoreObjects;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileTypes.FileNameMatcher;

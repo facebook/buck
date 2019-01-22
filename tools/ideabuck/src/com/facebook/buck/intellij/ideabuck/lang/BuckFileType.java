@@ -14,10 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.intellij.ideabuck.file;
+package com.facebook.buck.intellij.ideabuck.lang;
 
 import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
-import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.intellij.openapi.fileTypes.LanguageFileType;
 import javax.swing.Icon;
 import org.jetbrains.annotations.NotNull;
@@ -26,8 +25,12 @@ import org.jetbrains.annotations.NotNull;
 public class BuckFileType extends LanguageFileType {
 
   public static final BuckFileType INSTANCE = new BuckFileType();
-  // TODO(#11415116): Get the default extension from Buck or .buckconfig
-  private static final String DEFAULT_EXTENSION = "BUCK";
+
+  /** Default file name in the absence of a config setting for {@code buildfile.name}. */
+  public static final String DEFAULT_FILENAME = "BUCK";
+
+  /** Default file extension for extensions used by {@code load()} statements. */
+  public static final String DEFAULT_EXTENSION = "bzl";
 
   private BuckFileType() {
     super(BuckLanguage.INSTANCE);
@@ -48,7 +51,7 @@ public class BuckFileType extends LanguageFileType {
   @Override
   @NotNull
   public String getDefaultExtension() {
-    return DEFAULT_EXTENSION;
+    return DEFAULT_FILENAME;
   }
 
   @Override

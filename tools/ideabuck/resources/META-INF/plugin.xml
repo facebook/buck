@@ -213,7 +213,7 @@
   <depends optional="true">org.jetbrains.android</depends>
 
   <extensions defaultExtensionNs="com.intellij">
-    <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.file.BuckFileTypeFactory"/>
+    <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.lang.BuckFileTypeFactory"/>
     <lang.parserDefinition
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition"/>

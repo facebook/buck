@@ -20,9 +20,8 @@ import com.facebook.buck.intellij.ideabuck.api.BuckCellManager;
 import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
-import com.facebook.buck.intellij.ideabuck.external.IntellijBuckAction;
-import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
+import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionName;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
@@ -256,9 +255,5 @@ public class BuckAnnotator implements Annotator {
         annotationHolder.createInfoAnnotation(targetExpression, targetFile.get().getPath());
     annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_FILE_NAME);
     return true;
-  }
-
-  private void logToMessageBus(Project project) {
-    project.getMessageBus().syncPublisher(IntellijBuckAction.EVENT).consume(getClass().toString());
   }
 }

@@ -19,7 +19,7 @@ package com.facebook.buck.intellij.ideabuck.config;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
+import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.test.util.MockDisposable;
 import com.facebook.buck.intellij.ideabuck.ui.utils.BuckPluginNotifications;
 import com.intellij.ide.ui.UISettings;

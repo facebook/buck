@@ -16,7 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.lang.psi;
 
-import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
+import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.intellij.psi.tree.IElementType;
 
 public class BuckElementType extends IElementType {

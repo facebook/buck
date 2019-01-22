@@ -16,7 +16,6 @@
 
 package com.facebook.buck.intellij.ideabuck.lang;
 
-import com.facebook.buck.intellij.ideabuck.file.BuckFileType;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.FileViewProvider;
