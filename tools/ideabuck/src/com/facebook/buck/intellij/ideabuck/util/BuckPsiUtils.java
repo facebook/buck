@@ -20,6 +20,7 @@ import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckAssignmentTarget;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckAssignmentTargetList;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckCompoundStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCallSuffix;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionDefinition;
@@ -264,7 +265,7 @@ public final class BuckPsiUtils {
 
   /*
    * A bit hacky:  symbols are either top-level functions, top-level identifiers,
-   * or identifiers loaded from
+   * or identifiers loaded from a {@code load()} statement.
    */
   private static void visitSymbols(PsiElement psiElement, SymbolVisitor visitor) {
     if (psiElement == null) {
@@ -289,12 +290,16 @@ public final class BuckPsiUtils {
       recurse.accept(((BuckFunctionDefinition) psiElement).getIdentifier());
     } else if (psiElement instanceof BuckStatement) {
       recurse.accept(((BuckStatement) psiElement).getSimpleStatement());
-      recurse.accept(((BuckStatement) psiElement).getIfStatement());
+      recurse.accept(((BuckStatement) psiElement).getCompoundStatement());
     } else if (psiElement instanceof BuckIfStatement) {
       ((BuckIfStatement) psiElement).getSingleExpressionList().forEach(recurse);
       ((BuckIfStatement) psiElement).getSuiteList().forEach(recurse);
     } else if (psiElement instanceof BuckSimpleStatement) {
       ((BuckSimpleStatement) psiElement).getSmallStatementList().forEach(recurse);
+    } else if (psiElement instanceof BuckCompoundStatement) {
+      recurse.accept(((BuckCompoundStatement) psiElement).getForStatement());
+      recurse.accept(((BuckCompoundStatement) psiElement).getIfStatement());
+      recurse.accept(((BuckCompoundStatement) psiElement).getFunctionDefinition());
     } else if (psiElement instanceof BuckSmallStatement) {
       recurse.accept(((BuckSmallStatement) psiElement).getAssignmentTarget());
       ((BuckSmallStatement) psiElement).getAssignmentTargetListList().forEach(recurse);

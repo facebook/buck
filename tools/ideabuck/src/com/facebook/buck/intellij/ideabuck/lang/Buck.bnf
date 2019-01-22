@@ -95,14 +95,9 @@
   ]
 }
 
-buckFile ::= item_*
+buckFile ::= statement*
 
-private item_ ::= (statement | load_call | function_definition)
 string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_DOC_STRING | SINGLE_QUOTED_DOC_STRING) (PERCENT primary) ?
-
-load_call ::= 'load' '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
-load_target_argument ::= string
-load_argument ::= [IDENTIFIER '='] string
 
 function_definition ::= 'def' IDENTIFIER '(' parameter_list? ')' ':' suite
 
@@ -110,16 +105,20 @@ parameter_list ::= parameter (',' parameter)* ','?
 
 parameter ::= '**' IDENTIFIER | '*' IDENTIFIER | IDENTIFIER ['=' single_expression]
 
-suite ::= simple_statement | INDENT statement+ DEDENT
-
-statement ::= LINE_COMMENT | simple_statement | if_statement | for_statement
+statement ::= simple_statement | compound_statement
 
 simple_statement ::= small_statement (';' small_statement)* ';'?
 
-small_statement ::= assignment_target UPDATE_OPS expression
+small_statement ::= load_call
+                    | assignment_target UPDATE_OPS expression
                     | (assignment_target_list ('='))* expression
-                    | control_flow_statement
+                    | pass_statement
+                    | flow_statement
                     | expression
+
+load_call ::= 'load' '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
+load_target_argument ::= string
+load_argument ::= [IDENTIFIER '='] string
 
 assignment_target_list ::= assignment_target (',' assignment_target)*
 
@@ -129,7 +128,25 @@ assignment_target ::= primary '.' IDENTIFIER
                       | '[' assignment_target_list ']'
                       | IDENTIFIER
 
-control_flow_statement ::= 'return' [expression] | 'break' | 'continue' | 'pass'
+pass_statement ::= 'pass'
+
+flow_statement ::= break_statement | continue_statement | return_statement
+
+break_statement ::= 'break'
+
+continue_statement ::= 'continue'
+
+return_statement ::= 'return' [expression]
+
+assert_statement ::= 'assert' expression [',' expression]
+
+compound_statement ::= if_statement | for_statement | function_definition
+
+if_statement ::= 'if' single_expression ':' suite ('elif' single_expression ':' suite)* ['else' ':' suite]
+
+for_statement ::= 'for' loop_variable 'in' expression ':' suite
+
+suite ::= simple_statement | INDENT statement+ DEDENT
 
 expression ::= single_expression (',' single_expression)*
 
@@ -173,6 +190,3 @@ binary_op ::=  'or' | 'and' | '==' | '!=' | '<' | '>' | '<=' | '>='
                     | 'in' | 'not' 'in' | 'is' | 'not' 'is'
                     | '|' | '^' | '&' | '-' | '+' | '*' | '%' | '/' | '//'
 
-if_statement ::= 'if' single_expression ':' suite ('elif' single_expression ':' suite)* ['else' ':' suite]
-
-for_statement ::= 'for' loop_variable 'in' expression ':' suite

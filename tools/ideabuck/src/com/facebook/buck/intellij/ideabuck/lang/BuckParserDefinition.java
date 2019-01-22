@@ -81,6 +81,9 @@ public class BuckParserDefinition implements ParserDefinition {
     if (left.getElementType().equals(BuckTypes.LINE_COMMENT)) {
       return SpaceRequirements.MUST_LINE_BREAK;
     }
+    if (right.getElementType().equals(BuckTypes.COMPOUND_STATEMENT)) {
+      return SpaceRequirements.MUST_LINE_BREAK;
+    }
     return SpaceRequirements.MAY;
   }
 

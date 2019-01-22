@@ -80,6 +80,14 @@ public class BuckParsingTest extends ParsingTestCase {
     doTest();
   }
 
+  public void testLineComments2() {
+    doTest();
+  }
+
+  public void testLineComments3() {
+    doTest();
+  }
+
   public void testTwoRules1() {
     doTest();
   }

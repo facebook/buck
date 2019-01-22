@@ -155,16 +155,20 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
   {IDENTIFIER}                { return IDENTIFIER; }
 
   [^]                         { return BAD_CHARACTER; }
+  <<EOF>>                     {
+                                if (!stack.isEmpty()) {
+                                  stack.pop();
+                                  return DEDENT;
+                                } else {
+                                  return null;
+                                }
+                              }
 }
 
 <INDENTED> {
   [ ]                         { currentIndent++; }
   [\t]                        { currentIndent += 8 - currentIndent % 8; }
   {EOL}                       { currentIndent = 0; }
-  {LINE_COMMENT}              {
-                                yybegin(YYINITIAL);
-                                return LINE_COMMENT;
-                              }
   [^]                         {
                                 yypushback(1);
                                 int top = stack.isEmpty() ? 0 : stack.peek();
@@ -180,12 +184,7 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
                                 }
                               }
   <<EOF>>                     {
-                                if (!stack.isEmpty()) {
-                                  stack.pop();
-                                  return DEDENT;
-                                } else {
-                                  yybegin(YYINITIAL);
-                                }
+                                yybegin(YYINITIAL);
                               }
 }
 
