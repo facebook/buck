@@ -279,10 +279,10 @@ public class ExoHelper {
    * Trigger all callbacks which have registered to receive notifications when the module
    * definitions have changed on disk
    */
-  static void triggerCallbacks() {
+  static void triggerCallbacks(List<String> moduleClasses) {
     synchronized (sCallbacks) {
       for (OnModulesChangedCallback mCallback : sCallbacks) {
-        mCallback.onModulesChanged();
+        mCallback.onModulesChanged(moduleClasses);
       }
     }
   }

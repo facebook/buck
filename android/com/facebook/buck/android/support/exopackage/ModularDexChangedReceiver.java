@@ -36,7 +36,8 @@ public class ModularDexChangedReceiver extends BroadcastReceiver {
         new File("/data/local/tmp/exopackage/" + context.getPackageName(), changedPath);
     final List<File> dexJars = ExopackageDexLoader.getJarFilesFromContainingDirectory(changedDir);
     DelegatingClassLoader.getInstance().resetDelegate(dexJars);
-    ExoHelper.triggerCallbacks();
+    List<String> moduleClasses = intent.getStringArrayListExtra("module_classes");
+    ExoHelper.triggerCallbacks(moduleClasses);
   }
 
   /** @return a filter for the broadcast sent by buck when the installation completes */

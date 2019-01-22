@@ -16,10 +16,14 @@
 
 package com.facebook.buck.android.support.exopackage;
 
+import java.util.List;
+
 /**
  * Register an instance of this callback to receive a notification when new classes are hotswapped
  * into the app
+ *
+ * @param moduleClasses a list of all the classes contained in the changed modules.
  */
 public interface OnModulesChangedCallback {
-  void onModulesChanged();
+  void onModulesChanged(List<String> moduleClasses);
 }
