@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.query.Query;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -53,11 +52,6 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
   }
 
   @Override
-  QueryTargetsMacro fromQuery(Query query) {
-    return QueryTargetsMacro.of(query);
-  }
-
-  @Override
   public Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
@@ -77,11 +71,6 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
                 })
             .sorted()
             .collect(ImmutableList.toImmutableList()));
-  }
-
-  @Override
-  boolean detectsTargetGraphOnlyDeps() {
-    return true;
   }
 
   private class QueriedTargetsArg implements Arg {

@@ -28,7 +28,6 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
-import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
@@ -82,10 +81,6 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     return new QueryResults(
         resolveQuery(target, cellNames, graphBuilder, input.getQuery().getQuery()));
   }
-
-  abstract T fromQuery(Query query);
-
-  abstract boolean detectsTargetGraphOnlyDeps();
 
   protected static final class QueryResults {
     ImmutableList<QueryTarget> results;

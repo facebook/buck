@@ -26,7 +26,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
@@ -67,12 +66,6 @@ public class QueryTargetsAndOutputsMacroExpander
   }
 
   @Override
-  public QueryTargetsAndOutputsMacro fromQuery(Query query) {
-    throw new IllegalArgumentException(
-        "A separator must be provided to create a QueryTargetsAndOutputsMacro object");
-  }
-
-  @Override
   public Arg expandFrom(
       BuildTarget target,
       CellPathResolver cellNames,
@@ -92,11 +85,6 @@ public class QueryTargetsAndOutputsMacroExpander
             .sorted()
             .collect(Collectors.toList()),
         input.getSeparator());
-  }
-
-  @Override
-  boolean detectsTargetGraphOnlyDeps() {
-    return false;
   }
 
   private class QueriedTargestAndOutputsArg implements Arg {
