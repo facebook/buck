@@ -26,6 +26,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/config:config",
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:java-hamcrest",
+        "//third-party/java/ini4j:ini4j",
         "//third-party/java/junit:junit",
     ],
 )
