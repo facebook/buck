@@ -24,6 +24,8 @@ java_library(
         "JulLogFormatter.java",
         "SameThreadFailOnTimeout.java",
     ],
+    source = "8",
+    target = "8",
     tests = [
         "//test/com/facebook/buck/testrunner:testrunner",
     ],

@@ -1,6 +1,9 @@
 java_library(
     name = "runner",
     srcs = glob(["*.java"]),
+    # We need to support a java_for_tests that points at Java 8 for now.
+    source = "8",
+    target = "8",
     visibility = [
         "//src/com/facebook/buck/android:rules",
         "//src/com/facebook/buck/jvm/java:steps",

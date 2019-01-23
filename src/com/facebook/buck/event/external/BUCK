@@ -7,6 +7,9 @@ java_library(
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jsr:jsr305",
     ],
+    # This target gets pulled in by ideabuck, which can't move to Java 11 yet, so explicitly target 8.
+    source = "8",
+    target = "8",
     visibility = [
         "PUBLIC",
     ],
