@@ -124,9 +124,11 @@ public class StackedFileHashCache implements FileHashCache {
 
   @Override
   public void invalidate(Path path) {
-    Optional<Pair<ProjectFileHashCache, Path>> found = lookup(path);
-    if (found.isPresent()) {
-      found.get().getFirst().invalidate(found.get().getSecond());
+    for (ProjectFileHashCache cache : caches) {
+      Optional<Path> relativePath = cache.getFilesystem().getPathRelativeToProjectRoot(path);
+      if (relativePath.isPresent() && cache.willGet(relativePath.get())) {
+        cache.invalidate(relativePath.get());
+      }
     }
   }
 
@@ -213,11 +215,6 @@ public class StackedFileHashCache implements FileHashCache {
     return lookup(filesystem, path)
         .orElseThrow(() -> new NoSuchFileException(filesystem.resolve(path).toString()))
         .getSize(path);
-  }
-
-  @Override
-  public void invalidate(ProjectFilesystem filesystem, Path path) {
-    lookup(filesystem, path).ifPresent(cache -> cache.invalidate(path));
   }
 
   @Override

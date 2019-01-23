@@ -35,14 +35,6 @@ public interface FileHashCache extends FileHashLoader {
 
   void invalidate(Path path);
 
-  /**
-   * Invalidate any cached entries for the given relative {@link Path} under the given {@link
-   * ProjectFilesystem}.
-   */
-  default void invalidate(ProjectFilesystem filesystem, Path path) {
-    invalidate(filesystem.resolve(path));
-  }
-
   void invalidateAll();
 
   void set(Path path, HashCode hashCode) throws IOException;
