@@ -309,7 +309,7 @@ public class QueryCommand extends AbstractCommand {
       queryResultMap.putAll(input, queryResult);
     }
 
-    LOG.debug("Printing out the following targets: " + queryResultMap);
+    LOG.debug("Printing out the following targets: %s", queryResultMap);
 
     if (attributesFilter.size() > 0) {
       collectAndPrintAttributesAsJson(
@@ -334,7 +334,7 @@ public class QueryCommand extends AbstractCommand {
       throws IOException, InterruptedException, QueryException {
     ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
 
-    LOG.debug("Printing out the following targets: " + queryResult);
+    LOG.debug("Printing out the following targets: %s", queryResult);
     if (getOutputFormat() == OutputFormat.MINRANK || getOutputFormat() == OutputFormat.MAXRANK) {
       printRankOutput(params, env, queryResult, getOutputFormat());
     } else if (shouldGenerateDotOutput()) {
