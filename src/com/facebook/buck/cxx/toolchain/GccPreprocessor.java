@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx.toolchain;
 
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.MoreIterables;
@@ -27,7 +28,7 @@ import java.nio.file.Path;
 /** Preprocessor implementation for a gcc toolchain. */
 public class GccPreprocessor extends DelegatingTool implements Preprocessor {
 
-  private final boolean useUnixPathSeparator;
+  @AddToRuleKey private final boolean useUnixPathSeparator;
 
   public GccPreprocessor(Tool tool) {
     super(tool);
