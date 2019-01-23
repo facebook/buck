@@ -154,6 +154,10 @@ public class ObjectMappers {
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new Jdk8Module());
 
+    // Empty beans will just print empty string instead of throwing a
+    // com.fasterxml.jackson.databind.exc.InvalidDefinitionException.
+    mapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+
     // With some version of Jackson JDK8 module, it starts to serialize Path objects using
     // getURI() function, this results for serialized paths to be absolute paths with 'file:///'
     // prefix. That does not work well with custom filesystems that Buck uses. Following hack
