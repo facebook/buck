@@ -37,7 +37,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -134,8 +134,8 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     SourcePathResolver resolver = context.getSourcePathResolver();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.addAll(
-        MakeCleanDirectoryStep.of(
+    steps.add(
+        MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
