@@ -26,6 +26,8 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.command.BuildExecutionResult;
 import com.facebook.buck.command.BuildReport;
 import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -52,11 +54,14 @@ public class BuildCommandTest {
 
   private BuildExecutionResult buildExecutionResult;
   private SourcePathResolver resolver;
+  private Cell rootCell;
 
   @Before
   public void setUp() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+
+    rootCell = new TestCellBuilder().build();
 
     LinkedHashMap<BuildRule, Optional<BuildResult>> ruleToResult = new LinkedHashMap<>();
 
@@ -104,7 +109,7 @@ public class BuildCommandTest {
             " ** Summary of failures encountered during the build **",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some.");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver)
+        new BuildReport(buildExecutionResult, resolver, rootCell)
             .generateForConsole(
                 new Console(
                     Verbosity.STANDARD_INFORMATION,
@@ -127,7 +132,7 @@ public class BuildCommandTest {
             " ** Summary of failures encountered during the build **",
             "Rule //fake:rule2 FAILED because java.lang.RuntimeException: some.");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver)
+        new BuildReport(buildExecutionResult, resolver, rootCell)
             .generateForConsole(new TestConsole(Verbosity.COMMANDS));
     assertEquals(expectedReport, observedReport);
   }
@@ -165,7 +170,7 @@ public class BuildCommandTest {
             "  }",
             "}");
     String observedReport =
-        new BuildReport(buildExecutionResult, resolver).generateJsonBuildReport();
+        new BuildReport(buildExecutionResult, resolver, rootCell).generateJsonBuildReport();
     assertEquals(expectedReport, observedReport);
   }
 }

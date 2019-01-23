@@ -1,0 +1,5 @@
+genrule(
+    name = "foo",
+    out = "foo.txt",
+    cmd = "echo foo > $OUT",
+)

@@ -1,0 +1,9 @@
+[repositories]
+  cell1 = ../cell1
+  cell2 = .
+
+[color]
+  ui = false
+
+[project]
+  embedded_cell_buck_out_enabled = true

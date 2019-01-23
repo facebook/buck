@@ -355,7 +355,7 @@ public class Build implements Closeable {
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
-    BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver);
+    BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver, rootCell);
 
     if (buildContext.isKeepGoing()) {
       String buildReportText = buildReport.generateForConsole(console);
@@ -449,7 +449,8 @@ public class Build implements Closeable {
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
-    BuildReport buildReport = new BuildReport(e.createBuildExecutionResult(), pathResolver);
+    BuildReport buildReport =
+        new BuildReport(e.createBuildExecutionResult(), pathResolver, rootCell);
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();
       eventBus.post(BuildEvent.buildReport(jsonBuildReport));

@@ -22,10 +22,13 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -100,5 +103,32 @@ public class BuildReportIntegrationTest {
         new String(Files.readAllBytes(buildReport), Charsets.UTF_8).replace("\r\n", "\n");
     assertThat(buildReportContents, Matchers.containsString("stderr: failure.c"));
     assertThat(buildReportContents, Matchers.containsString("failure.c:2:3"));
+  }
+
+  @Test
+  public void testOutputPathRelativeToRootCell() throws IOException {
+    assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "build_report_with_cells", tmp);
+    workspace.setUp();
+
+    Path cell1Root = workspace.getPath("cell1");
+    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            cell1Root,
+            "build",
+            "--build-report",
+            buildReport.toAbsolutePath().toString(),
+            "cell2//:bar");
+    buildResult.assertSuccess();
+
+    assertTrue(Files.exists(buildReport));
+    JsonNode reportRoot = ObjectMappers.READER.readTree(ObjectMappers.createParser(buildReport));
+    assertEquals(
+        "buck-out/cells/cell2/gen/bar/bar.txt",
+        reportRoot.get("results").get("cell2//:bar").get("output").textValue());
   }
 }
