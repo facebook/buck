@@ -253,8 +253,15 @@ public class BuckQueryEnvironment implements QueryEnvironment {
               "Expected %s to be a build target but it was an instance of %s",
               target, target.getClass().getName()));
     }
+
+    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+    TargetNode<?> node = targetsToNodes.get(buildTarget);
+    if (node != null) {
+      return node;
+    }
+
     try {
-      return parser.getTargetNode(parserState, ((QueryBuildTarget) target).getBuildTarget());
+      return parser.getTargetNode(parserState, buildTarget);
     } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
     }
