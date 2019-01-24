@@ -447,7 +447,6 @@ public class DefaultRuleKeyFactoryTest {
     assertBothKeysAndValuesGetHashed(
         BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one"),
         BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:two"));
-    assertBothKeysAndValuesGetHashed(new SourceRoot("root1"), new SourceRoot("root2"));
 
     // wrapper types
     assertBothKeysAndValuesGetHashed(Optional.of("abc"), Optional.of("def"));

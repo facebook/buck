@@ -61,7 +61,6 @@ import com.facebook.buck.rules.keys.RuleKeyBuilder;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics.Result;
 import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyResult;
-import com.facebook.buck.rules.keys.SourceRoot;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.UncachedRuleKeyBuilder;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
@@ -263,22 +262,15 @@ public class RuleKeyTest {
 
   @Test
   public void ensureListsAreHandledProperly() {
-    ImmutableList<SourceRoot> sourceroots = ImmutableList.of(new SourceRoot("cake"));
     ImmutableList<String> strings = ImmutableList.of("one", "two");
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey reflective =
-        createBuilder(resolver, ruleFinder)
-            .setReflectively("sourceroot", sourceroots)
-            .setReflectively("strings", strings)
-            .build(RuleKey::new);
+        createBuilder(resolver, ruleFinder).setReflectively("strings", strings).build(RuleKey::new);
 
     RuleKey manual =
-        createBuilder(resolver, ruleFinder)
-            .setReflectively("sourceroot", sourceroots)
-            .setReflectively("strings", strings)
-            .build(RuleKey::new);
+        createBuilder(resolver, ruleFinder).setReflectively("strings", strings).build(RuleKey::new);
 
     assertEquals(manual, reflective);
   }

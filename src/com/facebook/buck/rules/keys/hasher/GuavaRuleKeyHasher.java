@@ -23,7 +23,6 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.rules.keys.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
@@ -143,11 +142,6 @@ public class GuavaRuleKeyHasher implements RuleKeyHasher<HashCode> {
   @Override
   public GuavaRuleKeyHasher putNonHashingPath(String path) {
     return this.putStringified(RuleKeyHasherTypes.NON_HASHING_PATH, path);
-  }
-
-  @Override
-  public GuavaRuleKeyHasher putSourceRoot(SourceRoot sourceRoot) {
-    return this.putStringified(RuleKeyHasherTypes.SOURCE_ROOT, sourceRoot.getName());
   }
 
   @Override

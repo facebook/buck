@@ -277,8 +277,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
       hasher.putRuleKey((RuleKey) val);
     } else if (val instanceof BuildTarget) {
       hasher.putBuildTarget((BuildTarget) val);
-    } else if (val instanceof SourceRoot) {
-      hasher.putSourceRoot((SourceRoot) val);
     } else if (val instanceof Sha1HashCode) {
       hasher.putSha1((Sha1HashCode) val);
     } else if (val instanceof byte[]) {

@@ -136,11 +136,6 @@ public final class CommonRuleKeyHasherTest {
                 pair.apply(
                     "NonHashingPath<4>, NonHashingPath<2>",
                     h -> h.putNonHashingPath("4").putNonHashingPath("2")),
-                pair.apply("SourceRoot<>", h -> h.putSourceRoot(new SourceRoot(""))),
-                pair.apply("SourceRoot<42>", h -> h.putSourceRoot(new SourceRoot("42"))),
-                pair.apply(
-                    "SourceRoot<4>, SourceRoot<2>",
-                    h -> h.putSourceRoot(new SourceRoot("4")).putSourceRoot(new SourceRoot("2"))),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_1), h -> h.putRuleKey(RULE_KEY_1)),
                 pair.apply(String.format("RuleKey<%s>", RULE_KEY_2), h -> h.putRuleKey(RULE_KEY_2)),
                 pair.apply("RuleType<>", h -> h.putRuleType(RuleType.of("", RuleType.Kind.BUILD))),
@@ -327,13 +322,6 @@ public final class CommonRuleKeyHasherTest {
     public void testConsistencyForNonHashingPath() {
       assertEquals(
           newHasher().putNonHashingPath("42").hash(), newHasher().putNonHashingPath("42").hash());
-    }
-
-    @Test
-    public void testConsistencyForSourceRoot() {
-      assertEquals(
-          newHasher().putSourceRoot(new SourceRoot("42")).hash(),
-          newHasher().putSourceRoot(new SourceRoot("42")).hash());
     }
 
     @Test

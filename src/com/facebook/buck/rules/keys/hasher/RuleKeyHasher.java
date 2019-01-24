@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.io.ArchiveMemberPath;
-import com.facebook.buck.rules.keys.SourceRoot;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
@@ -98,8 +97,6 @@ public interface RuleKeyHasher<HASH> {
   RuleKeyHasher<HASH> putArchiveMemberPath(ArchiveMemberPath path, HashCode hash);
 
   RuleKeyHasher<HASH> putNonHashingPath(String path);
-
-  RuleKeyHasher<HASH> putSourceRoot(SourceRoot sourceRoot);
 
   RuleKeyHasher<HASH> putRuleKey(RuleKey ruleKey);
 

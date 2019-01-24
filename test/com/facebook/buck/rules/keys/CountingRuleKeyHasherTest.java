@@ -184,21 +184,6 @@ public class CountingRuleKeyHasherTest {
         newGuavaHasher().putNonHashingPath("4").putNonHashingPath("2").hash(),
         newCountHasher().putNonHashingPath("4").putNonHashingPath("2").hash());
     assertEquals(
-        newGuavaHasher().putSourceRoot(new SourceRoot("")).hash(),
-        newCountHasher().putSourceRoot(new SourceRoot("")).hash());
-    assertEquals(
-        newGuavaHasher().putSourceRoot(new SourceRoot("42")).hash(),
-        newCountHasher().putSourceRoot(new SourceRoot("42")).hash());
-    assertEquals(
-        newGuavaHasher()
-            .putSourceRoot(new SourceRoot("4"))
-            .putSourceRoot(new SourceRoot("2"))
-            .hash(),
-        newCountHasher()
-            .putSourceRoot(new SourceRoot("4"))
-            .putSourceRoot(new SourceRoot("2"))
-            .hash());
-    assertEquals(
         newGuavaHasher().putRuleKey(RULE_KEY_1).hash(),
         newCountHasher().putRuleKey(RULE_KEY_1).hash());
     assertEquals(
@@ -357,10 +342,6 @@ public class CountingRuleKeyHasherTest {
     hasher.putNonHashingPath("");
     assertEquals(++count, hasher.getCount());
     hasher.putNonHashingPath("42").putNonHashingPath("43");
-    assertEquals(count += 2, hasher.getCount());
-    hasher.putSourceRoot(new SourceRoot(""));
-    assertEquals(++count, hasher.getCount());
-    hasher.putSourceRoot(new SourceRoot("42")).putSourceRoot(new SourceRoot("43"));
     assertEquals(count += 2, hasher.getCount());
     hasher.putRuleKey(RULE_KEY_1);
     assertEquals(++count, hasher.getCount());

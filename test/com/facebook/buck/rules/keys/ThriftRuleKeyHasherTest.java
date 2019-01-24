@@ -162,8 +162,6 @@ public class ThriftRuleKeyHasherTest {
     hasher.putKey(".archive_member_path_value");
     hasher.putNonHashingPath("non_hashing_test");
     hasher.putKey(".non_hashing_path_value");
-    hasher.putSourceRoot(new SourceRoot("source_root"));
-    hasher.putKey(".source_root_value");
     hasher.putRuleKey(new RuleKey(HashCode.fromString("d0c852385a66458b6e960c89fac580e5eb6d6aec")));
     hasher.putKey(".rule_key_value");
     hasher.putRuleType(RuleType.of("sample_build_rule", RuleType.Kind.BUILD));
@@ -254,10 +252,6 @@ public class ThriftRuleKeyHasherTest {
                     new com.facebook.buck.log.thrift.rulekeys.ArchiveMemberPath(
                         "archive_path", "member_path", "f9d8ff855a16a3a3d28bfb445cc440502d6e895a")))
             .put(".non_hashing_path_value", Value.path(new NonHashedPath("non_hashing_test")))
-            .put(
-                ".source_root_value",
-                Value.sourceRoot(
-                    new com.facebook.buck.log.thrift.rulekeys.SourceRoot("source_root")))
             .put(
                 ".rule_key_value",
                 Value.ruleKeyHash(new RuleKeyHash("d0c852385a66458b6e960c89fac580e5eb6d6aec")))

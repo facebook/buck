@@ -128,8 +128,6 @@ public class RuleKeyBuilderTest {
           // Buck simple types
           Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"),
           Sha1HashCode.of("b67816b13867c32ac52ca002b39af204cdfaa5fd"),
-          new SourceRoot(""),
-          new SourceRoot("42"),
           RULE_KEY_1,
           RULE_KEY_2,
           RuleType.of("", RuleType.Kind.BUILD),
