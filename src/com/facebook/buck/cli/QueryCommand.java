@@ -227,8 +227,7 @@ public class QueryCommand extends AbstractCommand {
           params, env, queryFormat, formatArgs, shouldGenerateJsonOutput(), outputAttributes());
     }
     if (formatArgs.size() > 0) {
-      // TODO: buck_team: return ExitCode.COMMANDLINE_ERROR
-      throw new HumanReadableException(
+      throw new CommandLineException(
           "Must not specify format arguments without a %s or %Ss in the query");
     }
     return runSingleQuery(params, env, queryFormat);
@@ -249,7 +248,7 @@ public class QueryCommand extends AbstractCommand {
           String.format(
               "Incorrect number of sets. Query uses `%%Ss` %d times but %d sets were given",
               numberOfSetsRequested, numberOfSetsProvided);
-      throw new HumanReadableException(message);
+      throw new CommandLineException(message);
     }
 
     // If they only provided one list as args, use that for every instance of `%Ss`

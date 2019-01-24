@@ -31,6 +31,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -300,7 +301,7 @@ public class QueryCommandIntegrationTest {
 
     ProcessResult processResult =
         workspace.runBuckCommand("query", "owner('example/1.txt')", "+", "owner('example/2.txt')");
-    processResult.assertFailure();
+    processResult.assertExitCode(ExitCode.COMMANDLINE_ERROR);
 
     assertThat(processResult.getStderr(), containsString("format arguments"));
     assertThat(processResult.getStderr(), containsString("%s"));
