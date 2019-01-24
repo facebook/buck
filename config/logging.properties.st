@@ -31,7 +31,12 @@
 # level (before passing them to the console / log files / etc.)
 #
 # If you want to enable more verbose logging, do it here.
-.level=FINE
+
+.level=INFO
+
+# Give a bit finer detail logging for facebook packages (importantly, the com.facebook.buck
+# package).
+com.facebook.level=FINE
 
 # http client is way too chatty at FINER level.
 httpclient.wire.content.level=SEVERE
