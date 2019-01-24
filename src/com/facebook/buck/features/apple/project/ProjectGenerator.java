@@ -141,6 +141,7 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
+import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.shell.AbstractGenruleDescription;
@@ -1767,6 +1768,9 @@ public class ProjectGenerator {
                 .addAll(
                     convertStringWithMacros(
                         targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
                 .addAll(testingOverlay)
                 .build();
         Iterable<String> otherCxxFlags =
@@ -1781,6 +1785,9 @@ public class ProjectGenerator {
                 .addAll(
                     convertStringWithMacros(
                         targetNode, targetNode.getConstructorArg().getPreprocessorFlags()))
+                .addAll(
+                    convertStringWithMacros(
+                        targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
                 .addAll(testingOverlay)
                 .build();
 
@@ -3809,16 +3816,81 @@ public class ProjectGenerator {
                 Optional.of(dependenciesCache),
                 AppleBuildRules.RecursiveDependenciesMode.BUILDING,
                 targetNode,
-                ImmutableSet.of(AppleLibraryDescription.class, CxxLibraryDescription.class)))
+                ImmutableSet.of(
+                    AppleLibraryDescription.class,
+                    CxxLibraryDescription.class,
+                    PrebuiltCxxLibraryDescription.class,
+                    PrebuiltAppleFrameworkDescription.class)))
         .append(targetNode)
         .transformAndConcat(
-            input ->
-                TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
-                    .map(
-                        input1 ->
-                            ImmutableList.of(
-                                input1.getConstructorArg().getExportedPlatformPreprocessorFlags()))
-                    .orElse(ImmutableList.of()));
+            input -> {
+              Optional<Iterable<PatternMatchedCollection<ImmutableList<StringWithMacros>>>> result;
+              result =
+                  TargetNodes.castArg(input, CxxLibraryDescription.CommonArg.class)
+                      .map(
+                          input1 ->
+                              ImmutableList.of(
+                                  input1
+                                      .getConstructorArg()
+                                      .getExportedPlatformPreprocessorFlags()));
+              if (result.isPresent()) {
+                return result.get();
+              }
+              result =
+                  TargetNodes.castArg(input, PrebuiltCxxLibraryDescriptionArg.class)
+                      .map(
+                          input1 ->
+                              ImmutableList.of(
+                                  input1
+                                      .getConstructorArg()
+                                      .getExportedPlatformPreprocessorFlags()));
+              if (result.isPresent()) {
+                return result.get();
+              }
+              return ImmutableList.of();
+            });
+  }
+
+  private Iterable<StringWithMacros> collectRecursiveSystemPreprocessorFlags(
+      TargetNode<?> targetNode) {
+    return FluentIterable.from(
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                targetNode,
+                ImmutableSet.of(PrebuiltCxxLibraryDescription.class)))
+        .append(targetNode)
+        .transformAndConcat(
+            input -> {
+              Optional<ImmutableList<SourcePath>> result;
+              result =
+                  TargetNodes.castArg(input, PrebuiltCxxLibraryDescriptionArg.class)
+                      .map(
+                          input1 ->
+                              input1
+                                  .getConstructorArg()
+                                  .getHeaderDirs()
+                                  .orElse(ImmutableList.of()));
+              if (result.isPresent()) {
+                return result.get();
+              }
+              return ImmutableList.of();
+            })
+        .transform(
+            headerDir -> {
+              if (headerDir instanceof BuildTargetSourcePath) {
+                BuildTargetSourcePath targetSourcePath = (BuildTargetSourcePath) headerDir;
+                return StringWithMacros.of(
+                    ImmutableList.of(
+                        Either.ofLeft("-isystem"),
+                        Either.ofRight(
+                            MacroContainer.of(
+                                LocationMacro.of(targetSourcePath.getTarget()), false))));
+              }
+              return StringWithMacros.of(ImmutableList.of(Either.ofLeft("-isystem" + headerDir)));
+            });
   }
 
   private ImmutableList<StringWithMacros> collectRecursiveExportedLinkerFlags(

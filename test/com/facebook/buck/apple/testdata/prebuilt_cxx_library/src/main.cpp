@@ -1,4 +1,4 @@
-extern const char *exclamation();
+#import <prebuilt_cxx_library/exclamation.h>
 
 int main()
 {
