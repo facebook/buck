@@ -62,22 +62,45 @@
     DOUBLE_QUOTED_DOC_STRING="regexp:\"\"\".*(\"\"\")?"
     SINGLE_QUOTED_DOC_STRING="regexp:'''.*(''')?"
 
-    LOAD_KEYWORD = 'load'
-    DEF = 'def'
-    FOR = 'for'
-    IN = 'in'
-    IS = 'is'
+    // As per https://github.com/bazelbuild/starlark/blob/master/spec.md
+    // "The following tokens are keywords and may not be used as identifiers:"
     AND = 'and'
-    OR = 'or'
-    NOT = 'not'
-    IF = 'if'
-    ELSE = 'else'
-    ELIF = 'elif'
     BREAK = 'break'
     CONTINUE = 'continue'
+    DEF = 'def'
+    ELIF = 'elif'
+    ELSE = 'else'
+    FOR = 'for'
+    IF = 'if'
+    IN = 'in'
+    LOAD = 'load'
+    NOT = 'not'
+    OR = 'or'
     PASS = 'pass'
     RETURN = 'return'
+
+    // As per https://github.com/bazelbuild/starlark/blob/master/spec.md
+    // "The tokens below also may not be used as identifiers
+    // although they do not appear in the grammar;
+    // they are reserved as possible future keywords:"
+    AS = 'as'
+    ASSERT = 'assert'
+    CLASS = 'class'
+    DEL = 'del'
+    EXCEPT = 'except'
+    FINALLY = 'finally'
+    FROM = 'from'
+    GLOBAL = 'global'
+    IMPORT = 'import'
+    IS = 'is'
     LAMBDA = 'lambda'
+    NONLOCAL = 'nonlocal'
+    RAISE = 'raise'
+    TRY = 'try'
+    WHILE = 'while'
+    WITH = 'with'
+    YIELD = 'yield'
+
     GLOB = 'glob'
 
     L_PARENTHESES = '('

@@ -102,22 +102,46 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
   ";"                         { return SEMI_COLON; }
   "*"                         { return STAR; }
   "**"                        { return DOUBLE_STAR; }
-  "load"                      { return LOAD_KEYWORD; }
-  "def"                       { return DEF; }
-  "for"                       { return FOR; }
-  "in"                        { return IN; }
+  // As per https://github.com/bazelbuild/starlark/blob/master/spec.md
+  // "The following tokens are keywords and may not be used as identifiers:"
   "and"                       { return AND; }
-  "or"                        { return OR; }
-  "not"                       { return NOT; }
-  "if"                        { return IF; }
-  "else"                      { return ELSE; }
-  "elif"                      { return ELIF; }
   "break"                     { return BREAK; }
   "continue"                  { return CONTINUE; }
+  "def"                       { return DEF; }
+  "elif"                      { return ELIF; }
+  "else"                      { return ELSE; }
+  "for"                       { return FOR; }
+  "if"                        { return IF; }
+  "in"                        { return IN; }
+  "load"                      { return LOAD; }
+  "not"                       { return NOT; }
+  "or"                        { return OR; }
   "pass"                      { return PASS; }
   "return"                    { return RETURN; }
+  // As per https://github.com/bazelbuild/starlark/blob/master/spec.md
+  // "The tokens below also may not be used as identifiers
+  // although they do not appear in the grammar;
+  // they are reserved as possible future keywords:"
+  "as"                        { return AS; }
+  "assert"                    { return ASSERT; }
+  "class"                     { return CLASS; }
+  "del"                       { return DEL; }
+  "except"                    { return EXCEPT; }
+  "finally"                   { return FINALLY; }
+  "from"                      { return FROM; }
+  "global"                    { return GLOBAL; }
+  "import"                    { return IMPORT; }
+  "is"                        { return IS; }
   "lambda"                    { return LAMBDA; }
+  "nonlocal"                  { return NONLOCAL; }
+  "raise"                     { return RAISE; }
+  "try"                       { return TRY; }
+  "while"                     { return WHILE; }
+  "with"                      { return WITH; }
+  "yield"                     { return YIELD; }
+
   "glob"                      { return GLOB; }
+
   "("                         {
                                 unmatchedPair++;
                                 return L_PARENTHESES;
