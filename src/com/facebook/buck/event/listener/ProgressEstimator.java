@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.event.listener.util;
+package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;

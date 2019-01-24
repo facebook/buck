@@ -208,7 +208,7 @@ public class CacheCommandTest {
             false,
             Optional.empty(),
             ImmutableList.of());
-    listener.register(eventBus);
+    eventBus.register(listener);
     return listener;
   }
 

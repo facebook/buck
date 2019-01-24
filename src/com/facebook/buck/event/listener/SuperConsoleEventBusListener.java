@@ -310,11 +310,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines);
 
     boolean parseFinished =
-        addLineFromEventInterval(
+        addLineFromEvents(
             "Parsing buck files",
             /* suffix */ Optional.empty(),
             currentTimeMillis,
-            parseStats.getInterval(),
+            buckFilesParsingEvents.values(),
             getEstimatedProgressOfParsingBuckFiles(),
             Optional.of(this.minimumDurationMillisecondsToShowParse),
             lines);
@@ -402,8 +402,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     long buildFinishedTime =
         buildFinished != null ? buildFinished.getTimestamp() : currentTimeMillis;
     Collection<EventInterval> filteredBuckFilesParsingEvents =
-        getEventsBetween(
-            buildStartedTime, buildFinishedTime, ImmutableList.of(parseStats.getInterval()));
+        getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesParsingEvents.values());
     Collection<EventInterval> filteredActionGraphEvents =
         getEventsBetween(buildStartedTime, buildFinishedTime, actionGraphEvents.values());
     long offsetMs =
