@@ -430,11 +430,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       throw new QueryException(e, e.getMessage());
     }
 
-    for (BuildTarget buildTarget : jobsCache.keySet()) {
-      if (!buildTargetToQueryTarget.containsKey(buildTarget)) {
-        buildTargetToQueryTarget.put(buildTarget, QueryBuildTarget.of(buildTarget));
-      }
-    }
+    jobsCache.keySet().forEach(this::getOrCreateQueryBuildTarget);
   }
 
   private Optional<ListenableFuture<Void>> discoverNewTargetsConcurrently(
