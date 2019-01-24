@@ -42,6 +42,10 @@ com.facebook.level=FINE
 httpclient.wire.content.level=SEVERE
 httpclient.wire.header.level=SEVERE
 
+# AggregateFuture logs every time it gets multiple failures. Due to the way that we use these, that
+# gets super-verbose and unnecessary.
+com.google.common.util.concurrent.AggregateFuture.level=OFF
+
 # Needed for "buck fix" to find many source ABI errors
 com.facebook.buck.jvm.java.Jsr199JavacInvocation.level=FINE
 
