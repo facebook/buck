@@ -59,14 +59,23 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   @VisibleForTesting
   public DefaultBuckEventBus(
       Clock clock, boolean async, BuildId buildId, int shutdownTimeoutMillis) {
-    this.clock = clock;
-    this.executorService =
+    this(
+        clock,
+        buildId,
+        shutdownTimeoutMillis,
         async
             ? MostExecutors.newSingleThreadExecutor(
                 new CommandThreadFactory(
                     BuckEventBus.class.getSimpleName(),
                     GlobalStateManager.singleton().getThreadToCommandRegister()))
-            : MoreExecutors.newDirectExecutorService();
+            : MoreExecutors.newDirectExecutorService());
+  }
+
+  @VisibleForTesting
+  public DefaultBuckEventBus(
+      Clock clock, BuildId buildId, int shutdownTimeoutMillis, ExecutorService executorService) {
+    this.clock = clock;
+    this.executorService = executorService;
     this.eventBus = new EventBus("buck-build-events");
     this.threadIdSupplier = DEFAULT_THREAD_ID_SUPPLIER;
     this.buildId = buildId;
@@ -79,7 +88,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
       activeTasks++;
     }
 
-    executorService.submit(
+    executorService.execute(
         () -> {
           try {
             eventBus.post(event);
