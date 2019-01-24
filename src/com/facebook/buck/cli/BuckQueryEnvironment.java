@@ -305,7 +305,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     Set<QueryTarget> result = new LinkedHashSet<>();
     for (QueryTarget target : targets) {
       TargetNode<?> node = getNode(target);
-      result.addAll(getTargetsFromTargetNodes(graph.getIncomingNodesFor(node)));
+      for (TargetNode<?> parentNode : graph.getIncomingNodesFor(node)) {
+        result.add(getOrCreateQueryBuildTarget(parentNode.getBuildTarget()));
+      }
     }
     return result;
   }
