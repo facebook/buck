@@ -86,7 +86,7 @@ public class AuditOwnerCommand extends AbstractCommand {
               pool.getListeningExecutorService(),
               getEnableParserProfiling(),
               getExcludeIncompatibleTargets());
-      return QueryCommand.runMultipleQuery(
+      QueryCommand.runMultipleQuery(
           params,
           env,
           "owner('%s')",
@@ -103,6 +103,7 @@ public class AuditOwnerCommand extends AbstractCommand {
       // TODO(buck_team): catch specific exceptions and output appropriate code
       return ExitCode.BUILD_ERROR;
     }
+    return ExitCode.SUCCESS;
   }
 
   @Override

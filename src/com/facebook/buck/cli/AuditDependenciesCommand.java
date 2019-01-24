@@ -125,7 +125,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
               pool.getListeningExecutorService(),
               getEnableParserProfiling(),
               getExcludeIncompatibleTargets());
-      return QueryCommand.runMultipleQuery(
+      QueryCommand.runMultipleQuery(
           params,
           env,
           QueryCommand.getAuditDependenciesQueryFormat(
@@ -143,6 +143,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
       // TODO(buck_team): catch specific exceptions and return proper codes
       return ExitCode.BUILD_ERROR;
     }
+    return ExitCode.SUCCESS;
   }
 
   @Override

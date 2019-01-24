@@ -208,33 +208,36 @@ public class QueryCommand extends AbstractCommand {
               executor,
               getEnableParserProfiling(),
               getExcludeIncompatibleTargets());
-      return formatAndRunQuery(params, env);
+      formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);
     }
+    return ExitCode.SUCCESS;
   }
 
   @VisibleForTesting
-  ExitCode formatAndRunQuery(CommandRunnerParams params, BuckQueryEnvironment env)
+  void formatAndRunQuery(CommandRunnerParams params, BuckQueryEnvironment env)
       throws IOException, InterruptedException, QueryException {
     String queryFormat = arguments.get(0);
     List<String> formatArgs = arguments.subList(1, arguments.size());
     if (queryFormat.contains("%Ss")) {
-      return runSingleQueryWithSet(params, env, queryFormat, formatArgs);
+      runSingleQueryWithSet(params, env, queryFormat, formatArgs);
+      return;
     }
     if (queryFormat.contains("%s")) {
-      return runMultipleQuery(
+      runMultipleQuery(
           params, env, queryFormat, formatArgs, shouldGenerateJsonOutput(), outputAttributes());
+      return;
     }
     if (formatArgs.size() > 0) {
       throw new CommandLineException(
           "Must not specify format arguments without a %s or %Ss in the query");
     }
-    return runSingleQuery(params, env, queryFormat);
+    runSingleQuery(params, env, queryFormat);
   }
 
   /** Format and evaluate the query using list substitution */
-  ExitCode runSingleQueryWithSet(
+  private void runSingleQueryWithSet(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       String queryFormat,
@@ -254,7 +257,8 @@ public class QueryCommand extends AbstractCommand {
     // If they only provided one list as args, use that for every instance of `%Ss`
     if (numberOfSetsProvided == 1) {
       String formattedQuery = queryFormat.replace("%Ss", getSetRepresentation(formatArgs));
-      return runSingleQuery(params, env, formattedQuery);
+      runSingleQuery(params, env, formattedQuery);
+      return;
     }
 
     List<String> unusedFormatArgs = formatArgs;
@@ -269,14 +273,14 @@ public class QueryCommand extends AbstractCommand {
       unusedFormatArgs = unusedFormatArgs.subList(nextSeparatorIndex + 1, unusedFormatArgs.size());
       formattedQuery = formattedQuery.replaceFirst("%Ss", getSetRepresentation(currentSet));
     }
-    return runSingleQuery(params, env, formattedQuery);
+    runSingleQuery(params, env, formattedQuery);
   }
 
   /**
    * Evaluate multiple queries in a single `buck query` run. Usage: buck query <query format>
    * <input1> <input2> <...> <inputN>
    */
-  static ExitCode runMultipleQuery(
+  static void runMultipleQuery(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       String queryFormat,
@@ -326,10 +330,9 @@ public class QueryCommand extends AbstractCommand {
     } else {
       CommandHelper.printToConsole(params, queryResultMap);
     }
-    return ExitCode.SUCCESS;
   }
 
-  ExitCode runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
+  private void runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
     ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
 
@@ -345,7 +348,6 @@ public class QueryCommand extends AbstractCommand {
     } else {
       CommandHelper.printToConsole(params, queryResult);
     }
-    return ExitCode.SUCCESS;
   }
 
   private void printDotOutput(
