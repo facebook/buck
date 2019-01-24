@@ -27,7 +27,6 @@ import com.facebook.buck.log.thrift.rulekeys.NullValue;
 import com.facebook.buck.log.thrift.rulekeys.Pattern;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Sha1;
-import com.facebook.buck.log.thrift.rulekeys.SourceRoot;
 import com.facebook.buck.log.thrift.rulekeys.TargetPath;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.log.thrift.rulekeys.Wrapper;
@@ -350,11 +349,6 @@ public class RuleKeyDiffPrinterTest {
                 new ArchiveMemberPath("archive path", "member path", "some hash"))));
 
     Assert.assertEquals(
-        "SourceRoot: some path",
-        RuleKeyDiffPrinter.valueAsReadableString(
-            sampleParsedFile, Value.sourceRoot(new SourceRoot("some path"))));
-
-    Assert.assertEquals(
         "BuildRuleType: rule type",
         RuleKeyDiffPrinter.valueAsReadableString(
             sampleParsedFile, Value.buildRuleType(new BuildRuleType("rule type"))));
@@ -500,11 +494,6 @@ public class RuleKeyDiffPrinterTest {
             f.apply(
                 Value.archiveMemberPath(
                     new ArchiveMemberPath("archive path", "member path", "some hash")))));
-
-    Assert.assertEquals(
-        "argument: some path",
-        RuleKeyDiffPrinter.getRuleKeyName(
-            sampleParsedFile, f.apply(Value.sourceRoot(new SourceRoot("some path")))));
 
     Assert.assertEquals(
         "argument: rule type",

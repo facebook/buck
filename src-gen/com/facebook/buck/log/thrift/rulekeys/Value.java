@@ -22,7 +22,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
   private static final org.apache.thrift.protocol.TField CONTAINER_LIST_FIELD_DESC = new org.apache.thrift.protocol.TField("containerList", org.apache.thrift.protocol.TType.LIST, (short)11);
   private static final org.apache.thrift.protocol.TField RULE_KEY_HASH_FIELD_DESC = new org.apache.thrift.protocol.TField("ruleKeyHash", org.apache.thrift.protocol.TType.STRUCT, (short)12);
   private static final org.apache.thrift.protocol.TField ARCHIVE_MEMBER_PATH_FIELD_DESC = new org.apache.thrift.protocol.TField("archiveMemberPath", org.apache.thrift.protocol.TType.STRUCT, (short)13);
-  private static final org.apache.thrift.protocol.TField SOURCE_ROOT_FIELD_DESC = new org.apache.thrift.protocol.TField("sourceRoot", org.apache.thrift.protocol.TType.STRUCT, (short)14);
   private static final org.apache.thrift.protocol.TField BUILD_RULE_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("buildRuleType", org.apache.thrift.protocol.TType.STRUCT, (short)15);
   private static final org.apache.thrift.protocol.TField WRAPPER_FIELD_DESC = new org.apache.thrift.protocol.TField("wrapper", org.apache.thrift.protocol.TType.STRUCT, (short)16);
   private static final org.apache.thrift.protocol.TField BUILD_TARGET_FIELD_DESC = new org.apache.thrift.protocol.TField("buildTarget", org.apache.thrift.protocol.TType.STRUCT, (short)17);
@@ -44,7 +43,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
     CONTAINER_LIST((short)11, "containerList"),
     RULE_KEY_HASH((short)12, "ruleKeyHash"),
     ARCHIVE_MEMBER_PATH((short)13, "archiveMemberPath"),
-    SOURCE_ROOT((short)14, "sourceRoot"),
     BUILD_RULE_TYPE((short)15, "buildRuleType"),
     WRAPPER((short)16, "wrapper"),
     BUILD_TARGET((short)17, "buildTarget"),
@@ -90,8 +88,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
           return RULE_KEY_HASH;
         case 13: // ARCHIVE_MEMBER_PATH
           return ARCHIVE_MEMBER_PATH;
-        case 14: // SOURCE_ROOT
-          return SOURCE_ROOT;
         case 15: // BUILD_RULE_TYPE
           return BUILD_RULE_TYPE;
         case 16: // WRAPPER
@@ -173,8 +169,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, RuleKeyHash.class)));
     tmpMap.put(_Fields.ARCHIVE_MEMBER_PATH, new org.apache.thrift.meta_data.FieldMetaData("archiveMemberPath", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, ArchiveMemberPath.class)));
-    tmpMap.put(_Fields.SOURCE_ROOT, new org.apache.thrift.meta_data.FieldMetaData("sourceRoot", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
-        new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, SourceRoot.class)));
     tmpMap.put(_Fields.BUILD_RULE_TYPE, new org.apache.thrift.meta_data.FieldMetaData("buildRuleType", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.StructMetaData(org.apache.thrift.protocol.TType.STRUCT, BuildRuleType.class)));
     tmpMap.put(_Fields.WRAPPER, new org.apache.thrift.meta_data.FieldMetaData("wrapper", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
@@ -282,12 +276,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
     return x;
   }
 
-  public static Value sourceRoot(SourceRoot value) {
-    Value x = new Value();
-    x.setSourceRoot(value);
-    return x;
-  }
-
   public static Value buildRuleType(BuildRuleType value) {
     Value x = new Value();
     x.setBuildRuleType(value);
@@ -387,11 +375,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
           break;
         }
         throw new java.lang.ClassCastException("Was expecting value of type ArchiveMemberPath for field 'archiveMemberPath', but got " + value.getClass().getSimpleName());
-      case SOURCE_ROOT:
-        if (value instanceof SourceRoot) {
-          break;
-        }
-        throw new java.lang.ClassCastException("Was expecting value of type SourceRoot for field 'sourceRoot', but got " + value.getClass().getSimpleName());
       case BUILD_RULE_TYPE:
         if (value instanceof BuildRuleType) {
           break;
@@ -576,16 +559,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
             return null;
           }
-        case SOURCE_ROOT:
-          if (field.type == SOURCE_ROOT_FIELD_DESC.type) {
-            SourceRoot sourceRoot;
-            sourceRoot = new SourceRoot();
-            sourceRoot.read(iprot);
-            return sourceRoot;
-          } else {
-            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, field.type);
-            return null;
-          }
         case BUILD_RULE_TYPE:
           if (field.type == BUILD_RULE_TYPE_FIELD_DESC.type) {
             BuildRuleType buildRuleType;
@@ -715,10 +688,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
         ArchiveMemberPath archiveMemberPath = (ArchiveMemberPath)value_;
         archiveMemberPath.write(oprot);
         return;
-      case SOURCE_ROOT:
-        SourceRoot sourceRoot = (SourceRoot)value_;
-        sourceRoot.write(oprot);
-        return;
       case BUILD_RULE_TYPE:
         BuildRuleType buildRuleType = (BuildRuleType)value_;
         buildRuleType.write(oprot);
@@ -833,11 +802,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
           archiveMemberPath = new ArchiveMemberPath();
           archiveMemberPath.read(iprot);
           return archiveMemberPath;
-        case SOURCE_ROOT:
-          SourceRoot sourceRoot;
-          sourceRoot = new SourceRoot();
-          sourceRoot.read(iprot);
-          return sourceRoot;
         case BUILD_RULE_TYPE:
           BuildRuleType buildRuleType;
           buildRuleType = new BuildRuleType();
@@ -941,10 +905,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
         ArchiveMemberPath archiveMemberPath = (ArchiveMemberPath)value_;
         archiveMemberPath.write(oprot);
         return;
-      case SOURCE_ROOT:
-        SourceRoot sourceRoot = (SourceRoot)value_;
-        sourceRoot.write(oprot);
-        return;
       case BUILD_RULE_TYPE:
         BuildRuleType buildRuleType = (BuildRuleType)value_;
         buildRuleType.write(oprot);
@@ -999,8 +959,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
         return RULE_KEY_HASH_FIELD_DESC;
       case ARCHIVE_MEMBER_PATH:
         return ARCHIVE_MEMBER_PATH_FIELD_DESC;
-      case SOURCE_ROOT:
-        return SOURCE_ROOT_FIELD_DESC;
       case BUILD_RULE_TYPE:
         return BUILD_RULE_TYPE_FIELD_DESC;
       case WRAPPER:
@@ -1211,20 +1169,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
     value_ = value;
   }
 
-  public SourceRoot getSourceRoot() {
-    if (getSetField() == _Fields.SOURCE_ROOT) {
-      return (SourceRoot)getFieldValue();
-    } else {
-      throw new java.lang.RuntimeException("Cannot get field 'sourceRoot' because union is currently set to " + getFieldDesc(getSetField()).name);
-    }
-  }
-
-  public void setSourceRoot(SourceRoot value) {
-    if (value == null) throw new java.lang.NullPointerException();
-    setField_ = _Fields.SOURCE_ROOT;
-    value_ = value;
-  }
-
   public BuildRuleType getBuildRuleType() {
     if (getSetField() == _Fields.BUILD_RULE_TYPE) {
       return (BuildRuleType)getFieldValue();
@@ -1357,11 +1301,6 @@ public class Value extends org.apache.thrift.TUnion<Value, Value._Fields> {
 
   public boolean isSetArchiveMemberPath() {
     return setField_ == _Fields.ARCHIVE_MEMBER_PATH;
-  }
-
-
-  public boolean isSetSourceRoot() {
-    return setField_ == _Fields.SOURCE_ROOT;
   }
 
 

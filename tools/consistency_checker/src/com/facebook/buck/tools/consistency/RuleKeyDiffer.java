@@ -162,7 +162,6 @@ public class RuleKeyDiffer {
         case PATTERN:
         case BYTE_ARRAY:
         case ARCHIVE_MEMBER_PATH:
-        case SOURCE_ROOT:
         case BUILD_RULE_TYPE:
         case BUILD_TARGET:
         case TARGET_PATH:

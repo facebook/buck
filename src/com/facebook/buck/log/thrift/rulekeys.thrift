@@ -65,10 +65,6 @@ struct ArchiveMemberPath {
   3: string hash;
 }
 
-struct SourceRoot {
-  1: string path;
-}
-
 /*
  * A string describing the type of a rule. e.g. java_library
  */
@@ -128,7 +124,7 @@ union Value {
   11: list<Value> containerList;
   12: RuleKeyHash ruleKeyHash;
   13: ArchiveMemberPath archiveMemberPath;
-  14: SourceRoot sourceRoot;
+  // 14: DEPRECATED
   15: BuildRuleType buildRuleType;
   16: Wrapper wrapper;
   17: BuildTarget buildTarget;

@@ -26,7 +26,6 @@ import com.facebook.buck.log.thrift.rulekeys.NonHashedPath;
 import com.facebook.buck.log.thrift.rulekeys.Pattern;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
 import com.facebook.buck.log.thrift.rulekeys.Sha1;
-import com.facebook.buck.log.thrift.rulekeys.SourceRoot;
 import com.facebook.buck.log.thrift.rulekeys.TargetPath;
 import com.facebook.buck.log.thrift.rulekeys.Value;
 import com.facebook.buck.log.thrift.rulekeys.Wrapper;
@@ -108,9 +107,6 @@ public class RuleKeyDifferTest {
                 String.format("archive_path_%s", valueSeed),
                 String.format("member_path_%s", valueSeed),
                 String.format("hash_%s", valueSeed))));
-    ret.put(
-        String.format("source_root_%s", id),
-        Value.sourceRoot(new SourceRoot(String.format("source_root_%s", valueSeed))));
     ret.put(
         String.format("build_rule_type_%s", id),
         Value.buildRuleType(new BuildRuleType(String.format("rule_type_%s", valueSeed))));

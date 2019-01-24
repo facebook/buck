@@ -264,8 +264,6 @@ public class RuleKeyDiffPrinter {
             value.getArchiveMemberPath().archivePath,
             value.getArchiveMemberPath().memberPath,
             value.getArchiveMemberPath().hash);
-      case SOURCE_ROOT:
-        return String.format("SourceRoot: %s", value.getSourceRoot().path);
       case BUILD_RULE_TYPE:
         return String.format("BuildRuleType: %s", value.getBuildRuleType().type);
       case WRAPPER:
@@ -350,8 +348,6 @@ public class RuleKeyDiffPrinter {
         return String.format(
             "%s!%s",
             value.getArchiveMemberPath().archivePath, value.getArchiveMemberPath().memberPath);
-      case SOURCE_ROOT:
-        return value.getSourceRoot().path;
       case BUILD_RULE_TYPE:
         return value.getBuildRuleType().type;
       case WRAPPER:
