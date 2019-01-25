@@ -38,6 +38,9 @@ import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
+import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
+import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.InputStreamConsumer;
@@ -57,8 +60,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.CountingInputStream;
+import com.google.devtools.build.lib.syntax.Runtime;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -485,8 +490,78 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList<Map<String, Object>> targets) {
     ImmutableMap.Builder<String, Map<String, Object>> builder =
         ImmutableMap.builderWithExpectedSize(targets.size());
-    targets.forEach(target -> builder.put((String) target.get("name"), target));
+    targets.forEach(
+        target -> builder.put((String) target.get("name"), convertSelectableAttributes(target)));
     return builder.build();
+  }
+
+  private static Map<String, Object> convertSelectableAttributes(Map<String, Object> values) {
+    return Maps.transformValues(
+        values, PythonDslProjectBuildFileParser::convertToSelectableAttributeIfNeeded);
+  }
+
+  /**
+   * When the given object if a map and it contains specific keys it's transformed in either a
+   * {@link com.facebook.buck.parser.syntax.ListWithSelects} or {@link
+   * com.facebook.buck.parser.syntax.SelectorValue}. This conversion is used to pass objects in JSON
+   * data.
+   *
+   * <p>The map may contain the following keys:
+   *
+   * <ul>
+   *   <li>{@code @type} - indicates the type of the object (either "SelectorList" or
+   *       "SelectorValue").
+   *   <li>{@code conditions} - contains a map of conditions for "SelectorList".
+   *   <li>{@code no_match_message} - contains a no match message for "SelectorList".
+   *   <li>{@code items} - contains a list of items for "SelectorValue".
+   * </ul>
+   */
+  @SuppressWarnings("unchecked")
+  private static Object convertToSelectableAttributeIfNeeded(Object value) {
+    if (!(value instanceof Map)) {
+      return value;
+    }
+    Map<String, Object> attributeValue = (Map<String, Object>) value;
+    String type = (String) attributeValue.get("@type");
+    if (type == null) {
+      return attributeValue;
+    }
+    if ("SelectorValue".equals(type)) {
+      Map<String, Object> conditions =
+          (Map<String, Object>) Objects.requireNonNull(attributeValue.get("conditions"));
+      Map<String, Object> convertedConditions =
+          Maps.transformValues(conditions, v -> v == null ? Runtime.NONE : v);
+      return ImmutableSelectorValue.of(
+          convertedConditions, Objects.toString(attributeValue.get("no_match_message"), ""));
+    } else {
+      Preconditions.checkState("SelectorList".equals(type));
+      List<Object> items = (List<Object>) Objects.requireNonNull(attributeValue.get("items"));
+      ImmutableList<Object> convertedElements = convertToSelectableAttributesIfNeeded(items);
+      return ImmutableListWithSelects.of(
+          convertedElements, getType(Iterables.getOnlyElement(convertedElements)));
+    }
+  }
+
+  private static ImmutableList<Object> convertToSelectableAttributesIfNeeded(
+      List<Object> attributes) {
+    ImmutableList.Builder<Object> convertedAttributes =
+        ImmutableList.builderWithExpectedSize(attributes.size());
+    for (Object attribute : attributes) {
+      convertedAttributes.add(
+          PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(attribute));
+    }
+    return convertedAttributes.build();
+  }
+
+  private static Class<?> getType(Object object) {
+    if (object instanceof SelectorValue) {
+      return getType(
+          Objects.requireNonNull(
+                  Iterables.getFirst(((SelectorValue) object).getDictionary().entrySet(), null))
+              .getValue());
+    } else {
+      return object.getClass();
+    }
   }
 
   private BuildFilePythonResult performJsonRequest(ImmutableMap<String, Object> request)

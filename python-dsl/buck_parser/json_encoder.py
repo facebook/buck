@@ -17,6 +17,8 @@ from __future__ import absolute_import, division, print_function, with_statement
 import collections
 from json import JSONEncoder
 
+from .select_support import SelectorList, SelectorValue
+
 
 # A JSONEncoder subclass which handles map-like and list-like objects.
 class BuckJSONEncoder(JSONEncoder):
@@ -32,5 +34,13 @@ class BuckJSONEncoder(JSONEncoder):
             obj, collections.Sized
         ):
             return list(obj)
+        elif isinstance(obj, SelectorValue):
+            return {
+                "@type": "SelectorValue",
+                "conditions": obj.conditions(),
+                "no_match_error": obj.no_match_message(),
+            }
+        elif isinstance(obj, SelectorList):
+            return {"@type": "SelectorList", "items": obj.items()}
         else:
             return super(BuckJSONEncoder, self).default(obj)

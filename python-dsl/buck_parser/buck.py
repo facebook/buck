@@ -26,12 +26,12 @@ import os
 import os.path
 import platform
 import re
-import select
 import sys
 import time
 import traceback
 import types
 from pathlib import Path, PurePath
+from select import select as _select
 from typing import (
     Any,
     Callable,
@@ -59,6 +59,7 @@ from .glob_watchman import SyncCookieState, glob_watchman
 from .json_encoder import BuckJSONEncoder
 from .module_whitelist import ImportWhitelistManager
 from .profiler import Profiler
+from .select_support import SelectorList, SelectorValue
 from .struct import create_struct_class, struct
 from .util import (
     Diagnostic,
@@ -698,6 +699,13 @@ def get_cell_name(build_env=None):
         build_env, BuildFileContext
     ), "Cannot use `get_cell_name()` at the top-level of an included file."
     return build_env.cell_name
+
+
+@provide_for_build
+def select(conditions, no_match_message=None, build_env=None):
+    """Allows to provide a configurable value for an attribute"""
+
+    return SelectorList([SelectorValue(conditions, no_match_message)])
 
 
 @provide_as_native_rule
@@ -2053,7 +2061,7 @@ def main():
 
 
 def wait_build_file_query():
-    select.select([sys.stdin], [], [])
+    _select([sys.stdin], [], [])
 
 
 def wait_and_read_build_file_query():
