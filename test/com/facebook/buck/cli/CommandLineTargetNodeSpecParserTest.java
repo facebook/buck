@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.BuildFileSpec;
@@ -65,7 +65,8 @@ public class CommandLineTargetNodeSpecParserTest {
         BuildFileSpec.fromRecursivePath(root.getRootPath(), root.getRootPath()),
         parseOne(createCellRoots(root), "...").getBuildFileSpec());
     assertEquals(
-        BuildTargetSpec.from(BuildTargetFactory.newInstance(root.getRootPath(), "//hello:...")),
+        BuildTargetSpec.from(
+            UnconfiguredBuildTargetFactoryForTests.newInstance(root.getRootPath(), "//hello:...")),
         parseOne(createCellRoots(root), "//hello:..."));
   }
 
@@ -76,17 +77,23 @@ public class CommandLineTargetNodeSpecParserTest {
     Files.createDirectories(
         cellRoots.getCellPathOrThrow(Optional.empty()).resolve("some").resolve("other"));
     assertEquals(
-        ImmutableSet.of(BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing"))),
+        ImmutableSet.of(
+            BuildTargetSpec.from(
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing"))),
         PARSER.parse(cellRoots, "foo"));
     assertEquals(
         ImmutableSet.of(
-            BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing")),
-            BuildTargetSpec.from(BuildTargetFactory.newInstance("//some/other:thing"))),
+            BuildTargetSpec.from(
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing")),
+            BuildTargetSpec.from(
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing"))),
         PARSER.parse(cellRoots, "bar"));
     assertEquals(
         ImmutableSet.of(
-            BuildTargetSpec.from(BuildTargetFactory.newInstance("//some:thing#fl")),
-            BuildTargetSpec.from(BuildTargetFactory.newInstance("//some/other:thing#fl"))),
+            BuildTargetSpec.from(
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some:thing#fl")),
+            BuildTargetSpec.from(
+                UnconfiguredBuildTargetFactoryForTests.newInstance("//some/other:thing#fl"))),
         PARSER.parse(cellRoots, "bar#fl"));
   }
 

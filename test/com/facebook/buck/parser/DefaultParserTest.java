@@ -49,6 +49,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -2084,7 +2085,8 @@ public class DefaultParserTest {
                 executorService,
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
-                        BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance(
+                            cellRoot, "//lib", "lib"))),
                 false,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
@@ -2131,7 +2133,8 @@ public class DefaultParserTest {
                 executorService,
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
-                        BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance(
+                            cellRoot, "//lib", "lib"))),
                 false,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
@@ -2182,7 +2185,8 @@ public class DefaultParserTest {
                 executorService,
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
-                        BuildTargetFactory.newInstance(cellRoot, "//lib", "lib"))),
+                        UnconfiguredBuildTargetFactoryForTests.newInstance(
+                            cellRoot, "//lib", "lib"))),
                 false,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
@@ -2223,7 +2227,8 @@ public class DefaultParserTest {
         false,
         executorService,
         ImmutableList.of(
-            AbstractBuildTargetSpec.from(BuildTargetFactory.newInstance(cellRoot, "//lib", "gen"))),
+            AbstractBuildTargetSpec.from(
+                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
         false,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
 
@@ -2241,7 +2246,8 @@ public class DefaultParserTest {
         false,
         executorService,
         ImmutableList.of(
-            AbstractBuildTargetSpec.from(BuildTargetFactory.newInstance(cellRoot, "//lib", "gen"))),
+            AbstractBuildTargetSpec.from(
+                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
         false,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());

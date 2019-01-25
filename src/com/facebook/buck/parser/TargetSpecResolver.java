@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -171,7 +172,10 @@ public class TargetSpecResolver {
       BuildTargetSpec buildTargetSpec = (BuildTargetSpec) spec;
       targetFutures.add(
           Futures.transform(
-              targetNodeProvider.getTargetNodeJob(buildTargetSpec.getBuildTarget()),
+              targetNodeProvider.getTargetNodeJob(
+                  buildTargetSpec
+                      .getUnconfiguredBuildTarget()
+                      .configure(EmptyTargetConfiguration.INSTANCE)),
               node -> {
                 ImmutableSet<BuildTarget> buildTargets =
                     applySpecFilter(spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);

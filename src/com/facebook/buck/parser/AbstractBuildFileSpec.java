@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -74,7 +74,7 @@ abstract class AbstractBuildFileSpec {
     return BuildFileSpec.of(basePath, /* recursive */ false, cellPath);
   }
 
-  public static BuildFileSpec fromBuildTarget(BuildTarget target) {
+  public static BuildFileSpec fromUnconfiguredBuildTarget(UnconfiguredBuildTarget target) {
     return fromPath(target.getBasePath(), target.getCellPath());
   }
 

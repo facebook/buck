@@ -19,7 +19,7 @@ package com.facebook.buck.core.parser.buildtargetparser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -33,6 +33,9 @@ public abstract class BuildTargetPatternParser<T> {
   private static final String BUILD_RULE_PREFIX = "//";
   private static final String WILDCARD_BUILD_RULE_SUFFIX = "...";
   private static final String BUILD_RULE_SEPARATOR = ":";
+
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+      new ParsingUnconfiguredBuildTargetFactory(BuildTargetParser.INSTANCE);
 
   /**
    * 1. //src/com/facebook/buck/cli:cli will be converted to a single build target 2.
@@ -50,7 +53,8 @@ public abstract class BuildTargetPatternParser<T> {
       return createWildCardPattern(cellNames, buildTargetPattern);
     }
 
-    BuildTarget target = BuildTargetParser.INSTANCE.parse(cellNames, buildTargetPattern, "", true);
+    UnconfiguredBuildTarget target =
+        unconfiguredBuildTargetFactory.createWithWildcard(cellNames, buildTargetPattern);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       return createForChildren(target.getCellPath(), target.getBasePath());
     } else {
@@ -114,7 +118,7 @@ public abstract class BuildTargetPatternParser<T> {
 
   protected abstract T createForChildren(Path cellPath, Path basePath);
 
-  protected abstract T createForSingleton(BuildTarget target);
+  protected abstract T createForSingleton(UnconfiguredBuildTarget target);
 
   private static class VisibilityContext extends BuildTargetPatternParser<BuildTargetPattern> {
 
@@ -129,7 +133,7 @@ public abstract class BuildTargetPatternParser<T> {
     }
 
     @Override
-    public BuildTargetPattern createForSingleton(BuildTarget target) {
+    public BuildTargetPattern createForSingleton(UnconfiguredBuildTarget target) {
       return SingletonBuildTargetPattern.of(
           target.getUnflavoredBuildTarget().getCellPath(), target.getFullyQualifiedName());
     }
