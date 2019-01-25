@@ -154,7 +154,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   protected final Path pathToOutFile;
   private final Path pathToTmpDirectory;
   private final Path pathToSrcDirectory;
-  private final Boolean isWorkerGenrule;
+  private final boolean isWorkerGenrule;
   private final Optional<AndroidPlatformTarget> androidPlatformTarget;
   private final Optional<AndroidNdk> androidNdk;
   private final Optional<AndroidSdkLocation> androidSdkLocation;

@@ -129,11 +129,11 @@ public class ActionGraphProviderIntegrationTest {
             }
 
             Map<String, Object> args = (Map<String, Object>) argsEl;
-            boolean isHit = (Boolean) args.get("hit");
+            boolean isHit = (boolean) args.get("hit");
             if (isHit) {
               return Optional.of(ActionGraphCacheStatus.HIT);
             } else {
-              boolean cacheWasEmpty = (Boolean) args.get("cacheWasEmpty");
+              boolean cacheWasEmpty = (boolean) args.get("cacheWasEmpty");
               return Optional.of(
                   cacheWasEmpty
                       ? ActionGraphCacheStatus.MISS_CACHE_EMPTY

@@ -78,7 +78,7 @@ public class MacNetworkConfiguration {
 
   static Pattern activePattern = Pattern.compile("Active: (.*)$");
   /** Indicates whether device is active (i.e. physically connected). */
-  private static Boolean isDeviceActive(String device) throws InterruptedException {
+  private static boolean isDeviceActive(String device) throws InterruptedException {
     /*
       $ networksetup -getMedia "en0"
       Current: autoselect

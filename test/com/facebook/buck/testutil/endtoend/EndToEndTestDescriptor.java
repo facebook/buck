@@ -30,7 +30,7 @@ public class EndToEndTestDescriptor {
   private final String command;
   private final String[] buildTargets;
   private final String[] arguments;
-  private final Boolean buckdEnabled;
+  private final boolean buckdEnabled;
   private final Map<String, String> variableMap;
   private final Map<String, Map<String, String>> localConfigs;
   private String name;
@@ -50,7 +50,7 @@ public class EndToEndTestDescriptor {
       String command,
       String[] buildTargets,
       String[] arguments,
-      Boolean buckdEnabled,
+      boolean buckdEnabled,
       Map<String, String> variableMap,
       Map<String, Map<String, String>> localConfigs) {
     this.method = method;
@@ -135,7 +135,7 @@ public class EndToEndTestDescriptor {
   }
 
   /** Gets whether buckd should be enabled during the test or not */
-  public Boolean getBuckdEnabled() {
+  public boolean getBuckdEnabled() {
     return buckdEnabled;
   }
 

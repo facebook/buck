@@ -140,7 +140,7 @@ public class ErrorSuppressingDiagnosticListener implements DiagnosticListener<Ja
         return false;
       }
 
-      return (Boolean)
+      return (boolean)
           Objects.requireNonNull(isFlagSetMethod)
               .invoke(Objects.requireNonNull(diagnosticField).get(diagnostic), recoverableError);
     } catch (IllegalAccessException | InvocationTargetException e) {

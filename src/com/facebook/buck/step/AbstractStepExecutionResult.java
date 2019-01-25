@@ -30,7 +30,7 @@ abstract class AbstractStepExecutionResult {
   public abstract Optional<String> getStderr();
 
   @Value.Derived
-  public Boolean isSuccess() {
+  public boolean isSuccess() {
     return getExitCode() == 0;
   }
 

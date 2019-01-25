@@ -61,7 +61,7 @@ import org.junit.runners.model.Statement;
 public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   private TemporaryPaths tempPath = new TemporaryPaths();
   private final ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
-  private Boolean ranWithBuckd = false;
+  private boolean ranWithBuckd = false;
   private final ProcessHelper processHelper = ProcessHelper.getInstance();
 
   private static final String TESTDATA_DIRECTORY = "testdata";
@@ -129,7 +129,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   private ImmutableMap<String, String> overrideSystemEnvironment(
-      Boolean buckdEnabled, ImmutableMap<String, String> environmentOverrides) {
+      boolean buckdEnabled, ImmutableMap<String, String> environmentOverrides) {
     ImmutableMap.Builder<String, String> environmentBuilder = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : EnvVariablesProvider.getSystemEnv().entrySet()) {
       if ("NO_BUCKD".equals(entry.getKey())) {
@@ -182,7 +182,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    *     {@code ["project"]}, etc.
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
-  public ProcessResult runBuckCommand(Boolean buckdEnabled, String... args) throws Exception {
+  public ProcessResult runBuckCommand(boolean buckdEnabled, String... args) throws Exception {
     ImmutableMap<String, String> environment = ImmutableMap.of();
     String[] templates = new String[] {};
     return runBuckCommand(buckdEnabled, environment, templates, args);
@@ -197,7 +197,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    *     {@code ["project"]}, etc.
    * @return the launched buck process
    */
-  public LaunchedProcess launchBuckCommandProcess(Boolean buckdEnabled, String... args)
+  public LaunchedProcess launchBuckCommandProcess(boolean buckdEnabled, String... args)
       throws Exception {
     ImmutableMap<String, String> environment = ImmutableMap.of();
     String[] templates = new String[] {};
@@ -279,7 +279,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * @return the result of running Buck, which includes the exit code, stdout, and stderr.
    */
   public ProcessResult runBuckCommand(
-      Boolean buckdEnabled,
+      boolean buckdEnabled,
       ImmutableMap<String, String> environmentOverrides,
       String[] templates,
       String... args)
@@ -310,7 +310,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
    * @return the launched buck process
    */
   public LaunchedProcess launchBuckCommandProcess(
-      Boolean buckdEnabled,
+      boolean buckdEnabled,
       ImmutableMap<String, String> environmentOverrides,
       String[] templates,
       String... args)
