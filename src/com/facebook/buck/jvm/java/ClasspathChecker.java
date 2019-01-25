@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class ClasspathChecker {
 
@@ -40,8 +41,8 @@ public class ClasspathChecker {
   private final String separator;
   private final String pathSeparator;
   private final Function<String, Path> toPathFunc;
-  private final Function<Path, Boolean> isDirectoryFunc;
-  private final Function<Path, Boolean> isFileFunc;
+  private final Predicate<Path> isDirectoryFunc;
+  private final Predicate<Path> isFileFunc;
   private final BiFunction<Path, String, Iterable<Path>> globberFunc;
 
   public ClasspathChecker() {
@@ -65,8 +66,8 @@ public class ClasspathChecker {
       String separator,
       String pathSeparator,
       Function<String, Path> toPathFunc,
-      Function<Path, Boolean> isDirectoryFunc,
-      Function<Path, Boolean> isFileFunc,
+      Predicate<Path> isDirectoryFunc,
+      Predicate<Path> isFileFunc,
       BiFunction<Path, String, Iterable<Path>> globberFunc) {
     this.separator = separator;
     this.pathSeparator = pathSeparator;
@@ -111,9 +112,9 @@ public class ClasspathChecker {
         }
       } else {
         Path entryPath = toPathFunc.apply(entry);
-        if (isDirectoryFunc.apply(entryPath)) {
+        if (isDirectoryFunc.test(entryPath)) {
           return true;
-        } else if (isFileFunc.apply(entryPath)
+        } else if (isFileFunc.test(entryPath)
             && ALLOWED_EXTENSIONS_SET.contains(
                 com.google.common.io.Files.getFileExtension(
                     entryPath.toString().toLowerCase(Locale.US)))) {
