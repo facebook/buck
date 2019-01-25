@@ -19,6 +19,7 @@ package com.facebook.buck.remoteexecution;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.List;
@@ -37,6 +38,8 @@ public interface RemoteExecutionService {
     // TODO(cjhopman): This needs a getStdout()
 
     Optional<String> getStderr();
+
+    RemoteExecutionMetadata getMetadata();
   }
 
   /**

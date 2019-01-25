@@ -359,11 +359,15 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       Iterable<? extends Path> actionOutputs)
       throws IOException, StepFailedException {
     if (result.getExitCode() != 0) {
+      // NOTE(ruibm): If we decide to change this to debug/info we should probably consider
+      //              appending the RemoteExecutionMetadata to the stderr passed to
+      //              StepExecutionResult.
       LOG.error(
-          "Failed to build target [%s] with exit code [%d]. stderr: %s",
+          "[RE] Failed to build target [%s] with exit code [%d]. stderr: [%s] metadata: [%s]",
           buildTarget.getFullyQualifiedName(),
           result.getExitCode(),
-          result.getStderr().orElse("<empty>"));
+          result.getStderr().orElse("<empty>"),
+          result.getMetadata());
       RemoteExecutionActionEvent.sendTerminalEvent(
           eventBus, State.ACTION_FAILED, buildTarget, Optional.of(actionDigest));
       throw StepFailedException.createForFailingStepWithExitCode(

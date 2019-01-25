@@ -31,6 +31,7 @@ import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.Futures;
@@ -134,7 +135,8 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
 
           try {
             return getExecutionResult(
-                operation.getResponse().unpack(ExecuteResponse.class).getResult());
+                operation.getResponse().unpack(ExecuteResponse.class).getResult(),
+                stubAndMetadata.getMetadata());
           } catch (InvalidProtocolBufferException e) {
             throw new BuckUncheckedExecutionException(
                 e,
@@ -146,7 +148,8 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
         MoreExecutors.directExecutor());
   }
 
-  private ExecutionResult getExecutionResult(ActionResult actionResult) {
+  private ExecutionResult getExecutionResult(
+      ActionResult actionResult, RemoteExecutionMetadata metadata) {
     if (actionResult.getExitCode() != 0) {
       LOG.debug(
           "Got failed action from worker %s", actionResult.getExecutionMetadata().getWorker());
@@ -180,7 +183,7 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
         ByteString stderrRaw = actionResult.getStderrRaw();
         if (stderrRaw == null
             || (stderrRaw.isEmpty() && actionResult.getStderrDigest().getSizeBytes() > 0)) {
-          System.err.println("Got stderr digest.");
+          LOG.debug("Got stderr digest.");
           try {
             ByteString data = ByteString.EMPTY;
             GrpcRemoteExecutionClients.readByteStream(
@@ -194,9 +197,14 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
             throw new RuntimeException(e);
           }
         } else {
-          System.err.println("Got raw stderr: " + stderrRaw.toStringUtf8());
+          LOG.debug("Got raw stderr: " + stderrRaw.toStringUtf8());
           return Optional.of(stderrRaw.toStringUtf8());
         }
+      }
+
+      @Override
+      public RemoteExecutionMetadata getMetadata() {
+        return metadata;
       }
     };
   }
