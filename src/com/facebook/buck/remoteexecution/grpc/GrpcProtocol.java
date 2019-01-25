@@ -70,6 +70,11 @@ public class GrpcProtocol implements Protocol {
     public int hashCode() {
       return digest.hashCode();
     }
+
+    @Override
+    public String toString() {
+      return String.format("Digest[%s:%d]", getHash(), getSize());
+    }
   }
 
   private static class GrpcCommand implements Command {

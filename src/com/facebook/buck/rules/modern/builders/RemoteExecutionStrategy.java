@@ -364,13 +364,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       //              StepExecutionResult.
       LOG.error(
           "[RE] Failed to build target [%s] with exit code [%d]. "
-              + "stderr: [%s] metadata: [%s] action: [%s:%d]",
+              + "stderr: [%s] metadata: [%s] action: [%s]",
           buildTarget.getFullyQualifiedName(),
           result.getExitCode(),
           result.getStderr().orElse("<empty>"),
           result.getMetadata(),
-          actionDigest.getHash(),
-          actionDigest.getSize());
+          actionDigest);
       RemoteExecutionActionEvent.sendTerminalEvent(
           eventBus, State.ACTION_FAILED, buildTarget, Optional.of(actionDigest));
       throw StepFailedException.createForFailingStepWithExitCode(

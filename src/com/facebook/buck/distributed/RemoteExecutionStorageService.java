@@ -89,9 +89,9 @@ public class RemoteExecutionStorageService implements AsyncBlobFetcher, CasBlobU
   }
 
   private static BuckUncheckedExecutionException logAndThrowException(Digest digest, Exception e) {
-    LOG.error(e, "Could not fetch stream for digest [%s:%d].", digest.getHash(), digest.getSize());
+    LOG.error(e, "Could not fetch stream for digest [%s].", digest);
     throw new BuckUncheckedExecutionException(
-        e, "When fetching to stream for digest [%s:%d].", digest.getHash(), digest.getSize());
+        e, "When fetching to stream for digest [%s].", digest);
   }
 
   private ListenableFuture<FrontendResponse> fetchToStreamInternal(
