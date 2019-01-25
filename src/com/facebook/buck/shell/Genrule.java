@@ -274,7 +274,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @VisibleForTesting
-  public boolean isWorkerGenrule() {
+  boolean isWorkerGenrule() {
     Arg cmdArg = cmd.orElse(null);
     Arg bashArg = bash.orElse(null);
     Arg cmdExeArg = cmdExe.orElse(null);
@@ -299,7 +299,8 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return type;
   }
 
-  public AbstractGenruleStep createGenruleStep(BuildContext context) {
+  @VisibleForTesting
+  AbstractGenruleStep createGenruleStep(BuildContext context) {
     SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
 
     // The user's command (this.cmd) should be run from the directory that contains only the
@@ -385,7 +386,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return inputs.build();
   }
 
-  public WorkerShellStep createWorkerShellStep(BuildContext context) {
+  private WorkerShellStep createWorkerShellStep(BuildContext context) {
     return new WorkerShellStep(
         getBuildTarget(),
         convertToWorkerJobParams(context.getSourcePathResolver(), cmd),
