@@ -286,10 +286,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private Path getSymlinkPath(SourcePathResolver resolver, SourcePath input) {
     Path runtimeLinkPath = runtimeResourcesDir.resolve(deriveLinkPath(resolver, input));
 
-    return getBuildTarget()
-        .getCell()
-        .map(cell -> Paths.get(cell).resolve(runtimeLinkPath))
-        .orElse(runtimeLinkPath);
+    return getBuildTarget().getCellPath().resolve(runtimeLinkPath);
   }
 
   private ImmutableList<String> searchForLinkConflicts(SourcePathResolver resolver) {

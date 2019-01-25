@@ -28,6 +28,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
@@ -886,6 +887,19 @@ public class InterCellIntegrationTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/cxx_binary_shared/primary", "inter-cell/cxx_binary_shared/secondary");
+    ProjectWorkspace primary = cells.getFirst();
+    primary.runBuckCommand("run", "secondary//:main").assertSuccess();
+  }
+
+  @Test
+  public void crossCellShBinaryWithResources() throws IOException {
+    // sh_binary is not available on Windows. Ignore this test on Windows.
+    assumeTrue(Platform.detect() != WINDOWS);
+
+    Pair<ProjectWorkspace, ProjectWorkspace> cells =
+        prepare(
+            "inter-cell/sh_binary_with_resources/primary",
+            "inter-cell/sh_binary_with_resources/secondary");
     ProjectWorkspace primary = cells.getFirst();
     primary.runBuckCommand("run", "secondary//:main").assertSuccess();
   }
