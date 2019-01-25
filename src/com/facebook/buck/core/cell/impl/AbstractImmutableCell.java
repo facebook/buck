@@ -58,7 +58,6 @@ abstract class AbstractImmutableCell implements Cell {
   public abstract ProjectFilesystem getFilesystem();
 
   @Override
-  @Value.Auxiliary
   public abstract BuckConfig getBuckConfig();
 
   @Override

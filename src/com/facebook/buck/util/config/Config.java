@@ -604,6 +604,11 @@ public class Config {
     return result;
   }
 
+  @Override
+  public String toString() {
+    return rawConfig.toString();
+  }
+
   public RawConfig getRawConfig() {
     return rawConfig;
   }
