@@ -114,6 +114,16 @@ take that <code>cxx_library</code> as a <em>dependency</em>.
 </p>
 
 
+<h3>Symlinks: Use with caution if at all</h3>
+
+<p>
+We recommend that you do not use symlinks&mdash;either absolute or
+relative&mdash;to specify input files to build rules. Although using
+symlinks in this context does sometimes work, it can lead to unexpected
+behavior and errors.
+</p>
+
+
 <h2>Dependencies: Output from one rule as input to another rule</h2>
 
 <p>
