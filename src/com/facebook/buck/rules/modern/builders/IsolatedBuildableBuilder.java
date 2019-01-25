@@ -329,7 +329,7 @@ public abstract class IsolatedBuildableBuilder {
   }
 
   private DataProvider getProvider(Path dir) {
-    Preconditions.checkState(Files.exists(dir));
+    Preconditions.checkState(Files.exists(dir), "Dir [%s] does not exist.", dir.toAbsolutePath());
 
     return new DataProvider() {
       @Override
