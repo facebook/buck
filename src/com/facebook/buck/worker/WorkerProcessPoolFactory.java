@@ -30,6 +30,7 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -163,6 +164,8 @@ public class WorkerProcessPoolFactory {
   public WorkerProcess createWorkerProcess(
       ProcessExecutorParams processParams, ExecutionContext context, Path tmpDir)
       throws IOException {
-    return new WorkerProcess(context.getProcessExecutor(), processParams, filesystem, tmpDir);
+    Path stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
+    return new WorkerProcess(
+        context.getProcessExecutor(), processParams, filesystem, stdErr, tmpDir);
   }
 }

@@ -62,6 +62,7 @@ public class WorkerProcessTest {
     Path argsPath = Paths.get(tmpPath.toString(), "0.args");
     Path stdoutPath = Paths.get(tmpPath.toString(), "0.out");
     Path stderrPath = Paths.get(tmpPath.toString(), "0.err");
+    Path workerStdErr = Paths.get(tmpPath.toString(), "stderr");
     String jobArgs = "my job args";
     int exitCode = 0;
 
@@ -69,7 +70,8 @@ public class WorkerProcessTest {
     Optional<String> stderr = Optional.of("my stderr");
 
     try (WorkerProcess process =
-        new WorkerProcess(new FakeProcessExecutor(), createDummyParams(), filesystem, tmpPath)) {
+        new WorkerProcess(
+            new FakeProcessExecutor(), createDummyParams(), filesystem, workerStdErr, tmpPath)) {
       process.setProtocol(
           new FakeWorkerProcessProtocol.FakeCommandSender() {
             @Override
@@ -97,6 +99,7 @@ public class WorkerProcessTest {
             new FakeProcessExecutor(),
             createDummyParams(),
             new FakeProjectFilesystem(),
+            Paths.get("stderr"),
             Paths.get("tmp").toAbsolutePath().normalize())) {
       process.setProtocol(protocol);
 
@@ -128,6 +131,7 @@ public class WorkerProcessTest {
                 .setDirectory(workspace.getDestPath())
                 .build(),
             projectFilesystem,
+            temporaryPaths.newFile("stderr"),
             temporaryPaths.newFolder())) {
       workerProcess.ensureLaunchAndHandshake();
       fail("Handshake should have failed");

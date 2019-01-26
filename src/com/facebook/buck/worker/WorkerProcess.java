@@ -58,17 +58,17 @@ public class WorkerProcess implements Closeable {
    * @param executor Process executor that will start worker process.
    * @param processParams Arguments for process executor.
    * @param filesystem File system for the worker process.
+   * @param stdErr path where stderr of a process is kept
    * @param tmpPath Temp folder.
-   * @throws IOException In case if some I/O failure happens.
    */
   public WorkerProcess(
       ProcessExecutor executor,
       ProcessExecutorParams processParams,
       ProjectFilesystem filesystem,
-      Path tmpPath)
-      throws IOException {
+      Path stdErr,
+      Path tmpPath) {
     this.executor = executor;
-    this.stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
+    this.stdErr = stdErr;
     this.processParams =
         processParams.withRedirectError(ProcessBuilder.Redirect.to(stdErr.toFile()));
     this.filesystem = filesystem;
