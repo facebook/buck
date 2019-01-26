@@ -372,7 +372,6 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     // plain or json output
-    ImmutableMap<BuildTarget, TargetResult> showRulesResult;
     TargetGraphAndBuildTargets targetGraphAndBuildTargetsForShowRules =
         buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
     boolean useVersioning =
@@ -383,7 +382,7 @@ public class TargetsCommand extends AbstractCommand {
         useVersioning
             ? toVersionedTargetGraph(params, targetGraphAndBuildTargetsForShowRules)
             : targetGraphAndBuildTargetsForShowRules;
-    showRulesResult =
+    ImmutableSortedMap<BuildTarget, TargetResult> showRulesResult =
         computeShowRules(
             params,
             executor,
@@ -394,10 +393,8 @@ public class TargetsCommand extends AbstractCommand {
                     .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
 
     if (shouldUseJsonFormat()) {
-      ImmutableSortedSet.Builder<BuildTarget> keysBuilder = ImmutableSortedSet.naturalOrder();
-      keysBuilder.addAll(showRulesResult.keySet());
       Iterable<TargetNode<?>> matchingNodes =
-          targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(keysBuilder.build());
+          targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(showRulesResult.keySet());
       printJsonForTargets(params, executor, matchingNodes, showRulesResult, outputAttributes.get());
     } else {
       printShowRules(showRulesResult, params);
@@ -690,9 +687,8 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private void printShowRules(
-      Map<BuildTarget, TargetResult> showRulesResult, CommandRunnerParams params) {
-    for (Entry<BuildTarget, TargetResult> entry :
-        ImmutableSortedMap.copyOf(showRulesResult).entrySet()) {
+      ImmutableSortedMap<BuildTarget, TargetResult> showRulesResult, CommandRunnerParams params) {
+    for (Entry<BuildTarget, TargetResult> entry : showRulesResult.entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.add(entry.getKey().getFullyQualifiedName());
       TargetResult targetResult = entry.getValue();
@@ -947,7 +943,7 @@ public class TargetsCommand extends AbstractCommand {
    *
    * @return An immutable map consisting of result of show options for to each target rule
    */
-  private ImmutableMap<BuildTarget, TargetResult> computeShowRules(
+  private ImmutableSortedMap<BuildTarget, TargetResult> computeShowRules(
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?>>> targetGraphAndTargetNodes)
@@ -1088,7 +1084,8 @@ public class TargetsCommand extends AbstractCommand {
         }
       }
 
-      ImmutableMap.Builder<BuildTarget, TargetResult> builder = new ImmutableMap.Builder<>();
+      ImmutableSortedMap.Builder<BuildTarget, TargetResult> builder =
+          ImmutableSortedMap.naturalOrder();
       for (Map.Entry<BuildTarget, TargetResult.Builder> entry :
           targetResultBuilders.map.entrySet()) {
         builder.put(entry.getKey(), entry.getValue().build());
