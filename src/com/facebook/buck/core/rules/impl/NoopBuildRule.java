@@ -25,6 +25,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.SortedSet;
 import javax.annotation.Nullable;
 
 /**
@@ -44,10 +46,15 @@ import javax.annotation.Nullable;
  *       the work is actually done on a depending rule (e.g. Lua).
  * </ol>
  */
-public abstract class NoopBuildRule extends AbstractBuildRule implements SupportsInputBasedRuleKey {
+public class NoopBuildRule extends AbstractBuildRule implements SupportsInputBasedRuleKey {
 
   public NoopBuildRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
     super(buildTarget, projectFilesystem);
+  }
+
+  @Override
+  public final SortedSet<BuildRule> getBuildDeps() {
+    return ImmutableSortedSet.of();
   }
 
   @Override

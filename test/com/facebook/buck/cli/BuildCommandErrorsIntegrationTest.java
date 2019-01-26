@@ -383,13 +383,7 @@ public class BuildCommandErrorsIntegrationTest {
   }
 
   private BuildRuleFactory successTargetFactory() {
-    return ((buildTarget, projectFilesystem) ->
-        new NoopBuildRule(buildTarget, projectFilesystem) {
-          @Override
-          public SortedSet<BuildRule> getBuildDeps() {
-            return ImmutableSortedSet.of();
-          }
-        });
+    return NoopBuildRule::new;
   }
 
   private static class ExceptionRule extends AbstractBuildRule {

@@ -183,12 +183,7 @@ public class MultiarchFileInfos {
       graphBuilder.addToIndex(multiarchFile);
       return multiarchFile;
     } else {
-      return new NoopBuildRule(buildTarget, projectFilesystem) {
-        @Override
-        public SortedSet<BuildRule> getBuildDeps() {
-          return ImmutableSortedSet.of();
-        }
-      };
+      return new NoopBuildRule(buildTarget, projectFilesystem);
     }
   }
 

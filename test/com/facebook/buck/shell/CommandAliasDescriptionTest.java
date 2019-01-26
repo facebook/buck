@@ -58,7 +58,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedSet;
 import java.util.function.Function;
 import org.junit.Rule;
 import org.junit.Test;
@@ -570,11 +569,6 @@ public class CommandAliasDescriptionTest {
     @Override
     public Tool getExecutableCommand() {
       return tool;
-    }
-
-    @Override
-    public SortedSet<BuildRule> getBuildDeps() {
-      return ImmutableSortedSet.of();
     }
   }
 

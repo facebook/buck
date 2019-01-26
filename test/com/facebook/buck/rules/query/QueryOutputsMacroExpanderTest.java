@@ -45,11 +45,9 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.testutil.HashMapWithStats;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.SortedSet;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -175,12 +173,7 @@ public class QueryOutputsMacroExpanderTest {
   private TargetNode<FakeTargetNodeArg> newNoopNode(String buildTarget) {
     return FakeTargetNodeBuilder.build(
         new NoopBuildRule(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget), filesystem) {
-          @Override
-          public SortedSet<BuildRule> getBuildDeps() {
-            return ImmutableSortedSet.of();
-          }
-        });
+            BuildTargetFactory.newInstance(filesystem.getRootPath(), buildTarget), filesystem));
   }
 
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {

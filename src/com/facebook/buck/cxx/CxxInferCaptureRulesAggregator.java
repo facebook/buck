@@ -17,12 +17,9 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import java.util.SortedSet;
 
 /**
  * CxxInferCaptureRulesAggregator is used to aggregate all of the per-source CxxInferCapture rules
@@ -61,10 +58,5 @@ class CxxInferCaptureRulesAggregator extends NoopBuildRule {
       captureBuilder.addAll(aggregator.getCaptureRules());
     }
     return captureBuilder.build();
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    return ImmutableSortedSet.of();
   }
 }

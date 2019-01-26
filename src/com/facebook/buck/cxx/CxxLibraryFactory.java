@@ -68,7 +68,6 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -841,12 +840,7 @@ public class CxxLibraryFactory {
             buildTarget, cxxPlatform.getFlavor(), pic);
 
     if (objects.isEmpty()) {
-      return new NoopBuildRule(staticTarget, projectFilesystem) {
-        @Override
-        public SortedSet<BuildRule> getBuildDeps() {
-          return ImmutableSortedSet.of();
-        }
-      };
+      return new NoopBuildRule(staticTarget, projectFilesystem);
     }
 
     Path staticLibraryPath =

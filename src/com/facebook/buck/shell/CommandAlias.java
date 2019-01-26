@@ -38,12 +38,10 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.SortedSet;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -103,12 +101,6 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
   public boolean inputBasedRuleKeyIsEnabled() {
     // NoopBuildRule implements SupportsInputBasedRuleKey, which cannot add BuildRule for rule keys.
     return false;
-  }
-
-  @Override
-  public SortedSet<BuildRule> getBuildDeps() {
-    // since CommandAlias wraps other build rules, nothing has to be built.
-    return ImmutableSortedSet.of();
   }
 
   @Override

@@ -66,7 +66,6 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.SortedSet;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -122,11 +121,6 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
 
     public SimpleNoopRule(BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
       super(buildTarget, projectFilesystem);
-    }
-
-    @Override
-    public SortedSet<BuildRule> getBuildDeps() {
-      return ImmutableSortedSet.of();
     }
   }
 
