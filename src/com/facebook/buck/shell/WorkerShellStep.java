@@ -39,13 +39,13 @@ import java.util.stream.Collectors;
 
 public class WorkerShellStep implements Step {
 
-  private Optional<WorkerJobParams> cmdParams;
-  private Optional<WorkerJobParams> bashParams;
-  private Optional<WorkerJobParams> cmdExeParams;
-  private WorkerProcessPoolFactory factory;
+  private final Optional<WorkerJobParams> cmdParams;
+  private final Optional<WorkerJobParams> bashParams;
+  private final Optional<WorkerJobParams> cmdExeParams;
+  private final WorkerProcessPoolFactory factory;
 
   /** Target using this worker shell step. */
-  BuildTarget buildTarget;
+  private final BuildTarget buildTarget;
 
   /**
    * Creates new shell step that uses worker process to delegate work. If platform-specific params
