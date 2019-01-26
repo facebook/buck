@@ -16,7 +16,6 @@
 package com.facebook.buck.worker;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 public class FakeWorkerProcessProtocol {
 
@@ -33,36 +32,6 @@ public class FakeWorkerProcessProtocol {
     @Override
     public int receiveCommandResponse(int messageID) throws IOException {
       return 0;
-    }
-
-    @Override
-    public void close() {
-      isClosed = true;
-    }
-
-    public boolean isClosed() {
-      return isClosed;
-    }
-  }
-
-  public static class FakeCommandReceiver implements WorkerProcessProtocol.CommandReceiver {
-
-    private boolean isClosed = false;
-
-    @Override
-    public void handshake(int messageId) {}
-
-    @Override
-    public WorkerProcessCommand receiveCommand(int messageId) {
-      return WorkerProcessCommand.of(Paths.get(""), Paths.get(""), Paths.get(""));
-    }
-
-    @Override
-    public void sendResponse(int messageId, String type, int exitCode) {}
-
-    @Override
-    public boolean shouldClose() {
-      return false;
     }
 
     @Override
