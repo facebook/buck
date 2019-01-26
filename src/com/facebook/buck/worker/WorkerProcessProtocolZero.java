@@ -29,14 +29,13 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 public class WorkerProcessProtocolZero {
   public static class CommandSender implements WorkerProcessProtocol.CommandSender {
     private final JsonWriter processStdinWriter;
     private final JsonReader processStdoutReader;
-    private final Optional<Path> stdErr;
+    private final Path stdErr;
     private final Runnable onClose;
     private boolean isClosed = false;
     private final Supplier<Boolean> isAlive;
@@ -51,7 +50,7 @@ public class WorkerProcessProtocolZero {
           new JsonWriter(new BufferedWriter(new OutputStreamWriter(processStdin)));
       this.processStdoutReader =
           new JsonReader(new BufferedReader(new InputStreamReader(processStdout)));
-      this.stdErr = Optional.of(stdErr);
+      this.stdErr = stdErr;
       this.onClose = onClose;
       this.isAlive = isAlive;
     }
@@ -231,7 +230,7 @@ public class WorkerProcessProtocolZero {
          capabilities: []
        }
   */
-  private static void receiveHandshake(JsonReader reader, int messageId, Optional<Path> stdErr)
+  private static void receiveHandshake(JsonReader reader, int messageId, Path stdErr)
       throws IOException {
     int id = -1;
     String type = "";
@@ -290,12 +289,9 @@ public class WorkerProcessProtocolZero {
     }
   }
 
-  private static String getStdErrorOutput(Optional<Path> stdErr) throws IOException {
-    if (!stdErr.isPresent()) {
-      return "";
-    }
+  private static String getStdErrorOutput(Path stdErr) throws IOException {
     StringBuilder sb = new StringBuilder();
-    try (InputStream inputStream = Files.newInputStream(stdErr.get());
+    try (InputStream inputStream = Files.newInputStream(stdErr);
         BufferedReader errorReader = new BufferedReader(new InputStreamReader(inputStream))) {
       while (errorReader.ready()) {
         sb.append("\t").append(errorReader.readLine()).append("\n");
