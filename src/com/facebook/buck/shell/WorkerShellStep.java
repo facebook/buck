@@ -95,7 +95,7 @@ public class WorkerShellStep implements Step {
     if (showStdout) {
       context.postEvent(ConsoleEvent.info("%s", result.getStdout().get()));
     }
-    if (showStderr) {
+    if (showStderr || result.getExitCode() != 0) {
       if (result.getExitCode() == 0) {
         context.postEvent(ConsoleEvent.warning("%s", result.getStderr().get()));
       } else {
