@@ -140,6 +140,7 @@ public final class BuckPsiUtils {
   @Nullable
   public static String getStringValueFromExpression(BuckSingleExpression expression) {
     return Optional.of(expression)
+        .filter(e -> e.getSingleExpressionList().isEmpty())
         .map(BuckSingleExpression::getPrimaryWithSuffix)
         .filter(e -> e.getDotSuffixList().isEmpty()) // "stri{}".format("ng") unsupported
         .filter(e -> e.getSliceSuffixList().isEmpty()) // "<<slices>>"[2:-2] unsupported
