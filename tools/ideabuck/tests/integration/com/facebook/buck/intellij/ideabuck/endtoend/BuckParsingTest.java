@@ -88,6 +88,10 @@ public class BuckParsingTest extends ParsingTestCase {
     doTest();
   }
 
+  public void testLineContinuations() {
+    doTest();
+  }
+
   public void testTwoRules1() {
     doTest();
   }

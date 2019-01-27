@@ -42,8 +42,8 @@ import static com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes.*;
 %type IElementType
 %unicode
 
-EOL="\r"|"\n"|"\r\n"
-LINE_WS=[\ \t\f]
+EOL=\r|\n|\r\n
+LINE_WS=[\ \t\f]|\\(\r|\n|\r\n)
 
 BOOLEAN=(True|False)
 LINE_COMMENT=#[^\r\n]*
