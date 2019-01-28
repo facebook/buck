@@ -36,6 +36,12 @@ public class FileExtensionMatcherTest {
   }
 
   @Test
+  public void matchesPathsWithMatchingExtensionWithDot() {
+    FileExtensionMatcher matcher = FileExtensionMatcher.of("srcs.zip");
+    assertTrue(matcher.matches(Paths.get("generated.srcs.zip")));
+  }
+
+  @Test
   public void doesNotMatchPathsWithADifferentExtension() {
     FileExtensionMatcher matcher = FileExtensionMatcher.of("cpp");
     assertFalse(matcher.matches(Paths.get("foo.java")));

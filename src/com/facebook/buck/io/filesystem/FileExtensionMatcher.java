@@ -19,7 +19,6 @@ package com.facebook.buck.io.filesystem;
 import com.facebook.buck.io.watchman.Capability;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
@@ -57,7 +56,7 @@ public class FileExtensionMatcher implements PathMatcher {
 
   @Override
   public boolean matches(Path path) {
-    return extension.equals(Files.getFileExtension(path.toString()));
+    return path != null && path.toString().endsWith("." + extension);
   }
 
   private String getGlob() {
