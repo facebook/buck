@@ -153,15 +153,8 @@ public class JavacOptionsTest {
 
     assertOptionsHasKeyValue(
         options,
-        "classpath",
+        "processorpath",
         String.format("%s%s%s", resolvedAlsoPath, File.pathSeparator, resolvedSomeMagicPath));
-  }
-
-  @Test
-  public void shouldAddEmptyClasspathWhenNoJavacPlugins() {
-    JavacOptions options = createStandardBuilder().build();
-
-    assertOptionsHasKeyValue(options, "classpath", "''");
   }
 
   @Test

@@ -114,9 +114,11 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
+
   private static final String TEST_SCENARIO_TARGET = "//android/java/src/com/facebook:fb";
 
-  @Rule public TemporaryFolder tmp = new TemporaryFolder();
+  @Rule
+  public TemporaryFolder tmp = new TemporaryFolder();
   private String annotationScenarioGenPath;
   private ActionGraphBuilder graphBuilder;
   private JavaBuckConfig testJavaBuckConfig;
@@ -141,7 +143,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .toString();
   }
 
-  /** Make sure that when isAndroidLibrary is true, that the Android bootclasspath is used. */
+  /**
+   * Make sure that when isAndroidLibrary is true, that the Android bootclasspath is used.
+   */
   @Test
   @SuppressWarnings("PMD.AvoidUsingHardCodedIP")
   public void testBuildInternalWithAndroidBootclasspath() throws Exception {
@@ -188,8 +192,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
   }
 
-  private void assertHasClasspath(List<String> params, String expectedClasspath) {
-    int index = params.indexOf("-classpath");
+  private void assertHasClasspathType(List<String> params, String classpathType,
+      String expectedClasspath) {
+    int index = params.indexOf("-" + classpathType);
     if (index >= params.size()) {
       fail(String.format("No classpath argument found in %s.", params));
     }
@@ -198,9 +203,17 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     if (!realClasspath.equals(expectedClasspath)) {
       fail(
           String.format(
-              "Expected classpath:\n%s\nIs not equal to the real one in:\n%s.",
+              "Expected " + classpathType + ":\n%s\nIs not equal to the real one in:\n%s.",
               expectedClasspath, params));
     }
+  }
+
+  private void assertHasClasspath(List<String> params, String expectedClasspath) {
+    assertHasClasspathType(params, "classpath", expectedClasspath);
+  }
+
+  private void assertHasProcessorPath(List<String> params, String expectedClasspath) {
+    assertHasClasspathType(params, "processorpath", expectedClasspath);
   }
 
   private String resolveClasspath(BuildRule rule) {
@@ -219,7 +232,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       String expectedClasspath,
       ImmutableList<String> pluginNames) {
 
-    assertHasClasspath(parameters, expectedClasspath);
+    assertHasProcessorPath(parameters, expectedClasspath);
     for (String name : pluginNames) {
       MoreAsserts.assertContainsOne(parameters, "-Xplugin:" + name);
     }
@@ -236,7 +249,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
       BuildTarget target = testTarget.createTarget();
       BuildRule rule = testTarget.createRule(target);
-      scenario.addStandardJavacPluginTarget(target, rule, pluginNames.get(i));
+      scenario.addStandardJavacPluginTarget(rule, pluginNames.get(i));
 
       classpath.append(resolveClasspath(rule));
 
@@ -282,7 +295,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildTarget target = validJavaBinary.createTarget();
     BuildRule rule = validJavaBinary.createRule(target);
 
-    scenario.addStandardJavacPluginTarget(target, rule, "MyPlugin");
+    scenario.addStandardJavacPluginTarget(rule, "MyPlugin");
 
     scenario.getStandardJavacPluginParamsBuilder().addParameters("MyParameter");
     scenario.getStandardJavacPluginParamsBuilder().addParameters("MyKey=MyValue");
@@ -312,26 +325,30 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         scenario.buildAndGetCompileParameters(ImmutableSortedSet.of(classpath));
 
     assertHasClasspath(parameters, classpath.toString());
+    assertEquals(
+        String.format("-processorpath was specified when it shouldn't in %s.", parameters),
+        -1, parameters.indexOf("-processorpath"));
   }
 
   @Test
-  public void testWithJavacPluginAndWithDeps_WillResultInBothClasspath() throws Exception {
+  public void testWithJavacPluginAndAnnotationProcessors_WillResultInBothProcessorPath()
+      throws Exception {
     TestJavaPluginScenario scenario = new TestJavaPluginScenario();
 
-    BuildTarget depTarget = validJavaLibrary.createTarget();
-    BuildRule depRule = validJavaLibrary.createRule(depTarget);
-    Path depClasspathPath = resolveClasspathPath(depRule);
+    BuildTarget apTarget = validJavaBinary.createTarget();
+    BuildRule apRule = validJavaBinary.createRule(apTarget);
+    String apClasspathPath = resolveClasspath(apRule);
 
     BuildTarget pluginTarget = validJavaLibrary.createTarget();
-    BuildRule plguinRule = validJavaLibrary.createRule(pluginTarget);
-    String pluginClasspath = resolveClasspath(depRule);
+    BuildRule pluginRule = validJavaLibrary.createRule(pluginTarget);
+    String pluginClasspath = resolveClasspath(pluginRule);
 
-    scenario.addStandardJavacPluginTarget(pluginTarget, plguinRule, "MyPlugin");
+    scenario.addAnnotationProcessorRule(apRule, "MyProcessor");
+    scenario.addStandardJavacPluginTarget(pluginRule, "MyPlugin");
 
-    ImmutableList<String> parameters =
-        scenario.buildAndGetCompileParameters(ImmutableSortedSet.of(depClasspathPath));
+    ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
 
-    assertHasClasspath(parameters, depClasspathPath.toString() + ":" + pluginClasspath);
+    assertHasProcessorPath(parameters, apClasspathPath + ":" + pluginClasspath);
   }
 
   private void assertHasProcessor(List<String> params, String processor) {
@@ -354,7 +371,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     MoreAsserts.assertContainsOne(parameters, annotationScenarioGenPath);
   }
 
-  /** Verify adding an annotation processor prebuilt jar. */
+  /**
+   * Verify adding an annotation processor prebuilt jar.
+   */
   @Test
   public void testAddAnnotationProcessorPrebuiltJar() throws Exception {
     TestJavaPluginScenario scenario = new TestJavaPluginScenario();
@@ -364,7 +383,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertCorrectAnnotationProcessorParameters(parameters);
   }
 
-  /** Verify adding an annotation processor java library. */
+  /**
+   * Verify adding an annotation processor java library.
+   */
   @Test
   public void testAddAnnotationProcessorJavaLibrary() throws Exception {
     TestJavaPluginScenario scenario = new TestJavaPluginScenario();
@@ -374,7 +395,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertCorrectAnnotationProcessorParameters(parameters);
   }
 
-  /** Verify adding an annotation processor java binary. */
+  /**
+   * Verify adding an annotation processor java binary.
+   */
   @Test
   public void testAddAnnotationProcessorJavaBinary() throws Exception {
     TestJavaPluginScenario scenario = new TestJavaPluginScenario();
@@ -397,7 +420,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
   }
 
-  /** Verify adding multiple annotation processors. */
+  /**
+   * Verify adding multiple annotation processors.
+   */
   @Test
   public void testAddMultipleAnnotationProcessorJar() throws Exception {
     TestJavaPluginScenario scenario = new TestJavaPluginScenario();
@@ -411,7 +436,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertHasProcessor(parameters, "MyThirdProcessor");
   }
 
-  /** Verify adding an annotation processor java binary with options. */
+  /**
+   * Verify adding an annotation processor java binary with options.
+   */
   @Test
   public void testAddAnnotationProcessorWithOptions() throws Exception {
     TestJavaPluginScenario scenario = new TestJavaPluginScenario();
@@ -980,7 +1007,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertThat(steps, Matchers.hasItem(Matchers.instanceOf(JarDirectoryStep.class)));
   }
 
-  /** Tests that input-based rule keys work properly with generated sources. */
+  /**
+   * Tests that input-based rule keys work properly with generated sources.
+   */
   @Test
   public void testInputBasedRuleKeySourceChange() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -1044,7 +1073,9 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     assertThat(originalRuleKey, Matchers.not(equalTo(affectedRuleKey)));
   }
 
-  /** Tests that input-based rule keys work properly with simple Java library deps. */
+  /**
+   * Tests that input-based rule keys work properly with simple Java library deps.
+   */
   @Test
   public void testInputBasedRuleKeyWithJavaLibraryDep() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -1355,16 +1386,16 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     DefaultJavaLibrary defaultJavaLibrary =
         DefaultJavaLibrary.rulesBuilder(
-                buildTarget,
-                filesystem,
-                new ToolchainProviderBuilder().build(),
-                buildRuleParams,
-                graphBuilder,
-                TestCellBuilder.createCellRoots(filesystem),
-                new JavaConfiguredCompilerFactory(
-                    testJavaBuckConfig, JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
-                testJavaBuckConfig,
-                null)
+            buildTarget,
+            filesystem,
+            new ToolchainProviderBuilder().build(),
+            buildRuleParams,
+            graphBuilder,
+            TestCellBuilder.createCellRoots(filesystem),
+            new JavaConfiguredCompilerFactory(
+                testJavaBuckConfig, JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
+            testJavaBuckConfig,
+            null)
             .setJavacOptions(javacOptions)
             .setSrcs(srcsAsPaths)
             .setPostprocessClassesCommands(postprocessClassesCommands)
@@ -1540,6 +1571,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   }
 
   private abstract static class TestBuildTargetTarget {
+
     private final String targetName;
 
     private TestBuildTargetTarget(String targetName) {
@@ -1601,6 +1633,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   // javac plugins, either an annotation processing or a
   // standard javac plugin, test scenarios.
   private class TestJavaPluginScenario {
+
     private final AbstractJavacPluginParams.Builder annotationProcessorParams;
     private final AbstractJavacPluginParams.Builder standardJavacPluginParams;
 
@@ -1617,12 +1650,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       return standardJavacPluginParams;
     }
 
-    public void addAnnotationProcessorTarget(
-        TestBuildTargetTarget processor, String... processorNames)
-        throws NoSuchBuildTargetException {
-      BuildTarget target = processor.createTarget();
-      BuildRule rule = processor.createRule(target);
-
+    public void addAnnotationProcessorRule(BuildRule rule, String... processorNames) {
       JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
       propsBuilder.addProcessorNames(processorNames);
       propsBuilder.addDep(rule);
@@ -1634,7 +1662,15 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       annotationProcessorParams.addPluginProperties(propsBuilder.build().resolve());
     }
 
-    public void addStandardJavacPluginTarget(BuildTarget target, BuildRule rule, String pluginName)
+    public void addAnnotationProcessorTarget(
+        TestBuildTargetTarget processor, String... processorNames)
+        throws NoSuchBuildTargetException {
+      BuildTarget target = processor.createTarget();
+      BuildRule rule = processor.createRule(target);
+      addAnnotationProcessorRule(rule, processorNames);
+    }
+
+    public void addStandardJavacPluginTarget(BuildRule rule, String pluginName)
         throws NoSuchBuildTargetException {
       JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
       propsBuilder.addProcessorNames(pluginName);
@@ -1688,17 +1724,17 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
       DefaultJavaLibrary javaLibrary =
           DefaultJavaLibrary.rulesBuilder(
-                  buildTarget,
-                  projectFilesystem,
-                  new ToolchainProviderBuilder().build(),
-                  buildRuleParams,
-                  graphBuilder,
-                  TestCellBuilder.createCellRoots(projectFilesystem),
-                  new JavaConfiguredCompilerFactory(
-                      testJavaBuckConfig,
-                      JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
+              buildTarget,
+              projectFilesystem,
+              new ToolchainProviderBuilder().build(),
+              buildRuleParams,
+              graphBuilder,
+              TestCellBuilder.createCellRoots(projectFilesystem),
+              new JavaConfiguredCompilerFactory(
                   testJavaBuckConfig,
-                  null)
+                  JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
+              testJavaBuckConfig,
+              null)
               .setJavacOptions(options)
               .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of(src)))
               .setResources(ImmutableSortedSet.of())

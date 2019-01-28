@@ -223,17 +223,6 @@ public class JavacPipelineState implements RulePipelineState {
                       Arrays.stream(value.split(File.pathSeparator))
                           .map(path -> filesystem.resolve(path).toString())
                           .collect(Collectors.joining(File.pathSeparator)));
-            } else if (option.equals(OPTION_CLASSPATH)) {
-              // Build up and set the classpath.
-              if (!buildClasspathEntries.isEmpty()) {
-                String joiner = value.equals("''") ? "" : File.pathSeparator + value;
-                String classpath =
-                    Joiner.on(File.pathSeparator).join(buildClasspathEntries) + joiner;
-                builder.add("-" + OPTION_CLASSPATH, classpath);
-              } else {
-                builder.add("-" + OPTION_CLASSPATH, value);
-              }
-
             } else {
               builder.add("-" + option).add(value);
             }
@@ -262,6 +251,14 @@ public class JavacPipelineState implements RulePipelineState {
 
     if (!javacOptions.getJavaAnnotationProcessorParams().isEmpty()) {
       builder.add("-s").add(filesystem.resolve(generatedCodeDirectory).toString());
+    }
+
+    // Build up and set the classpath.
+    if (!buildClasspathEntries.isEmpty()) {
+      String classpath = Joiner.on(File.pathSeparator).join(buildClasspathEntries);
+      builder.add("-classpath", classpath);
+    } else {
+      builder.add("-classpath", "''");
     }
 
     return builder.build();

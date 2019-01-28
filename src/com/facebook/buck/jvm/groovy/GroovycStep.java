@@ -115,8 +115,6 @@ class GroovycStep implements Step {
 
     command.add("@" + pathToSrcsList);
 
-    ImmutableList<String> built = command.build();
-    built.forEach(System.out::println);
     return command.build();
   }
 
@@ -140,10 +138,6 @@ class GroovycStep implements Step {
               // confuses the cross compilation step's javac (it won't find any class files
               // compiled by groovyc).
               if (option.equals("sourcepath")) {
-                return;
-              }
-              // Cross compilation won't work if we provide javac an empty classpath
-              if (option.equals("classpath") && value.equals("''")) {
                 return;
               }
               if (!Strings.isNullOrEmpty(value)) {

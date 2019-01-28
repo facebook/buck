@@ -51,9 +51,6 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
   // Default combined source and target level.
   public static final String TARGETED_JAVA_VERSION = "7";
 
-  public static final String OPTION_CLASSPATH = "classpath";
-  public static final String OPTION_JAVAC_PLUGIN = "Xplugin";
-
   /** The method in which the compiler output is spooled. */
   public enum SpoolMode {
     /**
@@ -208,17 +205,13 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       }
     }
 
+    ImmutableList.Builder<ResolvedJavacPluginProperties> allPluginsBuilder = ImmutableList.builder();
     // Add annotation processors.
     JavacPluginParams annotationProcessingParams = getJavaAnnotationProcessorParams();
     if (!annotationProcessingParams.isEmpty()) {
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
           annotationProcessingParams.getPluginProperties();
-
-      // Specify processorpath to search for processors.
-      optionsConsumer.addOptionValue(
-          "processorpath",
-          ResolvedJavacPluginProperties.getJoinedClasspath(
-              pathResolver, filesystem, annotationProcessors));
+      allPluginsBuilder.addAll(annotationProcessors);
 
       // Specify names of processors.
       optionsConsumer.addOptionValue(
@@ -246,21 +239,23 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     if (!standardJavacPluginParams.isEmpty()) {
       ImmutableList<ResolvedJavacPluginProperties> javacPlugins =
           standardJavacPluginParams.getPluginProperties();
-
-      // Specify classpath to include javac plugins.
-      optionsConsumer.addOptionValue(
-          OPTION_CLASSPATH,
-          ResolvedJavacPluginProperties.getJoinedClasspath(pathResolver, filesystem, javacPlugins));
+      allPluginsBuilder.addAll(javacPlugins);
 
       for (ResolvedJavacPluginProperties properties : javacPlugins) {
         optionsConsumer.addFlag(
-            OPTION_JAVAC_PLUGIN + File.pathSeparator + properties.getProcessorNames().first());
+            "Xplugin" + ":" + properties.getProcessorNames().first());
       }
 
       // Add plugin parameters.
       optionsConsumer.addExtras(standardJavacPluginParams.getParameters());
-    } else {
-      optionsConsumer.addOptionValue(OPTION_CLASSPATH, "''");
+    }
+
+    // Specify classpath to include javac plugins and annotation processors.
+    ImmutableList<ResolvedJavacPluginProperties> allPlugins = allPluginsBuilder.build();
+    if (!allPlugins.isEmpty()) {
+      optionsConsumer.addOptionValue(
+          "processorpath",
+          ResolvedJavacPluginProperties.getJoinedClasspath(pathResolver, filesystem, allPlugins));
     }
 
     // Add extra arguments.
