@@ -16,8 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.AbstractJavacOptions.OPTION_CLASSPATH;
-
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;

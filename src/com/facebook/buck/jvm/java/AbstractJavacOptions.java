@@ -205,7 +205,8 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       }
     }
 
-    ImmutableList.Builder<ResolvedJavacPluginProperties> allPluginsBuilder = ImmutableList.builder();
+    ImmutableList.Builder<ResolvedJavacPluginProperties> allPluginsBuilder =
+        ImmutableList.builder();
     // Add annotation processors.
     JavacPluginParams annotationProcessingParams = getJavaAnnotationProcessorParams();
     if (!annotationProcessingParams.isEmpty()) {
@@ -242,8 +243,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       allPluginsBuilder.addAll(javacPlugins);
 
       for (ResolvedJavacPluginProperties properties : javacPlugins) {
-        optionsConsumer.addFlag(
-            "Xplugin" + ":" + properties.getProcessorNames().first());
+        optionsConsumer.addFlag("Xplugin" + ":" + properties.getProcessorNames().first());
       }
 
       // Add plugin parameters.
