@@ -69,7 +69,6 @@ public class ErrorLogger {
   private final HumanReadableExceptionAugmentor errorAugmentor;
 
   /** Prints the stacktrace as formatted by an ErrorLogger. */
-  @VisibleForTesting
   public static String getUserFriendlyMessage(Throwable e) {
     StringBuilder builder = new StringBuilder();
     new ErrorLogger(
