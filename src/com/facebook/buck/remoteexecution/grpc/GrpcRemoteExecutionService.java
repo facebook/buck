@@ -119,18 +119,16 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
           if (operation.hasError()) {
             throw new RuntimeException(
                 String.format(
-                    "Execution failed due to an infra error with Status=[{}] Metadata=[{}].",
-                    operation.getError().toString(),
-                    stubAndMetadata.getMetadata()));
+                    "Execution failed due to an infra error with Status=[%s] Metadata=[%s].",
+                    operation.getError().toString(), stubAndMetadata.getMetadata()));
           }
 
           if (!operation.hasResponse()) {
             throw new RuntimeException(
                 String.format(
                     "Invalid operation response: missing ExecutionResponse object. "
-                        + "Response=[{}] Metadata=[{}].",
-                    operation.toString(),
-                    stubAndMetadata.getMetadata()));
+                        + "Response=[%s] Metadata=[%s].",
+                    operation.toString(), stubAndMetadata.getMetadata()));
           }
 
           try {
@@ -140,9 +138,8 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
           } catch (InvalidProtocolBufferException e) {
             throw new BuckUncheckedExecutionException(
                 e,
-                String.format(
-                    "Exception getting execution result with Metadata=[{}].",
-                    stubAndMetadata.getMetadata()));
+                "Exception getting execution result with Metadata=[%s].",
+                stubAndMetadata.getMetadata());
           }
         },
         MoreExecutors.directExecutor());

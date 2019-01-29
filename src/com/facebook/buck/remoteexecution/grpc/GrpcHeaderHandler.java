@@ -116,9 +116,8 @@ public class GrpcHeaderHandler {
             return RemoteExecutionMetadata.parseFrom(serialisedMetadata);
           } catch (InvalidProtocolBufferException e) {
             LOG.error(
-                String.format(
-                    "Failed to parse [{} bytes] for the RemoteExecutionMetadata.",
-                    serialisedMetadata.length));
+                "Failed to parse [%d bytes] for the RemoteExecutionMetadata.",
+                serialisedMetadata.length);
           }
         }
       }
