@@ -112,6 +112,9 @@ java_library(
 
 standard_java_test(
     name = "kotlin",
+    module_deps = [
+        "//src/com/facebook/buck/features/zip/rules:rules",
+    ],
     with_test_data = True,
     deps = [
         "//src-gen:thrift",

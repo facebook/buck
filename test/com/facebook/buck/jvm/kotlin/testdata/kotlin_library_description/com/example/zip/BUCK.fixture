@@ -1,0 +1,18 @@
+zip_file(
+    name = "file.src.zip",
+    srcs = [
+        "Example.kt",
+    ],
+    out = "file.src.zip",
+)
+
+kotlin_library(
+    name = "zip",
+    srcs = [
+        "JavaClass.java",
+        ":file.src.zip",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)

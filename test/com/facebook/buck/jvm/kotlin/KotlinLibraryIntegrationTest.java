@@ -163,4 +163,10 @@ public class KotlinLibraryIntegrationTest {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/mixed:example");
     buildResult.assertSuccess("Build should have succeeded.");
   }
+
+  @Test
+  public void shouldCompileKotlinSrcZip() throws Exception {
+    ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/zip:zip");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
 }

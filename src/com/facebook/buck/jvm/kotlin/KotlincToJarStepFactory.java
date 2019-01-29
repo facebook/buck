@@ -26,6 +26,9 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.BuildCellRelativePath;
+import com.facebook.buck.io.filesystem.FileExtensionMatcher;
+import com.facebook.buck.io.filesystem.GlobPatternMatcher;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
@@ -67,6 +70,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
+  private final ImmutableSortedSet<Path> kotlinHomeLibraries;
 
   private static final String COMPILER_BUILTINS = "-Xadd-compiler-builtins";
   private static final String LOAD_BUILTINS_FROM = "-Xload-builtins-from-dependencies";
@@ -92,7 +96,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private static final String NO_REFLECT = "-no-reflect";
   private static final String VERBOSE = "-verbose";
 
-  private final ImmutableSortedSet<Path> kotlinHomeLibraries;
+  private static final PathMatcher KOTLIN_PATH_MATCHER = FileExtensionMatcher.of("kt");
+  private static final PathMatcher SRC_ZIP_MATCHER = GlobPatternMatcher.of("**.src.zip");
 
   KotlincToJarStepFactory(
       Kotlinc kotlinc,
@@ -150,8 +155,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     ImmutableSortedSet.Builder<Path> sourceBuilder =
         ImmutableSortedSet.<Path>naturalOrder().addAll(sourceFilePaths);
 
-    // Only invoke kotlinc if we have kotlin files.
-    if (sourceFilePaths.stream().anyMatch(PathMatchers.KOTLIN_PATH_MATCHER::matches)) {
+    // Only invoke kotlinc if we have kotlin or src zip files.
+    if (sourceFilePaths.stream().anyMatch(KOTLIN_PATH_MATCHER::matches)
+        || sourceFilePaths.stream().anyMatch(SRC_ZIP_MATCHER::matches)) {
       ImmutableSortedSet<Path> sourcePaths =
           ImmutableSortedSet.<Path>naturalOrder().add(genOutput).addAll(sourceFilePaths).build();
 
@@ -258,7 +264,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         ImmutableSortedSet.copyOf(
             sources
                 .stream()
-                .filter(input -> !PathMatchers.KOTLIN_PATH_MATCHER.matches(input))
+                .filter(input -> !KOTLIN_PATH_MATCHER.matches(input))
                 .collect(Collectors.toSet()));
 
     CompilerParameters javacParameters =
