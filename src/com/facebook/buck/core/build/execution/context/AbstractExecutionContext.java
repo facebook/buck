@@ -203,7 +203,7 @@ abstract class AbstractExecutionContext implements Closeable {
         .setProcessExecutor(getProcessExecutor().cloneWithOutputStreams(newStdout, newStderr))
         .setClassLoaderCache(getClassLoaderCache().addRef())
         .setAndroidDevicesHelper(Optional.empty())
-        .setWorkerProcessPools(new ConcurrentHashMap<String, WorkerProcessPool>())
+        .setWorkerProcessPools(new ConcurrentHashMap<>())
         .build();
   }
 
