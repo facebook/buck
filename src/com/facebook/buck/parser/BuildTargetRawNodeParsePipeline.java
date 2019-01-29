@@ -19,7 +19,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -47,11 +46,8 @@ public class BuildTargetRawNodeParsePipeline
             cell, cell.getAbsolutePathToBuildFile(buildTarget)),
         input -> {
           if (!input.getTargets().containsKey(buildTarget.getShortName())) {
-            ImmutableList<String> spellingSuggestion =
-                TargetSuggestionUtils.getTypoSuggestions(
-                    cell, buildTarget, buildFileRawNodeParsePipeline);
             throw NoSuchBuildTargetException.createForMissingBuildRule(
-                buildTarget, cell.getAbsolutePathToBuildFile(buildTarget), spellingSuggestion);
+                buildTarget, cell.getAbsolutePathToBuildFile(buildTarget));
           }
           return Futures.immediateFuture(input.getTargets().get(buildTarget.getShortName()));
         },

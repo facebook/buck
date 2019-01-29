@@ -17,8 +17,6 @@
 package com.facebook.buck.parser.exceptions;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 
 /** Thrown when build target definition is missing in corresponding build file */
@@ -32,27 +30,14 @@ public class NoSuchBuildTargetException extends BuildTargetException {
     super(message);
   }
 
-  /**
-   * @param buildTarget the failing {@link BuildTarget}
-   * @param buckFilePath the path to BUCK file
-   * @param suggestions potential target suggestions, will not display if they are null or empty
-   */
+  /** @param buildTarget the failing {@link BuildTarget} */
   public static NoSuchBuildTargetException createForMissingBuildRule(
-      BuildTarget buildTarget, Path buckFilePath, ImmutableList<String> suggestions) {
-    StringBuilder exceptionMessageBuilder =
-        new StringBuilder(
-            String.format(
-                "The rule %s could not be found.\nPlease check the spelling and whether it exists in %s.",
-                buildTarget.getFullyQualifiedName(), buckFilePath));
-
-    if (!suggestions.isEmpty()) {
-      String lineSeparator = System.lineSeparator();
-      String separator = "    " + lineSeparator;
-      exceptionMessageBuilder.append(lineSeparator);
-      exceptionMessageBuilder.append("Did you mean:");
-      Joiner.on(separator).appendTo(exceptionMessageBuilder, suggestions);
-    }
-    return new NoSuchBuildTargetException(exceptionMessageBuilder.toString());
+      BuildTarget buildTarget, Path buckFilePath) {
+    String message =
+        String.format(
+            "The rule %s could not be found.\nPlease check the spelling and whether it exists in %s.",
+            buildTarget.getFullyQualifiedName(), buckFilePath);
+    return new NoSuchBuildTargetException(message);
   }
 
   @Override
