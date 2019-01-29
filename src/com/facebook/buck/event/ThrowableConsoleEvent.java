@@ -24,7 +24,7 @@ import java.util.logging.Level;
 /**
  * Event for tracking {@link Throwable}.
  *
- * <p>Deprecated, use ErrorLogger.
+ * <p>Deprecated, use {@link com.facebook.buck.util.ErrorLogger}.
  */
 @Deprecated
 public class ThrowableConsoleEvent extends ConsoleEvent {
