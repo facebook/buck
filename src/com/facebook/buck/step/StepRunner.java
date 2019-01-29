@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import java.util.Optional;
 

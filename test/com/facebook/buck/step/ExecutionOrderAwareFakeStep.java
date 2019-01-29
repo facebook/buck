@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.google.common.base.Preconditions;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;

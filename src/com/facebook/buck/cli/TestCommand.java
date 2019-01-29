@@ -28,6 +28,7 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -59,7 +60,6 @@ import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.external.ExternalTestRunEvent;

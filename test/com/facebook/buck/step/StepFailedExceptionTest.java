@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
 import java.io.IOException;

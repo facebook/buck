@@ -22,10 +22,10 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.FilterResourcesSteps.ImageScaler;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.file.ProjectFilesystemMatchers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.util.DefaultFilteredDirectoryCopier;
 import com.google.common.collect.ImmutableBiMap;

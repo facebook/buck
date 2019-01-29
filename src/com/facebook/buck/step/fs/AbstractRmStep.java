@@ -16,10 +16,10 @@
 
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.immutables.BuckStyleStep;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;

@@ -17,9 +17,9 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;

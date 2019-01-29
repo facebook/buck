@@ -16,9 +16,9 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Escaper;
@@ -49,7 +49,7 @@ public abstract class ShellStep implements Step {
   private static final Logger LOG = Logger.get(ShellStep.class);
   private static final OperatingSystemMXBean OS_JMX = ManagementFactory.getOperatingSystemMXBean();
 
-  /** Defined lazily by {@link #getShellCommand(com.facebook.buck.step.ExecutionContext)}. */
+  /** Defined lazily by {@link #getShellCommand(ExecutionContext)}. */
   @Nullable private ImmutableList<String> shellCommandArgs;
 
   /**

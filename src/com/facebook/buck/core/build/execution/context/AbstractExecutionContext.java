@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.core.build.execution.context;
 
 import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
@@ -54,6 +54,7 @@ import org.immutables.value.Value;
 
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
+/** The context exposed for executing {@link com.facebook.buck.step.Step}s */
 abstract class AbstractExecutionContext implements Closeable {
 
   @Value.Parameter

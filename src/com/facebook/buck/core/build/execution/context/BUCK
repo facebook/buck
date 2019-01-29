@@ -1,0 +1,28 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "context",
+    srcs = [
+        "AbstractExecutionContext.java",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android:utils_api",
+        "//src/com/facebook/buck/android/device:device",
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/jvm/core:packagefinder",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//src/com/facebook/buck/worker:worker_process",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
+    ],
+)

@@ -20,11 +20,11 @@ import static com.facebook.buck.io.file.MorePaths.pathWithPlatformSeparators;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.dalvik.EstimateDexWeightStep.DexWeightEstimator;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.classes.FileLike;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;

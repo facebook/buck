@@ -18,6 +18,7 @@ package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;

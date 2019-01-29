@@ -16,8 +16,8 @@
 
 package com.facebook.buck.features.go;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;

@@ -24,8 +24,8 @@ java_library(
     ],
     visibility = [
         "//src/com/facebook/buck/core/build/context:context",
+        "//src/com/facebook/buck/core/build/execution/context:context",
         "//src/com/facebook/buck/rules/modern/builders/...",
-        "//src/com/facebook/buck/step:step",
     ],
     deps = ["//src/com/facebook/buck/core/model:model"],
 )

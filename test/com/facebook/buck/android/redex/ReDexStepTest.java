@@ -20,13 +20,13 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.KeystoreProperties;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;

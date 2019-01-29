@@ -18,10 +18,10 @@ package com.facebook.buck.android;
 
 import com.android.common.sdklib.build.ApkBuilder;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.rules.coercer.ManifestEntries;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;

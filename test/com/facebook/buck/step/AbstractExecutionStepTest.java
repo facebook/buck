@@ -18,6 +18,7 @@ package com.facebook.buck.step;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import org.junit.Test;
 
 /** Unit test for {@link com.facebook.buck.step.AbstractExecutionStep}. */

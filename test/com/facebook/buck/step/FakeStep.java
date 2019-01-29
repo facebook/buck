@@ -16,6 +16,8 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
+
 public class FakeStep implements Step {
   private final String shortName;
   private final String description;

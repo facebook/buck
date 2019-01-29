@@ -16,9 +16,9 @@
 
 package com.facebook.buck.features.dotnet;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.shell.ShellStep;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;

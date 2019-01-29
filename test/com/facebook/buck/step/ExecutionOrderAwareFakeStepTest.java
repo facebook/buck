@@ -19,6 +19,7 @@ package com.facebook.buck.step;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Test;

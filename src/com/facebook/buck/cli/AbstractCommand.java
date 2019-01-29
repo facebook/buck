@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.CellPathResolver;
@@ -38,7 +39,6 @@ import com.facebook.buck.rules.keys.EventPostingRuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.util.DefaultProcessExecutor;

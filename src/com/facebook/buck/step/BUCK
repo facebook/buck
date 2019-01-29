@@ -1,10 +1,14 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
 
 java_immutables_library(
     name = "step",
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/android/device:device",
+        "//src/com/facebook/buck/core/build/execution/context:context",
     ],
     tests = [
         "//test/com/facebook/buck/step:step",
@@ -22,7 +26,6 @@ java_immutables_library(
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/jvm/core:packagefinder",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",

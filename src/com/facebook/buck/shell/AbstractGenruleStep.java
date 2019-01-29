@@ -16,11 +16,11 @@
 
 package com.facebook.buck.shell;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.programrunner.DirectProgramRunner;
 import com.facebook.buck.shell.programrunner.ProgramRunner;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;

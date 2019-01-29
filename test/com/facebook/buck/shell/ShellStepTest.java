@@ -19,8 +19,8 @@ package com.facebook.buck.shell;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.step.ExecutionContext;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
