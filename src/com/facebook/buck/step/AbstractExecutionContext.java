@@ -16,6 +16,7 @@
 
 package com.facebook.buck.step;
 
+import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildId;

@@ -22,6 +22,7 @@ import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.DdmPreferences;
 import com.android.ddmlib.IDevice;
+import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
@@ -41,7 +42,6 @@ import com.facebook.buck.event.UninstallEvent;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.MoreSuppliers;

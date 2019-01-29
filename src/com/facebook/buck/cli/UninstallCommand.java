@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.HasInstallableApk;
+import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.core.config.BuckConfig;
@@ -32,7 +33,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;

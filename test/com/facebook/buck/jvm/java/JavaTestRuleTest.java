@@ -20,6 +20,7 @@ import static org.easymock.EasyMock.createMock;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -27,7 +28,6 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;

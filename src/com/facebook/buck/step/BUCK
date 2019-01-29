@@ -3,12 +3,16 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "step",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/android/device:device",
+    ],
     tests = [
         "//test/com/facebook/buck/step:step",
     ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/android:utils_api",
+        "//src/com/facebook/buck/android/device:device",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rulekey:rulekey",

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.android.device.TargetDevice;
+import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -58,8 +60,6 @@ import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionContext;
-import com.facebook.buck.step.TargetDevice;
-import com.facebook.buck.step.TargetDeviceOptions;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.external.ExternalTestRunEvent;

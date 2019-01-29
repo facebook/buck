@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.android.device;
 
 import java.util.Optional;
 

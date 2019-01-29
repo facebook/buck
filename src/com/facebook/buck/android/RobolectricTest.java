@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -34,7 +35,6 @@ import com.facebook.buck.jvm.java.JavaTest;
 import com.facebook.buck.jvm.java.TestType;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.TargetDevice;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.Optionals;
 import com.google.common.annotations.VisibleForTesting;
