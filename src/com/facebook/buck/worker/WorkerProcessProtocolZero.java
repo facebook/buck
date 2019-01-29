@@ -17,7 +17,6 @@ package com.facebook.buck.worker;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.BufferedReader;
@@ -171,11 +170,9 @@ public class WorkerProcessProtocolZero {
 
     @Override
     public synchronized void close() throws IOException {
-      Preconditions.checkArgument(
-          !isClosed,
-          "%s (%d) has been already closed",
-          getClass().getSimpleName(),
-          System.identityHashCode(this));
+      if (isClosed) {
+        return;
+      }
       try {
         processStdinWriter.endArray();
         processStdinWriter.close();
