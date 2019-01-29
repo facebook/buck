@@ -237,9 +237,34 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         }
       }
     }
-    try (Closeable closeable = prepareExecutionContext(params)) {
+    try (Closeable closeable = prepareExecutionContext(params);
+        Closeable bazelProfiler = prepareBazelProfiler()) {
       return runWithoutHelp(params);
     }
+  }
+
+  private Closeable prepareBazelProfiler() {
+    if (skylarkProfile != null) {
+      Clock clock = new JavaClock();
+      try {
+        OutputStream outputStream =
+            new BufferedOutputStream(Files.newOutputStream(Paths.get(skylarkProfile)));
+        Profiler.instance()
+            .start(
+                ProfiledTaskKinds.ALL,
+                outputStream,
+                Format.JSON_TRACE_FILE_FORMAT,
+                "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),
+                false,
+                clock,
+                clock.nanoTime(),
+                false);
+      } catch (IOException e) {
+        throw new HumanReadableException(
+            "Cannot initialize Skylark profiler for " + skylarkProfile, e);
+      }
+    }
+    return () -> Profiler.instance().stop();
   }
 
   protected Closeable prepareExecutionContext(CommandRunnerParams params) {
@@ -301,27 +326,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
             .setProjectFilesystemFactory(params.getProjectFilesystemFactory());
-    if (skylarkProfile != null) {
-      Clock clock = new JavaClock();
-      try {
-        OutputStream outputStream =
-            new BufferedOutputStream(Files.newOutputStream(Paths.get(skylarkProfile)));
-        Profiler.instance()
-            .start(
-                ProfiledTaskKinds.ALL,
-                outputStream,
-                Format.JSON_TRACE_FILE_FORMAT,
-                "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),
-                false,
-                clock,
-                clock.nanoTime(),
-                false);
-      } catch (IOException e) {
-        throw new HumanReadableException(
-            "Cannot initialize Skylark profiler for " + skylarkProfile, e);
-      }
-      builder.setProfiler(Optional.of(Profiler.instance()));
-    }
     return builder;
   }
 
