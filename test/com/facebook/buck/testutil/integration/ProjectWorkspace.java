@@ -53,6 +53,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
+import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.AbstractWorkspace;
 import com.facebook.buck.testutil.ProcessResult;
@@ -101,7 +102,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
-import javax.tools.ToolProvider;
 import org.hamcrest.Matchers;
 import org.pf4j.PluginManager;
 
@@ -594,7 +594,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
               Class.forName(
                   "com.sun.tools.javac.file.ZipFileIndexCache",
                   false,
-                  ToolProvider.getSystemToolClassLoader());
+                  SynchronizedToolProvider.getSystemToolClassLoader());
 
           Method getSharedInstanceMethod = cacheClass.getMethod("getSharedInstance");
           Method clearCacheMethod = cacheClass.getMethod("clearCache");

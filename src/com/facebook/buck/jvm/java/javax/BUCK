@@ -4,4 +4,7 @@ java_library(
         "*.java",
     ]),
     visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/util:isolated",
+    ],
 )

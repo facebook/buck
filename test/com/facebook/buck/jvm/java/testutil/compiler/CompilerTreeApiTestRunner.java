@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.testutil.compiler;
 
+import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.JavaVersion;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
@@ -57,7 +58,7 @@ public class CompilerTreeApiTestRunner extends BlockJUnit4ClassRunner {
 
   private static class TestClassLoader extends URLClassLoader {
     public TestClassLoader() {
-      super(getSystemClassLoaderUrls(), ToolProvider.getSystemToolClassLoader());
+      super(getSystemClassLoaderUrls(), SynchronizedToolProvider.getSystemToolClassLoader());
     }
 
     private static URL[] getSystemClassLoaderUrls() {
