@@ -44,11 +44,11 @@ public class UnknownCellException extends HumanReadableException {
       return ImmutableList.of();
     }
 
-    ImmutableList<String> suggestions =
+    List<String> suggestions =
         MoreStrings.getSpellingSuggestions(cellName.get(), validCellNames, 2);
 
     if (!suggestions.isEmpty()) {
-      return suggestions;
+      return ImmutableList.copyOf(suggestions);
     }
 
     return validCellNames.stream().sorted().collect(ImmutableList.toImmutableList());

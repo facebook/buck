@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 public final class MoreStrings {
@@ -148,29 +149,17 @@ public final class MoreStrings {
   }
 
   /**
-   * @return The spelling suggestion for the {@code input} sorted by Levenstein distance in
-   *     ascending order based on its Levenstein distance from a list of available {@code options}.
+   * @return The spelling suggestion for the {@code input} based on its Levenstein distance from a
+   *     list of available {@code options}.
    */
-  public static ImmutableList<String> getSpellingSuggestions(
-      String input, Collection<String> options, int maxDistance) {
-    return getSpellingSuggestionsWithLevenshteinDistance(input, options, maxDistance)
-        .stream()
-        .map(Pair::getFirst)
-        .collect(ImmutableList.toImmutableList());
-  }
-
-  /**
-   * @return The spelling suggestion and Levenstain distance for the {@code input} sorted by
-   *     distance in ascending order based on its Levenstein distance from a list of available
-   *     {@code options}.
-   */
-  public static ImmutableList<Pair<String, Integer>> getSpellingSuggestionsWithLevenshteinDistance(
+  public static List<String> getSpellingSuggestions(
       String input, Collection<String> options, int maxDistance) {
     return options
         .stream()
         .map(option -> new Pair<>(option, MoreStrings.getLevenshteinDistance(input, option)))
         .filter(pair -> pair.getSecond() <= maxDistance)
         .sorted(Comparator.comparing(Pair::getSecond))
+        .map(Pair::getFirst)
         .collect(ImmutableList.toImmutableList());
   }
 

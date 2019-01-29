@@ -18,11 +18,9 @@ package com.facebook.buck.io.file;
 
 import com.facebook.buck.cli.bootstrapper.filesystem.BuckUnixPath;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -31,7 +29,6 @@ import com.google.common.collect.Streams;
 import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -39,16 +36,12 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -57,8 +50,6 @@ import javax.annotation.Nullable;
  * com.facebook.buck.io.MoreProjectFilesystems} instead.
  */
 public class MorePaths {
-
-  private static final Logger LOG = Logger.get(MorePaths.class);
 
   /** Utility class: do not instantiate. */
   private MorePaths() {}
@@ -514,77 +505,5 @@ public class MorePaths {
     NOT_EXIST,
     EXIST_CASE_MATCHED,
     EXIST_CASE_MISMATCHED
-  }
-
-  /**
-   * Suggest existing paths on given path based on Levenshtein distances allowed. The return result
-   * will include the given path if the given path actually exists.
-   *
-   * <p>There are limitations on the suggestions for the performance optimization, such as it
-   * couldn't search cross folder levels like : correct input: Alpha/Beta/Gamma/Delta.txt wrong
-   * input: AlphaBeta/Gamma/Delta.txt
-   *
-   * @param path a path with potential typos
-   * @param rootPath rootPath to start from
-   * @param maxDistance Max Levenshtein Distance allowed
-   * @return List<Pair<Path, Integer>> a list of suggested path and Levenshtein distance, the list
-   *     is in ascending Levenshtein distance order.
-   */
-  public static List<Pair<Path, Integer>> getPathSuggestions(
-      Path path, Path rootPath, int maxDistance) {
-
-    Path relativePath = path.isAbsolute() ? rootPath.relativize(path) : path;
-    List<Pair<Path, Integer>> candidates = Arrays.asList(new Pair<>(rootPath, 0));
-
-    int nameCount = relativePath.getNameCount();
-    for (Path subPath : relativePath) {
-      if (candidates.isEmpty()) {
-        return candidates;
-      }
-
-      String subPathString = subPath.getFileName().toString();
-
-      nameCount--;
-      boolean isLastSubPath = (nameCount == 0);
-
-      List<Pair<Path, Integer>> nextCandidates = new ArrayList<>();
-      for (Pair<Path, Integer> candidate : candidates) {
-        Path candidatePath = candidate.getFirst();
-        try {
-          Set<String> fileNamesInFolderCandidate =
-              Files.list(candidatePath)
-                  .filter(
-                      fileName ->
-                          isLastSubPath || Files.isDirectory(fileName, LinkOption.NOFOLLOW_LINKS))
-                  .map(Path::getFileName)
-                  .map(Path::toString)
-                  .collect(Collectors.toSet());
-          int remainingDistanceAllowed = maxDistance - candidate.getSecond();
-          List<Pair<String, Integer>> suggestedFileNamesAndLevenshteinDistance =
-              MoreStrings.getSpellingSuggestionsWithLevenshteinDistance(
-                  subPathString, fileNamesInFolderCandidate, remainingDistanceAllowed);
-
-          List<Pair<Path, Integer>> suggestedFileAndLevenshteinDistance =
-              suggestedFileNamesAndLevenshteinDistance
-                  .stream()
-                  .map(
-                      folderNameAndDistance ->
-                          new Pair<>(
-                              candidatePath.resolve(folderNameAndDistance.getFirst()),
-                              candidate.getSecond() + folderNameAndDistance.getSecond()))
-                  .collect(Collectors.toList());
-          nextCandidates.addAll(suggestedFileAndLevenshteinDistance);
-        } catch (SecurityException | UncheckedIOException | IOException ignored) {
-          LOG.warn(ignored, "Fail to list file %s", candidatePath);
-        }
-      }
-
-      candidates = nextCandidates;
-    }
-
-    return candidates
-        .stream()
-        .sorted(Comparator.comparing(Pair::getSecond))
-        .collect(Collectors.toList());
   }
 }

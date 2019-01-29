@@ -29,6 +29,7 @@ import com.facebook.buck.util.ExitCode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -105,52 +106,16 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
     result = workspace.runBuckCommand("targets", "//sImple:");
     result.assertFailure();
 
-    assertThat(
-        result.getStderr(),
+    Matcher<String> errorMessageMatcher =
         Matchers.allOf(
             Matchers.containsString("The case of the build path provided"),
             Matchers.containsString("sImple"),
             Matchers.containsString(
                 "does not match the actual path. "
                     + "This is an issue even on case-insensitive file systems. "
-                    + "Please check the spelling of the provided path."),
-            Matchers.containsString("Did you mean:"),
-            Matchers.containsString("//simple")));
+                    + "Please check the spelling of the provided path."));
 
-    // Check for some expected failure cases if CAPSLOCK
-    result = workspace.runBuckCommand("targets", "//SIMPLE:");
-    result.assertFailure();
-
-    assertThat(
-        result.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString("The case of the build path provided"),
-            Matchers.containsString("SIMPLE"),
-            Matchers.containsString(
-                "does not match the actual path. "
-                    + "This is an issue even on case-insensitive file systems. "
-                    + "Please check the spelling of the provided path."),
-            Matchers.containsString("Did you mean:"),
-            Matchers.containsString("//simple")));
-
-    // Give suggestion if possible
-    result = workspace.runBuckCommand("targets", "//smple:");
-    result.assertFailure();
-    assertThat(
-        result.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString("//smple: references non-existent directory"),
-            Matchers.containsString("Did you mean:"),
-            Matchers.containsString("//simple")));
-
-    // Do not give suggestion if no suggestion is found
-    result = workspace.runBuckCommand("targets", "//VeryVeryNotSimple:");
-    result.assertFailure();
-    assertThat(
-        result.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString("//VeryVeryNotSimple: references non-existent directory"),
-            Matchers.not(Matchers.containsString("Did you mean:"))));
+    assertThat(result.getStderr(), errorMessageMatcher);
   }
 
   @Test
