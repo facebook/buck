@@ -23,12 +23,12 @@ import com.intellij.testFramework.ParsingTestCase;
 public class BuckParsingTest extends ParsingTestCase {
 
   public BuckParsingTest() {
-    super("psi", BuckFileUtil.getBuildFileName(), new BuckParserDefinition());
+    super("buck", BuckFileUtil.getBuildFileName(), new BuckParserDefinition());
   }
 
   @Override
   protected String getTestDataPath() {
-    return "tests/testdata";
+    return "tests/testdata/psi";
   }
 
   @Override
