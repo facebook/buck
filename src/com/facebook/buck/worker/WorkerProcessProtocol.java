@@ -31,19 +31,4 @@ public interface WorkerProcessProtocol {
     @Override
     void close() throws IOException;
   }
-
-  interface CommandReceiver extends Closeable {
-    void handshake(int messageId) throws IOException;
-
-    WorkerProcessCommand receiveCommand(int messageId) throws IOException;
-
-    void sendResponse(int messageId, String type, int exitCode) throws IOException;
-
-    /** @return true if the other end has indicated that close() should be called. */
-    boolean shouldClose() throws IOException;
-
-    /** Should be called when the CommandSender has requested the receiver closes. */
-    @Override
-    void close() throws IOException;
-  }
 }
