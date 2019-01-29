@@ -26,7 +26,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
-import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.google.common.util.concurrent.ListeningExecutorService;

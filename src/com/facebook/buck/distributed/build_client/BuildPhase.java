@@ -57,7 +57,7 @@ import com.facebook.buck.distributed.thrift.RuleKeyCalculatedEvent;
 import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.step.ExecutorPool;
+import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.types.Pair;

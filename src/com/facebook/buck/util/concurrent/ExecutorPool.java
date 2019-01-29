@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.step;
+package com.facebook.buck.util.concurrent;
 
 public enum ExecutorPool {
   CPU,
