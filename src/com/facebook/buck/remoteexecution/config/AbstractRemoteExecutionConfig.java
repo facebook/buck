@@ -65,13 +65,19 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
    * probably be greater than concurrent_result_handling below.
    */
   public static final String STRATEGY_WORKER_THREADS_KEY = "worker_threads";
-
   /**
    * Number of pending uploads at a time. While an action is pending uploads, it may hold a
    * reference to some large-ish data (>1MB). If this limit is reached, it will also block future
    * action computations until uploads finish.
    */
   public static final String CONCURRENT_PENDING_UPLOADS_KEY = "concurrent_pending_uploads";
+  /** URL format string for debug UI on the super console */
+  public static final String DEBUG_FORMAT_STRING_URL_KEY = "debug_format_string_url";
+  /**
+   * The variable identifier string to be replace in any configured format defined by
+   * DEBUG_FORMAT_STRING_URL_KEY. This is being presented to avoid string duplication.
+   */
+  public static final String FORMAT_SESSION_ID_VARIABLE_STRING = "{id}";
 
   public String getRemoteHost() {
     return getValueWithFallback("remote_host").orElse("localhost");
@@ -110,6 +116,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   /** file containing all TLS authorities to verify server certificate with (PEM format) */
   public Optional<Path> getCAsFile() {
     return getFileOption("ca");
+  }
+
+  public String getDebugURLFormatString() {
+    return getValueWithFallback(DEBUG_FORMAT_STRING_URL_KEY)
+        .orElse(FORMAT_SESSION_ID_VARIABLE_STRING);
   }
 
   @Value.Derived

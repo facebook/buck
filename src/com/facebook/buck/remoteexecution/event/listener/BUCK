@@ -19,6 +19,7 @@ java_immutables_library(
         "//src/com/facebook/buck/event/listener/interfaces:interfaces",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/remoteexecution/config:config",
         "//src/com/facebook/buck/remoteexecution/event:event",
         "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
         "//src/com/facebook/buck/util/network:network",

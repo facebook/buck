@@ -17,6 +17,7 @@
 package com.facebook.buck.remoteexecution.event.listener;
 
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -33,11 +34,17 @@ import java.util.Objects;
 public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLineProvider {
 
   private final RemoteExecutionStatsProvider statsProvider;
+  private final String formatIdVariableString;
+  private final String formatDebugSessionIDString;
   private final String reSessionID;
 
   public RemoteExecutionConsoleLineProvider(
-      RemoteExecutionStatsProvider statsProvider, RemoteExecutionMetadata remoteExecutionMetadata) {
+      RemoteExecutionStatsProvider statsProvider,
+      RemoteExecutionConfig remoteExecutionConfig,
+      RemoteExecutionMetadata remoteExecutionMetadata) {
     this.statsProvider = statsProvider;
+    this.formatIdVariableString = RemoteExecutionConfig.FORMAT_SESSION_ID_VARIABLE_STRING;
+    this.formatDebugSessionIDString = remoteExecutionConfig.getDebugURLFormatString();
     this.reSessionID = remoteExecutionMetadata.getReSessionId().getId();
   }
 
@@ -50,7 +57,9 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
       return lines.build();
     }
 
-    String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", reSessionID);
+    String sessionIdFormatted =
+        formatDebugSessionIDString.replace(formatIdVariableString, reSessionID);
+    String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdFormatted);
     lines.add(metadataLine);
 
     String actionsLine =

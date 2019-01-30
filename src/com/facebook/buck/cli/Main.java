@@ -1467,7 +1467,7 @@ public final class Main {
 
     return ImmutableList.of(
         new RemoteExecutionConsoleLineProvider(
-            remoteExecutionListener.get(), metadataProvider.get()));
+            remoteExecutionListener.get(), remoteExecutionConfig, metadataProvider.get()));
   }
 
   /** Struct for the multiple values returned by {@link #getParserAndCaches}. */

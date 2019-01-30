@@ -11,9 +11,11 @@ java_test(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/listener/interfaces:interfaces",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
+        "//src/com/facebook/buck/remoteexecution/config:config",
         "//src/com/facebook/buck/remoteexecution/event:event",
         "//src/com/facebook/buck/remoteexecution/event/listener:listener",
         "//src/com/facebook/buck/util:util",
+        "//test/com/facebook/buck/core/config:testutil",
         "//third-party/java/junit:junit",
     ],
 )
