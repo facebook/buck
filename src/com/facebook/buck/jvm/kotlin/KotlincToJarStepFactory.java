@@ -130,8 +130,11 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
     Path sourcesOutput =
         BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_sources__");
-    Path classesOutput =
-        BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_classes__");
+
+    // So we share the same classes dir with javac, this way generated files
+    // such as META-INF dirs will also be added to the final jar.
+    Path classesOutput = parameters.getOutputPaths().getClassesDir();
+
     Path kaptGeneratedOutput =
         BuildTargetPaths.getAnnotationPath(
             projectFilesystem, invokingRule, "__%s_kapt_generated__");
