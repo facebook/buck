@@ -17,6 +17,7 @@
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ErrorToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
@@ -53,11 +54,14 @@ public class LuaBuckConfig {
                             .setName(Paths.get("lua"))
                             .setEnvironment(delegate.getEnvironment())
                             .build()))
-        .setLuaCxxLibraryTarget(delegate.getBuildTarget(section, "cxx_library"))
+        .setLuaCxxLibraryTarget(
+            delegate.getBuildTarget(section, "cxx_library", EmptyTargetConfiguration.INSTANCE))
         .setStarterType(
             delegate.getEnum(section, "starter_type", LuaBinaryDescription.StarterType.class))
         .setExtension(delegate.getValue(section, "extension").orElse(".lex"))
-        .setNativeStarterLibrary(delegate.getBuildTarget(section, "native_starter_library"))
+        .setNativeStarterLibrary(
+            delegate.getBuildTarget(
+                section, "native_starter_library", EmptyTargetConfiguration.INSTANCE))
         .setPackageStyle(
             delegate
                 .getEnum(section, "package_style", LuaPlatform.PackageStyle.class)

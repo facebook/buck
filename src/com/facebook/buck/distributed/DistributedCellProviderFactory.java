@@ -24,6 +24,8 @@ import com.facebook.buck.core.cell.impl.ImmutableCell;
 import com.facebook.buck.core.cell.impl.RootCellFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -77,13 +79,15 @@ public class DistributedCellProviderFactory {
                       new CellPathResolverView(
                           rootCellResolver, declaredCellNames, currentCellRoot);
                   CellPathResolver cellPathResolverForParser = currentCellResolver;
+                  UnconfiguredBuildTargetFactory buildTargetFactory =
+                      new ParsingUnconfiguredBuildTargetFactory(BuildTargetParser.INSTANCE);
                   BuckConfig configWithResolver =
                       cellParam
                           .getConfig()
                           .withBuildTargetParser(
-                              target ->
-                                  BuildTargetParser.INSTANCE.parseFullyQualified(
-                                      cellPathResolverForParser, target));
+                              buildTargetName ->
+                                  buildTargetFactory.create(
+                                      cellPathResolverForParser, buildTargetName));
                   RuleKeyConfiguration ruleKeyConfiguration =
                       ConfigRuleKeyConfigurationFactory.create(
                           configWithResolver, cellParam.getBuckModuleManager());

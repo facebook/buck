@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -51,7 +52,7 @@ public class PythonBuckConfig {
   }
 
   public Optional<BuildTarget> getPexTarget() {
-    return delegate.getMaybeBuildTarget(SECTION, "path_to_pex");
+    return delegate.getMaybeBuildTarget(SECTION, "path_to_pex", EmptyTargetConfiguration.INSTANCE);
   }
 
   public String getPexFlags() {
@@ -63,7 +64,8 @@ public class PythonBuckConfig {
   }
 
   public Optional<BuildTarget> getPexExecutorTarget() {
-    return delegate.getMaybeBuildTarget(SECTION, "path_to_pex_executer");
+    return delegate.getMaybeBuildTarget(
+        SECTION, "path_to_pex_executer", EmptyTargetConfiguration.INSTANCE);
   }
 
   public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
@@ -118,7 +120,7 @@ public class PythonBuckConfig {
   }
 
   public Optional<BuildTarget> getCxxLibrary(String section) {
-    return delegate.getBuildTarget(section, "library");
+    return delegate.getBuildTarget(section, "library", EmptyTargetConfiguration.INSTANCE);
   }
 
   public String getDefaultSection() {

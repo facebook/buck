@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -182,7 +183,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
 
   @VisibleForTesting
   Optional<SourcePath> getJavacPath() {
-    Optional<SourcePath> sourcePath = delegate.getSourcePath("tools", "javac");
+    Optional<SourcePath> sourcePath =
+        delegate.getSourcePath("tools", "javac", EmptyTargetConfiguration.INSTANCE);
     if (sourcePath.isPresent() && sourcePath.get() instanceof PathSourcePath) {
       PathSourcePath pathSourcePath = (PathSourcePath) sourcePath.get();
       if (!pathSourcePath.getFilesystem().isExecutable(pathSourcePath.getRelativePath())) {
@@ -193,7 +195,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   }
 
   private Optional<SourcePath> getJavacJarPath() {
-    return delegate.getSourcePath("tools", "javac_jar");
+    return delegate.getSourcePath("tools", "javac_jar", EmptyTargetConfiguration.INSTANCE);
   }
 
   private Optional<Tool> getToolForExecutable(String executableName) {

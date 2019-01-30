@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
@@ -53,7 +54,10 @@ public class SuggestCommand extends AbstractCommand {
     JavaBuildGraphProcessor.Processor processor =
         (graph, javaDepsFinder, executorService) -> {
           BuildTarget buildTarget =
-              params.getBuckConfig().getBuildTargetForFullyQualifiedTarget(fullyQualifiedTarget);
+              params
+                  .getBuckConfig()
+                  .getBuildTargetForFullyQualifiedTarget(
+                      fullyQualifiedTarget, EmptyTargetConfiguration.INSTANCE);
           FineGrainedJavaDependencySuggester suggester =
               new FineGrainedJavaDependencySuggester(buildTarget, graph, javaDepsFinder, console);
           suggester.suggestRefactoring();

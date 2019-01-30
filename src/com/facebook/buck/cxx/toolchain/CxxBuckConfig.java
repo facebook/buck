@@ -18,9 +18,11 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -171,7 +173,7 @@ public class CxxBuckConfig {
 
   /** @return the {@link BuildTarget} which represents the gtest library. */
   public Optional<BuildTarget> getGtestDep() {
-    return delegate.getBuildTarget(cxxSection, GTEST_DEP);
+    return delegate.getBuildTarget(cxxSection, GTEST_DEP, EmptyTargetConfiguration.INSTANCE);
   }
 
   /**
@@ -179,12 +181,13 @@ public class CxxBuckConfig {
    *     by default (if no other main is given).
    */
   public Optional<BuildTarget> getGtestDefaultTestMainDep() {
-    return delegate.getBuildTarget(cxxSection, GTEST_DEFAULT_TEST_MAIN_DEP);
+    return delegate.getBuildTarget(
+        cxxSection, GTEST_DEFAULT_TEST_MAIN_DEP, EmptyTargetConfiguration.INSTANCE);
   }
 
   /** @return the {@link BuildTarget} which represents the boost testing library. */
   public Optional<BuildTarget> getBoostTestDep() {
-    return delegate.getBuildTarget(cxxSection, BOOST_TEST_DEP);
+    return delegate.getBuildTarget(cxxSection, BOOST_TEST_DEP, EmptyTargetConfiguration.INSTANCE);
   }
 
   public Optional<Path> getPath(String name) {
@@ -196,8 +199,8 @@ public class CxxBuckConfig {
     return delegate.getPathSourcePath(path);
   }
 
-  public Optional<SourcePath> getSourcePath(String name) {
-    return delegate.getSourcePath(cxxSection, name);
+  public Optional<SourcePath> getSourcePath(String name, TargetConfiguration targetConfiguration) {
+    return delegate.getSourcePath(cxxSection, name, targetConfiguration);
   }
 
   public Optional<String> getDefaultPlatform() {
@@ -306,7 +309,8 @@ public class CxxBuckConfig {
       return Optional.empty();
     }
     String source = String.format("[%s] %s", cxxSection, field);
-    Optional<BuildTarget> target = delegate.getMaybeBuildTarget(cxxSection, field);
+    Optional<BuildTarget> target =
+        delegate.getMaybeBuildTarget(cxxSection, field, EmptyTargetConfiguration.INSTANCE);
     Optional<CxxToolProvider.Type> type =
         delegate.getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class);
     if (target.isPresent()) {

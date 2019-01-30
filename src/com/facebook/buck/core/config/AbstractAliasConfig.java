@@ -18,6 +18,7 @@ package com.facebook.buck.core.config;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -138,7 +139,10 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
           // Here we parse the alias values with a BuildTargetParser to be strict. We could be
           // looser and just grab everything between "//" and ":" and assume it's a valid base path.
           buildTargets =
-              ImmutableSet.of(getDelegate().getBuildTargetForFullyQualifiedTarget(value));
+              ImmutableSet.of(
+                  getDelegate()
+                      .getBuildTargetForFullyQualifiedTarget(
+                          value, EmptyTargetConfiguration.INSTANCE));
         }
         aliasToBuildTarget.putAll(alias, buildTargets);
       }

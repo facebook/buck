@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -83,7 +84,9 @@ public class BuckConfigTest {
         ImmutableList.of("//java/com/example:foo", "//java/com/example:bar");
     ImmutableList<String> result =
         ImmutableList.copyOf(
-            FluentIterable.from(config.getBuildTargetList("section", "some_list"))
+            FluentIterable.from(
+                    config.getBuildTargetList(
+                        "section", "some_list", EmptyTargetConfiguration.INSTANCE))
                 .transform(Object::toString));
     assertThat(result, Matchers.equalTo(expected));
   }

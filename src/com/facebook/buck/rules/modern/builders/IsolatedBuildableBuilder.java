@@ -28,6 +28,8 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.AbstractBuildRuleResolver;
 import com.facebook.buck.core.rules.BuildRule;
@@ -140,6 +142,8 @@ public abstract class IsolatedBuildableBuilder {
 
     DefaultCellPathResolver cellPathResolver =
         DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+    UnconfiguredBuildTargetFactory buildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory(BuildTargetParser.INSTANCE);
 
     BuckConfig buckConfig =
         new BuckConfig(
@@ -148,7 +152,7 @@ public abstract class IsolatedBuildableBuilder {
             architecture,
             platform,
             clientEnvironment,
-            target -> BuildTargetParser.INSTANCE.parseFullyQualified(cellPathResolver, target));
+            buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
 
     BuckModuleManager moduleManager =
         new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());

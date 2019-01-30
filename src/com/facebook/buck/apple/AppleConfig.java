@@ -21,6 +21,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
@@ -187,12 +188,15 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   public Optional<BuildTarget> getXctoolZipTarget() {
-    return delegate.getBuildTarget(APPLE_SECTION, "xctool_zip_target");
+    return delegate.getBuildTarget(
+        APPLE_SECTION, "xctool_zip_target", EmptyTargetConfiguration.INSTANCE);
   }
 
   public ToolProvider getCodesignProvider() {
     String codesignField = "codesign";
-    Optional<BuildTarget> target = delegate.getMaybeBuildTarget(APPLE_SECTION, codesignField);
+    Optional<BuildTarget> target =
+        delegate.getMaybeBuildTarget(
+            APPLE_SECTION, codesignField, EmptyTargetConfiguration.INSTANCE);
     String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
     if (target.isPresent()) {
       return new BinaryBuildRuleToolProvider(target.get(), source);
@@ -251,7 +255,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   }
 
   public Optional<BuildTarget> getAppleDeviceHelperTarget() {
-    return delegate.getBuildTarget(APPLE_SECTION, "device_helper_target");
+    return delegate.getBuildTarget(
+        APPLE_SECTION, "device_helper_target", EmptyTargetConfiguration.INSTANCE);
   }
 
   public Path getProvisioningProfileSearchPath() {

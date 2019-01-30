@@ -19,6 +19,7 @@ package com.facebook.buck.rules.tool.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -49,7 +50,8 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
     if (!value.isPresent()) {
       return Optional.empty();
     }
-    Optional<BuildTarget> target = getDelegate().getMaybeBuildTarget(section, field);
+    Optional<BuildTarget> target =
+        getDelegate().getMaybeBuildTarget(section, field, EmptyTargetConfiguration.INSTANCE);
     if (target.isPresent()) {
       return Optional.of(
           new BinaryBuildRuleToolProvider(target.get(), String.format("[%s] %s", section, field)));

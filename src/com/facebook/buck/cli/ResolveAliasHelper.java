@@ -21,6 +21,7 @@ import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -102,6 +103,7 @@ public class ResolveAliasHelper {
   /** @return the build target identified by the specified full path or {@code null}. */
   private static BuildTarget getBuildTargetForFullyQualifiedTarget(
       BuckConfig buckConfig, String target) {
-    return buckConfig.getBuildTargetForFullyQualifiedTarget(target);
+    return buckConfig.getBuildTargetForFullyQualifiedTarget(
+        target, EmptyTargetConfiguration.INSTANCE);
   }
 }

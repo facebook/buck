@@ -28,6 +28,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.BuildJobStateBuckConfig;
@@ -246,13 +248,15 @@ public class DistBuildState {
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, String> environment,
       CellPathResolver cellPathResolver) {
+    UnconfiguredBuildTargetFactory buildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory(BuildTargetParser.INSTANCE);
     return new BuckConfig(
         rawConfig,
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(environment),
-        target -> BuildTargetParser.INSTANCE.parseFullyQualified(cellPathResolver, target));
+        buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
   }
 
   public ImmutableMap<Integer, Cell> getCells() {

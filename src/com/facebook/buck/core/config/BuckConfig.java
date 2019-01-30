@@ -21,6 +21,8 @@ import static java.lang.Integer.parseInt;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -79,7 +81,7 @@ public class BuckConfig {
   private final ConfigViewCache<BuckConfig> viewCache =
       new ConfigViewCache<>(this, BuckConfig.class);
 
-  private final Function<String, BuildTarget> buildTargetParser;
+  private final Function<String, UnconfiguredBuildTarget> buildTargetParser;
 
   private final int hashCode;
 
@@ -123,7 +125,7 @@ public class BuckConfig {
       Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment,
-      Function<String, BuildTarget> buildTargetParser) {
+      Function<String, UnconfiguredBuildTarget> buildTargetParser) {
     this.config = config;
     this.projectFilesystem = projectFilesystem;
     this.architecture = architecture;
@@ -136,7 +138,8 @@ public class BuckConfig {
   }
 
   /** Returns a clone of the current config with a the argument CellPathResolver. */
-  public BuckConfig withBuildTargetParser(Function<String, BuildTarget> buildTargetParser) {
+  public BuckConfig withBuildTargetParser(
+      Function<String, UnconfiguredBuildTarget> buildTargetParser) {
     return new BuckConfig(
         config, projectFilesystem, architecture, platform, environment, buildTargetParser);
   }
@@ -205,11 +208,13 @@ public class BuckConfig {
     return Optional.of(paths.collect(ImmutableList.toImmutableList()));
   }
 
-  public BuildTarget getBuildTargetForFullyQualifiedTarget(String target) {
-    return buildTargetParser.apply(target);
+  public BuildTarget getBuildTargetForFullyQualifiedTarget(
+      String target, TargetConfiguration targetConfiguration) {
+    return buildTargetParser.apply(target).configure(targetConfiguration);
   }
 
-  public ImmutableList<BuildTarget> getBuildTargetList(String section, String key) {
+  public ImmutableList<BuildTarget> getBuildTargetList(
+      String section, String key, TargetConfiguration targetConfiguration) {
     ImmutableList<String> targetsToForce = getListWithoutComments(section, key);
     if (targetsToForce.isEmpty()) {
       return ImmutableList.of();
@@ -221,10 +226,10 @@ public class BuckConfig {
       Set<String> expandedAlias =
           getView(AliasConfig.class).getBuildTargetForAliasAsString(targetOrAlias);
       if (expandedAlias.isEmpty()) {
-        targets.add(getBuildTargetForFullyQualifiedTarget(targetOrAlias));
+        targets.add(getBuildTargetForFullyQualifiedTarget(targetOrAlias, targetConfiguration));
       } else {
         for (String target : expandedAlias) {
-          targets.add(getBuildTargetForFullyQualifiedTarget(target));
+          targets.add(getBuildTargetForFullyQualifiedTarget(target, targetConfiguration));
         }
       }
     }
@@ -232,10 +237,12 @@ public class BuckConfig {
   }
 
   /** @return the parsed BuildTarget in the given section and field, if set. */
-  public Optional<BuildTarget> getBuildTarget(String section, String field) {
+  public Optional<BuildTarget> getBuildTarget(
+      String section, String field, TargetConfiguration targetConfiguration) {
     try {
       Optional<String> target = getValue(section, field);
-      return target.map(this::getBuildTargetForFullyQualifiedTarget);
+      return target.map(
+          targetName -> getBuildTargetForFullyQualifiedTarget(targetName, targetConfiguration));
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(
           e, "When trying to parse configuration %s.%s as a build target.", section, field);
@@ -247,21 +254,23 @@ public class BuckConfig {
    *     <p>This is useful if you use getTool to get the target, if any, but allow filesystem
    *     references.
    */
-  public Optional<BuildTarget> getMaybeBuildTarget(String section, String field) {
+  public Optional<BuildTarget> getMaybeBuildTarget(
+      String section, String field, TargetConfiguration targetConfiguration) {
     Optional<String> value = getValue(section, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
     try {
-      return Optional.of(getBuildTargetForFullyQualifiedTarget(value.get()));
+      return Optional.of(getBuildTargetForFullyQualifiedTarget(value.get(), targetConfiguration));
     } catch (BuildTargetParseException e) {
       return Optional.empty();
     }
   }
 
   /** @return the parsed BuildTarget in the given section and field. */
-  public BuildTarget getRequiredBuildTarget(String section, String field) {
-    Optional<BuildTarget> target = getBuildTarget(section, field);
+  public BuildTarget getRequiredBuildTarget(
+      String section, String field, TargetConfiguration targetConfiguration) {
+    Optional<BuildTarget> target = getBuildTarget(section, field, targetConfiguration);
     return getOrThrow(section, field, target);
   }
 
@@ -273,13 +282,14 @@ public class BuckConfig {
    * @return a {@link SourcePath} identified by a @{link BuildTarget} or {@link Path} reference by
    *     the given section:field, if set.
    */
-  public Optional<SourcePath> getSourcePath(String section, String field) {
+  public Optional<SourcePath> getSourcePath(
+      String section, String field, TargetConfiguration targetConfiguration) {
     Optional<String> value = getValue(section, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
     try {
-      BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get());
+      BuildTarget target = getBuildTargetForFullyQualifiedTarget(value.get(), targetConfiguration);
       return Optional.of(DefaultBuildTargetSourcePath.of(target));
     } catch (BuildTargetParseException e) {
       return Optional.of(

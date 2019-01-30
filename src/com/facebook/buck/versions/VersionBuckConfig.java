@@ -17,6 +17,7 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -47,7 +48,9 @@ public class VersionBuckConfig {
             UNIVERSES_SECTION, name, val);
       }
       universe.putVersions(
-          delegate.getBuildTargetForFullyQualifiedTarget(parts.get(0)), Version.of(parts.get(1)));
+          delegate.getBuildTargetForFullyQualifiedTarget(
+              parts.get(0), EmptyTargetConfiguration.INSTANCE),
+          Version.of(parts.get(1)));
     }
     return universe.build();
   }

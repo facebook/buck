@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import java.util.Optional;
 
@@ -36,11 +37,12 @@ public class ProGuardConfig {
    *     specified, the Android platform proguard.jar will be used.
    */
   public Optional<SourcePath> getProguardJarOverride() {
-    return delegate.getSourcePath(SECTION, PROGUARD_CONFIG);
+    return delegate.getSourcePath(SECTION, PROGUARD_CONFIG, EmptyTargetConfiguration.INSTANCE);
   }
 
   public Optional<BuildTarget> getProguardTarget() {
-    return delegate.getMaybeBuildTarget(SECTION, PROGUARD_CONFIG);
+    return delegate.getMaybeBuildTarget(
+        SECTION, PROGUARD_CONFIG, EmptyTargetConfiguration.INSTANCE);
   }
 
   /** @return The upper heap size limit for Proguard if specified. */

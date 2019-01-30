@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -54,15 +55,16 @@ public class ScalaBuckConfig {
   }
 
   public BuildTarget getScalaLibraryTarget() {
-    return delegate.getRequiredBuildTarget(SECTION, "library");
+    return delegate.getRequiredBuildTarget(SECTION, "library", EmptyTargetConfiguration.INSTANCE);
   }
 
   public Iterable<BuildTarget> getCompilerPlugins() {
-    return delegate.getBuildTargetList(SECTION, "compiler_plugins");
+    return delegate.getBuildTargetList(
+        SECTION, "compiler_plugins", EmptyTargetConfiguration.INSTANCE);
   }
 
   public Optional<BuildTarget> getScalacTarget() {
-    return delegate.getMaybeBuildTarget(SECTION, "compiler");
+    return delegate.getMaybeBuildTarget(SECTION, "compiler", EmptyTargetConfiguration.INSTANCE);
   }
 
   public ImmutableList<String> getCompilerFlags() {
