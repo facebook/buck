@@ -70,7 +70,6 @@
 <a href="{ROOT}files-and-dirs/buckconfig.html#{$section}"><code>[{$section}]</code></a>
 {/template}
 
-
 /**
  * @param title Text for heading that appears in rendered content
  * @param id    ID string that is used to link to the heading. See
@@ -88,29 +87,6 @@
   <a href="#{$id}"><strong>{$rendered_text}</strong></a><br>
 {/template}
 
-
-/***/
-{template .dx_threads}
-{call .entry_link}
-  {param section : 'dx' /}
-  {param entry : 'threads' /}
-{/call}
-{/template}
-
-/***/
-{template .httpserver}
-{call .section_link}
-  {param section: 'httpserver' /}
-{/call}
-{/template}
-
-/***/
-{template .maven_repositories}
-{call .section_link}
-  {param section: 'maven_repositories' /}
-{/call}
-{/template}
-
 /**
  * @param section The section the entry is in.
  * @param entry The name of the entry to link to.
@@ -118,6 +94,37 @@
  */
 {template .entry_link}
 <a href="{ROOT}files-and-dirs/buckconfig.html#{$section}.{$entry}">{if isNonnull($link_text)}{$link_text}{else}<code>[{$section}].{$entry}</code>{/if}</a>
+{/template}
+
+/***/
+{template .alias}
+{call .section_link}
+  {param section: 'alias' /}
+{/call}
+{/template}
+
+/***/
+{template .android_build_tools_version}
+{call .entry_link}
+  {param section: 'android' /}
+  {param entry: 'build_tools_version' /}
+{/call}
+{/template}
+
+/***/
+{template .android_sdk_path}
+{call .entry_link}
+  {param section: 'android' /}
+  {param entry: 'sdk_path' /}
+{/call}
+{/template}
+
+/***/
+{template .android_target}
+{call .entry_link}
+  {param section: 'android' /}
+  {param entry: 'target' /}
+{/call}
 {/template}
 
 /***/
@@ -161,18 +168,18 @@
 {/template}
 
 /***/
-{template .apple_toolchains_override}
-{call .entry_link}
-  {param section: 'apple' /}
-  {param entry: '*_toolchains_override' /}
-{/call}
-{/template}
-
-/***/
 {template .apple_replacement}
 {call .entry_link}
   {param section: 'apple' /}
   {param entry: '*_replacement' /}
+{/call}
+{/template}
+
+/***/
+{template .apple_toolchains_override}
+{call .entry_link}
+  {param section: 'apple' /}
+  {param entry: '*_toolchains_override' /}
 {/call}
 {/template}
 
@@ -224,6 +231,14 @@
 {/template}
 
 /***/
+{template .http_max_store_size}
+{call .entry_link}
+  {param section: 'cache' /}
+  {param entry: 'http_max_store_size' /}
+{/call}
+{/template}
+
+/***/
 {template .http_mode}
 {call .entry_link}
   {param section: 'cache' /}
@@ -248,26 +263,10 @@
 {/template}
 
 /***/
-{template .http_max_store_size}
-{call .entry_link}
-  {param section: 'cache' /}
-  {param entry: 'http_max_store_size' /}
-{/call}
-{/template}
-
-/***/
 {template .cxx_gtest_dep}
 {call .entry_link}
   {param section: 'cxx' /}
   {param entry: 'gtest_dep' /}
-{/call}
-{/template}
-
-/***/
-{template .should_remap_host_platform}
-{call .entry_link}
-  {param section: 'cxx' /}
-  {param entry: 'should_remap_host_platform' /}
 {/call}
 {/template}
 
@@ -280,13 +279,114 @@
 {/template}
 
 /***/
-{template .kotlin_kotlinc}
+{template .should_remap_host_platform}
 {call .entry_link}
-  {param section: 'kotlin' /}
-  {param entry: 'kotlinc' /}
+  {param section: 'cxx' /}
+  {param entry: 'should_remap_host_platform' /}
 {/call}
 {/template}
 
+/***/
+{template .download_in_build}
+{call .entry_link}
+  {param section: 'download' /}
+  {param entry: 'in_build' /}
+{/call}
+{/template}
+
+/***/
+{template .dx_threads}
+{call .entry_link}
+  {param section : 'dx' /}
+  {param entry : 'threads' /}
+{/call}
+{/template}
+
+/***/
+{template .go_vendor_path}
+{call buckconfig.entry_link}
+  {param section: 'go' /}
+  {param entry: 'vendor_path' /}
+{/call}
+{/template}
+
+/***/
+{template .httpserver}
+{call .section_link}
+  {param section: 'httpserver' /}
+{/call}
+{/template}
+
+/***/
+{template .default_android_manifest_path}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'default_android_manifest_path' /}
+{/call}
+{/template}
+
+/***/
+{template .generate_android_manifest}
+{call .entry_link}
+  {param section: 'intellij' /}
+  {param entry: 'generate_android_manifest' /}
+{/call}
+{/template}
+
+/***/
+{template .java_abi_generation_mode}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'abi_generation_mode' /}
+{/call}
+{/template}
+
+/***/
+{template .java_src_roots}
+{call .entry_link}
+  {param section: 'java' /}
+  {param entry: 'src_roots' /}
+{/call}
+{/template}
+
+/***/
+{template .maven_repositories}
+{call .section_link}
+  {param section: 'maven_repositories' /}
+{/call}
+{/template}
+
+/***/
+{template .ndk_path}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'ndk_path' /}
+{/call}
+{/template}
+
+/***/
+{template .ndk_repository_path}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'ndk_repository_path' /}
+{/call}
+{/template}
+
+/***/
+{template .ndk_version}
+{call .entry_link}
+  {param section: 'ndk' /}
+  {param entry: 'ndk_version' /}
+{/call}
+{/template}
+
+/***/
+{template .python_native_link_strategy}
+{call .entry_link}
+  {param section: 'python' /}
+  {param entry: 'native_link_strategy' /}
+{/call}
+{/template}
 /***/
 {template .kotlin_external}
 {call .entry_link}
@@ -304,26 +404,26 @@
 {/template}
 
 /***/
+{template .kotlin_kotlinc}
+{call .entry_link}
+  {param section: 'kotlin' /}
+  {param entry: 'kotlinc' /}
+{/call}
+{/template}
+
+/***/
 {template .lua_cxx_library}
 {call .entry_link}
-    {param section: 'lua' /}
-    {param entry: 'cxx_library' /}
+  {param section: 'lua' /}
+  {param entry: 'cxx_library' /}
 {/call}
 {/template}
 
 /***/
 {template .ndk_compiler}
 {call .entry_link}
-    {param section: 'ndk' /}
-    {param entry: 'compiler' /}
-{/call}
-{/template}
-
-/***/
-{template .project_parallel_parsing}
-{call .entry_link}
-    {param section: 'project' /}
-    {param entry: 'parallel_parsing' /}
+  {param section: 'ndk' /}
+  {param entry: 'compiler' /}
 {/call}
 {/template}
 
@@ -336,17 +436,25 @@
 
 /***/
 {template .parser_polyglot_parsing_enabled}
-    {call .entry_link}
-        {param section: 'parser' /}
-        {param entry: 'polyglot_parsing_enabled' /}
-    {/call}
+  {call .entry_link}
+    {param section: 'parser' /}
+    {param entry: 'polyglot_parsing_enabled' /}
+  {/call}
 {/template}
 
 /***/
 {template .project_ignore}
 {call .entry_link}
-    {param section: 'project' /}
-    {param entry: 'ignore' /}
+  {param section: 'project' /}
+  {param entry: 'ignore' /}
+{/call}
+{/template}
+
+/***/
+{template .project_parallel_parsing}
+{call .entry_link}
+  {param section: 'project' /}
+  {param entry: 'parallel_parsing' /}
 {/call}
 {/template}
 
@@ -360,16 +468,16 @@
 /***/
 {template .python_interpreter}
 {call .entry_link}
-    {param section: 'python' /}
-    {param entry: 'interpreter' /}
+  {param section: 'python' /}
+  {param entry: 'interpreter' /}
 {/call}
 {/template}
 
 /***/
 {template .python_package_style}
 {call .entry_link}
-    {param section: 'python' /}
-    {param entry: 'package_style' /}
+  {param section: 'python' /}
+  {param entry: 'package_style' /}
 {/call}
 {/template}
 
@@ -381,50 +489,34 @@
 {/template}
 
 /***/
-{template .test_rule_timeout}
+{template .test_external_runner}
 {call .entry_link}
-    {param section: 'test' /}
-    {param entry: 'rule_timeout' /}
+  {param section: 'test' /}
+  {param entry: 'external_runner' /}
 {/call}
 {/template}
 
 /***/
-{template .test_external_runner}
+{template .test_rule_timeout}
 {call .entry_link}
-    {param section: 'test' /}
-    {param entry: 'external_runner' /}
+  {param section: 'test' /}
+  {param entry: 'rule_timeout' /}
 {/call}
 {/template}
 
 /***/
 {template .test_threads}
 {call .entry_link}
-    {param section: 'test' /}
-    {param entry: 'threads' /}
+  {param section: 'test' /}
+  {param entry: 'threads' /}
 {/call}
 {/template}
 
 /***/
 {template .thrift_compiler}
 {call .entry_link}
-    {param section: 'thrift' /}
-    {param entry: 'compiler' /}
-{/call}
-{/template}
-
-/***/
-{template .ui_thread_line_limit}
-{call .entry_link}
-    {param section: 'ui' /}
-    {param entry: 'thread_line_limit' /}
-{/call}
-{/template}
-
-/***/
-{template .tools_javac}
-{call buckconfig.entry_link}
-  {param section: 'tools' /}
-  {param entry: 'javac' /}
+  {param section: 'thrift' /}
+  {param entry: 'compiler' /}
 {/call}
 {/template}
 
@@ -437,114 +529,21 @@
 {/template}
 
 /***/
-{template .alias}
-{call .section_link}
-  {param section: 'alias' /}
-{/call}
-{/template}
-
-/***/
-{template .java_src_roots}
-{call .entry_link}
-    {param section: 'java' /}
-    {param entry: 'src_roots' /}
-{/call}
-{/template}
-
-/***/
-{template .java_abi_generation_mode}
-{call .entry_link}
-    {param section: 'java' /}
-    {param entry: 'abi_generation_mode' /}
-{/call}
-{/template}
-
-/***/
-{template .android_build_tools_version}
-{call .entry_link}
-    {param section: 'android' /}
-    {param entry: 'build_tools_version' /}
-{/call}
-{/template}
-
-/***/
-{template .android_target}
-{call .entry_link}
-    {param section: 'android' /}
-    {param entry: 'target' /}
-{/call}
-{/template}
-
-/***/
-{template .android_sdk_path}
-{call .entry_link}
-    {param section: 'android' /}
-    {param entry: 'sdk_path' /}
-{/call}
-{/template}
-
-/***/
-{template .ndk_version}
-{call .entry_link}
-    {param section: 'ndk' /}
-    {param entry: 'ndk_version' /}
-{/call}
-{/template}
-
-/***/
-{template .go_vendor_path}
+{template .tools_javac}
 {call buckconfig.entry_link}
-  {param section: 'go' /}
-  {param entry: 'vendor_path' /}
+  {param section: 'tools' /}
+  {param entry: 'javac' /}
 {/call}
 {/template}
 
 /***/
-{template .ndk_path}
+{template .ui_thread_line_limit}
 {call .entry_link}
-    {param section: 'ndk' /}
-    {param entry: 'ndk_path' /}
+  {param section: 'ui' /}
+  {param entry: 'thread_line_limit' /}
 {/call}
 {/template}
 
-/***/
-{template .ndk_repository_path}
-{call .entry_link}
-    {param section: 'ndk' /}
-    {param entry: 'ndk_repository_path' /}
-{/call}
-{/template}
-
-/***/
-{template .default_android_manifest_path}
-{call .entry_link}
-    {param section: 'intellij' /}
-    {param entry: 'default_android_manifest_path' /}
-{/call}
-{/template}
-
-/***/
-{template .generate_android_manifest}
-{call .entry_link}
-    {param section: 'intellij' /}
-    {param entry: 'generate_android_manifest' /}
-{/call}
-{/template}
-
-/***/
-{template .python_native_link_strategy}
-{call .entry_link}
-  {param section: 'python' /}
-  {param entry: 'native_link_strategy' /}
-{/call}
-{/template}
-
-/***/
-{template .download_in_build}
-{call .entry_link}
-  {param section: 'download' /}
-  {param entry: 'in_build' /}
-{/call}
-{/template}
 
 {/namespace}
+
