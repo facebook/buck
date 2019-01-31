@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
+import com.facebook.buck.core.graph.transformation.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
 
 /**
@@ -24,7 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
  *
  * <p>This key will be used to indicate which rule's analysis we are currently interested in.
  */
-public interface RuleAnalysisKey {
+public interface RuleAnalysisKey extends ComputeKey<RuleAnalysisResult> {
 
   /**
    * TODO(bobyf) this really should be a ConfiguredBuildTarget

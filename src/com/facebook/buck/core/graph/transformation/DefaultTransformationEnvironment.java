@@ -22,21 +22,22 @@ import com.google.common.collect.ImmutableMap;
  * A computation environment that {@link GraphTransformer} can access. This class provides ability
  * of {@link GraphTransformer}s to access their dependencies.
  */
-class DefaultTransformationEnvironment<ComputeKey, ComputeResult>
-    implements TransformationEnvironment<ComputeKey, ComputeResult> {
+class DefaultTransformationEnvironment<
+        KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+    implements TransformationEnvironment<KeyType, ResultType> {
 
-  private final ImmutableMap<ComputeKey, ComputeResult> deps;
+  private final ImmutableMap<KeyType, ResultType> deps;
 
   /**
    * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
    * environment
    */
-  DefaultTransformationEnvironment(ImmutableMap<ComputeKey, ComputeResult> deps) {
+  DefaultTransformationEnvironment(ImmutableMap<KeyType, ResultType> deps) {
     this.deps = deps;
   }
 
   @Override
-  public ImmutableMap<ComputeKey, ComputeResult> getDeps() {
+  public ImmutableMap<KeyType, ResultType> getDeps() {
     return deps;
   }
 }

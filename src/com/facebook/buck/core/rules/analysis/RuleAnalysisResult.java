@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
+import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionAnalysisDataLookUp;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
@@ -27,7 +28,7 @@ import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
  * com.google.devtools.build.lib.skyframe.ConfiguredTargetValue}. {@see <a
  * href="https://github.com/bazelbuild/bazel/blob/master/src/main/java/com/google/devtools/build/lib/skyframe/ConfiguredTargetValue.java">ConfiguredTargetValue</a>}
  */
-public interface RuleAnalysisResult extends ActionAnalysisDataLookUp {
+public interface RuleAnalysisResult extends ActionAnalysisDataLookUp, ComputeResult {
 
   /** @return {@link BuildTarget} of the rule */
   BuildTarget getBuildTarget();

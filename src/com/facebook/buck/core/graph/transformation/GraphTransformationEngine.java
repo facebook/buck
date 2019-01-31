@@ -27,9 +27,11 @@ import java.util.concurrent.Future;
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * GraphTransformer#discoverDeps(Object)}
+ * GraphTransformer#discoverDeps(ComputeKey)}
  */
-public interface GraphTransformationEngine<ComputeKey, ComputeResult> extends AutoCloseable {
+public interface GraphTransformationEngine<
+        KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+    extends AutoCloseable {
 
   /** Shuts down the engine and the backing executor */
   @Override
@@ -41,7 +43,7 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> extends Au
    * @param key the specific Key on the graph to compute
    * @return future of the result of applying the transformer on the graph with the given key
    */
-  Future<ComputeResult> compute(ComputeKey key);
+  Future<ResultType> compute(KeyType key);
 
   /**
    * Synchronously computes the given key
@@ -49,7 +51,7 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> extends Au
    * @param key the specific Key on the graph to compute
    * @return the result of applying the transformer on the graph with the given key
    */
-  ComputeResult computeUnchecked(ComputeKey key);
+  ResultType computeUnchecked(KeyType key);
 
   /**
    * Asynchronously computes the result for multiple keys
@@ -57,7 +59,7 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> extends Au
    * @param keys iterable of keys to compute on the graph
    * @return a map of futures of the result for each of the keys supplied
    */
-  ImmutableMap<ComputeKey, Future<ComputeResult>> computeAll(Set<ComputeKey> keys);
+  ImmutableMap<KeyType, Future<ResultType>> computeAll(Set<KeyType> keys);
 
   /**
    * Synchronously computes the result for multiple keys
@@ -65,5 +67,5 @@ public interface GraphTransformationEngine<ComputeKey, ComputeResult> extends Au
    * @param keys iterable of the keys to compute on the graph
    * @return a map of the results for each of the keys supplied
    */
-  ImmutableMap<ComputeKey, ComputeResult> computeAllUnchecked(Set<ComputeKey> keys);
+  ImmutableMap<KeyType, ResultType> computeAllUnchecked(Set<KeyType> keys);
 }

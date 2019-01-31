@@ -27,7 +27,7 @@ import java.util.Optional;
  * @param <Key> Key to the cache
  * @param <Value> Value stored by Cache
  */
-public interface GraphEngineCache<Key, Value> {
+public interface GraphEngineCache<Key extends ComputeKey<Value>, Value extends ComputeResult> {
 
   /**
    * Optionally returns the cached result given the key

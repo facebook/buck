@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
+import com.facebook.buck.core.graph.transformation.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import org.immutables.value.Value;
@@ -36,4 +37,9 @@ abstract class RuleAnalysisKeyImpl implements RuleAnalysisKey {
   @Override
   @Value.Parameter
   public abstract BuildTarget getBuildTarget();
+
+  @Override
+  public Class<? extends ComputeKey<?>> getKeyClass() {
+    return RuleAnalysisKey.class;
+  }
 }

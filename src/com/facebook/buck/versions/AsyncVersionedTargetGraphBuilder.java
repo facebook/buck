@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.graph.transformation.ComputeKey;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphTransformer;
@@ -66,7 +67,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   private final GraphTransformationEngine<VersionTargetGraphKey, TargetNode<?>>
       asyncTransformationEngine;
 
-  private final GraphTransformationEngine<TargetNode<?>, VersionInfo>
+  private final GraphTransformationEngine<VersionInfoKey, VersionInfo>
       versionInfoAsyncTransformationEngine;
   private final ForkJoinPool versionInfoExecutor;
 
@@ -102,7 +103,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
   @Override
   protected VersionInfo getVersionInfo(TargetNode<?> node) {
-    return Futures.getUnchecked(versionInfoAsyncTransformationEngine.compute(node));
+    return Futures.getUnchecked(
+        versionInfoAsyncTransformationEngine.compute(ImmutableVersionInfoKey.of(node)));
   }
 
   @Override
@@ -174,8 +176,20 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
    * Computes all the {@link VersionInfo} in the graph. TODO(bobyf) rewrite this as stages once
    * {@link GraphTransformer} supports staging
    */
+  @Value.Immutable(builder = false, copy = false, prehash = true)
+  @Value.Style(visibility = ImplementationVisibility.PACKAGE)
+  abstract static class VersionInfoKey implements ComputeKey<VersionInfo> {
+    @Value.Parameter
+    public abstract TargetNode<?> getTargetNode();
+
+    @Override
+    public Class<? extends ComputeKey<?>> getKeyClass() {
+      return VersionInfoKey.class;
+    }
+  }
+
   private final class TargetNodeToVersionInfoTransformer
-      implements GraphTransformer<TargetNode<?>, VersionInfo> {
+      implements GraphTransformer<VersionInfoKey, VersionInfo> {
 
     private final TargetGraph targetGraph;
 
@@ -185,14 +199,15 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
     @Override
     public VersionInfo transform(
-        TargetNode<?> node, TransformationEnvironment<TargetNode<?>, VersionInfo> env) {
-      return getVersionInfo(node, env);
+        VersionInfoKey node, TransformationEnvironment<VersionInfoKey, VersionInfo> env) {
+      return getVersionInfo(node.getTargetNode(), env);
     }
 
     @Override
-    public ImmutableSet<TargetNode<?>> discoverDeps(TargetNode<?> node) {
+    public ImmutableSet<VersionInfoKey> discoverDeps(VersionInfoKey node) {
+      TargetNode<?> targetNode = node.getTargetNode();
       Optional<TargetNode<VersionedAliasDescriptionArg>> versionedNode =
-          TargetGraphVersionTransformations.getVersionedNode(node);
+          TargetGraphVersionTransformations.getVersionedNode(targetNode);
 
       Iterable<BuildTarget> versionedDeps;
       if (versionedNode.isPresent()) {
@@ -207,7 +222,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
       } else {
         Iterable<BuildTarget> deps =
-            TargetGraphVersionTransformations.getDeps(typeCoercerFactory, node);
+            TargetGraphVersionTransformations.getDeps(typeCoercerFactory, targetNode);
         versionedDeps =
             Iterables.filter(
                 deps,
@@ -217,12 +232,15 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                       || TargetGraphVersionTransformations.getVersionedNode(depNode).isPresent();
                 });
       }
-      return ImmutableSet.copyOf(Iterables.transform(versionedDeps, targetGraph::get));
+      return ImmutableSet.copyOf(
+          Iterables.transform(
+              versionedDeps,
+              buildTarget -> ImmutableVersionInfoKey.of(targetGraph.get(buildTarget))));
     }
 
     /** Get/cache the transitive version info for this node. */
     private VersionInfo getVersionInfo(
-        TargetNode<?> node, TransformationEnvironment<TargetNode<?>, VersionInfo> env) {
+        TargetNode<?> node, TransformationEnvironment<VersionInfoKey, VersionInfo> env) {
       HashMap<BuildTarget, ImmutableSet<Version>> versionDomain = new HashMap<>();
 
       Optional<TargetNode<VersionedAliasDescriptionArg>> versionedNode =
@@ -243,7 +261,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
   /** Key used to request for resolved {@link TargetNode}s. */
   @Value.Immutable(builder = false, copy = false, prehash = true)
-  abstract static class VersionTargetGraphKey {
+  abstract static class VersionTargetGraphKey implements ComputeKey<TargetNode<?>> {
     @Value.Parameter
     public abstract TargetNode<?> getTargetNode();
 
@@ -253,6 +271,11 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     @Value.Parameter
     @Value.Auxiliary
     public abstract Optional<TargetNodeTranslator> targetNodeTranslator();
+
+    @Override
+    public Class<? extends ComputeKey<?>> getKeyClass() {
+      return VersionTargetGraphKey.class;
+    }
 
     public static VersionTargetGraphKey of(TargetNode<?> node) {
       return ImmutableVersionTargetGraphKey.of(node, Optional.empty(), Optional.empty());

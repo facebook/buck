@@ -23,11 +23,12 @@ import com.google.common.collect.ImmutableMap;
  * execution context for the {@link GraphTransformer}, such as the dependencies required for this
  * transformation.
  */
-public interface TransformationEnvironment<ComputeKey, ComputeResult> {
+public interface TransformationEnvironment<
+    KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult> {
 
   /**
    * @return an immutable map containing the requested deps and their results. The dependencies here
    *     are all of the keys returned from {@link GraphTransformer#discoverDeps}
    */
-  ImmutableMap<ComputeKey, ComputeResult> getDeps();
+  ImmutableMap<KeyType, ResultType> getDeps();
 }

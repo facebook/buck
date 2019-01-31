@@ -24,16 +24,16 @@ import com.google.common.collect.ImmutableSet;
  * <p>The transformation is guaranteed the following conditions:
  *
  * <ul>
- *   <li>1. {@link #transform(Object, TransformationEnvironment)} is only called once per key if
+ *   <li>1. {@link #transform(ComputeKey, TransformationEnvironment)} is only called once per key if
  *       caching is enabled.
- *   <li>2. {@link #transform(Object, TransformationEnvironment)} is only called after all keys in
- *       {@link #discoverDeps(Object)} has been computed.
+ *   <li>2. {@link #transform(ComputeKey, TransformationEnvironment)} is only called after all keys
+ *       in {@link #discoverDeps(ComputeKey)} has been computed.
  * </ul>
  *
  * @param <Key> The types of Keys used to query for the result on the graph computation
  * @param <Result> The result of the computation given a specific key.
  */
-public interface GraphTransformer<Key, Result> {
+public interface GraphTransformer<Key extends ComputeKey<Result>, Result extends ComputeResult> {
 
   /**
    * Perform a transformation identified by key {@link Key} into a final type {@link Result}. This
@@ -41,14 +41,14 @@ public interface GraphTransformer<Key, Result> {
    *
    * @param key The Key of the requested result
    * @param env The execution environment containing results of keys from {@link
-   *     #discoverDeps(Object)}
+   *     #discoverDeps(ComputeKey)}
    * @return The result of the transformation
    */
   Result transform(Key key, TransformationEnvironment<Key, Result> env) throws Exception;
 
   /**
    * Compute dependent keys required to compute given key. The results of those computations will be
-   * available in {@link #transform(Object, TransformationEnvironment)} as a part of {@link
+   * available in {@link #transform(ComputeKey, TransformationEnvironment)} as a part of {@link
    * TransformationEnvironment}
    *
    * @param key the current key to transform

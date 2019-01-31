@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -15,17 +15,5 @@
  */
 package com.facebook.buck.core.graph.transformation;
 
-import com.google.common.collect.ImmutableMap;
-
-public class FakeTransformationEnvironment<
-        KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
-    extends DefaultTransformationEnvironment<KeyType, ResultType> {
-
-  /**
-   * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
-   * environment
-   */
-  public FakeTransformationEnvironment(ImmutableMap<KeyType, ResultType> deps) {
-    super(deps);
-  }
-}
+/** This is a marker interface for result types of {@link GraphTransformer}. */
+public interface ComputeResult {}
