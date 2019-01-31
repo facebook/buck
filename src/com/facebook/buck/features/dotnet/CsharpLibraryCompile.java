@@ -60,8 +60,7 @@ public class CsharpLibraryCompile extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    DotnetFramework netFramework =
-        DotnetFramework.resolveFramework(context.getEnvironment(), version);
+    DotnetFramework netFramework = DotnetFramework.resolveFramework(version);
 
     ImmutableList.Builder<String> args = ImmutableList.builder();
 

@@ -16,13 +16,10 @@
 
 package com.facebook.buck.features.dotnet;
 
-import static java.util.Locale.US;
-
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -35,34 +32,28 @@ import java.nio.file.Path;
  */
 public class DotnetFramework {
 
-  private static final Logger LOG = Logger.get(DotnetFramework.class);
-
-  private static final ImmutableSet<String> PROGRAM_FILES_ENV_NAMES =
-      ImmutableSet.of("programfiles(x86)", "programfiles");
-
   private final FrameworkVersion version;
-  private final Path frameworkDir;
+  private final ImmutableList<Path> frameworkDirs;
 
-  private DotnetFramework(FrameworkVersion version, Path frameworkDir) {
+  private DotnetFramework(FrameworkVersion version, ImmutableList<Path> frameworkDirs) {
     this.version = version;
-    this.frameworkDir = frameworkDir;
+    this.frameworkDirs = frameworkDirs;
   }
 
-  public static DotnetFramework resolveFramework(
-      ImmutableMap<String, String> env, FrameworkVersion version) {
-    return resolveFramework(FileSystems.getDefault(), env, version);
+  public static DotnetFramework resolveFramework(FrameworkVersion version) {
+    return resolveFramework(FileSystems.getDefault(), version);
   }
 
   public Path findReferenceAssembly(String dllName) {
-    Path toReturn = frameworkDir.resolve(dllName);
-
-    if (!Files.exists(toReturn)) {
-      throw new HumanReadableException(
-          "Unable to find dll in framework version %s under %s: %s",
-          version, frameworkDir, dllName);
+    for (Path frameworkDir : frameworkDirs) {
+      Path toReturn = frameworkDir.resolve(dllName);
+      if (Files.exists(toReturn)) {
+        return toReturn;
+      }
     }
 
-    return toReturn;
+    throw new HumanReadableException(
+        "Unable to find dll in framework version %s under %s: %s", version, frameworkDirs, dllName);
   }
 
   @Override
@@ -83,60 +74,23 @@ public class DotnetFramework {
     return version.equals(((DotnetFramework) obj).version);
   }
 
-  // TODO(t8390117): Use official Win32 APIs to find the framework
   @VisibleForTesting
-  static DotnetFramework resolveFramework(
-      FileSystem osFilesystem, ImmutableMap<String, String> env, FrameworkVersion version) {
+  static DotnetFramework resolveFramework(FileSystem osFilesystem, FrameworkVersion version) {
 
-    Path programFiles = findProgramFiles(osFilesystem, env);
-    Path baseDir =
-        programFiles.resolve("Reference Assemblies").resolve("Microsoft").resolve("Framework");
-
-    Path frameworkDir;
-    switch (version) {
-      case NET35:
-        frameworkDir = baseDir.resolve("v3.5");
-        break;
-      case NET40:
-        // fall through
-      case NET45:
-        // fall through
-      case NET46:
-        frameworkDir = baseDir.resolve(".NETFramework").resolve(version.getDirName());
-        break;
-
-        // Which we should never reach
-      default:
-        throw new HumanReadableException("Unknown .net framework version: %s", version);
-    }
-
-    if (!Files.exists(frameworkDir)) {
-      throw new HumanReadableException(
-          "Resolved framework dir for %s does not exist: %s", version, frameworkDir);
-    }
-    if (!Files.isDirectory(frameworkDir)) {
-      throw new HumanReadableException(
-          "Resolved framework directory is not a directory: %s", frameworkDir);
-    }
-
-    return new DotnetFramework(version, frameworkDir);
-  }
-
-  private static Path findProgramFiles(FileSystem osFilesystem, ImmutableMap<String, String> env) {
-    for (String envName : PROGRAM_FILES_ENV_NAMES) {
-      for (String key : env.keySet()) {
-        if (envName.equals(key.toLowerCase(US))) {
-          String value = env.get(key);
-          Path path = osFilesystem.getPath(value);
-          if (Files.exists(path)) {
-            return path;
-          } else {
-            LOG.info("Found a program files path with %s that did not exist: %s", key, value);
-          }
-        }
+    Builder<Path> builder = ImmutableList.builder();
+    for (String dir : version.getDirectories()) {
+      Path frameworkDir = osFilesystem.getPath(dir);
+      if (!Files.exists(frameworkDir)) {
+        throw new HumanReadableException(
+            String.format("Required dir %s for %s was not found", dir, version));
+      } else if (!Files.isDirectory(frameworkDir)) {
+        throw new HumanReadableException(
+            "Resolved framework directory is not a directory: %s", frameworkDir);
+      } else {
+        builder.add(frameworkDir);
       }
     }
 
-    throw new HumanReadableException("Unable to find ProgramFiles or ProgramFiles(x86) env var");
+    return new DotnetFramework(version, builder.build());
   }
 }
