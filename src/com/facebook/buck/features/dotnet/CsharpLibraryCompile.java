@@ -65,6 +65,9 @@ public class CsharpLibraryCompile extends ShellStep {
     ImmutableList.Builder<String> args = ImmutableList.builder();
 
     args.addAll(csharpCompiler.getCommandPrefix(pathResolver));
+    args.add("/noconfig");
+    args.add("/nostdlib");
+    args.add("/deterministic");
     args.add("/target:library").add("/out:" + output);
 
     for (Either<Path, String> ref : references) {
