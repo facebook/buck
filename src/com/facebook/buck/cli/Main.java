@@ -565,7 +565,7 @@ public final class Main {
       rootCellConfigOverrides =
           command.getConfigOverrides(cellMapping).getForCell(CellName.ROOT_CELL_NAME);
     }
-    return Configs.createDefaultConfig(rootPath, rootCellConfigOverrides);
+    return Configs.createDefaultConfig(Objects.requireNonNull(rootPath), rootCellConfigOverrides);
   }
 
   private ImmutableSet<Path> getProjectWatchList(
@@ -1199,7 +1199,7 @@ public final class Main {
                     consoleListener,
                     buckConfig.getRepository().orElse("unknown"),
                     new RemoteLogBuckConfig(buckConfig),
-                    executors.get(ExecutorPool.CPU));
+                    Objects.requireNonNull(executors.get(ExecutorPool.CPU)));
             announcementManager.getAndPostAnnouncements();
           }
 
@@ -2350,7 +2350,7 @@ public final class Main {
 
     private final NGServer server;
     private final IdleKiller idleKiller;
-    private final SocketLossKiller unixDomainSocketLossKiller;
+    @Nullable private final SocketLossKiller unixDomainSocketLossKiller;
 
     DaemonKillers(ScheduledExecutorService executorService, NGServer server, Path socketPath) {
       this.server = server;

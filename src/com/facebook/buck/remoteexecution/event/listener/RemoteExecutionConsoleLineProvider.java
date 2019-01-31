@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 
 /** Provides output lines to the console about the current state of Remote Execution. */
 public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLineProvider {
@@ -88,8 +87,8 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
   private int getLocallyBuiltRules(
       int totalBuildRules, ImmutableMap<State, Integer> actionsPerState) {
     int remotelyExecutedBuildRules =
-        Objects.requireNonNull(actionsPerState.get(State.ACTION_SUCCEEDED))
-            + actionsPerState.get(State.ACTION_FAILED);
+        actionsPerState.getOrDefault(State.ACTION_SUCCEEDED, 0)
+            + actionsPerState.getOrDefault(State.ACTION_FAILED, 0);
     return Math.max(0, totalBuildRules - remotelyExecutedBuildRules);
   }
 
@@ -97,7 +96,7 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     List<String> states = Lists.newArrayList();
     for (State state : RemoteExecutionActionEvent.State.values()) {
       String stateName = state.getAbbreviateName();
-      int stateValue = actionsPerState.get(state);
+      Integer stateValue = actionsPerState.getOrDefault(state, 0);
       states.add(String.format("%s=%d", stateName, stateValue));
     }
 
