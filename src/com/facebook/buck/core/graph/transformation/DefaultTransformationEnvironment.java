@@ -17,27 +17,49 @@
 package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.Map.Entry;
 
 /**
  * A computation environment that {@link GraphTransformer} can access. This class provides ability
  * of {@link GraphTransformer}s to access their dependencies.
  */
-class DefaultTransformationEnvironment<
-        KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
-    implements TransformationEnvironment<KeyType, ResultType> {
+class DefaultTransformationEnvironment implements TransformationEnvironment {
 
-  private final ImmutableMap<KeyType, ResultType> deps;
+  private final ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> deps;
 
   /**
    * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
    * environment
    */
-  DefaultTransformationEnvironment(ImmutableMap<KeyType, ResultType> deps) {
+  DefaultTransformationEnvironment(
+      ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> deps) {
     this.deps = deps;
   }
 
   @Override
-  public ImmutableMap<KeyType, ResultType> getDeps() {
+  public ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> getDeps() {
     return deps;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ResultType getDep(KeyType key) {
+    return (ResultType) deps.get(key);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ImmutableMap<KeyType, ResultType> getDeps(Class<KeyType> keyClass) {
+    ImmutableMap.Builder<KeyType, ResultType> resultBuilder =
+        ImmutableMap.builderWithExpectedSize(deps.size());
+
+    for (Entry<? extends ComputeKey<?>, ? extends ComputeResult> dep : deps.entrySet()) {
+      if (dep.getKey().getKeyClass().equals(keyClass)) {
+        resultBuilder.put((KeyType) dep.getKey(), (ResultType) dep.getValue());
+      }
+    }
+    return resultBuilder.build();
   }
 }

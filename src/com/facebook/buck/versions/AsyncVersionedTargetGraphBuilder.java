@@ -17,6 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.graph.transformation.ComputeKey;
+import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphTransformer;
@@ -72,7 +73,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   private final ForkJoinPool versionInfoExecutor;
 
   AsyncVersionedTargetGraphBuilder(
-      DepsAwareExecutor<? super TargetNode<?>, ?> executor,
+      DepsAwareExecutor<? super ComputeResult, ?> executor,
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
       TypeCoercerFactory typeCoercerFactory,
@@ -158,7 +159,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   public static TargetGraphAndBuildTargets transform(
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
-      DepsAwareExecutor<? super TargetNode<?>, ?> executor,
+      DepsAwareExecutor<? super ComputeResult, ?> executor,
       TypeCoercerFactory typeCoercerFactory,
       long timeoutSeconds)
       throws VersionException, TimeoutException, InterruptedException {
@@ -203,14 +204,13 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     @Override
-    public VersionInfo transform(
-        VersionInfoKey node, TransformationEnvironment<VersionInfoKey, VersionInfo> env) {
+    public VersionInfo transform(VersionInfoKey node, TransformationEnvironment env) {
       return getVersionInfo(node.getTargetNode(), env);
     }
 
     @Override
     public ImmutableSet<VersionInfoKey> discoverDeps(
-        VersionInfoKey key, TransformationEnvironment<VersionInfoKey, VersionInfo> env) {
+        VersionInfoKey key, TransformationEnvironment env) {
       return ImmutableSet.of();
     }
 
@@ -250,8 +250,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     /** Get/cache the transitive version info for this node. */
-    private VersionInfo getVersionInfo(
-        TargetNode<?> node, TransformationEnvironment<VersionInfoKey, VersionInfo> env) {
+    private VersionInfo getVersionInfo(TargetNode<?> node, TransformationEnvironment env) {
       HashMap<BuildTarget, ImmutableSet<Version>> versionDomain = new HashMap<>();
 
       Optional<TargetNode<VersionedAliasDescriptionArg>> versionedNode =
@@ -263,7 +262,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         versionDomain.put(node.getBuildTarget(), versions.keySet());
       }
 
-      for (VersionInfo depInfo : env.getDeps().values()) {
+      for (VersionInfo depInfo : env.getDeps(VersionInfoKey.class).values()) {
         versionDomain.putAll(depInfo.getVersionDomain());
       }
       return VersionInfo.of(versionDomain);
@@ -340,9 +339,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     @Override
-    public TargetNode<?> transform(
-        VersionTargetGraphKey key,
-        TransformationEnvironment<VersionTargetGraphKey, TargetNode<?>> env)
+    public TargetNode<?> transform(VersionTargetGraphKey key, TransformationEnvironment env)
         throws VersionException {
 
       TargetNodeTranslator targetTranslator;
@@ -358,8 +355,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
     @Override
     public ImmutableSet<VersionTargetGraphKey> discoverDeps(
-        VersionTargetGraphKey key,
-        TransformationEnvironment<VersionTargetGraphKey, TargetNode<?>> env) {
+        VersionTargetGraphKey key, TransformationEnvironment env) {
       return ImmutableSet.of();
     }
 
@@ -429,9 +425,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
     @SuppressWarnings("unchecked")
     private TargetNode<?> processVersionSubGraphNode(
-        TargetNode<?> node,
-        TargetNodeTranslator targetTranslator,
-        TransformationEnvironment<VersionTargetGraphKey, TargetNode<?>> env) {
+        TargetNode<?> node, TargetNodeTranslator targetTranslator, TransformationEnvironment env) {
 
       // Create the new target node, with the new target and deps.
       TargetNode<?> newNode =
@@ -455,7 +449,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                       newNode.getBuildTarget().getFlavors(), node.getBuildTarget().getFlavors())),
           newNode);
 
-      for (TargetNode<?> childNode : env.getDeps().values()) {
+      for (TargetNode<?> childNode : env.getDeps(VersionTargetGraphKey.class).values()) {
         targetGraphBuilder.addEdge(newNode, childNode);
       }
 

@@ -202,7 +202,7 @@ public class RuleAnalysisTransformerTest {
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
             ImmutableRuleAnalysisKeyImpl.of(buildTarget),
-            new FakeTransformationEnvironment<>(ImmutableMap.of()));
+            new FakeTransformationEnvironment(ImmutableMap.of()));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -292,7 +292,7 @@ public class RuleAnalysisTransformerTest {
         transformer.transform(
             ImmutableRuleAnalysisKeyImpl.of(buildTarget),
             // here we provide the deps via the TransformationEnvironment
-            new FakeTransformationEnvironment<>(
+            new FakeTransformationEnvironment(
                 ImmutableMap.of(
                     ImmutableRuleAnalysisKeyImpl.of(buildTarget2),
                     ImmutableRuleAnalysisResultImpl.of(

@@ -178,8 +178,7 @@ public class DefaultGraphTransformationEngineTest {
     transformer =
         new ChildrenAdder(graph) {
           @Override
-          public LongNode transform(
-              LongNode node, TransformationEnvironment<LongNode, LongNode> env) {
+          public LongNode transform(LongNode node, TransformationEnvironment env) {
             fail("Did not expect call as cache should be used");
             return super.transform(node, env);
           }
@@ -222,8 +221,7 @@ public class DefaultGraphTransformationEngineTest {
     transformer =
         new ChildrenAdder(graph) {
           @Override
-          public LongNode transform(
-              LongNode node, TransformationEnvironment<LongNode, LongNode> env) {
+          public LongNode transform(LongNode node, TransformationEnvironment env) {
             if (node.get() == 5L || node.get() == 4L || node.get() == 3L) {
               fail("Did not expect call as cache should be used");
             }
@@ -262,14 +260,13 @@ public class DefaultGraphTransformationEngineTest {
           }
 
           @Override
-          public LongNode transform(
-              LongNode aLong, TransformationEnvironment<LongNode, LongNode> env) throws Exception {
+          public LongNode transform(LongNode aLong, TransformationEnvironment env)
+              throws Exception {
             throw exception;
           }
 
           @Override
-          public ImmutableSet<LongNode> discoverDeps(
-              LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
+          public ImmutableSet<LongNode> discoverDeps(LongNode key, TransformationEnvironment env) {
             return ImmutableSet.of();
           }
 
@@ -301,14 +298,12 @@ public class DefaultGraphTransformationEngineTest {
           }
 
           @Override
-          public LongNode transform(
-              LongNode aLong, TransformationEnvironment<LongNode, LongNode> env) {
+          public LongNode transform(LongNode aLong, TransformationEnvironment env) {
             return ImmutableLongNode.of(1);
           }
 
           @Override
-          public ImmutableSet<LongNode> discoverDeps(
-              LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
+          public ImmutableSet<LongNode> discoverDeps(LongNode key, TransformationEnvironment env) {
             fail("Should not have gotten to discoverDeps since preliminary deps discovery failed");
             return ImmutableSet.of();
           }
@@ -341,14 +336,13 @@ public class DefaultGraphTransformationEngineTest {
           }
 
           @Override
-          public LongNode transform(
-              LongNode aLong, TransformationEnvironment<LongNode, LongNode> env) {
+          public LongNode transform(LongNode aLong, TransformationEnvironment env) {
             return ImmutableLongNode.of(1);
           }
 
           @Override
-          public ImmutableSet<LongNode> discoverDeps(
-              LongNode key, TransformationEnvironment<LongNode, LongNode> env) throws Exception {
+          public ImmutableSet<LongNode> discoverDeps(LongNode key, TransformationEnvironment env)
+              throws Exception {
             throw exception;
           }
 
@@ -369,8 +363,7 @@ public class DefaultGraphTransformationEngineTest {
     ChildrenAdder transformer =
         new ChildrenAdder(graph) {
           @Override
-          public ImmutableSet<LongNode> discoverDeps(
-              LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
+          public ImmutableSet<LongNode> discoverDeps(LongNode key, TransformationEnvironment env) {
             return ImmutableSet.copyOf(
                 Sets.difference(super.discoverPreliminaryDeps(key), env.getDeps().keySet()));
           }
@@ -395,7 +388,8 @@ public class DefaultGraphTransformationEngineTest {
    * @param computationIndex the computationIndex of the engine
    */
   private static void assertComputationIndexBecomesEmpty(
-      ConcurrentHashMap<LongNode, ? extends DepsAwareTask<?, ?>> computationIndex) {
+      ConcurrentHashMap<ComputeKey<? extends ComputeResult>, ? extends DepsAwareTask<?, ?>>
+          computationIndex) {
     // wait for all tasks to complete in the computation.
     // we can have situation where the computation was completed by using the cache.
     for (DepsAwareTask<?, ?> task : computationIndex.values()) {

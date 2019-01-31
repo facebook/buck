@@ -75,13 +75,12 @@ public class TransformationStageMapTest {
             }
 
             @Override
-            public Result transform(Key key, TransformationEnvironment<Key, Result> env) {
+            public Result transform(Key key, TransformationEnvironment env) {
               throw new UnsupportedOperationException();
             }
 
             @Override
-            public ImmutableSet<Key> discoverDeps(
-                Key key, TransformationEnvironment<Key, Result> env) {
+            public ImmutableSet<Key> discoverDeps(Key key, TransformationEnvironment env) {
               return ImmutableSet.of();
             }
 

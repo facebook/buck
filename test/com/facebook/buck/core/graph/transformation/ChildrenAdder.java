@@ -52,14 +52,13 @@ class ChildrenAdder implements GraphTransformer<LongNode, LongNode> {
   }
 
   @Override
-  public LongNode transform(LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
+  public LongNode transform(LongNode key, TransformationEnvironment env) {
     return ImmutableLongNode.of(
-        key.get() + env.getDeps().values().stream().mapToLong(LongNode::get).sum());
+        key.get() + env.getDeps(LongNode.class).values().stream().mapToLong(LongNode::get).sum());
   }
 
   @Override
-  public ImmutableSet<LongNode> discoverDeps(
-      LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
+  public ImmutableSet<LongNode> discoverDeps(LongNode key, TransformationEnvironment env) {
     return ImmutableSet.of();
   }
 

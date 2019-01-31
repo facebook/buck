@@ -16,12 +16,12 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack;
 import com.facebook.buck.core.graph.transformation.executor.impl.JavaExecutorBackedDefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEvent;
@@ -90,7 +90,7 @@ public class VersionedTargetGraphCache {
           typeCoercerFactory,
           timeoutSeconds);
     } else {
-      try (DepsAwareExecutor<TargetNode<?>, ?> executor =
+      try (DepsAwareExecutor<? super ComputeResult, ?> executor =
           getDepsAwareExecutor(resolvedMode, pool)) {
         TargetGraphAndBuildTargets versionedTargetGraph =
             AsyncVersionedTargetGraphBuilder.transform(
@@ -105,7 +105,7 @@ public class VersionedTargetGraphCache {
     }
   }
 
-  private DepsAwareExecutor<TargetNode<?>, ?> getDepsAwareExecutor(
+  private DepsAwareExecutor<? super ComputeResult, ?> getDepsAwareExecutor(
       VersionTargetGraphMode resolvedMode, ForkJoinPool pool) {
     switch (resolvedMode) {
       case ENABLED:

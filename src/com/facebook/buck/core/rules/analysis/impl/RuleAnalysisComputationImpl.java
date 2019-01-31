@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
+import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
@@ -50,7 +51,7 @@ public class RuleAnalysisComputationImpl implements RuleAnalysisComputation {
    */
   public static RuleAnalysisComputationImpl of(
       TargetGraph targetGraph,
-      DepsAwareExecutor<? super RuleAnalysisResult, ?> depsAwareExecutor,
+      DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       RuleAnalysisCache cache) {
     RuleAnalysisTransformer transformer = new RuleAnalysisTransformer(targetGraph);
     GraphTransformationEngine<RuleAnalysisKey, RuleAnalysisResult> engine =

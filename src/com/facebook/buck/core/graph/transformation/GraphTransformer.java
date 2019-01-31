@@ -53,7 +53,7 @@ public interface GraphTransformer<Key extends ComputeKey<Result>, Result extends
    *     #discoverPreliminaryDeps(ComputeKey)}
    * @return The result of the transformation
    */
-  Result transform(Key key, TransformationEnvironment<Key, Result> env) throws Exception;
+  Result transform(Key key, TransformationEnvironment env) throws Exception;
 
   /**
    * Compute dependent keys required to compute given key, and a set of dependencies as listed by
@@ -66,8 +66,7 @@ public interface GraphTransformer<Key extends ComputeKey<Result>, Result extends
    *     #discoverPreliminaryDeps(ComputeKey)}
    * @return a set of keys that the transformation of the current key depends on
    */
-  ImmutableSet<Key> discoverDeps(Key key, TransformationEnvironment<Key, Result> env)
-      throws Exception;
+  ImmutableSet<Key> discoverDeps(Key key, TransformationEnvironment env) throws Exception;
 
   /**
    * Compute dependent keys required to compute given the current key. The results of those

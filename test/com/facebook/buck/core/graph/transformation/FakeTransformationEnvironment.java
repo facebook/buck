@@ -17,15 +17,14 @@ package com.facebook.buck.core.graph.transformation;
 
 import com.google.common.collect.ImmutableMap;
 
-public class FakeTransformationEnvironment<
-        KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
-    extends DefaultTransformationEnvironment<KeyType, ResultType> {
+public class FakeTransformationEnvironment extends DefaultTransformationEnvironment {
 
   /**
    * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
    * environment
    */
-  public FakeTransformationEnvironment(ImmutableMap<KeyType, ResultType> deps) {
+  public FakeTransformationEnvironment(
+      ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> deps) {
     super(deps);
   }
 }

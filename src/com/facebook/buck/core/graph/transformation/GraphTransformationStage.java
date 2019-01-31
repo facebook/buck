@@ -47,4 +47,11 @@ public class GraphTransformationStage<
   GraphEngineCache<KeyType, ResultType> getCache() {
     return cache;
   }
+
+  ResultType transform(KeyType key, DefaultTransformationEnvironment env) throws Exception {
+    ResultType result = transformer.transform(key, env);
+
+    cache.put(key, result);
+    return result;
+  }
 }

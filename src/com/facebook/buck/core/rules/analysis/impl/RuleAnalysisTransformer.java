@@ -55,8 +55,7 @@ public class RuleAnalysisTransformer
   }
 
   @Override
-  public RuleAnalysisResult transform(
-      RuleAnalysisKey key, TransformationEnvironment<RuleAnalysisKey, RuleAnalysisResult> env) {
+  public RuleAnalysisResult transform(RuleAnalysisKey key, TransformationEnvironment env) {
     return transformImpl(targetGraph.get(key.getBuildTarget()), env);
   }
 
@@ -74,8 +73,7 @@ public class RuleAnalysisTransformer
    * @return an {@link RuleAnalysisResult} containing information about the rule analyzed
    */
   private <T> RuleAnalysisResult transformImpl(
-      TargetNode<T> targetNode,
-      TransformationEnvironment<RuleAnalysisKey, RuleAnalysisResult> env) {
+      TargetNode<T> targetNode, TransformationEnvironment env) {
     BaseDescription<T> baseDescription = targetNode.getDescription();
     Verify.verify(baseDescription instanceof RuleDescription);
 
@@ -84,7 +82,8 @@ public class RuleAnalysisTransformer
     RuleAnalysisContextImpl ruleAnalysisContext =
         new RuleAnalysisContextImpl(
             ImmutableMap.copyOf(
-                Maps.transformValues(env.getDeps(), RuleAnalysisResult::getProviderInfos)));
+                Maps.transformValues(
+                    env.getDeps(RuleAnalysisKey.class), RuleAnalysisResult::getProviderInfos)));
 
     ProviderInfoCollection providers =
         ruleDescription.ruleImpl(
@@ -106,7 +105,7 @@ public class RuleAnalysisTransformer
 
   @Override
   public ImmutableSet<RuleAnalysisKey> discoverDeps(
-      RuleAnalysisKey key, TransformationEnvironment<RuleAnalysisKey, RuleAnalysisResult> env) {
+      RuleAnalysisKey key, TransformationEnvironment env) {
     return ImmutableSet.of();
   }
 }
