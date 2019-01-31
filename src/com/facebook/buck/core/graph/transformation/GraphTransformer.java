@@ -38,6 +38,12 @@ import com.google.common.collect.ImmutableSet;
 public interface GraphTransformer<Key extends ComputeKey<Result>, Result extends ComputeResult> {
 
   /**
+   * @return the class of the key for this transformation. This should match {@link
+   *     ComputeKey#getKeyClass()}
+   */
+  Class<Key> getKeyClass();
+
+  /**
    * Perform a transformation identified by key {@link Key} into a final type {@link Result}. This
    * transformation should be performed synchronously.
    *

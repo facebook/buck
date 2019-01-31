@@ -198,6 +198,11 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     @Override
+    public Class<VersionInfoKey> getKeyClass() {
+      return VersionInfoKey.class;
+    }
+
+    @Override
     public VersionInfo transform(
         VersionInfoKey node, TransformationEnvironment<VersionInfoKey, VersionInfo> env) {
       return getVersionInfo(node.getTargetNode(), env);
@@ -327,6 +332,11 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         TargetGraph targetGraph, VersionSelector versionSelector) {
       this.targetGraph = targetGraph;
       this.versionSelector = versionSelector;
+    }
+
+    @Override
+    public Class<VersionTargetGraphKey> getKeyClass() {
+      return VersionTargetGraphKey.class;
     }
 
     @Override

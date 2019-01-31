@@ -255,6 +255,12 @@ public class DefaultGraphTransformationEngineTest {
 
     GraphTransformer<LongNode, LongNode> transformer =
         new GraphTransformer<LongNode, LongNode>() {
+
+          @Override
+          public Class<LongNode> getKeyClass() {
+            return LongNode.class;
+          }
+
           @Override
           public LongNode transform(
               LongNode aLong, TransformationEnvironment<LongNode, LongNode> env) throws Exception {
@@ -288,6 +294,12 @@ public class DefaultGraphTransformationEngineTest {
 
     GraphTransformer<LongNode, LongNode> transformer =
         new GraphTransformer<LongNode, LongNode>() {
+
+          @Override
+          public Class<LongNode> getKeyClass() {
+            return LongNode.class;
+          }
+
           @Override
           public LongNode transform(
               LongNode aLong, TransformationEnvironment<LongNode, LongNode> env) {
@@ -322,6 +334,12 @@ public class DefaultGraphTransformationEngineTest {
 
     GraphTransformer<LongNode, LongNode> transformer =
         new GraphTransformer<LongNode, LongNode>() {
+
+          @Override
+          public Class<LongNode> getKeyClass() {
+            return LongNode.class;
+          }
+
           @Override
           public LongNode transform(
               LongNode aLong, TransformationEnvironment<LongNode, LongNode> env) {

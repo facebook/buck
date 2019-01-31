@@ -50,6 +50,11 @@ public class RuleAnalysisTransformer
   }
 
   @Override
+  public Class<RuleAnalysisKey> getKeyClass() {
+    return RuleAnalysisKey.class;
+  }
+
+  @Override
   public RuleAnalysisResult transform(
       RuleAnalysisKey key, TransformationEnvironment<RuleAnalysisKey, RuleAnalysisResult> env) {
     return transformImpl(targetGraph.get(key.getBuildTarget()), env);

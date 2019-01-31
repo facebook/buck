@@ -47,6 +47,11 @@ class ChildrenAdder implements GraphTransformer<LongNode, LongNode> {
   }
 
   @Override
+  public Class<LongNode> getKeyClass() {
+    return LongNode.class;
+  }
+
+  @Override
   public LongNode transform(LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
     return ImmutableLongNode.of(
         key.get() + env.getDeps().values().stream().mapToLong(LongNode::get).sum());
