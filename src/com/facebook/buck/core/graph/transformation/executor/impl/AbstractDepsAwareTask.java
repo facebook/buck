@@ -16,7 +16,6 @@
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
-import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
@@ -31,9 +30,12 @@ abstract class AbstractDepsAwareTask<T, TaskType extends AbstractDepsAwareTask<T
   private final AtomicReference<TaskStatus> status =
       new AtomicReference<>(TaskStatus.NOT_SCHEDULED);
 
-  AbstractDepsAwareTask(
-      Callable<T> callable, ThrowingSupplier<ImmutableSet<TaskType>, Exception> depsSupplier) {
+  AbstractDepsAwareTask(Callable<T> callable, DepsSupplier<TaskType> depsSupplier) {
     super(callable, depsSupplier);
+  }
+
+  ImmutableSet<TaskType> getPrereqs() throws Exception {
+    return getDepsSupplier().getPrereq();
   }
 
   ImmutableSet<TaskType> getDependencies() throws Exception {

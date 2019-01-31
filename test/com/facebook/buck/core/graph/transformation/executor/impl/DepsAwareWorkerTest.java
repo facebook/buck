@@ -19,6 +19,7 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSupplier;
 import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
@@ -110,7 +111,46 @@ public class DepsAwareWorkerTest {
   }
 
   @Test(timeout = 5000)
-  public void workerCanRunDependentWorkFirst() throws InterruptedException {
+  public void workerCanRunPrereqWorkFirst() throws InterruptedException, ExecutionException {
+    AtomicBoolean prereqTaskDone = new AtomicBoolean();
+    DefaultDepsAwareTask<?> depsAwareTask1 =
+        DefaultDepsAwareTask.of(
+            () -> {
+              prereqTaskDone.set(true);
+              return null;
+            });
+
+    Semaphore sem = new Semaphore(0);
+
+    DefaultDepsAwareTask<?> depsAwareTask2 =
+        DefaultDepsAwareTask.of(
+            () -> {
+              assertTrue(prereqTaskDone.get());
+              sem.release();
+              return null;
+            },
+            DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
+    depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
+    workQueue.put(depsAwareTask2);
+
+    Thread testThread =
+        new Thread(
+            () -> {
+              try {
+                worker1.loopForever();
+              } catch (InterruptedException e) {
+                return;
+              }
+            });
+    testThread.start();
+
+    sem.acquire();
+    depsAwareTask2.getFuture().get();
+    testThread.interrupt();
+  }
+
+  @Test(timeout = 5000)
+  public void workerCanRunDepWorkFirst() throws InterruptedException, ExecutionException {
     AtomicBoolean depTaskDone = new AtomicBoolean();
     DefaultDepsAwareTask<?> depsAwareTask1 =
         DefaultDepsAwareTask.of(
@@ -128,7 +168,7 @@ public class DepsAwareWorkerTest {
               sem.release();
               return null;
             },
-            () -> ImmutableSet.of(depsAwareTask1));
+            DepsSupplier.of(ImmutableSet::of, () -> ImmutableSet.of(depsAwareTask1)));
     depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
     workQueue.put(depsAwareTask2);
 
@@ -144,22 +184,103 @@ public class DepsAwareWorkerTest {
     testThread.start();
 
     sem.acquire();
+    depsAwareTask2.getFuture().get();
     testThread.interrupt();
   }
 
   @Test(timeout = 5000)
-  public void workerHandlesExceptionDuringGetDeps()
+  public void workerCanRunPrereqBeforeDep() throws InterruptedException, ExecutionException {
+    AtomicBoolean prereqTaskDone = new AtomicBoolean();
+    DefaultDepsAwareTask<?> depsAwareTask1 =
+        DefaultDepsAwareTask.of(
+            () -> {
+              prereqTaskDone.set(true);
+              return null;
+            });
+
+    Semaphore sem = new Semaphore(0);
+
+    DefaultDepsAwareTask<?> depsAwareTask2 =
+        DefaultDepsAwareTask.of(
+            () -> {
+              assertTrue(prereqTaskDone.get());
+              sem.release();
+              return null;
+            },
+            DepsSupplier.of(
+                () -> ImmutableSet.of(depsAwareTask1),
+                () -> {
+                  // prereq should run before getdeps
+                  assertTrue(prereqTaskDone.get());
+                  return ImmutableSet.of();
+                }));
+    depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED);
+    workQueue.put(depsAwareTask2);
+
+    Thread testThread =
+        new Thread(
+            () -> {
+              try {
+                worker1.loopForever();
+              } catch (InterruptedException e) {
+                return;
+              }
+            });
+    testThread.start();
+
+    sem.acquire();
+    depsAwareTask2.getFuture().get();
+    testThread.interrupt();
+  }
+
+  @Test(timeout = 5000)
+  public void workerHandlesExceptionDuringGetPrereq()
       throws InterruptedException, ExecutionException {
     Exception ex = new Exception();
 
     expectedException.expectCause(Matchers.sameInstance(ex));
 
     DefaultDepsAwareTask<?> depsAwareTask =
-        DefaultDepsAwareTask.ofThrowing(
+        DefaultDepsAwareTask.of(
             () -> null,
+            DepsSupplier.of(
+                () -> {
+                  throw ex;
+                }));
+
+    Verify.verify(
+        depsAwareTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
+    workQueue.put(depsAwareTask);
+
+    Thread testThread =
+        new Thread(
             () -> {
-              throw ex;
+              try {
+                worker1.loopForever();
+              } catch (InterruptedException e) {
+                return;
+              }
             });
+    testThread.start();
+
+    depsAwareTask.getResultFuture().get();
+    testThread.interrupt();
+  }
+
+  @Test(timeout = 5000)
+  public void workerHandlesExceptionDuringGetDep() throws InterruptedException, ExecutionException {
+    Exception ex = new Exception();
+
+    expectedException.expectCause(Matchers.sameInstance(ex));
+
+    DefaultDepsAwareTask<?> depsAwareTask =
+        DefaultDepsAwareTask.of(
+            () -> null,
+            DepsSupplier.of(
+                ImmutableSet::of,
+                () -> {
+                  throw ex;
+                }));
 
     Verify.verify(
         depsAwareTask.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -188,11 +309,12 @@ public class DepsAwareWorkerTest {
     expectedException.expectCause(Matchers.sameInstance(ex));
 
     DefaultDepsAwareTask<?> depsAwareTask1 =
-        DefaultDepsAwareTask.ofThrowing(
+        DefaultDepsAwareTask.of(
             () -> null,
-            () -> {
-              throw ex;
-            });
+            DepsSupplier.of(
+                () -> {
+                  throw ex;
+                }));
 
     Verify.verify(
         depsAwareTask1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -210,7 +332,7 @@ public class DepsAwareWorkerTest {
     testThread.start();
 
     DefaultDepsAwareTask<?> depsAwareTask2 =
-        DefaultDepsAwareTask.of(() -> null, () -> ImmutableSet.of(depsAwareTask1));
+        DefaultDepsAwareTask.of(() -> null, DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
 
     Verify.verify(
         depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -375,10 +497,11 @@ public class DepsAwareWorkerTest {
             () -> {
               while (true) {}
             },
-            () -> {
-              getDepsRan.release();
-              return ImmutableSet.of(task1);
-            });
+            DepsSupplier.of(
+                () -> {
+                  getDepsRan.release();
+                  return ImmutableSet.of(task1);
+                }));
 
     // pretend task1 is scheduled
     Verify.verify(task1.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));

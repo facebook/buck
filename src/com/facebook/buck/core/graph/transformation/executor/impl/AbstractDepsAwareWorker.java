@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
+import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -54,18 +55,18 @@ abstract class AbstractDepsAwareWorker<TaskType extends AbstractDepsAwareTask<?,
    */
   protected abstract boolean eval(TaskType task) throws InterruptedException;
 
-  /** @return whether to propagate an exception for the dependency to the current task */
-  protected boolean propagateException(TaskType task, TaskType dep) throws InterruptedException {
-    CompletableFuture<?> depResult = dep.getFuture();
+  /** propagate an exception for the dependency to the current task by throwing it */
+  protected void propagateException(TaskType task) throws InterruptedException, ExecutionException {
+    CompletableFuture<?> depResult = task.getFuture();
     if (!depResult.isCompletedExceptionally()) {
-      return false;
+      return;
     }
-    try {
-      depResult.get();
-      Verify.verify(false, "Should have completed exceptionally");
-    } catch (ExecutionException e) {
-      task.getFuture().completeExceptionally(e.getCause());
-    }
-    return true;
+    depResult.get();
+    Verify.verify(false, "Should have completed exceptionally");
+  }
+
+  protected void completeWithException(TaskType task, Throwable e) {
+    task.getFuture().completeExceptionally(e);
+    Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
   }
 }

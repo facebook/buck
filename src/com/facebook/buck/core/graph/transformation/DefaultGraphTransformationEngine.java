@@ -236,7 +236,8 @@ public final class DefaultGraphTransformationEngine<
                 () -> computeForKey(key, collectDeps(depResults.build())),
                 MoreSuppliers.memoize(
                     () -> computeDepsForKey(transformer.discoverDeps(key), depResults),
-                    Exception.class));
+                    Exception.class),
+                ImmutableSet::of);
           });
     }
 

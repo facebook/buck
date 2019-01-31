@@ -18,10 +18,10 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 
 import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**
@@ -67,32 +67,42 @@ class DefaultDepsAwareWorkerWithLocalStack<T>
       return false;
     }
 
-    ImmutableSet<? extends DefaultDepsAwareTask<T>> deps;
+    ImmutableSet<DefaultDepsAwareTask<T>> prereqs;
     try {
-      deps = task.getDependencies();
+      prereqs = task.getPrereqs();
     } catch (Exception e) {
-      task.getFuture().completeExceptionally(e);
-      Preconditions.checkState(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
+      completeWithException(task, e);
+      return true;
+    }
+    boolean prereqsDone;
+    try {
+      prereqsDone = checkTasksReadyOrSchedule(prereqs);
+    } catch (ExecutionException e) {
+      completeWithException(task, e.getCause());
       return true;
     }
 
-    boolean depsDone = true;
-    for (DefaultDepsAwareTask<T> dep : deps) {
-      if (dep.getStatus() != TaskStatus.DONE) {
-        depsDone = false;
-        if (dep.getStatus() == TaskStatus.STARTED) {
-          continue;
-        } else {
-          localStack.push(dep);
-          if (dep.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED)) {
-            sharedQueue.putFirst(dep);
-          }
-        }
-      }
-      if (propagateException(task, dep)) {
-        Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
-        return true;
-      }
+    if (!prereqsDone) {
+      Preconditions.checkState(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.SCHEDULED));
+      localStack.add(task);
+      sharedQueue.put(task);
+      return false;
+    }
+
+    ImmutableSet<DefaultDepsAwareTask<T>> deps;
+    try {
+      deps = task.getDependencies();
+    } catch (Exception e) {
+      completeWithException(task, e);
+      return true;
+    }
+
+    boolean depsDone;
+    try {
+      depsDone = checkTasksReadyOrSchedule(deps);
+    } catch (ExecutionException e) {
+      completeWithException(task, e.getCause());
+      return true;
     }
 
     if (!depsDone) {
@@ -103,5 +113,25 @@ class DefaultDepsAwareWorkerWithLocalStack<T>
     }
     task.call();
     return true;
+  }
+
+  private boolean checkTasksReadyOrSchedule(ImmutableSet<DefaultDepsAwareTask<T>> tasksToCheck)
+      throws InterruptedException, ExecutionException {
+    boolean ret = true;
+    for (DefaultDepsAwareTask<T> task : tasksToCheck) {
+      if (task.getStatus() != TaskStatus.DONE) {
+        ret = false;
+        if (task.getStatus() == TaskStatus.STARTED) {
+          continue;
+        } else {
+          localStack.push(task);
+          if (task.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED)) {
+            sharedQueue.putFirst(task);
+          }
+        }
+      }
+      propagateException(task);
+    }
+    return ret;
   }
 }

@@ -56,9 +56,10 @@ public interface DepsAwareExecutor<ResultType, TaskType extends DepsAwareTask<Re
   /** @return a new {@link DepsAwareTask} that can be executed in this executor */
   TaskType createTask(Callable<ResultType> callable, Supplier<ImmutableSet<TaskType>> depsSupplier);
 
-  /** @see #createTask(Callable, Supplier) but with a {@link ThrowingSupplier} instead */
+  /** @return a new {@link DepsAwareTask} with two stages of dependency computation */
   TaskType createThrowingTask(
       Callable<ResultType> callable,
+      ThrowingSupplier<ImmutableSet<TaskType>, Exception> prereqSupplier,
       ThrowingSupplier<ImmutableSet<TaskType>, Exception> depsSupplier);
 
   /** @see #createTask(Callable, Supplier) */

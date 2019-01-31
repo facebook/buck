@@ -19,6 +19,7 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSupplier;
 import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
@@ -35,26 +36,58 @@ public class DefaultDepsAwareTaskTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Test
+  public void discoversPrereqsCallsSupplier() throws Exception {
+    LongAdder longAdder = new LongAdder();
+
+    DefaultDepsAwareTask<?> task1 =
+        DefaultDepsAwareTask.of(
+            () -> null,
+            DepsSupplier.of(
+                () -> {
+                  longAdder.increment();
+                  return ImmutableSet.of();
+                }));
+    assertEquals(ImmutableSet.of(), task1.getPrereqs());
+
+    assertEquals(1, longAdder.intValue());
+    DefaultDepsAwareTask<?> task2 =
+        DefaultDepsAwareTask.of(
+            () -> null,
+            DepsSupplier.of(
+                () -> {
+                  longAdder.increment();
+                  return ImmutableSet.of(task1);
+                }));
+
+    assertEquals(ImmutableSet.of(task1), ImmutableSet.copyOf(task2.getPrereqs()));
+    assertEquals(2, longAdder.intValue());
+  }
+
+  @Test
   public void discoversDepsCallsSupplier() throws Exception {
     LongAdder longAdder = new LongAdder();
 
     DefaultDepsAwareTask<?> task1 =
         DefaultDepsAwareTask.of(
             () -> null,
-            () -> {
-              longAdder.increment();
-              return ImmutableSet.of();
-            });
+            DepsSupplier.of(
+                ImmutableSet::of,
+                () -> {
+                  longAdder.increment();
+                  return ImmutableSet.of();
+                }));
     assertEquals(ImmutableSet.of(), task1.getDependencies());
 
     assertEquals(1, longAdder.intValue());
     DefaultDepsAwareTask<?> task2 =
         DefaultDepsAwareTask.of(
             () -> null,
-            () -> {
-              longAdder.increment();
-              return ImmutableSet.of(task1);
-            });
+            DepsSupplier.of(
+                ImmutableSet::of,
+                () -> {
+                  longAdder.increment();
+                  return ImmutableSet.of(task1);
+                }));
 
     assertEquals(ImmutableSet.of(task1), ImmutableSet.copyOf(task2.getDependencies()));
     assertEquals(2, longAdder.intValue());

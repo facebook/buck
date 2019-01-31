@@ -16,10 +16,9 @@
 
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
-import com.facebook.buck.util.function.ThrowingSupplier;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.Callable;
-import java.util.function.Supplier;
 
 /**
  * Task to be ran in the default implementation of {@link
@@ -32,29 +31,18 @@ import java.util.function.Supplier;
 class DefaultDepsAwareTask<T> extends AbstractDepsAwareTask<T, DefaultDepsAwareTask<T>> {
 
   private DefaultDepsAwareTask(
-      Callable<T> callable,
-      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
+      Callable<T> callable, DepsAwareTask.DepsSupplier<DefaultDepsAwareTask<T>> depsSupplier) {
     super(callable, depsSupplier);
   }
 
   /** @return a new Task to be ran without any dependencies */
   static <U> DefaultDepsAwareTask<U> of(Callable<U> callable) {
-    return of(callable, () -> ImmutableSet.of());
+    return of(callable, DepsAwareTask.DepsSupplier.of(() -> ImmutableSet.of()));
   }
 
   /** @return a new Task to be ran */
   static <U> DefaultDepsAwareTask<U> of(
-      Callable<U> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<U>>> depsSupplier) {
-    return ofThrowing(callable, ThrowingSupplier.fromSupplier(depsSupplier));
-  }
-
-  /**
-   * constructs a task from a callable with the specified dependencies, where dependency discovery
-   * could throw
-   */
-  public static <U> DefaultDepsAwareTask<U> ofThrowing(
-      Callable<U> callable,
-      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<U>>, Exception> depsSupplier) {
+      Callable<U> callable, DepsAwareTask.DepsSupplier<DefaultDepsAwareTask<U>> depsSupplier) {
     return new DefaultDepsAwareTask<>(callable, depsSupplier);
   }
 }

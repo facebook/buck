@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.graph.transformation.executor.impl;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSupplier;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.collect.ImmutableSet;
 import java.util.concurrent.BlockingDeque;
@@ -37,14 +38,16 @@ abstract class AbstractDefaultDepsAwareExecutor<T>
   @Override
   public DefaultDepsAwareTask<T> createTask(
       Callable<T> callable, Supplier<ImmutableSet<DefaultDepsAwareTask<T>>> depsSupplier) {
-    return DefaultDepsAwareTask.of(callable, depsSupplier);
+    return DefaultDepsAwareTask.of(
+        callable, DepsSupplier.of(ThrowingSupplier.fromSupplier(depsSupplier)));
   }
 
   @Override
   public DefaultDepsAwareTask<T> createThrowingTask(
       Callable<T> callable,
+      ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> prereqSupplier,
       ThrowingSupplier<ImmutableSet<DefaultDepsAwareTask<T>>, Exception> depsSupplier) {
-    return DefaultDepsAwareTask.ofThrowing(callable, depsSupplier);
+    return DefaultDepsAwareTask.of(callable, DepsSupplier.of(prereqSupplier, depsSupplier));
   }
 
   @Override

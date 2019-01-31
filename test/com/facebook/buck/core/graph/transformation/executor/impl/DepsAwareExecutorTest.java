@@ -21,6 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSupplier;
+import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -173,5 +175,38 @@ public class DepsAwareExecutorTest {
     assertFalse(f2.isDone());
     assertFalse(f3.isDone());
     assertFalse(f4.isDone());
+  }
+
+  @Test
+  public void runsPrereqAndDepTasksWithCorrectScheduling()
+      throws ExecutionException, InterruptedException {
+    AtomicBoolean task1Done = new AtomicBoolean();
+    DefaultDepsAwareTask<Object> task1 =
+        DefaultDepsAwareTask.of(
+            () -> {
+              task1Done.set(true);
+              return null;
+            });
+
+    AtomicBoolean task2Done = new AtomicBoolean();
+    DefaultDepsAwareTask<Object> task2 =
+        DefaultDepsAwareTask.of(
+            () -> {
+              task2Done.set(true);
+              return null;
+            });
+    DefaultDepsAwareTask<Object> task3 =
+        DefaultDepsAwareTask.of(
+            () -> {
+              assertTrue(task2Done.get());
+              return null;
+            },
+            DepsSupplier.of(
+                () -> ImmutableSet.of(task1),
+                () -> {
+                  assertTrue(task1Done.get());
+                  return ImmutableSet.of(task2);
+                }));
+    executor.submit(task3).get();
   }
 }

@@ -26,6 +26,8 @@ import java.util.concurrent.Future;
  * Task to be ran in a {@link DepsAwareExecutor}. This task will offer dependency discovery to the
  * executor so that the executor can perform better scheduling.
  *
+ * <p>The task uses {@link DepsSupplier} to mark what dependencies are needed.
+ *
  * @param <T> the result type of the task
  * @param <Impl> The implementation type of
  */
@@ -33,12 +35,56 @@ public abstract class DepsAwareTask<T, Impl extends DepsAwareTask<T, Impl>> {
 
   protected final CompletableFuture<T> result = new CompletableFuture<>();
   private final Callable<T> callable;
-  private final ThrowingSupplier<ImmutableSet<Impl>, Exception> depsSupplier;
+  private final DepsSupplier<Impl> depsSupplier;
 
-  protected DepsAwareTask(
-      Callable<T> callable, ThrowingSupplier<ImmutableSet<Impl>, Exception> depsSupplier) {
+  protected DepsAwareTask(Callable<T> callable, DepsSupplier<Impl> depsSupplier) {
     this.callable = callable;
     this.depsSupplier = depsSupplier;
+  }
+
+  /**
+   * The dependency information of a task.
+   *
+   * <p>The {@code prereqSupplier} is a supplier that returns a set of tasks necessary to compute
+   * {@code depsSupplier}. The {@code depsSupplier} is a supplier that returns the dependencies.
+   *
+   * @param <Impl> the task type
+   */
+  public static class DepsSupplier<Impl> {
+
+    private final ThrowingSupplier<ImmutableSet<Impl>, Exception> depsSupplier;
+    private final ThrowingSupplier<ImmutableSet<Impl>, Exception> prereqSupplier;
+
+    private DepsSupplier(
+        ThrowingSupplier<ImmutableSet<Impl>, Exception> prereqSupplier,
+        ThrowingSupplier<ImmutableSet<Impl>, Exception> depsSupplier) {
+      this.depsSupplier = depsSupplier;
+      this.prereqSupplier = prereqSupplier;
+    }
+
+    /** @return a single stage {@link DepsSupplier} */
+    public static <U> DepsSupplier<U> of(ThrowingSupplier<ImmutableSet<U>, Exception> depSupplier) {
+      return of(depSupplier, ImmutableSet::of);
+    }
+
+    /**
+     * @return a two staged {@link DepsSupplier}, where {@code prereqSupplier} is the initial
+     *     dependency computation, and {@code depSupplier} is the dependency computation that occurs
+     *     after the tasks from the initial dependency computation are complete.
+     */
+    public static <U> DepsSupplier<U> of(
+        ThrowingSupplier<ImmutableSet<U>, Exception> prereqSupplier,
+        ThrowingSupplier<ImmutableSet<U>, Exception> depSupplier) {
+      return new DepsSupplier<>(prereqSupplier, depSupplier);
+    }
+
+    public ImmutableSet<Impl> get() throws Exception {
+      return depsSupplier.get();
+    }
+
+    public ImmutableSet<Impl> getPrereq() throws Exception {
+      return prereqSupplier.get();
+    }
   }
 
   /** @return the function to run for this task */
@@ -47,7 +93,7 @@ public abstract class DepsAwareTask<T, Impl extends DepsAwareTask<T, Impl>> {
   }
 
   /** @return a function to generate the dependencies */
-  public ThrowingSupplier<ImmutableSet<Impl>, Exception> getDepsSupplier() {
+  public DepsSupplier<Impl> getDepsSupplier() {
     return depsSupplier;
   }
 
