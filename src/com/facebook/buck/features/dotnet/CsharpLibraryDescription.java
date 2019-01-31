@@ -34,6 +34,8 @@ import org.immutables.value.Value;
 public class CsharpLibraryDescription
     implements DescriptionWithTargetGraph<CsharpLibraryDescriptionArg> {
 
+  public CsharpLibraryDescription() {}
+
   @Override
   public Class<CsharpLibraryDescriptionArg> getConstructorArgType() {
     return CsharpLibraryDescriptionArg.class;
@@ -60,6 +62,11 @@ public class CsharpLibraryDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
+        context
+            .getToolchainProvider()
+            .getByName(DotnetToolchain.DEFAULT_NAME, DotnetToolchain.class)
+            .getCsharpCompiler()
+            .resolve(context.getActionGraphBuilder()),
         args.getDllName(),
         args.getSrcs(),
         refsAsRules.build(),

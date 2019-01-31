@@ -16,84 +16,114 @@
 
 package com.facebook.buck.features.dotnet;
 
-import static com.facebook.buck.features.dotnet.DotnetAssumptions.assumeCscIsAvailable;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.testutil.ProcessResult;
+import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.testutil.ParameterizedTests;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Optional;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class CsharpLibraryIntegrationTest {
 
-  // https://msdn.microsoft.com/en-us/library/1700bbwd.aspx
-  private static final String vsvars32bat =
-      "C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\Tools\\vsvars32.bat";
+  private static final String CSC_DIR =
+      "C:/tools/toolchains/vs2017_15.5/BuildTools/MSBuild/15.0/Bin/Roslyn";
+  private static final String CSC_EXE = String.format("%s/csc.exe", CSC_DIR);
 
+  private ProjectWorkspace workspace;
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ImmutableMap<String, String> env;
 
+  @Parameterized.Parameters(name = "configure_csc={0}")
+  public static Collection<Object[]> data() {
+    return ParameterizedTests.getPermutations(ImmutableList.of(false, true));
+  }
+
+  @Parameterized.Parameter(value = 0)
+  public boolean configureCsc;
+
   @Before
   public void setUp() throws IOException, InterruptedException {
+    checkAssumptions();
+    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+    if (configureCsc) {
+      TestDataHelper.overrideBuckconfig(
+          workspace, ImmutableMap.of("dotnet", ImmutableMap.of("csc", CSC_EXE)));
+    }
     env = getEnv();
-    assumeCscIsAvailable(env);
   }
 
   @Test
   public void shouldCompileLibraryWithSystemProvidedDeps() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:simple");
-    result.assertSuccess();
+    workspace.runBuckCommand(env, "build", "//src:simple").assertSuccess();
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/simple/simple.dll")));
+    workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
+    workspace.runBuckCommand(env, "build", "//src:simple").assertSuccess();
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//src:simple");
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/simple/simple.dll")));
   }
 
   @Test
   public void shouldCompileLibraryWithAPrebuiltDependency() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:prebuilt");
-    result.assertSuccess();
+    workspace.runBuckCommand(env, "build", "//src:prebuilt").assertSuccess();
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/prebuilt/prebuilt.dll")));
+    workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
+    workspace.runBuckCommand(env, "build", "//src:prebuilt").assertSuccess();
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//src:prebuilt");
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/prebuilt/prebuilt.dll")));
   }
 
   @Test
   public void shouldBeAbleToEmbedResourcesIntoTheBuiltDll() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
-    workspace.setUp();
-
-    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:embed");
-    result.assertSuccess();
+    workspace.runBuckCommand(env, "build", "//src:embed").assertSuccess();
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/embed/embed.dll")));
+    workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
+    workspace.runBuckCommand(env, "build", "//src:embed").assertSuccess();
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//src:embed");
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/embed/embed.dll")));
   }
 
   @Test
   public void shouldBeAbleToDependOnAnotherCsharpLibrary() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "csc-tests", tmp);
-    workspace.setUp();
+    workspace.runBuckCommand(env, "build", "//src:dependent").assertSuccess();
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/dependent/dependent.dll")));
+    workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
+    workspace.runBuckCommand(env, "build", "//src:dependent").assertSuccess();
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//src:dependent");
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/src/dependent/dependent.dll")));
+  }
 
-    ProcessResult result = workspace.runBuckCommand(env, "build", "//src:dependent");
-    result.assertSuccess();
+  @Test
+  public void shouldCachePrebuiltCsharpLibrary() throws IOException {
+    workspace.runBuckCommand(env, "build", "//lib:log4net").assertSuccess();
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/lib/log4net/log4net.dll")));
+    workspace.runBuckCommand(env, "clean", "--keep-cache").assertSuccess();
+    workspace.runBuckCommand(env, "build", "//lib:log4net").assertSuccess();
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//lib:log4net");
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/lib/log4net/log4net.dll")));
   }
 
   @Test
@@ -102,30 +132,21 @@ public class CsharpLibraryIntegrationTest {
     fail("Implement me, please!");
   }
 
-  private ImmutableMap<String, String> getEnv() throws IOException, InterruptedException {
-    if (Platform.detect() == Platform.WINDOWS && Files.exists(Paths.get(vsvars32bat))) {
-      String vsvar32BatEsc = vsvars32bat.replace(" ", "^ ").replace("(", "^(");
-      ProcessExecutorParams params =
-          ProcessExecutorParams.ofCommand("cmd", "/c", vsvar32BatEsc + " && set");
-      ProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
-      ProcessExecutor.Result envResult = executor.launchAndExecute(params);
-      Optional<String> envOut = envResult.getStdout();
-      Assert.assertTrue(envOut.isPresent());
-      String envString = envOut.get();
-      String[] envStrings = envString.split("\\r?\\n");
-      ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
-      for (String s : envStrings) {
-        int sep = s.indexOf('=');
-        String key = s.substring(0, sep);
-        if ("PATH".equalsIgnoreCase(key)) {
-          key = "PATH";
-        }
-        String val = s.substring(sep + 1);
-        builder.put(key, val);
-      }
-      return builder.build();
+  private void checkAssumptions() {
+    assumeTrue("Running on windows", Platform.detect() == Platform.WINDOWS);
+    Optional<Path> csc =
+        new ExecutableFinder().getOptionalExecutable(Paths.get(CSC_EXE), ImmutableMap.of());
+    assumeTrue(String.format("csc.exe (%s) is available", CSC_EXE), csc.isPresent());
+  }
+
+  private ImmutableMap<String, String> getEnv() {
+    ImmutableMap<String, String> defaultEnv = EnvVariablesProvider.getSystemEnv();
+    if (configureCsc) {
+      return defaultEnv;
     } else {
-      return EnvVariablesProvider.getSystemEnv();
+      HashMap<String, String> patchedEnv = new HashMap<>(defaultEnv);
+      patchedEnv.put("PATH", String.format("%s;%s", CSC_DIR, defaultEnv.get("PATH")));
+      return ImmutableMap.copyOf(patchedEnv);
     }
   }
 }
