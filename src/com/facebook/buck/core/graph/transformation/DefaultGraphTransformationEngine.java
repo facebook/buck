@@ -49,6 +49,11 @@ import java.util.concurrent.Future;
  * and {@link GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}. The engine
  * guarantees that all dependencies are completed before performing the transformation.
  *
+ * <p>This engine allows for multiple stages of transformations via different {@link
+ * GraphTransformer}s. These are specified during construction of the engine by supplying multiple
+ * {@link GraphTransformationStage}s. Different stages are allowed to depend on other stages, as
+ * long as the computation nodes do not form a cyclic dependency.
+ *
  * <p>{@link GraphTransformer#discoverPreliminaryDeps(ComputeKey)} will be ran first to discover a
  * set of dependencies based only on the {@link ComputeKey}. The keys are then computed, and the
  * results passed via the {@link TransformationEnvironment} to {@link
@@ -65,9 +70,9 @@ import java.util.concurrent.Future;
  * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}
  *
  * <p>The transformation is incremental, so cached portions of the transformation will be used
- * whenever possible based on {@code ComputeKey.equals()}. Therefore, {@link KeyType} should be
- * immutable, and have deterministic equals. For future perspective, we want to have {@link KeyType}
- * be serializable, so that we can eventually send keys to be computed remotely.
+ * whenever possible based on {@code ComputeKey.equals()}. Therefore, {@link ComputeKey} should be
+ * immutable, and have deterministic equals. For future perspective, we want to have {@link
+ * ComputeKey} be serializable, so that we can eventually send keys to be computed remotely.
  *
  * <p>A custom cache can be supplied to the engine to cache the computation as desired.
  *
@@ -81,67 +86,27 @@ import java.util.concurrent.Future;
  * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}, and {@link
  * GraphTransformer#transform(ComputeKey, TransformationEnvironment)} methods.
  */
-public final class DefaultGraphTransformationEngine<
-        KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
-    implements GraphTransformationEngine<KeyType, ResultType> {
+public final class DefaultGraphTransformationEngine implements GraphTransformationEngine {
 
   private static final Logger LOG = Logger.get(DefaultGraphTransformationEngine.class);
   @VisibleForTesting final GraphTransformationEngineImpl<?> impl;
 
   /**
-   * Constructs a {@link DefaultGraphTransformationEngine} with a default cache that uses the {@link
-   * KeyType} for reusability.
+   * Constructs a {@link DefaultGraphTransformationEngine} with the given transformations.
    *
-   * @param transformer the transformer
-   * @param estimatedNumOps the estimated number of operations this engine will execute given a
-   *     computation to reserve the size of its computation index
-   * @param executor the custom {@link DepsAwareExecutor} the engine uses to execute tasks
-   */
-  public DefaultGraphTransformationEngine(
-      GraphTransformer<KeyType, ResultType> transformer,
-      int estimatedNumOps,
-      DepsAwareExecutor<? super ComputeResult, ?> executor) {
-    this(
-        transformer,
-        estimatedNumOps,
-        // Default Cache is just a ConcurrentHashMap
-        new GraphEngineCache<KeyType, ResultType>() {
-          private final ConcurrentHashMap<KeyType, ResultType> map =
-              new ConcurrentHashMap<>(estimatedNumOps);
-
-          @Override
-          public Optional<ResultType> get(KeyType k) {
-            return Optional.ofNullable(map.get(k));
-          }
-
-          @Override
-          public void put(KeyType k, ResultType v) {
-            map.put(k, v);
-          }
-        },
-        executor);
-  }
-
-  /**
-   * Constructs a {@link DefaultGraphTransformationEngine} with an internal cache that uses the
-   * {@link KeyType} for reusability.
-   *
-   * @param transformer the {@link GraphTransformer} this engine executes
+   * @param stages all of the available transformation stages this engine can execute
    * @param estimatedNumOps the estimated number of operations this engine will execute given a
    *     computation, to reserve the size of its computation index
-   * @param cache the cache to store the computed results
    * @param executor the custom {@link DepsAwareExecutor} the engine uses to execute tasks
    */
   @SuppressWarnings("unchecked")
   public DefaultGraphTransformationEngine(
-      GraphTransformer<KeyType, ResultType> transformer,
+      ImmutableList<GraphTransformationStage<?, ?>> stages,
       int estimatedNumOps,
-      GraphEngineCache<KeyType, ResultType> cache,
       DepsAwareExecutor<? super ComputeResult, ?> executor) {
     this.impl =
         new GraphTransformationEngineImpl<>(
-            TransformationStageMap.from(
-                ImmutableList.of(new GraphTransformationStage<>(transformer, cache))),
+            TransformationStageMap.from(stages),
             estimatedNumOps,
             (DepsAwareExecutor<ComputeResult, ?>) executor);
   }
@@ -152,17 +117,20 @@ public final class DefaultGraphTransformationEngine<
   }
 
   @Override
-  public final Future<ResultType> compute(KeyType key) {
+  public final <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      Future<ResultType> compute(KeyType key) {
     return impl.compute(key);
   }
 
   @Override
-  public final ResultType computeUnchecked(KeyType key) {
+  public final <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ResultType computeUnchecked(KeyType key) {
     return Futures.getUnchecked(compute(key));
   }
 
   @Override
-  public final ImmutableMap<KeyType, Future<ResultType>> computeAll(Set<KeyType> keys) {
+  public final <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ImmutableMap<KeyType, Future<ResultType>> computeAll(Set<KeyType> keys) {
     return RichStream.from(keys)
         .parallel()
         .map(key -> Maps.immutableEntry(key, compute(key)))
@@ -170,7 +138,8 @@ public final class DefaultGraphTransformationEngine<
   }
 
   @Override
-  public final ImmutableMap<KeyType, ResultType> computeAllUnchecked(Set<KeyType> keys) {
+  public final <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ImmutableMap<KeyType, ResultType> computeAllUnchecked(Set<KeyType> keys) {
     return ImmutableMap.copyOf(Maps.transformValues(computeAll(keys), Futures::getUnchecked));
   }
 

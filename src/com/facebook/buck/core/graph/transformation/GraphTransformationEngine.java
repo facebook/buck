@@ -25,14 +25,12 @@ import java.util.concurrent.Future;
  * GraphTransformer}. This engine is able to asynchronously run graph based computation, reusing
  * results when possible. Note that the computation graph must be an acyclic graph.
  *
- * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
- * request dependent results of other transformations through {@link
+ * <p>This engine is able to deal with dependencies in the computation graph by having {@link
+ * GraphTransformer} request dependent results of other transformations through {@link
  * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} and {@link
  * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}
  */
-public interface GraphTransformationEngine<
-        KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
-    extends AutoCloseable {
+public interface GraphTransformationEngine extends AutoCloseable {
 
   /** Shuts down the engine and the backing executor */
   @Override
@@ -44,7 +42,8 @@ public interface GraphTransformationEngine<
    * @param key the specific Key on the graph to compute
    * @return future of the result of applying the transformer on the graph with the given key
    */
-  Future<ResultType> compute(KeyType key);
+  <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      Future<ResultType> compute(KeyType key);
 
   /**
    * Synchronously computes the given key
@@ -52,7 +51,8 @@ public interface GraphTransformationEngine<
    * @param key the specific Key on the graph to compute
    * @return the result of applying the transformer on the graph with the given key
    */
-  ResultType computeUnchecked(KeyType key);
+  <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ResultType computeUnchecked(KeyType key);
 
   /**
    * Asynchronously computes the result for multiple keys
@@ -60,7 +60,8 @@ public interface GraphTransformationEngine<
    * @param keys iterable of keys to compute on the graph
    * @return a map of futures of the result for each of the keys supplied
    */
-  ImmutableMap<KeyType, Future<ResultType>> computeAll(Set<KeyType> keys);
+  <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ImmutableMap<KeyType, Future<ResultType>> computeAll(Set<KeyType> keys);
 
   /**
    * Synchronously computes the result for multiple keys
@@ -68,5 +69,6 @@ public interface GraphTransformationEngine<
    * @param keys iterable of the keys to compute on the graph
    * @return a map of the results for each of the keys supplied
    */
-  ImmutableMap<KeyType, ResultType> computeAllUnchecked(Set<KeyType> keys);
+  <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
+      ImmutableMap<KeyType, ResultType> computeAllUnchecked(Set<KeyType> keys);
 }

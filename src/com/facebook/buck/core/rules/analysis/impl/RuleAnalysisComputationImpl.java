@@ -19,12 +19,14 @@ import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.GraphTransformationStage;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
 import com.facebook.buck.core.rules.analysis.computation.RuleAnalysisComputation;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Set;
 
@@ -37,10 +39,9 @@ import java.util.Set;
  */
 public class RuleAnalysisComputationImpl implements RuleAnalysisComputation {
 
-  private final GraphTransformationEngine<RuleAnalysisKey, RuleAnalysisResult> computationEngine;
+  private final GraphTransformationEngine computationEngine;
 
-  private RuleAnalysisComputationImpl(
-      GraphTransformationEngine<RuleAnalysisKey, RuleAnalysisResult> computationEngine) {
+  private RuleAnalysisComputationImpl(GraphTransformationEngine computationEngine) {
     this.computationEngine = computationEngine;
   }
 
@@ -54,9 +55,11 @@ public class RuleAnalysisComputationImpl implements RuleAnalysisComputation {
       DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor,
       RuleAnalysisCache cache) {
     RuleAnalysisTransformer transformer = new RuleAnalysisTransformer(targetGraph);
-    GraphTransformationEngine<RuleAnalysisKey, RuleAnalysisResult> engine =
-        new DefaultGraphTransformationEngine<>(
-            transformer, targetGraph.getSize(), cache, depsAwareExecutor);
+    GraphTransformationEngine engine =
+        new DefaultGraphTransformationEngine(
+            ImmutableList.of(new GraphTransformationStage<>(transformer, cache)),
+            targetGraph.getSize(),
+            depsAwareExecutor);
     return new RuleAnalysisComputationImpl(engine);
   }
 

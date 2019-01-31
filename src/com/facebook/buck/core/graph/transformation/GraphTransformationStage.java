@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.core.graph.transformation;
 
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * Represents one "stage" of computation in the {@link GraphTransformationEngine}. This maps to a
  * single transformation by a {@link GraphTransformer} from a {@link ComputeKey} to a {@link
@@ -28,6 +31,24 @@ public class GraphTransformationStage<
 
   private final GraphTransformer<KeyType, ResultType> transformer;
   private final GraphEngineCache<KeyType, ResultType> cache;
+
+  public GraphTransformationStage(GraphTransformer<KeyType, ResultType> transformer) {
+    this(
+        transformer,
+        new GraphEngineCache<KeyType, ResultType>() {
+          private final ConcurrentHashMap<KeyType, ResultType> cache = new ConcurrentHashMap<>();
+
+          @Override
+          public Optional<ResultType> get(KeyType key) {
+            return Optional.ofNullable(cache.get(key));
+          }
+
+          @Override
+          public void put(KeyType key, ResultType resultType) {
+            cache.put(key, resultType);
+          }
+        });
+  }
 
   public GraphTransformationStage(
       GraphTransformer<KeyType, ResultType> transformer,

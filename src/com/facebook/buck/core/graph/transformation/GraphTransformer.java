@@ -32,6 +32,8 @@ import com.google.common.collect.ImmutableSet;
  *       keys in {@link #discoverPreliminaryDeps(ComputeKey)} has been computed
  * </ul>
  *
+ * Note that dependencies can be keys of other {@link GraphTransformer}s.
+ *
  * @param <Key> The types of Keys used to query for the result on the graph computation
  * @param <Result> The result of the computation given a specific key.
  */
@@ -66,7 +68,8 @@ public interface GraphTransformer<Key extends ComputeKey<Result>, Result extends
    *     #discoverPreliminaryDeps(ComputeKey)}
    * @return a set of keys that the transformation of the current key depends on
    */
-  ImmutableSet<Key> discoverDeps(Key key, TransformationEnvironment env) throws Exception;
+  ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
+      Key key, TransformationEnvironment env) throws Exception;
 
   /**
    * Compute dependent keys required to compute given the current key. The results of those
@@ -78,5 +81,6 @@ public interface GraphTransformer<Key extends ComputeKey<Result>, Result extends
    * @return a set of keys that the {@link #discoverDeps(ComputeKey, TransformationEnvironment)} and
    *     {@link #transform(ComputeKey, TransformationEnvironment)} of the current key depends on
    */
-  ImmutableSet<Key> discoverPreliminaryDeps(Key key) throws Exception;
+  ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(Key key)
+      throws Exception;
 }

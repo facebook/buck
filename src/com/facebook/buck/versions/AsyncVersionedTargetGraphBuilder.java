@@ -20,6 +20,7 @@ import com.facebook.buck.core.graph.transformation.ComputeKey;
 import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.GraphTransformationStage;
 import com.facebook.buck.core.graph.transformation.GraphTransformer;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -37,6 +38,7 @@ import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -65,11 +67,9 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
   private final VersionedTargetGraphTransformer versionedTargetGraphTransformer;
 
-  private final GraphTransformationEngine<VersionTargetGraphKey, TargetNode<?>>
-      asyncTransformationEngine;
+  private final GraphTransformationEngine asyncTransformationEngine;
 
-  private final GraphTransformationEngine<VersionInfoKey, VersionInfo>
-      versionInfoAsyncTransformationEngine;
+  private final GraphTransformationEngine versionInfoAsyncTransformationEngine;
   private final ForkJoinPool versionInfoExecutor;
 
   AsyncVersionedTargetGraphBuilder(
@@ -89,15 +89,17 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
             unversionedTargetGraphAndBuildTargets.getTargetGraph(), versionSelector);
 
     this.asyncTransformationEngine =
-        new DefaultGraphTransformationEngine<>(
-            versionedTargetGraphTransformer,
+        new DefaultGraphTransformationEngine(
+            ImmutableList.of(new GraphTransformationStage<>(versionedTargetGraphTransformer)),
             unversionedTargetGraphAndBuildTargets.getTargetGraph().getSize() * 4,
             executor);
     versionInfoExecutor = new ForkJoinPool(2);
     this.versionInfoAsyncTransformationEngine =
-        new DefaultGraphTransformationEngine<>(
-            new TargetNodeToVersionInfoTransformer(
-                unversionedTargetGraphAndBuildTargets.getTargetGraph()),
+        new DefaultGraphTransformationEngine(
+            ImmutableList.of(
+                new GraphTransformationStage<>(
+                    new TargetNodeToVersionInfoTransformer(
+                        unversionedTargetGraphAndBuildTargets.getTargetGraph()))),
             2 * unversionedTargetGraphAndBuildTargets.getTargetGraph().getSize(),
             DefaultDepsAwareExecutor.from(versionInfoExecutor));
   }
