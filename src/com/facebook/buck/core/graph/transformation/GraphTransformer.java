@@ -27,7 +27,9 @@ import com.google.common.collect.ImmutableSet;
  *   <li>1. {@link #transform(ComputeKey, TransformationEnvironment)} is only called once per key if
  *       caching is enabled.
  *   <li>2. {@link #transform(ComputeKey, TransformationEnvironment)} is only called after all keys
- *       in {@link #discoverDeps(ComputeKey)} has been computed.
+ *       in {@link #discoverDeps(ComputeKey, TransformationEnvironment)} has been computed.
+ *   <li>3. {@link #discoverDeps(ComputeKey, TransformationEnvironment)} is only called after all
+ *       keys in {@link #discoverPreliminaryDeps(ComputeKey)} has been computed
  * </ul>
  *
  * @param <Key> The types of Keys used to query for the result on the graph computation
@@ -41,18 +43,35 @@ public interface GraphTransformer<Key extends ComputeKey<Result>, Result extends
    *
    * @param key The Key of the requested result
    * @param env The execution environment containing results of keys from {@link
-   *     #discoverDeps(ComputeKey)}
+   *     #discoverDeps(ComputeKey, TransformationEnvironment)} and {@link
+   *     #discoverPreliminaryDeps(ComputeKey)}
    * @return The result of the transformation
    */
   Result transform(Key key, TransformationEnvironment<Key, Result> env) throws Exception;
 
   /**
-   * Compute dependent keys required to compute given key. The results of those computations will be
+   * Compute dependent keys required to compute given key, and a set of dependencies as listed by
+   * {@link #discoverPreliminaryDeps(ComputeKey)}. The results of those computations will be
    * available in {@link #transform(ComputeKey, TransformationEnvironment)} as a part of {@link
    * TransformationEnvironment}
    *
    * @param key the current key to transform
+   * @param env The execution environment containing results of keys from {@link
+   *     #discoverPreliminaryDeps(ComputeKey)}
    * @return a set of keys that the transformation of the current key depends on
    */
-  ImmutableSet<Key> discoverDeps(Key key) throws Exception;
+  ImmutableSet<Key> discoverDeps(Key key, TransformationEnvironment<Key, Result> env)
+      throws Exception;
+
+  /**
+   * Compute dependent keys required to compute given the current key. The results of those
+   * computations will be available in {@link #discoverDeps(ComputeKey, TransformationEnvironment)}
+   * as a part of {@link TransformationEnvironment}, and {@link #transform(ComputeKey,
+   * TransformationEnvironment)}
+   *
+   * @param key the current key to transform
+   * @return a set of keys that the {@link #discoverDeps(ComputeKey, TransformationEnvironment)} and
+   *     {@link #transform(ComputeKey, TransformationEnvironment)} of the current key depends on
+   */
+  ImmutableSet<Key> discoverPreliminaryDeps(Key key) throws Exception;
 }

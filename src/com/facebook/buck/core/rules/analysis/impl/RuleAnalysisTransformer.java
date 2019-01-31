@@ -92,10 +92,16 @@ public class RuleAnalysisTransformer
   }
 
   @Override
-  public ImmutableSet<RuleAnalysisKey> discoverDeps(RuleAnalysisKey key) {
+  public ImmutableSet<RuleAnalysisKey> discoverPreliminaryDeps(RuleAnalysisKey key) {
     return ImmutableSet.copyOf(
         Iterables.transform(
             targetGraph.get(key.getBuildTarget()).getParseDeps(),
             ImmutableRuleAnalysisKeyImpl::of));
+  }
+
+  @Override
+  public ImmutableSet<RuleAnalysisKey> discoverDeps(
+      RuleAnalysisKey key, TransformationEnvironment<RuleAnalysisKey, RuleAnalysisResult> env) {
+    return ImmutableSet.of();
   }
 }

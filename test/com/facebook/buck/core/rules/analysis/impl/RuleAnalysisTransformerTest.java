@@ -85,7 +85,8 @@ public class RuleAnalysisTransformerTest {
 
     RuleAnalysisTransformer transformer = new RuleAnalysisTransformer(targetGraph);
     assertEquals(
-        ImmutableSet.of(), transformer.discoverDeps(ImmutableRuleAnalysisKeyImpl.of(buildTarget)));
+        ImmutableSet.of(),
+        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKeyImpl.of(buildTarget)));
   }
 
   @Test
@@ -151,7 +152,7 @@ public class RuleAnalysisTransformerTest {
         ImmutableSet.of(
             ImmutableRuleAnalysisKeyImpl.of(buildTarget2),
             ImmutableRuleAnalysisKeyImpl.of(buildTarget3)),
-        transformer.discoverDeps(ImmutableRuleAnalysisKeyImpl.of(buildTarget1)));
+        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKeyImpl.of(buildTarget1)));
   }
 
   @Test

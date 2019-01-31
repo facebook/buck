@@ -27,7 +27,8 @@ import java.util.concurrent.Future;
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * GraphTransformer#discoverDeps(ComputeKey)}
+ * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} and {@link
+ * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}
  */
 public interface GraphTransformationEngine<
         KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>

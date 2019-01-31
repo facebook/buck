@@ -43,12 +43,24 @@ import java.util.concurrent.Future;
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * GraphTransformer#discoverDeps(ComputeKey)}. The engine guarantees that all dependencies are
- * completed before performing the transformation.
+ * GraphTransformer#discoverPreliminaryDeps(com.facebook.buck.core.graph.transformation.ComputeKey)}
+ * and {@link GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}. The engine
+ * guarantees that all dependencies are completed before performing the transformation.
+ *
+ * <p>{@link GraphTransformer#discoverPreliminaryDeps(ComputeKey)} will be ran first to discover a
+ * set of dependencies based only on the {@link ComputeKey}. The keys are then computed, and the
+ * results passed via the {@link TransformationEnvironment} to {@link
+ * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)} for a second stage of
+ * dependency discovery, where the dependency discovery can use the dependencies previously
+ * specified. The results of dependencies returned via both {@link
+ * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} and {@link
+ * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)} will be available for the
+ * {@link GraphTransformer#transform(ComputeKey, TransformationEnvironment)} operation.
  *
  * <p>Transformations also should never block waiting for each other in any manner. If required to
  * wait, the transformation must declare it through {@link
- * GraphTransformer#discoverDeps(ComputeKey)}
+ * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} or {@link
+ * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}
  *
  * <p>The transformation is incremental, so cached portions of the transformation will be used
  * whenever possible based on {@code ComputeKey.equals()}. Therefore, {@link KeyType} should be
@@ -63,11 +75,9 @@ import java.util.concurrent.Future;
  * <p>By using all callback based operations and queue based operations, this engine will also
  * reduce stack usage, eliminating stack overflow for large graph computations, provided that the
  * {@link GraphTransformer} itself does not stack overflow within its {@link
- * GraphTransformer#discoverDeps(ComputeKey)} and {@link GraphTransformer#transform(ComputeKey,
- * TransformationEnvironment)} methods.
- *
- * @param <KeyType> the specific type of {@link ComputeKey} this engine computes
- * @param <ResultType> the specific type of {@link ComputeResult} this engine computes
+ * GraphTransformer#discoverPreliminaryDeps(ComputeKey)}, {@link
+ * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}, and {@link
+ * GraphTransformer#transform(ComputeKey, TransformationEnvironment)} methods.
  */
 public final class DefaultGraphTransformationEngine<
         KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
@@ -235,9 +245,9 @@ public final class DefaultGraphTransformationEngine<
             return executor.createThrowingTask(
                 () -> computeForKey(key, collectDeps(depResults.build())),
                 MoreSuppliers.memoize(
-                    () -> computeDepsForKey(transformer.discoverDeps(key), depResults),
-                    Exception.class),
-                ImmutableSet::of);
+                    () -> computePreliminaryDepForKey(key, depResults), Exception.class),
+                MoreSuppliers.memoize(
+                    () -> computeDepsForKey(transformer, key, depResults), Exception.class));
           });
     }
 
@@ -251,8 +261,31 @@ public final class DefaultGraphTransformationEngine<
       return result;
     }
 
+    private ImmutableSet<TaskType> computePreliminaryDepForKey(
+        KeyType key, ImmutableMap.Builder<KeyType, Future<ResultType>> depResults)
+        throws Exception {
+      ImmutableSet<KeyType> preliminaryDepKeys = transformer.discoverPreliminaryDeps(key);
+      ImmutableSet.Builder<TaskType> preliminaryDepWorkBuilder =
+          ImmutableSet.builderWithExpectedSize(preliminaryDepKeys.size());
+      for (KeyType preliminaryDepKey : preliminaryDepKeys) {
+        TaskType task = convertKeyToTask(preliminaryDepKey);
+        depResults.put(preliminaryDepKey, task.getResultFuture());
+        preliminaryDepWorkBuilder.add(task);
+      }
+      return preliminaryDepWorkBuilder.build();
+    }
+
     private ImmutableSet<TaskType> computeDepsForKey(
-        Set<KeyType> depKeys, ImmutableMap.Builder<KeyType, Future<ResultType>> depResults) {
+        GraphTransformer<KeyType, ResultType> transformer,
+        KeyType key,
+        ImmutableMap.Builder<KeyType, Future<ResultType>> depResults)
+        throws Exception {
+
+      ImmutableSet<KeyType> depKeys =
+          transformer.discoverDeps(
+              key, new DefaultTransformationEnvironment<>(collectDeps(depResults.build())));
+
+      // task that executes secondary deps, depending on the initial deps
       ImmutableSet.Builder<TaskType> depWorkBuilder =
           ImmutableSet.builderWithExpectedSize(depKeys.size());
       for (KeyType depKey : depKeys) {

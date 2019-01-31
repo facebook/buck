@@ -204,7 +204,13 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     @Override
-    public ImmutableSet<VersionInfoKey> discoverDeps(VersionInfoKey node) {
+    public ImmutableSet<VersionInfoKey> discoverDeps(
+        VersionInfoKey key, TransformationEnvironment<VersionInfoKey, VersionInfo> env) {
+      return ImmutableSet.of();
+    }
+
+    @Override
+    public ImmutableSet<VersionInfoKey> discoverPreliminaryDeps(VersionInfoKey node) {
       TargetNode<?> targetNode = node.getTargetNode();
       Optional<TargetNode<VersionedAliasDescriptionArg>> versionedNode =
           TargetGraphVersionTransformations.getVersionedNode(targetNode);
@@ -342,6 +348,13 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
     @Override
     public ImmutableSet<VersionTargetGraphKey> discoverDeps(
+        VersionTargetGraphKey key,
+        TransformationEnvironment<VersionTargetGraphKey, TargetNode<?>> env) {
+      return ImmutableSet.of();
+    }
+
+    @Override
+    public ImmutableSet<VersionTargetGraphKey> discoverPreliminaryDeps(
         VersionTargetGraphKey versionTargetGraphKey) throws VersionException {
 
       TargetNode<?> root = versionTargetGraphKey.getTargetNode();

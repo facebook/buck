@@ -53,7 +53,13 @@ class ChildrenAdder implements GraphTransformer<LongNode, LongNode> {
   }
 
   @Override
-  public ImmutableSet<LongNode> discoverDeps(LongNode key) {
+  public ImmutableSet<LongNode> discoverDeps(
+      LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSet<LongNode> discoverPreliminaryDeps(LongNode key) {
     return ImmutableSet.copyOf(input.successors(key));
   }
 }

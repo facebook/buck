@@ -17,6 +17,7 @@
 package com.facebook.buck.core.graph.transformation;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.graph.transformation.ChildrenAdder.LongNode;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -24,6 +25,7 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.google.common.util.concurrent.Futures;
@@ -35,7 +37,6 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.LongAdder;
 import org.hamcrest.Matchers;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -157,7 +158,7 @@ public class DefaultGraphTransformationEngineTest {
         new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);
     try {
       engine2.computeUnchecked(ImmutableLongNode.of(1));
-      Assert.fail(
+      fail(
           "Did not expect DefaultAsyncTransformationEngine to compute with an executor that has been shut down");
     } catch (RejectedExecutionException e) {
       // this is expected because the custom executor has been shut down
@@ -179,7 +180,7 @@ public class DefaultGraphTransformationEngineTest {
           @Override
           public LongNode transform(
               LongNode node, TransformationEnvironment<LongNode, LongNode> env) {
-            Assert.fail("Did not expect call as cache should be used");
+            fail("Did not expect call as cache should be used");
             return super.transform(node, env);
           }
         };
@@ -224,7 +225,7 @@ public class DefaultGraphTransformationEngineTest {
           public LongNode transform(
               LongNode node, TransformationEnvironment<LongNode, LongNode> env) {
             if (node.get() == 5L || node.get() == 4L || node.get() == 3L) {
-              Assert.fail("Did not expect call as cache should be used");
+              fail("Did not expect call as cache should be used");
             }
             return super.transform(node, env);
           }
@@ -261,8 +262,48 @@ public class DefaultGraphTransformationEngineTest {
           }
 
           @Override
-          public ImmutableSet<LongNode> discoverDeps(LongNode aLong) {
+          public ImmutableSet<LongNode> discoverDeps(
+              LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
             return ImmutableSet.of();
+          }
+
+          @Override
+          public ImmutableSet<LongNode> discoverPreliminaryDeps(LongNode aLong) {
+            return ImmutableSet.of();
+          }
+        };
+
+    DefaultGraphTransformationEngine<LongNode, LongNode> engine =
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), cache, executor);
+
+    engine.compute(ImmutableLongNode.of(1)).get();
+  }
+
+  @Test
+  public void handlesTransformerThatThrowsInDiscoverPreliminaryDeps()
+      throws ExecutionException, InterruptedException {
+
+    Exception exception = new Exception();
+    expectedException.expectCause(Matchers.sameInstance(exception));
+
+    GraphTransformer<LongNode, LongNode> transformer =
+        new GraphTransformer<LongNode, LongNode>() {
+          @Override
+          public LongNode transform(
+              LongNode aLong, TransformationEnvironment<LongNode, LongNode> env) {
+            return ImmutableLongNode.of(1);
+          }
+
+          @Override
+          public ImmutableSet<LongNode> discoverDeps(
+              LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
+            fail("Should not have gotten to discoverDeps since preliminary deps discovery failed");
+            return ImmutableSet.of();
+          }
+
+          @Override
+          public ImmutableSet<LongNode> discoverPreliminaryDeps(LongNode aLong) throws Exception {
+            throw exception;
           }
         };
 
@@ -288,8 +329,14 @@ public class DefaultGraphTransformationEngineTest {
           }
 
           @Override
-          public ImmutableSet<LongNode> discoverDeps(LongNode aLong) throws Exception {
+          public ImmutableSet<LongNode> discoverDeps(
+              LongNode key, TransformationEnvironment<LongNode, LongNode> env) throws Exception {
             throw exception;
+          }
+
+          @Override
+          public ImmutableSet<LongNode> discoverPreliminaryDeps(LongNode aLong) throws Exception {
+            return ImmutableSet.of();
           }
         };
 
@@ -297,6 +344,30 @@ public class DefaultGraphTransformationEngineTest {
         new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), cache, executor);
 
     engine.compute(ImmutableLongNode.of(1)).get();
+  }
+
+  @Test
+  public void requestOnRootWithTwoStageDepsCorrectValue() {
+    ChildrenAdder transformer =
+        new ChildrenAdder(graph) {
+          @Override
+          public ImmutableSet<LongNode> discoverDeps(
+              LongNode key, TransformationEnvironment<LongNode, LongNode> env) {
+            return ImmutableSet.copyOf(
+                Sets.difference(super.discoverPreliminaryDeps(key), env.getDeps().keySet()));
+          }
+
+          @Override
+          public ImmutableSet<LongNode> discoverPreliminaryDeps(LongNode key) {
+            return ImmutableSet.copyOf(
+                Sets.filter(super.discoverPreliminaryDeps(key), node -> node.get() % 2 == 0));
+          }
+        };
+    DefaultGraphTransformationEngine<LongNode, LongNode> engine =
+        new DefaultGraphTransformationEngine<>(transformer, graph.nodes().size(), executor);
+    assertEquals(ImmutableLongNode.of(19), engine.computeUnchecked(ImmutableLongNode.of(1)));
+
+    assertComputationIndexBecomesEmpty(engine.impl.computationIndex);
   }
 
   /**
