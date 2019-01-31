@@ -23,6 +23,11 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.FakeAppleRuleDescriptions;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
+import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -51,6 +56,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -246,6 +252,48 @@ public class SwiftLibraryIntegrationTest {
     workspace
         .getBuildLog()
         .assertTargetBuiltLocally("//:hello#iphonesimulator-x86_64,swift-compile");
+  }
+
+  @Test
+  public void testEmitModuleDocArgsAreIncludedInCompilerCommand() {
+    assumeThat(
+        AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#iphoneos-x86_64");
+    BuildTarget swiftCompileTarget =
+        buildTarget.withAppendedFlavors(SwiftLibraryDescription.SWIFT_COMPILE_FLAVOR);
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setSections("[swift]", "emit_swiftdocs = True").build();
+
+    SwiftLibraryDescription swiftLibraryDescription =
+        FakeAppleRuleDescriptions.createSwiftLibraryDescription(buckConfig);
+
+    SwiftCompile buildRule =
+        (SwiftCompile)
+            swiftLibraryDescription.createBuildRule(
+                TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
+                swiftCompileTarget,
+                TestBuildRuleParams.create(),
+                createDummySwiftArg());
+
+    BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
+    ImmutableList<Step> steps = buildRule.getBuildSteps(buildContext, new FakeBuildableContext());
+    SwiftCompileStep compileStep = (SwiftCompileStep) steps.get(1);
+    ImmutableList<String> compilerCommand =
+        ImmutableList.copyOf(compileStep.getDescription(null).split(" "));
+
+    String expectedSwiftdocPath =
+        ExplicitBuildTargetSourcePath.of(
+                swiftCompileTarget,
+                pathResolver
+                    .getRelativePath(buildRule.getSourcePathToOutput())
+                    .resolve("bar.swiftdoc"))
+            .getResolvedPath()
+            .toString();
+    assertThat(
+        compilerCommand,
+        Matchers.hasItems("-emit-module-doc", "-emit-module-doc-path", expectedSwiftdocPath));
   }
 
   private SwiftLibraryDescriptionArg createDummySwiftArg() {

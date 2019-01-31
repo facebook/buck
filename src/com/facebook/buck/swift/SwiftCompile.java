@@ -83,6 +83,9 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final ImmutableList<Path> objectPaths;
   private final Optional<Path> swiftFileListPath;
 
+  @AddToRuleKey private final boolean shouldEmitSwiftdocs;
+  private final Path swiftdocPath;
+
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> srcs;
   @AddToRuleKey private final Optional<String> version;
   @AddToRuleKey private final ImmutableList<? extends Arg> compilerFlags;
@@ -147,6 +150,9 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                         BuildTargetPaths.getScratchPath(
                             getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt")))
             : Optional.empty();
+
+    this.shouldEmitSwiftdocs = swiftBuckConfig.getEmitSwiftdocs();
+    this.swiftdocPath = outputPath.resolve(escapedModuleName + ".swiftdoc");
 
     this.srcs = ImmutableSortedSet.copyOf(srcs);
     this.version = version;
@@ -225,6 +231,10 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         headerPath.toString(),
         "-o",
         objectFilePath.toString());
+
+    if (shouldEmitSwiftdocs) {
+      compilerCommand.add("-emit-module-doc", "-emit-module-doc-path", swiftdocPath.toString());
+    }
 
     version.ifPresent(
         v -> {
