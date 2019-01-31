@@ -31,7 +31,7 @@ public class RustTestUtils {
           .setLinker(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setLinkerProvider(
               new DefaultLinkerProvider(
-                  Type.GNU, new ConstantToolProvider(new CommandTool.Builder().build())))
+                  Type.GNU, new ConstantToolProvider(new CommandTool.Builder().build()), true))
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .build();
 

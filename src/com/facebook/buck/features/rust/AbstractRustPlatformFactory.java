@@ -77,7 +77,8 @@ abstract class AbstractRustPlatformFactory {
                                 rustBuckConfig
                                     .getLinkerPlatform(name)
                                     .orElse(cxxPlatform.getLd().getType()),
-                                tp))
+                                tp,
+                                true))
                 .orElseGet(cxxPlatform::getLd))
         .addAllLinkerArgs(rustBuckConfig.getLinkerFlags(name))
         .addAllLinkerArgs(!linker.isPresent() ? cxxPlatform.getLdflags() : ImmutableList.of())

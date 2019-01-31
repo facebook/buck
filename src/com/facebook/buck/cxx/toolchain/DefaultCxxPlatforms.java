@@ -203,8 +203,8 @@ public class DefaultCxxPlatforms {
         cxxpp,
         new DefaultLinkerProvider(
             linkerType,
-            new ConstantToolProvider(
-                new HashedFileTool(() -> config.getSourcePath(defaultLinker)))),
+            new ConstantToolProvider(new HashedFileTool(() -> config.getSourcePath(defaultLinker))),
+            config.shouldCacheLinks()),
         ImmutableList.of(),
         getHashedFileTool(config, "strip", DEFAULT_STRIP, env),
         ArchiverProvider.from(archiver),

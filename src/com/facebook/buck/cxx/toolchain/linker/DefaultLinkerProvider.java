@@ -29,6 +29,7 @@ public class DefaultLinkerProvider implements LinkerProvider {
 
   private final Type type;
   private final ToolProvider toolProvider;
+  private final boolean cacheLinks;
 
   private final LoadingCache<BuildRuleResolver, Linker> cache =
       CacheBuilder.newBuilder()
@@ -37,19 +38,20 @@ public class DefaultLinkerProvider implements LinkerProvider {
               new CacheLoader<BuildRuleResolver, Linker>() {
                 @Override
                 public Linker load(@Nonnull BuildRuleResolver resolver) {
-                  return build(type, toolProvider.resolve(resolver));
+                  return build(type, toolProvider.resolve(resolver), cacheLinks);
                 }
               });
 
-  public DefaultLinkerProvider(Type type, ToolProvider toolProvider) {
+  public DefaultLinkerProvider(Type type, ToolProvider toolProvider, boolean cacheLinks) {
     this.type = type;
     this.toolProvider = toolProvider;
+    this.cacheLinks = cacheLinks;
   }
 
-  private static Linker build(Type type, Tool tool) {
+  private static Linker build(Type type, Tool tool, boolean cacheLinks) {
     switch (type) {
       case DARWIN:
-        return new DarwinLinker(tool);
+        return new DarwinLinker(tool, cacheLinks);
       case GNU:
         return new GnuLinker(tool);
       case WINDOWS:

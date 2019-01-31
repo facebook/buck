@@ -49,14 +49,23 @@ import java.util.function.Consumer;
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
  */
 public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap, HasThinLTO {
-  public DarwinLinker(Tool tool) {
+
+  private final boolean cacheLinks;
+
+  public DarwinLinker(Tool tool, boolean cacheLinks) {
     super(tool);
+    this.cacheLinks = cacheLinks;
   }
 
   @Override
   public ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap) {
-    return ImmutableList.of(
-        new OsoSymbolsContentsScrubber(cellRootMap), new LcUuidContentsScrubber());
+    if (cacheLinks) {
+      return ImmutableList.of(
+          new OsoSymbolsContentsScrubber(cellRootMap), new LcUuidContentsScrubber());
+    } else {
+      // there's no point scrubbing the debug info if the linked objects are never getting cached
+      return ImmutableList.of();
+    }
   }
 
   @Override

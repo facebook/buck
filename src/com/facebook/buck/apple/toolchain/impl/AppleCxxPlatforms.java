@@ -421,7 +421,9 @@ public class AppleCxxPlatforms {
             cpp,
             cxxpp,
             new DefaultLinkerProvider(
-                LinkerProvider.Type.DARWIN, new ConstantToolProvider(clangXxPath)),
+                LinkerProvider.Type.DARWIN,
+                new ConstantToolProvider(clangXxPath),
+                config.shouldCacheLinks()),
             ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
             strip,
             ArchiverProvider.from(new BsdArchiver(ar)),

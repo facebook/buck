@@ -40,7 +40,8 @@ public class FakeRustConfig extends RustBuckConfig {
               new DefaultLinkerProvider(
                   LinkerProvider.Type.GNU,
                   new ConstantToolProvider(
-                      new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("/bin/rustc"))))));
+                      new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("/bin/rustc")))),
+                  true));
 
   private Optional<ToolProvider> compiler = Optional.empty();
   private Optional<ImmutableList<String>> rustcFlags = Optional.empty();
