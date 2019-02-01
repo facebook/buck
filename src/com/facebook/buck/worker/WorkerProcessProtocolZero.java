@@ -16,6 +16,7 @@
 package com.facebook.buck.worker;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -31,6 +32,9 @@ import java.nio.file.Path;
 import java.util.function.Supplier;
 
 public class WorkerProcessProtocolZero {
+
+  private static final Logger LOG = Logger.get(WorkerProcessProtocolZero.class);
+
   public static class CommandSender implements WorkerProcessProtocol.CommandSender {
     private final JsonWriter processStdinWriter;
     private final JsonReader processStdoutReader;
@@ -180,7 +184,7 @@ public class WorkerProcessProtocolZero {
         processStdoutReader.close();
       } finally {
         if (!isAlive.get()) {
-          throw new HumanReadableException(
+          LOG.error(
               "%s (%d)'s process was already killed",
               getClass().getSimpleName(), System.identityHashCode(this));
         }

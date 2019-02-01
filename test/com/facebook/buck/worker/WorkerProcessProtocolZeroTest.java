@@ -228,21 +228,6 @@ public class WorkerProcessProtocolZeroTest {
     }
   }
 
-  @Test
-  public void closingStreamsThrowsWhenProcessIsKilledBeforeClose() throws IOException {
-    expectedException.expect(HumanReadableException.class);
-    expectedException.expectMessage("was already killed");
-
-    WorkerProcessProtocolZero.CommandSender protocol =
-        new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, inputStream(""), newTempFile(), () -> {}, () -> false);
-    // write an opening bracket now, so the writer doesn't throw due to invalid JSON when it goes
-    // to write the closing bracket
-    protocol.getProcessStdinWriter().beginArray();
-
-    protocol.close();
-  }
-
   private Path newTempFile() throws IOException {
     return temporaryPaths.newFile();
   }
