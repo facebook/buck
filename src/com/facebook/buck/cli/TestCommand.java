@@ -62,6 +62,7 @@ import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.util.CommandLineException;
@@ -239,14 +240,14 @@ public class TestCommand extends BuildCommand {
   public boolean isBuildFiltered(BuckConfig buckConfig) {
     return isBuildFiltered != null
         ? isBuildFiltered
-        : buckConfig.getBooleanValue("test", "build_filtered_tests", false);
+        : buckConfig.getView(TestBuckConfig.class).isBuildingFilteredTestsEnabled();
   }
 
   public int getNumTestThreads(BuckConfig buckConfig) {
     if (isDebugEnabled()) {
       return 1;
     }
-    return buckConfig.getNumTestThreads();
+    return buckConfig.getView(TestBuckConfig.class).getNumTestThreads();
   }
 
   public int getNumTestManagedThreads(ResourcesConfig resourcesConfig) {
@@ -276,10 +277,9 @@ public class TestCommand extends BuildCommand {
             .setEnvironmentOverrides(environmentOverrides)
             .setJavaTempDir(params.getBuckConfig().getView(JavaBuckConfig.class).getJavaTempDir());
 
-    Optional<ImmutableList<String>> coverageIncludes =
-        params.getBuckConfig().getOptionalListWithoutComments("test", "coverageIncludes", ',');
-    Optional<ImmutableList<String>> coverageExcludes =
-        params.getBuckConfig().getOptionalListWithoutComments("test", "coverageExcludes", ',');
+    TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
+    Optional<ImmutableList<String>> coverageIncludes = testBuckConfig.getCoverageIncludes();
+    Optional<ImmutableList<String>> coverageExcludes = testBuckConfig.getCoverageExcludes();
 
     coverageIncludes.ifPresent(strings -> builder.setCoverageIncludes(String.join(",", strings)));
     coverageExcludes.ifPresent(strings -> builder.setCoverageExcludes(String.join(",", strings)));
@@ -352,11 +352,14 @@ public class TestCommand extends BuildCommand {
       return ExitCode.BUILD_ERROR;
     }
     TestRunningOptions options = getTestRunningOptions(params);
+    boolean parallelExternalTestSpecComputationEnabled =
+        params
+            .getBuckConfig()
+            .getView(TestBuckConfig.class)
+            .isParallelExternalTestSpecComputationEnabled();
     // Walk the test rules, collecting all the specs.
     ImmutableList<ExternalTestRunnerTestSpec> specs =
-        StreamSupport.stream(
-                testRules.spliterator(),
-                params.getBuckConfig().isParallelExternalTestSpecComputationEnabled())
+        StreamSupport.stream(testRules.spliterator(), parallelExternalTestSpecComputationEnabled)
             .map(ExternalTestRunnerRule.class::cast)
             .map(
                 rule -> {
@@ -374,9 +377,7 @@ public class TestCommand extends BuildCommand {
                 })
             .collect(ImmutableList.toImmutableList());
 
-    StreamSupport.stream(
-            testRules.spliterator(),
-            params.getBuckConfig().isParallelExternalTestSpecComputationEnabled())
+    StreamSupport.stream(testRules.spliterator(), parallelExternalTestSpecComputationEnabled)
         .map(ExternalTestRunnerRule.class::cast)
         .forEach(
             rule -> {
@@ -666,7 +667,7 @@ public class TestCommand extends BuildCommand {
 
           // Once all of the rules are built, then run the tests.
           Optional<ImmutableList<String>> externalTestRunner =
-              params.getBuckConfig().getExternalTestRunner();
+              params.getBuckConfig().getView(TestBuckConfig.class).getExternalTestRunner();
           if (externalTestRunner.isPresent()) {
             return runTestsExternal(
                 params, build, externalTestRunner.get(), testRules, buildContext);

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.test;
+package com.facebook.buck.test.config;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.util.OptionalInt;

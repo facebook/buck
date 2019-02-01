@@ -39,7 +39,6 @@ import com.facebook.infer.annotation.PropagatesNullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -62,7 +61,6 @@ import java.util.stream.Stream;
 
 /** Structured representation of data read from a {@code .buckconfig} file. */
 public class BuckConfig {
-  private static final String TEST_SECTION_HEADER = "test";
 
   private static final Float DEFAULT_THREAD_CORE_RATIO = Float.valueOf(1.0F);
 
@@ -319,26 +317,12 @@ public class BuckConfig {
     return PathSourcePath.of(projectFilesystem, checkPathExists(path.toString(), errorMessage));
   }
 
-  public long getDefaultTestTimeoutMillis() {
-    return Long.parseLong(getValue("test", "timeout").orElse("0"));
-  }
-
-  public boolean isParallelExternalTestSpecComputationEnabled() {
-    return getBooleanValue(
-        TEST_SECTION_HEADER, "parallel_external_test_spec_computation_enabled", false);
-  }
-
   public boolean getFlushEventsBeforeExit() {
     return getBooleanValue("daemon", "flush_events_before_exit", false);
   }
 
   public ImmutableSet<String> getListenerJars() {
     return ImmutableSet.copyOf(getListWithoutComments("extensions", "listeners"));
-  }
-
-  /** Return Strings so as to avoid a dependency on {@link com.facebook.buck.cli.LabelSelector}! */
-  public ImmutableList<String> getDefaultRawExcludedLabelSelectors() {
-    return getListWithoutComments("test", "excluded_labels");
   }
 
   public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@PropagatesNullable Path path) {
@@ -544,29 +528,6 @@ public class BuckConfig {
     return getNumThreads(getDefaultMaximumNumberOfThreads());
   }
 
-  /**
-   * @return the number of threads Buck should use for testing. This will use the test.threads
-   *     setting if it exists. Otherwise, this will use the build parallelization settings if not
-   *     configured.
-   */
-  public int getNumTestThreads() {
-    OptionalInt numTestThreads = config.getInteger("test", "threads");
-    if (numTestThreads.isPresent()) {
-      int num = numTestThreads.getAsInt();
-      if (num <= 0) {
-        throw new HumanReadableException(
-            "test.threads must be greater than zero (was " + num + ")");
-      }
-      return num;
-    }
-    double ratio = config.getFloat(TEST_SECTION_HEADER, "thread_utilization_ratio").orElse(1.0F);
-    if (ratio <= 0.0F) {
-      throw new HumanReadableException(
-          "thread_utilization_ratio must be greater than zero (was " + ratio + ")");
-    }
-    return (int) Math.ceil(ratio * getNumThreads());
-  }
-
   /** @return the number of threads to be used for the scheduled executor thread pool. */
   public int getNumThreadsForSchedulerPool() {
     return config.getLong("build", "scheduler_threads").orElse((long) 2).intValue();
@@ -762,12 +723,6 @@ public class BuckConfig {
     return filtered.build();
   }
 
-  public Optional<ImmutableList<String>> getExternalTestRunner() {
-    Optional<String> value = getValue("test", "external_runner");
-    return value.map(
-        configValue -> ImmutableList.copyOf(Splitter.on(' ').splitToList(configValue)));
-  }
-
   /**
    * @return whether to symlink the default output location (`buck-out`) to the user-provided
    *     override for compatibility.
@@ -824,11 +779,6 @@ public class BuckConfig {
 
   public Optional<String> getPathToBuildPrehookScript() {
     return getValue("build", "prehook_script");
-  }
-
-  /** The timeout to apply to entire test rules. */
-  public Optional<Long> getDefaultTestRuleTimeoutMs() {
-    return config.getLong(TEST_SECTION_HEADER, "rule_timeout");
   }
 
   /** List of error message replacements to make things more friendly for humans */

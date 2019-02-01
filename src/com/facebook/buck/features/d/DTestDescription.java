@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -124,7 +125,11 @@ public class DTestDescription
         args.getLabels(),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
-            .orElse(dBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()));
+            .orElse(
+                dBuckConfig
+                    .getDelegate()
+                    .getView(TestBuckConfig.class)
+                    .getDefaultTestRuleTimeoutMs()));
   }
 
   @Override

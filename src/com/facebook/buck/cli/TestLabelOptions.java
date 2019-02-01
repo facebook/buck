@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.collect.ImmutableList;
@@ -108,7 +109,7 @@ class TestLabelOptions {
     }
 
     List<String> defaultRawExcludedLabelSelectors =
-        buckConfig.getDefaultRawExcludedLabelSelectors();
+        buckConfig.getView(TestBuckConfig.class).getDefaultRawExcludedLabelSelectors();
     for (String raw : defaultRawExcludedLabelSelectors) {
       LabelSelector labelSelector = LabelSelector.fromString(raw).invert();
       if (labelSelector.matches(rawLabels)) {

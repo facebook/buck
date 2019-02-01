@@ -14,32 +14,12 @@ java_library(
     ],
 )
 
-CONFIG_SRCS = [
-    "AbstractTestResultSummaryVerbosity.java",
-    "TestConfig.java",
-]
-
-java_immutables_library(
-    name = "config",
-    srcs = CONFIG_SRCS,
-    visibility = [
-        "//src/com/facebook/buck/cli:cli",
-        "//src/com/facebook/buck/event/listener:listener",
-        "//test/com/facebook/buck/cli:cli",
-        "//test/com/facebook/buck/event/listener:listener",
-        "//test/com/facebook/buck/test:test",
-    ],
-    deps = [
-        "//src/com/facebook/buck/core/config:config",
-    ],
-)
-
 # Sources for dealing with test results.
 java_immutables_library(
     name = "test",
     srcs = glob(
         ["*.java"],
-        exclude = REPORT_FORMAT_SRCS + CONFIG_SRCS,
+        exclude = REPORT_FORMAT_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/test:test",

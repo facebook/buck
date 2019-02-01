@@ -92,16 +92,6 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testExcludedLabels() throws IOException {
-    Reader reader =
-        new StringReader(Joiner.on('\n').join("[test]", "excluded_labels = windows, linux"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-
-    assertEquals(
-        ImmutableList.of("windows", "linux"), config.getDefaultRawExcludedLabelSelectors());
-  }
-
-  @Test
   public void testResolveNullPathThatMayBeOutsideTheProjectFilesystem() throws IOException {
     BuckConfig config = createFromText("");
     assertNull(config.resolvePathThatMayBeOutsideTheProjectFilesystem(null));
@@ -142,15 +132,6 @@ public class BuckConfigTest {
 
     ProcessResult result = workspace.runBuckCommand("test", "--all");
     result.assertSuccess("buck test --all should exit cleanly");
-  }
-
-  @Test
-  public void testGetDefaultTestTimeoutMillis() throws IOException {
-    assertEquals(0L, FakeBuckConfig.builder().build().getDefaultTestTimeoutMillis());
-
-    Reader reader = new StringReader(Joiner.on('\n').join("[test]", "timeout = 54321"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-    assertEquals(54321L, config.getDefaultTestTimeoutMillis());
   }
 
   @Test
@@ -309,67 +290,6 @@ public class BuckConfigTest {
                         "thread_core_ratio_min_threads", "6")))
             .build();
     assertThat(buckConfig.getDefaultMaximumNumberOfThreads(10), Matchers.equalTo(6));
-  }
-
-  @Test
-  public void testTestThreadUtilizationRatioDefaultValue() {
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(ImmutableMap.of("build", ImmutableMap.of("threads", "10")))
-            .build();
-    assertThat(buckConfig.getNumTestThreads(), Matchers.equalTo(10));
-  }
-
-  @Test
-  public void testTestThreadUtilizationRatioRoundsUp() {
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "build", ImmutableMap.of("threads", "10"),
-                    "test", ImmutableMap.of("thread_utilization_ratio", "0.51")))
-            .build();
-    assertThat(buckConfig.getNumTestThreads(), Matchers.equalTo(6));
-  }
-
-  @Test
-  public void testTestThreadUtilizationRatioGreaterThanZero() {
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "build", ImmutableMap.of("threads", "1"),
-                    "test", ImmutableMap.of("thread_utilization_ratio", "0.00001")))
-            .build();
-    assertThat(buckConfig.getNumTestThreads(), Matchers.equalTo(1));
-  }
-
-  @Test
-  public void testTestThreadUtilizationRatioZero() {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(Matchers.startsWith("thread_utilization_ratio must be greater than zero"));
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "build", ImmutableMap.of("threads", "1"),
-                    "test", ImmutableMap.of("thread_utilization_ratio", "0")))
-            .build();
-    buckConfig.getNumTestThreads();
-  }
-
-  @Test
-  public void testTestThreadUtilizationRatioLessThanZero() {
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(Matchers.startsWith("thread_utilization_ratio must be greater than zero"));
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "build", ImmutableMap.of("threads", "1"),
-                    "test", ImmutableMap.of("thread_utilization_ratio", "-0.00001")))
-            .build();
-    buckConfig.getNumTestThreads();
   }
 
   @Test

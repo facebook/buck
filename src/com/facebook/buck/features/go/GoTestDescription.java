@@ -53,6 +53,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Preconditions;
@@ -278,7 +279,11 @@ public class GoTestDescription
         args.getContacts(),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
-            .orElse(goBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
+            .orElse(
+                goBuckConfig
+                    .getDelegate()
+                    .getView(TestBuckConfig.class)
+                    .getDefaultTestRuleTimeoutMs()),
         ImmutableMap.copyOf(
             Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),
         args.getRunTestSeparately(),
@@ -298,7 +303,11 @@ public class GoTestDescription
       GoPlatform platform) {
     Path packageName = getGoPackageName(graphBuilder, buildTarget, args);
     boolean createResourcesSymlinkTree =
-        goBuckConfig.getDelegate().getExternalTestRunner().isPresent();
+        goBuckConfig
+            .getDelegate()
+            .getView(TestBuckConfig.class)
+            .getExternalTestRunner()
+            .isPresent();
 
     BuildRule testLibrary =
         new NoopBuildRuleWithDeclaredAndExtraDeps(

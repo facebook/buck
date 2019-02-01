@@ -34,7 +34,7 @@ import com.facebook.buck.event.listener.RenderingConsole;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.io.file.LazyPath;
-import com.facebook.buck.test.TestResultSummaryVerbosity;
+import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;

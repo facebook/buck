@@ -35,6 +35,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.PackagedResource;
 import com.google.common.collect.ImmutableCollection.Builder;
 import java.util.Optional;
@@ -91,7 +92,7 @@ public class AndroidInstrumentationTestDescription
         javaOptions.get().getJavaRuntimeLauncher(context.getActionGraphBuilder()),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
-            .orElse(buckConfig.getDefaultTestRuleTimeoutMs()),
+            .orElse(buckConfig.getView(TestBuckConfig.class).getDefaultTestRuleTimeoutMs()),
         getRelativePackagedResource(projectFilesystem, "ddmlib.jar"),
         getRelativePackagedResource(projectFilesystem, "kxml2.jar"),
         getRelativePackagedResource(projectFilesystem, "guava.jar"),

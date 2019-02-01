@@ -143,8 +143,8 @@ import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.log.LogBuckConfig;
-import com.facebook.buck.test.TestConfig;
-import com.facebook.buck.test.TestResultSummaryVerbosity;
+import com.facebook.buck.test.config.TestBuckConfig;
+import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BgProcessKiller;
@@ -916,7 +916,7 @@ public final class Main {
       Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools =
           daemon.map(Daemon::getPersistentWorkerPools);
 
-      TestConfig testConfig = new TestConfig(buckConfig);
+      TestBuckConfig testConfig = buckConfig.getView(TestBuckConfig.class);
       ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
       SuperConsoleConfig superConsoleConfig = new SuperConsoleConfig(buckConfig);

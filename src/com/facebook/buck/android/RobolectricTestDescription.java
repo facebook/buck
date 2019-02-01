@@ -50,6 +50,7 @@ import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.DependencyMode;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.Preconditions;
@@ -237,7 +238,11 @@ public class RobolectricTestDescription
         dummyRDotJava,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
-            .orElse(javaBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
+            .orElse(
+                javaBuckConfig
+                    .getDelegate()
+                    .getView(TestBuckConfig.class)
+                    .getDefaultTestRuleTimeoutMs()),
         args.getTestCaseTimeoutMs(),
         ImmutableMap.copyOf(
             Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder))),

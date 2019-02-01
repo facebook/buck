@@ -48,6 +48,7 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Preconditions;
@@ -278,7 +279,11 @@ public class CxxTestDescription
                   args.getRunTestSeparately().orElse(false),
                   args.getTestRuleTimeoutMs()
                       .map(Optional::of)
-                      .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
+                      .orElse(
+                          cxxBuckConfig
+                              .getDelegate()
+                              .getView(TestBuckConfig.class)
+                              .getDefaultTestRuleTimeoutMs()),
                   cxxBuckConfig.getMaximumTestOutputSize());
           break;
         }
@@ -303,7 +308,11 @@ public class CxxTestDescription
                   args.getRunTestSeparately().orElse(false),
                   args.getTestRuleTimeoutMs()
                       .map(Optional::of)
-                      .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()));
+                      .orElse(
+                          cxxBuckConfig
+                              .getDelegate()
+                              .getView(TestBuckConfig.class)
+                              .getDefaultTestRuleTimeoutMs()));
           break;
         }
       default:

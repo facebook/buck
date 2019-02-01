@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "config",
+    srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/config:config",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+    ],
+)

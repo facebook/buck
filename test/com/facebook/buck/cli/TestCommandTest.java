@@ -28,6 +28,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.impl.FakeTestRule;
 import com.facebook.buck.core.test.rule.TestRule;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -228,7 +229,9 @@ public class TestCommandTest {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("test", ImmutableMap.of("excluded_labels", "e2e")))
             .build();
-    assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
+    assertThat(
+        config.getView(TestBuckConfig.class).getDefaultRawExcludedLabelSelectors(),
+        contains("e2e"));
     TestCommand command = new TestCommand();
 
     CmdLineParserFactory.create(command).parseArgument();
@@ -243,7 +246,9 @@ public class TestCommandTest {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("test", ImmutableMap.of("excluded_labels", "e2e")))
             .build();
-    assertThat(config.getDefaultRawExcludedLabelSelectors(), contains("e2e"));
+    assertThat(
+        config.getView(TestBuckConfig.class).getDefaultRawExcludedLabelSelectors(),
+        contains("e2e"));
     TestCommand command = new TestCommand();
 
     CmdLineParserFactory.create(command).parseArgument("--include", "e2e");
@@ -258,7 +263,9 @@ public class TestCommandTest {
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("test", ImmutableMap.of("excluded_labels", excludedLabel)))
             .build();
-    assertThat(config.getDefaultRawExcludedLabelSelectors(), contains(excludedLabel));
+    assertThat(
+        config.getView(TestBuckConfig.class).getDefaultRawExcludedLabelSelectors(),
+        contains(excludedLabel));
     TestCommand command = new TestCommand();
 
     CmdLineParserFactory.create(command).parseArgument("//example:test");

@@ -73,6 +73,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import com.facebook.buck.swift.SwiftRuntimeNativeLinkable;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.types.Either;
@@ -365,7 +366,11 @@ public class AppleTestDescription
         appleConfig.getTestLogLevel(),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
-            .orElse(appleConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
+            .orElse(
+                appleConfig
+                    .getDelegate()
+                    .getView(TestBuckConfig.class)
+                    .getDefaultTestRuleTimeoutMs()),
         args.getIsUiTest(),
         args.getSnapshotReferenceImagesPath(),
         args.getEnv());

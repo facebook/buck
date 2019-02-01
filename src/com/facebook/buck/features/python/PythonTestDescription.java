@@ -59,6 +59,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Pair;
@@ -443,7 +444,11 @@ public class PythonTestDescription
         additionalCoverageSourcePaths,
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
-            .orElse(cxxBuckConfig.getDelegate().getDefaultTestRuleTimeoutMs()),
+            .orElse(
+                cxxBuckConfig
+                    .getDelegate()
+                    .getView(TestBuckConfig.class)
+                    .getDefaultTestRuleTimeoutMs()),
         args.getContacts());
   }
 

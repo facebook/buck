@@ -41,6 +41,7 @@ import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.Optionals;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -108,7 +109,7 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
             .toSortedSet(Ordering.natural()),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
-            .orElse(buckConfig.getDefaultTestRuleTimeoutMs()),
+            .orElse(buckConfig.getView(TestBuckConfig.class).getDefaultTestRuleTimeoutMs()),
         args.getRunTestSeparately(),
         args.getLabels(),
         args.getType(),

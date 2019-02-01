@@ -43,6 +43,7 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
@@ -309,6 +310,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
+    TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
     ExecutionContext.Builder builder =
         ExecutionContext.builder()
             .setConsole(params.getConsole())
@@ -320,9 +322,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setCellPathResolver(params.getCell().getCellPathResolver())
             .setBuildCellRootPath(params.getCell().getRoot())
             .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
-            .setDefaultTestTimeoutMillis(params.getBuckConfig().getDefaultTestTimeoutMillis())
-            .setInclNoLocationClassesEnabled(
-                params.getBuckConfig().getBooleanValue("test", "incl_no_location_classes", false))
+            .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
+            .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
             .setRuleKeyDiagnosticsMode(
                 params.getBuckConfig().getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
             .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
