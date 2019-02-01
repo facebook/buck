@@ -217,6 +217,8 @@ public class ProjectGenerator {
   private static final Logger LOG = Logger.get(ProjectGenerator.class);
   private static final ImmutableList<String> DEFAULT_CFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_CXXFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_CPPFLAGS = ImmutableList.of();
+  private static final ImmutableList<String> DEFAULT_CXXPPFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_LDFLAGS = ImmutableList.of();
   private static final ImmutableList<String> DEFAULT_SWIFTFLAGS = ImmutableList.of();
   private static final String PRODUCT_NAME = "PRODUCT_NAME";
@@ -1759,6 +1761,7 @@ public class ProjectGenerator {
         Iterable<String> otherCFlags =
             ImmutableList.<String>builder()
                 .addAll(cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS))
+                .addAll(cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS))
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
@@ -1776,6 +1779,7 @@ public class ProjectGenerator {
         Iterable<String> otherCxxFlags =
             ImmutableList.<String>builder()
                 .addAll(cxxBuckConfig.getCxxflags().orElse(DEFAULT_CXXFLAGS))
+                .addAll(cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS))
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
