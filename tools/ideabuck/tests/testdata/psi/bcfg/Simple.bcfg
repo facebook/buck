@@ -1,0 +1,4 @@
+# Comment
+[foo]
+    bar = unquoted
+    baz = "quoted"

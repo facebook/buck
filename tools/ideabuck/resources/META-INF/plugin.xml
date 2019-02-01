@@ -218,6 +218,9 @@
     <lang.parserDefinition
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition"/>
+    <lang.parserDefinition
+      language="Buckconfig"
+      implementationClass="com.facebook.buck.intellij.ideabuck.lang.BcfgParserDefinition"/>
     <lang.syntaxHighlighterFactory
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighterFactory"/>

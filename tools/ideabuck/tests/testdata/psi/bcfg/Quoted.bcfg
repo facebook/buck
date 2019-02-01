@@ -1,0 +1,11 @@
+[foo]
+    quoted = "\x68ello, world!"
+    odd_quotes = "dangling
+    continuations = "\
+          Across \
+          a \
+          great \
+          div\
+          ide"
+
+# The End
