@@ -224,6 +224,9 @@
     <lang.syntaxHighlighterFactory
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighterFactory"/>
+    <lang.syntaxHighlighterFactory
+      language="Buckconfig"
+      implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BcfgSyntaxHighlighterFactory"/>
     <lang.formatter
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckFormattingModelBuilder"/>
@@ -252,6 +255,8 @@
       implementationClass="com.facebook.buck.intellij.ideabuck.annotator.BuckAnnotator"/>
     <colorSettingsPage
       implementation="com.facebook.buck.intellij.ideabuck.config.BuckColorSettingsPage"/>
+    <colorSettingsPage
+      implementation="com.facebook.buck.intellij.ideabuck.config.BcfgColorSettingsPage"/>
     <lang.commenter language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.commenter.BuckCommenter"/>
     <lang.braceMatcher
