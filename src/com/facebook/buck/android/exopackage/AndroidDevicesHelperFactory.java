@@ -33,12 +33,13 @@ public class AndroidDevicesHelperFactory {
       BuckConfig buckConfig,
       AdbOptions adbOptions,
       TargetDeviceOptions targetDeviceOptions) {
+    AdbConfig adbConfig = buckConfig.getView(AdbConfig.class);
     return new AdbHelper(
         adbOptions,
         targetDeviceOptions,
         toolchainProvider,
         contextSupplier,
-        buckConfig.getRestartAdbOnFailure(),
-        buckConfig.getAdbRapidInstallTypes());
+        adbConfig.getRestartAdbOnFailure(),
+        adbConfig.getAdbRapidInstallTypes());
   }
 }

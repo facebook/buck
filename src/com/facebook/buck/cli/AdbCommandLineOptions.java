@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.exopackage.AdbConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.util.environment.Platform;
@@ -46,7 +47,7 @@ public class AdbCommandLineOptions {
   private boolean multiInstallMode;
 
   public AdbOptions getAdbOptions(BuckConfig buckConfig) {
-    if (buckConfig.getMultiInstallMode()) {
+    if (buckConfig.getView(AdbConfig.class).getMultiInstallMode()) {
       multiInstallMode = true;
     }
     AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());

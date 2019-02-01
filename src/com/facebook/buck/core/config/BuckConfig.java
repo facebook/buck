@@ -328,18 +328,6 @@ public class BuckConfig {
         TEST_SECTION_HEADER, "parallel_external_test_spec_computation_enabled", false);
   }
 
-  public boolean getRestartAdbOnFailure() {
-    return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").orElse("true"));
-  }
-
-  public ImmutableList<String> getAdbRapidInstallTypes() {
-    return getListWithoutComments("adb", "rapid_install_types_beta");
-  }
-
-  public boolean getMultiInstallMode() {
-    return getBooleanValue("adb", "multi_install_mode", false);
-  }
-
   public boolean getFlushEventsBeforeExit() {
     return getBooleanValue("daemon", "flush_events_before_exit", false);
   }
