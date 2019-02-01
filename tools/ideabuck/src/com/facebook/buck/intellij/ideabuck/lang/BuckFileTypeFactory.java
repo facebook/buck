@@ -29,6 +29,7 @@ public class BuckFileTypeFactory extends FileTypeFactory {
     fileTypeConsumer.consume(
         BuckFileType.INSTANCE,
         new ExactFileNameMatcher(BuckFileType.DEFAULT_FILENAME),
+        new ExtensionFileNameMatcher(BuckFileType.DEFAULT_FILENAME),
         new ExtensionFileNameMatcher(BuckFileType.DEFAULT_EXTENSION));
   }
 }
