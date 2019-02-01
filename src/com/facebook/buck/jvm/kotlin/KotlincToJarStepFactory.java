@@ -130,10 +130,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
     Path sourcesOutput =
         BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_sources__");
-
-    // So we share the same classes dir with javac, this way generated files
-    // such as META-INF dirs will also be added to the final jar.
-    Path classesOutput = parameters.getOutputPaths().getClassesDir();
+    Path classesOutput =
+        BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_classes__");
 
     Path kaptGeneratedOutput =
         BuildTargetPaths.getAnnotationPath(
@@ -277,6 +275,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                     .build())
             .setSourceFilePaths(javaSourceFiles)
             .build();
+
+    // Generated classes should be part of the output. This way generated files
+    // such as META-INF dirs will also be added to the final jar.
+    steps.add(
+        CopyStep.forDirectory(
+            projectFilesystem, classesOutput, outputDirectory, DirectoryMode.CONTENTS_ONLY));
 
     new JavacToJarStepFactory(javac, finalJavacOptions, extraClassPath)
         .createCompileStep(
