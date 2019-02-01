@@ -18,7 +18,6 @@ package com.facebook.buck.core.config;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -95,7 +94,7 @@ public class FakeBuckConfig {
       CellPathResolver cellPathResolver =
           DefaultCellPathResolver.of(filesystem.getRootPath(), config);
       UnconfiguredBuildTargetFactory buildTargetFactory =
-          new ParsingUnconfiguredBuildTargetFactory(BuildTargetParser.INSTANCE);
+          new ParsingUnconfiguredBuildTargetFactory();
       return new BuckConfig(
           config,
           filesystem,

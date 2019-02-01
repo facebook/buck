@@ -23,7 +23,6 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.ImmutableCell;
 import com.facebook.buck.core.cell.impl.RootCellFactory;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -80,7 +79,7 @@ public class DistributedCellProviderFactory {
                           rootCellResolver, declaredCellNames, currentCellRoot);
                   CellPathResolver cellPathResolverForParser = currentCellResolver;
                   UnconfiguredBuildTargetFactory buildTargetFactory =
-                      new ParsingUnconfiguredBuildTargetFactory(BuildTargetParser.INSTANCE);
+                      new ParsingUnconfiguredBuildTargetFactory();
                   BuckConfig configWithResolver =
                       cellParam
                           .getConfig()

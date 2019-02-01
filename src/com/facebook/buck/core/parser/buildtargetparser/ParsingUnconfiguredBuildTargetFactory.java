@@ -23,11 +23,7 @@ import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 /** A factory that parses a given build target name using the provided {@link BuildTargetParser}. */
 public class ParsingUnconfiguredBuildTargetFactory implements UnconfiguredBuildTargetFactory {
 
-  private final BuildTargetParser buildTargetParser;
-
-  public ParsingUnconfiguredBuildTargetFactory(BuildTargetParser buildTargetParser) {
-    this.buildTargetParser = buildTargetParser;
-  }
+  private final BuildTargetParser buildTargetParser = BuildTargetParser.INSTANCE;
 
   @Override
   public UnconfiguredBuildTarget create(CellPathResolver cellPathResolver, String buildTargetName) {

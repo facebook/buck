@@ -35,7 +35,7 @@ public abstract class BuildTargetPatternParser<T> {
   private static final String BUILD_RULE_SEPARATOR = ":";
 
   private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-      new ParsingUnconfiguredBuildTargetFactory(BuildTargetParser.INSTANCE);
+      new ParsingUnconfiguredBuildTargetFactory();
 
   /**
    * 1. //src/com/facebook/buck/cli:cli will be converted to a single build target 2.
