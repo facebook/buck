@@ -217,7 +217,6 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
                   });
             }
 
-            LOG.verbose("Result cache miss. Computing transformation for requested key: %s", key);
             ImmutableMap.Builder<ComputeKey<?>, Future<ComputeResult>> depResults =
                 ImmutableMap.builder();
             ThrowingSupplier<ImmutableSet<TaskType>, Exception> preliminaryDepsSupplier =
