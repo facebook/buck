@@ -142,6 +142,7 @@ import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
+import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.test.TestConfig;
 import com.facebook.buck.test.TestResultSummaryVerbosity;
 import com.facebook.buck.util.Ansi;
@@ -943,6 +944,8 @@ public final class Main {
           MetadataProviderFactory.minimalMetadataProviderForBuild(
               buildId, executionEnvironment.getUsername());
 
+      LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
+
       try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
@@ -1057,12 +1060,12 @@ public final class Main {
             PerfStatsTracking perfStatsTracking =
                 new PerfStatsTracking(buildEventBus, invocationInfo);
             ProcessTracker processTracker =
-                buckConfig.isProcessTrackerEnabled() && platform != Platform.WINDOWS
+                logBuckConfig.isProcessTrackerEnabled() && platform != Platform.WINDOWS
                     ? new ProcessTracker(
                         buildEventBus,
                         invocationInfo,
                         daemon.isPresent(),
-                        buckConfig.isProcessTrackerDeepEnabled())
+                        logBuckConfig.isProcessTrackerDeepEnabled())
                     : null;
             ArtifactCaches artifactCacheFactory =
                 new ArtifactCaches(
@@ -1169,7 +1172,8 @@ public final class Main {
                   managerScope);
           buildEventBus.register(consoleListener);
 
-          if (buckConfig.isBuckConfigLocalWarningEnabled() && !console.getVerbosity().isSilent()) {
+          if (logBuckConfig.isBuckConfigLocalWarningEnabled()
+              && !console.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
                 rootCell
                     .getAllCells()
@@ -1191,7 +1195,7 @@ public final class Main {
             }
           }
 
-          if (commandMode == CommandMode.RELEASE && buckConfig.isPublicAnnouncementsEnabled()) {
+          if (commandMode == CommandMode.RELEASE && logBuckConfig.isPublicAnnouncementsEnabled()) {
             PublicAnnouncementManager announcementManager =
                 new PublicAnnouncementManager(
                     clock,
@@ -1948,7 +1952,8 @@ public final class Main {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder().add(new LoggingBuildListener());
 
-    if (buckConfig.getBooleanValue("log", "jul_build_log", false)) {
+    LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
+    if (logBuckConfig.isJavaUtilsLoggingEnabled()) {
       eventListenersBuilder.add(new JavaUtilsLoggingBuildListener(projectFilesystem));
     }
 
@@ -1986,7 +1991,7 @@ public final class Main {
             invocationInfo.getLogDirectoryPath(),
             invocationInfo.getBuildId(),
             managerScope));
-    if (buckConfig.isRuleKeyLoggerEnabled()) {
+    if (logBuckConfig.isRuleKeyLoggerEnabled()) {
       eventListenersBuilder.add(
           new RuleKeyLoggerListener(
               projectFilesystem,
@@ -2004,7 +2009,7 @@ public final class Main {
                 new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
             managerScope));
 
-    if (buckConfig.isMachineReadableLoggerEnabled()) {
+    if (logBuckConfig.isMachineReadableLoggerEnabled()) {
       try {
         eventListenersBuilder.add(
             new MachineReadableLoggerListener(
@@ -2025,10 +2030,13 @@ public final class Main {
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
     eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
     eventListenersBuilder.add(new WatchmanDiagnosticEventListener(buckEventBus));
-    if (buckConfig.isCriticalPathAnalysisEnabled()) {
+    if (logBuckConfig.isCriticalPathAnalysisEnabled()) {
       eventListenersBuilder.add(
           new BuildTargetDurationListener(
-              invocationInfo, projectFilesystem, buckConfig.getCriticalPathCount(), managerScope));
+              invocationInfo,
+              projectFilesystem,
+              logBuckConfig.getCriticalPathCount(),
+              managerScope));
     }
     eventListenersBuilder.addAll(commandSpecificEventListeners);
 

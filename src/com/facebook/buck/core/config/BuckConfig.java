@@ -328,41 +328,6 @@ public class BuckConfig {
         TEST_SECTION_HEADER, "parallel_external_test_spec_computation_enabled", false);
   }
 
-  private static final String LOG_SECTION = "log";
-
-  public boolean isPublicAnnouncementsEnabled() {
-    return getBooleanValue(LOG_SECTION, "public_announcements", true);
-  }
-
-  public boolean isProcessTrackerEnabled() {
-    return getBooleanValue(LOG_SECTION, "process_tracker_enabled", true);
-  }
-
-  public boolean isProcessTrackerDeepEnabled() {
-    return getBooleanValue(LOG_SECTION, "process_tracker_deep_enabled", false);
-  }
-
-  public boolean isRuleKeyLoggerEnabled() {
-    return getBooleanValue(LOG_SECTION, "rule_key_logger_enabled", false);
-  }
-
-  public boolean isMachineReadableLoggerEnabled() {
-    return getBooleanValue(LOG_SECTION, "machine_readable_logger_enabled", true);
-  }
-
-  public boolean isCriticalPathAnalysisEnabled() {
-    return getBooleanValue(LOG_SECTION, "critical_path_analysis_enabled", false);
-  }
-
-  public int getCriticalPathCount() {
-    return getInteger(LOG_SECTION, "critical_path_count").orElse(1);
-  }
-
-
-  public boolean isBuckConfigLocalWarningEnabled() {
-    return getBooleanValue(LOG_SECTION, "buckconfig_local_warning_enabled", false);
-  }
-
   public boolean getRestartAdbOnFailure() {
     return Boolean.parseBoolean(getValue("adb", "adb_restart_on_failure").orElse("true"));
   }
