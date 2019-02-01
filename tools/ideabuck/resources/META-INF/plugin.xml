@@ -214,6 +214,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.lang.BuckFileTypeFactory"/>
+    <fileTypeFactory implementation="com.facebook.buck.intellij.ideabuck.lang.BcfgFileTypeFactory"/>
     <lang.parserDefinition
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckParserDefinition"/>
