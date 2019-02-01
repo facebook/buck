@@ -23,8 +23,10 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
@@ -382,6 +384,11 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     return ImmutableList.copyOf(targetPlatforms);
   }
 
+  @Override
+  public TargetConfiguration getTargetConfiguration() {
+    return EmptyTargetConfiguration.INSTANCE;
+  }
+
   public boolean getExcludeIncompatibleTargets() {
     return excludeIncompatibleTargets;
   }
@@ -392,13 +399,16 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
    */
   protected ImmutableSet<BuildTarget> convertArgumentsToBuildTargets(
       CommandRunnerParams params, List<String> arguments) {
+    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+        params.getUnconfiguredBuildTargetFactory();
     return getCommandLineBuildTargetNormalizer(params.getBuckConfig())
         .normalizeAll(arguments)
         .stream()
         .map(
             input ->
-                BuildTargetParser.INSTANCE.parseFullyQualified(
+                unconfiguredBuildTargetFactory.create(
                     params.getCell().getCellPathResolver(), input))
+        .map(unconfiguredBuildTarget -> unconfiguredBuildTarget.configure(getTargetConfiguration()))
         .collect(ImmutableSet.toImmutableSet());
   }
 
