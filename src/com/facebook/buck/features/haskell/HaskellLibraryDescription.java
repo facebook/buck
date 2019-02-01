@@ -500,7 +500,7 @@ public class HaskellLibraryDescription
       @Override
       public Iterable<BuildRule> visit(BuildRule rule) {
         ImmutableSet.Builder<BuildRule> traverse = ImmutableSet.builder();
-        if (rule instanceof HaskellCompileDep || rule instanceof PrebuiltHaskellLibrary) {
+        if (rule instanceof HaskellCompileDep) {
           HaskellCompileDep haskellCompileDep = (HaskellCompileDep) rule;
 
           // Get haddock-interfaces
