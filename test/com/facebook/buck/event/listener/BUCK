@@ -115,6 +115,7 @@ java_library(
 standard_java_test(
     name = "listener",
     deps = [
+        "//src-gen:protobuf",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",

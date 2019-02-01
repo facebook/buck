@@ -1143,7 +1143,8 @@ public final class Main {
                       .getEventListeners(executors, scheduledExecutorPool.get())
                   : ImmutableList.of();
 
-          if (isRemoteExecutionBuild(command, buckConfig)) {
+          final boolean isRemoteExecutionBuild = isRemoteExecutionBuild(command, buckConfig);
+          if (isRemoteExecutionBuild) {
             List<BuckEventListener> remoteExecutionsListeners = Lists.newArrayList();
             if (remoteExecutionListener.isPresent()) {
               remoteExecutionsListeners.add(remoteExecutionListener.get());
