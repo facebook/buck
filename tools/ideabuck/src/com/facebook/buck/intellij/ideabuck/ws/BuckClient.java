@@ -64,10 +64,9 @@ public class BuckClient {
   }
 
   public void connect() {
-    if (isConnected() || mConnecting.get()) {
+    if (isConnected() || mConnecting.getAndSet(true)) {
       return;
     }
-    mConnecting.set(true);
     ApplicationManager.getApplication()
         .executeOnPooledThread(
             new Runnable() {
@@ -75,7 +74,7 @@ public class BuckClient {
               public void run() {
                 try {
                   int port = BuckWSServerPortUtils.getPort(mProject, mProject.getBasePath());
-                  if (port == -1) {
+                  if (port < 0) {
                     String warning =
                         "Your buck server may be turned off, since the Buck daemon is on port "
                             + port
@@ -90,11 +89,7 @@ public class BuckClient {
                   }
                   // Connect to WebServer
                   connectToWebServer("localhost", port);
-                } catch (NumberFormatException e) {
-                  LOG.error(e);
-                } catch (ExecutionException e) {
-                  LOG.error(e);
-                } catch (IOException e) {
+                } catch (NumberFormatException | ExecutionException | IOException e) {
                   LOG.error(e);
                 } catch (RuntimeException e) {
                   LOG.error(e);
