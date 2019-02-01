@@ -79,6 +79,12 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
    */
   public static final String FORMAT_SESSION_ID_VARIABLE_STRING = "{id}";
 
+  /**
+   * Free form string label that can be passed along any Remote Execution session. Useful for
+   * logging.
+   */
+  public static final String RE_SESSION_LABEL_KEY = "re_session_label";
+
   public String getRemoteHost() {
     return getValueWithFallback("remote_host").orElse("localhost");
   }
@@ -278,5 +284,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   /** Whether SuperConsole output of Remote Execution information is enabled. */
   public boolean isSuperConsoleEnabled() {
     return getType() != RemoteExecutionType.NONE;
+  }
+
+  public String getReSessionLabel() {
+    return getDelegate().getValue(SECTION, RE_SESSION_LABEL_KEY).orElse("");
   }
 }
