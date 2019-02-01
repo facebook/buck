@@ -26,7 +26,6 @@ import com.facebook.buck.core.cell.InvalidCellOverrideException;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.module.BuckModuleManager;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -58,7 +57,8 @@ public class LocalCellProviderFactory {
       CellPathResolver rootCellCellPathResolver,
       BuckModuleManager moduleManager,
       ToolchainProviderFactory toolchainProviderFactory,
-      ProjectFilesystemFactory projectFilesystemFactory) {
+      ProjectFilesystemFactory projectFilesystemFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
 
     ImmutableMap<Path, RawConfig> pathToConfigOverrides;
     try {
@@ -130,8 +130,6 @@ public class LocalCellProviderFactory {
                 ProjectFilesystem cellFilesystem =
                     projectFilesystemFactory.createProjectFilesystem(
                         normalizedCellPath, config, embeddedCellBuckOutInfo);
-                UnconfiguredBuildTargetFactory buildTargetFactory =
-                    new ParsingUnconfiguredBuildTargetFactory();
 
                 BuckConfig buckConfig =
                     new BuckConfig(
@@ -141,7 +139,8 @@ public class LocalCellProviderFactory {
                         rootConfig.getPlatform(),
                         rootConfig.getEnvironment(),
                         buildTargetName ->
-                            buildTargetFactory.create(cellPathResolver, buildTargetName));
+                            unconfiguredBuildTargetFactory.create(
+                                cellPathResolver, buildTargetName));
 
                 RuleKeyConfiguration ruleKeyConfiguration =
                     ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);

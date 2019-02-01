@@ -40,6 +40,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
@@ -687,7 +688,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
             rootCellCellPathResolver,
             TestBuckModuleManagerFactory.create(pluginManager),
             toolchainProviderFactory,
-            new DefaultProjectFilesystemFactory())
+            new DefaultProjectFilesystemFactory(),
+            new ParsingUnconfiguredBuildTargetFactory())
         .getCellByPath(filesystem.getRootPath());
   }
 

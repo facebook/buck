@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.module.BuckModuleManager;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -87,6 +88,9 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract TypeCoercerFactory getTypeCoercerFactory();
+
+  @Value.Parameter
+  public abstract UnconfiguredBuildTargetFactory getUnconfiguredBuildTargetFactory();
 
   @Value.Parameter
   public abstract Parser getParser();

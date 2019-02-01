@@ -32,6 +32,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -307,6 +308,7 @@ public class CleanCommandTest {
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(new NoopArtifactCache()),
         typeCoercerFactory,
+        new ParsingUnconfiguredBuildTargetFactory(),
         TestParserFactory.create(buckConfig, knownRuleTypesProvider),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),

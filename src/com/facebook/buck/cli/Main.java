@@ -812,7 +812,8 @@ public final class Main {
                   rootCellCellPathResolver,
                   moduleManager,
                   toolchainProviderFactory,
-                  projectFilesystemFactory)
+                  projectFilesystemFactory,
+                  buildTargetFactory)
               .getCellByPath(filesystem.getRootPath());
 
       Optional<Daemon> daemon = Optional.empty();
@@ -1308,6 +1309,7 @@ public final class Main {
                         parserAndCaches.getVersionedTargetGraphCache(),
                         artifactCacheFactory,
                         parserAndCaches.getTypeCoercerFactory(),
+                        buildTargetFactory,
                         parserAndCaches.getParser(),
                         buildEventBus,
                         platform,

@@ -5,6 +5,7 @@ java_immutables_library(
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/support/cli/args:args",
         "//third-party/java/pf4j:pf4j",
     ],
@@ -58,7 +59,6 @@ java_immutables_library(
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
         "//src/com/facebook/buck/core/module/impl:impl",
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/plugin/impl:impl",
         "//src/com/facebook/buck/core/rulekey/calculator:calculator",
         "//src/com/facebook/buck/core/rulekey/config:config",

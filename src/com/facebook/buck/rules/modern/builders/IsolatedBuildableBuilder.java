@@ -172,7 +172,8 @@ public abstract class IsolatedBuildableBuilder {
             cellPathResolver,
             moduleManager,
             toolchainProviderFactory,
-            projectFilesystemFactory);
+            projectFilesystemFactory,
+            buildTargetFactory);
 
     this.filesystemFunction =
         (cellName) ->

@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.module.BuckModuleManager;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -149,7 +148,8 @@ public class DistBuildState {
       ExecutableFinder executableFinder,
       BuckModuleManager moduleManager,
       PluginManager pluginManager,
-      ProjectFilesystemFactory projectFilesystemFactory)
+      ProjectFilesystemFactory projectFilesystemFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
@@ -182,7 +182,8 @@ public class DistBuildState {
               config,
               projectFilesystem,
               ImmutableMap.copyOf(localBuckConfig.getEnvironment()),
-              cellPathResolver);
+              cellPathResolver,
+              unconfiguredBuildTargetFactory);
 
       Optional<String> cellName =
           remoteCell.getCanonicalName().isEmpty()
@@ -209,7 +210,10 @@ public class DistBuildState {
 
     CellProvider cellProvider =
         DistributedCellProviderFactory.create(
-            Objects.requireNonNull(rootCellParams), cellParams.build(), rootCellPathResolver);
+            Objects.requireNonNull(rootCellParams),
+            cellParams.build(),
+            rootCellPathResolver,
+            unconfiguredBuildTargetFactory);
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));
@@ -246,15 +250,16 @@ public class DistBuildState {
       Config rawConfig,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<String, String> environment,
-      CellPathResolver cellPathResolver) {
-    UnconfiguredBuildTargetFactory buildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
+      CellPathResolver cellPathResolver,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
     return new BuckConfig(
         rawConfig,
         projectFilesystem,
         Architecture.detect(),
         Platform.detect(),
         ImmutableMap.copyOf(environment),
-        buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
+        buildTargetName ->
+            unconfiguredBuildTargetFactory.create(cellPathResolver, buildTargetName));
   }
 
   public ImmutableMap<Integer, Cell> getCells() {

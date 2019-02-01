@@ -200,7 +200,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                 params.getExecutableFinder(),
                 params.getBuckModuleManager(),
                 params.getPluginManager(),
-                params.getProjectFilesystemFactory());
+                params.getProjectFilesystemFactory(),
+                params.getUnconfiguredBuildTargetFactory());
         timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_STATE_LOADING_TIME);
 
         DistBuildConfig distBuildConfig = new DistBuildConfig(state.getRootCell().getBuckConfig());
