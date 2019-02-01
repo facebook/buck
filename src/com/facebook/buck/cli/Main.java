@@ -2360,7 +2360,7 @@ public final class Main {
 
     private final NGServer server;
     private final IdleKiller idleKiller;
-    @Nullable private final SocketLossKiller unixDomainSocketLossKiller;
+    private final @Nullable SocketLossKiller unixDomainSocketLossKiller;
 
     DaemonKillers(ScheduledExecutorService executorService, NGServer server, Path socketPath) {
       this.server = server;
