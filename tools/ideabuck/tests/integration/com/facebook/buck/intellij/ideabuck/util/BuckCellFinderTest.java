@@ -21,6 +21,7 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.registry.Registry;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.testFramework.PlatformTestCase;
@@ -41,6 +42,7 @@ public class BuckCellFinderTest extends PlatformTestCase {
 
   @Override
   protected void setUp() throws Exception {
+    Registry.get("ide.mac.touchbar.use").setValue(false);
     super.setUp();
     tmpDir = this.createTempDirectory();
     Project project = getProject();
