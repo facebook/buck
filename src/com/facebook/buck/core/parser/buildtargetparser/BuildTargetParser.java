@@ -64,7 +64,7 @@ public class BuildTargetParser {
    * @param allowWildCards whether to allow a colon at the end of the target name. This is used when
    *     parsing target name patterns.
    */
-  public BuildTarget parse(
+  BuildTarget parse(
       CellPathResolver cellPathResolver,
       String buildTargetName,
       String buildTargetBaseName,

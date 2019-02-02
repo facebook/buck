@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellPathResolverView;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -126,6 +127,8 @@ public class BuildTargetPatternParserTest {
     CellPathResolver otherCellPathResolver =
         new CellPathResolverView(
             rootCellPathResolver, ImmutableSet.of("root"), filesystem.getPath("other").normalize());
+    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory();
 
     // Root cell visibility from non-root cell
     Stream.of("other//lib:lib", "other//lib:", "other//lib/...")
@@ -136,13 +139,15 @@ public class BuildTargetPatternParserTest {
               assertTrue(
                   "from root matching something in non-root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parse(
-                          otherCellPathResolver, "//lib:lib", "", false)));
+                      unconfiguredBuildTargetFactory
+                          .create(otherCellPathResolver, "//lib:lib")
+                          .configure(EmptyTargetConfiguration.INSTANCE)));
               assertFalse(
                   "from root failing to match something in root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parse(
-                          rootCellPathResolver, "//lib:lib", "", false)));
+                      unconfiguredBuildTargetFactory
+                          .create(rootCellPathResolver, "//lib:lib")
+                          .configure(EmptyTargetConfiguration.INSTANCE)));
             });
 
     // Non-root cell visibility from root cell.
@@ -154,13 +159,15 @@ public class BuildTargetPatternParserTest {
               assertTrue(
                   "from non-root matching something in root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parse(
-                          rootCellPathResolver, "//lib:lib", "", false)));
+                      unconfiguredBuildTargetFactory
+                          .create(rootCellPathResolver, "//lib:lib")
+                          .configure(EmptyTargetConfiguration.INSTANCE)));
               assertFalse(
                   "from non-root matching something in non-root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parse(
-                          otherCellPathResolver, "//lib:lib", "", false)));
+                      unconfiguredBuildTargetFactory
+                          .create(otherCellPathResolver, "//lib:lib")
+                          .configure(EmptyTargetConfiguration.INSTANCE)));
             });
   }
 
