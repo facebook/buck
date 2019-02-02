@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
@@ -243,6 +242,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
+      TargetConfiguration targetConfiguration,
       Object arg,
       Map<String, ?> instance)
       throws ParamInfoException {
@@ -250,7 +250,7 @@ public class ParamInfo implements Comparable<ParamInfo> {
         cellRoots,
         filesystem,
         buildTarget.getBasePath(),
-        EmptyTargetConfiguration.INSTANCE,
+        targetConfiguration,
         arg,
         instance.get(name));
   }

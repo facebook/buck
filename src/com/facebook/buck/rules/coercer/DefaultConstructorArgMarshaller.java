@@ -18,7 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -61,7 +61,13 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     ImmutableMap<String, ParamInfo> allParamInfo =
         CoercedTypeCache.INSTANCE.getAllParamInfo(typeCoercerFactory, dtoClass);
     for (ParamInfo info : allParamInfo.values()) {
-      info.setFromParams(cellRoots, filesystem, buildTarget, dtoAndBuild.getFirst(), instance);
+      info.setFromParams(
+          cellRoots,
+          filesystem,
+          buildTarget,
+          buildTarget.getTargetConfiguration(),
+          dtoAndBuild.getFirst(),
+          instance);
     }
     T dto = dtoAndBuild.getSecond().apply(dtoAndBuild.getFirst());
     collectDeclaredDeps(cellRoots, allParamInfo.get("deps"), declaredDeps, dto);
@@ -108,7 +114,12 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       }
       Object attributeWithSelectableValue =
           createCoercedAttributeWithSelectableValue(
-              cellPathResolver, filesystem, buildTarget, info, attribute);
+              cellPathResolver,
+              filesystem,
+              buildTarget,
+              buildTarget.getTargetConfiguration(),
+              info,
+              attribute);
       Object configuredAttributeValue =
           configureAttributeValue(
               configurationContext,
@@ -129,6 +140,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
+      TargetConfiguration targetConfiguration,
       ParamInfo argumentInfo,
       Object rawValue)
       throws CoerceFailedException {
@@ -148,11 +160,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       coercer = argumentInfo.getTypeCoercer();
     }
     return coercer.coerce(
-        cellRoots,
-        filesystem,
-        buildTarget.getBasePath(),
-        EmptyTargetConfiguration.INSTANCE,
-        rawValue);
+        cellRoots, filesystem, buildTarget.getBasePath(), targetConfiguration, rawValue);
   }
 
   @SuppressWarnings("unchecked")

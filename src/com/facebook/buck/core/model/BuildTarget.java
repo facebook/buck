@@ -29,6 +29,8 @@ public interface BuildTarget extends Comparable<BuildTarget> {
 
   ImmutableSortedSet<Flavor> getFlavors();
 
+  TargetConfiguration getTargetConfiguration();
+
   Optional<String> getCell();
 
   Path getCellPath();

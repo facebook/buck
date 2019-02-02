@@ -18,7 +18,9 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.AbstractBuildTarget;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.log.views.JsonViews;
@@ -50,6 +52,11 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
   @Override
   @Value.NaturalOrder
   public abstract ImmutableSortedSet<Flavor> getFlavors();
+
+  @Override
+  public TargetConfiguration getTargetConfiguration() {
+    return EmptyTargetConfiguration.INSTANCE;
+  }
 
   @Value.Check
   protected void check() {
