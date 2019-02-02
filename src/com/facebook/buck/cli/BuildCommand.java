@@ -29,10 +29,10 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -410,7 +410,12 @@ public class BuildCommand extends AbstractCommand {
         createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
 
     ImmutableSet<BuildTarget> buildTargets =
-        getBuildTargets(params, actionGraph, targetGraphForLocalBuild, justBuildTarget);
+        getBuildTargets(
+            params,
+            actionGraph,
+            targetGraphForLocalBuild,
+            getTargetConfiguration(),
+            justBuildTarget);
 
     ActionAndTargetGraphs actionAndTargetGraphs =
         ActionAndTargetGraphs.builder()
@@ -687,6 +692,7 @@ public class BuildCommand extends AbstractCommand {
       CommandRunnerParams params,
       ActionGraphAndBuilder actionGraphAndBuilder,
       TargetGraphAndBuildTargets targetGraph,
+      TargetConfiguration targetConfiguration,
       @Nullable String justBuildTarget)
       throws ActionGraphCreationException {
     ImmutableSet<BuildTarget> buildTargets = targetGraph.getBuildTargets();
@@ -696,8 +702,10 @@ public class BuildCommand extends AbstractCommand {
 
     // If the user specified an explicit build target, use that.
     BuildTarget explicitTarget =
-        BuildTargetParser.INSTANCE.parseFullyQualified(
-            params.getCell().getCellPathResolver(), justBuildTarget);
+        params
+            .getUnconfiguredBuildTargetFactory()
+            .create(params.getCell().getCellPathResolver(), justBuildTarget)
+            .configure(targetConfiguration);
     Iterable<BuildRule> actionGraphRules =
         Objects.requireNonNull(actionGraphAndBuilder.getActionGraph().getNodes());
     ImmutableSet<BuildTarget> actionGraphTargets =
