@@ -18,7 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -93,8 +94,9 @@ public class TargetNodeParsePipeline
   @Override
   protected BuildTarget getBuildTarget(
       Path root, Optional<String> cellName, Path buildFile, Map<String, Object> from) {
-    return ImmutableBuildTarget.of(
-        UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile));
+    return ImmutableUnconfiguredBuildTarget.of(
+            UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile))
+        .configure(EmptyTargetConfiguration.INSTANCE);
   }
 
   @Override

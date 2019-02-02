@@ -23,7 +23,7 @@ import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -118,7 +118,7 @@ public class RuleKeyLoggerListenerTest {
   private BuildRuleEvent.Finished createBuildEvent() {
     BuildRule rule =
         new FakeBuildRule(
-            ImmutableBuildTarget.of(projectFilesystem.getRootPath(), "//topspin", "//downtheline"));
+            BuildTargetFactory.newInstance(projectFilesystem, "//topspin:downtheline"));
     BuildRuleKeys keys = BuildRuleKeys.of(new RuleKey("1a1a1a"));
     BuildRuleEvent.Started started =
         TestEventConfigurator.configureTestEvent(BuildRuleEvent.started(rule, durationTracker));

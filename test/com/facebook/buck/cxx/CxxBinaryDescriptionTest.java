@@ -23,14 +23,11 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -71,32 +68,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Sets;
 import java.io.File;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class CxxBinaryDescriptionTest {
-
-  //  private TargetGraph prepopulateWithSandbox(BuildTarget libTarget) {
-  //      return TargetGraph.EMPTY;
-  //  }
-
-  private TargetNode<CxxBinaryDescriptionArg> mkSandboxNode(BuildTarget libTarget) {
-    Optional<Map.Entry<Flavor, CxxLibraryDescription.Type>> type =
-        CxxLibraryDescription.getLibType(libTarget);
-    Set<Flavor> flavors = Sets.newHashSet(libTarget.getFlavors());
-    if (type.isPresent()) {
-      flavors.remove(type.get().getKey());
-    }
-    BuildTarget target = ImmutableBuildTarget.of(libTarget.getUnflavoredBuildTarget(), flavors);
-    return new CxxBinaryBuilder(target).build();
-  }
 
   @Test
   public void createBuildRule() {

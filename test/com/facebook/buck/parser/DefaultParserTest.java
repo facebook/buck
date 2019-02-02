@@ -51,7 +51,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
@@ -2007,7 +2006,8 @@ public class DefaultParserTest {
   @Test
   public void readConfigReadsConfig() throws Exception {
     Path buckFile = cellRoot.resolve("BUCK");
-    BuildTarget buildTarget = ImmutableBuildTarget.of(filesystem.getRootPath(), "//", "cake");
+    BuildTarget buildTarget =
+        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//", "cake");
     Files.write(
         buckFile,
         Joiner.on("")

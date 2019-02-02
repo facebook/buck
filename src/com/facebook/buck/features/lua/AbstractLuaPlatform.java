@@ -18,9 +18,10 @@ package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -38,7 +39,9 @@ abstract class AbstractLuaPlatform implements FlavorConvertible {
   public static final String FLAVOR_DOMAIN_NAME = "Lua Platform";
 
   private static final AbstractCxxLibrary SYSTEM_CXX_LIBRARY =
-      new SystemLuaCxxLibrary(ImmutableBuildTarget.of(Paths.get(""), "//system", "lua"));
+      new SystemLuaCxxLibrary(
+          ImmutableUnconfiguredBuildTarget.of(Paths.get(""), "//system", "lua")
+              .configure(EmptyTargetConfiguration.INSTANCE));
 
   @Override
   public Flavor getFlavor() {

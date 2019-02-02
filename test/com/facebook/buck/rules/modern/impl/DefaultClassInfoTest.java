@@ -26,7 +26,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
@@ -114,9 +113,9 @@ public class DefaultClassInfoTest {
 
   @Test
   public void testDerivedClass() {
-    BuildTarget target1 = ImmutableBuildTarget.of(Paths.get("some1"), "//some1", "name");
-    BuildTarget target2 = ImmutableBuildTarget.of(Paths.get("some2"), "//some2", "name");
-    BuildTarget target3 = ImmutableBuildTarget.of(Paths.get("some3"), "//some3", "name");
+    BuildTarget target1 = BuildTargetFactory.newInstance(Paths.get("some1"), "//some1", "name");
+    BuildTarget target2 = BuildTargetFactory.newInstance(Paths.get("some2"), "//some2", "name");
+    BuildTarget target3 = BuildTargetFactory.newInstance(Paths.get("some3"), "//some3", "name");
 
     BuildRule rule1 = new FakeBuildRule(target1, ImmutableSortedSet.of());
     BuildRule rule2 = new FakeBuildRule(target2, ImmutableSortedSet.of());

@@ -20,7 +20,8 @@ import static com.facebook.buck.core.model.UnflavoredBuildTarget.BUILD_TARGET_PR
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -43,8 +44,9 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
   private static final BuildTarget PSEUDO_BUILD_TARGET =
-      ImmutableBuildTarget.of(
-          Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME);
+      ImmutableUnconfiguredBuildTarget.of(
+              Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME)
+          .configure(EmptyTargetConfiguration.INSTANCE);
   private final SwiftPlatform swiftPlatform;
 
   public SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {

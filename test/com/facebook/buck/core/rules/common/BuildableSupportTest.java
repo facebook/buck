@@ -19,8 +19,8 @@ package com.facebook.buck.core.rules.common;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -48,7 +48,7 @@ import org.junit.Test;
 public class BuildableSupportTest {
   @Test
   public void testDeriveDepsFromAddsToRuleKeys() {
-    BuildTarget target = ImmutableBuildTarget.of(Paths.get("some"), "//some", "name");
+    BuildTarget target = BuildTargetFactory.newInstance(Paths.get("some"), "//some", "name");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule rule1 = makeRule(target, filesystem, "rule1");
