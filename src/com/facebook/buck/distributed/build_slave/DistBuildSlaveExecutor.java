@@ -293,7 +293,9 @@ public class DistBuildSlaveExecutor {
                 // Only the client side build needs to synchronize, not the slave.
                 // (as the co-ordinator synchronizes artifacts between slaves).
                 new NoOpRemoteBuildRuleCompletionWaiter(),
-                args.getMetadataProvider()),
+                args.getMetadataProvider(),
+                args.getUnconfiguredBuildTargetFactory(),
+                EmptyTargetConfiguration.INSTANCE),
         args.getExecutorService());
   }
 

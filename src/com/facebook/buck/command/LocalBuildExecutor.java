@@ -30,8 +30,9 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.config.RuleKeyConfig;
@@ -83,6 +84,8 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final Optional<BuildType> buildEngineMode;
   private final Optional<ThriftRuleKeyLogger> ruleKeyLogger;
   private final MetadataProvider metadataProvider;
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private final TargetConfiguration targetConfiguration;
 
   private final CachingBuildEngine cachingBuildEngine;
   private final Build build;
@@ -102,7 +105,9 @@ public class LocalBuildExecutor implements BuildExecutor {
       Optional<BuildType> buildEngineMode,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger,
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
-      MetadataProvider metadataProvider) {
+      MetadataProvider metadataProvider,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      TargetConfiguration targetConfiguration) {
     this.actionGraphAndBuilder = actionGraphAndBuilder;
     this.executorService = executorService;
     this.args = args;
@@ -112,6 +117,8 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.ruleKeyCacheScope = ruleKeyRuleKeyCacheScope;
     this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
     this.metadataProvider = metadataProvider;
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+    this.targetConfiguration = targetConfiguration;
 
     // Init resources.
     this.cachingBuildEngine = createCachingBuildEngine();
@@ -135,8 +142,9 @@ public class LocalBuildExecutor implements BuildExecutor {
         FluentIterable.from(targetsToBuild)
             .transform(
                 targetName ->
-                    BuildTargetParser.INSTANCE.parseFullyQualified(
-                        args.getRootCell().getCellPathResolver(), targetName)),
+                    unconfiguredBuildTargetFactory
+                        .create(args.getRootCell().getCellPathResolver(), targetName)
+                        .configure(targetConfiguration)),
         pathToBuildReport);
   }
 
@@ -200,8 +208,9 @@ public class LocalBuildExecutor implements BuildExecutor {
         Iterables.transform(
             targetsToBuild,
             targetName ->
-                BuildTargetParser.INSTANCE.parseFullyQualified(
-                    args.getRootCell().getCellPathResolver(), targetName)));
+                unconfiguredBuildTargetFactory
+                    .create(args.getRootCell().getCellPathResolver(), targetName)
+                    .configure(targetConfiguration)));
   }
 
   private CachingBuildEngine createCachingBuildEngine() {
