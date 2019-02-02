@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -34,9 +35,13 @@ import java.util.stream.Stream;
 public class QueryCoercer implements TypeCoercer<Query> {
 
   private final TypeCoercerFactory typeCoercerFactory;
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
 
-  public QueryCoercer(TypeCoercerFactory typeCoercerFactory) {
+  public QueryCoercer(
+      TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
     this.typeCoercerFactory = typeCoercerFactory;
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 
   private Stream<BuildTarget> extractBuildTargets(CellPathResolver cellPathResolver, Query query) {
@@ -46,6 +51,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
             Optional.empty(),
             typeCoercerFactory,
             cellPathResolver,
+            unconfiguredBuildTargetFactory,
             query.getBaseName().orElse(""),
             ImmutableSet.of());
     QueryExpression parsedExp;

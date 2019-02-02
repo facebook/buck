@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
@@ -68,6 +69,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
+            new ParsingUnconfiguredBuildTargetFactory(),
             target.getBaseName(),
             ImmutableSet.of());
     try {
@@ -87,6 +89,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
+            new ParsingUnconfiguredBuildTargetFactory(),
             target.getBaseName(),
             ImmutableSet.of());
 
@@ -116,6 +119,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             Optional.of(TargetGraph.EMPTY),
             TYPE_COERCER_FACTORY,
             cellRoots,
+            new ParsingUnconfiguredBuildTargetFactory(),
             target.getBaseName(),
             ImmutableSet.of(dep1, dep2));
 
@@ -157,6 +161,7 @@ public class GraphEnhancementQueryEnvironmentTest {
         Optional.of(targetGraph),
         TYPE_COERCER_FACTORY,
         cellRoots,
+        new ParsingUnconfiguredBuildTargetFactory(),
         libNode.getBuildTarget().getBaseName(),
         ImmutableSet.of(sublibNode.getBuildTarget()));
   }

@@ -20,6 +20,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.query.NoopQueryEvaluator;
 import com.facebook.buck.query.QueryException;
@@ -39,6 +41,8 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
     implements MacroExpander<T, QueryMacroExpander.QueryResults> {
 
   private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
+  private static final UnconfiguredBuildTargetFactory UNCONFIGURED_BUILD_TARGET_FACTORY =
+      new ParsingUnconfiguredBuildTargetFactory();
 
   private Optional<TargetGraph> targetGraph;
 
@@ -58,6 +62,7 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             targetGraph,
             TYPE_COERCER_FACTORY,
             cellNames,
+            UNCONFIGURED_BUILD_TARGET_FACTORY,
             target.getBaseName(),
             ImmutableSet.of());
     try {

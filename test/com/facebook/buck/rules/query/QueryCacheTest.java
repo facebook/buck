@@ -27,6 +27,8 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -106,6 +108,7 @@ public class QueryCacheTest {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
+            new ParsingUnconfiguredBuildTargetFactory(),
             targetA.getBaseName(),
             ImmutableSet.of());
 
@@ -163,6 +166,8 @@ public class QueryCacheTest {
             JavaLibraryBuilder.createBuilder(targetB).build());
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory();
 
     GraphEnhancementQueryEnvironment fooEnv =
         new GraphEnhancementQueryEnvironment(
@@ -170,6 +175,7 @@ public class QueryCacheTest {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
+            unconfiguredBuildTargetFactory,
             fooTarget.getBaseName(),
             foo.getDeclaredDeps());
 
@@ -179,6 +185,7 @@ public class QueryCacheTest {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             TestCellPathResolver.get(new FakeProjectFilesystem()),
+            unconfiguredBuildTargetFactory,
             barTarget.getBaseName(),
             bar.getDeclaredDeps());
 

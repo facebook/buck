@@ -21,6 +21,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
@@ -80,6 +82,8 @@ import java.util.regex.Pattern;
  */
 public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+      new ParsingUnconfiguredBuildTargetFactory();
   private final PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode;
 
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
@@ -126,7 +130,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
-    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer(this);
+    TypeCoercer<Query> queryTypeCoercer = new QueryCoercer(this, unconfiguredBuildTargetFactory);
     TypeCoercer<ImmutableList<BuildTarget>> buildTargetsTypeCoercer =
         new ListTypeCoercer<>(buildTargetTypeCoercer);
     nonParameterizedTypeCoercers =

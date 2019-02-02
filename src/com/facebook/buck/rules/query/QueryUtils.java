@@ -21,6 +21,8 @@ import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
@@ -44,6 +46,8 @@ import java.util.stream.Stream;
 public final class QueryUtils {
 
   private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
+  private static final UnconfiguredBuildTargetFactory UNCONFIGURED_BUILD_TARGET_FACTORY =
+      new ParsingUnconfiguredBuildTargetFactory();
 
   private QueryUtils() {
     // This class cannot be instantiated
@@ -107,6 +111,7 @@ public final class QueryUtils {
             Optional.of(targetGraph),
             TYPE_COERCER_FACTORY,
             cellRoots,
+            UNCONFIGURED_BUILD_TARGET_FACTORY,
             target.getBaseName(),
             declaredDeps);
     try {
@@ -136,6 +141,7 @@ public final class QueryUtils {
             Optional.empty(),
             TYPE_COERCER_FACTORY,
             cellPathResolver,
+            UNCONFIGURED_BUILD_TARGET_FACTORY,
             targetBaseName,
             ImmutableSet.of());
     QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
