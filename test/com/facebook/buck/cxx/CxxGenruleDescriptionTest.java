@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -208,6 +209,7 @@ public class CxxGenruleDescriptionTest {
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
             POOL,
             new DefaultTypeCoercerFactory(),
+            new ParsingUnconfiguredBuildTargetFactory(),
             20);
     CxxGenruleDescriptionArg arg =
         extractArg(
@@ -244,6 +246,7 @@ public class CxxGenruleDescriptionTest {
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
             POOL,
             new DefaultTypeCoercerFactory(),
+            new ParsingUnconfiguredBuildTargetFactory(),
             20);
     CxxGenruleDescriptionArg arg =
         extractArg(

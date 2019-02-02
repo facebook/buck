@@ -31,6 +31,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
@@ -86,6 +87,7 @@ public class IjProjectCommandHelper {
   private final ActionGraphProvider actionGraphProvider;
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   private final Cell cell;
   private final IjProjectConfig projectConfig;
   private final boolean enableParserProfiling;
@@ -104,6 +106,7 @@ public class IjProjectCommandHelper {
       ActionGraphProvider actionGraphProvider,
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Cell cell,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
@@ -131,6 +134,7 @@ public class IjProjectCommandHelper {
     this.argsParser = argsParser;
 
     this.projectGeneratorParameters = projectGeneratorParameters;
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
@@ -408,6 +412,7 @@ public class IjProjectCommandHelper {
               buckEventBus,
               buckConfig,
               typeCoercerFactory,
+              unconfiguredBuildTargetFactory,
               explicitTestTargets);
     }
     return targetGraphAndTargets;

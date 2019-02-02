@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphAndTargets;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
@@ -107,6 +108,7 @@ public class XCodeProjectCommandHelper {
   private final BuckConfig buckConfig;
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   private final Cell cell;
   private final ImmutableSet<Flavor> appleCxxFlavors;
   private final RuleKeyConfiguration ruleKeyConfiguration;
@@ -138,6 +140,7 @@ public class XCodeProjectCommandHelper {
       BuckConfig buckConfig,
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Cell cell,
       RuleKeyConfiguration ruleKeyConfiguration,
       Console console,
@@ -166,6 +169,7 @@ public class XCodeProjectCommandHelper {
     this.buckConfig = buckConfig;
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.cell = cell;
     this.appleCxxFlavors = appleCxxFlavors;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
@@ -743,6 +747,7 @@ public class XCodeProjectCommandHelper {
               buckEventBus,
               buckConfig,
               typeCoercerFactory,
+              unconfiguredBuildTargetFactory,
               explicitTestTargets);
     }
     return targetGraphAndTargets;

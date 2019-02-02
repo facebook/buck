@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
@@ -35,16 +36,19 @@ import java.util.concurrent.TimeUnit;
 public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTargetGraphBuilder {
 
   protected final TypeCoercerFactory typeCoercerFactory;
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   protected final TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets;
   protected final long timeout;
   protected final TimeUnit timeUnit;
 
   protected AbstractVersionedTargetGraphBuilder(
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
       long timeout,
       TimeUnit timeUnit) {
     this.typeCoercerFactory = typeCoercerFactory;
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.unversionedTargetGraphAndBuildTargets = unversionedTargetGraphAndBuildTargets;
     this.timeout = timeout;
     this.timeUnit = timeUnit;
@@ -108,7 +112,8 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
   protected TargetNodeTranslator getTargetNodeTranslator(
       TargetNode<?> root, ImmutableMap<BuildTarget, Version> selectedVersions) {
     // Build a target translator object to translate build targets.
-    ImmutableList<TargetTranslator<?>> translators = ImmutableList.of(new QueryTargetTranslator());
+    ImmutableList<TargetTranslator<?>> translators =
+        ImmutableList.of(new QueryTargetTranslator(unconfiguredBuildTargetFactory));
     return new TargetNodeTranslator(typeCoercerFactory, translators) {
 
       private final LoadingCache<BuildTarget, Optional<BuildTarget>> cache =

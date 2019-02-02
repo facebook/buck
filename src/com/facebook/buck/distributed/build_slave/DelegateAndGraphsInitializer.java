@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
@@ -126,6 +127,7 @@ public class DelegateAndGraphsInitializer {
                       args.getState().getRemoteRootCellConfig(),
                       new DefaultTypeCoercerFactory(
                           PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
+                      new ParsingUnconfiguredBuildTargetFactory(),
                       targetGraphAndBuildTargets)
                   .getTargetGraph();
         } else {

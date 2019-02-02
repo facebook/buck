@@ -22,6 +22,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack;
 import com.facebook.buck.core.graph.transformation.executor.impl.JavaExecutorBackedDefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEvent;
@@ -55,6 +56,7 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       ForkJoinPool pool,
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       VersionTargetGraphMode versionTargetGraphMode,
       Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
@@ -88,6 +90,7 @@ public class VersionedTargetGraphCache {
           targetGraphAndBuildTargets,
           pool,
           typeCoercerFactory,
+          unconfiguredBuildTargetFactory,
           timeoutSeconds);
     } else {
       try (DepsAwareExecutor<? super ComputeResult, ?> executor =
@@ -99,6 +102,7 @@ public class VersionedTargetGraphCache {
                 targetGraphAndBuildTargets,
                 executor,
                 typeCoercerFactory,
+                unconfiguredBuildTargetFactory,
                 timeoutSeconds);
         return versionedTargetGraph;
       }
@@ -128,6 +132,7 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       ForkJoinPool pool,
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       VersionTargetGraphMode versionTargetGraphMode,
       Map<VersionTargetGraphMode, Double> versionTargetGraphModeProbabilities,
       long timeoutSeconds,
@@ -168,6 +173,7 @@ public class VersionedTargetGraphCache {
             versionUniverses,
             pool,
             typeCoercerFactory,
+            unconfiguredBuildTargetFactory,
             versionTargetGraphMode,
             versionTargetGraphModeProbabilities,
             timeoutSeconds,
@@ -188,6 +194,7 @@ public class VersionedTargetGraphCache {
   public VersionedTargetGraphCacheResult getVersionedTargetGraph(
       BuckEventBus eventBus,
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       ForkJoinPool pool,
@@ -211,6 +218,7 @@ public class VersionedTargetGraphCache {
                   versionUniverses,
                   pool,
                   typeCoercerFactory,
+                  unconfiguredBuildTargetFactory,
                   versionBuckConfig.getVersionTargetGraphMode(),
                   versionBuckConfig.getVersionTargetGraphModeGroups(),
                   versionBuckConfig.getVersionTargetGraphTimeoutSeconds(),
@@ -245,6 +253,7 @@ public class VersionedTargetGraphCache {
       BuckEventBus eventBus,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ForkJoinPool pool,
       CacheStatsTracker statsTracker)
@@ -254,6 +263,7 @@ public class VersionedTargetGraphCache {
         versionUniverses,
         pool,
         typeCoercerFactory,
+        unconfiguredBuildTargetFactory,
         VersionTargetGraphMode.DISABLED,
         ImmutableMap.of(),
         20,

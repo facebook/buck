@@ -108,6 +108,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             params.getBuckConfig(),
             params.getVersionedTargetGraphCache(),
             params.getTypeCoercerFactory(),
+            params.getUnconfiguredBuildTargetFactory(),
             params.getCell(),
             params.getRuleKeyConfiguration(),
             params.getConsole(),

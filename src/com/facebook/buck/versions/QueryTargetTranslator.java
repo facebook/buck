@@ -18,7 +18,8 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -29,6 +30,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class QueryTargetTranslator implements TargetTranslator<Query> {
+
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+
+  public QueryTargetTranslator(UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+  }
 
   @Override
   public Class<Query> getTranslatableClass() {
@@ -74,8 +81,9 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     while (matcher.find()) {
       builder.append(queryString, lastEnd, matcher.start());
       BuildTarget target =
-          BuildTargetParser.INSTANCE.parse(
-              cellPathResolver, matcher.group(), targetBaseName, false);
+          unconfiguredBuildTargetFactory
+              .createForBaseName(cellPathResolver, targetBaseName, matcher.group())
+              .configure(EmptyTargetConfiguration.INSTANCE);
       Optional<BuildTarget> translated =
           translator.translate(cellPathResolver, targetBaseName, target);
       builder.append(translated.orElse(target).getFullyQualifiedName());

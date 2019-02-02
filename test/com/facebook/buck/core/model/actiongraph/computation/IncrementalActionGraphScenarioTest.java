@@ -39,6 +39,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -378,6 +379,7 @@ public class IncrementalActionGraphScenarioTest {
                     unversionedTargetGraph, ImmutableSet.of(binaryTarget, binaryTarget2)),
                 new ForkJoinPool(),
                 new DefaultTypeCoercerFactory(),
+                new ParsingUnconfiguredBuildTargetFactory(),
                 20)
             .getTargetGraph();
     ActionGraphAndBuilder result = createActionGraph(versionedTargetGraph);
@@ -550,6 +552,7 @@ public class IncrementalActionGraphScenarioTest {
                     unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
                 new ForkJoinPool(),
                 new DefaultTypeCoercerFactory(),
+                new ParsingUnconfiguredBuildTargetFactory(),
                 20)
             .getTargetGraph();
 
@@ -575,6 +578,7 @@ public class IncrementalActionGraphScenarioTest {
                     newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
                 new ForkJoinPool(),
                 new DefaultTypeCoercerFactory(),
+                new ParsingUnconfiguredBuildTargetFactory(),
                 20)
             .getTargetGraph();
 

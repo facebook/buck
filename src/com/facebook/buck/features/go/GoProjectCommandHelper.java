@@ -409,6 +409,7 @@ public class GoProjectCommandHelper {
               buckEventBus,
               buckConfig,
               params.getTypeCoercerFactory(),
+              params.getUnconfiguredBuildTargetFactory(),
               explicitTestTargets);
     }
     return targetGraphAndTargets;

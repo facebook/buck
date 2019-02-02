@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.base.Charsets;
@@ -85,10 +86,12 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
       VersionSelector versionSelector,
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       long timeoutSeconds) {
 
     super(
         typeCoercerFactory,
+        unconfiguredBuildTargetFactory,
         unversionedTargetGraphAndBuildTargets,
         timeoutSeconds,
         TimeUnit.SECONDS);
@@ -220,6 +223,7 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
       TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
       ForkJoinPool pool,
       TypeCoercerFactory typeCoercerFactory,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       long timeoutSeconds)
       throws VersionException, TimeoutException, InterruptedException {
     return unversionedTargetGraphAndBuildTargets.withTargetGraph(
@@ -228,6 +232,7 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
                 versionSelector,
                 unversionedTargetGraphAndBuildTargets,
                 typeCoercerFactory,
+                unconfiguredBuildTargetFactory,
                 timeoutSeconds)
             .build());
   }

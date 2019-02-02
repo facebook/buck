@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.Query;
@@ -41,7 +42,8 @@ public class QueryTargetTranslatorTest {
     BuildTarget b = BuildTargetFactory.newInstance("//:b");
     FixedTargetNodeTranslator translator =
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of(a, b));
-    QueryTargetTranslator queryTranslator = new QueryTargetTranslator();
+    QueryTargetTranslator queryTranslator =
+        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetFactory());
     assertThat(
         queryTranslator.translateTargets(
             CELL_PATH_RESOLVER, "", translator, Query.of("deps(//:a)")),
@@ -52,7 +54,8 @@ public class QueryTargetTranslatorTest {
   public void noTargets() {
     FixedTargetNodeTranslator translator =
         new FixedTargetNodeTranslator(new DefaultTypeCoercerFactory(), ImmutableMap.of());
-    QueryTargetTranslator queryTranslator = new QueryTargetTranslator();
+    QueryTargetTranslator queryTranslator =
+        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetFactory());
     assertThat(
         queryTranslator.translateTargets(
             CELL_PATH_RESOLVER, "", translator, Query.of("$declared_deps")),
