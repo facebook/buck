@@ -52,17 +52,6 @@ public class BuildTargetParser {
   }
 
   /**
-   * Creates a {@link BuildTarget} with the given fully qualified target name.
-   *
-   * @param buildTargetName a fully-qualified build target name.
-   * @see #parse(CellPathResolver, String, String, boolean)
-   */
-  public BuildTarget parseFullyQualified(
-      CellPathResolver cellPathResolver, String buildTargetName) {
-    return parse(cellPathResolver, buildTargetName, "", false);
-  }
-
-  /**
    * Creates {@link BuildTarget} using a target name.
    *
    * <p>The target name can either be fully-qualified or relative. Relative target names are

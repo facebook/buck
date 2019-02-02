@@ -45,7 +45,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseRootRule() {
     // Parse "//:fb4a" with the BuildTargetParser and test all of its observers.
-    BuildTarget buildTarget = parser.parseFullyQualified(createCellRoots(null), "//:fb4a");
+    BuildTarget buildTarget = parser.parse(createCellRoots(null), "//:fb4a", "", false);
     assertEquals("fb4a", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
     assertEquals(Paths.get(""), buildTarget.getBasePath());
@@ -54,7 +54,7 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseRuleWithFlavors() {
-    BuildTarget buildTarget = parser.parseFullyQualified(createCellRoots(null), "//:lib#foo,bar");
+    BuildTarget buildTarget = parser.parse(createCellRoots(null), "//:lib#foo,bar", "", false);
     // Note the sort order.
     assertEquals("lib#bar,foo", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
@@ -68,7 +68,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseValidTargetWithDots() {
     BuildTarget buildTarget =
-        parser.parseFullyQualified(createCellRoots(null), "//..a/b../a...b:assets");
+        parser.parse(createCellRoots(null), "//..a/b../a...b:assets", "", false);
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//..a/b../a...b", buildTarget.getBaseName());
     assertEquals(Paths.get("..a", "b..", "a...b"), buildTarget.getBasePath());
@@ -80,7 +80,7 @@ public class BuildTargetParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage(" . ");
     exception.expectMessage("(found //.:assets)");
-    parser.parseFullyQualified(createCellRoots(null), "//.:assets");
+    parser.parse(createCellRoots(null), "//.:assets", "", false);
   }
 
   @Test
@@ -88,7 +88,7 @@ public class BuildTargetParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage(" .. ");
     exception.expectMessage("(found //../facebookorca:assets)");
-    parser.parseFullyQualified(createCellRoots(null), "//../facebookorca:assets");
+    parser.parse(createCellRoots(null), "//../facebookorca:assets", "", false);
   }
 
   @Test
@@ -96,7 +96,7 @@ public class BuildTargetParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage("absolute");
     exception.expectMessage("(found ///facebookorca:assets)");
-    parser.parseFullyQualified(createCellRoots(null), "///facebookorca:assets");
+    parser.parse(createCellRoots(null), "///facebookorca:assets", "", false);
   }
 
   @Test
@@ -104,13 +104,13 @@ public class BuildTargetParserTest {
     exception.expect(BuildTargetParseException.class);
     exception.expectMessage("//");
     exception.expectMessage("(found //facebook//orca:assets)");
-    parser.parseFullyQualified(createCellRoots(null), "//facebook//orca:assets");
+    parser.parse(createCellRoots(null), "//facebook//orca:assets", "", false);
   }
 
   @Test
   public void testParseTrailingColon() {
     try {
-      parser.parseFullyQualified(createCellRoots(null), "//facebook/orca:assets:");
+      parser.parse(createCellRoots(null), "//facebook/orca:assets:", "", false);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals("//facebook/orca:assets: cannot end with a colon", e.getMessage());
@@ -120,7 +120,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseNoColon() {
     try {
-      parser.parseFullyQualified(createCellRoots(null), "//facebook/orca/assets");
+      parser.parse(createCellRoots(null), "//facebook/orca/assets", "", false);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals(
@@ -131,7 +131,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseMultipleColons() {
     try {
-      parser.parseFullyQualified(createCellRoots(null), "//facebook:orca:assets");
+      parser.parse(createCellRoots(null), "//facebook:orca:assets", "", false);
       fail("parse() should throw an exception");
     } catch (BuildTargetParseException e) {
       assertEquals(
@@ -142,7 +142,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseFullyQualified() {
     BuildTarget buildTarget =
-        parser.parseFullyQualified(createCellRoots(null), "//facebook/orca:assets");
+        parser.parse(createCellRoots(null), "//facebook/orca:assets", "", false);
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
   }
@@ -173,7 +173,7 @@ public class BuildTargetParserTest {
             Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "localreponame//foo/bar:baz";
 
-    BuildTarget buildTarget = parser.parseFullyQualified(cellRoots, targetStr);
+    BuildTarget buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
     assertTrue(buildTarget.getCell().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
@@ -187,7 +187,7 @@ public class BuildTargetParserTest {
             Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "@localreponame//foo/bar:baz";
 
-    BuildTarget buildTarget = parser.parseFullyQualified(cellRoots, targetStr);
+    BuildTarget buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
     assertTrue(buildTarget.getCell().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
@@ -197,13 +197,13 @@ public class BuildTargetParserTest {
   public void testParseFailsWithRepoNameAndRelativeTarget() throws NoSuchBuildTargetException {
 
     String invalidTargetStr = "myRepo:baz";
-    parser.parseFullyQualified(createCellRoots(null), invalidTargetStr);
+    parser.parse(createCellRoots(null), invalidTargetStr, "", false);
   }
 
   @Test
   public void testParseWithBackslash() {
     String backslashStr = "//com\\microsoft\\windows:something";
-    BuildTarget buildTarget = parser.parseFullyQualified(createCellRoots(null), backslashStr);
+    BuildTarget buildTarget = parser.parse(createCellRoots(null), backslashStr, "", false);
     assertEquals("//com/microsoft/windows", buildTarget.getBaseName());
   }
 
@@ -221,6 +221,6 @@ public class BuildTargetParserTest {
     exception.expectMessage("Unknown cell: lclreponame");
     // And the suggestion
     exception.expectMessage("localreponame");
-    parser.parseFullyQualified(cellRoots, "lclreponame//facebook/orca:assets");
+    parser.parse(cellRoots, "lclreponame//facebook/orca:assets", "", false);
   }
 }

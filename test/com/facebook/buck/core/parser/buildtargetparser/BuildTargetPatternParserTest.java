@@ -136,13 +136,13 @@ public class BuildTargetPatternParserTest {
               assertTrue(
                   "from root matching something in non-root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parseFullyQualified(
-                          otherCellPathResolver, "//lib:lib")));
+                      BuildTargetParser.INSTANCE.parse(
+                          otherCellPathResolver, "//lib:lib", "", false)));
               assertFalse(
                   "from root failing to match something in root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parseFullyQualified(
-                          rootCellPathResolver, "//lib:lib")));
+                      BuildTargetParser.INSTANCE.parse(
+                          rootCellPathResolver, "//lib:lib", "", false)));
             });
 
     // Non-root cell visibility from root cell.
@@ -154,13 +154,13 @@ public class BuildTargetPatternParserTest {
               assertTrue(
                   "from non-root matching something in root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parseFullyQualified(
-                          rootCellPathResolver, "//lib:lib")));
+                      BuildTargetParser.INSTANCE.parse(
+                          rootCellPathResolver, "//lib:lib", "", false)));
               assertFalse(
                   "from non-root matching something in non-root: " + pattern,
                   pattern.matches(
-                      BuildTargetParser.INSTANCE.parseFullyQualified(
-                          otherCellPathResolver, "//lib:lib")));
+                      BuildTargetParser.INSTANCE.parse(
+                          otherCellPathResolver, "//lib:lib", "", false)));
             });
   }
 

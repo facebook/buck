@@ -27,8 +27,7 @@ public class ParsingUnconfiguredBuildTargetFactory implements UnconfiguredBuildT
 
   @Override
   public UnconfiguredBuildTarget create(CellPathResolver cellPathResolver, String buildTargetName) {
-    BuildTarget buildTarget =
-        buildTargetParser.parseFullyQualified(cellPathResolver, buildTargetName);
+    BuildTarget buildTarget = buildTargetParser.parse(cellPathResolver, buildTargetName, "", false);
     return ImmutableUnconfiguredBuildTarget.of(
         buildTarget.getUnflavoredBuildTarget(), buildTarget.getFlavors());
   }
