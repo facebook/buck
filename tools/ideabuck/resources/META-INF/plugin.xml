@@ -12,7 +12,8 @@
   <change-notes><![CDATA[
 <h3>3.7</h3>
 <ul>
-  <li></li>
+  <li>Add editor support for <code>.buckconfig</code> files, including
+      <code>.buckconfig.local</code> and <code>*.bcfg</code> files.</li>
 </ul>
 <h3>3.6.1</h3>
 <ul>

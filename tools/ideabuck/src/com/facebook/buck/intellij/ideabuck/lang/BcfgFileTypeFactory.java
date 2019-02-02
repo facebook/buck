@@ -16,6 +16,7 @@
 
 package com.facebook.buck.intellij.ideabuck.lang;
 
+import com.intellij.openapi.fileTypes.ExactFileNameMatcher;
 import com.intellij.openapi.fileTypes.ExtensionFileNameMatcher;
 import com.intellij.openapi.fileTypes.FileTypeConsumer;
 import com.intellij.openapi.fileTypes.FileTypeFactory;
@@ -29,6 +30,7 @@ public class BcfgFileTypeFactory extends FileTypeFactory {
     fileTypeConsumer.consume(
         BcfgFileType.INSTANCE,
         new ExtensionFileNameMatcher(BcfgFileType.DEFAULT_EXTENSION),
+        new ExactFileNameMatcher(".buckconfig.local"),
         new ExtensionFileNameMatcher("bcfg"));
   }
 }
