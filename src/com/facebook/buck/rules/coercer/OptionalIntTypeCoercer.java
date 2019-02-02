@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 import java.util.OptionalInt;
@@ -34,6 +35,7 @@ public class OptionalIntTypeCoercer extends LeafTypeCoercer<OptionalInt> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object == null) {

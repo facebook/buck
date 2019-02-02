@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.QueryMacro;
@@ -59,6 +60,7 @@ class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1) {
@@ -66,6 +68,7 @@ class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M>
           String.format("expected exactly one argument (found %d)", args.size()));
     }
     return factory.apply(
-        queryCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, args.get(0)));
+        queryCoercer.coerce(
+            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args.get(0)));
   }
 }

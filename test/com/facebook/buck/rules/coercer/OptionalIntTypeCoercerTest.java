@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -62,6 +63,7 @@ public class OptionalIntTypeCoercerTest {
   }
 
   private OptionalInt coerce(Object object) throws CoerceFailedException {
-    return coercer.coerce(cellRoots, filesystem, basePath, object);
+    return coercer.coerce(
+        cellRoots, filesystem, basePath, EmptyTargetConfiguration.INSTANCE, object);
   }
 }

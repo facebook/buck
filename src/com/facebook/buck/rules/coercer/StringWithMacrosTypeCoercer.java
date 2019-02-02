@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroFinderAutomaton;
 import com.facebook.buck.core.macros.MacroMatchResult;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
@@ -91,6 +92,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       String blob)
       throws CoerceFailedException {
 
@@ -141,7 +143,9 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
         // Delegate to the macro coercers to parse the macro..
         Macro macro;
         try {
-          macro = coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, args);
+          macro =
+              coercer.coerce(
+                  cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args);
         } catch (CoerceFailedException e) {
           throw new CoerceFailedException(
               String.format(
@@ -170,12 +174,14 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<StringWithMacros
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
-    return parse(cellRoots, filesystem, pathRelativeToProjectRoot, (String) object);
+    return parse(
+        cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, (String) object);
   }
 
   @Override

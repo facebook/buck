@@ -27,6 +27,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -163,7 +164,12 @@ public class MavenCoordinatesMacroExpanderTest {
         (StringWithMacros)
             new DefaultTypeCoercerFactory()
                 .typeCoercerForType(StringWithMacros.class)
-                .coerce(cellPathResolver, filesystem, rule.getBuildTarget().getBasePath(), input);
+                .coerce(
+                    cellPathResolver,
+                    filesystem,
+                    rule.getBuildTarget().getBasePath(),
+                    EmptyTargetConfiguration.INSTANCE,
+                    input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
     return Arg.stringify(
         arg, DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));

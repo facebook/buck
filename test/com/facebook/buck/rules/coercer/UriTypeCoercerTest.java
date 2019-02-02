@@ -21,6 +21,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.net.URI;
@@ -38,7 +39,14 @@ public class UriTypeCoercerTest {
   @Test
   public void canCoerceAValidHttpURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("http://example.org");
-    URI uri = new UriTypeCoercer().coerce(cellRoots, filesystem, pathFromRoot, expected.toString());
+    URI uri =
+        new UriTypeCoercer()
+            .coerce(
+                cellRoots,
+                filesystem,
+                pathFromRoot,
+                EmptyTargetConfiguration.INSTANCE,
+                expected.toString());
 
     assertEquals(expected, uri);
   }
@@ -46,7 +54,14 @@ public class UriTypeCoercerTest {
   @Test
   public void canCoerceAValidHttpsURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("https://example.org");
-    URI uri = new UriTypeCoercer().coerce(cellRoots, filesystem, pathFromRoot, expected.toString());
+    URI uri =
+        new UriTypeCoercer()
+            .coerce(
+                cellRoots,
+                filesystem,
+                pathFromRoot,
+                EmptyTargetConfiguration.INSTANCE,
+                expected.toString());
 
     assertEquals(expected, uri);
   }
@@ -54,14 +69,27 @@ public class UriTypeCoercerTest {
   @Test
   public void canCoerceAMavenURI() throws CoerceFailedException, URISyntaxException {
     URI expected = new URI("mvn:org.hamcrest:hamcrest-core:jar:1.3");
-    URI uri = new UriTypeCoercer().coerce(cellRoots, filesystem, pathFromRoot, expected.toString());
+    URI uri =
+        new UriTypeCoercer()
+            .coerce(
+                cellRoots,
+                filesystem,
+                pathFromRoot,
+                EmptyTargetConfiguration.INSTANCE,
+                expected.toString());
 
     assertEquals(expected, uri);
   }
 
   @Test(expected = CoerceFailedException.class)
   public void shouldThrowAMeaningfulExceptionIfURICannotBeCoerced() throws CoerceFailedException {
-    new UriTypeCoercer().coerce(cellRoots, filesystem, pathFromRoot, "not a valid URI");
+    new UriTypeCoercer()
+        .coerce(
+            cellRoots,
+            filesystem,
+            pathFromRoot,
+            EmptyTargetConfiguration.INSTANCE,
+            "not a valid URI");
     fail("Expected coercion failure");
   }
 }

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import java.nio.file.Path;
@@ -89,6 +90,7 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
 
@@ -104,11 +106,13 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     if (leftCoercerType == objectType && rightCoercerType == objectType) {
       try {
         return Either.ofLeft(
-            leftTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+            leftTypeCoercer.coerce(
+                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
       } catch (CoerceFailedException eLeft) {
         try {
           return Either.ofRight(
-              rightTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+              rightTypeCoercer.coerce(
+                  cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
         } catch (CoerceFailedException eRight) {
           throw new CoerceFailedException(
               String.format("%s, or %s", eLeft.getMessage(), eRight.getMessage()));
@@ -120,14 +124,16 @@ public class EitherTypeCoercer<Left, Right> implements TypeCoercer<Either<Left, 
     // exceptions propagate up.
     if (leftCoercerType == objectType) {
       return Either.ofLeft(
-          leftTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+          leftTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
     }
 
     // Only the right coercer matches, so use that to parse the input and let any inner
     // exceptions propagate up.
     if (rightCoercerType == objectType) {
       return Either.ofRight(
-          rightTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+          rightTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
     }
 
     // None of our coercers matched the "type" of the object, so throw the generic

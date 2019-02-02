@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import java.lang.reflect.InvocationTargetException;
@@ -82,6 +83,7 @@ public class ImmutableTypeCoercer<T> implements TypeCoercer<T> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     Object builder;
@@ -107,7 +109,13 @@ public class ImmutableTypeCoercer<T> implements TypeCoercer<T> {
             "parameter '" + key + "' not found on " + paramInfos.keySet());
       }
       try {
-        paramInfo.set(cellRoots, filesystem, pathRelativeToProjectRoot, builder, entry.getValue());
+        paramInfo.set(
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            builder,
+            entry.getValue());
       } catch (ParamInfoException e) {
         throw new CoerceFailedException(e.getMessage(), e.getCause());
       }

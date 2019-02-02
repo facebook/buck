@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +62,7 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1) {
@@ -69,7 +71,7 @@ public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
     }
     BuildTarget target =
         buildTargetTypeCoercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, args.get(0));
+            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, args.get(0));
     return factory.apply(target);
   }
 }

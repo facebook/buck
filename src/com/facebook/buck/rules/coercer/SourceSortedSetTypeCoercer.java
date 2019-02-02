@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedMap;
@@ -64,15 +65,17 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof List) {
       return SourceSortedSet.ofUnnamedSources(
           unnamedHeadersTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
     } else {
       return SourceSortedSet.ofNamedSources(
-          namedHeadersTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+          namedHeadersTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
     }
   }
 }

@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
@@ -109,6 +110,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
               CellPathResolver cellRoots,
               ProjectFilesystem filesystem,
               Path pathRelativeToProjectRoot,
+              TargetConfiguration targetConfiguration,
               Object object) {
             // This is only actually used directly by ConstructorArgMarshaller, for parsing the
             // groups list. It's also queried (but not actually used) when Descriptions declare

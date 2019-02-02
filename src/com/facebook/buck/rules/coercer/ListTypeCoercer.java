@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.facebook.buck.rules.coercer.concat.ImmutableListConcatable;
@@ -43,10 +44,11 @@ public class ListTypeCoercer<T> extends CollectionTypeCoercer<ImmutableList<T>, 
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     ImmutableList.Builder<T> builder = ImmutableList.builder();
-    fill(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
+    fill(cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, object);
     return builder.build();
   }
 

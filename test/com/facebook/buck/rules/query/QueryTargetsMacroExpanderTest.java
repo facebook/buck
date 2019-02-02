@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -147,7 +148,12 @@ public class QueryTargetsMacroExpanderTest {
         (StringWithMacros)
             new DefaultTypeCoercerFactory()
                 .typeCoercerForType(StringWithMacros.class)
-                .coerce(cellNames, filesystem, rule.getBuildTarget().getBasePath(), input);
+                .coerce(
+                    cellNames,
+                    filesystem,
+                    rule.getBuildTarget().getBasePath(),
+                    EmptyTargetConfiguration.INSTANCE,
+                    input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
     return Arg.stringify(
         arg, DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));

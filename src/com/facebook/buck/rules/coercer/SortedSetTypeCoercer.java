@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -44,6 +45,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       SortedSet<T> builder,
       Object object)
       throws CoerceFailedException {
@@ -52,7 +54,8 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       for (Object element : (Iterable<?>) object) {
         // if any element failed, the entire collection fails
         T coercedElement =
-            elementTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, element);
+            elementTypeCoercer.coerce(
+                cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, element);
         boolean alreadyExists = !builder.add(coercedElement);
         if (alreadyExists) {
           throw new CoerceFailedException(
@@ -69,10 +72,12 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     SortedSet<T> builder = new TreeSet<>();
-    fillSortedSet(cellRoots, filesystem, pathRelativeToProjectRoot, builder, object);
+    fillSortedSet(
+        cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, object);
     return ImmutableSortedSet.copyOf(builder);
   }
 }

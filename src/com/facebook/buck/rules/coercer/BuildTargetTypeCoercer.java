@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
 import com.facebook.buck.io.file.MorePaths;
@@ -37,6 +38,7 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
       CellPathResolver cellRoots,
       ProjectFilesystem alsoUnused,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof String)) {

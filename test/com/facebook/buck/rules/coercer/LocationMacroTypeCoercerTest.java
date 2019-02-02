@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.LocationMacro;
@@ -41,12 +42,22 @@ public class LocationMacroTypeCoercerTest {
   public void validTarget() throws CoerceFailedException {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
     assertThat(
-        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("//:test")),
+        coercer.coerce(
+            CELL_PATH_RESOLVER,
+            FILESYSTEM,
+            BASE_PATH,
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableList.of("//:test")),
         Matchers.equalTo(
             LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.empty())));
 
     assertThat(
-        coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("//:test[foo]")),
+        coercer.coerce(
+            CELL_PATH_RESOLVER,
+            FILESYSTEM,
+            BASE_PATH,
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableList.of("//:test[foo]")),
         Matchers.equalTo(
             LocationMacro.of(BuildTargetFactory.newInstance("//:test"), Optional.of("foo"))));
   }
@@ -54,19 +65,33 @@ public class LocationMacroTypeCoercerTest {
   @Test(expected = CoerceFailedException.class)
   public void invalidTarget() throws CoerceFailedException {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
-    coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("not a target"));
+    coercer.coerce(
+        CELL_PATH_RESOLVER,
+        FILESYSTEM,
+        BASE_PATH,
+        EmptyTargetConfiguration.INSTANCE,
+        ImmutableList.of("not a target"));
   }
 
   @Test(expected = CoerceFailedException.class)
   public void tooManyArgs() throws CoerceFailedException {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
     coercer.coerce(
-        CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of("not", "a", "target"));
+        CELL_PATH_RESOLVER,
+        FILESYSTEM,
+        BASE_PATH,
+        EmptyTargetConfiguration.INSTANCE,
+        ImmutableList.of("not", "a", "target"));
   }
 
   @Test(expected = CoerceFailedException.class)
   public void tooFewArgs() throws CoerceFailedException {
     LocationMacroTypeCoercer coercer = new LocationMacroTypeCoercer(new BuildTargetTypeCoercer());
-    coercer.coerce(CELL_PATH_RESOLVER, FILESYSTEM, BASE_PATH, ImmutableList.of());
+    coercer.coerce(
+        CELL_PATH_RESOLVER,
+        FILESYSTEM,
+        BASE_PATH,
+        EmptyTargetConfiguration.INSTANCE,
+        ImmutableList.of());
   }
 }

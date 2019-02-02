@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.ErrorLogger;
@@ -87,6 +88,7 @@ public class BuilderParamInfoTest {
             TestCellPathResolver.get(filesystem),
             filesystem,
             Paths.get("/doesnotexist"),
+            EmptyTargetConfiguration.INSTANCE,
             builder,
             "foo");
     assertEquals("foo", builder.build().getSomeString());

@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
@@ -58,12 +59,15 @@ public class OptionalTypeCoercer<T> implements TypeCoercer<Optional<T>> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object == null) {
       return Optional.empty();
     }
-    return Optional.of(coercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    return Optional.of(
+        coercer.coerce(
+            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
   }
 
   @Nullable

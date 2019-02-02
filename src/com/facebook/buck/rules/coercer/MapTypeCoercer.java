@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -60,6 +61,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
@@ -67,10 +69,19 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
 
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
         K key =
-            keyTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, entry.getKey());
+            keyTypeCoercer.coerce(
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                entry.getKey());
         V value =
             valueTypeCoercer.coerce(
-                cellRoots, filesystem, pathRelativeToProjectRoot, entry.getValue());
+                cellRoots,
+                filesystem,
+                pathRelativeToProjectRoot,
+                targetConfiguration,
+                entry.getValue());
         builder.put(key, value);
       }
 

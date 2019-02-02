@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -61,6 +62,7 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof SourceWithFlags) {
@@ -70,14 +72,15 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
     // We're expecting one of two types here. They can be differentiated pretty easily.
     if (object instanceof String) {
       return SourceWithFlags.of(
-          sourcePathTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object));
+          sourcePathTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
     }
 
     // If we get this far, we're dealing with a Pair of a SourcePath and a String.
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
       Pair<SourcePath, ImmutableList<String>> sourcePathWithFlags =
           sourcePathWithFlagsTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, object);
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
       return SourceWithFlags.of(sourcePathWithFlags.getFirst(), sourcePathWithFlags.getSecond());
     }
 

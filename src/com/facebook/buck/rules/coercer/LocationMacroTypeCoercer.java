@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.google.common.collect.ImmutableList;
@@ -52,6 +53,7 @@ class LocationMacroTypeCoercer implements MacroTypeCoercer<LocationMacro> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1 || args.get(0).isEmpty()) {
@@ -61,7 +63,7 @@ class LocationMacroTypeCoercer implements MacroTypeCoercer<LocationMacro> {
     LocationMacro.SplitResult parts = LocationMacro.splitSupplementaryOutputPart(args.get(0));
     BuildTarget target =
         buildTargetTypeCoercer.coerce(
-            cellRoots, filesystem, pathRelativeToProjectRoot, parts.target);
+            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, parts.target);
     return LocationMacro.of(target, parts.supplementaryOutput);
   }
 }

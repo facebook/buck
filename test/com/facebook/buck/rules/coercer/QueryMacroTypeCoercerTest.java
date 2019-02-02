@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -45,7 +46,11 @@ public class QueryMacroTypeCoercerTest {
             QueryOutputsMacro::of);
     QueryMacro queryMacro =
         coercer.coerce(
-            createCellRoots(filesystem), filesystem, basePath, ImmutableList.of("some query"));
+            createCellRoots(filesystem),
+            filesystem,
+            basePath,
+            EmptyTargetConfiguration.INSTANCE,
+            ImmutableList.of("some query"));
     assertThat(queryMacro.getQuery(), Matchers.equalTo(Query.of("some query", "//" + basePath)));
   }
 }

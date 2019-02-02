@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import java.nio.file.Path;
@@ -57,6 +58,7 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Collection) {
@@ -68,10 +70,18 @@ public class PairTypeCoercer<FIRST, SECOND> implements TypeCoercer<Pair<FIRST, S
       Iterator<?> iterator = collection.iterator();
       FIRST first =
           firstTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, iterator.next());
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              iterator.next());
       SECOND second =
           secondTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, iterator.next());
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              iterator.next());
       return new Pair<>(first, second);
     } else {
       throw CoerceFailedException.simple(

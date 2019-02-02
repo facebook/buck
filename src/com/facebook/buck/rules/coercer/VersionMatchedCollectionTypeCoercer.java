@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.Version;
@@ -65,6 +66,7 @@ public class VersionMatchedCollectionTypeCoercer<T>
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if (!(object instanceof List)) {
@@ -80,9 +82,11 @@ public class VersionMatchedCollectionTypeCoercer<T>
       }
       Iterator<?> pair = ((Collection<?>) element).iterator();
       ImmutableMap<BuildTarget, Version> versionsSelector =
-          versionsTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, pair.next());
+          versionsTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, pair.next());
       T value =
-          valueTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, pair.next());
+          valueTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, pair.next());
       builder.add(versionsSelector, value);
     }
     return builder.build();

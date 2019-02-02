@@ -20,6 +20,7 @@ import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
@@ -47,7 +48,11 @@ public class PathTypeCoercerTest {
     String invalidPath = "";
     try {
       pathTypeCoercer.coerce(
-          createCellRoots(filesystem), filesystem, pathRelativeToProjectRoot, invalidPath);
+          createCellRoots(filesystem),
+          filesystem,
+          pathRelativeToProjectRoot,
+          EmptyTargetConfiguration.INSTANCE,
+          invalidPath);
       fail("expected to throw when");
     } catch (CoerceFailedException e) {
       assertEquals("invalid path", e.getMessage());
@@ -58,6 +63,11 @@ public class PathTypeCoercerTest {
   public void coercingMissingFileDoesNotThrow() throws Exception {
     String missingPath = "hello";
     new PathTypeCoercer()
-        .coerce(createCellRoots(filesystem), filesystem, pathRelativeToProjectRoot, missingPath);
+        .coerce(
+            createCellRoots(filesystem),
+            filesystem,
+            pathRelativeToProjectRoot,
+            EmptyTargetConfiguration.INSTANCE,
+            missingPath);
   }
 }

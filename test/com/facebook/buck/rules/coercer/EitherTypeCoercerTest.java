@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.types.Either;
@@ -41,7 +42,11 @@ public class EitherTypeCoercerTest {
 
     Either<Pair<String, String>, String> seen =
         coercer.coerce(
-            createCellRoots(filesystem), filesystem, basePath, Arrays.asList("abc", "de"));
+            createCellRoots(filesystem),
+            filesystem,
+            basePath,
+            EmptyTargetConfiguration.INSTANCE,
+            Arrays.asList("abc", "de"));
 
     assertEquals(Either.ofLeft(new Pair<>("abc", "de")), seen);
   }

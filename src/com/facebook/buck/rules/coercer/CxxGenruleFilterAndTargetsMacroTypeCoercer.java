@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
 import com.google.common.collect.ImmutableList;
@@ -71,6 +72,7 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
 
@@ -88,12 +90,18 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilt
           Optional.of(
               patternTypeCoercer
                   .get()
-                  .coerce(cellRoots, filesystem, pathRelativeToProjectRoot, mArgs.remove()));
+                  .coerce(
+                      cellRoots,
+                      filesystem,
+                      pathRelativeToProjectRoot,
+                      targetConfiguration,
+                      mArgs.remove()));
     }
 
     // Parse build target args.
     ImmutableList<BuildTarget> targets =
-        buildTargetsTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, mArgs);
+        buildTargetsTypeCoercer.coerce(
+            cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, mArgs);
 
     return factory.apply(filter, targets);
   }

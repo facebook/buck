@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -146,7 +147,12 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     } else {
       coercer = argumentInfo.getTypeCoercer();
     }
-    return coercer.coerce(cellRoots, filesystem, buildTarget.getBasePath(), rawValue);
+    return coercer.coerce(
+        cellRoots,
+        filesystem,
+        buildTarget.getBasePath(),
+        EmptyTargetConfiguration.INSTANCE,
+        rawValue);
   }
 
   @SuppressWarnings("unchecked")

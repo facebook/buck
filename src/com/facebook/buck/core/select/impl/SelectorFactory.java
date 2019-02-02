@@ -18,6 +18,8 @@ package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -89,7 +91,11 @@ public class SelectorFactory {
         selectorKey =
             new SelectorKey(
                 buildTargetTypeCoercer.coerce(
-                    cellPathResolver, filesystem, pathRelativeToProjectRoot, key));
+                    cellPathResolver,
+                    filesystem,
+                    pathRelativeToProjectRoot,
+                    EmptyTargetConfiguration.INSTANCE,
+                    key));
       }
       if (entry.getValue() == Runtime.NONE) {
         result.remove(selectorKey);
@@ -98,7 +104,11 @@ public class SelectorFactory {
         result.put(
             selectorKey,
             elementTypeCoercer.coerce(
-                cellPathResolver, filesystem, pathRelativeToProjectRoot, entry.getValue()));
+                cellPathResolver,
+                filesystem,
+                pathRelativeToProjectRoot,
+                EmptyTargetConfiguration.INSTANCE,
+                entry.getValue()));
         nullConditions.remove(selectorKey);
       }
     }
@@ -115,6 +125,7 @@ public class SelectorFactory {
         CellPathResolver cellRoots,
         ProjectFilesystem alsoUnused,
         Path pathRelativeToProjectRoot,
+        TargetConfiguration targetConfiguration,
         Object object)
         throws CoerceFailedException;
   }

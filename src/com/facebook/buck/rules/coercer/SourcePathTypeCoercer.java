@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -44,15 +45,19 @@ public class SourcePathTypeCoercer extends LeafTypeCoercer<SourcePath> {
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       Path pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
       Object object)
       throws CoerceFailedException {
     if ((object instanceof String)
         && (((String) object).contains("//") || ((String) object).startsWith(":"))) {
       BuildTarget buildTarget =
-          buildTargetTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
+          buildTargetTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
       return DefaultBuildTargetSourcePath.of(buildTarget);
     } else {
-      Path path = pathTypeCoercer.coerce(cellRoots, filesystem, pathRelativeToProjectRoot, object);
+      Path path =
+          pathTypeCoercer.coerce(
+              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
       if (path.isAbsolute()) {
         throw CoerceFailedException.simple(
             object, getOutputClass(), "SourcePath cannot contain an absolute path");
