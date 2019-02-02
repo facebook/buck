@@ -16,9 +16,7 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 
 /** A factory that parses a given build target name using the provided {@link BuildTargetParser}. */
 public class ParsingUnconfiguredBuildTargetFactory implements UnconfiguredBuildTargetFactory {
@@ -27,25 +25,18 @@ public class ParsingUnconfiguredBuildTargetFactory implements UnconfiguredBuildT
 
   @Override
   public UnconfiguredBuildTarget create(CellPathResolver cellPathResolver, String buildTargetName) {
-    BuildTarget buildTarget = buildTargetParser.parse(cellPathResolver, buildTargetName, "", false);
-    return ImmutableUnconfiguredBuildTarget.of(
-        buildTarget.getUnflavoredBuildTarget(), buildTarget.getFlavors());
+    return buildTargetParser.parse(cellPathResolver, buildTargetName, "", false);
   }
 
   @Override
   public UnconfiguredBuildTarget createForBaseName(
       CellPathResolver cellPathResolver, String baseName, String buildTargetName) {
-    BuildTarget buildTarget =
-        buildTargetParser.parse(cellPathResolver, buildTargetName, baseName, false);
-    return ImmutableUnconfiguredBuildTarget.of(
-        buildTarget.getUnflavoredBuildTarget(), buildTarget.getFlavors());
+    return buildTargetParser.parse(cellPathResolver, buildTargetName, baseName, false);
   }
 
   @Override
   public UnconfiguredBuildTarget createWithWildcard(
       CellPathResolver cellPathResolver, String buildTargetName) {
-    BuildTarget buildTarget = buildTargetParser.parse(cellPathResolver, buildTargetName, "", true);
-    return ImmutableUnconfiguredBuildTarget.of(
-        buildTarget.getUnflavoredBuildTarget(), buildTarget.getFlavors());
+    return buildTargetParser.parse(cellPathResolver, buildTargetName, "", true);
   }
 }

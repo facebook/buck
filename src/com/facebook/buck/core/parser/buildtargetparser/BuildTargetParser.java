@@ -21,8 +21,9 @@ import com.facebook.buck.core.cell.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Splitter;
@@ -43,7 +44,7 @@ public class BuildTargetParser {
   private static final String BUILD_RULE_SEPARATOR = ":";
   private static final Splitter BUILD_RULE_SEPARATOR_SPLITTER = Splitter.on(BUILD_RULE_SEPARATOR);
 
-  private final Interner<BuildTarget> flavoredTargetCache = Interners.newWeakInterner();
+  private final Interner<UnconfiguredBuildTarget> flavoredTargetCache = Interners.newWeakInterner();
 
   private final FlavorParser flavorParser = new FlavorParser();
 
@@ -64,7 +65,7 @@ public class BuildTargetParser {
    * @param allowWildCards whether to allow a colon at the end of the target name. This is used when
    *     parsing target name patterns.
    */
-  BuildTarget parse(
+  UnconfiguredBuildTarget parse(
       CellPathResolver cellPathResolver,
       String buildTargetName,
       String buildTargetBaseName,
@@ -133,7 +134,7 @@ public class BuildTargetParser {
 
     UnflavoredBuildTarget unflavoredBuildTarget = unflavoredBuilder.build();
     return flavoredTargetCache.intern(
-        ImmutableBuildTarget.of(
+        ImmutableUnconfiguredBuildTarget.of(
             unflavoredBuildTarget,
             RichStream.from(flavorNames).map(InternalFlavor::of).toImmutableSet()));
   }

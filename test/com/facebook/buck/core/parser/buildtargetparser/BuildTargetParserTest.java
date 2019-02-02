@@ -26,8 +26,8 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -45,7 +45,7 @@ public class BuildTargetParserTest {
   @Test
   public void testParseRootRule() {
     // Parse "//:fb4a" with the BuildTargetParser and test all of its observers.
-    BuildTarget buildTarget = parser.parse(createCellRoots(null), "//:fb4a", "", false);
+    UnconfiguredBuildTarget buildTarget = parser.parse(createCellRoots(null), "//:fb4a", "", false);
     assertEquals("fb4a", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
     assertEquals(Paths.get(""), buildTarget.getBasePath());
@@ -54,7 +54,8 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseRuleWithFlavors() {
-    BuildTarget buildTarget = parser.parse(createCellRoots(null), "//:lib#foo,bar", "", false);
+    UnconfiguredBuildTarget buildTarget =
+        parser.parse(createCellRoots(null), "//:lib#foo,bar", "", false);
     // Note the sort order.
     assertEquals("lib#bar,foo", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//", buildTarget.getBaseName());
@@ -67,7 +68,7 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseValidTargetWithDots() {
-    BuildTarget buildTarget =
+    UnconfiguredBuildTarget buildTarget =
         parser.parse(createCellRoots(null), "//..a/b../a...b:assets", "", false);
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
     assertEquals("//..a/b../a...b", buildTarget.getBaseName());
@@ -141,7 +142,7 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseFullyQualified() {
-    BuildTarget buildTarget =
+    UnconfiguredBuildTarget buildTarget =
         parser.parse(createCellRoots(null), "//facebook/orca:assets", "", false);
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
@@ -149,7 +150,7 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseBuildFile() {
-    BuildTarget buildTarget =
+    UnconfiguredBuildTarget buildTarget =
         parser.parse(createCellRoots(null), ":assets", "//facebook/orca", false);
     assertEquals("//facebook/orca", buildTarget.getBaseName());
     assertEquals("assets", buildTarget.getShortNameAndFlavorPostfix());
@@ -157,7 +158,8 @@ public class BuildTargetParserTest {
 
   @Test
   public void testParseWithVisibilityContext() {
-    BuildTarget target = parser.parse(createCellRoots(null), "//java/com/example:", "", true);
+    UnconfiguredBuildTarget target =
+        parser.parse(createCellRoots(null), "//java/com/example:", "", true);
     assertEquals(
         "A build target that ends with a colon should be treated as a wildcard build target "
             + "when parsed in the context of a visibility argument.",
@@ -173,7 +175,7 @@ public class BuildTargetParserTest {
             Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "localreponame//foo/bar:baz";
 
-    BuildTarget buildTarget = parser.parse(cellRoots, targetStr, "", false);
+    UnconfiguredBuildTarget buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
     assertTrue(buildTarget.getCell().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
@@ -187,7 +189,7 @@ public class BuildTargetParserTest {
             Paths.get("/opt/local/rootcell"), ImmutableMap.of("localreponame", localRepoRoot));
     String targetStr = "@localreponame//foo/bar:baz";
 
-    BuildTarget buildTarget = parser.parse(cellRoots, targetStr, "", false);
+    UnconfiguredBuildTarget buildTarget = parser.parse(cellRoots, targetStr, "", false);
     assertEquals("localreponame//foo/bar:baz", buildTarget.getFullyQualifiedName());
     assertTrue(buildTarget.getCell().isPresent());
     assertEquals(localRepoRoot, buildTarget.getCellPath());
@@ -203,7 +205,8 @@ public class BuildTargetParserTest {
   @Test
   public void testParseWithBackslash() {
     String backslashStr = "//com\\microsoft\\windows:something";
-    BuildTarget buildTarget = parser.parse(createCellRoots(null), backslashStr, "", false);
+    UnconfiguredBuildTarget buildTarget =
+        parser.parse(createCellRoots(null), backslashStr, "", false);
     assertEquals("//com/microsoft/windows", buildTarget.getBaseName());
   }
 
