@@ -25,6 +25,8 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public interface BuildTarget extends Comparable<BuildTarget> {
 
+  UnconfiguredBuildTarget getUnconfiguredBuildTarget();
+
   UnflavoredBuildTarget getUnflavoredBuildTarget();
 
   ImmutableSortedSet<Flavor> getFlavors();

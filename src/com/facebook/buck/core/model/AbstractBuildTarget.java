@@ -17,45 +17,54 @@
 package com.facebook.buck.core.model;
 
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
-import com.google.common.collect.Ordering;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public abstract class AbstractBuildTarget implements BuildTarget {
 
-  private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
-      Ordering.<Flavor>natural().lexicographical();
+  @Override
+  public abstract UnconfiguredBuildTarget getUnconfiguredBuildTarget();
+
+  @Override
+  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
+    return getUnconfiguredBuildTarget().getUnflavoredBuildTarget();
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> getFlavors() {
+    return getUnconfiguredBuildTarget().getFlavors();
+  }
 
   @Override
   public Optional<String> getCell() {
-    return getUnflavoredBuildTarget().getCell();
+    return getUnconfiguredBuildTarget().getCell();
   }
 
   @Override
   public Path getCellPath() {
-    return getUnflavoredBuildTarget().getCellPath();
+    return getUnconfiguredBuildTarget().getCellPath();
   }
 
   @Override
   public String getBaseName() {
-    return getUnflavoredBuildTarget().getBaseName();
+    return getUnconfiguredBuildTarget().getBaseName();
   }
 
   @Override
   public Path getBasePath() {
-    return getUnflavoredBuildTarget().getBasePath();
+    return getUnconfiguredBuildTarget().getBasePath();
   }
 
   @Override
   public String getShortName() {
-    return getUnflavoredBuildTarget().getShortName();
+    return getUnconfiguredBuildTarget().getShortName();
   }
 
   @Override
   public String getShortNameAndFlavorPostfix() {
-    return getShortName() + getFlavorPostfix();
+    return getUnconfiguredBuildTarget().getShortNameAndFlavorPostfix();
   }
 
   @Override
@@ -72,17 +81,17 @@ public abstract class AbstractBuildTarget implements BuildTarget {
 
   @Override
   public String getFullyQualifiedName() {
-    return getUnflavoredBuildTarget().getFullyQualifiedName() + getFlavorPostfix();
+    return getUnconfiguredBuildTarget().getFullyQualifiedName();
   }
 
   @Override
   public boolean isFlavored() {
-    return !(getFlavors().isEmpty());
+    return getUnconfiguredBuildTarget().isFlavored();
   }
 
   @Override
   public BuildTarget assertUnflavored() {
-    Preconditions.checkState(!isFlavored(), "%s is flavored.", this);
+    getUnconfiguredBuildTarget().assertUnflavored();
     return this;
   }
 
@@ -93,8 +102,7 @@ public abstract class AbstractBuildTarget implements BuildTarget {
     }
 
     return ComparisonChain.start()
-        .compare(getUnflavoredBuildTarget(), o.getUnflavoredBuildTarget())
-        .compare(getFlavors(), o.getFlavors(), LEXICOGRAPHICAL_ORDERING)
+        .compare(getUnconfiguredBuildTarget(), o.getUnconfiguredBuildTarget())
         .result();
   }
 }

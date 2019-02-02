@@ -149,8 +149,7 @@ abstract class AbstractImmutableUnconfiguredBuildTarget extends AbstractUnconfig
 
   @Override
   public BuildTarget configure(TargetConfiguration targetConfiguration) {
-    // TODO: add TargetConfiguration to BuildTarget
-    return ImmutableBuildTarget.of(getUnflavoredBuildTarget(), getFlavors());
+    return ImmutableBuildTarget.of(this, targetConfiguration);
   }
 
   public static UnconfiguredBuildTarget of(UnflavoredBuildTarget unflavoredBuildTarget) {
