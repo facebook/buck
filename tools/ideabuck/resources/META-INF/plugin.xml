@@ -236,6 +236,8 @@
     <lang.foldingBuilder
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.folding.BuckFoldingBuilder"/>
+    <lang.foldingBuilder language="Buckconfig"
+      implementationClass="com.facebook.buck.intellij.ideabuck.folding.BcfgFoldingBuilder"/>
     <codeInsight.unresolvedReferenceQuickFixProvider
       implementation="com.facebook.buck.intellij.ideabuck.autodeps.BuckAutoDepsQuickFixProvider"/>
     <completion.contributor
