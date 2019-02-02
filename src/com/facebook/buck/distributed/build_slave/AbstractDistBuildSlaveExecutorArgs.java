@@ -21,6 +21,7 @@ import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -120,6 +121,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   public abstract RemoteCommand getRemoteCommand();
 
   public abstract MetadataProvider getMetadataProvider();
+
+  public abstract UnconfiguredBuildTargetFactory getUnconfiguredBuildTargetFactory();
 
   public int getBuildThreadCount() {
     return getState()

@@ -3,6 +3,9 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "build_slave",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+    ],
     tests = [
         "//test/com/facebook/buck/distributed/build_slave:build_slave",
     ],
@@ -19,7 +22,6 @@ java_immutables_library(
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model/actiongraph/computation:computation",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/rulekey/calculator:calculator",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",

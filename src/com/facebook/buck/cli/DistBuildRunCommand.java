@@ -268,7 +268,8 @@ public class DistBuildRunCommand extends AbstractDistBuildCommand {
                     timeStatsTracker,
                     getCoordinatorBuildRuleEventsPublisher(),
                     getMinionBuildProgressTracker(),
-                    ruleKeyCacheScope);
+                    ruleKeyCacheScope,
+                    params.getUnconfiguredBuildTargetFactory());
 
             distBuildExecutor.onBuildSlavePreparationCompleted(
                 () -> timeStatsTracker.stopTimer(SlaveEvents.DIST_BUILD_PREPARATION_TIME));
