@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-public class BuildTargetParser {
+class BuildTargetParser {
 
   /** The BuildTargetParser is stateless, so this single instance can be shared. */
   public static final BuildTargetParser INSTANCE = new BuildTargetParser();
