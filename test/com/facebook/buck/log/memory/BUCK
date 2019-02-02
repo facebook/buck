@@ -1,0 +1,13 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "standard_java_test",
+)
+
+standard_java_test(
+    name = "log",
+    deps = [
+        "//src/com/facebook/buck/log/memory:memory",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/junit:junit",
+    ],
+)
