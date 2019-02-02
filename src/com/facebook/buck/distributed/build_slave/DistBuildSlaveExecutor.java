@@ -102,7 +102,8 @@ public class DistBuildSlaveExecutor {
               args.getExecutorService(),
               args.getBuckEventBus(),
               args.getState(),
-              args.getRootCell()));
+              args.getRootCell(),
+              args.getUnconfiguredBuildTargetFactory()));
     }
 
     Optional<BuildId> clientBuildId = fetchClientBuildId();
