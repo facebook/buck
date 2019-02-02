@@ -55,6 +55,7 @@ import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -211,7 +212,8 @@ public class DefaultParserTest {
                 eventBus,
                 getManifestSupplier(),
                 new FakeFileHashCache(
-                    ImmutableMap.of(buildFile, HashCode.fromBytes(new byte[] {1}))))
+                    ImmutableMap.of(buildFile, HashCode.fromBytes(new byte[] {1}))),
+                new ParsingUnconfiguredBuildTargetFactory())
             .create(
                 parser.getPermState(),
                 executor,
@@ -2611,7 +2613,8 @@ public class DefaultParserTest {
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 getManifestSupplier(),
-                new FakeFileHashCache(hashes))
+                new FakeFileHashCache(hashes),
+                new ParsingUnconfiguredBuildTargetFactory())
             .create(
                 parser.getPermState(),
                 executor,

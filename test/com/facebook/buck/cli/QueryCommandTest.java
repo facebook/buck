@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
@@ -120,7 +121,8 @@ public class QueryCommandTest {
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 getManifestSupplier(),
-                new FakeFileHashCache(ImmutableMap.of()))
+                new FakeFileHashCache(ImmutableMap.of()),
+                new ParsingUnconfiguredBuildTargetFactory())
             .create(
                 params.getParser().getPermState(),
                 executorService,

@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
@@ -59,7 +60,8 @@ public abstract class PerBuildStateFactory {
       Watchman watchman,
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache) {
+      FileHashCache fileHashCache,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
     return buckConfig.getView(ParserConfig.class).getEnableConfigurableAttributes()
         ? new PerBuildStateFactoryWithConfigurableAttributes(
             typeCoercerFactory,
@@ -69,7 +71,8 @@ public abstract class PerBuildStateFactory {
             watchman,
             eventBus,
             manifestServiceSupplier,
-            fileHashCache)
+            fileHashCache,
+            unconfiguredBuildTargetFactory)
         : new LegacyPerBuildStateFactory(
             typeCoercerFactory,
             marshaller,

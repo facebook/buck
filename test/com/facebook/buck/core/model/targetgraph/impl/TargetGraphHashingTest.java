@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -110,7 +111,8 @@ public class TargetGraphHashingTest {
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close),
-                new FakeFileHashCache(ImmutableMap.of()))
+                new FakeFileHashCache(ImmutableMap.of()),
+                new ParsingUnconfiguredBuildTargetFactory())
             .create(
                 parser.getPermState(),
                 MoreExecutors.newDirectExecutorService(),

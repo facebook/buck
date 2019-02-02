@@ -16,6 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
@@ -44,7 +45,8 @@ public class ParserFactory {
       BuckEventBus eventBus,
       Supplier<ImmutableList<String>> targetPlatforms,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache) {
+      FileHashCache fileHashCache,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
     if (buckConfig.getView(ParserConfig.class).getEnableConfigurableAttributes()) {
       return new ParserWithConfigurableAttributes(
           daemonicParserState,
@@ -56,7 +58,8 @@ public class ParserFactory {
               watchman,
               eventBus,
               manifestServiceSupplier,
-              fileHashCache),
+              fileHashCache,
+              unconfiguredBuildTargetFactory),
           targetSpecResolver,
           eventBus,
           targetPlatforms);

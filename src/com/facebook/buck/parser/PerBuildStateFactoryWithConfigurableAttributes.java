@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -26,7 +27,7 @@ import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetParser;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -71,6 +72,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
   private final ParserPythonInterpreterProvider parserPythonInterpreterProvider;
   private final Watchman watchman;
   private final BuckEventBus eventBus;
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
 
   PerBuildStateFactoryWithConfigurableAttributes(
       TypeCoercerFactory typeCoercerFactory,
@@ -80,7 +82,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
       Watchman watchman,
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache) {
+      FileHashCache fileHashCache,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
     super(manifestServiceSupplier, fileHashCache);
     this.typeCoercerFactory = typeCoercerFactory;
     this.marshaller = marshaller;
@@ -88,6 +91,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     this.parserPythonInterpreterProvider = parserPythonInterpreterProvider;
     this.watchman = watchman;
     this.eventBus = eventBus;
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 
   @Override
@@ -265,8 +269,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     String targetPlatformName = targetPlatforms.get(0);
     ConfigurationRule configurationRule =
         configurationRuleResolver.getRule(
-            BuildTargetParser.INSTANCE.parseFullyQualified(
-                rootCell.getCellPathResolver(), targetPlatformName));
+            unconfiguredBuildTargetFactory
+                .create(rootCell.getCellPathResolver(), targetPlatformName)
+                .configure(EmptyTargetConfiguration.INSTANCE));
 
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(

@@ -1269,7 +1269,8 @@ public final class Main {
                   ruleKeyConfiguration,
                   executableFinder,
                   manifestServiceSupplier,
-                  fileHashCache);
+                  fileHashCache,
+                  buildTargetFactory);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
           // we need to manually register its counters after it's created.
@@ -1507,7 +1508,8 @@ public final class Main {
       RuleKeyConfiguration ruleKeyConfiguration,
       ExecutableFinder executableFinder,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
-      FileHashCache fileHashCache)
+      FileHashCache fileHashCache,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory)
       throws IOException, InterruptedException {
     WatchmanWatcher watchmanWatcher = null;
     if (daemonOptional.isPresent() && watchman.getTransportPath().isPresent()) {
@@ -1560,7 +1562,8 @@ public final class Main {
               buildEventBus,
               targetPlatforms,
               manifestServiceSupplier,
-              fileHashCache);
+              fileHashCache,
+              unconfiguredBuildTargetFactory);
       daemon.getFileEventBus().register(daemon.getDaemonicParserState());
 
       parserAndCaches =
@@ -1593,7 +1596,8 @@ public final class Main {
                   buildEventBus,
                   targetPlatforms,
                   manifestServiceSupplier,
-                  fileHashCache),
+                  fileHashCache,
+                  unconfiguredBuildTargetFactory),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
                   new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),

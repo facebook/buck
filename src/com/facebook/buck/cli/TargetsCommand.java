@@ -841,7 +841,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getWatchman(),
                 params.getBuckEventBus(),
                 params.getManifestServiceSupplier(),
-                params.getFileHashCache())
+                params.getFileHashCache(),
+                params.getUnconfiguredBuildTargetFactory())
             .create(
                 params.getParser().getPermState(),
                 executor,
@@ -1230,7 +1231,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getWatchman(),
                 params.getBuckEventBus(),
                 params.getManifestServiceSupplier(),
-                params.getFileHashCache())
+                params.getFileHashCache(),
+                params.getUnconfiguredBuildTargetFactory())
             .create(
                 params.getParser().getPermState(),
                 executor,
