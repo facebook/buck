@@ -16,6 +16,7 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -30,7 +31,9 @@ public class TestSelectorListFactory {
   public static <T> SelectorList<T> createSelectorListForCoercer(
       TypeCoercer<T> elementTypeCoercer, Map<String, ?>... selectors) throws CoerceFailedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SelectorFactory selectorFactory = new SelectorFactory(new BuildTargetTypeCoercer()::coerce);
+    SelectorFactory selectorFactory =
+        new SelectorFactory(
+            new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())::coerce);
     ImmutableList.Builder<Selector<T>> selectorBuilder = ImmutableList.builder();
     for (Map<String, ?> selectorAttributes : selectors) {
       Selector<T> selector =

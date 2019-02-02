@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
@@ -51,7 +52,9 @@ public class SelectorListCoercerTest {
     projectFilesystem = new FakeProjectFilesystem();
     cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     selectorListFactory =
-        new SelectorListFactory(new SelectorFactory(new BuildTargetTypeCoercer()::coerce));
+        new SelectorListFactory(
+            new SelectorFactory(
+                new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())::coerce));
   }
 
   @Test
@@ -74,7 +77,10 @@ public class SelectorListCoercerTest {
   public void testTraverseEncountersKeysAndValues() throws CoerceFailedException {
     ListTypeCoercer<Flavor> elementTypeCoercer = new ListTypeCoercer<>(new FlavorTypeCoercer());
     SelectorListCoercer<ImmutableList<Flavor>> coercer =
-        new SelectorListCoercer<>(new BuildTargetTypeCoercer(), elementTypeCoercer, null);
+        new SelectorListCoercer<>(
+            new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory()),
+            elementTypeCoercer,
+            null);
     ImmutableSelectorValue selectorValue =
         ImmutableSelectorValue.of(
             ImmutableMap.of(

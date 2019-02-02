@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -45,7 +46,9 @@ public class SelectorFactoryTest {
   @Before
   public void setUp() {
     projectFilesystem = new FakeProjectFilesystem();
-    selectorFactory = new SelectorFactory(new BuildTargetTypeCoercer()::coerce);
+    selectorFactory =
+        new SelectorFactory(
+            new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())::coerce);
   }
 
   @Test

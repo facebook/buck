@@ -25,6 +25,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorList;
@@ -254,7 +255,9 @@ public class DefaultSelectorListResolverTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
-    SelectorFactory selectorFactory = new SelectorFactory(new BuildTargetTypeCoercer()::coerce);
+    SelectorFactory selectorFactory =
+        new SelectorFactory(
+            new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())::coerce);
     ListTypeCoercer<Flavor> flavorListTypeCoercer = new ListTypeCoercer<>(new FlavorTypeCoercer());
     Selector<ImmutableList<Flavor>> selector =
         selectorFactory.createSelector(

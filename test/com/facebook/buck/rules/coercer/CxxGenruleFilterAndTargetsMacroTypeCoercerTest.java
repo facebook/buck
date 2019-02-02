@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.CppFlagsMacro;
@@ -42,7 +43,8 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
     CxxGenruleFilterAndTargetsMacroTypeCoercer<CppFlagsMacro> coercer =
         new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
             Optional.empty(),
-            new ListTypeCoercer<>(new BuildTargetTypeCoercer()),
+            new ListTypeCoercer<>(
+                new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())),
             CppFlagsMacro.class,
             CppFlagsMacro::of);
     CppFlagsMacro result =
@@ -66,7 +68,8 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
     CxxGenruleFilterAndTargetsMacroTypeCoercer<LdflagsStaticMacro> coercer =
         new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
             Optional.of(new PatternTypeCoercer()),
-            new ListTypeCoercer<>(new BuildTargetTypeCoercer()),
+            new ListTypeCoercer<>(
+                new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())),
             LdflagsStaticMacro.class,
             LdflagsStaticMacro::of);
     LdflagsStaticMacro result =

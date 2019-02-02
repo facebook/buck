@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -64,13 +65,17 @@ import javax.annotation.Nullable;
  */
 class ParserWithConfigurableAttributes extends DefaultParser {
 
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+
   ParserWithConfigurableAttributes(
       DaemonicParserState daemonicParserState,
       PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
       BuckEventBus eventBus,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Supplier<ImmutableList<String>> targetPlatforms) {
     super(daemonicParserState, perBuildStateFactory, targetSpecResolver, eventBus, targetPlatforms);
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 
   /**
@@ -141,7 +146,9 @@ class ParserWithConfigurableAttributes extends DefaultParser {
             stateWithConfigurableAttributes.getTargetPlatform().get());
 
     SelectorListFactory selectorListFactory =
-        new SelectorListFactory(new SelectorFactory(new BuildTargetTypeCoercer()::coerce));
+        new SelectorListFactory(
+            new SelectorFactory(
+                new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)::coerce));
 
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
 

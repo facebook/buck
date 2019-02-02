@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -45,7 +46,9 @@ public class SourcePathTypeCoercerTest {
   private CellPathResolver cellRoots;
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
-      new SourcePathTypeCoercer(new BuildTargetTypeCoercer(), new PathTypeCoercer());
+      new SourcePathTypeCoercer(
+          new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory()),
+          new PathTypeCoercer());
 
   @Before
   public void setUp() {

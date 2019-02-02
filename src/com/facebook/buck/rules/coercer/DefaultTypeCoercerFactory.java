@@ -121,7 +121,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 .parse(cellRoots, (String) object);
           }
         };
-    TypeCoercer<BuildTarget> buildTargetTypeCoercer = new BuildTargetTypeCoercer();
+    TypeCoercer<BuildTarget> buildTargetTypeCoercer =
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
@@ -382,16 +383,19 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else if (rawClass.isAssignableFrom(VersionMatchedCollection.class)) {
       return new VersionMatchedCollectionTypeCoercer<>(
-          new MapTypeCoercer<>(new BuildTargetTypeCoercer(), new VersionTypeCoercer()),
+          new MapTypeCoercer<>(
+              new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory), new VersionTypeCoercer()),
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else if (rawClass.isAssignableFrom(Optional.class)) {
       return new OptionalTypeCoercer<>(
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else if (rawClass.isAssignableFrom(SelectorList.class)) {
       return new SelectorListCoercer<>(
-          new BuildTargetTypeCoercer(),
+          new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory),
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)),
-          new SelectorListFactory(new SelectorFactory(new BuildTargetTypeCoercer()::coerce)));
+          new SelectorListFactory(
+              new SelectorFactory(
+                  new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)::coerce)));
     } else {
       throw new IllegalArgumentException("Unhandled type: " + typeName);
     }
