@@ -38,7 +38,7 @@ public class AdbCommandLineOptions {
   private int adbThreadCount = 0;
 
   @VisibleForTesting static final String MULTI_INSTALL_MODE_SHORT_ARG = "-x";
-  @VisibleForTesting static final String MULTI_INSTALL_MODE_LONG_ARG = "-all";
+  @VisibleForTesting static final String MULTI_INSTALL_MODE_LONG_ARG = "--all-devices";
 
   @Option(
       name = MULTI_INSTALL_MODE_LONG_ARG,
