@@ -148,6 +148,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @AddToRuleKey private final Optional<Tool> swiftStdlibTool;
 
+  @AddToRuleKey private final Tool lipo;
+
   @AddToRuleKey private final boolean dryRunCodeSigning;
 
   @AddToRuleKey private final ImmutableList<String> codesignFlags;
@@ -282,6 +284,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         appleCxxPlatform.getSwiftPlatform().isPresent()
             ? appleCxxPlatform.getSwiftPlatform().get().getSwiftStdlibTool()
             : Optional.empty();
+    this.lipo = appleCxxPlatform.getLipo();
 
     this.codesignTimeout = codesignTimeout;
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
@@ -983,16 +986,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 || copySwiftStdlibToFrameworks);
 
     if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
-      ImmutableList.Builder<String> swiftStdlibCommand = ImmutableList.builder();
-      swiftStdlibCommand.addAll(swiftStdlibTool.get().getCommandPrefix(resolver));
-      swiftStdlibCommand.add(
-          "--scan-executable",
-          bundleBinaryPath.toString(),
-          "--scan-folder",
-          bundleRoot.resolve(this.destinations.getFrameworksPath()).toString(),
-          "--scan-folder",
-          bundleRoot.resolve(destinations.getPlugInsPath()).toString());
-
       String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";
       stepsBuilder.add(
           new SwiftStdlibStep(
@@ -1001,7 +994,10 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   getProjectFilesystem(), getBuildTarget(), tempDirPattern),
               this.sdkPath,
               destinationPath,
-              swiftStdlibCommand.build(),
+              swiftStdlibTool.get().getCommandPrefix(resolver),
+              lipo.getCommandPrefix(resolver),
+              bundleBinaryPath,
+              ImmutableSet.of(destinations.getFrameworksPath(), destinations.getPlugInsPath()),
               codeSignIdentitySupplier));
     }
   }
