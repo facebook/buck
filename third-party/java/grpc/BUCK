@@ -5,11 +5,11 @@ load(
 
 prebuilt_jar(
     name = "grpc-context",
-    binary_jar = "grpc-context-1.11.0.jar",
+    binary_jar = "grpc-context-1.18.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "grpc-context-1.11.0-sources.jar",
+    source_jar = "grpc-context-1.18.0-sources.jar",
     visibility = [
         "PUBLIC",
     ],
@@ -19,11 +19,11 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "grpc-core",
-    binary_jar = "grpc-core-1.10.1.jar",
+    binary_jar = "grpc-core-1.18.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "grpc-core-1.10.1-sources.jar",
+    source_jar = "grpc-core-1.18.0-sources.jar",
     visibility = [
         "PUBLIC",
     ],
@@ -38,11 +38,11 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "grpc-protobuf",
-    binary_jar = "grpc-protobuf-1.10.1.jar",
+    binary_jar = "grpc-protobuf-1.18.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "grpc-protobuf-1.10.1-sources.jar",
+    source_jar = "grpc-protobuf-1.18.0-sources.jar",
     visibility = [
         "PUBLIC",
     ],
@@ -57,11 +57,11 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "grpc-protobuf-lite",
-    binary_jar = "grpc-protobuf-lite-1.11.0.jar",
+    binary_jar = "grpc-protobuf-lite-1.18.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "grpc-protobuf-lite-1.11.0-sources.jar",
+    source_jar = "grpc-protobuf-lite-1.18.0-sources.jar",
     visibility = [
         "PUBLIC",
     ],
@@ -73,11 +73,11 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "grpc-stub",
-    binary_jar = "grpc-stub-1.10.1.jar",
+    binary_jar = "grpc-stub-1.18.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "grpc-stub-1.10.1-sources.jar",
+    source_jar = "grpc-stub-1.18.0-sources.jar",
     visibility = [
         "PUBLIC",
     ],
@@ -88,11 +88,11 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "grpc-netty-shaded",
-    binary_jar = "grpc-netty-shaded-1.10.1.jar",
+    binary_jar = "grpc-netty-shaded-1.18.0.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "grpc-netty-shaded-1.10.1-sources.jar",
+    source_jar = "grpc-netty-shaded-1.18.0-sources.jar",
     visibility = [
         "PUBLIC",
     ],

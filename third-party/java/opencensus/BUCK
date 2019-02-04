@@ -1,8 +1,8 @@
 prebuilt_jar(
     name = "opencensus-api",
-    binary_jar = "opencensus-api-0.12.2.jar",
+    binary_jar = "opencensus-api-0.18.0.jar",
     licenses = ["LICENSE"],
-    source_jar = "opencensus-api-0.12.2-sources.jar",
+    source_jar = "opencensus-api-0.18.0-sources.jar",
     visibility = ["PUBLIC"],
     deps = [
         "//third-party/java/grpc:grpc-context",
@@ -13,9 +13,9 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "opencensus-contrib-grpc-metrics",
-    binary_jar = "opencensus-contrib-grpc-metrics-0.12.2.jar",
+    binary_jar = "opencensus-contrib-grpc-metrics-0.18.0.jar",
     licenses = ["LICENSE"],
-    source_jar = "opencensus-contrib-grpc-metrics-0.12.2-sources.jar",
+    source_jar = "opencensus-contrib-grpc-metrics-0.18.0-sources.jar",
     visibility = ["PUBLIC"],
     deps = [
         "//third-party/java/grpc:grpc-context",
