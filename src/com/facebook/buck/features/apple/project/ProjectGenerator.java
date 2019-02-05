@@ -1665,19 +1665,17 @@ public class ProjectGenerator {
       }
       extraSettingsBuilder.put("USE_HEADERMAP", shouldSetUseHeadermap ? "YES" : "NO");
 
+      Path repoRoot = projectFilesystem.getRootPath().toAbsolutePath().normalize();
       defaultSettingsBuilder.put(
-          "REPO_ROOT", projectFilesystem.getRootPath().toAbsolutePath().normalize().toString());
+          "REPO_ROOT", repoRoot.toString());
       if (hasSwiftVersionArg && containsSwiftCode && isFocusedOnTarget) {
         // We need to be able to control the directory where Xcode places the derived sources, so
         // that the Obj-C Generated Header can be included in the header map and imported through
         // a framework-style import like <Module/Module-Swift.h>
         Path derivedSourcesDir =
             getDerivedSourcesDirectoryForBuildTarget(buildTarget, projectFilesystem);
-        Path derivedSourceDirRelativeToProjectRoot =
-            pathRelativizer.outputDirToRootRelative(derivedSourcesDir);
-
         defaultSettingsBuilder.put(
-            "DERIVED_FILE_DIR", derivedSourceDirRelativeToProjectRoot.toString());
+            "DERIVED_FILE_DIR", repoRoot.resolve(derivedSourcesDir).toString());
       }
 
       defaultSettingsBuilder.put(PRODUCT_NAME, getProductName(buildTargetNode));
