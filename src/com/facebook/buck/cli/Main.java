@@ -2031,7 +2031,6 @@ public final class Main {
 
     eventListenersBuilder.add(new ParserProfilerLoggerListener(invocationInfo, projectFilesystem));
 
-
     eventListenersBuilder.add(new LoadBalancerEventsListener(counterRegistry));
     eventListenersBuilder.add(new CacheRateStatsListener(buckEventBus));
     eventListenersBuilder.add(new WatchmanDiagnosticEventListener(buckEventBus));
