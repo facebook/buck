@@ -1,0 +1,22 @@
+<component name="libraryTable">
+  <library name="idea-ce-2018.3.4">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/android.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/annotations.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/extensions.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/idea.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/java-api.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/java-impl.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/jdom.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/light-psi-all.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/openapi.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/picocontainer-1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/platform-api.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/platform-impl.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/serviceMessages.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/util.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

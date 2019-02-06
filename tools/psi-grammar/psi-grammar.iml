@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/gen" isTestSource="false" generated="true" />
+      <sourceFolder url="file://$MODULE_DIR$/resources" type="java-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" scope="PROVIDED" name="idea-ce-2018.3.4" level="project" />
+    <orderEntry type="module-library" exported="">
+      <library name="generated-grammar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/psi-grammar/lib__grammar__output/grammar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/psi-grammar/bcfg_lexer.src__/bcfg_lexer.src.zip!" />
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/psi-grammar/bcfg_parser.src__/bcfg_parser.src.zip!" />
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/psi-grammar/buck_lexer.src__/buck_lexer.src.zip!" />
+          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/psi-grammar/buck_parser.src__/buck_parser.src.zip!" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+  </component>
+</module>

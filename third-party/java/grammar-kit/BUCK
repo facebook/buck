@@ -2,7 +2,7 @@ java_binary(
     name = "grammar-kit",
     main_class = "org.intellij.grammar.Main",
     visibility = [
-        "PUBLIC",
+        "//tools/psi-grammar/...",
     ],
     deps = [
         ":grammar-kit_prebuilt",
@@ -14,7 +14,7 @@ java_binary(
     name = "jflex",
     main_class = "jflex.Main",
     visibility = [
-        "//tools/ideabuck/...",
+        "//tools/psi-grammar/...",
     ],
     deps = [
         ":jflex_prebuilt",
@@ -45,6 +45,6 @@ filegroup(
         "idea-flex.skeleton",
     ],
     visibility = [
-        "//tools/ideabuck/...",
+        "//tools/psi-grammar/...",
     ],
 )

@@ -9,127 +9,10 @@ API_SOURCE_FILES = glob([
     "src/com/facebook/buck/intellij/ideabuck/api/**/*.java",
 ])
 
-# Minimal set of ideabuck files needed to compile grammar
-# Keep as small as possible to permit the possibility of
-# extracting a standalone grammar from ideabuck.
-GRAMMAR_SOURCE_FILES = [
-    "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/BuckFileType.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgFile.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgFileType.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgLanguage.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgElementType.java",
-    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgTokenType.java",
-]
-
-BUCK_BNF = "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf"
-
-BUCK_FLEX = "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex"
-
-BCFG_BNF = "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.bnf"
-
-BCFG_FLEX = "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.flex"
-
 # Implementation classes that should not be used by other plugins.
 PLUGIN_SOURCE_FILES = glob(
     ["src/**/*.java"],
-    exclude = API_SOURCE_FILES + GRAMMAR_SOURCE_FILES,
-)
-
-# =========================================================
-# Grammar artifacts (JFlex lexer, GrammarKit parser)
-# =========================================================
-
-# Make the output artifact be a directory named "com"
-# so when it gets included in the zip_file, it appears
-# at the right prefix to be used as a Java source zip file.
-
-genrule(
-    name = "bcfg_parser",
-    srcs = [
-        BCFG_BNF,
-    ],
-    out = "com",
-    cmd = (
-        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
-    ),
-)
-
-genrule(
-    name = "buck_parser",
-    srcs = [BUCK_BNF],
-    out = "com",
-    cmd = (
-        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
-    ),
-)
-
-zip_file(
-    name = "bcfg_parser.src",
-    srcs = [
-        ":bcfg_parser",
-    ],
-)
-
-zip_file(
-    name = "buck_parser.src",
-    srcs = [":buck_parser"],
-)
-
-genrule(
-    name = "bcfg_lexer",
-    srcs = [
-        BCFG_FLEX,
-    ],
-    out = "com",
-    cmd = (
-        "$(exe //third-party/java/grammar-kit:jflex)" +
-        " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
-        " -d $OUT/facebook/buck/intellij/ideabuck/lang" +
-        " $SRCS"
-    ),
-)
-
-genrule(
-    name = "buck_lexer",
-    srcs = [BUCK_FLEX],
-    out = "com",
-    cmd = (
-        "$(exe //third-party/java/grammar-kit:jflex)" +
-        " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
-        " -d $OUT/facebook/buck/intellij/ideabuck/lang" +
-        " $SRCS"
-    ),
-)
-
-zip_file(
-    name = "bcfg_lexer.src",
-    srcs = [
-        ":bcfg_lexer",
-    ],
-)
-
-zip_file(
-    name = "buck_lexer.src",
-    srcs = [":buck_lexer"],
-)
-
-java_library(
-    name = "grammar",
-    srcs = GRAMMAR_SOURCE_FILES + [
-        ":bcfg_lexer.src",
-        ":buck_lexer.src",
-        ":bcfg_parser.src",
-        ":buck_parser.src",
-    ],
-    provided_deps = [
-        "//third-party/java/intellij:intellij-plugin-sdk",
-    ],
-    resources = ["resources/icons/buck_icon.png"],
-    resources_root = "resources/",
+    exclude = API_SOURCE_FILES,
 )
 
 # ================================================================
@@ -170,7 +53,6 @@ java_library(
         "//tools/ideabuck/...",
     ],
     deps = [
-        ":grammar",
         "//src/com/facebook/buck/event/external:external_lib",
         "//third-party/java/android:ddmlib",
         "//third-party/java/gson:gson",
@@ -180,6 +62,7 @@ java_library(
         "//third-party/java/jackson:jackson-datatype-guava",
         "//third-party/java/jackson:jackson-mrbean",
         "//third-party/java/jetty:jetty",
+        "//tools/psi-grammar:grammar",
     ],
 )
 

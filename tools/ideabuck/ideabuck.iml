@@ -20,20 +20,6 @@
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
     <orderEntry type="library" scope="TEST" name="guava-testlib" level="project" />
     <orderEntry type="module-library">
-      <library name="ideabuck-grammar">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/lib__grammar__output/grammar.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/bcfg_lexer.src__/bcfg_lexer.src.zip!" />
-          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/bcfg_parser.src__/bcfg_parser.src.zip!" />
-          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/buck_lexer.src__/buck_lexer.src.zip!" />
-          <root url="jar://$MODULE_DIR$/../../buck-out/gen/tools/ideabuck/buck_parser.src__/buck_parser.src.zip!" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
       <library name="ideabuck-dependencies-on-buck">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../../buck-out/gen/src/com/facebook/buck/event/external/lib__external_lib__output/external_lib.jar!/" />
@@ -43,5 +29,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="psi-grammar" />
   </component>
 </module>

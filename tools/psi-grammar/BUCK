@@ -1,0 +1,103 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+BUCK_BNF = "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf"
+
+BUCK_FLEX = "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex"
+
+BCFG_BNF = "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.bnf"
+
+BCFG_FLEX = "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.flex"
+
+# =========================================================
+# Grammar artifacts (JFlex lexer, GrammarKit parser)
+# =========================================================
+
+# Make the output artifact be a directory named "com"
+# so when it gets included in the zip_file, it appears
+# at the right prefix to be used as a Java source zip file.
+
+genrule(
+    name = "bcfg_parser",
+    srcs = [
+        BCFG_BNF,
+    ],
+    out = "com",
+    cmd = (
+        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
+    ),
+)
+
+genrule(
+    name = "buck_parser",
+    srcs = [BUCK_BNF],
+    out = "com",
+    cmd = (
+        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
+    ),
+)
+
+zip_file(
+    name = "bcfg_parser.src",
+    srcs = [
+        ":bcfg_parser",
+    ],
+)
+
+zip_file(
+    name = "buck_parser.src",
+    srcs = [":buck_parser"],
+)
+
+genrule(
+    name = "bcfg_lexer",
+    srcs = [
+        BCFG_FLEX,
+    ],
+    out = "com",
+    cmd = (
+        "$(exe //third-party/java/grammar-kit:jflex)" +
+        " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
+        " -d $OUT/facebook/buck/intellij/ideabuck/lang" +
+        " $SRCS"
+    ),
+)
+
+genrule(
+    name = "buck_lexer",
+    srcs = [BUCK_FLEX],
+    out = "com",
+    cmd = (
+        "$(exe //third-party/java/grammar-kit:jflex)" +
+        " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
+        " -d $OUT/facebook/buck/intellij/ideabuck/lang" +
+        " $SRCS"
+    ),
+)
+
+zip_file(
+    name = "bcfg_lexer.src",
+    srcs = [
+        ":bcfg_lexer",
+    ],
+)
+
+zip_file(
+    name = "buck_lexer.src",
+    srcs = [":buck_lexer"],
+)
+
+java_library(
+    name = "grammar",
+    srcs = glob(["src/**/*"]) + [
+        ":bcfg_lexer.src",
+        ":buck_lexer.src",
+        ":bcfg_parser.src",
+        ":buck_parser.src",
+    ],
+    provided_deps = [
+        "//third-party/java/intellij:intellij-plugin-sdk",
+    ],
+    resources = glob(["resources/icons/*.png"]),
+    resources_root = "resources/",
+    visibility = ["//tools/ideabuck/..."],
+)
