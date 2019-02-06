@@ -98,7 +98,6 @@ public class MainIntegrationTest {
         "  root           prints the absolute path to the root of the current buck project",
         "  run            runs a target as a command",
         "  server         query and control the http server",
-        "  suggest        suggests a refactoring for the specified build target",
         "  targets        prints the list of buildable targets",
         "  test           builds and runs the tests for the specified target",
         "  uninstall      uninstalls an APK",

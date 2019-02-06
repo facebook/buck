@@ -1,5 +1,0 @@
-java_library(
-    name = "app",
-    srcs = glob(["*.java"]),
-    deps = ["//lib:lib"],
-)
