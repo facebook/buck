@@ -150,25 +150,18 @@ public class NdkCxxPlatforms {
   private NdkCxxPlatforms() {}
 
   static int getNdkMajorVersion(String ndkVersion) {
-    return ndkVersion.startsWith("r9")
-        ? 9
-        : ndkVersion.startsWith("r10")
-            ? 10
-            : ndkVersion.startsWith("11.")
-                ? 11
-                : ndkVersion.startsWith("12.")
-                    ? 12
-                    : ndkVersion.startsWith("13.")
-                        ? 13
-                        : ndkVersion.startsWith("14.")
-                            ? 14
-                            : ndkVersion.startsWith("15.")
-                                ? 15
-                                : ndkVersion.startsWith("16.")
-                                    ? 16
-                                    : ndkVersion.startsWith("17.")
-                                        ? 17
-                                        : ndkVersion.startsWith("18.") ? 18 : -1;
+    if (ndkVersion.startsWith("r")) {
+      return ndkVersion.startsWith("r9")
+          ? 9
+          : ndkVersion.startsWith("r10")
+              ? 10
+              : -1;
+    }
+    try {
+      return Integer.parseInt(ndkVersion.substring(0, ndkVersion.indexOf(".")));
+    } catch (NumberFormatException e) {
+      return -1;
+    }
   }
 
   public static String getDefaultGccVersionForNdk(String ndkVersion) {
