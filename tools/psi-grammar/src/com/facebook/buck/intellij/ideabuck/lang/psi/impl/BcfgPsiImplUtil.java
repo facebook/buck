@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.intellij.ideabuck.util;
+package com.facebook.buck.intellij.ideabuck.lang.psi.impl;
 
 import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgProperty;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgTypes;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  * Utility methods for extracting information from {@link
  * com.facebook.buck.intellij.ideabuck.lang.BcfgLanguage} elements.
  */
-public class BcfgPsiUtils {
+public class BcfgPsiImplUtil {
 
   /** Returns a list of the property value fragments for a given {@link BcfgProperty}. */
   public static List<PsiElement> getPropertyValueFragmentList(BcfgProperty property) {
@@ -42,7 +42,10 @@ public class BcfgPsiUtils {
     return results;
   }
 
-  /** Returns the property value for a given {@link BcfgProperty} as a string. */
+  /**
+   * Returns the property value for a given {@link BcfgProperty} as a string, omitting inner line
+   * continuations but not expanding escape sequences or macros.
+   */
   public static String getPropertyValueAsText(BcfgProperty property) {
     return getPropertyValueFragmentList(property)
         .stream()

@@ -1,57 +1,13 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
-BUCK_BNF = "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf"
-
-BUCK_FLEX = "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex"
-
-BCFG_BNF = "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.bnf"
-
-BCFG_FLEX = "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.flex"
-
 # =========================================================
-# Grammar artifacts (JFlex lexer, GrammarKit parser)
+# Lexers:
 # =========================================================
-
-# Make the output artifact be a directory named "com"
-# so when it gets included in the zip_file, it appears
-# at the right prefix to be used as a Java source zip file.
-
 genrule(
-    name = "bcfg_parser",
+    name = "lexers",
     srcs = [
-        BCFG_BNF,
-    ],
-    out = "com",
-    cmd = (
-        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
-    ),
-)
-
-genrule(
-    name = "buck_parser",
-    srcs = [BUCK_BNF],
-    out = "com",
-    cmd = (
-        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
-    ),
-)
-
-zip_file(
-    name = "bcfg_parser.src",
-    srcs = [
-        ":bcfg_parser",
-    ],
-)
-
-zip_file(
-    name = "buck_parser.src",
-    srcs = [":buck_parser"],
-)
-
-genrule(
-    name = "bcfg_lexer",
-    srcs = [
-        BCFG_FLEX,
+        "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.flex",
+        "src/com/facebook/buck/intellij/ideabuck/lang/Buck.flex",
     ],
     out = "com",
     cmd = (
@@ -62,42 +18,102 @@ genrule(
     ),
 )
 
+zip_file(
+    name = "lexers.src",
+    srcs = [
+        ":lexers",
+    ],
+)
+
+# =========================================================
+# Parsers:
+# =========================================================
+
+BNF_SRCS = [
+    "src/com/facebook/buck/intellij/ideabuck/lang/Bcfg.bnf",
+    "src/com/facebook/buck/intellij/ideabuck/lang/Buck.bnf",
+]
+
+MIXIN_SRCS = [
+    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgFileType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BuckFileType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgLanguage.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgElementType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgTokenType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BcfgPsiImplUtil.java",
+]
+
+# Because GrammarKit resolves mixins from *class* files, not *java*
+# files, there's a chicken-and-egg problem:  you can't generate a
+# correct parser without compiled versions of your mixins, but you
+# can't compile your mixins without a generated parser.  :-(
+#
+# A two-pass parser generation solves this problem by first creating
+# an incorrect parser that doesn't handle mixins properly...
 genrule(
-    name = "buck_lexer",
-    srcs = [BUCK_FLEX],
+    name = "_pass1_parsers",
+    srcs = BNF_SRCS,
     out = "com",
     cmd = (
-        "$(exe //third-party/java/grammar-kit:jflex)" +
-        " -skel $(location //third-party/java/grammar-kit:idea-flex.skeleton)/idea-flex.skeleton" +
-        " -d $OUT/facebook/buck/intellij/ideabuck/lang" +
-        " $SRCS"
+        "mkdir $OUT && $(exe //third-party/java/grammar-kit:grammar-kit) $OUT/.. $SRCS"
+    ),
+)
+
+# ...but when packed up as a zip file ending in ".src.zip"...
+zip_file(
+    name = "_pass1_parsers.src",
+    srcs = [":_pass1_parsers"],
+)
+
+# ...it is sufficient to use in compiling the mixins.
+java_library(
+    name = "_parser_mixins",
+    srcs = [":_pass1_parsers.src"] + MIXIN_SRCS,
+    provided_deps = [
+        "//third-party/java/intellij:intellij-plugin-sdk",
+    ],
+)
+
+# Then, these compiled mixins can be packaged with the parser generator...
+java_binary(
+    name = "_custom_grammarkit",
+    main_class = "org.intellij.grammar.Main",
+    deps = [
+        ":_parser_mixins",
+        "//third-party/java/grammar-kit:grammar-kit",
+    ],
+)
+
+# ...so the second pass yields a parser that correctly resolves mixins.
+genrule(
+    name = "parsers",
+    srcs = BNF_SRCS,
+    out = "com",
+    cmd = (
+        "mkdir $OUT && $(exe :_custom_grammarkit) $OUT/.. $SRCS"
     ),
 )
 
 zip_file(
-    name = "bcfg_lexer.src",
+    name = "parsers.src",
     srcs = [
-        ":bcfg_lexer",
+        ":parsers",
     ],
-)
-
-zip_file(
-    name = "buck_lexer.src",
-    srcs = [":buck_lexer"],
 )
 
 java_library(
     name = "grammar",
-    srcs = glob(["src/**/*"]) + [
-        ":bcfg_lexer.src",
-        ":buck_lexer.src",
-        ":bcfg_parser.src",
-        ":buck_parser.src",
+    srcs = glob(["src/**/*.java"]) + [
+        ":lexers.src",
+        ":parsers.src",
     ],
     provided_deps = [
         "//third-party/java/intellij:intellij-plugin-sdk",
     ],
-    resources = glob(["resources/icons/*.png"]),
+    resources = glob(["resources/**/*"]),
     resources_root = "resources/",
     visibility = ["//tools/ideabuck/..."],
 )

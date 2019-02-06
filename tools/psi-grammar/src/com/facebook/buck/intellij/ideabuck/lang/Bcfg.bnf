@@ -28,6 +28,8 @@
   elementTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BcfgElementType"
   tokenTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BcfgTokenType"
 
+  psiImplUtilClass="com.facebook.buck.intellij.ideabuck.lang.psi.impl.BcfgPsiImplUtil"
+
   tokens = [
     COMMENT = 'regexp:[#;][^\r\n]*'
     L_BRACKET = '['
@@ -48,6 +50,11 @@ bcfgFile ::= (section | inline)*
 section ::= section_header property*
 section_header ::= '[' SECTION_NAME ']'
 
-property ::= PROPERTY_NAME ASSIGN PROPERTY_VALUE_FRAGMENT*
+property ::= PROPERTY_NAME ASSIGN PROPERTY_VALUE_FRAGMENT* {
+  methods=[
+    getPropertyValueAsText
+    getPropertyValueFragmentList
+  ]
+}
 
 inline ::= (REQUIRED_INLINE | OPTIONAL_INLINE) FILE_PATH END_INLINE

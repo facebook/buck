@@ -18,7 +18,6 @@ package com.facebook.buck.intellij.ideabuck.folding;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgProperty;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgSection;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgTypes;
-import com.facebook.buck.intellij.ideabuck.util.BcfgPsiUtils;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilderEx;
 import com.intellij.lang.folding.FoldingDescriptor;
@@ -57,7 +56,7 @@ public class BcfgFoldingBuilder extends FoldingBuilderEx {
       @Nullable
       @Override
       public String getPlaceholderText() {
-        return BcfgPsiUtils.getPropertyValueAsText(property);
+        return property.getPropertyValueAsText();
       }
     };
   }
