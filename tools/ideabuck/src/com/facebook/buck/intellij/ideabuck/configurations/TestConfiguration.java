@@ -30,9 +30,9 @@ import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.DefaultJDOMExternalizer;
 import com.intellij.openapi.util.InvalidDataException;
 import com.intellij.openapi.util.WriteExternalException;
+import com.intellij.util.xmlb.XmlSerializer;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -71,13 +71,13 @@ public class TestConfiguration extends LocatableConfigurationBase
   @Override
   public void readExternal(Element element) throws InvalidDataException {
     super.readExternal(element);
-    DefaultJDOMExternalizer.readExternal(data, element);
+    XmlSerializer.deserializeInto(data, element);
   }
 
   @Override
   public void writeExternal(Element element) throws WriteExternalException {
     super.writeExternal(element);
-    DefaultJDOMExternalizer.writeExternal(data, element);
+    XmlSerializer.serializeInto(data, element);
   }
 
   public static class Data {

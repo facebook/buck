@@ -305,11 +305,6 @@
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Statement"/>
   </extensions>
 
-  <extensions defaultExtensionNs="com.android.project">
-    <featureEnableService
-      implementation="com.facebook.buck.intellij.ideabuck.proj.BuckFeatureEnableService"/>
-  </extensions>
-
   <actions>
     <group id="buck.Menu">
       <action

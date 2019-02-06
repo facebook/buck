@@ -65,7 +65,7 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "picocontainer",
-    binary_jar = "picocontainer.jar",
+    binary_jar = "picocontainer-1.2.jar",
 )
 
 prebuilt_jar(
