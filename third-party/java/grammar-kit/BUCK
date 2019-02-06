@@ -23,12 +23,12 @@ java_binary(
 
 prebuilt_jar(
     name = "grammar-kit_prebuilt",
-    binary_jar = "grammar-kit.jar",
+    binary_jar = "grammar-kit-2018.3-SNAPSHOT.jar",
 )
 
 prebuilt_jar(
     name = "light-psi_prebuilt",
-    binary_jar = "light-psi-all.jar",
+    binary_jar = "light-psi-all-2018.3-SNAPSHOT.jar",
 )
 
 # JFlex artifacts downloaded by the IntelliJ GrammarKit plugin (v2017.1.7),
