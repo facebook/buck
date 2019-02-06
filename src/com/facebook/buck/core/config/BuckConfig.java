@@ -28,7 +28,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.PatternAndMessage;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
@@ -48,7 +47,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -368,20 +366,6 @@ public class BuckConfig {
    */
   public boolean useBuckBinaryHash() {
     return getBooleanValue("cache", "use_buck_binary_hash", false);
-  }
-
-  public Optional<ImmutableSet<PatternAndMessage>> getUnexpectedFlavorsMessages() {
-    ImmutableMap<String, String> entries = config.get("unknown_flavors_messages");
-    if (!entries.isEmpty()) {
-      Set<PatternAndMessage> patternAndMessages = new HashSet<>();
-      for (Map.Entry<String, String> entry : entries.entrySet()) {
-        patternAndMessages.add(
-            PatternAndMessage.of(Pattern.compile(entry.getKey()), entry.getValue()));
-      }
-      return Optional.of(ImmutableSet.copyOf(patternAndMessages));
-    }
-
-    return Optional.empty();
   }
 
   public boolean hasUserDefinedValue(String sectionName, String propertyName) {

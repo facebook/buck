@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -24,7 +23,6 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.util.PatternAndMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -63,31 +61,17 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   public static UnexpectedFlavorException createWithSuggestions(
-      Flavored flavored, Cell cell, BuildTarget target) {
+      Flavored flavored, BuildTarget target) {
     ImmutableSet<Flavor> invalidFlavors = getInvalidFlavors(flavored, target);
     ImmutableSet<Flavor> validFlavors = getValidFlavors(flavored, target);
     // Get the specific message
     String exceptionMessage = createDefaultMessage(target, invalidFlavors, validFlavors);
-    // Get some suggestions on how to solve it.
-    Optional<ImmutableSet<PatternAndMessage>> configMessagesForFlavors =
-        cell.getBuckConfig().getUnexpectedFlavorsMessages();
 
     ImmutableList.Builder<String> suggestionsBuilder = ImmutableList.builder();
     for (Flavor flavor : invalidFlavors) {
-      boolean foundInConfig = false;
-      if (configMessagesForFlavors.isPresent()) {
-        for (PatternAndMessage flavorPattern : configMessagesForFlavors.get()) {
-          if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
-            foundInConfig = true;
-            suggestionsBuilder.add("- " + flavor.getName() + ": " + flavorPattern.getMessage());
-          }
-        }
-      }
-      if (!foundInConfig) {
-        for (PatternAndMessage flavorPattern : suggestedMessagesForFlavors) {
-          if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
-            suggestionsBuilder.add("- " + flavor.getName() + ": " + flavorPattern.getMessage());
-          }
+      for (PatternAndMessage flavorPattern : suggestedMessagesForFlavors) {
+        if (flavorPattern.getPattern().matcher(flavor.getName()).find()) {
+          suggestionsBuilder.add("- " + flavor.getName() + ": " + flavorPattern.getMessage());
         }
       }
     }

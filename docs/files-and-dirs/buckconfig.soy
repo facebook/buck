@@ -451,7 +451,6 @@ The following sections are recognized by Buck:
     'thrift',
     'tools',
     'ui',
-    'unknown_flavors_messages',
     'worker',
     ]}
   <a href="#{$name}"><code>[{$name}]</code></a><br>
@@ -4971,22 +4970,6 @@ buck = .
     Sometimes, however, a user should not be alerted about specific files. For example, there may be global Buck settings in <code>/etc/buckconfig.d/system</code> that
     are managed by an IT organization, not the user, and the warning would just be ignored. In this case, this setting could be set to <code>system</code>
     so that <code>/etc/buckconfig.d/system</code> being present would not elicit a warning.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'unknown_flavors_messages' /}
-  {param name: 'unknown_flavors_messages' /}
-  {param description}
-    Specify messages for flavors. The message is used in case of an error with the flavors and
-    it can be used to help debugging or provide suggestions for a fix. The name is a common Java
-    Regex pattern like <code>android-*</code> and the value is the message that will be shown.
-    Messages in <code>.buckconfig</code> have priority over Buck's defaults and suggestions will be
-    shown for all the matches.
-    <pre class="prettyprint lang-ini">
-        [unknown_flavors_messages]{\n}{sp}{sp}
-            android-* = Make sure you have Android SDK & NDK installed and set up.
-    </pre>
   {/param}
 {/call}
 

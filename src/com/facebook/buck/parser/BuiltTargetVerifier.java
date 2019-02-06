@@ -46,8 +46,7 @@ class BuiltTargetVerifier {
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
         if (!((Flavored) description).hasFlavors(ImmutableSet.copyOf(target.getFlavors()))) {
-          throw UnexpectedFlavorException.createWithSuggestions(
-              (Flavored) description, cell, target);
+          throw UnexpectedFlavorException.createWithSuggestions((Flavored) description, target);
         }
       } else {
         LOG.warn(
