@@ -7,6 +7,7 @@
         <option name="TAB_SIZE" value="2" />
       </value>
     </option>
+    <option name="LINE_SEPARATOR" value="&#10;" />
     <option name="RIGHT_MARGIN" value="100" />
     <option name="KEEP_CONTROL_STATEMENT_IN_ONE_LINE" value="false" />
     <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
