@@ -41,6 +41,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -215,12 +216,13 @@ public class CacheCommand extends AbstractCommand {
       if (!outputPath.isPresent()) {
         // legacy output
         if (r.completed) {
+          params.getConsole().getStdOut().println(resultString);
+
           params
               .getConsole()
               .printSuccess(
                   String.format(
-                      "Successfully downloaded artifact with id %s at %s .",
-                      r.ruleKey, r.artifact));
+                      "Successfully downloaded artifact with id %s at %s.", r.ruleKey, r.artifact));
         } else {
           params
               .getConsole()
@@ -405,6 +407,10 @@ public class CacheCommand extends AbstractCommand {
       cacheResult = cacheResultToString(success);
       cacheResultType = success.getType();
       cacheResultMode = success.cacheMode();
+      ImmutableMap<String, String> metadata =
+          success.metadata().orElse(ImmutableMap.<String, String>builder().build());
+      resultString.append("Artifact metadata:\n");
+      resultString.append(new Gson().toJson(metadata));
       boolean cacheSuccess = success.getType().isSuccess();
       if (!cacheSuccess) {
         statusString = String.format("FAILED FETCHING %s %s", ruleKey, cacheResult);
