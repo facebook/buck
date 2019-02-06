@@ -159,7 +159,7 @@ public class NdkCxxPlatforms {
     }
     try {
       return Integer.parseInt(ndkVersion.substring(0, ndkVersion.indexOf(".")));
-    } catch (NumberFormatException e) {
+    } catch (IndexOutOfBoundsException | NumberFormatException e) {
       return -1;
     }
   }
