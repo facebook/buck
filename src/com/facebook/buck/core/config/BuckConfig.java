@@ -499,10 +499,6 @@ public class BuckConfig {
     return getOrThrow(section, field, path);
   }
 
-  public String getClientId() {
-    return getValue("client", "id").orElse("buck");
-  }
-
   /** @return the number of threads Buck should use. */
   public int getNumThreads() {
     return getNumThreads(getDefaultMaximumNumberOfThreads());
