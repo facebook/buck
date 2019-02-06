@@ -321,10 +321,6 @@ public class BuckConfig {
     return getBooleanValue("daemon", "flush_events_before_exit", false);
   }
 
-  public ImmutableSet<String> getListenerJars() {
-    return ImmutableSet.copyOf(getListWithoutComments("extensions", "listeners"));
-  }
-
   public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@PropagatesNullable Path path) {
     if (path == null) {
       return path;

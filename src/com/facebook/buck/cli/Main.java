@@ -211,7 +211,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
-import com.google.common.reflect.ClassPath;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sun.jna.LastErrorException;
@@ -225,9 +224,6 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.channels.ClosedByInterruptException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -1837,57 +1833,6 @@ public final class Main {
     return daemon.getFileHashCaches();
   }
 
-  private void loadListenersFromBuckConfig(
-      ImmutableList.Builder<BuckEventListener> eventListeners,
-      ProjectFilesystem projectFilesystem,
-      BuckConfig config) {
-    ImmutableSet<String> paths = config.getListenerJars();
-    if (paths.isEmpty()) {
-      return;
-    }
-
-    URL[] urlsArray = new URL[paths.size()];
-    try {
-      int i = 0;
-      for (String path : paths) {
-        String urlString = "file://" + projectFilesystem.resolve(Paths.get(path));
-        urlsArray[i] = new URL(urlString);
-        i++;
-      }
-    } catch (MalformedURLException e) {
-      throw new HumanReadableException(e.getMessage());
-    }
-
-    // This ClassLoader is disconnected to allow searching the JARs (and just the JARs) for classes.
-    ClassLoader isolatedClassLoader = URLClassLoader.newInstance(urlsArray, null);
-
-    ImmutableSet<ClassPath.ClassInfo> classInfos;
-    try {
-      ClassPath classPath = ClassPath.from(isolatedClassLoader);
-      classInfos = classPath.getTopLevelClasses();
-    } catch (IOException e) {
-      throw new HumanReadableException(e.getMessage());
-    }
-
-    // This ClassLoader will actually work, because it is joined to the parent ClassLoader.
-    URLClassLoader workingClassLoader = URLClassLoader.newInstance(urlsArray);
-
-    for (ClassPath.ClassInfo classInfo : classInfos) {
-      String className = classInfo.getName();
-      try {
-        Class<?> aClass = Class.forName(className, true, workingClassLoader);
-        if (BuckEventListener.class.isAssignableFrom(aClass)) {
-          BuckEventListener listener = aClass.asSubclass(BuckEventListener.class).newInstance();
-          eventListeners.add(listener);
-        }
-      } catch (ReflectiveOperationException e) {
-        throw new HumanReadableException(
-            "Error loading event listener class '%s': %s: %s",
-            className, e.getClass(), e.getMessage());
-      }
-    }
-  }
-
   /**
    * Try to acquire global semaphore if needed to do so. Attach closer to acquired semaphore in a
    * form of a wrapper object so it can be used with try-with-resources.
@@ -1980,7 +1925,6 @@ public final class Main {
       eventListenersBuilder.add(webServer.get().createListener());
     }
 
-    loadListenersFromBuckConfig(eventListenersBuilder, projectFilesystem, buckConfig);
     ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
 
     devspeedDaemonEventListener.ifPresent(eventListenersBuilder::add);
