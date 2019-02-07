@@ -652,7 +652,6 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
 
   @Override
   protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
-    StoreResult.Builder resultBuilder = StoreResult.builder();
     ByteSource artifact =
         new ByteSource() {
           @Override
@@ -681,6 +680,12 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     cacheRequest.setType(BuckCacheRequestType.STORE);
     cacheRequest.setStoreRequest(storeRequest);
 
+    // Handling for file system issues may lead us to upload empty manifests
+    if (artifactSizeBytes == 0 && info.isManifest()) {
+      throw new IOException(
+          String.format("Trying to upload a 0 size Manifest entry %s", info.getRuleKeys()));
+    }
+
     if (LOG.isVerboseEnabled()) {
       LOG.verbose(
           String.format(
@@ -691,6 +696,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     ThriftArtifactCacheProtocol.Request request =
         ThriftArtifactCacheProtocol.createRequest(PROTOCOL, cacheRequest, artifact);
     Request.Builder builder = toOkHttpRequest(request);
+    StoreResult.Builder resultBuilder = StoreResult.builder();
     resultBuilder.setRequestSizeBytes(request.getRequestLengthBytes());
     try (HttpResponse httpResponse = storeClient.makeRequest(hybridThriftEndpoint, builder)) {
       if (httpResponse.statusCode() != 200) {
