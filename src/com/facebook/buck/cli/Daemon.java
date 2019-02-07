@@ -150,7 +150,8 @@ final class Daemon implements Closeable {
     persistentWorkerPools = new ConcurrentHashMap<>();
 
     this.bgTaskManager =
-        new AsyncBackgroundTaskManager(rootCell.getBuckConfig().getFlushEventsBeforeExit());
+        new AsyncBackgroundTaskManager(
+            rootCell.getBuckConfig().getView(CliConfig.class).getFlushEventsBeforeExit());
     this.clock = clock;
     this.startTime = clock.currentTimeMillis();
 

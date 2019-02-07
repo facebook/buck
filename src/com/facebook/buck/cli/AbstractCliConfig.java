@@ -21,12 +21,19 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 @BuckStyleImmutable
 @Value.Immutable(builder = false, copy = false)
 public abstract class AbstractCliConfig implements ConfigView<BuckConfig> {
+
+  private static final String UI_SECTION = "ui";
+
   @Override
   @Value.Parameter
   public abstract BuckConfig getDelegate();
@@ -63,7 +70,31 @@ public abstract class AbstractCliConfig implements ConfigView<BuckConfig> {
   @Value.Derived
   public JsonAttributeFormat getJsonAttributeFormat() {
     return getDelegate()
-        .getEnum("ui", "json_attribute_format", JsonAttributeFormat.class)
+        .getEnum(UI_SECTION, "json_attribute_format", JsonAttributeFormat.class)
         .orElse(JsonAttributeFormat.DEFAULT);
+  }
+
+  @Value.Lazy
+  public boolean getWarnOnConfigFileOverrides() {
+    return getDelegate().getBooleanValue(UI_SECTION, "warn_on_config_file_overrides", true);
+  }
+
+  @Value.Lazy
+  public ImmutableSet<Path> getWarnOnConfigFileOverridesIgnoredFiles() {
+    return getDelegate()
+        .getListWithoutComments(UI_SECTION, "warn_on_config_file_overrides_ignored_files", ',')
+        .stream()
+        .map(Paths::get)
+        .collect(ImmutableSet.toImmutableSet());
+  }
+
+  @Value.Lazy
+  public boolean getFlushEventsBeforeExit() {
+    return getDelegate().getBooleanValue("daemon", "flush_events_before_exit", false);
+  }
+
+  @Value.Lazy
+  public ImmutableList<String> getMessageOfTheDay() {
+    return getDelegate().getListWithoutComments("project", "motd");
   }
 }

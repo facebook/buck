@@ -46,15 +46,12 @@ import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /** Structured representation of data read from a {@code .buckconfig} file. */
@@ -161,10 +158,6 @@ public class BuckConfig {
     } else {
       return ImmutableMap.of();
     }
-  }
-
-  public ImmutableList<String> getMessageOfTheDay() {
-    return getListWithoutComments("project", "motd");
   }
 
   public ImmutableList<String> getListWithoutComments(String section, String field) {
@@ -313,10 +306,6 @@ public class BuckConfig {
       return PathSourcePath.of(projectFilesystem, path);
     }
     return PathSourcePath.of(projectFilesystem, checkPathExists(path.toString(), errorMessage));
-  }
-
-  public boolean getFlushEventsBeforeExit() {
-    return getBooleanValue("daemon", "flush_events_before_exit", false);
   }
 
   public Path resolvePathThatMayBeOutsideTheProjectFilesystem(@PropagatesNullable Path path) {
@@ -741,26 +730,6 @@ public class BuckConfig {
     return getValue("build", "prehook_script");
   }
 
-  /** List of error message replacements to make things more friendly for humans */
-  public Map<Pattern, String> getErrorMessageAugmentations() throws HumanReadableException {
-    return config
-        .getMap("ui", "error_message_augmentations")
-        .entrySet()
-        .stream()
-        .collect(
-            ImmutableMap.toImmutableMap(
-                e -> {
-                  try {
-                    return Pattern.compile(e.getKey(), Pattern.MULTILINE | Pattern.DOTALL);
-                  } catch (Exception ex) {
-                    throw new HumanReadableException(
-                        "Could not parse regular expression %s from buckconfig: %s",
-                        e.getKey(), ex.getMessage());
-                  }
-                },
-                Entry::getValue));
-  }
-
   /**
    * Whether to delete temporary files generated to run a build rule immediately after the rule is
    * run.
@@ -771,17 +740,5 @@ public class BuckConfig {
 
   public ProjectFilesystem getFilesystem() {
     return projectFilesystem;
-  }
-
-  public boolean getWarnOnConfigFileOverrides() {
-    return config.getBooleanValue("ui", "warn_on_config_file_overrides", true);
-  }
-
-  public ImmutableSet<Path> getWarnOnConfigFileOverridesIgnoredFiles() {
-    return config
-        .getListWithoutComments("ui", "warn_on_config_file_overrides_ignored_files", ',')
-        .stream()
-        .map(Paths::get)
-        .collect(ImmutableSet.toImmutableSet());
   }
 }

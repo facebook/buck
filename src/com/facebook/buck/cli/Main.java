@@ -35,6 +35,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
@@ -472,7 +473,8 @@ public final class Main {
         augmentor =
             new HumanReadableExceptionAugmentor(
                 parsedRootConfig
-                    .map(BuckConfig::getErrorMessageAugmentations)
+                    .map(buckConfig -> buckConfig.getView(ErrorHandlingBuckConfig.class))
+                    .map(ErrorHandlingBuckConfig::getErrorMessageAugmentations)
                     .orElse(ImmutableMap.of()));
       } catch (HumanReadableException e) {
         console.printErrorText(e.getHumanReadableErrorMessage());
@@ -671,7 +673,8 @@ public final class Main {
               buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
       // Set so that we can use some settings when we print out messages to users
       parsedRootConfig = Optional.of(buckConfig);
-      warnAboutConfigFileOverrides(filesystem.getRootPath(), buckConfig, console);
+      CliConfig cliConfig = buckConfig.getView(CliConfig.class);
+      warnAboutConfigFileOverrides(filesystem.getRootPath(), cliConfig, console);
 
       ImmutableSet<Path> projectWatchList =
           getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
@@ -826,7 +829,7 @@ public final class Main {
       }
 
       BackgroundTaskManager bgTaskManager;
-      boolean blocking = rootCell.getBuckConfig().getFlushEventsBeforeExit();
+      boolean blocking = cliConfig.getFlushEventsBeforeExit();
       if (!blocking && !daemon.isPresent()) {
         LOG.warn(
             "Manager cannot be async (as currently set in config) when not on daemon. Initializing blocking manager.");
@@ -1356,7 +1359,7 @@ public final class Main {
           // to the CommandEvent listener
           if (exitCode == ExitCode.SUCCESS
               && context.isPresent()
-              && !rootCell.getBuckConfig().getFlushEventsBeforeExit()) {
+              && !cliConfig.getFlushEventsBeforeExit()) {
             context.get().in.close(); // Avoid client exit triggering client disconnection handling.
             context.get().exit(exitCode.getCode());
           }
@@ -1371,9 +1374,9 @@ public final class Main {
     return exitCode;
   }
 
-  private void warnAboutConfigFileOverrides(Path root, BuckConfig config, Console console)
+  private void warnAboutConfigFileOverrides(Path root, CliConfig cliConfig, Console console)
       throws IOException {
-    if (!config.getWarnOnConfigFileOverrides()) {
+    if (!cliConfig.getWarnOnConfigFileOverrides()) {
       return;
     }
 
@@ -1384,7 +1387,7 @@ public final class Main {
     // Useful for filtering out things like system wide buckconfigs in /etc that might be managed
     // by the system. We don't want to warn users about files that they have not necessarily
     // created.
-    ImmutableSet<Path> overridesToIgnore = config.getWarnOnConfigFileOverridesIgnoredFiles();
+    ImmutableSet<Path> overridesToIgnore = cliConfig.getWarnOnConfigFileOverridesIgnoredFiles();
     Path mainConfigPath = Configs.getMainConfigurationFile(root);
 
     ImmutableSortedSet<Path> userSpecifiedOverrides =

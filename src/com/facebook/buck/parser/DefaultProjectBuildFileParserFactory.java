@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -300,7 +301,10 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
     HumanReadableExceptionAugmentor augmentor;
     try {
       augmentor =
-          new HumanReadableExceptionAugmentor(cell.getBuckConfig().getErrorMessageAugmentations());
+          new HumanReadableExceptionAugmentor(
+              cell.getBuckConfig()
+                  .getView(ErrorHandlingBuckConfig.class)
+                  .getErrorMessageAugmentations());
     } catch (HumanReadableException e) {
       eventBus.post(ConsoleEvent.warning(e.getHumanReadableErrorMessage()));
       augmentor = new HumanReadableExceptionAugmentor(ImmutableMap.of());

@@ -233,7 +233,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       return ExitCode.SUCCESS;
     }
     if (params.getConsole().getAnsi().isAnsiTerminal()) {
-      ImmutableList<String> motd = params.getBuckConfig().getMessageOfTheDay();
+      ImmutableList<String> motd =
+          params.getBuckConfig().getView(CliConfig.class).getMessageOfTheDay();
       if (!motd.isEmpty()) {
         for (String line : motd) {
           params.getBuckEventBus().post(ConsoleEvent.info(line));
