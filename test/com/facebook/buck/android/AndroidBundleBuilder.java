@@ -64,8 +64,8 @@ public class AndroidBundleBuilder
     super(
         new AndroidBundleDescription(
             DEFAULT_JAVA_CONFIG,
-            new AndroidBuckConfig(buckConfig, Platform.detect()),
             new ProGuardConfig(buckConfig),
+            new AndroidBuckConfig(buckConfig, Platform.detect()),
             buckConfig,
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(buckConfig),
