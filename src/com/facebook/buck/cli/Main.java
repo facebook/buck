@@ -1018,8 +1018,8 @@ public final class Main {
                     locale,
                     filesystem.getBuckPaths().getLogDir().resolve("test.log"),
                     buildId,
-                    buckConfig.isLogBuildIdToConsoleEnabled(),
-                    buckConfig.getBuildDetailsTemplate(),
+                    logBuckConfig.isLogBuildIdToConsoleEnabled(),
+                    logBuckConfig.getBuildDetailsTemplate(),
                     createAdditionalConsoleLinesProviders(
                         remoteExecutionListener, remoteExecutionConfig, metadataProvider));
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to

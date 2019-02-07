@@ -18,6 +18,7 @@ package com.facebook.buck.support.log;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @BuckStyleTuple
@@ -72,5 +73,13 @@ public abstract class AbstractLogBuckConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean isJavaUtilsLoggingEnabled() {
     return getDelegate().getBooleanValue(LOG_SECTION, "jul_build_log", false);
+  }
+
+  public boolean isLogBuildIdToConsoleEnabled() {
+    return getDelegate().getBooleanValue(LOG_SECTION, "log_build_id_to_console_enabled", false);
+  }
+
+  public Optional<String> getBuildDetailsTemplate() {
+    return getDelegate().getValue(LOG_SECTION, "build_details_template");
   }
 }

@@ -728,10 +728,6 @@ public class BuckConfig {
     return config;
   }
 
-  public boolean isLogBuildIdToConsoleEnabled() {
-    return getBooleanValue("log", "log_build_id_to_console_enabled", false);
-  }
-
   /** Whether to create symlinks of build output in buck-out/last. */
   public boolean createBuildOutputSymLinksEnabled() {
     return getBooleanValue("build", "create_build_output_symlinks_enabled", false);
@@ -771,10 +767,6 @@ public class BuckConfig {
    */
   public boolean getShouldDeleteTemporaries() {
     return config.getBooleanValue("build", "delete_temporaries", false);
-  }
-
-  public Optional<String> getBuildDetailsTemplate() {
-    return config.get("log", "build_details_template");
   }
 
   public ProjectFilesystem getFilesystem() {
