@@ -59,6 +59,7 @@ import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProviderFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.counters.CounterBuckConfig;
 import com.facebook.buck.counters.CounterRegistry;
 import com.facebook.buck.counters.CounterRegistryImpl;
 import com.facebook.buck.distributed.DistBuildConfig;
@@ -1041,8 +1042,10 @@ public final class Main {
                 new CounterRegistryImpl(
                     counterAggregatorExecutor.get(),
                     buildEventBus,
-                    buckConfig.getCountersFirstFlushIntervalMillis(),
-                    buckConfig.getCountersFlushIntervalMillis());
+                    buckConfig
+                        .getView(CounterBuckConfig.class)
+                        .getCountersFirstFlushIntervalMillis(),
+                    buckConfig.getView(CounterBuckConfig.class).getCountersFlushIntervalMillis());
             PerfStatsTracking perfStatsTracking =
                 new PerfStatsTracking(buildEventBus, invocationInfo);
             ProcessTracker processTracker =

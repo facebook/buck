@@ -3,6 +3,9 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "counters",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/config:config",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/util/log:log",

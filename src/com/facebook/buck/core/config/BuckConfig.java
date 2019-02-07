@@ -461,14 +461,6 @@ public class BuckConfig {
     return getOrThrow(section, field, path);
   }
 
-  public long getCountersFirstFlushIntervalMillis() {
-    return config.getLong("counters", "first_flush_interval_millis").orElse(5000L);
-  }
-
-  public long getCountersFlushIntervalMillis() {
-    return config.getLong("counters", "flush_interval_millis").orElse(30000L);
-  }
-
   public Optional<Path> getPath(String sectionName, String name, boolean isCellRootRelative) {
     Optional<String> pathString = getValue(sectionName, name);
     return pathString.map(
