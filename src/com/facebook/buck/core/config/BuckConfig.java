@@ -441,11 +441,6 @@ public class BuckConfig {
     }
     return value.split(separator);
   }
-  /** @return the local cache directory */
-  public String getLocalCacheDirectory(String dirCacheName) {
-    return getValue(dirCacheName, "dir")
-        .orElse(projectFilesystem.getBuckPaths().getCacheDir().toString());
-  }
 
   /** @return the path for the given section and property. */
   public Optional<Path> getPath(String sectionName, String name) {

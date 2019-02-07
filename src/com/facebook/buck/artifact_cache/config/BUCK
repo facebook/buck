@@ -10,6 +10,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/resources:resources",
+        "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/slb:slb",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",

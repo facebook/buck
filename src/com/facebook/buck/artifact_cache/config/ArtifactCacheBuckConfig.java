@@ -20,6 +20,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.resources.ResourcesConfig;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.SlbBuckConfig;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
@@ -140,6 +141,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
       "download_heavy_build_http_cache_fetch_threads";
   private static final int DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS = 20;
 
+  private final ProjectFilesystem projectFilesystem;
   private final BuckConfig buckConfig;
   private final SlbBuckConfig slbConfig;
 
@@ -148,6 +150,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public ArtifactCacheBuckConfig(BuckConfig buckConfig) {
+    this.projectFilesystem = buckConfig.getFilesystem();
     this.buckConfig = buckConfig;
     this.slbConfig = new SlbBuckConfig(buckConfig, CACHE_SECTION_NAME);
   }
@@ -467,12 +470,18 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig.getValue(section, fieldName).orElse(defaultValue);
   }
 
+  private String getLocalCacheDirectory(String dirCacheName) {
+    return buckConfig
+        .getValue(dirCacheName, "dir")
+        .orElse(projectFilesystem.getBuckPaths().getCacheDir().toString());
+  }
+
   private DirCacheEntry obtainDirEntryForName(Optional<String> cacheName) {
     String section = Joiner.on('#').skipNulls().join(CACHE_SECTION_NAME, cacheName.orElse(null));
 
     CacheReadMode readMode = getCacheReadMode(section, DIR_MODE_FIELD, DEFAULT_DIR_CACHE_MODE);
 
-    String cacheDir = buckConfig.getLocalCacheDirectory(section);
+    String cacheDir = getLocalCacheDirectory(section);
     Path pathToCacheDir =
         buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(cacheDir));
     Objects.requireNonNull(pathToCacheDir);
@@ -531,7 +540,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     CacheReadMode readMode =
         getCacheReadMode(section, SQLITE_MODE_FIELD, DEFAULT_SQLITE_CACHE_MODE);
 
-    String cacheDir = buckConfig.getLocalCacheDirectory(section);
+    String cacheDir = getLocalCacheDirectory(section);
     Path pathToCacheDir =
         buckConfig.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(cacheDir));
 
