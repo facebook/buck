@@ -20,6 +20,7 @@ java_immutables_library(
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/remoteexecution/config:config",
+        "//src/com/facebook/buck/remoteexecution/grpc/retry:retry",
         "//src/com/facebook/buck/remoteexecution/event:event",
         "//src/com/facebook/buck/remoteexecution/util:util",
         "//src/com/facebook/buck/util:exceptions",

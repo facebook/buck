@@ -19,6 +19,9 @@ package com.facebook.buck.remoteexecution.grpc;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
+import com.facebook.buck.remoteexecution.grpc.retry.Backoff;
+import com.facebook.buck.remoteexecution.grpc.retry.RetryClientInterceptor;
+import com.facebook.buck.remoteexecution.grpc.retry.RetryPolicy;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.util.NamedTemporaryDirectory;
@@ -40,6 +43,10 @@ import javax.net.ssl.SSLException;
 /** Factory for creating grpc-based strategies. */
 public class GrpcExecutionFactory {
   public static final int MAX_INBOUND_MESSAGE_SIZE = 500 * 1024 * 1024;
+  private static final int MAX_CONNECT_RETRIES = 2;
+  private static final int INITIAL_DELAY_ON_RETRY_MS = 50;
+  private static final int MAX_DELAY_ON_RETRY_MS = 2000;
+
   /**
    * The in-process strategy starts up a grpc remote execution service in process and connects to it
    * directly.
@@ -118,6 +125,7 @@ public class GrpcExecutionFactory {
     return ManagedChannelBuilder.forAddress(host, port)
         .maxInboundMessageSize(MAX_INBOUND_MESSAGE_SIZE)
         .usePlaintext(true)
+        .intercept(getRetryInterceptor())
         .build();
   }
 
@@ -137,6 +145,16 @@ public class GrpcExecutionFactory {
         .maxInboundMessageSize(MAX_INBOUND_MESSAGE_SIZE)
         .sslContext(contextBuilder.build())
         .negotiationType(NegotiationType.TLS)
+        .intercept(getRetryInterceptor())
         .build();
+  }
+
+  private static RetryClientInterceptor getRetryInterceptor() {
+    return new RetryClientInterceptor(
+        RetryPolicy.builder()
+            .setMaxRetries(MAX_CONNECT_RETRIES)
+            .setBackoffStrategy(
+                Backoff.exponential(INITIAL_DELAY_ON_RETRY_MS, MAX_DELAY_ON_RETRY_MS))
+            .build());
   }
 }
