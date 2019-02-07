@@ -600,10 +600,6 @@ public class BuckConfig {
     return config.getLong("build", "threads").orElse((long) defaultValue).intValue();
   }
 
-  public Optional<ImmutableList<String>> getAllowedJavaSpecificationVersions() {
-    return getOptionalListWithoutComments("project", "allowed_java_specification_versions");
-  }
-
   public long getCountersFirstFlushIntervalMillis() {
     return config.getLong("counters", "first_flush_interval_millis").orElse(5000L);
   }

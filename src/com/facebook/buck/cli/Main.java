@@ -574,21 +574,6 @@ public final class Main {
         .build();
   }
 
-  private void checkJavaSpecificationVersions(BuckConfig buckConfig) {
-    Optional<ImmutableList<String>> allowedJavaSpecificationVersions =
-        buckConfig.getAllowedJavaSpecificationVersions();
-    if (allowedJavaSpecificationVersions.isPresent()) {
-      String specificationVersion = System.getProperty("java.specification.version");
-      boolean javaSpecificationVersionIsAllowed =
-          allowedJavaSpecificationVersions.get().contains(specificationVersion);
-      if (!javaSpecificationVersionIsAllowed) {
-        throw new HumanReadableException(
-            "Current Java version '%s' is not in the allowed java specification versions:\n%s",
-            specificationVersion, Joiner.on(", ").join(allowedJavaSpecificationVersions.get()));
-      }
-    }
-  }
-
   /**
    * @param buildId an identifier for this command execution.
    * @param initTimestamp Value of System.nanoTime() when process got main()/nailMain() invoked.
@@ -690,8 +675,6 @@ public final class Main {
 
       ImmutableSet<Path> projectWatchList =
           getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
-
-      checkJavaSpecificationVersions(buckConfig);
 
       Verbosity verbosity = VerbosityParser.parse(args);
 
