@@ -19,6 +19,7 @@ package com.facebook.buck.distributed;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
@@ -186,7 +187,11 @@ public class DistBuildFileHashesIntegrationTest {
       throws InterruptedException {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withMaxEntries(rootCell.getBuckConfig().getMaxActionGraphCacheEntries())
+            .withMaxEntries(
+                rootCell
+                    .getBuckConfig()
+                    .getView(BuildBuckConfig.class)
+                    .getMaxActionGraphCacheEntries())
             .withCellProvider(rootCell.getCellProvider())
             .withCheckActionGraphs()
             .build();

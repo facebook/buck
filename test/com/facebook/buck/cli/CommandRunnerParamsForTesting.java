@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -137,7 +138,7 @@ public class CommandRunnerParamsForTesting {
         new FakeExecutor(),
         BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphProviderBuilder()
-            .withMaxEntries(config.getMaxActionGraphCacheEntries())
+            .withMaxEntries(config.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
             .withPoolSupplier(Main.getForkJoinPoolSupplier(config))
             .build(),
         knownRuleTypesProvider,

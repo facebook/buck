@@ -13,6 +13,7 @@ buck_module(
         "//src/com/facebook/buck/apple/toolchain:toolchain",
         "//src/com/facebook/buck/apple/xcode:xcode",
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/command/config:config",
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/macros:macros",

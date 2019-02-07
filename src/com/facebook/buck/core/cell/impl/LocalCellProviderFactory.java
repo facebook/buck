@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.cell.impl;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
@@ -119,7 +120,8 @@ public class LocalCellProviderFactory {
                 Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
                 Optional<String> canonicalCellName =
                     cellPathResolver.getCanonicalCellName(normalizedCellPath);
-                if (rootConfig.isEmbeddedCellBuckOutEnabled() && canonicalCellName.isPresent()) {
+                if (rootConfig.getView(BuildBuckConfig.class).isEmbeddedCellBuckOutEnabled()
+                    && canonicalCellName.isPresent()) {
                   embeddedCellBuckOutInfo =
                       Optional.of(
                           EmbeddedCellBuckOutInfo.of(

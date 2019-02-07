@@ -16,6 +16,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/command/config:config",
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/android:utils_api",

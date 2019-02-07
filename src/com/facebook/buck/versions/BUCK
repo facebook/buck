@@ -55,6 +55,7 @@ java_library_with_plugins(
     deps = [
         ":translator",
         ":types",
+        "//src/com/facebook/buck/command/config:config",
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/graph/transformation:transformation",
         "//src/com/facebook/buck/core/graph/transformation/executor:executor",

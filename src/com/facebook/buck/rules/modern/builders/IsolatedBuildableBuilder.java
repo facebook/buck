@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellConfig;
@@ -231,7 +232,8 @@ public abstract class IsolatedBuildableBuilder {
             .setBuildCellRootPath(canonicalProjectRoot)
             .setEventBus(eventBus)
             .setJavaPackageFinder(javaPackageFinder)
-            .setShouldDeleteTemporaries(buckConfig.getShouldDeleteTemporaries())
+            .setShouldDeleteTemporaries(
+                buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries())
             .build();
 
     this.toolchainProviderFunction =
@@ -254,7 +256,7 @@ public abstract class IsolatedBuildableBuilder {
                   fs.getRootPath().toString(), configuredPaths.getProjectRootDir());
 
               if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
-                  && buckConfig.getBuckOutCompatLink()
+                  && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()
                   && Platform.detect() != Platform.WINDOWS) {
                 BuckPaths unconfiguredPaths =
                     configuredPaths.withConfiguredBuckOut(configuredPaths.getBuckOut());

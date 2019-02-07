@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -93,7 +94,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
                   getExcludeIncompatibleTargets(),
                   params.getBuckConfig().getView(ParserConfig.class).getDefaultFlavorsMode());
       TargetGraphAndBuildTargets targetGraphAndBuildTargets =
-          params.getBuckConfig().getBuildVersions()
+          params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
               ? toVersionedTargetGraph(params, unversionedTargetGraphAndBuildTargets)
               : unversionedTargetGraphAndBuildTargets;
 

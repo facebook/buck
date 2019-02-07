@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.log.Logger;
@@ -66,7 +67,8 @@ class BuildPrehook implements AutoCloseable {
 
   /** Start the build prehook script. */
   synchronized void startPrehookScript() throws IOException {
-    Optional<String> pathToPrehookScript = buckConfig.getPathToBuildPrehookScript();
+    Optional<String> pathToPrehookScript =
+        buckConfig.getView(BuildBuckConfig.class).getPathToBuildPrehookScript();
     if (!pathToPrehookScript.isPresent()) {
       return;
     }

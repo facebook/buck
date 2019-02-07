@@ -24,6 +24,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
@@ -325,7 +326,8 @@ public class CleanCommandTest {
         new FakeExecutor(),
         CommandRunnerParamsForTesting.BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphProviderBuilder()
-            .withMaxEntries(buckConfig.getMaxActionGraphCacheEntries())
+            .withMaxEntries(
+                buckConfig.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
             .withPoolSupplier(Main.getForkJoinPoolSupplier(buckConfig))
             .build(),
         knownRuleTypesProvider,

@@ -17,6 +17,7 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
@@ -113,7 +114,11 @@ public class Build implements Closeable {
                 .setBuildCellRootPath(rootCell.getRoot())
                 .setJavaPackageFinder(javaPackageFinder)
                 .setEventBus(executionContext.getBuckEventBus())
-                .setShouldDeleteTemporaries(rootCell.getBuckConfig().getShouldDeleteTemporaries())
+                .setShouldDeleteTemporaries(
+                    rootCell
+                        .getBuckConfig()
+                        .getView(BuildBuckConfig.class)
+                        .getShouldDeleteTemporaries())
                 .build())
         .setClock(clock)
         .setArtifactCache(artifactCache)
@@ -173,7 +178,7 @@ public class Build implements Closeable {
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths configuredPaths = filesystem.getBuckPaths();
       if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
-          && buckConfig.getBuckOutCompatLink()
+          && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()
           && Platform.detect() != Platform.WINDOWS) {
         BuckPaths unconfiguredPaths =
             configuredPaths.withConfiguredBuckOut(configuredPaths.getBuckOut());

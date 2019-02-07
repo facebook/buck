@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.resources;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -83,13 +84,15 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public int getManagedThreadCount() {
+    BuildBuckConfig buildBuckConfig = getDelegate().getView(BuildBuckConfig.class);
     if (!isResourceAwareSchedulingEnabled()) {
-      return getDelegate().getNumThreads();
+      return buildBuckConfig.getNumThreads();
     }
     return getDelegate()
         .getLong(RESOURCES_SECTION_HEADER, "managed_thread_count")
         .orElse(
-            (long) getDelegate().getNumThreads() + getDelegate().getDefaultMaximumNumberOfThreads())
+            (long) buildBuckConfig.getNumThreads()
+                + buildBuckConfig.getDefaultMaximumNumberOfThreads())
         .intValue();
   }
 
@@ -117,7 +120,7 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
   public ResourceAmounts getMaximumResourceAmounts() {
     ResourceAmounts estimated = ResourceAmountsEstimator.getEstimatedAmounts();
     return ResourceAmounts.of(
-        getDelegate().getNumThreads(estimated.getCpu()),
+        getDelegate().getView(BuildBuckConfig.class).getNumThreads(estimated.getCpu()),
         getDelegate()
             .getInteger(RESOURCES_SECTION_HEADER, "max_memory_resource")
             .orElse(estimated.getMemory()),
@@ -137,7 +140,7 @@ abstract class AbstractResourcesConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public ConcurrencyLimit getConcurrencyLimit() {
     return new ConcurrencyLimit(
-        getDelegate().getNumThreads(),
+        getDelegate().getView(BuildBuckConfig.class).getNumThreads(),
         getResourceAllocationFairness(),
         getManagedThreadCount(),
         getDefaultResourceAmounts(),

@@ -21,6 +21,7 @@ java_immutables_library(
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:utils",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
+        "//src/com/facebook/buck/command/config:config",
         "//src/com/facebook/buck/core/build/distributed/synchronization:synchronization",
         "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
         "//src/com/facebook/buck/core/build/engine/delegate:delegate",

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.distributed.build_slave;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
 import com.facebook.buck.core.cell.Cell;
@@ -119,7 +120,10 @@ public class DelegateAndGraphsInitializer {
                   key -> Objects.requireNonNull(cells.get(key))));
 
       try {
-        if (args.getState().getRemoteRootCellConfig().getBuildVersions()) {
+        if (args.getState()
+            .getRemoteRootCellConfig()
+            .getView(BuildBuckConfig.class)
+            .getBuildVersions()) {
           targetGraph =
               args.getVersionedTargetGraphCache()
                   .toVersionedTargetGraph(
@@ -180,22 +184,23 @@ public class DelegateAndGraphsInitializer {
   private StackedFileHashCache createStackOfDefaultFileHashCache() throws InterruptedException {
     ImmutableList.Builder<ProjectFileHashCache> allCachesBuilder = ImmutableList.builder();
     Cell rootCell = args.getState().getRootCell();
+    BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
 
     // 1. Add all cells (including the root cell).
     for (Path cellPath : rootCell.getKnownRoots()) {
       Cell cell = rootCell.getCell(cellPath);
       allCachesBuilder.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
+              cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
       allCachesBuilder.add(
           DefaultFileHashCache.createBuckOutFileHashCache(
-              cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
+              cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
     }
 
     // 2. Add the Operating System roots.
     allCachesBuilder.addAll(
         DefaultFileHashCache.createOsRootDirectoriesCaches(
-            args.getProjectFilesystemFactory(), rootCell.getBuckConfig().getFileHashCacheMode()));
+            args.getProjectFilesystemFactory(), buildBuckConfig.getFileHashCacheMode()));
 
     return new StackedFileHashCache(allCachesBuilder.build());
   }

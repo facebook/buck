@@ -16,6 +16,7 @@
 package com.facebook.buck.command;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
@@ -253,7 +254,7 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getRuleKeyConfiguration(),
             cachingBuildEngineDelegate.getFileHashCache(),
             actionGraphAndBuilder.getActionGraphBuilder(),
-            args.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+            args.getBuckConfig().getView(BuildBuckConfig.class).getBuildInputRuleKeyFileSizeLimit(),
             ruleKeyCacheScope.getCache(),
             ruleKeyLogger),
         remoteBuildRuleCompletionWaiter,

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
@@ -98,24 +99,23 @@ final class Daemon implements Closeable {
     this.fileEventBus = new EventBus("file-change-events");
 
     ImmutableList<Cell> allCells = rootCell.getAllCells();
+    BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
 
     // Setup the stacked file hash cache from all cells.
     ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder =
         ImmutableList.builderWithExpectedSize(allCells.size() + 1);
     for (Cell subCell : allCells) {
       WatchedFileHashCache watchedCache =
-          new WatchedFileHashCache(
-              subCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode());
+          new WatchedFileHashCache(subCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode());
       fileEventBus.register(watchedCache);
       hashCachesBuilder.add(watchedCache);
     }
     hashCachesBuilder.add(
         DefaultFileHashCache.createBuckOutFileHashCache(
-            rootCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
+            rootCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
     this.hashCaches = hashCachesBuilder.build();
 
-    this.actionGraphCache =
-        new ActionGraphCache(rootCell.getBuckConfig().getMaxActionGraphCacheEntries());
+    this.actionGraphCache = new ActionGraphCache(buildBuckConfig.getMaxActionGraphCacheEntries());
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
     this.knownRuleTypesProvider = knownRuleTypesProvider;
 

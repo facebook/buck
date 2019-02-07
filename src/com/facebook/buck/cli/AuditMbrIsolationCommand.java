@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
@@ -93,7 +94,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
             .post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
         return ExitCode.PARSE_ERROR;
       }
-      if (params.getBuckConfig().getBuildVersions()) {
+      if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
         targetGraph =
             toVersionedTargetGraph(params, TargetGraphAndBuildTargets.of(targetGraph, targets))
                 .getTargetGraph();
@@ -109,7 +110,10 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
                               params.getPoolSupplier(),
                               params.getBuckConfig()),
                           new ActionGraphCache(
-                              params.getBuckConfig().getMaxActionGraphCacheEntries()),
+                              params
+                                  .getBuckConfig()
+                                  .getView(BuildBuckConfig.class)
+                                  .getMaxActionGraphCacheEntries()),
                           params.getRuleKeyConfiguration(),
                           params.getBuckConfig())
                       .getFreshActionGraph(targetGraph))

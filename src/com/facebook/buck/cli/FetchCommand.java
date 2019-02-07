@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.Build;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
@@ -89,7 +90,7 @@ public class FetchCommand extends BuildCommand {
                         getArguments()),
                     getExcludeIncompatibleTargets(),
                     parserConfig.getDefaultFlavorsMode());
-        if (params.getBuckConfig().getBuildVersions()) {
+        if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
           result = toVersionedTargetGraph(params, result);
         }
         actionGraphAndBuilder =
@@ -102,7 +103,10 @@ public class FetchCommand extends BuildCommand {
                             params.getPoolSupplier(),
                             params.getBuckConfig()),
                         new ActionGraphCache(
-                            params.getBuckConfig().getMaxActionGraphCacheEntries()),
+                            params
+                                .getBuckConfig()
+                                .getView(BuildBuckConfig.class)
+                                .getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration(),
                         params.getBuckConfig())
                     .getFreshActionGraph(ruleGenerator, result.getTargetGraph()));
@@ -125,7 +129,7 @@ public class FetchCommand extends BuildCommand {
               getDefaultRuleKeyCacheScope(
                   params,
                   new RuleKeyCacheRecycler.SettingsAffectingCache(
-                      params.getBuckConfig().getKeySeed(),
+                      params.getBuckConfig().getView(BuildBuckConfig.class).getKeySeed(),
                       actionGraphAndBuilder.getActionGraph()));
           CachingBuildEngine buildEngine =
               new CachingBuildEngine(
@@ -148,7 +152,10 @@ public class FetchCommand extends BuildCommand {
                       params.getRuleKeyConfiguration(),
                       localCachingBuildEngineDelegate.getFileHashCache(),
                       actionGraphAndBuilder.getActionGraphBuilder(),
-                      params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+                      params
+                          .getBuckConfig()
+                          .getView(BuildBuckConfig.class)
+                          .getBuildInputRuleKeyFileSizeLimit(),
                       ruleKeyCacheScope.getCache()),
                   new NoOpRemoteBuildRuleCompletionWaiter(),
                   cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(

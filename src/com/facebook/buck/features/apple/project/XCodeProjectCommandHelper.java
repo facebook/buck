@@ -23,6 +23,7 @@ import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.cli.ProjectTestsMode;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
@@ -739,7 +740,7 @@ public class XCodeProjectCommandHelper {
 
     TargetGraphAndTargets targetGraphAndTargets =
         TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
-    if (buckConfig.getBuildVersions()) {
+    if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
       targetGraphAndTargets =
           VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
               targetGraphAndTargets,

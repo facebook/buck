@@ -16,8 +16,6 @@
 
 package com.facebook.buck.core.config;
 
-import static java.lang.Integer.parseInt;
-
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -28,14 +26,12 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.infer.annotation.PropagatesNullable;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Objects;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
@@ -56,8 +52,6 @@ import java.util.stream.Stream;
 
 /** Structured representation of data read from a {@code .buckconfig} file. */
 public class BuckConfig {
-
-  private static final Float DEFAULT_THREAD_CORE_RATIO = Float.valueOf(1.0F);
 
   private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART;
 
@@ -336,25 +330,8 @@ public class BuckConfig {
     return platform;
   }
 
-  public int getMaxActionGraphCacheEntries() {
-    return getInteger("cache", "max_action_graph_cache_entries").orElse(1);
-  }
-
   public Optional<String> getRepository() {
     return config.get("cache", "repository");
-  }
-
-  /**
-   * Whether Buck should use Buck binary hash or git commit id as the core key in all rule keys.
-   *
-   * <p>The binary hash reflects the code that can affect the content of artifacts.
-   *
-   * <p>By default git commit id is used as the core key.
-   *
-   * @return <code>True</code> if binary hash should be used as the core key
-   */
-  public boolean useBuckBinaryHash() {
-    return getBooleanValue("cache", "use_buck_binary_hash", false);
   }
 
   public boolean hasUserDefinedValue(String sectionName, String propertyName) {
@@ -474,10 +451,6 @@ public class BuckConfig {
         .orElse(projectFilesystem.getBuckPaths().getCacheDir().toString());
   }
 
-  public int getKeySeed() {
-    return parseInt(getValue("cache", "key_seed").orElse("0"));
-  }
-
   /** @return the path for the given section and property. */
   public Optional<Path> getPath(String sectionName, String name) {
     return getPath(sectionName, name, true);
@@ -486,107 +459,6 @@ public class BuckConfig {
   public Path getRequiredPath(String section, String field) {
     Optional<Path> path = getPath(section, field);
     return getOrThrow(section, field, path);
-  }
-
-  /** @return the number of threads Buck should use. */
-  public int getNumThreads() {
-    return getNumThreads(getDefaultMaximumNumberOfThreads());
-  }
-
-  /** @return the number of threads to be used for the scheduled executor thread pool. */
-  public int getNumThreadsForSchedulerPool() {
-    return config.getLong("build", "scheduler_threads").orElse((long) 2).intValue();
-  }
-
-  /** @return the maximum size of files input based rule keys will be willing to hash. */
-  public long getBuildInputRuleKeyFileSizeLimit() {
-    return config.getLong("build", "input_rule_key_file_size_limit").orElse(Long.MAX_VALUE);
-  }
-
-  public int getDefaultMaximumNumberOfThreads() {
-    return getDefaultMaximumNumberOfThreads(Runtime.getRuntime().availableProcessors());
-  }
-
-  @VisibleForTesting
-  int getDefaultMaximumNumberOfThreads(int detectedProcessorCount) {
-    double ratio = config.getFloat("build", "thread_core_ratio").orElse(DEFAULT_THREAD_CORE_RATIO);
-    if (ratio <= 0.0F) {
-      throw new HumanReadableException(
-          "thread_core_ratio must be greater than zero (was " + ratio + ")");
-    }
-
-    int scaledValue = (int) Math.ceil(ratio * detectedProcessorCount);
-
-    int threadLimit = detectedProcessorCount;
-
-    Optional<Long> reservedCores = getNumberOfReservedCores();
-    if (reservedCores.isPresent()) {
-      threadLimit -= reservedCores.get();
-    }
-
-    if (scaledValue > threadLimit) {
-      scaledValue = threadLimit;
-    }
-
-    Optional<Long> minThreads = getThreadCoreRatioMinThreads();
-    if (minThreads.isPresent()) {
-      scaledValue = Math.max(scaledValue, minThreads.get().intValue());
-    }
-
-    Optional<Long> maxThreads = getThreadCoreRatioMaxThreads();
-    if (maxThreads.isPresent()) {
-      long maxThreadsValue = maxThreads.get();
-
-      if (minThreads.isPresent() && minThreads.get() > maxThreadsValue) {
-        throw new HumanReadableException(
-            "thread_core_ratio_max_cores must be larger than thread_core_ratio_min_cores");
-      }
-
-      if (maxThreadsValue > threadLimit) {
-        throw new HumanReadableException(
-            "thread_core_ratio_max_cores is larger than thread_core_ratio_reserved_cores allows");
-      }
-
-      scaledValue = Math.min(scaledValue, (int) maxThreadsValue);
-    }
-
-    if (scaledValue <= 0) {
-      throw new HumanReadableException(
-          "Configuration resulted in an invalid number of build threads (" + scaledValue + ").");
-    }
-
-    return scaledValue;
-  }
-
-  private Optional<Long> getNumberOfReservedCores() {
-    Optional<Long> reservedCores = config.getLong("build", "thread_core_ratio_reserved_cores");
-    if (reservedCores.isPresent() && reservedCores.get() < 0) {
-      throw new HumanReadableException("thread_core_ratio_reserved_cores must be larger than zero");
-    }
-    return reservedCores;
-  }
-
-  private Optional<Long> getThreadCoreRatioMaxThreads() {
-    Optional<Long> maxThreads = config.getLong("build", "thread_core_ratio_max_threads");
-    if (maxThreads.isPresent() && maxThreads.get() < 0) {
-      throw new HumanReadableException("thread_core_ratio_max_threads must be larger than zero");
-    }
-    return maxThreads;
-  }
-
-  private Optional<Long> getThreadCoreRatioMinThreads() {
-    Optional<Long> minThreads = config.getLong("build", "thread_core_ratio_min_threads");
-    if (minThreads.isPresent() && minThreads.get() <= 0) {
-      throw new HumanReadableException("thread_core_ratio_min_threads must be larger than zero");
-    }
-    return minThreads;
-  }
-
-  /**
-   * @return the number of threads Buck should use or the specified defaultValue if it is not set.
-   */
-  public int getNumThreads(int defaultValue) {
-    return config.getLong("build", "threads").orElse((long) defaultValue).intValue();
   }
 
   public long getCountersFirstFlushIntervalMillis() {
@@ -684,58 +556,8 @@ public class BuckConfig {
     return filtered.build();
   }
 
-  /**
-   * @return whether to symlink the default output location (`buck-out`) to the user-provided
-   *     override for compatibility.
-   */
-  public boolean getBuckOutCompatLink() {
-    return getBooleanValue("project", "buck_out_compat_link", false);
-  }
-
-  /** @return whether to enabled versions on build/test command. */
-  public boolean getBuildVersions() {
-    return getBooleanValue("build", "versions", false);
-  }
-
-  /** @return whether to enabled versions on targets command. */
-  public boolean getTargetsVersions() {
-    return getBooleanValue("targets", "versions", false);
-  }
-
-  /** @return whether to enable caching of rule key calculations between builds. */
-  public boolean getRuleKeyCaching() {
-    return getBooleanValue("build", "rule_key_caching", false);
-  }
-
-  /** @return whether to enable new file hash cache engine. */
-  public FileHashCacheMode getFileHashCacheMode() {
-    return getEnum("build", "file_hash_cache_mode", FileHashCacheMode.class)
-        .orElse(FileHashCacheMode.DEFAULT);
-  }
-
   public Config getConfig() {
     return config;
-  }
-
-  /** Whether to create symlinks of build output in buck-out/last. */
-  public boolean createBuildOutputSymLinksEnabled() {
-    return getBooleanValue("build", "create_build_output_symlinks_enabled", false);
-  }
-
-  public boolean isEmbeddedCellBuckOutEnabled() {
-    return getBooleanValue("project", "embedded_cell_buck_out_enabled", false);
-  }
-
-  public Optional<String> getPathToBuildPrehookScript() {
-    return getValue("build", "prehook_script");
-  }
-
-  /**
-   * Whether to delete temporary files generated to run a build rule immediately after the rule is
-   * run.
-   */
-  public boolean getShouldDeleteTemporaries() {
-    return config.getBooleanValue("build", "delete_temporaries", false);
   }
 
   public ProjectFilesystem getFilesystem() {

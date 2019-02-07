@@ -20,6 +20,7 @@ import com.facebook.buck.apple.AppleBundle;
 import com.facebook.buck.apple.AppleDsym;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.command.LocalBuildExecutor;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDelegate;
@@ -395,7 +396,7 @@ public class BuildCommand extends AbstractCommand {
 
     Optional<TargetGraphAndBuildTargets> versionedTargetGraph = Optional.empty();
     try {
-      if (params.getBuckConfig().getBuildVersions()) {
+      if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
         versionedTargetGraph = Optional.of(toVersionedTargetGraph(params, unversionedTargetGraph));
       }
     } catch (VersionException e) {
@@ -496,7 +497,7 @@ public class BuildCommand extends AbstractCommand {
       GraphsAndBuildTargets graphsAndBuildTargets,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope)
       throws IOException {
-    if (params.getBuckConfig().createBuildOutputSymLinksEnabled()) {
+    if (params.getBuckConfig().getView(BuildBuckConfig.class).createBuildOutputSymLinksEnabled()) {
       symLinkBuildResults(params, graphsAndBuildTargets);
     }
     ActionAndTargetGraphs graphs = graphsAndBuildTargets.getGraphs();
@@ -553,7 +554,7 @@ public class BuildCommand extends AbstractCommand {
       throws IOException {
     Optional<Path> outputPath =
         TargetsCommand.getUserFacingOutputPath(
-            pathResolver, rule, buckConfig.getBuckOutCompatLink());
+            pathResolver, rule, buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink());
     if (outputPath.isPresent()) {
       Path absolutePath = outputPath.get();
       Path destPath = lastOutputDirPath.relativize(absolutePath);
@@ -621,7 +622,9 @@ public class BuildCommand extends AbstractCommand {
       BuildRule rule = graphBuilder.requireRule(buildTarget);
       Optional<Path> outputPath =
           TargetsCommand.getUserFacingOutputPath(
-                  pathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
+                  pathResolver,
+                  rule,
+                  params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
               .map(
                   path ->
                       showFullOutput || showFullJsonOutput
@@ -776,7 +779,8 @@ public class BuildCommand extends AbstractCommand {
     return getDefaultRuleKeyCacheScope(
         params,
         new RuleKeyCacheRecycler.SettingsAffectingCache(
-            params.getBuckConfig().getKeySeed(), actionGraphAndBuilder.getActionGraph()));
+            params.getBuckConfig().getView(BuildBuckConfig.class).getKeySeed(),
+            actionGraphAndBuilder.getActionGraph()));
   }
 
   @Override

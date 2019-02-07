@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -376,8 +377,8 @@ public class TargetsCommand extends AbstractCommand {
         buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
     boolean useVersioning =
         isShowRuleKey || isShowOutput || isShowFullOutput
-            ? params.getBuckConfig().getBuildVersions()
-            : params.getBuckConfig().getTargetsVersions();
+            ? params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
+            : params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions();
     targetGraphAndBuildTargetsForShowRules =
         useVersioning
             ? toVersionedTargetGraph(params, targetGraphAndBuildTargetsForShowRules)
@@ -471,7 +472,8 @@ public class TargetsCommand extends AbstractCommand {
         getDefaultRuleKeyCacheScope(
             params,
             new RuleKeyCacheRecycler.SettingsAffectingCache(
-                params.getBuckConfig().getKeySeed(), result.getActionGraph()))) {
+                params.getBuckConfig().getView(BuildBuckConfig.class).getKeySeed(),
+                result.getActionGraph()))) {
 
       // ruleKeyFactory is used to calculate rule key that we also want to display on a graph
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getActionGraphBuilder());
@@ -661,7 +663,7 @@ public class TargetsCommand extends AbstractCommand {
                   getExcludeIncompatibleTargets(),
                   parserConfig.getDefaultFlavorsMode());
     }
-    return params.getBuckConfig().getTargetsVersions()
+    return params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions()
         ? toVersionedTargetGraph(params, targetGraphAndBuildTargets)
         : targetGraphAndBuildTargets;
   }
@@ -991,7 +993,8 @@ public class TargetsCommand extends AbstractCommand {
               getDefaultRuleKeyCacheScope(
                   params,
                   new RuleKeyCacheRecycler.SettingsAffectingCache(
-                      params.getBuckConfig().getKeySeed(), result.getActionGraph()))) {
+                      params.getBuckConfig().getView(BuildBuckConfig.class).getKeySeed(),
+                      result.getActionGraph()))) {
 
             // Setup a parallel rule key calculator to use when building rule keys.
             ruleKeyCalculator =
@@ -1061,7 +1064,9 @@ public class TargetsCommand extends AbstractCommand {
             SourcePathResolver sourcePathResolver =
                 DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder.get()));
             getUserFacingOutputPath(
-                    sourcePathResolver, rule, params.getBuckConfig().getBuckOutCompatLink())
+                    sourcePathResolver,
+                    rule,
+                    params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
                 .map(
                     path ->
                         isShowFullOutput ? path : params.getCell().getFilesystem().relativize(path))

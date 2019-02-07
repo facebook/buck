@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.parser;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -210,7 +211,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
             .orElse(NUM_PARSING_THREADS_DEFAULT)
             .intValue();
 
-    return Math.min(value, getDelegate().getNumThreads());
+    return Math.min(value, getDelegate().getView(BuildBuckConfig.class).getNumThreads());
   }
 
   @Value.Lazy

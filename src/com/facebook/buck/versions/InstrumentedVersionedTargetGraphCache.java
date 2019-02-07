@@ -16,6 +16,7 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
@@ -82,7 +83,7 @@ public class InstrumentedVersionedTargetGraphCache {
             unconfiguredBuildTargetFactory,
             targetGraphAndBuildTargets,
             new VersionBuckConfig(buckConfig).getVersionUniverses(),
-            new ForkJoinPool(buckConfig.getNumThreads()),
+            new ForkJoinPool(buckConfig.getView(BuildBuckConfig.class).getNumThreads()),
             new VersionBuckConfig(buckConfig),
             statsTracker)
         .getTargetGraphAndBuildTargets();

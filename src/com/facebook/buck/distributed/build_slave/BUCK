@@ -14,6 +14,7 @@ java_immutables_library(
         "//src-gen:thrift",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/command:command",
+        "//src/com/facebook/buck/command/config:config",
         "//src/com/facebook/buck/core/build/distributed/synchronization/impl:impl",
         "//src/com/facebook/buck/core/build/engine/cache/manager:manager",
         "//src/com/facebook/buck/core/build/engine/delegate:delegate",

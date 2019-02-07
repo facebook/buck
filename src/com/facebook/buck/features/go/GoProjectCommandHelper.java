@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuildCommand;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectTestsMode;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -401,7 +402,7 @@ public class GoProjectCommandHelper {
 
     TargetGraphAndTargets targetGraphAndTargets =
         TargetGraphAndTargets.create(graphRoots, projectGraph, isWithTests, explicitTestTargets);
-    if (buckConfig.getBuildVersions()) {
+    if (buckConfig.getView(BuildBuckConfig.class).getBuildVersions()) {
       targetGraphAndTargets =
           VersionedTargetGraphAndTargets.toVersionedTargetGraphAndTargets(
               targetGraphAndTargets,

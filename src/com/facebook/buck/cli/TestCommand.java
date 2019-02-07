@@ -20,6 +20,7 @@ import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngine;
@@ -543,7 +544,7 @@ public class TestCommand extends BuildCommand {
           }
         }
 
-        if (params.getBuckConfig().getBuildVersions()) {
+        if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
           targetGraphAndBuildTargets = toVersionedTargetGraph(params, targetGraphAndBuildTargets);
         }
 
@@ -577,7 +578,8 @@ public class TestCommand extends BuildCommand {
           getDefaultRuleKeyCacheScope(
               params,
               new RuleKeyCacheRecycler.SettingsAffectingCache(
-                  params.getBuckConfig().getKeySeed(), actionGraphAndBuilder.getActionGraph()))) {
+                  params.getBuckConfig().getView(BuildBuckConfig.class).getKeySeed(),
+                  actionGraphAndBuilder.getActionGraph()))) {
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
         SourcePathRuleFinder sourcePathRuleFinder =
@@ -611,7 +613,10 @@ public class TestCommand extends BuildCommand {
                         params.getRuleKeyConfiguration(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         actionGraphAndBuilder.getActionGraphBuilder(),
-                        params.getBuckConfig().getBuildInputRuleKeyFileSizeLimit(),
+                        params
+                            .getBuckConfig()
+                            .getView(BuildBuckConfig.class)
+                            .getBuildInputRuleKeyFileSizeLimit(),
                         ruleKeyCacheScope.getCache()),
                     new NoOpRemoteBuildRuleCompletionWaiter(),
                     cachingBuildEngineBuckConfig.getManifestServiceIfEnabled(
@@ -662,7 +667,11 @@ public class TestCommand extends BuildCommand {
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())
-                  .setShouldDeleteTemporaries(params.getBuckConfig().getShouldDeleteTemporaries())
+                  .setShouldDeleteTemporaries(
+                      params
+                          .getBuckConfig()
+                          .getView(BuildBuckConfig.class)
+                          .getShouldDeleteTemporaries())
                   .build();
 
           // Once all of the rules are built, then run the tests.

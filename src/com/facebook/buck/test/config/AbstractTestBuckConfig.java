@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.test.config;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -76,7 +77,7 @@ public abstract class AbstractTestBuckConfig implements ConfigView<BuckConfig> {
       throw new HumanReadableException(
           "thread_utilization_ratio must be greater than zero (was " + ratio + ")");
     }
-    return (int) Math.ceil(ratio * getDelegate().getNumThreads());
+    return (int) Math.ceil(ratio * getDelegate().getView(BuildBuckConfig.class).getNumThreads());
   }
 
   public TestResultSummaryVerbosity getResultSummaryVerbosity() {

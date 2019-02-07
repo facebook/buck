@@ -27,6 +27,7 @@ import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig.Executor;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
@@ -724,7 +725,7 @@ public final class Main {
             || !currentBuckCoreKey.get().equals(ruleKeyConfiguration.getCoreKey())
             || (filesystem.exists(unconfiguredPaths.getGenDir(), LinkOption.NOFOLLOW_LINKS)
                 && (filesystem.isSymLink(unconfiguredPaths.getGenDir())
-                    ^ buckConfig.getBuckOutCompatLink()))) {
+                    ^ buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()))) {
           // Migrate any version-dependent directories (which might be huge) to a trash directory
           // so we can delete it asynchronously after the command is done.
           moveToTrash(
@@ -852,6 +853,7 @@ public final class Main {
       // uses the defaults.
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(rootCell.getFilesystem().getRootPath());
+      BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
       if (daemon.isPresent()) {
         allCaches.addAll(getFileHashCachesFromDaemon(daemon.get()));
       } else {
@@ -861,13 +863,13 @@ public final class Main {
             .map(
                 cell ->
                     DefaultFileHashCache.createDefaultFileHashCache(
-                        cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()))
+                        cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()))
             .forEach(allCaches::add);
         // The Daemon caches a buck-out filehashcache for the root cell, so the non-daemon case
         // needs to create that itself.
         allCaches.add(
             DefaultFileHashCache.createBuckOutFileHashCache(
-                rootCell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
+                rootCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
       }
 
       rootCell
@@ -877,7 +879,7 @@ public final class Main {
                 if (!cell.equals(rootCell)) {
                   allCaches.add(
                       DefaultFileHashCache.createBuckOutFileHashCache(
-                          cell.getFilesystem(), rootCell.getBuckConfig().getFileHashCacheMode()));
+                          cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
                 }
               });
 
@@ -886,10 +888,10 @@ public final class Main {
       // times in a single run.
       allCaches.add(
           DefaultFileHashCache.createDefaultFileHashCache(
-              rootCellProjectFilesystem, rootCell.getBuckConfig().getFileHashCacheMode()));
+              rootCellProjectFilesystem, buildBuckConfig.getFileHashCacheMode()));
       allCaches.addAll(
           DefaultFileHashCache.createOsRootDirectoriesCaches(
-              projectFilesystemFactory, rootCell.getBuckConfig().getFileHashCacheMode()));
+              projectFilesystemFactory, buildBuckConfig.getFileHashCacheMode()));
 
       StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 
@@ -982,7 +984,9 @@ public final class Main {
                 scheduledExecutorPool =
                     getExecutorWrapper(
                         Executors.newScheduledThreadPool(
-                            buckConfig.getNumThreadsForSchedulerPool(),
+                            buckConfig
+                                .getView(BuildBuckConfig.class)
+                                .getNumThreadsForSchedulerPool(),
                             new CommandThreadFactory(
                                 getClass().getName() + "SchedulerThreadPool",
                                 commonThreadFactoryState)),
@@ -1007,7 +1011,8 @@ public final class Main {
                     getExecutorWrapper(
                         listeningDecorator(
                             MostExecutors.newMultiThreadExecutor(
-                                "Project", buckConfig.getNumThreads())),
+                                "Project",
+                                buckConfig.getView(BuildBuckConfig.class).getNumThreads())),
                         ExecutorPool.PROJECT.toString(),
                         EXECUTOR_SERVICES_TIMEOUT_SECONDS);
             BuildInfoStoreManager storeManager = new BuildInfoStoreManager();
@@ -1505,7 +1510,7 @@ public final class Main {
                     .addAll(DEFAULT_IGNORE_GLOBS)
                     .build(),
                 daemon.getWatchmanCursor(),
-                buckConfig.getNumThreads());
+                buckConfig.getView(BuildBuckConfig.class).getNumThreads());
       } catch (WatchmanWatcherException e) {
         buildEventBus.post(
             ConsoleEvent.warning(
@@ -1522,7 +1527,7 @@ public final class Main {
       registerClientDisconnectedListener(context.get(), daemon);
       daemon.watchFileSystem(buildEventBus, watchmanWatcher, watchmanFreshInstanceAction);
       Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler;
-      if (buckConfig.getRuleKeyCaching()) {
+      if (buckConfig.getView(BuildBuckConfig.class).getRuleKeyCaching()) {
         LOG.debug("Using rule key calculation caching");
         defaultRuleKeyFactoryCacheRecycler =
             Optional.of(daemon.getDefaultRuleKeyFactoryCacheRecycler());
@@ -1586,7 +1591,8 @@ public final class Main {
                   buildEventBus,
                   ActionGraphFactory.create(
                       buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
-                  new ActionGraphCache(buckConfig.getMaxActionGraphCacheEntries()),
+                  new ActionGraphCache(
+                      buckConfig.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries()),
                   ruleKeyConfiguration,
                   buckConfig),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
