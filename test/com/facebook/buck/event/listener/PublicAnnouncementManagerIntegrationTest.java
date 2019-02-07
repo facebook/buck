@@ -128,7 +128,9 @@ public class PublicAnnouncementManagerIntegrationTest {
                   ImmutableMap.of(
                       "log",
                       ImmutableMap.of(
-                          "slb_server_pool", "http://localhost:" + httpd.getRootUri().getPort())))
+                          "slb_server_pool", "http://localhost:" + httpd.getRootUri().getPort()),
+                      "cache",
+                      ImmutableMap.of("repository", REPOSITORY)))
               .build();
 
       TestConsole console = new TestConsole();
@@ -153,7 +155,6 @@ public class PublicAnnouncementManagerIntegrationTest {
               clock,
               eventBus,
               listener,
-              REPOSITORY,
               new RemoteLogBuckConfig(buckConfig),
               MoreExecutors.newDirectExecutorService());
 

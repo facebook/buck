@@ -330,10 +330,6 @@ public class BuckConfig {
     return platform;
   }
 
-  public Optional<String> getRepository() {
-    return config.get("cache", "repository");
-  }
-
   public boolean hasUserDefinedValue(String sectionName, String propertyName) {
     return config.get(sectionName).containsKey(propertyName);
   }

@@ -1191,7 +1191,6 @@ public final class Main {
                     clock,
                     buildEventBus,
                     consoleListener,
-                    buckConfig.getRepository().orElse("unknown"),
                     new RemoteLogBuckConfig(buckConfig),
                     Objects.requireNonNull(executors.get(ExecutorPool.CPU)));
             announcementManager.getAndPostAnnouncements();

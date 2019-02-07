@@ -59,4 +59,8 @@ public class RemoteLogBuckConfig {
         .getInteger(LOG_SECTION_NAME, REQUEST_MAX_THREADS)
         .orElse(DEFAULT_REQUEST_MAX_THREADS);
   }
+
+  public String getRepository() {
+    return buckConfig.getValue("cache", "repository").orElse("unknown");
+  }
 }

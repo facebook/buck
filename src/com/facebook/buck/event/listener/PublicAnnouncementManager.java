@@ -55,7 +55,6 @@ public class PublicAnnouncementManager {
   private Clock clock;
   private BuckEventBus eventBus;
   private AbstractConsoleEventBusListener consoleEventBusListener;
-  private String repository;
   private ListeningExecutorService service;
   private RemoteLogBuckConfig logConfig;
 
@@ -63,13 +62,11 @@ public class PublicAnnouncementManager {
       Clock clock,
       BuckEventBus eventBus,
       AbstractConsoleEventBusListener consoleEventBusListener,
-      String repository,
       RemoteLogBuckConfig logConfig,
       ListeningExecutorService service) {
     this.clock = clock;
     this.consoleEventBusListener = consoleEventBusListener;
     this.eventBus = eventBus;
-    this.repository = repository;
     this.logConfig = logConfig;
     this.service = service;
   }
@@ -89,7 +86,7 @@ public class PublicAnnouncementManager {
                                 slb.get(), logConfig.createOkHttpClient(), eventBus)))) {
                   AnnouncementRequest announcementRequest = new AnnouncementRequest();
                   announcementRequest.setBuckVersion(getBuckVersion());
-                  announcementRequest.setRepository(repository);
+                  announcementRequest.setRepository(logConfig.getRepository());
                   FrontendRequest request = new FrontendRequest();
                   request.setType(FrontendRequestType.ANNOUNCEMENT);
                   request.setAnnouncementRequest(announcementRequest);
