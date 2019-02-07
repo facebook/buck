@@ -73,9 +73,11 @@ public class CleanCommand extends AbstractCommand {
     pathsToDelete.add(projectFilesystem.getBuckPaths().getGenDir());
     pathsToDelete.add(projectFilesystem.getBuckPaths().getTrashDir());
 
+    CleanCommandBuckConfig buckConfig = cell.getBuckConfig().getView(CleanCommandBuckConfig.class);
+
     // Remove dir cache.
     if (!keepCache) {
-      ImmutableList<String> excludedCaches = cell.getBuckConfig().getCleanExcludedCaches();
+      ImmutableList<String> excludedCaches = buckConfig.getCleanExcludedCaches();
       pathsToDelete.add(projectFilesystem.getBuckPaths().getCacheDir());
       for (DirCacheEntry dirCacheEntry :
           ArtifactCacheBuckConfig.of(cell.getBuckConfig()).getCacheEntries().getDirCacheEntries()) {
@@ -87,7 +89,7 @@ public class CleanCommand extends AbstractCommand {
     }
 
     // Clean out any additional directories specified via config setting.
-    for (String subPath : cell.getBuckConfig().getCleanAdditionalPaths()) {
+    for (String subPath : buckConfig.getCleanAdditionalPaths()) {
       pathsToDelete.add(projectFilesystem.getPath(subPath));
     }
 
