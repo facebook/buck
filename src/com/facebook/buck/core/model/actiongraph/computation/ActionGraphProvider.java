@@ -162,8 +162,7 @@ public class ActionGraphProvider {
           actionGraphCache.put(targetGraph, out);
         }
       }
-      finished =
-          ActionGraphEvent.finished(started, out.getActionGraph().getSize(), out.getActionGraph());
+      finished = ActionGraphEvent.finished(started, out.getActionGraph().getSize());
       return out;
     } finally {
       eventBus.post(finished);
@@ -199,9 +198,7 @@ public class ActionGraphProvider {
     ActionGraphAndBuilder actionGraph =
         createActionGraph(transformer, targetGraph, IncrementalActionGraphMode.DISABLED);
 
-    eventBus.post(
-        ActionGraphEvent.finished(
-            started, actionGraph.getActionGraph().getSize(), actionGraph.getActionGraph()));
+    eventBus.post(ActionGraphEvent.finished(started, actionGraph.getActionGraph().getSize()));
     return actionGraph;
   }
 
