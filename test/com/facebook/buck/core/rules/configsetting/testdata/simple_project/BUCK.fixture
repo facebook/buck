@@ -163,3 +163,13 @@ genrule(
     out = "cat_out.txt",
     cmd = "cat $SRCS > $OUT",
 )
+
+genrule(
+    name = "select_concat_list",
+    srcs = select({
+        ":a": ["a.txt"],
+        ":b": ["b.txt"],
+    }) + ["c.txt"],
+    out = "select_concat_out.txt",
+    cmd = "cat $SRCS > $OUT",
+)

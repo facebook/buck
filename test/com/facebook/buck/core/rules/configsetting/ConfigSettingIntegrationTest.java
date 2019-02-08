@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules.configsetting;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -29,6 +30,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -71,6 +73,23 @@ public class ConfigSettingIntegrationTest {
 
     output = workspace.buildAndReturnOutput("-c", "cat.file=b", ":cat");
     assertEquals("b", Files.readAllLines(output).get(0));
+  }
+
+  @Test
+  public void testCanConcatListWithSelect() throws IOException {
+    ProjectWorkspace workspace = setupWorkspace();
+
+    Path output = workspace.buildAndReturnOutput("-c", "cat.file=a", ":select_concat_list");
+    List<String> result = Files.readAllLines(output);
+    assertEquals(2, result.size());
+    assertTrue(result.contains("a"));
+    assertTrue(result.contains("c"));
+
+    output = workspace.buildAndReturnOutput("-c", "cat.file=b", ":select_concat_list");
+    result = Files.readAllLines(output);
+    assertEquals(2, result.size());
+    assertTrue(result.contains("b"));
+    assertTrue(result.contains("c"));
   }
 
   @Test

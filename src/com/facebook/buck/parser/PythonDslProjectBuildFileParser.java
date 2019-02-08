@@ -538,7 +538,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       List<Object> items = (List<Object>) Objects.requireNonNull(attributeValue.get("items"));
       ImmutableList<Object> convertedElements = convertToSelectableAttributesIfNeeded(items);
       return ImmutableListWithSelects.of(
-          convertedElements, getType(Iterables.getOnlyElement(convertedElements)));
+          convertedElements, getType(Iterables.getLast(convertedElements)));
     }
   }
 
