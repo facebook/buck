@@ -5,7 +5,24 @@
     <excludeFromCompile>
       <directory url="file://$PROJECT_DIR$/buck-out/android" includeSubdirectories="true" />
       <directory url="file://$PROJECT_DIR$/buck-out/bin" includeSubdirectories="true" />
-      <directory url="file://$PROJECT_DIR$/buck-out/gen" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/android" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/assets" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/bin" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/config" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/docs" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/programs" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/py" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/python-dsl" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/scripts" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/src" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/src-gen" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/test" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/third-party" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/tools/build" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/tools/consistency_checker" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/tools/documentation_generator" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/tools/dxanalysis" includeSubdirectories="true" />
+      <directory url="file://$PROJECT_DIR$/buck-out/gen/tools/release" includeSubdirectories="true" />
     </excludeFromCompile>
     <wildcardResourcePatterns>
       <entry name="?*.properties" />
