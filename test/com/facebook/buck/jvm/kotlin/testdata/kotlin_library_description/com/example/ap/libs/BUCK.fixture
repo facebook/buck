@@ -19,14 +19,9 @@ java_annotation_processor(
         'com.google.auto.service.processor.AutoServiceProcessor',
     ],
     deps = [
-        ':auto-service-1.0-rc4.jar',
-        ':auto-common-0.8.jar',
-        ':jsr305-1.3.9.jar',
-        ':error_prone_annotations-2.0.18.jar',
-        ':guava-23.5-jre.jar',
-        ':j2objc-annotations-1.1.jar',
-        ':checker-qual-2.0.0.jar',
-        ':animal-sniffer-annotations-1.14.jar',
+        'buck//third-party/java/guava:guava',
+        ':auto-common.jar',
+        ':auto-service.jar',
     ],
     visibility = ['PUBLIC'],
 )
