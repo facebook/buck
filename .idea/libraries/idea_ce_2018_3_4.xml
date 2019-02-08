@@ -8,7 +8,6 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/intellij/java-api.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/intellij/java-impl.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/intellij/jdom.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/intellij/light-psi-all.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/intellij/openapi.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/intellij/picocontainer-1.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/intellij/platform-api.jar!/" />
