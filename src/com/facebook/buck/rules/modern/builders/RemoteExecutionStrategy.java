@@ -143,8 +143,14 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       CellPathResolver cellResolver,
       Cell rootCell,
       ThrowingFunction<Path, HashCode, IOException> fileHasher) {
-    return new RemoteExecutionStrategy(
-        eventBus, strategyConfig, clients, ruleFinder, cellResolver, rootCell, fileHasher);
+    BuildRuleStrategy strategy =
+        new RemoteExecutionStrategy(
+            eventBus, strategyConfig, clients, ruleFinder, cellResolver, rootCell, fileHasher);
+    if (strategyConfig.isLocalFallbackEnabled()) {
+      strategy = new LocalFallbackStrategy(strategy);
+    }
+
+    return strategy;
   }
 
   @Override

@@ -42,6 +42,7 @@ java_test(
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util:testutil",
         "//test/com/facebook/buck/util/timing:testutil",
+        "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",

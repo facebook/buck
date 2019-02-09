@@ -26,4 +26,6 @@ public interface RemoteExecutionStrategyConfig {
   int getMaxConcurrentResultHandling();
 
   int getMaxConcurrentPendingUploads();
+
+  boolean isLocalFallbackEnabled();
 }

@@ -45,6 +45,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final int DEFAULT_REMOTE_CONCURRENT_PENDING_UPLOADS = 100;
   public static final int DEFAULT_REMOTE_CONCURRENT_EXECUTIONS = 80;
   public static final int DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING = 6;
+  public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED = false;
 
   /**
    * Limit on the number of outstanding execution requests. This is probably the value that's most
@@ -60,6 +61,8 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
    * which is currently a blocking operation.
    */
   public static final String CONCURRENT_RESULT_HANDLING_KEY = "concurrent_result_handling";
+  /** Whether failed remote executions are retried locally. */
+  public static final String IS_LOCAL_FALLBACK_ENABLED_KEY = "is_local_fallback_enabled";
   /**
    * Number of threads for the strategy to do its work. This doesn't need to be a lot, but should
    * probably be greater than concurrent_result_handling below.
@@ -156,6 +159,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
             .getInteger(SECTION, CONCURRENT_RESULT_HANDLING_KEY)
             .orElse(DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING);
 
+    boolean isLocalFallbackEnabled =
+        getDelegate()
+            .getBooleanValue(
+                SECTION, IS_LOCAL_FALLBACK_ENABLED_KEY, DEFAULT_IS_LOCAL_FALLBACK_ENABLED);
+
     // Some of these values are also limited by other ones (e.g. synchronous work is limited by the
     // number of threads). We detect some of these cases and log an error to the user to help them
     // understand the behavior.
@@ -216,6 +224,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public int getMaxConcurrentResultHandling() {
         return concurrentResultHandling;
+      }
+
+      @Override
+      public boolean isLocalFallbackEnabled() {
+        return isLocalFallbackEnabled;
       }
     };
   }
