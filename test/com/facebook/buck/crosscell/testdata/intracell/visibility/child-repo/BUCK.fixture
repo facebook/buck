@@ -12,3 +12,10 @@ export_file(
     name = "reexported-dummy.c",
     src = ":dummy.c",
 )
+
+apple_library(
+    name = "child-apple-library",
+    deps = [
+        "parent//just-a-directory:jad-apple-library",
+    ],
+)

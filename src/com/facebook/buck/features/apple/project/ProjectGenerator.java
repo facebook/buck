@@ -3591,13 +3591,9 @@ public class ProjectGenerator {
           targetNode,
           (nativeNode, headerVisibility) -> {
             if (options.shouldUseAbsoluteHeaderMapPaths()) {
-              builder.add(
-                  nativeNode
-                      .getFilesystem()
-                      .getBuckPaths()
-                      .getConfiguredBuckOut()
-                      .toAbsolutePath()
-                      .normalize());
+              ProjectFilesystem filesystem = nativeNode.getFilesystem();
+              Path buckOut = filesystem.resolve(filesystem.getBuckPaths().getConfiguredBuckOut());
+              builder.add(buckOut.toAbsolutePath().normalize());
             } else {
               builder.add(
                   targetNode

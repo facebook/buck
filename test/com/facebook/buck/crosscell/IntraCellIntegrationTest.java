@@ -17,7 +17,9 @@
 package com.facebook.buck.crosscell;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -29,10 +31,13 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -138,5 +143,45 @@ public class IntraCellIntegrationTest {
     ProcessResult rebuildResult = workspace.runBuckdCommand(childRepoRoot, "build", target);
     rebuildResult.assertSuccess();
     workspace.getBuildLog(childRepoRoot).assertTargetBuiltLocally(target);
+  }
+
+  @Test
+  public void testBuckProjectGeneratesCorrectAbsolutePaths() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "intracell/visibility", tmp);
+    workspace.setUp();
+
+    Map<String, Map<String, String>> childLocalConfigs =
+        ImmutableMap.of(
+            "project",
+            ImmutableMap.of(
+                "absolute_header_map_paths", "true",
+                "embedded_cell_buck_out_enabled", "true"));
+    workspace.writeContentsToPath(
+        workspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
+
+    Path childRepoRoot = workspace.getPath("child-repo");
+
+    ProcessResult projectResult =
+        workspace.runBuckCommand(
+            childRepoRoot, "project", "--ide", "xcode", "//:child-apple-library");
+    projectResult.assertSuccess();
+
+    Path outputXCConfig =
+        childRepoRoot.resolve(
+            "buck-out/cells/parent/gen/just-a-directory/jad-apple-library-Debug.xcconfig");
+    assertTrue(Files.exists(outputXCConfig));
+    String xcconfigContents =
+        new String(Files.readAllBytes(outputXCConfig), StandardCharsets.UTF_8);
+    // The key to this test - make sure that the HEADER_SEARCH_PATHS contains the right header base.
+    // HACK: Since the header map base gets added as the last element, we ensure we don't pick up
+    // a path component by searching for path + newline. This is obviously fragile if we move the
+    // header map base to somewhere else in the search path
+    assertTrue(
+        xcconfigContents.contains(
+            childRepoRoot.resolve("buck-out/cells/parent").toString() + "\n"));
   }
 }
