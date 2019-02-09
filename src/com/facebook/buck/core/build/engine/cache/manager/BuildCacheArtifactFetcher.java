@@ -236,7 +236,10 @@ public class BuildCacheArtifactFetcher {
       buildInfoStore.updateMetadata(rule.getBuildTarget(), cacheResult.getMetadata());
     } catch (IOException e) {
       throw new IOException(
-          String.format("%s. Suggested fix: try `buck clean`", e.getMessage()), e.getCause());
+          String.format(
+              "%s extracting artifact for Rule Key: %s. Suggested fix: try `buck clean`",
+              e.getMessage(), ruleKey),
+          e.getCause());
     } finally {
       eventBus.post(ArtifactCompressionEvent.finished(started));
     }
