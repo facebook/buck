@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.command.config.ConfigIgnoredByDaemon;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -167,7 +168,8 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             .setWatchmanUseGlobGenerator(watchmanUseGlobGenerator)
             .setWatchman(watchman)
             .setWatchmanQueryTimeoutMs(parserConfig.getWatchmanQueryTimeoutMs())
-            .setRawConfig(cell.getBuckConfig().getRawConfigForParser())
+            .setRawConfig(
+                cell.getBuckConfig().getView(ConfigIgnoredByDaemon.class).getRawConfigForParser())
             .setBuildFileImportWhitelist(parserConfig.getBuildFileImportWhitelist())
             .setDisableImplicitNativeRules(parserConfig.getDisableImplicitNativeRules())
             .setWarnAboutDeprecatedSyntax(parserConfig.isWarnAboutDeprecatedSyntax())

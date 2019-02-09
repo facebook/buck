@@ -15,10 +15,13 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.command.config.ConfigIgnoredByDaemon;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.ComparableToolchain;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -71,13 +74,23 @@ class DaemonCellChecker {
     if (!cell1.getFilesystem().equals(cell2.getFilesystem())) {
       return IsCompatibleForCaching.FILESYSTEM_CHANGED;
     }
-    if (!cell1.getBuckConfig().equalsForDaemonRestart(cell2.getBuckConfig())) {
+    if (!equalsForDaemonRestart(cell1.getBuckConfig(), cell2.getBuckConfig())) {
       return IsCompatibleForCaching.BUCK_CONFIG_CHANGED;
     }
     if (!areToolchainsCompatibleForCaching(cell1, cell2)) {
       return IsCompatibleForCaching.TOOLCHAINS_INCOMPATIBLE;
     }
     return IsCompatibleForCaching.IS_COMPATIBLE;
+  }
+
+  // This is a hack. A cleaner approach would be to expose a narrow view of the config to any code
+  // that affects the state cached by the Daemon.
+  @VisibleForTesting
+  static boolean equalsForDaemonRestart(BuckConfig buckConfig1, BuckConfig buckConfig2) {
+    return buckConfig1
+        .getView(ConfigIgnoredByDaemon.class)
+        .getRawConfigForParser()
+        .equals(buckConfig2.getView(ConfigIgnoredByDaemon.class).getRawConfigForParser());
   }
 
   private static boolean areToolchainsCompatibleForCaching(Cell cell1, Cell cell2) {

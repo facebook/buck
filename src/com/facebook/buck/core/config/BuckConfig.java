@@ -33,12 +33,9 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.facebook.infer.annotation.PropagatesNullable;
 import com.google.common.base.Objects;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -52,8 +49,6 @@ import java.util.stream.Stream;
 
 /** Structured representation of data read from a {@code .buckconfig} file. */
 public class BuckConfig {
-
-  private static final ImmutableMap<String, ImmutableSet<String>> IGNORE_FIELDS_FOR_DAEMON_RESTART;
 
   private final Architecture architecture;
 
@@ -71,40 +66,6 @@ public class BuckConfig {
   private final Function<String, UnconfiguredBuildTarget> buildTargetParser;
 
   private final int hashCode;
-
-  static {
-    ImmutableMap.Builder<String, ImmutableSet<String>> ignoreFieldsForDaemonRestartBuilder =
-        ImmutableMap.builder();
-    ignoreFieldsForDaemonRestartBuilder.put(
-        "apple", ImmutableSet.of("generate_header_symlink_tree_only"));
-    ignoreFieldsForDaemonRestartBuilder.put("build", ImmutableSet.of("threads"));
-    ignoreFieldsForDaemonRestartBuilder.put(
-        "cache",
-        ImmutableSet.of("dir", "dir_mode", "http_mode", "http_url", "mode", "slb_server_pool"));
-    ignoreFieldsForDaemonRestartBuilder.put(
-        "client", ImmutableSet.of("id", "skip-action-graph-cache"));
-    ignoreFieldsForDaemonRestartBuilder.put(
-        "log",
-        ImmutableSet.of(
-            "chrome_trace_generation",
-            "compress_traces",
-            "max_traces",
-            "public_announcements",
-            "log_build_id_to_console_enabled",
-            "build_details_template"));
-    ignoreFieldsForDaemonRestartBuilder.put(
-        "project", ImmutableSet.of("ide_prompt", "ide_force_kill"));
-    ignoreFieldsForDaemonRestartBuilder.put(
-        "ui",
-        ImmutableSet.of(
-            "superconsole",
-            "thread_line_limit",
-            "thread_line_output_max_columns",
-            "warn_on_config_file_overrides",
-            "warn_on_config_file_overrides_ignored_files"));
-    ignoreFieldsForDaemonRestartBuilder.put("color", ImmutableSet.of("ui"));
-    IGNORE_FIELDS_FOR_DAEMON_RESTART = ignoreFieldsForDaemonRestartBuilder.build();
-  }
 
   public BuckConfig(
       Config config,
@@ -403,12 +364,6 @@ public class BuckConfig {
     return value.get();
   }
 
-  // This is a hack. A cleaner approach would be to expose a narrow view of the config to any code
-  // that affects the state cached by the Daemon.
-  public boolean equalsForDaemonRestart(BuckConfig other) {
-    return this.config.equalsIgnoring(other.config, IGNORE_FIELDS_FOR_DAEMON_RESTART);
-  }
-
   @Override
   public boolean equals(Object obj) {
     if (this == obj) {
@@ -496,47 +451,6 @@ public class BuckConfig {
 
   public ImmutableSet<String> getSections() {
     return config.getSectionToEntries().keySet();
-  }
-
-  public ImmutableMap<String, ImmutableMap<String, String>> getRawConfigForParser() {
-    ImmutableMap<String, ImmutableMap<String, String>> rawSections = config.getSectionToEntries();
-
-    // If the raw config doesn't have sections which have ignored fields, then just return it as-is.
-    ImmutableSet<String> sectionsWithIgnoredFields = IGNORE_FIELDS_FOR_DAEMON_RESTART.keySet();
-    if (Sets.intersection(rawSections.keySet(), sectionsWithIgnoredFields).isEmpty()) {
-      return rawSections;
-    }
-
-    // Otherwise, iterate through the config to do finer-grain filtering.
-    ImmutableMap.Builder<String, ImmutableMap<String, String>> filtered = ImmutableMap.builder();
-    for (Map.Entry<String, ImmutableMap<String, String>> sectionEnt : rawSections.entrySet()) {
-      String sectionName = sectionEnt.getKey();
-
-      // If this section doesn't have a corresponding ignored section, then just add it as-is.
-      if (!sectionsWithIgnoredFields.contains(sectionName)) {
-        filtered.put(sectionEnt);
-        continue;
-      }
-
-      // If none of this section's entries are ignored, then add it as-is.
-      ImmutableMap<String, String> fields = sectionEnt.getValue();
-      ImmutableSet<String> ignoredFieldNames =
-          IGNORE_FIELDS_FOR_DAEMON_RESTART.getOrDefault(sectionName, ImmutableSet.of());
-      if (Sets.intersection(fields.keySet(), ignoredFieldNames).isEmpty()) {
-        filtered.put(sectionEnt);
-        continue;
-      }
-
-      // Otherwise, filter out the ignored fields.
-      ImmutableMap<String, String> remainingKeys =
-          ImmutableMap.copyOf(Maps.filterKeys(fields, Predicates.not(ignoredFieldNames::contains)));
-
-      if (!remainingKeys.isEmpty()) {
-        filtered.put(sectionName, remainingKeys);
-      }
-    }
-
-    return filtered.build();
   }
 
   public Config getConfig() {

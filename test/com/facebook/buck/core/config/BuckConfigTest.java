@@ -162,38 +162,6 @@ public class BuckConfigTest {
   }
 
   @Test
-  public void testEqualsForDaemonRestart() {
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "build", ImmutableMap.of("threads", "3"),
-                    "cxx", ImmutableMap.of("cc", "/some_location/gcc")))
-            .build();
-    BuckConfig buckConfigMoreThreads =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "build", ImmutableMap.of("threads", "4"),
-                    "cxx", ImmutableMap.of("cc", "/some_location/gcc")))
-            .build();
-    BuckConfig buckConfigDifferentCompiler =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    "build", ImmutableMap.of("threads", "3"),
-                    "cxx", ImmutableMap.of("cc", "/some_location/clang")))
-            .build();
-
-    assertFalse(buckConfig.equals(buckConfigMoreThreads));
-    assertFalse(buckConfig.equals(buckConfigDifferentCompiler));
-
-    assertTrue(buckConfig.equalsForDaemonRestart(buckConfigMoreThreads));
-    assertFalse(buckConfig.equalsForDaemonRestart(buckConfigDifferentCompiler));
-    assertFalse(buckConfigMoreThreads.equalsForDaemonRestart(buckConfigDifferentCompiler));
-  }
-
-  @Test
   public void hasUserDefinedValueReturnsTrueForEmptySetting() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()

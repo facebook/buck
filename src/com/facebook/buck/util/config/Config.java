@@ -29,9 +29,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -406,32 +404,6 @@ public class Config {
     }
     Config that = (Config) obj;
     return Objects.equal(this.rawConfig, that.rawConfig);
-  }
-
-  public boolean equalsIgnoring(
-      Config other, ImmutableMap<String, ImmutableSet<String>> ignoredFields) {
-    if (this == other) {
-      return true;
-    }
-    ImmutableMap<String, ImmutableMap<String, String>> left = this.getSectionToEntries();
-    ImmutableMap<String, ImmutableMap<String, String>> right = other.getSectionToEntries();
-    Sets.SetView<String> sections = Sets.union(left.keySet(), right.keySet());
-    for (String section : sections) {
-      ImmutableMap<String, String> leftFields = left.getOrDefault(section, ImmutableMap.of());
-      ImmutableMap<String, String> rightFields = right.getOrDefault(section, ImmutableMap.of());
-      Sets.SetView<String> fields =
-          Sets.difference(
-              Sets.union(leftFields.keySet(), rightFields.keySet()),
-              Optional.ofNullable(ignoredFields.get(section)).orElse(ImmutableSet.of()));
-      for (String field : fields) {
-        String leftValue = leftFields.get(field);
-        String rightValue = rightFields.get(field);
-        if (leftValue == null || !leftValue.equals(rightValue)) {
-          return false;
-        }
-      }
-    }
-    return true;
   }
 
   @Override

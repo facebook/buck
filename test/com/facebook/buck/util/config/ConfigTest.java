@@ -27,7 +27,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -316,63 +315,6 @@ public class ConfigTest {
     assertThat(
         config.get("section", "field"),
         Matchers.equalTo(Optional.of("hello $(location input) world")));
-  }
-
-  @Test
-  public void equalsIgnoringIgnoresValueOfSingleField() {
-    assertThat(
-        new Config(RawConfig.builder().put("section", "field", "valueLeft").build())
-            .equalsIgnoring(
-                new Config(RawConfig.builder().put("section", "field", "valueRight").build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))),
-        is(true));
-
-    assertThat(
-        new Config(
-                RawConfig.builder()
-                    .put("section", "field", "valueLeft")
-                    .put("section", "field_b", "value")
-                    .build())
-            .equalsIgnoring(
-                new Config(
-                    RawConfig.builder()
-                        .put("section", "field", "valueRight")
-                        .put("section", "field_b", "value")
-                        .build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))),
-        is(true));
-  }
-
-  @Test
-  public void equalsIgnoringIgnoresPresenceOfIgnoredField() {
-    assertThat(
-        new Config(RawConfig.builder().put("section", "field", "value").build())
-            .equalsIgnoring(
-                new Config(RawConfig.builder().build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))),
-        is(true));
-
-    assertThat(
-        new Config(
-                RawConfig.builder()
-                    .put("section", "field", "value")
-                    .put("section", "field_b", "value")
-                    .build())
-            .equalsIgnoring(
-                new Config(RawConfig.builder().put("section", "field_b", "value").build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))),
-        is(true));
-
-    assertThat(
-        new Config(
-                RawConfig.builder()
-                    .put("section", "field", "value")
-                    .put("section_b", "field_b", "value")
-                    .build())
-            .equalsIgnoring(
-                new Config(RawConfig.builder().put("section_b", "field_b", "value").build()),
-                ImmutableMap.of("section", ImmutableSet.of("field"))),
-        is(true));
   }
 
   @Test
