@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.cli.DaemonCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -79,9 +80,9 @@ class DaemonLifecycleManager {
 
       // If Buck config has changed or SDKs have changed, invalidate the cache and
       // create a new daemon.
-      Cell.IsCompatibleForCaching cacheCompat =
-          daemon.getRootCell().isCompatibleForCaching(rootCell);
-      if (cacheCompat != Cell.IsCompatibleForCaching.IS_COMPATIBLE) {
+      IsCompatibleForCaching cacheCompat =
+          DaemonCellChecker.areCellsCompatibleForCaching(daemon.getRootCell(), rootCell);
+      if (cacheCompat != IsCompatibleForCaching.IS_COMPATIBLE) {
         LOG.warn(
             "Shutting down and restarting daemon on config or directory graphBuilder change (%s != %s)",
             daemon.getRootCell(), rootCell);
