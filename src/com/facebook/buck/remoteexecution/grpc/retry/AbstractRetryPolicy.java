@@ -45,6 +45,11 @@ abstract class AbstractRetryPolicy {
   }
 
   @Value.Default
+  public boolean getRestartAllStreamingCalls() {
+    return false;
+  }
+
+  @Value.Default
   public ScheduledExecutorService getExecutor() {
     return Executors.newSingleThreadScheduledExecutor(
         new ThreadFactoryBuilder().setNameFormat("retryer-%s").setDaemon(true).build());

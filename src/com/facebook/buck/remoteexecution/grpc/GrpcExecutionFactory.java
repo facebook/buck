@@ -155,6 +155,9 @@ public class GrpcExecutionFactory {
             .setMaxRetries(MAX_CONNECT_RETRIES)
             .setBackoffStrategy(
                 Backoff.exponential(INITIAL_DELAY_ON_RETRY_MS, MAX_DELAY_ON_RETRY_MS))
+            // Build Actions and CAS operations can be retried without issue even if they fail in
+            // the middle of execution.
+            .setRestartAllStreamingCalls(true)
             .build());
   }
 }
