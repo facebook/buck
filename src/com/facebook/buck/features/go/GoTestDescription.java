@@ -27,7 +27,6 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -188,7 +187,8 @@ public class GoTestDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       GoTestDescriptionArg args) {
-    GoPlatform platform = getGoPlatform(buildTarget, args);
+    GoPlatform platform =
+        GoDescriptors.getPlatformForRule(getGoToolchain(), this.goBuckConfig, buildTarget, args);
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
@@ -480,24 +480,14 @@ public class GoTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ platform parse time deps.
-    targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(getGoPlatform(buildTarget, constructorArg).getCxxPlatform()));
+    GoPlatform platform =
+        GoDescriptors.getPlatformForRule(
+            getGoToolchain(), this.goBuckConfig, buildTarget, constructorArg);
+    targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform()));
   }
 
   private GoToolchain getGoToolchain() {
     return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
-  }
-
-  private GoPlatform getGoPlatform(BuildTarget target, AbstractGoTestDescriptionArg arg) {
-    GoToolchain toolchain = getGoToolchain();
-    FlavorDomain<GoPlatform> platforms = toolchain.getPlatformFlavorDomain();
-    return platforms
-        .getValue(target)
-        .orElseGet(
-            () ->
-                arg.getPlatform()
-                    .map(platforms::getValue)
-                    .orElseGet(toolchain::getDefaultPlatform));
   }
 
   @BuckStyleImmutable

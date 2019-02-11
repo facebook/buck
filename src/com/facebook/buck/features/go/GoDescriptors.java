@@ -19,6 +19,7 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -210,6 +211,33 @@ abstract class GoDescriptors {
     }
 
     return ImmutableMap.copyOf(importMapBuilder);
+  }
+
+  static GoPlatform getPlatformForRule(
+      GoToolchain toolchain, GoBuckConfig buckConfig, BuildTarget target, HasGoLinkable arg) {
+    FlavorDomain<GoPlatform> platforms = toolchain.getPlatformFlavorDomain();
+
+    // Check target-defined platform first.
+    Optional<GoPlatform> platform = platforms.getValue(target);
+    if (platform.isPresent()) {
+      return platform.get();
+    }
+
+    // Now try the default Go toolchain platform. This shouldn't be defined
+    // normally.
+    platform = buckConfig.getDefaultPlatform().map(InternalFlavor::of).map(platforms::getValue);
+    if (platform.isPresent()) {
+      return platform.get();
+    }
+
+    // Next is the platform from the arg.
+    platform = arg.getPlatform().map(platforms::getValue);
+    if (platform.isPresent()) {
+      return platform.get();
+    }
+
+    // Finally, the default overall toolchain platform.
+    return toolchain.getDefaultPlatform();
   }
 
   static Iterable<BuildRule> getCgoLinkableDeps(Iterable<BuildRule> deps) {
