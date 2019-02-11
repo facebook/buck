@@ -932,7 +932,8 @@ class CachingBuildRuleBuilder {
                 success(
                     BuildRuleSuccessType.FETCHED_FROM_CACHE_MANIFEST_BASED,
                     result.getRuleCacheResult().get()));
-          });
+          },
+          MoreExecutors.directExecutor());
     }
   }
 
@@ -955,7 +956,8 @@ class CachingBuildRuleBuilder {
                   inputRuleKeyCacheCheckTimestampsMillis =
                       new Pair<>(start, System.currentTimeMillis());
                   return success(result.getFirst(), result.getSecond());
-                }));
+                }),
+        MoreExecutors.directExecutor());
   }
 
   private ListenableFuture<BuildResult> buildOrFetchFromCache() {
@@ -988,7 +990,8 @@ class CachingBuildRuleBuilder {
               cacheResult.getType().verifyValidFinalType();
               rulekeyCacheResult.set(cacheResult);
               return getBuildResultForRuleKeyCacheResult(cacheResult);
-            });
+            },
+            MoreExecutors.directExecutor());
 
     // 3. Before unlocking dependencies, ensure build rule hasn't started remotely.
     buildResultFuture =
@@ -1087,7 +1090,7 @@ class CachingBuildRuleBuilder {
     }
 
     // Unwrap the result.
-    return Futures.transform(buildResultFuture, Optional::get);
+    return Futures.transform(buildResultFuture, Optional::get, MoreExecutors.directExecutor());
   }
 
   private boolean shouldKeepGoing() {
@@ -1117,7 +1120,8 @@ class CachingBuildRuleBuilder {
               cacheResult -> {
                 rulekeyCacheResult.set(cacheResult);
                 return getBuildResultForRuleKeyCacheResult(cacheResult);
-              });
+              },
+              MoreExecutors.directExecutor());
         });
   }
 
@@ -1174,7 +1178,8 @@ class CachingBuildRuleBuilder {
               new Pair<>(cacheRequestTimestampMillis, System.currentTimeMillis());
           eventBus.post(new RuleKeyCacheResultEvent(ruleKeyCacheResult, cacheHitExpected));
           return cacheResult;
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   private Optional<BuildResult> getBuildResultForRuleKeyCacheResult(CacheResult cacheResult) {

@@ -66,7 +66,8 @@ public class LocalFsContentsProvider implements FileContentsProvider {
     RuleKey key = new RuleKey(entry.getSha1());
     return Futures.transform(
         dirCache.fetchAsync(null, key, LazyPath.ofInstance(targetAbsPath)),
-        (CacheResult result) -> result.getType() == CacheResultType.HIT);
+        (CacheResult result) -> result.getType() == CacheResultType.HIT,
+        MoreExecutors.directExecutor());
   }
 
   public void writeFileAndGetInputStream(BuildJobStateFileHashEntry entry, Path absPath)

@@ -36,6 +36,7 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -113,7 +114,8 @@ public class InputBasedRuleKeyManager {
             }
           }
           return Optional.empty();
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   public ListenableFuture<Optional<Pair<BuildRuleSuccessType, CacheResult>>>

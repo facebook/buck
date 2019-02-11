@@ -29,6 +29,7 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.Objects;
@@ -188,7 +189,8 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
           future.setFuture(
               Futures.transform(
                   Objects.requireNonNull(delegateResult).getBuildResult(),
-                  ignored -> cancelledResult));
+                  ignored -> cancelledResult,
+                  MoreExecutors.directExecutor()));
         }
         advanceStage(JobStage.FINISHED);
       }

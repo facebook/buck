@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -94,7 +95,8 @@ public class RetryingCacheDecorator implements ArtifactCache, CacheDecorator {
                     ruleKey, cacheMode.name(), maxFetchRetries));
           }
           return CacheResult.builder().from(result).setCacheError(msg).build();
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   @Override

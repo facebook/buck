@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.MoreFiles;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
@@ -130,7 +131,8 @@ public class OutputsMaterializer {
           } catch (IOException e) {
             throw new UncheckedExecutionException(e);
           }
-        });
+        },
+        MoreExecutors.directExecutor());
   }
 
   private void setExecutable(boolean isExecutable, Path path) {

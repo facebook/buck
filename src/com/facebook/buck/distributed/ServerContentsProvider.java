@@ -23,6 +23,7 @@ import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -181,7 +182,8 @@ public class ServerContentsProvider implements FileContentsProvider {
       future =
           Futures.transform(
               multiFetchFuture,
-              resultMap -> Objects.requireNonNull(resultMap).get(entry.getSha1()));
+              resultMap -> Objects.requireNonNull(resultMap).get(entry.getSha1()),
+              MoreExecutors.directExecutor());
     }
 
     return future;
@@ -208,6 +210,8 @@ public class ServerContentsProvider implements FileContentsProvider {
     networkThreadPool.submit(this::makeMultiFetchRequestIfBufferIsFull);
 
     return Futures.transform(
-        fileFuture, (byte[] fileContents) -> writeFileContentsToPath(fileContents, targetAbsPath));
+        fileFuture,
+        (byte[] fileContents) -> writeFileContentsToPath(fileContents, targetAbsPath),
+        MoreExecutors.directExecutor());
   }
 }

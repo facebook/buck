@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -141,7 +142,8 @@ public class TargetNodeParsePipeline
       Cell cell, Path buildFile) throws BuildTargetException {
     return Futures.transform(
         buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile),
-        map -> ImmutableList.copyOf(map.getTargets().values()));
+        map -> ImmutableList.copyOf(map.getTargets().values()),
+        MoreExecutors.directExecutor());
   }
 
   @Override

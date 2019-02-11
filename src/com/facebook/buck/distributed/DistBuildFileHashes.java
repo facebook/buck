@@ -110,7 +110,8 @@ public class DistBuildFileHashes {
     this.ruleKeys = ruleKeyComputation(actionGraph, this.ruleKeyFactories, executorService);
     this.fileHashes =
         fileHashesComputation(
-            Futures.transform(this.ruleKeys, Functions.constant(null)),
+            Futures.transform(
+                this.ruleKeys, Functions.constant(null), MoreExecutors.directExecutor()),
             ImmutableList.copyOf(this.remoteFileHashes.values()),
             executorService);
   }

@@ -73,6 +73,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
@@ -466,7 +467,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
                             depsFuture.add(
                                 attachParentNodeToErrorMessage(buildTarget, parseDep, depWork)));
               }
-              return Futures.transform(Futures.allAsList(depsFuture), Functions.constant(null));
+              return Futures.transform(
+                  Futures.allAsList(depsFuture),
+                  Functions.constant(null),
+                  MoreExecutors.directExecutor());
             });
     newJob.setFuture(future);
     return Optional.of(newJob);

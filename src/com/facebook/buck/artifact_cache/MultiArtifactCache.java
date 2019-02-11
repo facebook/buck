@@ -122,7 +122,8 @@ public class MultiArtifactCache implements ArtifactCache {
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(Futures.allAsList(storeFutures), Functions.constant(null));
+    return Futures.transform(
+        Futures.allAsList(storeFutures), Functions.constant(null), MoreExecutors.directExecutor());
   }
 
   /** Store the artifact to all encapsulated ArtifactCaches. */
@@ -152,7 +153,8 @@ public class MultiArtifactCache implements ArtifactCache {
     }
 
     // Aggregate future to ensure all store operations have completed.
-    return Futures.transform(Futures.allAsList(storeFutures), Functions.constant(null));
+    return Futures.transform(
+        Futures.allAsList(storeFutures), Functions.constant(null), MoreExecutors.directExecutor());
   }
 
   @Override
