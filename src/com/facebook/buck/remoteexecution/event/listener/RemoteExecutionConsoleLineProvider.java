@@ -77,6 +77,20 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
             prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
     lines.add(casLine);
 
+    LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
+    if (localFallbackStats.getLocallyExecutedRules() > 0) {
+      float percentageRetry =
+          (100f * localFallbackStats.getLocallyExecutedRules())
+              / localFallbackStats.getTotalExecutedRules();
+      lines.add(
+          String.format(
+              "[RE] LocalFallback: [retried=%.2f%% succ=%d fail=%d]",
+              percentageRetry,
+              localFallbackStats.getLocallySuccessfulRules(),
+              localFallbackStats.getLocallyExecutedRules()
+                  - localFallbackStats.getLocallySuccessfulRules()));
+    }
+
     return lines.build();
   }
 

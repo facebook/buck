@@ -20,6 +20,8 @@ import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.event.CasBlobUploadEvent.Finished;
+import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
+import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.google.common.collect.ImmutableMap;
@@ -45,6 +47,10 @@ public class RemoteExecutionEventListener
 
   private final AtomicBoolean hasFirstRemoteActionStarted;
 
+  private final AtomicInteger localFallbackTotalExecutions;
+  private final AtomicInteger localFallbackLocalExecutions;
+  private final AtomicInteger localFallbackSuccLocalExecutions;
+
   public RemoteExecutionEventListener() {
     this.downloads = new AtomicInteger(0);
     this.donwloadBytes = new AtomicLong(0);
@@ -52,6 +58,10 @@ public class RemoteExecutionEventListener
     this.uploadBytes = new AtomicLong(0);
     this.totalBuildRules = new AtomicInteger(0);
     this.hasFirstRemoteActionStarted = new AtomicBoolean(false);
+
+    localFallbackTotalExecutions = new AtomicInteger(0);
+    localFallbackLocalExecutions = new AtomicInteger(0);
+    localFallbackSuccLocalExecutions = new AtomicInteger(0);
 
     this.actionStateCount = Maps.newConcurrentMap();
     for (State state : RemoteExecutionActionEvent.State.values()) {
@@ -117,6 +127,20 @@ public class RemoteExecutionEventListener
     getStateCount(event.getStartedEvent().getState()).decrementAndGet();
   }
 
+  /** Events from the LocalFallback stats. */
+  @Subscribe
+  public void onLocalFallbackEventFinished(LocalFallbackEvent.Finished event) {
+    localFallbackTotalExecutions.incrementAndGet();
+
+    if (event.getRemoteResult() != Result.SUCCESS) {
+      localFallbackLocalExecutions.incrementAndGet();
+    }
+
+    if (event.getLocalResult() == Result.SUCCESS) {
+      localFallbackSuccLocalExecutions.incrementAndGet();
+    }
+  }
+
   @Override
   public ImmutableMap<State, Integer> getActionsPerState() {
     return ImmutableMap.copyOf(
@@ -149,5 +173,14 @@ public class RemoteExecutionEventListener
   @Override
   public int getTotalRulesBuilt() {
     return totalBuildRules.get();
+  }
+
+  @Override
+  public LocalFallbackStats getLocalFallbackStats() {
+    return LocalFallbackStats.builder()
+        .setLocallyExecutedRules(localFallbackLocalExecutions.get())
+        .setLocallySuccessfulRules(localFallbackSuccLocalExecutions.get())
+        .setTotalExecutedRules(localFallbackTotalExecutions.get())
+        .build();
   }
 }

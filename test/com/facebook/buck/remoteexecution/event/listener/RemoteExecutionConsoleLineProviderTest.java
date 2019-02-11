@@ -54,13 +54,35 @@ public class RemoteExecutionConsoleLineProviderTest {
         new RemoteExecutionConsoleLineProvider(
             statsProvider, config.getView(RemoteExecutionConfig.class), remoteExecutionMetadata);
     List<String> lines = provider.createConsoleLinesAtTime(0);
-    Assert.assertEquals(3, lines.size());
+    Assert.assertEquals(4, lines.size());
     Assert.assertEquals("[RE] Metadata: Session ID=[reSessionID-FOO123]", lines.get(0));
     Assert.assertEquals(
         "[RE] Actions: Local=0 Remote=[wait=0 del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0 cncl=0]",
         lines.get(1));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
+    Assert.assertEquals("[RE] LocalFallback: [retried=50.00% succ=21 fail=21]", lines.get(3));
+  }
+
+  @Test
+  public void testNoLocalFallback() {
+    statsProvider.casDownladedBytes = 42;
+    statsProvider.casDownloads = 21;
+    statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
+    statsProvider.localFallbackStats =
+        LocalFallbackStats.builder()
+            .from(statsProvider.localFallbackStats)
+            .setLocallyExecutedRules(0)
+            .build();
+    BuckConfig config = FakeBuckConfig.builder().build();
+    RemoteExecutionConsoleLineProvider provider =
+        new RemoteExecutionConsoleLineProvider(
+            statsProvider, config.getView(RemoteExecutionConfig.class), remoteExecutionMetadata);
+    List<String> lines = provider.createConsoleLinesAtTime(0);
+    Assert.assertEquals(3, lines.size());
+    for (String line : lines) {
+      Assert.assertFalse(line.contains("LocalFallback"));
+    }
   }
 
   @Test
@@ -77,7 +99,7 @@ public class RemoteExecutionConsoleLineProviderTest {
         new RemoteExecutionConsoleLineProvider(
             statsProvider, config.getView(RemoteExecutionConfig.class), remoteExecutionMetadata);
     List<String> lines = provider.createConsoleLinesAtTime(0);
-    Assert.assertEquals(3, lines.size());
+    Assert.assertEquals(4, lines.size());
     Assert.assertEquals(
         "[RE] Metadata: Session ID=[https://localhost/test?blah=reSessionID-FOO123]", lines.get(0));
     Assert.assertEquals(
@@ -85,12 +107,19 @@ public class RemoteExecutionConsoleLineProviderTest {
         lines.get(1));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
+    Assert.assertEquals("[RE] LocalFallback: [retried=50.00% succ=21 fail=21]", lines.get(3));
   }
 
   private static final class TestStatsProvider implements RemoteExecutionStatsProvider {
     public Map<State, Integer> actionsPerState = Maps.newHashMap();
     public int casDownloads = 0;
     public int casDownladedBytes = 0;
+    public LocalFallbackStats localFallbackStats =
+        LocalFallbackStats.builder()
+            .setTotalExecutedRules(84)
+            .setLocallyExecutedRules(42)
+            .setLocallySuccessfulRules(21)
+            .build();
 
     public TestStatsProvider() {
       for (State state : State.values()) {
@@ -126,6 +155,11 @@ public class RemoteExecutionConsoleLineProviderTest {
     @Override
     public int getTotalRulesBuilt() {
       return 0;
+    }
+
+    @Override
+    public LocalFallbackStats getLocalFallbackStats() {
+      return localFallbackStats;
     }
   }
 }

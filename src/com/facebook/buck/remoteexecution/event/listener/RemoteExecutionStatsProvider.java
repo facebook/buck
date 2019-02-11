@@ -39,4 +39,7 @@ public interface RemoteExecutionStatsProvider {
 
   /** Get the total number of BuildRules that are finished. (both local and remote) */
   int getTotalRulesBuilt();
+
+  /** Fetches stats regarding the local fallback. */
+  LocalFallbackStats getLocalFallbackStats();
 }
