@@ -147,7 +147,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         new RemoteExecutionStrategy(
             eventBus, strategyConfig, clients, ruleFinder, cellResolver, rootCell, fileHasher);
     if (strategyConfig.isLocalFallbackEnabled()) {
-      strategy = new LocalFallbackStrategy(strategy);
+      strategy = new LocalFallbackStrategy(strategy, eventBus);
     }
 
     return strategy;

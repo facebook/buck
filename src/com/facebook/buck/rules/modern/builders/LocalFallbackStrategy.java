@@ -21,6 +21,9 @@ import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
+import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -35,9 +38,11 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
   private static final Logger LOG = Logger.get(LocalFallbackStrategy.class);
 
   private final BuildRuleStrategy mainBuildRuleStrategy;
+  private final BuckEventBus eventBus;
 
-  public LocalFallbackStrategy(BuildRuleStrategy mainBuildRuleStrategy) {
+  public LocalFallbackStrategy(BuildRuleStrategy mainBuildRuleStrategy, BuckEventBus eventBus) {
     this.mainBuildRuleStrategy = mainBuildRuleStrategy;
+    this.eventBus = eventBus;
   }
 
   @Override
@@ -48,7 +53,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
   @Override
   public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
     return new FallbackStrategyBuildResult(
-        rule.toString(), mainBuildRuleStrategy.build(rule, strategyContext), strategyContext);
+        rule.getFullyQualifiedName(),
+        mainBuildRuleStrategy.build(rule, strategyContext),
+        strategyContext,
+        eventBus);
   }
 
   @Override
@@ -60,27 +68,35 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
    * Contains the combined result of running the remote execution and local execution if necessary.
    */
   static class FallbackStrategyBuildResult implements StrategyBuildResult {
-    private final String buildRuleName;
+    private final String buildTarget;
     private final StrategyBuildResult remoteStrategyBuildResult;
     private final SettableFuture<Optional<BuildResult>> combinedFinalResult;
     private final BuildStrategyContext strategyContext;
     private final Object lock;
+    private final BuckEventBus eventBus;
+    private final LocalFallbackEvent.Started startedEvent;
 
     private Optional<ListenableFuture<Optional<BuildResult>>> localStrategyBuildResult;
     private boolean hasCancellationBeenRequested;
+    private Optional<LocalFallbackEvent.Result> remoteBuildResult;
 
     public FallbackStrategyBuildResult(
-        String buildRuleName,
+        String buildTarget,
         StrategyBuildResult remoteStrategyBuildResult,
-        BuildStrategyContext strategyContext) {
+        BuildStrategyContext strategyContext,
+        BuckEventBus eventBus) {
       this.lock = new Object();
       this.localStrategyBuildResult = Optional.empty();
-      this.buildRuleName = buildRuleName;
+      this.buildTarget = buildTarget;
       this.remoteStrategyBuildResult = remoteStrategyBuildResult;
       this.strategyContext = strategyContext;
       this.combinedFinalResult = SettableFuture.create();
       this.hasCancellationBeenRequested = false;
+      this.eventBus = eventBus;
+      this.startedEvent = LocalFallbackEvent.createStarted(buildTarget);
+      this.remoteBuildResult = Optional.empty();
 
+      this.eventBus.post(this.startedEvent);
       this.remoteStrategyBuildResult
           .getBuildResult()
           .addListener(
@@ -125,6 +141,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
           if (result.get().isSuccess()) {
             // Remote build worked flawlessly first time. :)
             combinedFinalResult.set(result);
+            eventBus.post(startedEvent.createFinished(Result.SUCCESS, Result.NOT_RUN));
           } else {
             handleRemoteBuildFailedWithActionError(result);
           }
@@ -144,12 +161,14 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private void handleRemoteBuildFailedWithActionError(Optional<BuildResult> result) {
       LOG.warn(
           "Remote build failed so trying locally. The error was: [%s]", result.get().toString());
+      remoteBuildResult = Optional.of(Result.FAIL);
       fallbackBuildToLocalStrategy();
     }
 
     private void handleRemoteBuildFailedWithException(Throwable t) {
       LOG.warn(
-          t, "Remote build failed for a build rule so trying locally now for [%s].", buildRuleName);
+          t, "Remote build failed for a build rule so trying locally now for [%s].", buildTarget);
+      remoteBuildResult = Optional.of(Result.EXCEPTION);
       fallbackBuildToLocalStrategy();
     }
 
@@ -165,7 +184,12 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       synchronized (lock) {
         try {
           // Remote build failed but local build finished.
-          combinedFinalResult.set(future.get());
+          Optional<BuildResult> result = future.get();
+          combinedFinalResult.set(result);
+          eventBus.post(
+              startedEvent.createFinished(
+                  remoteBuildResult.get(),
+                  result.get().isSuccess() ? Result.SUCCESS : Result.FAIL));
         } catch (InterruptedException e) {
           if (hasCancellationBeenRequested) {
             combinedFinalResult.setException(e);
@@ -180,8 +204,9 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     }
 
     private void handleLocalBuildFailedWithException(Throwable t) {
-      LOG.error(t, "Local fallback for one build rule failed as well for [%s].", buildRuleName);
+      LOG.error(t, "Local fallback for one build rule failed as well for [%s].", buildTarget);
       combinedFinalResult.setException(t);
+      eventBus.post(startedEvent.createFinished(remoteBuildResult.get(), Result.EXCEPTION));
     }
 
     private boolean isLocalBuildAlreadyRunning() {
