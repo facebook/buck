@@ -100,7 +100,11 @@ public class BuildRuleScopeManager {
       Preconditions.checkState(
           finishedData == null, "RuleScope started after rule marked as finished.");
       if (currentBuildRuleScopeThread != null) {
-        Preconditions.checkState(Thread.currentThread() == currentBuildRuleScopeThread);
+        Preconditions.checkState(
+            Thread.currentThread() == currentBuildRuleScopeThread,
+            "Must execute in the scope of thread [%s] but running in thread [%s].",
+            Thread.currentThread().getName(),
+            currentBuildRuleScopeThread.getName());
         return () -> {};
       }
       BuildRuleEvent.Resumed resumed = postResumed();
