@@ -70,7 +70,11 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
   @Override
   public ListenableFuture<Void> fetchToStream(Protocol.Digest digest, OutputStream outputStream) {
-    return GrpcRemoteExecutionClients.readByteStream(
-        instanceName, digest, byteStreamStub, data -> data.writeTo(outputStream));
+    final Scope scope = CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize());
+    ListenableFuture<Void> future =
+        GrpcRemoteExecutionClients.readByteStream(
+            instanceName, digest, byteStreamStub, data -> data.writeTo(outputStream));
+    future.addListener(() -> scope.close(), MoreExecutors.directExecutor());
+    return future;
   }
 }
