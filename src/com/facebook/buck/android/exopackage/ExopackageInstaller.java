@@ -20,6 +20,7 @@ import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.ApkInfo;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -141,7 +142,16 @@ public class ExopackageInstaller {
     if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeExoHelper nativeExoHelper =
           new NativeExoHelper(
-              device, pathResolver, projectFilesystem, exoInfo.getNativeLibsInfo().get());
+              () -> {
+                try {
+                  return device.getDeviceAbis();
+                } catch (Exception e) {
+                  throw new HumanReadableException("Unable to communicate with device", e);
+                }
+              },
+              pathResolver,
+              projectFilesystem,
+              exoInfo.getNativeLibsInfo().get());
       wantedPaths.addAll(nativeExoHelper.getFilesToInstall().keySet());
       metadata.putAll(nativeExoHelper.getMetadataToInstall());
     }
@@ -175,7 +185,16 @@ public class ExopackageInstaller {
     if (exoInfo.getNativeLibsInfo().isPresent()) {
       NativeExoHelper nativeExoHelper =
           new NativeExoHelper(
-              device, pathResolver, projectFilesystem, exoInfo.getNativeLibsInfo().get());
+              () -> {
+                try {
+                  return device.getDeviceAbis();
+                } catch (Exception e) {
+                  throw new HumanReadableException("Unable to communicate with device", e);
+                }
+              },
+              pathResolver,
+              projectFilesystem,
+              exoInfo.getNativeLibsInfo().get());
       installMissingFiles(presentFiles, nativeExoHelper.getFilesToInstall(), NATIVE_LIBRARY_TYPE);
     }
 
@@ -192,7 +211,11 @@ public class ExopackageInstaller {
     }
   }
 
-  private boolean exopackageEnabled(ApkInfo apkInfo) {
+  /**
+   * @param apkInfo the apk info to examine for exopackage items
+   * @return true if the given apk info contains any items which need to be installed via exopackage
+   */
+  public static boolean exopackageEnabled(ApkInfo apkInfo) {
     return apkInfo
         .getExopackageInfo()
         .map(

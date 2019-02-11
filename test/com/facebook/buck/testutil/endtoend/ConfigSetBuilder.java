@@ -63,6 +63,16 @@ public class ConfigSetBuilder {
     return this;
   }
 
+  /**
+   * add a configuration to use a simple external testrunner to test the interactions with Buck's
+   * embedded test running binaries
+   */
+  public ConfigSetBuilder addExternalTestRunner() {
+    ensureSection("test");
+    configSet.get("test").put("external_runner", "python simple_test_runner.py");
+    return this;
+  }
+
   /** Builds and returns configurationSet, and resets added sets to the builder */
   public Map<String, Map<String, String>> build() {
     Map<String, Map<String, String>> builtConfigSet = configSet;

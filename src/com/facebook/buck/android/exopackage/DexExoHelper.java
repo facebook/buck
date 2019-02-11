@@ -42,12 +42,12 @@ public class DexExoHelper {
     this.dexInfo = dexInfo;
   }
 
-  public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
+  public ImmutableMap<Path, Path> getFilesToInstall() throws IOException {
     return ExopackageUtil.applyFilenameFormat(
         getRequiredDexFiles(), SECONDARY_DEX_DIR, "secondary-%s.dex.jar");
   }
 
-  public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
+  public ImmutableMap<Path, String> getMetadataToInstall() throws IOException {
     return ImmutableMap.of(
         SECONDARY_DEX_DIR.resolve("metadata.txt"), getSecondaryDexMetadataContents());
   }

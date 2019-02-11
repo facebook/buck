@@ -10,9 +10,12 @@ java_test(
         TEST_SRCS,
     ),
     deps = [
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/util/environment:environment",
         "//test/com/facebook/buck/android:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/endtoend:testutil",
         "//third-party/java/junit:junit",
+        "//third-party/java/nuprocess:nuprocess",
     ],
 )

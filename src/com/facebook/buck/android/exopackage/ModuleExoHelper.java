@@ -60,7 +60,7 @@ public class ModuleExoHelper {
    * @return the list of modular dex files which are installable for this build The returned map
    *     contains entries of the form destination_file_path => local_src_file_path
    */
-  public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
+  public ImmutableMap<Path, Path> getFilesToInstall() throws IOException {
     return ExopackageUtil.applyFilenameFormat(
         getRequiredDexFiles(), MODULAR_DEX_DIR, "module-%s.dex.jar");
   }
@@ -74,7 +74,7 @@ public class ModuleExoHelper {
    *     module_name" and provides a top-level listing of all jars included in the build along with
    *     a mapping back to the module name where they came from
    */
-  public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
+  public ImmutableMap<Path, String> getMetadataToInstall() throws IOException {
     Builder<Path, String> builder = ImmutableMap.builder();
     for (DexInfo info : dexInfoForModules) {
       Path metadataFile = pathResolver.getAbsolutePath(info.getMetadata());

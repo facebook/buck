@@ -29,29 +29,32 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class NativeExoHelper {
   @VisibleForTesting public static final Path NATIVE_LIBS_DIR = Paths.get("native-libs");
-  private final AndroidDevice device;
+  private final Supplier<List<String>> abiSupplier;
   private final SourcePathResolver pathResolver;
   private final ProjectFilesystem projectFilesystem;
   private final ExopackageInfo.NativeLibsInfo nativeLibsInfo;
 
   NativeExoHelper(
-      AndroidDevice device,
+      Supplier<List<String>> abiSupplier,
       SourcePathResolver pathResolver,
       ProjectFilesystem projectFilesystem,
       ExopackageInfo.NativeLibsInfo nativeLibsInfo) {
-    this.device = device;
+    this.abiSupplier = abiSupplier;
     this.pathResolver = pathResolver;
     this.projectFilesystem = projectFilesystem;
     this.nativeLibsInfo = nativeLibsInfo;
   }
 
-  public ImmutableMap<Path, Path> getFilesToInstall() throws Exception {
+  /** @return a mapping from destinationPathOnDevice -> localPath */
+  public ImmutableMap<Path, Path> getFilesToInstall() throws IOException {
     ImmutableMap.Builder<Path, Path> filesToInstallBuilder = ImmutableMap.builder();
     ImmutableMap<String, ImmutableMultimap<String, Path>> filesByHashForAbis =
         getFilesByHashForAbis();
@@ -71,7 +74,11 @@ public class NativeExoHelper {
     return filesToInstallBuilder.build();
   }
 
-  public ImmutableMap<Path, String> getMetadataToInstall() throws Exception {
+  /**
+   * @return a mapping from destinationPathOnDevice -> contents of file for all native-libs metadata
+   *     files (one per abi)
+   */
+  public ImmutableMap<Path, String> getMetadataToInstall() throws IOException {
     ImmutableMap<String, ImmutableMultimap<String, Path>> filesByHashForAbis =
         getFilesByHashForAbis();
     ImmutableMap.Builder<Path, String> metadataBuilder = ImmutableMap.builder();
@@ -93,12 +100,13 @@ public class NativeExoHelper {
   }
 
   private ImmutableMap<String, ImmutableMultimap<String, Path>> getFilesByHashForAbis()
-      throws Exception {
+      throws IOException {
+    List<String> deviceAbis = abiSupplier.get();
     ImmutableMap.Builder<String, ImmutableMultimap<String, Path>> filesByHashForAbisBuilder =
         ImmutableMap.builder();
     ImmutableMultimap<String, Path> allLibraries = getAllLibraries();
     ImmutableSet.Builder<String> providedLibraries = ImmutableSet.builder();
-    for (String abi : device.getDeviceAbis()) {
+    for (String abi : deviceAbis) {
       ImmutableMultimap<String, Path> filesByHash =
           getRequiredLibrariesForAbi(allLibraries, abi, providedLibraries.build());
       if (filesByHash.isEmpty()) {

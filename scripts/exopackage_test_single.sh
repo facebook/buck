@@ -53,6 +53,12 @@ fi
 
 # Copy the test project into a temp dir, then cd into it and make it a buck project.
 cp -r test/com/facebook/buck/android/testdata/exopackage-device/* $TMP_DIR
+# Copy the testrunner script
+cp test/com/facebook/buck/testutil/endtoend/testdata/mobile/simple_test_runner.py $TMP_DIR/
+# Copy the test libraries
+mkdir $TMP_DIR/test_libs
+cp -r test/com/facebook/buck/testutil/endtoend/testdata/mobile/android/libs/*.jar $TMP_DIR/test_libs/
+
 buck build --out $TMP_DIR/buck.pex buck
 buck build --out $TMP_DIR/buck-android-support.jar buck-android-support
 
@@ -115,6 +121,14 @@ function installAndLaunch() {
   grep -q "META_ICON=.*_.*" out.txt || (cat out.txt && false)
   grep -q "META_NAME=$EXP_APP_NAME" out.txt || (cat out.txt && false)
   grep -q "META_DATA=<item0,item1,item2>" out.txt || (cat out.txt && false)
+}
+
+function runInstrumentationTestWithExternalRunner() {
+  ./buck.pex test //:instrumentation_test --config test.external_runner=./simple_test_runner.py
+}
+
+function runInstrumentationTest() {
+  ./buck.pex test //:instrumentation_test
 }
 
 function create_image() {
@@ -293,10 +307,14 @@ test "$NATIVE_LIBS_INSTALLED" = 0
 test "$RESOURCE_APKS_INSTALLED" = 0
 test "$MODULAR_DEX_INSTALLED" = 0
 
+# Check for instrumentation test support
+runInstrumentationTest
+runInstrumentationTestWithExternalRunner
 
 # Clean up after ourselves.
 ./buck.pex uninstall //:exotest-noexo
 ./buck.pex uninstall //app-meta-tool:exometa
+./buck.pex uninstall //:instrumentation_test-apk
 adb uninstall com.facebook.buck.android.agent
 
 # Celebrate!  (And show that we succeeded, because grep doesn't print error messages.)

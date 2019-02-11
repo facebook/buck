@@ -69,7 +69,11 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
   abstract Optional<Path> getApkUnderTestPath();
 
+  abstract Optional<Path> getApkUnderTestExopackageLocalDir();
+
   abstract Optional<String> getTestFilter();
+
+  abstract Optional<Path> getExopackageLocalDir();
 
   /** @return The filesystem path to the compiled Buck test runner classes. */
   abstract Path getTestRunnerClasspath();
@@ -105,6 +109,7 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
       args.add("--output", getDirectoryForTestResults().get().toString());
     }
 
+    // The InstrumentationRunner requires the package name of the test
     args.add("--test-package-name", getTestPackage());
     args.add("--test-runner", getTestRunner());
     args.add("--adb-executable-path", getPathToAdbExecutable());
@@ -113,15 +118,36 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
       args.add("--extra-instrumentation-argument", "class=" + getTestFilter().get());
     }
 
+    // If the test APK supports exopackage installation, this will be the location of a
+    // folder which contains the contents of the expackage dir exactly how they should be
+    // laid out on the device along with a metadata file which contains the path to the root.
+    // This way, the instrumentation test runner can simply `adb push` the requisite files to
+    // the device.
+    if (getExopackageLocalDir().isPresent()) {
+      args.add("--exopackage-local-dir", getExopackageLocalDir().get().toString());
+    }
+
     if (getApkUnderTestPath().isPresent()) {
       args.add("--apk-under-test-path", getApkUnderTestPath().get().toFile().getAbsolutePath());
     }
+
+    // We currently don't support exo for apk-under-test, but when it is supported, this will
+    // be populated with a path to a folder containing the exopackage layout and metadata for
+    // the apk under test.
+    if (getApkUnderTestExopackageLocalDir().isPresent()) {
+      args.add(
+          "--apk-under-test-exopackage-local-dir",
+          getApkUnderTestExopackageLocalDir().get().toString());
+    }
+
     if (getInstrumentationApkPath().isPresent()) {
       args.add(
           "--instrumentation-apk-path",
           getInstrumentationApkPath().get().toFile().getAbsolutePath());
     }
 
+    // If enabled, the runner should enable debugging so that the test pauses and waits for
+    // a debugger to attach.
     if (isDebugEnabled()) {
       args.add("--debug");
     }
