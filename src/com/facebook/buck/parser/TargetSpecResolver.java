@@ -17,7 +17,6 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.HasBuildTarget;
@@ -213,9 +212,6 @@ public class TargetSpecResolver {
         targetsMap.putAll(result.getKey(), result.getValue());
       }
     } catch (ExecutionException e) {
-      MoreThrowables.throwIfAnyCauseInstanceOf(e, BuildFileParseException.class);
-      MoreThrowables.throwIfAnyCauseInstanceOf(e, BuildTargetException.class);
-      MoreThrowables.throwIfAnyCauseInstanceOf(e, HumanReadableException.class);
       MoreThrowables.throwIfAnyCauseInstanceOf(e, InterruptedException.class);
       Throwables.throwIfUnchecked(e.getCause());
       throw new RuntimeException(e);
