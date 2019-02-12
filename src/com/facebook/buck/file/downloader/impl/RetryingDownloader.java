@@ -50,7 +50,7 @@ public class RetryingDownloader implements Downloader {
       } catch (IOException exception) {
         LOG.warn(
             exception,
-            "Failed to download {0}. {1} retries left",
+            "Failed to download %d. %d retries left",
             uri,
             maxNumberOfRetries - retryCount);
         allExceptions.add(exception);
