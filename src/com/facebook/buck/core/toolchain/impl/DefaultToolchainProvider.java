@@ -30,6 +30,7 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -173,10 +174,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
         failedToolchains.put(toolchainName, (ToolchainInstantiationException) e.getCause());
         return Optional.empty();
       }
-      throw new RuntimeException(
-          String.format(
-              "Cannot create a toolchain: %s. Cause: %s", toolchainName, e.getCause().getMessage()),
-          e);
+      throw new BuckUncheckedExecutionException(e, "When creating toolchain %s.", toolchainName);
     }
   }
 

@@ -55,10 +55,10 @@ public class BuckUncheckedExecutionException extends RuntimeException
   }
 
   @Override
-  public String getLocalizedMessage() {
+  public String getMessage() {
     StringBuilder builder = new StringBuilder();
     builder.append(context);
-    String parentMessage = super.getLocalizedMessage();
+    String parentMessage = super.getMessage();
     if (parentMessage != null && !parentMessage.isEmpty()) {
       builder.append(": ");
       builder.append(parentMessage);
