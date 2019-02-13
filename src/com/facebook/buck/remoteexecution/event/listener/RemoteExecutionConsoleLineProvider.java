@@ -84,11 +84,11 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
               / localFallbackStats.getTotalExecutedRules();
       lines.add(
           String.format(
-              "[RE] LocalFallback: [retried=%.2f%% succ=%d fail=%d]",
+              "[RE] LocalFallback: [fallback_rate=%.2f%% remote=%d local=%d]",
               percentageRetry,
-              localFallbackStats.getLocallySuccessfulRules(),
-              localFallbackStats.getLocallyExecutedRules()
-                  - localFallbackStats.getLocallySuccessfulRules()));
+              localFallbackStats.getTotalExecutedRules()
+                  - localFallbackStats.getLocallyExecutedRules(),
+              localFallbackStats.getLocallySuccessfulRules()));
     }
 
     return lines.build();

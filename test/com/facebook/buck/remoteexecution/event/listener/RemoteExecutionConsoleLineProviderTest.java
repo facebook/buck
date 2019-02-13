@@ -61,7 +61,8 @@ public class RemoteExecutionConsoleLineProviderTest {
         lines.get(1));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
-    Assert.assertEquals("[RE] LocalFallback: [retried=50.00% succ=21 fail=21]", lines.get(3));
+    Assert.assertEquals(
+        "[RE] LocalFallback: [fallback_rate=50.00% remote=42 local=21]", lines.get(3));
   }
 
   @Test
@@ -107,7 +108,8 @@ public class RemoteExecutionConsoleLineProviderTest {
         lines.get(1));
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
-    Assert.assertEquals("[RE] LocalFallback: [retried=50.00% succ=21 fail=21]", lines.get(3));
+    Assert.assertEquals(
+        "[RE] LocalFallback: [fallback_rate=50.00% remote=42 local=21]", lines.get(3));
   }
 
   private static final class TestStatsProvider implements RemoteExecutionStatsProvider {

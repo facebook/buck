@@ -49,7 +49,7 @@ public class RemoteExecutionEventListener
 
   private final AtomicInteger localFallbackTotalExecutions;
   private final AtomicInteger localFallbackLocalExecutions;
-  private final AtomicInteger localFallbackSuccLocalExecutions;
+  private final AtomicInteger localFallbackSuccessfulLocalExecutions;
 
   public RemoteExecutionEventListener() {
     this.downloads = new AtomicInteger(0);
@@ -61,7 +61,7 @@ public class RemoteExecutionEventListener
 
     localFallbackTotalExecutions = new AtomicInteger(0);
     localFallbackLocalExecutions = new AtomicInteger(0);
-    localFallbackSuccLocalExecutions = new AtomicInteger(0);
+    localFallbackSuccessfulLocalExecutions = new AtomicInteger(0);
 
     this.actionStateCount = Maps.newConcurrentMap();
     for (State state : RemoteExecutionActionEvent.State.values()) {
@@ -132,12 +132,12 @@ public class RemoteExecutionEventListener
   public void onLocalFallbackEventFinished(LocalFallbackEvent.Finished event) {
     localFallbackTotalExecutions.incrementAndGet();
 
-    if (event.getRemoteResult() != Result.SUCCESS) {
+    if (event.getLocalResult() != Result.NOT_RUN) {
       localFallbackLocalExecutions.incrementAndGet();
     }
 
     if (event.getLocalResult() == Result.SUCCESS) {
-      localFallbackSuccLocalExecutions.incrementAndGet();
+      localFallbackSuccessfulLocalExecutions.incrementAndGet();
     }
   }
 
@@ -179,7 +179,7 @@ public class RemoteExecutionEventListener
   public LocalFallbackStats getLocalFallbackStats() {
     return LocalFallbackStats.builder()
         .setLocallyExecutedRules(localFallbackLocalExecutions.get())
-        .setLocallySuccessfulRules(localFallbackSuccLocalExecutions.get())
+        .setLocallySuccessfulRules(localFallbackSuccessfulLocalExecutions.get())
         .setTotalExecutedRules(localFallbackTotalExecutions.get())
         .build();
   }
