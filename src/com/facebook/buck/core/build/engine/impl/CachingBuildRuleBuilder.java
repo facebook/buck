@@ -99,6 +99,7 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -793,17 +794,18 @@ class CachingBuildRuleBuilder {
 
         // Try get the output size.
         Optional<String> outputSizeString = onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE);
-        if (outputSizeString.isPresent()) {
-          outputSize = Optional.of(Long.parseLong(outputSizeString.get()));
-        }
+        Verify.verify(
+            outputSizeString.isPresent(), "OUTPUT_SIZE should always be computed and present.");
+        outputSize = Optional.of(Long.parseLong(outputSizeString.get()));
 
         // All rules should have output_size/output_hash in their artifact metadata.
-        if (success.shouldUploadResultingArtifact()
-            && outputSize.isPresent()
-            && shouldWriteOutputHashes(outputSize.get())) {
-          String hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH).get();
-          outputHash = Optional.of(HashCode.fromString(hashString));
+        Optional<String> hashString = onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH);
+        if (!hashString.isPresent() && !shouldWriteOutputHashes(outputSize.get())) {
+          // OUTPUT_HASH should only be missing if we exceed the hash size limit.
+          LOG.warn("OUTPUT_HASH is unexpectedly missing for %s.", rule.getFullyQualifiedName());
         }
+
+        outputHash = hashString.map(HashCode::fromString);
 
         // Determine if this is rule is cacheable.
         if (outputSize.isPresent()) {
