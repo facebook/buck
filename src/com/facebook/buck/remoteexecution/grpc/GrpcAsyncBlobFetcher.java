@@ -45,35 +45,39 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
 
   @Override
   public ListenableFuture<ByteBuffer> fetch(Protocol.Digest digest) {
-    try (Scope unused = CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize())) {
-      /** Payload received on a fetch request. */
-      class Data {
-        ByteString data = ByteString.EMPTY;
+    /** Payload received on a fetch request. */
+    class Data {
+      ByteString data = ByteString.EMPTY;
 
-        public ByteBuffer get() {
-          return data.asReadOnlyByteBuffer();
-        }
-
-        public void concat(ByteString bytes) {
-          data = data.concat(bytes);
-        }
+      public ByteBuffer get() {
+        return data.asReadOnlyByteBuffer();
       }
 
-      Data data = new Data();
-      return Futures.transform(
-          GrpcRemoteExecutionClients.readByteStream(
-              instanceName, digest, byteStreamStub, data::concat),
-          ignored -> data.get(),
-          MoreExecutors.directExecutor());
+      public void concat(ByteString bytes) {
+        data = data.concat(bytes);
+      }
     }
+
+    Data data = new Data();
+    return closeScopeWhenFutureCompletes(
+        CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
+        Futures.transform(
+            GrpcRemoteExecutionClients.readByteStream(
+                instanceName, digest, byteStreamStub, data::concat),
+            ignored -> data.get(),
+            MoreExecutors.directExecutor()));
   }
 
   @Override
   public ListenableFuture<Void> fetchToStream(Protocol.Digest digest, OutputStream outputStream) {
-    final Scope scope = CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize());
-    ListenableFuture<Void> future =
+    return closeScopeWhenFutureCompletes(
+        CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
         GrpcRemoteExecutionClients.readByteStream(
-            instanceName, digest, byteStreamStub, data -> data.writeTo(outputStream));
+            instanceName, digest, byteStreamStub, data -> data.writeTo(outputStream)));
+  }
+
+  private <T> ListenableFuture<T> closeScopeWhenFutureCompletes(
+      Scope scope, ListenableFuture<T> future) {
     future.addListener(() -> scope.close(), MoreExecutors.directExecutor());
     return future;
   }
