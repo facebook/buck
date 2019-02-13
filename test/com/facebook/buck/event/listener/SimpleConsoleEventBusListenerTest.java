@@ -109,18 +109,26 @@ public class SimpleConsoleEventBusListenerTest {
   public static Collection<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
-          {false, Optional.empty(), "no_build_id_and_no_build_url"},
-          {true, Optional.empty(), "build_id_and_no_build_url"},
+          {false, Optional.empty(), "no_build_id_and_no_build_url", Optional.empty()},
+          {true, Optional.empty(), "build_id_and_no_build_url", Optional.empty()},
           {
             true,
             Optional.of("View details at https://example.com/build/{build_id}"),
-            "build_id_and_build_url"
+            "build_id_and_build_url",
+            Optional.empty()
           },
           {
             false,
             Optional.of("View details at https://example.com/build/{build_id}"),
-            "no_build_id_and_build_url"
-          }
+            "no_build_id_and_build_url",
+            Optional.empty()
+          },
+          {
+            false,
+            Optional.empty(),
+            "with_re_session_id",
+            Optional.of("super cool remote execution session id.")
+          },
         });
   }
 
@@ -135,12 +143,19 @@ public class SimpleConsoleEventBusListenerTest {
   @Parameterized.Parameter(2)
   public String _ignoredName;
 
+  @Parameterized.Parameter(3)
+  public Optional<String> reSessionIdDetails;
+
   @Test
   public void testSimpleBuild() {
-    setupSimpleConsole(false, printBuildId, buildDetailsTemplate);
+    setupSimpleConsole(false, printBuildId, buildDetailsTemplate, reSessionIdDetails);
     String expectedOutput = "";
     if (printBuildId) {
       expectedOutput = "Build UUID: 1234-5678" + System.lineSeparator();
+    }
+    if (reSessionIdDetails.isPresent()) {
+      expectedOutput +=
+          "[RE] SessionInfo: [super cool remote execution session id.]." + System.lineSeparator();
     }
     assertOutput(expectedOutput, console);
 
@@ -546,11 +561,14 @@ public class SimpleConsoleEventBusListenerTest {
   }
 
   private void setupSimpleConsole(boolean hideSucceededRules) {
-    setupSimpleConsole(hideSucceededRules, false, Optional.empty());
+    setupSimpleConsole(hideSucceededRules, false, Optional.empty(), Optional.empty());
   }
 
   private void setupSimpleConsole(
-      boolean hideSucceededRules, boolean printBuildId, Optional<String> buildDetailsTemplate) {
+      boolean hideSucceededRules,
+      boolean printBuildId,
+      Optional<String> buildDetailsTemplate,
+      Optional<String> reSessionIdInfo) {
     SimpleConsoleEventBusListener listener =
         new SimpleConsoleEventBusListener(
             new RenderingConsole(fakeClock, console),
@@ -565,7 +583,8 @@ public class SimpleConsoleEventBusListenerTest {
                 EnvVariablesProvider.getSystemEnv(), System.getProperties()),
             buildId,
             printBuildId,
-            buildDetailsTemplate);
+            buildDetailsTemplate,
+            reSessionIdInfo);
 
     eventBus.register(listener);
   }

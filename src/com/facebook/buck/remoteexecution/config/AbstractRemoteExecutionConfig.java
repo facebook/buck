@@ -22,6 +22,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import java.nio.file.Path;
@@ -127,9 +128,15 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return getFileOption("ca");
   }
 
-  public String getDebugURLFormatString() {
+  private String getDebugURLFormatString() {
     return getValueWithFallback(DEBUG_FORMAT_STRING_URL_KEY)
         .orElse(FORMAT_SESSION_ID_VARIABLE_STRING);
+  }
+
+  public String getDebugURLString(RESessionID reSessionID) {
+    String formatDebugSessionIDString = getDebugURLFormatString();
+    return formatDebugSessionIDString.replace(
+        FORMAT_SESSION_ID_VARIABLE_STRING, reSessionID.getId());
   }
 
   @Value.Derived

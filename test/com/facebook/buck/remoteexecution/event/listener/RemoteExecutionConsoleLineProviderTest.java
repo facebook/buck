@@ -16,12 +16,7 @@
 
 package com.facebook.buck.remoteexecution.event.listener;
 
-import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
-import com.facebook.buck.remoteexecution.proto.RESessionID;
-import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import java.util.List;
@@ -31,17 +26,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class RemoteExecutionConsoleLineProviderTest {
-  private String reSessionID = "reSessionID-FOO123";
+  private final String SESSION_ID_INFO = "super cool info about the session";
+
   private TestStatsProvider statsProvider;
-  private RemoteExecutionMetadata remoteExecutionMetadata;
 
   @Before
   public void setUp() {
     this.statsProvider = new TestStatsProvider();
-    this.remoteExecutionMetadata =
-        RemoteExecutionMetadata.newBuilder()
-            .setReSessionId(RESessionID.newBuilder().setId(reSessionID).build())
-            .build();
   }
 
   @Test
@@ -49,13 +40,12 @@ public class RemoteExecutionConsoleLineProviderTest {
     statsProvider.casDownladedBytes = 42;
     statsProvider.casDownloads = 21;
     statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
-    BuckConfig config = FakeBuckConfig.builder().build();
     RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(
-            statsProvider, config.getView(RemoteExecutionConfig.class), remoteExecutionMetadata);
+        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO);
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(4, lines.size());
-    Assert.assertEquals("[RE] Metadata: Session ID=[reSessionID-FOO123]", lines.get(0));
+    Assert.assertEquals(
+        "[RE] Metadata: Session ID=[super cool info about the session]", lines.get(0));
     Assert.assertEquals(
         "[RE] Actions: Local=0 Remote=[wait=0 del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0 cncl=0]",
         lines.get(1));
@@ -75,10 +65,8 @@ public class RemoteExecutionConsoleLineProviderTest {
             .from(statsProvider.localFallbackStats)
             .setLocallyExecutedRules(0)
             .build();
-    BuckConfig config = FakeBuckConfig.builder().build();
     RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(
-            statsProvider, config.getView(RemoteExecutionConfig.class), remoteExecutionMetadata);
+        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO);
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(3, lines.size());
     for (String line : lines) {
@@ -91,18 +79,13 @@ public class RemoteExecutionConsoleLineProviderTest {
     statsProvider.casDownladedBytes = 42;
     statsProvider.casDownloads = 21;
     statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
-    BuckConfig config =
-        FakeBuckConfig.builder()
-            .setSections(
-                "[remoteexecution]", "debug_format_string_url=https://localhost/test?blah={id}")
-            .build();
+
     RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(
-            statsProvider, config.getView(RemoteExecutionConfig.class), remoteExecutionMetadata);
+        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO);
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(4, lines.size());
     Assert.assertEquals(
-        "[RE] Metadata: Session ID=[https://localhost/test?blah=reSessionID-FOO123]", lines.get(0));
+        "[RE] Metadata: Session ID=[super cool info about the session]", lines.get(0));
     Assert.assertEquals(
         "[RE] Actions: Local=0 Remote=[wait=0 del=0 comp=0 upl=0 exec=0 dwl=0 suc=84 fail=0 cncl=0]",
         lines.get(1));

@@ -83,7 +83,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       ExecutionEnvironment executionEnvironment,
       BuildId buildId,
       boolean printBuildId,
-      Optional<String> buildDetailsTemplate) {
+      Optional<String> buildDetailsTemplate,
+      Optional<String> reSessionIDInfo) {
     super(
         console,
         clock,
@@ -110,6 +111,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
     if (printBuildId) {
       printLines(ImmutableList.of(getBuildLogLine(buildId)));
+    }
+
+    if (reSessionIDInfo.isPresent()) {
+      printLines(ImmutableList.of(String.format("[RE] SessionInfo: [%s].", reSessionIDInfo.get())));
     }
   }
 

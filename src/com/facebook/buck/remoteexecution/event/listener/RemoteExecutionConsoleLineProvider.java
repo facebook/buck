@@ -17,10 +17,8 @@
 package com.facebook.buck.remoteexecution.event.listener;
 
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
-import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
-import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -33,18 +31,12 @@ import java.util.Locale;
 public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLineProvider {
 
   private final RemoteExecutionStatsProvider statsProvider;
-  private final String formatIdVariableString;
-  private final String formatDebugSessionIDString;
-  private final String reSessionID;
+  private final String sessionIdInfo;
 
   public RemoteExecutionConsoleLineProvider(
-      RemoteExecutionStatsProvider statsProvider,
-      RemoteExecutionConfig remoteExecutionConfig,
-      RemoteExecutionMetadata remoteExecutionMetadata) {
+      RemoteExecutionStatsProvider statsProvider, String sessionIdInfo) {
     this.statsProvider = statsProvider;
-    this.formatIdVariableString = RemoteExecutionConfig.FORMAT_SESSION_ID_VARIABLE_STRING;
-    this.formatDebugSessionIDString = remoteExecutionConfig.getDebugURLFormatString();
-    this.reSessionID = remoteExecutionMetadata.getReSessionId().getId();
+    this.sessionIdInfo = sessionIdInfo;
   }
 
   @Override
@@ -56,9 +48,7 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
       return lines.build();
     }
 
-    String sessionIdFormatted =
-        formatDebugSessionIDString.replace(formatIdVariableString, reSessionID);
-    String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdFormatted);
+    String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdInfo);
     lines.add(metadataLine);
 
     String actionsLine =

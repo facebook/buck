@@ -1030,7 +1030,12 @@ public final class Main {
                     logBuckConfig.isLogBuildIdToConsoleEnabled(),
                     logBuckConfig.getBuildDetailsTemplate(),
                     createAdditionalConsoleLinesProviders(
-                        remoteExecutionListener, remoteExecutionConfig, metadataProvider));
+                        remoteExecutionListener, remoteExecutionConfig, metadataProvider),
+                    isRemoteExecutionBuild(command, buckConfig)
+                        ? Optional.of(
+                            remoteExecutionConfig.getDebugURLString(
+                                metadataProvider.get().getReSessionId()))
+                        : Optional.empty());
             // This makes calls to LOG.error(...) post to the EventBus, instead of writing to
             // stderr.
             Closeable logErrorToEventBus =
@@ -1462,7 +1467,8 @@ public final class Main {
 
     return ImmutableList.of(
         new RemoteExecutionConsoleLineProvider(
-            remoteExecutionListener.get(), remoteExecutionConfig, metadataProvider.get()));
+            remoteExecutionListener.get(),
+            remoteExecutionConfig.getDebugURLString(metadataProvider.get().getReSessionId())));
   }
 
   /** Struct for the multiple values returned by {@link #getParserAndCaches}. */
@@ -2001,7 +2007,8 @@ public final class Main {
       BuildId buildId,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
-      ImmutableList<AdditionalConsoleLineProvider> remoteExecutionConsoleLineProvider) {
+      ImmutableList<AdditionalConsoleLineProvider> remoteExecutionConsoleLineProvider,
+      Optional<String> reSessionIDInfo) {
     RenderingConsole renderingConsole = new RenderingConsole(clock, console);
     if (config.isEnabled(console.getAnsi(), console.getVerbosity())) {
       SuperConsoleEventBusListener superConsole =
@@ -2036,7 +2043,8 @@ public final class Main {
         executionEnvironment,
         buildId,
         printBuildId,
-        buildDetailsTemplate);
+        buildDetailsTemplate,
+        reSessionIDInfo);
   }
 
   /**
