@@ -108,11 +108,14 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     public void cancel(Throwable cause) {
       synchronized (lock) {
         hasCancellationBeenRequested = true;
-        if (!isLocalBuildAlreadyRunning()) {
-          remoteStrategyBuildResult.cancel(cause);
+        if (isLocalBuildAlreadyRunning()) {
+          // Don't interrupt ongoing local builds to avoid leaving buck-out in a bad state.
+          localStrategyBuildResult.get().cancel(/* mayInterruptIfRunning */ false);
         } else {
-          localStrategyBuildResult.get().cancel(true);
+          remoteStrategyBuildResult.cancel(cause);
         }
+
+        combinedFinalResult.cancel(false);
       }
     }
 
@@ -140,14 +143,13 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
           Preconditions.checkState(result.isPresent());
           if (result.get().isSuccess()) {
             // Remote build worked flawlessly first time. :)
-            combinedFinalResult.set(result);
-            eventBus.post(startedEvent.createFinished(Result.SUCCESS, Result.NOT_RUN));
+            completeCombinedFuture(result, Result.SUCCESS, Result.NOT_RUN);
           } else {
             handleRemoteBuildFailedWithActionError(result);
           }
         } catch (InterruptedException e) {
           if (hasCancellationBeenRequested) {
-            combinedFinalResult.setException(e);
+            completeCombinedFutureWithException(e, Result.INTERRUPTED, Result.NOT_RUN);
             return;
           }
 
@@ -168,16 +170,18 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private void handleRemoteBuildFailedWithException(Throwable t) {
       LOG.warn(
           t, "Remote build failed for a build rule so trying locally now for [%s].", buildTarget);
-      remoteBuildResult = Optional.of(Result.EXCEPTION);
+      remoteBuildResult =
+          Optional.of(t instanceof InterruptedException ? Result.INTERRUPTED : Result.EXCEPTION);
       fallbackBuildToLocalStrategy();
     }
 
     private void fallbackBuildToLocalStrategy() {
+      Preconditions.checkState(!hasCancellationBeenRequested);
       ListenableFuture<Optional<BuildResult>> future =
           Futures.submitAsync(
               strategyContext::runWithDefaultBehavior, strategyContext.getExecutorService());
       localStrategyBuildResult = Optional.of(future);
-      future.addListener(() -> onLocalBuildFinished(future), strategyContext.getExecutorService());
+      future.addListener(() -> onLocalBuildFinished(future), MoreExecutors.directExecutor());
     }
 
     private void onLocalBuildFinished(ListenableFuture<Optional<BuildResult>> future) {
@@ -185,14 +189,13 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         try {
           // Remote build failed but local build finished.
           Optional<BuildResult> result = future.get();
-          combinedFinalResult.set(result);
-          eventBus.post(
-              startedEvent.createFinished(
-                  remoteBuildResult.get(),
-                  result.get().isSuccess() ? Result.SUCCESS : Result.FAIL));
+          completeCombinedFuture(
+              result,
+              remoteBuildResult.get(),
+              result.get().isSuccess() ? Result.SUCCESS : Result.FAIL);
         } catch (InterruptedException e) {
           if (hasCancellationBeenRequested) {
-            combinedFinalResult.setException(e);
+            completeCombinedFutureWithException(e, remoteBuildResult.get(), Result.INTERRUPTED);
             return;
           }
 
@@ -205,12 +208,22 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
 
     private void handleLocalBuildFailedWithException(Throwable t) {
       LOG.error(t, "Local fallback for one build rule failed as well for [%s].", buildTarget);
-      combinedFinalResult.setException(t);
-      eventBus.post(startedEvent.createFinished(remoteBuildResult.get(), Result.EXCEPTION));
+      completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.EXCEPTION);
     }
 
     private boolean isLocalBuildAlreadyRunning() {
       return localStrategyBuildResult.isPresent();
+    }
+
+    private void completeCombinedFuture(Optional<BuildResult> result, Result remote, Result local) {
+      combinedFinalResult.set(result);
+      eventBus.post(startedEvent.createFinished(remote, local));
+    }
+
+    private void completeCombinedFutureWithException(
+        Throwable throwable, Result remote, Result local) {
+      combinedFinalResult.setException(throwable);
+      eventBus.post(startedEvent.createFinished(remote, local));
     }
   }
 }

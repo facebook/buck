@@ -31,7 +31,8 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
     SUCCESS,
     FAIL,
     EXCEPTION,
-    NOT_RUN
+    NOT_RUN,
+    INTERRUPTED
   }
 
   public static Started createStarted(String buildTarget) {

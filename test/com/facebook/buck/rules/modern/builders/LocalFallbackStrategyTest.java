@@ -78,15 +78,16 @@ public class LocalFallbackStrategyTest {
   }
 
   @Test
-  public void testRemoteException() throws ExecutionException, InterruptedException {
+  public void testRemoteInterruptedException() throws ExecutionException, InterruptedException {
     EasyMock.expect(strategyBuildResult.getBuildResult())
-        .andReturn(Futures.immediateFailedFuture(new Exception("This did not go well...")))
+        .andReturn(
+            Futures.immediateFailedFuture(new InterruptedException("This did not go well...")))
         .times(2);
     BuildResult localResult = successBuildResult("//local/did:though");
     EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())
         .andReturn(Futures.immediateFuture(Optional.of(localResult)))
         .once();
-    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).times(2);
+    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).once();
 
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
@@ -106,7 +107,7 @@ public class LocalFallbackStrategyTest {
     EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())
         .andReturn(Futures.immediateFuture(Optional.of(localResult)))
         .once();
-    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).times(2);
+    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).once();
 
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
@@ -126,7 +127,7 @@ public class LocalFallbackStrategyTest {
     EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())
         .andReturn(Futures.immediateFuture(Optional.of(localResult)))
         .once();
-    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).times(2);
+    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).once();
 
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
@@ -146,7 +147,7 @@ public class LocalFallbackStrategyTest {
     EasyMock.expect(buildStrategyContext.runWithDefaultBehavior())
         .andReturn(Futures.immediateFailedFuture(exception))
         .once();
-    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).times(2);
+    EasyMock.expect(buildStrategyContext.getExecutorService()).andReturn(directExecutor).once();
 
     EasyMock.replay(strategyBuildResult, buildStrategyContext);
     FallbackStrategyBuildResult fallbackStrategyBuildResult =
@@ -175,6 +176,21 @@ public class LocalFallbackStrategyTest {
     List<LocalFallbackEvent> events = eventCapture.getValues();
     Assert.assertTrue(events.get(0) instanceof LocalFallbackEvent.Started);
     Assert.assertTrue(events.get(1) instanceof LocalFallbackEvent.Finished);
+  }
+
+  @Test
+  public void testInterruptedState() throws ExecutionException, InterruptedException {
+    Capture<LocalFallbackEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
+    eventBus.post(EasyMock.capture(eventCapture));
+    EasyMock.expectLastCall().times(2);
+    EasyMock.replay(eventBus);
+
+    testRemoteInterruptedException();
+
+    List<LocalFallbackEvent> events = eventCapture.getValues();
+    LocalFallbackEvent.Finished event = (LocalFallbackEvent.Finished) events.get(1);
+    Assert.assertEquals(LocalFallbackEvent.Result.INTERRUPTED, event.getRemoteResult());
+    Assert.assertEquals(LocalFallbackEvent.Result.SUCCESS, event.getLocalResult());
   }
 
   private static BuildRule buildRule(String name) {
