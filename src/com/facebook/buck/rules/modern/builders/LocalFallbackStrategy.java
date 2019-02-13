@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent;
 import com.facebook.buck.remoteexecution.event.LocalFallbackEvent.Result;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -32,6 +33,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 /** Strategy that makes sure failed remote builds fallback to be executed locally. */
 public class LocalFallbackStrategy implements BuildRuleStrategy {
@@ -75,6 +77,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private final Object lock;
     private final BuckEventBus eventBus;
     private final LocalFallbackEvent.Started startedEvent;
+    private final Stopwatch remoteExecutionTimer;
 
     private Optional<ListenableFuture<Optional<BuildResult>>> localStrategyBuildResult;
     private boolean hasCancellationBeenRequested;
@@ -95,6 +98,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       this.eventBus = eventBus;
       this.startedEvent = LocalFallbackEvent.createStarted(buildTarget);
       this.remoteBuildResult = Optional.empty();
+      this.remoteExecutionTimer = Stopwatch.createStarted();
 
       this.eventBus.post(this.startedEvent);
       this.remoteStrategyBuildResult
@@ -138,6 +142,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
 
     private void onMainBuildFinished(ListenableFuture<Optional<BuildResult>> mainBuildResult) {
       synchronized (lock) {
+        remoteExecutionTimer.stop();
         try {
           Optional<BuildResult> result = mainBuildResult.get();
           Preconditions.checkState(result.isPresent());
@@ -217,13 +222,17 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
 
     private void completeCombinedFuture(Optional<BuildResult> result, Result remote, Result local) {
       combinedFinalResult.set(result);
-      eventBus.post(startedEvent.createFinished(remote, local));
+      eventBus.post(
+          startedEvent.createFinished(
+              remote, local, remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS)));
     }
 
     private void completeCombinedFutureWithException(
         Throwable throwable, Result remote, Result local) {
       combinedFinalResult.setException(throwable);
-      eventBus.post(startedEvent.createFinished(remote, local));
+      eventBus.post(
+          startedEvent.createFinished(
+              remote, local, remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS)));
     }
   }
 }

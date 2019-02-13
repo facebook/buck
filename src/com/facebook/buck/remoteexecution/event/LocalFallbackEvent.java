@@ -47,8 +47,9 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
       this.buildTarget = buildTarget;
     }
 
-    public Finished createFinished(Result remoteResult, Result localResult) {
-      return new Finished(this, remoteResult, localResult);
+    public Finished createFinished(
+        Result remoteResult, Result localResult, long remoteDurationMillis) {
+      return new Finished(this, remoteResult, localResult, remoteDurationMillis);
     }
 
     public String getBuildTarget() {
@@ -66,11 +67,14 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
     private final Started startedEvent;
     private final Result remoteResult;
     private final Result localResult;
+    private final long remoteDurationMillis;
 
-    private Finished(Started startedEvent, Result remoteResult, Result localResult) {
+    private Finished(
+        Started startedEvent, Result remoteResult, Result localResult, long remoteDurationMillis) {
       this.startedEvent = startedEvent;
       this.remoteResult = remoteResult;
       this.localResult = localResult;
+      this.remoteDurationMillis = remoteDurationMillis;
     }
 
     public Started getStartedEvent() {
@@ -83,6 +87,10 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
 
     public Result getLocalResult() {
       return localResult;
+    }
+
+    public long getRemoteDurationMillis() {
+      return remoteDurationMillis;
     }
 
     @Override
