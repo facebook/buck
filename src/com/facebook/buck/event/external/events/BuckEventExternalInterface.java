@@ -52,7 +52,7 @@ public interface BuckEventExternalInterface {
   // Sent when project generation has finished
   String PROJECT_GENERATION_FINISHED = "ProjectGenerationFinished";
   /** @return the time at which the event has been created, in milliseconds. */
-  long getTimestamp();
+  long getTimestampMillis();
   /** @return the type of the event. */
   @JsonProperty("type")
   String getEventName();

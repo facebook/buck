@@ -391,11 +391,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
     EventInterval interval =
         EventInterval.builder()
-            .setStart(startEvent.getTimestamp())
+            .setStart(startEvent.getTimestampMillis())
             .setFinish(
                 finishedEvent == null
                     ? OptionalLong.empty()
-                    : OptionalLong.of(finishedEvent.getTimestamp()))
+                    : OptionalLong.of(finishedEvent.getTimestampMillis()))
             .build();
     return logEventInterval(
         prefix,
@@ -663,8 +663,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         started.getEventKey(),
         (key, pair) ->
             pair == null
-                ? EventInterval.builder().setStart(started.getTimestamp()).build()
-                : pair.withStart(started.getTimestamp()));
+                ? EventInterval.builder().setStart(started.getTimestampMillis()).build()
+                : pair.withStart(started.getTimestampMillis()));
   }
 
   public static void aggregateFinishedEvent(
@@ -673,8 +673,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
         finished.getEventKey(),
         (key, pair) ->
             pair == null
-                ? EventInterval.builder().setFinish(finished.getTimestamp()).build()
-                : pair.withFinish(finished.getTimestamp()));
+                ? EventInterval.builder().setFinish(finished.getTimestampMillis()).build()
+                : pair.withFinish(finished.getTimestampMillis()));
   }
 
   @Subscribe

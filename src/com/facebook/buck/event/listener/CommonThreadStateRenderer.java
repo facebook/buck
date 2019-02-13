@@ -128,7 +128,7 @@ public class CommonThreadStateRenderer {
         String stepTimeString =
             String.format(
                 "[%s]%s",
-                formatElapsedTime(currentTimeMs - runningStep.get().getTimestamp()),
+                formatElapsedTime(currentTimeMs - runningStep.get().getTimestampMillis()),
                 STEP_INFO_SUFFIX);
         lineBuilder.append(
             formatWithTruncatable(

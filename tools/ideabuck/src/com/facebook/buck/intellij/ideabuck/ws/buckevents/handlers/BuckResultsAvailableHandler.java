@@ -37,6 +37,7 @@ public class BuckResultsAvailableHandler implements BuckEventHandler {
     testResultsAvailable.getResults();
     TestResultsAvailableConsumer consumer =
         buckEventsConsumerFactory.getTestResultsAvailableConsumer();
-    consumer.consumeTestResultsAvailable(event.getTimestamp(), testResultsAvailable.getResults());
+    consumer.consumeTestResultsAvailable(
+        event.getTimestampMillis(), testResultsAvailable.getResults());
   }
 }

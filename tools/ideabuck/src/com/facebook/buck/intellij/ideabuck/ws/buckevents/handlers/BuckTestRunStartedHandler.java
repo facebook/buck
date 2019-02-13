@@ -31,6 +31,6 @@ public class BuckTestRunStartedHandler implements BuckEventHandler {
       ObjectMapper objectMapper)
       throws IOException {
     TestRunStartedConsumer consumer = buckEventsConsumerFactory.getTestRunStartedConsumer();
-    consumer.consumeTestRunStarted(event.getTimestamp());
+    consumer.consumeTestRunStarted(event.getTimestampMillis());
   }
 }

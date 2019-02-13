@@ -68,10 +68,10 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
 
     ++outstandingUploads;
     if (outstandingUploads == 1) {
-      lastUploadStartMillis = event.getTimestamp();
+      lastUploadStartMillis = event.getTimestampMillis();
     }
     if (firstUploadMillis == -1) {
-      firstUploadMillis = event.getTimestamp();
+      firstUploadMillis = event.getTimestampMillis();
     }
   }
 
@@ -86,9 +86,9 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
     if (event.getStoreData().getArtifactSizeBytes().isPresent()) {
       totalUploadedBytes += event.getStoreData().getArtifactSizeBytes().get();
     }
-    lastUploadFinishMillis = event.getTimestamp();
+    lastUploadFinishMillis = event.getTimestampMillis();
     if (outstandingUploads == 0) {
-      totalNetworkTimeMillis += event.getTimestamp() - lastUploadStartMillis;
+      totalNetworkTimeMillis += event.getTimestampMillis() - lastUploadStartMillis;
     }
 
     sendCounterSnapshotIfFinished();
@@ -96,7 +96,7 @@ public class HttpArtifactCacheUploadListener implements BuckEventListener {
 
   @Subscribe
   public synchronized void onBuildFinished(BuildEvent.Finished event) {
-    buildFinishMillis = event.getTimestamp();
+    buildFinishMillis = event.getTimestampMillis();
     sendCounterSnapshotIfFinished();
   }
 

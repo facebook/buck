@@ -101,7 +101,7 @@ public class DefaultBuckEventBusTest {
     eb.timestamp(timestamp);
     eb.post(event, timestamp);
     eb.close();
-    assertEquals(timestamp.getTimestamp(), event.getTimestamp());
+    assertEquals(timestamp.getTimestampMillis(), event.getTimestampMillis());
     assertEquals(timestamp.getNanoTime(), event.getNanoTime());
   }
 
@@ -114,7 +114,7 @@ public class DefaultBuckEventBusTest {
     TestEvent event = new TestEvent();
     eb.post(event);
     eb.close();
-    assertEquals(event.getTimestamp(), 49152);
+    assertEquals(event.getTimestampMillis(), 49152);
     assertEquals(event.getNanoTime(), 64738);
   }
 

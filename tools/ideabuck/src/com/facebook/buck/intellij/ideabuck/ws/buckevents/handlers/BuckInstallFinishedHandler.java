@@ -34,6 +34,6 @@ public class BuckInstallFinishedHandler implements BuckEventHandler {
         objectMapper.readValue(rawMessage, InstallFinishedEventExternalInterface.class);
     buckEventsConsumerFactory
         .getInstallFinishedConsumer()
-        .consumeInstallFinished(event.getTimestamp(), installFinishedEvent.getPackageName());
+        .consumeInstallFinished(event.getTimestampMillis(), installFinishedEvent.getPackageName());
   }
 }

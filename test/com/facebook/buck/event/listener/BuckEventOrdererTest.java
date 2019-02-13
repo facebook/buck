@@ -200,18 +200,21 @@ public class BuckEventOrdererTest {
       orderer.add(createUniqueEvent(MAX_SKEW + 1, TimeUnit.MILLISECONDS, THREAD_TWO));
 
       assertThat(
-          FluentIterable.from(serializedEvents).transform(BuckEventExternalInterface::getTimestamp),
+          FluentIterable.from(serializedEvents)
+              .transform(BuckEventExternalInterface::getTimestampMillis),
           Matchers.contains(0L));
 
       orderer.add(createUniqueEvent(5 + MAX_SKEW + 1, TimeUnit.MILLISECONDS, THREAD_ONE));
 
       assertThat(
-          FluentIterable.from(serializedEvents).transform(BuckEventExternalInterface::getTimestamp),
+          FluentIterable.from(serializedEvents)
+              .transform(BuckEventExternalInterface::getTimestampMillis),
           Matchers.contains(0L, 5L));
     }
 
     assertThat(
-        FluentIterable.from(serializedEvents).transform(BuckEventExternalInterface::getTimestamp),
+        FluentIterable.from(serializedEvents)
+            .transform(BuckEventExternalInterface::getTimestampMillis),
         Matchers.contains(0L, 5L, MAX_SKEW + 1, 5 + MAX_SKEW + 1));
   }
 

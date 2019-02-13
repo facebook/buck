@@ -87,7 +87,7 @@ public abstract class ArtifactCompressionEvent extends AbstractBuckEvent
   public static class Finished extends ArtifactCompressionEvent {
     protected Finished(Started started) {
       super(started.getEventKey(), started.getOperation(), started.getRuleKeys());
-      startedTimeStamp = started.getTimestamp();
+      startedTimeStamp = started.getTimestampMillis();
     }
 
     private final long startedTimeStamp;

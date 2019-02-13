@@ -57,6 +57,6 @@ public class FileSerializationEventBusListenerTest {
     assertThat(
         "An event should have something JSON-like in it",
         lines.get(0),
-        containsString("\"timestamp\":"));
+        containsString("\"timestampMillis\":"));
   }
 }

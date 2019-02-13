@@ -169,9 +169,13 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     @Override
     public void configure(
-        long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
-      super.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
-      this.duration = tracker.doBeginning(getBuildRule(), timestamp, nanoTime);
+        long timestampMillis,
+        long nanoTime,
+        long threadUserNanoTime,
+        long threadId,
+        BuildId buildId) {
+      super.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
+      this.duration = tracker.doBeginning(getBuildRule(), timestampMillis, nanoTime);
     }
 
     @Override
@@ -199,11 +203,16 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
 
     @Override
     public void configure(
-        long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
-      super.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+        long timestampMillis,
+        long nanoTime,
+        long threadUserNanoTime,
+        long threadId,
+        BuildId buildId) {
+      super.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
       long threadUserNanoDuration = threadUserNanoTime - beginning.getThreadUserNanoTime();
       this.duration =
-          beginning.tracker.doEnding(getBuildRule(), timestamp, nanoTime, threadUserNanoDuration);
+          beginning.tracker.doEnding(
+              getBuildRule(), timestampMillis, nanoTime, threadUserNanoDuration);
     }
 
     @Override

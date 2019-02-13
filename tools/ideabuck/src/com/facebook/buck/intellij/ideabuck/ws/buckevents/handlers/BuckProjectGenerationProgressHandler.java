@@ -36,6 +36,6 @@ public class BuckProjectGenerationProgressHandler implements BuckEventHandler {
     buckEventsConsumerFactory
         .getBuckProjectGenerationProgressConsumer()
         .consumeBuckProjectGenerationProgress(
-            parsingProgressEvent.getTimestamp(), parsingProgressEvent.getProgressValue());
+            parsingProgressEvent.getTimestampMillis(), parsingProgressEvent.getProgressValue());
   }
 }

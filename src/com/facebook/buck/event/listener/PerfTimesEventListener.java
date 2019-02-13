@@ -72,7 +72,7 @@ public class PerfTimesEventListener implements BuckEventListener {
 
   @Subscribe
   public synchronized void initializationFinished(BuckInitializationDurationEvent event) {
-    buildPhasesLastEvent.set(event.getTimestamp());
+    buildPhasesLastEvent.set(event.getTimestampMillis());
     perfTimesStatsBuilder.setInitTimeMs(event.getDuration());
     eventBus.post(PerfTimesEvent.update(perfTimesStatsBuilder.build()));
   }
@@ -154,8 +154,8 @@ public class PerfTimesEventListener implements BuckEventListener {
 
   /** Helper method, returns the time difference from last invocation of this method. */
   private long getTimeDifferenceSinceLastEventToEvent(AbstractBuckEvent event) {
-    long diff = event.getTimestamp() - buildPhasesLastEvent.get();
-    buildPhasesLastEvent.set(event.getTimestamp());
+    long diff = event.getTimestampMillis() - buildPhasesLastEvent.get();
+    buildPhasesLastEvent.set(event.getTimestampMillis());
     return diff;
   }
 

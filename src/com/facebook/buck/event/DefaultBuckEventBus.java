@@ -113,7 +113,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
   @Override
   public void post(BuckEvent event, BuckEvent atTime) {
     event.configure(
-        atTime.getTimestamp(),
+        atTime.getTimestampMillis(),
         atTime.getNanoTime(),
         atTime.getThreadUserNanoTime(),
         threadIdSupplier.get(),

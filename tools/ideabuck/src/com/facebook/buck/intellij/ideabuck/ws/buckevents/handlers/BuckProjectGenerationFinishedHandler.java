@@ -31,6 +31,6 @@ public class BuckProjectGenerationFinishedHandler implements BuckEventHandler {
       throws IOException {
     buckEventsConsumerFactory
         .getBuckProjectGenerationFinishedConsumer()
-        .consumeBuckProjectGenerationFinished(event.getTimestamp());
+        .consumeBuckProjectGenerationFinished(event.getTimestampMillis());
   }
 }

@@ -70,7 +70,7 @@ public class BuildThreadStateRenderer implements MultiStateRenderer {
         buildTarget = Optional.of(buildRuleEvent.get().getBuildRule().getBuildTarget());
         elapsedTimeMs =
             currentTimeMs
-                - buildRuleEvent.get().getTimestamp()
+                - buildRuleEvent.get().getTimestampMillis()
                 + buildRuleEvent.get().getDuration().getWallMillisDuration();
       }
       if (elapsedTimeMs < minimumDurationMillis) {

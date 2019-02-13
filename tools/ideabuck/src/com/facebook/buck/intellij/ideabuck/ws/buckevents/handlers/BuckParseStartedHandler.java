@@ -32,6 +32,6 @@ public class BuckParseStartedHandler implements BuckEventHandler {
       throws IOException {
     buckEventsConsumerFactory
         .getRulesParsingStartConsumer()
-        .consumeParseRuleStart(event.getTimestamp());
+        .consumeParseRuleStart(event.getTimestampMillis());
   }
 }

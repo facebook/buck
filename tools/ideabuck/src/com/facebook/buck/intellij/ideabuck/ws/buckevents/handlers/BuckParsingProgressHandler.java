@@ -36,6 +36,6 @@ public class BuckParsingProgressHandler implements BuckEventHandler {
     buckEventsConsumerFactory
         .getRulesParsingProgressUpdateConsumer()
         .consumeParseRuleProgressUpdate(
-            parsingProgressEvent.getTimestamp(), parsingProgressEvent.getProgressValue());
+            parsingProgressEvent.getTimestampMillis(), parsingProgressEvent.getProgressValue());
   }
 }

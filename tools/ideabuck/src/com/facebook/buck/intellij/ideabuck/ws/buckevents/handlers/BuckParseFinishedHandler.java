@@ -31,6 +31,6 @@ public class BuckParseFinishedHandler implements BuckEventHandler {
       throws IOException {
     buckEventsConsumerFactory
         .getRulesParsingEndConsumer()
-        .consumeParseRuleEnd(event.getTimestamp());
+        .consumeParseRuleEnd(event.getTimestampMillis());
   }
 }

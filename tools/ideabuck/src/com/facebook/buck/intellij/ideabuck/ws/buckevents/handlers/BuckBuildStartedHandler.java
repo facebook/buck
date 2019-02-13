@@ -27,6 +27,6 @@ public class BuckBuildStartedHandler implements BuckEventHandler {
       BuckEventExternalInterface event,
       BuckEventsConsumerFactory buckEventsConsumerFactory,
       ObjectMapper objectMapper) {
-    buckEventsConsumerFactory.getBuildStartConsumer().consumeBuildStart(event.getTimestamp());
+    buckEventsConsumerFactory.getBuildStartConsumer().consumeBuildStart(event.getTimestampMillis());
   }
 }

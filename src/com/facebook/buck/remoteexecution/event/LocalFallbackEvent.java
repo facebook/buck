@@ -92,7 +92,7 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
     }
 
     public long getFullDurationMillis() {
-      return this.getTimestamp() - startedEvent.getTimestamp();
+      return this.getTimestampMillis() - startedEvent.getTimestampMillis();
     }
 
     public boolean wasExecutionSuccessful() {

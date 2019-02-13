@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 public abstract class AbstractBuckEvent implements BuckEvent {
 
   private boolean isConfigured;
-  private long timestamp;
+  private long timestampMillis;
   private long nanoTime;
   private long threadUserNanoTime;
   private long threadId;
@@ -51,9 +51,13 @@ public abstract class AbstractBuckEvent implements BuckEvent {
   @Override
   @VisibleForTesting
   public void configure(
-      long timestamp, long nanoTime, long threadUserNanoTime, long threadId, BuildId buildId) {
+      long timestampMillis,
+      long nanoTime,
+      long threadUserNanoTime,
+      long threadId,
+      BuildId buildId) {
     Preconditions.checkState(!isConfigured, "Events can only be configured once.");
-    this.timestamp = timestamp;
+    this.timestampMillis = timestampMillis;
     this.nanoTime = nanoTime;
     this.threadUserNanoTime = threadUserNanoTime;
     this.threadId = threadId;
@@ -68,9 +72,9 @@ public abstract class AbstractBuckEvent implements BuckEvent {
 
   @Override
   @JsonView(JsonViews.MachineReadableLog.class)
-  public long getTimestamp() {
+  public long getTimestampMillis() {
     Preconditions.checkState(isConfigured, "Event was not configured yet.");
-    return timestamp;
+    return timestampMillis;
   }
 
   @Override

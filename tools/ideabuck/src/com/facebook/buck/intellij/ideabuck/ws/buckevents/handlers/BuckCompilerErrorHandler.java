@@ -37,7 +37,7 @@ public class BuckCompilerErrorHandler implements BuckEventHandler {
         .getCompilerErrorConsumer()
         .consumeCompilerError(
             compilerErrorEvent.getTarget(),
-            compilerErrorEvent.getTimestamp(),
+            compilerErrorEvent.getTimestampMillis(),
             compilerErrorEvent.getError(),
             compilerErrorEvent.getSuggestions());
   }

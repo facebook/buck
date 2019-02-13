@@ -31,6 +31,6 @@ public class BuckTestRunCompleteHandler implements BuckEventHandler {
       ObjectMapper objectMapper)
       throws IOException {
     TestRunCompleteConsumer consumer = buckEventsConsumerFactory.getTestRunCompleteConsumer();
-    consumer.consumeTestRunComplete(event.getTimestamp());
+    consumer.consumeTestRunComplete(event.getTimestampMillis());
   }
 }

@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 abstract class AbstractProxyBuckEvent implements BuckEventExternalInterface {
   @Value.Parameter
   @Override
-  public abstract long getTimestamp();
+  public abstract long getTimestampMillis();
 
   @Override
   public String getEventName() {

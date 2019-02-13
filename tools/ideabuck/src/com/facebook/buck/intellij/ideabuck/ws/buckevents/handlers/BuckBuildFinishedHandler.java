@@ -27,6 +27,6 @@ public class BuckBuildFinishedHandler implements BuckEventHandler {
       BuckEventExternalInterface event,
       BuckEventsConsumerFactory buckEventsConsumerFactory,
       ObjectMapper objectMapper) {
-    buckEventsConsumerFactory.getBuildEndConsumer().consumeBuildEnd(event.getTimestamp());
+    buckEventsConsumerFactory.getBuildEndConsumer().consumeBuildEnd(event.getTimestampMillis());
   }
 }

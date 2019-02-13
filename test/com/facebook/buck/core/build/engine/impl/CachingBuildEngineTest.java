@@ -4034,11 +4034,11 @@ public class CachingBuildEngineTest {
         for (BuildRuleEvent event : queue) {
           if (event instanceof BuildRuleEvent.BeginningBuildRuleEvent) {
             if (count++ == 0) {
-              wallStart = event.getTimestamp();
+              wallStart = event.getTimestampMillis();
               nanoStart = event.getNanoTime();
             }
             assertEquals(
-                wall + event.getTimestamp() - wallStart,
+                wall + event.getTimestampMillis() - wallStart,
                 event.getDuration().getWallMillisDuration());
             assertEquals(
                 nano + event.getNanoTime() - nanoStart, event.getDuration().getNanoDuration());
@@ -4048,13 +4048,13 @@ public class CachingBuildEngineTest {
                 ((BuildRuleEvent.EndingBuildRuleEvent) event).getBeginningEvent();
             thread += event.getThreadUserNanoTime() - beginning.getThreadUserNanoTime();
             assertEquals(
-                wall + event.getTimestamp() - wallStart,
+                wall + event.getTimestampMillis() - wallStart,
                 event.getDuration().getWallMillisDuration());
             assertEquals(
                 nano + event.getNanoTime() - nanoStart, event.getDuration().getNanoDuration());
             assertEquals(thread, event.getDuration().getThreadUserNanoDuration());
             if (--count == 0) {
-              wall += event.getTimestamp() - wallStart;
+              wall += event.getTimestampMillis() - wallStart;
               nano += event.getNanoTime() - nanoStart;
             }
           }

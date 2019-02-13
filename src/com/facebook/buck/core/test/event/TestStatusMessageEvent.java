@@ -39,7 +39,7 @@ public abstract class TestStatusMessageEvent extends AbstractBuckEvent
   }
 
   @Override
-  public long getTimestamp() {
+  public long getTimestampMillis() {
     return testStatusMessage.getTimestampMillis();
   }
 

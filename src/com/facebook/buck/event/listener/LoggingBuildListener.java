@@ -76,12 +76,12 @@ public class LoggingBuildListener implements BuckEventListener {
 
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
-    LOG.info("Build started at %s", formatTimestamp(started.getTimestamp()));
+    LOG.info("Build started at %s", formatTimestamp(started.getTimestampMillis()));
   }
 
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
-    LOG.info("Build finished at %s", formatTimestamp(finished.getTimestamp()));
+    LOG.info("Build finished at %s", formatTimestamp(finished.getTimestampMillis()));
   }
 
   @Subscribe

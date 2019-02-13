@@ -81,42 +81,42 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
   @Subscribe
   public void buildStarted(BuildEvent.Started started) {
     LogRecord record = new LogRecord(LEVEL, "Build started");
-    record.setMillis(started.getTimestamp());
+    record.setMillis(started.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void buildFinished(BuildEvent.Finished finished) {
     LogRecord record = new LogRecord(LEVEL, "Build finished");
-    record.setMillis(finished.getTimestamp());
+    record.setMillis(finished.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void ruleStarted(BuildRuleEvent.Started started) {
     LogRecord record = new LogRecord(LEVEL, started.toString());
-    record.setMillis(started.getTimestamp());
+    record.setMillis(started.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void ruleFinished(BuildRuleEvent.Finished finished) {
     LogRecord record = new LogRecord(LEVEL, finished.toLogMessage());
-    record.setMillis(finished.getTimestamp());
+    record.setMillis(finished.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void ruleResumed(BuildRuleEvent.Resumed resumed) {
     LogRecord record = new LogRecord(LEVEL, resumed.toString());
-    record.setMillis(resumed.getTimestamp());
+    record.setMillis(resumed.getTimestampMillis());
     LOG.log(record);
   }
 
   @Subscribe
   public void ruleSuspended(BuildRuleEvent.Suspended suspended) {
     LogRecord record = new LogRecord(LEVEL, suspended.toString());
-    record.setMillis(suspended.getTimestamp());
+    record.setMillis(suspended.getTimestampMillis());
     LOG.log(record);
   }
 

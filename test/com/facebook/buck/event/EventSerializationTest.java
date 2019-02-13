@@ -59,7 +59,7 @@ import org.junit.Test;
  */
 public class EventSerializationTest {
 
-  private long timestamp;
+  private long timestampMillis;
   private long nanoTime;
   private long threadUserNanoTime;
   private long threadId;
@@ -69,7 +69,7 @@ public class EventSerializationTest {
   @Before
   public void setUp() {
     Clock clock = new DefaultClock();
-    timestamp = clock.currentTimeMillis();
+    timestampMillis = clock.currentTimeMillis();
     nanoTime = clock.nanoTime();
     // Not using real value as not all JVMs will support thread user time.
     threadUserNanoTime = new Random().nextLong();
@@ -82,7 +82,7 @@ public class EventSerializationTest {
   @Test
   public void testConsoleEvent() throws IOException {
     ConsoleEvent event = ConsoleEvent.severe("Something happened");
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"type\":\"ConsoleEvent\",\"eventKey\":{\"value\":4242},"
@@ -95,7 +95,7 @@ public class EventSerializationTest {
   @Test
   public void testProjectGenerationEventFinished() throws IOException {
     ProjectGenerationEvent.Finished event = ProjectGenerationEvent.finished();
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"type\":\"ProjectGenerationFinished\"," + "\"eventKey\":{\"value\":4242}}", message);
@@ -104,7 +104,7 @@ public class EventSerializationTest {
   @Test
   public void testProjectGenerationEventStarted() throws IOException {
     ProjectGenerationEvent.Started event = ProjectGenerationEvent.started();
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"type\":\"ProjectGenerationStarted\"," + "\"eventKey\":{\"value\":4242}}", message);
@@ -113,7 +113,7 @@ public class EventSerializationTest {
   @Test
   public void testParseEventStarted() throws IOException {
     ParseEvent.Started event = ParseEvent.started(ImmutableList.of());
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"buildTargets\":[],\"type\":\"ParseStarted\"," + "\"eventKey\":{\"value\":4242}}",
@@ -125,7 +125,7 @@ public class EventSerializationTest {
     ParseEvent.Started started =
         ParseEvent.started(ImmutableList.of(BuildTargetFactory.newInstance("//base:short#flv")));
     ParseEvent.Finished event = ParseEvent.finished(started, 10, Optional.empty());
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
@@ -138,7 +138,7 @@ public class EventSerializationTest {
   @Test
   public void testBuildEventStarted() throws IOException {
     BuildEvent.Started event = BuildEvent.started(ImmutableSet.of("//base:short"));
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"eventKey\":{\"value\":4242},"
@@ -151,7 +151,7 @@ public class EventSerializationTest {
   public void testBuildEventFinished() throws IOException {
     BuildEvent.Finished event =
         BuildEvent.finished(BuildEvent.started(ImmutableSet.of("//base:short")), ExitCode.SUCCESS);
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"eventKey\":{\"value\":4242},"
@@ -163,7 +163,7 @@ public class EventSerializationTest {
   public void testBuildRuleEventStarted() throws IOException {
     BuildRule rule = new FakeBuildRule("//fake:rule");
     BuildRuleEvent.Started event = BuildRuleEvent.started(rule, durationTracker);
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"buildRule\":{\"type\":\"fake_build_rule\",\"name\":\"//fake:rule\"},"
@@ -177,7 +177,8 @@ public class EventSerializationTest {
   public void testBuildRuleEventFinished() throws IOException {
     BuildRule rule = new FakeBuildRule("//fake:rule");
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
-    started.configure(timestamp - 11, nanoTime - 12, threadUserNanoTime - 13, threadId, buildId);
+    started.configure(
+        timestampMillis - 11, nanoTime - 12, threadUserNanoTime - 13, threadId, buildId);
     BuildRuleEvent.Finished event =
         BuildRuleEvent.finished(
             started,
@@ -196,7 +197,7 @@ public class EventSerializationTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty());
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"status\":\"SUCCESS\",\"cacheResult\":{\"type\":\"MISS\"},"
@@ -216,7 +217,7 @@ public class EventSerializationTest {
   public void testTestRunEventStarted() throws IOException {
     TestRunEvent.Started event =
         TestRunEvent.started(true, TestSelectorList.empty(), false, ImmutableSet.of());
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"runAllTests\":true,"
@@ -231,7 +232,7 @@ public class EventSerializationTest {
         TestRunEvent.finished(
             ImmutableSet.of("target"),
             ImmutableList.of(FakeTestResults.newFailedInstance("Test1")));
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
@@ -256,7 +257,7 @@ public class EventSerializationTest {
             TestSelectorList.empty(), /* shouldExplainTestSelectorList */
             false,
             ImmutableSet.of());
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"runAllTests\":true,"
@@ -269,7 +270,7 @@ public class EventSerializationTest {
   public void testExternalTestRunEventFinished() throws Exception {
     ExternalTestRunEvent.Finished event =
         ExternalTestRunEvent.finished(ImmutableSet.of(), /* exitCode */ ExitCode.SUCCESS);
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
@@ -282,7 +283,7 @@ public class EventSerializationTest {
   public void testExternalTestSpecCalculationEventStarted() throws Exception {
     ExternalTestSpecCalculationEvent.Started event =
         ExternalTestSpecCalculationEvent.started(BuildTargetFactory.newInstance("//example:app"));
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
@@ -295,7 +296,7 @@ public class EventSerializationTest {
   public void testExternalTestSpecCalculationEventFinished() throws Exception {
     ExternalTestSpecCalculationEvent.Finished event =
         ExternalTestSpecCalculationEvent.finished(BuildTargetFactory.newInstance("//example:app"));
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
@@ -307,7 +308,7 @@ public class EventSerializationTest {
   @Test
   public void testIndividualTestEventStarted() throws IOException {
     IndividualTestEvent.Started event = IndividualTestEvent.started(ImmutableList.of(""));
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"type\":\"AwaitingResults\",\"eventKey\":{\"value\":-594614447}}", message);
@@ -318,7 +319,7 @@ public class EventSerializationTest {
     IndividualTestEvent.Finished event =
         IndividualTestEvent.finished(
             ImmutableList.of(), FakeTestResults.newFailedInstance("Test1"));
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,\"eventKey\":{\"value\":-594614477},"
@@ -338,7 +339,7 @@ public class EventSerializationTest {
   public void testSimplePerfEvent() throws IOException {
     SimplePerfEvent.Started event =
         SimplePerfEvent.started(PerfEventId.of("PerfId"), "value", "Some value");
-    event.configure(timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+    event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = ObjectMappers.WRITER.writeValueAsString(event);
     assertJsonEquals(
         "{%s,"
@@ -350,9 +351,9 @@ public class EventSerializationTest {
   private void assertJsonEquals(String expected, String actual) {
     String commonHeader =
         String.format(
-            "\"timestamp\":%d,\"nanoTime\":%d,\"threadUserNanoTime\":%d,"
+            "\"timestampMillis\":%d,\"nanoTime\":%d,\"threadUserNanoTime\":%d,"
                 + "\"threadId\":%d,\"buildId\":\"%s\"",
-            timestamp, nanoTime, threadUserNanoTime, threadId, buildId);
+            timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     assertThat(actual, new JsonMatcher(String.format(expected, commonHeader)));
   }
 }

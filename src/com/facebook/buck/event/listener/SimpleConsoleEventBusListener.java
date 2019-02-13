@@ -165,8 +165,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     lines.add(getNetworkStatsLine(finished));
 
     long currentMillis = clock.currentTimeMillis();
-    long buildStartedTime = buildStarted != null ? buildStarted.getTimestamp() : Long.MAX_VALUE;
-    long buildFinishedTime = buildFinished != null ? buildFinished.getTimestamp() : currentMillis;
+    long buildStartedTime =
+        buildStarted != null ? buildStarted.getTimestampMillis() : Long.MAX_VALUE;
+    long buildFinishedTime =
+        buildFinished != null ? buildFinished.getTimestampMillis() : currentMillis;
     Collection<EventInterval> processingEvents =
         getEventsBetween(buildStartedTime, buildFinishedTime, actionGraphEvents.values());
     long offsetMs = getTotalCompletedTimeFromEventIntervals(processingEvents);

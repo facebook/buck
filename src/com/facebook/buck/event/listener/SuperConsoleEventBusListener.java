@@ -398,9 +398,9 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     // Check to see if the build encompasses the time spent parsing. This is true for runs of
     // buck build but not so for runs of e.g. buck project. If so, subtract parse times
     // from the build time.
-    long buildStartedTime = buildStarted.getTimestamp();
+    long buildStartedTime = buildStarted.getTimestampMillis();
     long buildFinishedTime =
-        buildFinished != null ? buildFinished.getTimestamp() : currentTimeMillis;
+        buildFinished != null ? buildFinished.getTimestampMillis() : currentTimeMillis;
     Collection<EventInterval> filteredBuckFilesParsingEvents =
         getEventsBetween(buildStartedTime, buildFinishedTime, buckFilesParsingEvents.values());
     Collection<EventInterval> filteredActionGraphEvents =
@@ -500,7 +500,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       // project generation never started
       // we only output total time if build started and finished
       if (buildStarted != null && buildFinished != null) {
-        long durationMs = buildFinished.getTimestamp() - buildStarted.getTimestamp();
+        long durationMs = buildFinished.getTimestampMillis() - buildStarted.getTimestampMillis();
         String finalLine = "  Total time: " + formatElapsedTime(durationMs);
         if (distBuildStarted != null) {
           // Stampede build. We need to print final status to reduce confusion from remote errors.
@@ -518,7 +518,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       // we wait for generation to finish to output time
       if (projectGenerationFinished != null) {
         long durationMs =
-            projectGenerationFinished.getTimestamp() - projectGenerationStarted.getTimestamp();
+            projectGenerationFinished.getTimestampMillis()
+                - projectGenerationStarted.getTimestampMillis();
         lines.add("  Total time: " + formatElapsedTime(durationMs));
       }
     }
