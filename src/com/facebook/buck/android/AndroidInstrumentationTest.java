@@ -206,8 +206,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             getFilterString(options),
             Optional.empty(),
             executionContext.isDebugEnabled(),
-            executionContext.isCodeCoverageEnabled(),
-            Optional.empty()));
+            executionContext.isCodeCoverageEnabled()));
 
     return steps.build();
   }
@@ -238,8 +237,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       Optional<String> classFilterArg,
       Optional<Path> apkUnderTestPath,
       boolean debugEnabled,
-      boolean codeCoverageEnabled,
-      Optional<BuildTarget> apkUnderTestBuildTarget) {
+      boolean codeCoverageEnabled) {
     String packageName =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
     String testRunner =
@@ -257,15 +255,20 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
               ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
                   apk.getBuildTarget(), getProjectFilesystem()));
     }
+    Optional<Path> apkUnderTestSymlinkTreePath =
+        getApkUnderTest()
+            .flatMap(
+                hasInstallableApk ->
+                    ExopackageInstaller.exopackageEnabled(hasInstallableApk.getApkInfo())
+                        ? Optional.of(
+                            ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
+                                hasInstallableApk.getBuildTarget(), getProjectFilesystem()))
+                        : Optional.empty());
 
     AndroidInstrumentationTestJVMArgs jvmArgs =
         AndroidInstrumentationTestJVMArgs.builder()
             .setApkUnderTestPath(apkUnderTestPath)
-            .setApkUnderTestExopackageLocalDir(
-                apkUnderTestBuildTarget.map(
-                    target ->
-                        ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
-                            target, getProjectFilesystem())))
+            .setApkUnderTestExopackageLocalDir(apkUnderTestSymlinkTreePath)
             .setPathToAdbExecutable(pathToAdbExecutable)
             .setDeviceSerial(deviceSerial)
             .setDirectoryForTestResults(directoryForTestResults)
@@ -386,8 +389,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
                     buildContext
                         .getSourcePathResolver()
                         .getAbsolutePath(apkUnderTest.getApkInfo().getApkPath()));
-    Optional<BuildTarget> apkUnderTestBuildTarget =
-        getApkUnderTest().map(HasInstallableApk::getBuildTarget);
     InstrumentationStep step =
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
@@ -401,8 +402,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             Optional.empty(),
             apkUnderTestPath,
             executionContext.isDebugEnabled(),
-            executionContext.isCodeCoverageEnabled(),
-            apkUnderTestBuildTarget);
+            executionContext.isCodeCoverageEnabled());
 
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
