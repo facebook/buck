@@ -4280,6 +4280,59 @@ public class ProjectGeneratorTest {
             "bar.m", Optional.empty()));
   }
 
+  /**
+   * Ensure target map filters out duplicated targets with an explicit and implicit static flavor.
+   * Ensure the filtering prefers the main workspace target over other project targets.
+   *
+   * @throws IOException
+   */
+  @Test
+  public void ruleToTargetMapFiltersDuplicatePBXTarget() throws IOException {
+    BuildTarget explicitStaticBuildTarget =
+        BuildTargetFactory.newInstance(
+            rootPath, "//foo", "lib", CxxDescriptionEnhancer.STATIC_FLAVOR);
+    TargetNode<?> explicitStaticNode =
+        AppleLibraryBuilder.createBuilder(explicitStaticBuildTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
+                    SourceWithFlags.of(FakeSourcePath.of("bar.m"))))
+            .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
+            .build();
+
+    BuildTarget implicitStaticBuildTarget =
+        BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?> implicitStaticNode =
+        AppleLibraryBuilder.createBuilder(implicitStaticBuildTarget)
+            .setSrcs(
+                ImmutableSortedSet.of(
+                    SourceWithFlags.of(FakeSourcePath.of("foo.m"), ImmutableList.of("-foo")),
+                    SourceWithFlags.of(FakeSourcePath.of("bar.m"))))
+            .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo.h")))
+            .build();
+
+    ProjectGenerator projectGenerator =
+        createProjectGenerator(
+            ImmutableSet.of(explicitStaticNode, implicitStaticNode),
+            Optional.of(explicitStaticBuildTarget));
+
+    projectGenerator.createXcodeProjects();
+
+    // `implicitStaticBuildTarget` should be filtered out since it duplicates
+    // `explicitStaticBuildTarget`, the workspace target, which takes precedence.
+    assertEquals(
+        explicitStaticBuildTarget,
+        Iterables.getOnlyElement(projectGenerator.getBuildTargetToGeneratedTargetMap().keySet()));
+
+    PBXTarget target =
+        Iterables.getOnlyElement(projectGenerator.getBuildTargetToGeneratedTargetMap().values());
+    assertHasSingletonSourcesPhaseWithSourcesAndFlags(
+        target,
+        ImmutableMap.of(
+            "foo.m", Optional.of("-foo"),
+            "bar.m", Optional.empty()));
+  }
+
   @Test
   public void generatedGidsForTargetsAreStable() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "foo");
@@ -6627,10 +6680,22 @@ public class ProjectGeneratorTest {
         buildSettingsTest.get("HEADER_SEARCH_PATHS"));
   }
 
+  private ProjectGenerator createProjectGenerator(
+      Collection<TargetNode<?>> allNodes, Optional<BuildTarget> workspaceTarget) {
+    return createProjectGenerator(
+        allNodes,
+        allNodes,
+        workspaceTarget,
+        ProjectGeneratorOptions.builder().build(),
+        ImmutableSet.of(),
+        Optional.empty());
+  }
+
   private ProjectGenerator createProjectGenerator(Collection<TargetNode<?>> allNodes) {
     return createProjectGenerator(
         allNodes,
         allNodes,
+        Optional.empty(),
         ProjectGeneratorOptions.builder().build(),
         ImmutableSet.of(),
         Optional.empty());
@@ -6642,10 +6707,27 @@ public class ProjectGeneratorTest {
       ProjectGeneratorOptions projectGeneratorOptions,
       ImmutableSet<Flavor> appleCxxFlavors,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibrariesToBundles) {
+    return createProjectGenerator(
+        allNodes,
+        initialTargetNodes,
+        Optional.empty(),
+        projectGeneratorOptions,
+        appleCxxFlavors,
+        sharedLibrariesToBundles);
+  }
+
+  private ProjectGenerator createProjectGenerator(
+      Collection<TargetNode<?>> allNodes,
+      Collection<TargetNode<?>> initialTargetNodes,
+      Optional<BuildTarget> workspaceTarget,
+      ProjectGeneratorOptions projectGeneratorOptions,
+      ImmutableSet<Flavor> appleCxxFlavors,
+      Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibrariesToBundles) {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(ImmutableSet.copyOf(allNodes));
     return createProjectGenerator(
         allNodes,
         initialTargetNodes,
+        workspaceTarget,
         projectGeneratorOptions,
         appleCxxFlavors,
         getActionGraphBuilderNodeFunction(targetGraph),
@@ -6658,6 +6740,7 @@ public class ProjectGeneratorTest {
     return createProjectGenerator(
         allNodes,
         allNodes,
+        Optional.empty(),
         projectGeneratorOptions,
         ImmutableSet.of(),
         getActionGraphBuilderNodeFunction(targetGraph),
@@ -6672,6 +6755,7 @@ public class ProjectGeneratorTest {
     return createProjectGenerator(
         allNodes,
         initialTargetNodes,
+        Optional.empty(),
         projectGeneratorOptions,
         ImmutableSet.of(),
         getActionGraphBuilderNodeFunction(targetGraph),
@@ -6685,6 +6769,7 @@ public class ProjectGeneratorTest {
     return createProjectGenerator(
         allNodes,
         allNodes,
+        Optional.empty(),
         projectGeneratorOptions,
         ImmutableSet.of(),
         actionGraphBuilderForNode,
@@ -6694,6 +6779,7 @@ public class ProjectGeneratorTest {
   private ProjectGenerator createProjectGenerator(
       Collection<TargetNode<?>> allNodes,
       Collection<TargetNode<?>> initialTargetNodes,
+      Optional<BuildTarget> workspaceTarget,
       ProjectGeneratorOptions projectGeneratorOptions,
       ImmutableSet<Flavor> appleCxxFlavors,
       Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
@@ -6723,7 +6809,7 @@ public class ProjectGeneratorTest {
         projectGeneratorOptions,
         TestRuleKeyConfigurationFactory.create(),
         false,
-        Optional.empty(),
+        workspaceTarget,
         ImmutableSet.of(),
         FocusedModuleTargetMatcher.noFocus(),
         DEFAULT_PLATFORM,

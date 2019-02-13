@@ -445,6 +445,13 @@ public class ProjectGenerator {
     return projectGenerated;
   }
 
+  // Loads the target into the project cache and updates the internal generated project map.
+  private void triggerLoadingCache(TargetNode<?> targetNode) {
+    Optional<PBXTarget> target = targetNodeToProjectTarget.getUnchecked(targetNode);
+    target.ifPresent(
+        pbxTarget -> targetNodeToGeneratedProjectTargetBuilder.put(targetNode, pbxTarget));
+  }
+
   public void createXcodeProjects() throws IOException {
     LOG.debug("Creating projects for targets %s", initialTargets);
 
@@ -454,14 +461,14 @@ public class ProjectGenerator {
             buckEventBus,
             PerfEventId.of("xcode_project_generation"),
             ImmutableMap.of("Path", getProjectPath()))) {
-      for (TargetNode<?> targetNode : targetGraph.getNodes()) {
 
+      // Filter out nodes that aren't included in project.
+      ImmutableSet.Builder<TargetNode<?>> projectTargetsBuilder = ImmutableSet.builder();
+      for (TargetNode<?> targetNode : targetGraph.getNodes()) {
         if (isBuiltByCurrentProject(targetNode.getBuildTarget())) {
           LOG.debug("Including rule %s in project", targetNode);
-          // Trigger the loading cache to call the generateProjectTarget function.
-          Optional<PBXTarget> target = targetNodeToProjectTarget.getUnchecked(targetNode);
-          target.ifPresent(
-              pbxTarget -> targetNodeToGeneratedProjectTargetBuilder.put(targetNode, pbxTarget));
+          projectTargetsBuilder.add(targetNode);
+
           if (focusModules.isFocusedOn(targetNode.getBuildTarget())) {
             // If the target is not included, we still need to do other operations to generate
             // the required header maps.
@@ -471,6 +478,22 @@ public class ProjectGenerator {
           LOG.verbose("Excluding rule %s (not built by current project)", targetNode);
         }
       }
+      final ImmutableSet<TargetNode<?>> projectTargets = projectTargetsBuilder.build();
+
+      // Trigger the loading cache for the workspace target if it's in the project. This ensures the
+      // workspace target isn't filtered later by loading it first.
+      final Optional<TargetNode<?>> workspaceTargetNode =
+          workspaceTarget.map(target -> targetGraph.get(target));
+      workspaceTargetNode
+          .filter(targetNode -> projectTargets.contains(targetNode))
+          .ifPresent(targetNode -> triggerLoadingCache(targetNode));
+
+      // Trigger the loading cache to call the generateProjectTarget function on all other targets.
+      // Exclude the workspace target since it's loaded above.
+      RichStream.from(projectTargets)
+          .filter(
+              input -> !workspaceTargetNode.isPresent() || !input.equals(workspaceTargetNode.get()))
+          .forEach(input -> triggerLoadingCache(input));
 
       addGenruleFiles();
 
@@ -547,12 +570,18 @@ public class ProjectGenerator {
       return Optional.empty();
     }
 
+    // Ignore certain flavors when considering a target previously generated:
+    //   AppleCxx - Differing platforms should be generated as one target.
+    //   static - Static is the default. This avoids duplication when `static` is passed directly.
     BuildTarget targetWithoutAppleCxxFlavors =
         targetNode.getBuildTarget().withoutFlavors(appleCxxFlavors);
-    if (generatedTargets.contains(targetWithoutAppleCxxFlavors)) {
+    BuildTarget targetWithoutSpecificFlavors =
+        targetWithoutAppleCxxFlavors.withoutFlavors(CxxDescriptionEnhancer.STATIC_FLAVOR);
+
+    if (generatedTargets.contains(targetWithoutSpecificFlavors)) {
       return Optional.empty();
     }
-    generatedTargets.add(targetWithoutAppleCxxFlavors);
+    generatedTargets.add(targetWithoutSpecificFlavors);
 
     Optional<PBXTarget> result = Optional.empty();
     if (targetNode.getDescription() instanceof AppleLibraryDescription) {
