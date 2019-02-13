@@ -61,6 +61,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -335,25 +336,58 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   MoreExecutors.directExecutor());
             });
 
-    return Futures.transformAsync(
-        executionResult,
-        result -> {
-          if (cancelled.get() != null) {
-            return Futures.immediateFuture(
-                Optional.of(strategyContext.createCancelledResult(cancelled.get())));
+    return sendFailedEventOnException(
+        Futures.transformAsync(
+            executionResult,
+            result -> {
+              if (cancelled.get() != null) {
+                return Futures.immediateFuture(
+                    Optional.of(strategyContext.createCancelledResult(cancelled.get())));
+              }
+              return handleResultLimiter.schedule(
+                  service,
+                  () ->
+                      handleExecutionResult(
+                          filesystem,
+                          strategyContext,
+                          buildTarget,
+                          result,
+                          actionDigest,
+                          actionOutputs));
+            },
+            service),
+        buildTarget,
+        actionDigest);
+  }
+
+  private ListenableFuture<Optional<BuildResult>> sendFailedEventOnException(
+      ListenableFuture<Optional<BuildResult>> futureToBeWrapped,
+      BuildTarget buildTarget,
+      Digest actionDigest) {
+    futureToBeWrapped.addListener(
+        () -> {
+          Optional<Throwable> exception = Optional.empty();
+          try {
+            futureToBeWrapped.get();
+          } catch (InterruptedException e) {
+            exception = Optional.of(e);
+          } catch (ExecutionException e) {
+            exception = Optional.of(e.getCause());
           }
-          return handleResultLimiter.schedule(
-              service,
-              () ->
-                  handleExecutionResult(
-                      filesystem,
-                      strategyContext,
-                      buildTarget,
-                      result,
-                      actionDigest,
-                      actionOutputs));
+
+          if (exception.isPresent()) {
+            RemoteExecutionActionEvent.sendTerminalEvent(
+                eventBus,
+                exception.get() instanceof InterruptedException
+                    ? State.ACTION_CANCELLED
+                    : State.ACTION_FAILED,
+                buildTarget,
+                Optional.of(actionDigest));
+          }
         },
-        service);
+        MoreExecutors.directExecutor());
+
+    return futureToBeWrapped;
   }
 
   private ListenableFuture<Optional<BuildResult>> handleExecutionResult(
