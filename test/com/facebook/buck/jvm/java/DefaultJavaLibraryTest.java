@@ -98,6 +98,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.Hashing;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.LinkOption;
@@ -252,7 +253,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       classpath.append(resolveClasspath(rule));
 
       if (i != testTargets.size() - 1) {
-        classpath.append(":");
+        classpath.append(File.pathSeparator);
       }
     }
 

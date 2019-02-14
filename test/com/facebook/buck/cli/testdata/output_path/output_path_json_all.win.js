@@ -24,7 +24,7 @@
 {
   "buck.base_path":"",
   "buck.direct_dependencies":[],
-  "buck.ruleType":"java_annotation_processor_plugin",
+  "buck.ruleType":"java_annotation_processor",
   "buck.type":"java_annotation_processor",
   "fully_qualified_name": "//:plugin",
   "name":"plugin",

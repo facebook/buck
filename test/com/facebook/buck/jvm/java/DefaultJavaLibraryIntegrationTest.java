@@ -581,6 +581,22 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
+  public void testMixedAnnotationProcessorAndJavaPlugins() throws IOException {
+    setUpProjectWorkspaceForScenario("mixed_javac_plugin_annotation_processors");
+
+    // Run `buck build` to create the dep file
+    BuildTarget mainTarget = BuildTargetFactory.newInstance("//:main");
+    // Warm the used classes file
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", mainTarget.getFullyQualifiedName());
+    buildResult.assertSuccess("Successful build should exit with 0.");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:main");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:jp_util");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:ap_util");
+  }
+
+  @Test
   public void testFileChangeThatDoesNotModifyAbiOfAUsedClassAvoidsRebuild() throws IOException {
     setUpProjectWorkspaceForScenario("dep_file_rule_key");
 

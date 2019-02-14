@@ -243,7 +243,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       allPluginsBuilder.addAll(javacPlugins);
 
       for (ResolvedJavacPluginProperties properties : javacPlugins) {
-        optionsConsumer.addFlag("Xplugin" + ":" + properties.getProcessorNames().first());
+        optionsConsumer.addFlag("Xplugin:" + properties.getProcessorNames().first());
       }
 
       // Add plugin parameters.

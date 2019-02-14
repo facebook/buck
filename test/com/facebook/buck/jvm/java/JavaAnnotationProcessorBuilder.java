@@ -24,7 +24,7 @@ public class JavaAnnotationProcessorBuilder
     JavaAnnotationProcessorDescriptionArg.Builder,
     JavaAnnotationProcessorDescriptionArg,
     JavaAnnotationProcessorDescription,
-    JavaAnnotationProcessorPlugin> {
+    JavaAnnotationProcessor> {
 
   private JavaAnnotationProcessorBuilder(BuildTarget target) {
     super(new JavaAnnotationProcessorDescription(), target);

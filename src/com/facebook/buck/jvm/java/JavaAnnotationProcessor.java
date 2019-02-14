@@ -23,9 +23,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 /**
  * Represents a Java Annotation Processor Plugin for the Java Compiler
  */
-public class JavaAnnotationProcessorPlugin extends JavacPlugin {
+public class JavaAnnotationProcessor extends JavacPlugin {
 
-  public JavaAnnotationProcessorPlugin(BuildTarget buildTarget,
+  public JavaAnnotationProcessor(BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       JavacPluginProperties properties) {

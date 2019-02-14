@@ -80,7 +80,7 @@ public class JavaAnnotationProcessorDescription
     propsBuilder.setSupportsAbiGenerationFromSource(args.isSupportsAbiGenerationFromSource());
     JavacPluginProperties properties = propsBuilder.build();
 
-    return new JavaAnnotationProcessorPlugin(
+    return new JavaAnnotationProcessor(
         buildTarget, context.getProjectFilesystem(), params, properties);
   }
 

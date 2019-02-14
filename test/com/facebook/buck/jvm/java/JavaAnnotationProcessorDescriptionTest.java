@@ -60,8 +60,8 @@ public class JavaAnnotationProcessorDescriptionTest {
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
-    JavaAnnotationProcessorPlugin javaAnnotationProcessorPlugin =
-        (JavaAnnotationProcessorPlugin)
+    JavaAnnotationProcessor javaAnnotationProcessorPlugin =
+        (JavaAnnotationProcessor)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
@@ -103,8 +103,8 @@ public class JavaAnnotationProcessorDescriptionTest {
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
-    JavaAnnotationProcessorPlugin javaAnnotationProcessorPlugin =
-        (JavaAnnotationProcessorPlugin)
+    JavaAnnotationProcessor javaAnnotationProcessorPlugin =
+        (JavaAnnotationProcessor)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),
@@ -147,8 +147,8 @@ public class JavaAnnotationProcessorDescriptionTest {
         TestBuildRuleParams.create().withDeclaredDeps(graphBuilder.getAllRules(arg.getDeps()));
 
     // When
-    JavaAnnotationProcessorPlugin javaAnnotationProcessorPlugin =
-        (JavaAnnotationProcessorPlugin)
+    JavaAnnotationProcessor javaAnnotationProcessorPlugin =
+        (JavaAnnotationProcessor)
             new JavaAnnotationProcessorDescription()
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(graphBuilder, projectFilesystem),

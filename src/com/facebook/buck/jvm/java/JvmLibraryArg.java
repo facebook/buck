@@ -158,8 +158,8 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
       if (!(pluginRule instanceof JavacPlugin)) {
         throw new HumanReadableException(
             String.format(
-                "%s: only java_annotation_processor or javac_plugin rules can be specified "
-                    + "as plugins. %s is not a java_annotation_processor nor javac_plugin.",
+                "%s: only java_annotation_processor or java_plugin rules can be specified "
+                    + "as plugins. %s is not a java_annotation_processor nor java_plugin.",
                 owner, pluginTarget));
       }
       JavacPlugin javacPluginRule = (JavacPlugin) pluginRule;
