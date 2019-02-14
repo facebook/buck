@@ -1784,32 +1784,6 @@ artifact_cache_size_limit = 52428800
 {/call}
 
 {call buckconfig.section}
-  {param name: 'credentials' /}
-  {param description}
-    This section configures credentials to be used when fetching from
-    authenticated Maven repositories via HTTPS.
-    <p>
-    For a repository <code>repo</code> appearing in{sp}
-    {call buckconfig.maven_repositories /}, Buck reads the values of
-    {sp}<code>repo_user</code> and <code>repo_pass</code> in this section
-    (if present), and passes them to the server using {sp}
-    <a href="https://en.wikipedia.org/wiki/Basic_access_authentication#Client_side">basic access authentication</a>
-    {sp}when fetching.
-    <p>
-    Note that authenticating in this way over plain HTTP connections is
-    disallowed and will result in an error.
-
-{literal}<pre class="prettyprint lang-ini">
-[maven_repositories]
-  repo = https://example.com/repo
-[credentials]
-  repo_user = joeuser
-  repo_pass = hunter2
-</pre>{/literal}
-  {/param}
-{/call}
-
-{call buckconfig.section}
   {param name: 'client' /}
   {param description}
     This section includes settings that provide information about the caller.
@@ -1889,140 +1863,28 @@ $ buck build //big:expensive-rule            # Action Graph is reused.</pre>
 {/call}
 
 {call buckconfig.section}
-  {param name: 'd' /}
+  {param name: 'credentials' /}
   {param description}
-    This section configures how code written in D is compiled.
-  {/param}
-{/call}
+    This section configures credentials to be used when fetching from
+    authenticated Maven repositories via HTTPS.
+    <p>
+    For a repository <code>repo</code> appearing in{sp}
+    {call buckconfig.maven_repositories /}, Buck reads the values of
+    {sp}<code>repo_user</code> and <code>repo_pass</code> in this section
+    (if present), and passes them to the server using {sp}
+    <a href="https://en.wikipedia.org/wiki/Basic_access_authentication#Client_side">basic access authentication</a>
+    {sp}when fetching.
+    <p>
+    Note that authenticating in this way over plain HTTP connections is
+    disallowed and will result in an error.
 
-{call buckconfig.entry}
-  {param section: 'd' /}
-  {param name: 'base_compiler_flags' /}
-  {param example_value: '-I/some/path -g -O3' /}
-  {param description}
-    Flags to pass to every invocation of the D compiler.
-    This is a space-separated list.
-    It defaults to an empty list.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'd' /}
-  {param name: 'compiler' /}
-  {param example_value: '/opt/dmd/bin/dmd' /}
-  {param description}
-    Path to the D compiler.
-    If this parameter is not specified, Buck attempts to find the D
-    compiler automatically.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'd' /}
-  {param name: 'library_path' /}
-  {param example_value: '/usr/local/lib:/opt/dmd/lib' /}
-  {param description}
-    Directories to be searched for the D runtime libraries.
-    This is a colon-separated list.
-    If this parameter is not specified, Buck attempts to detect the
-    location of the libraries automatically.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'd' /}
-  {param name: 'linker_flags' /}
-  {param example_value: '"-L/path to phobos" -lphobos2' /}
-  {param description}
-    Flags to pass to the linker when linking D code into an executable.
-    This is a space-separated list.
-    If omitted, this value is constructed from d.library_path.
-  {/param}
-{/call}
-
-{call buckconfig.section}
-  {param name: 'download' /}
-  {param description}
-    This section configures downloading from the network during {call buck.cmd_fetch /}.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'download' /}
-  {param name: 'proxy' /}
-  {param description}
-    Buck will attempt to fetch files from the network, however, if you happen to be behind a]
-    firewall, this may not work correctly.  You can supply a proxy when downloading from HTTP[S]
-    servers with these three settings.  Valid types for <code>proxy_type</code> are{sp}
-    <code>HTTP</code> (default) and <code>SOCKS</code>.  These values correspond to {sp}
-    <a href="http://docs.oracle.com/javase/8/docs/api/java/net/Proxy.Type.html">Java's
-    Proxy.Type</a>.
-  {/param}
-  {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
-[download]
-    proxy_host=proxy.example.com
-    proxy_port=8080
-    proxy_type=HTTP
+[maven_repositories]
+  repo = https://example.com/repo
+[credentials]
+  repo_user = joeuser
+  repo_pass = hunter2
 </pre>{/literal}
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'download' /}
-  {param name: 'maven_repo' /}
-  {param example_value: 'https://repo1.maven.org/maven2' /}
-  {param description}
-    If a remote file's URL starts with <code>mvn:</code>, that file (usually a jar) is supposed to
-    come from a maven repo.  You can specify the repo to download from here, or by setting one or
-    more repositories in {call buckconfig.maven_repositories /}.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'download' /}
-  {param name: 'max_number_of_retries' /}
-  {param example_value: '3' /}
-  {param description}
-    In case buck is unable to download a file, it will retry specified number of times before
-    giving up. By default it's not set, so Buck is not going to retry failed downloads.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'download' /}
-  {param name: 'in_build' /}
-  {param example_value: 'true' /}
-  {param description}
-    If true, allow downloads to be part of the build process. If false, buck build / run / test
-    will require the user to run 'buck fetch' first. This generally should not be changed, to
-    avoid surprising users with unexpected build times, when the cause is mostly download times.
-    By default this set to false.
-  {/param}
-{/call}
-
-{call buckconfig.section}
-  {param name: 'export_file' /}
-  {param description}
-    This section configures behavior of <code>export_file</code> build rule.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'export_file' /}
-  {param name: 'input_directory_action' /}
-  {param example_value: 'fail' /}
-  {param description}
-    <p>Defines the behavior of <code>export_file</code> when input of a build rule is a directory.
-    Support for directories will be removed soon and this option provides a way to migrate a project
-    to a state when none of the <code>export_file</code> rules use directories as inputs.</p>
-    <p>The valid values are:
-      <ul>
-        <li><code>allow</code> (default): directories are allowed and no action is taken,</li>
-        <li><code>warn</code>: emit a warning to the console,</li>
-        <li><code>fail</code>: fail the build.</li>
-      </ul>
-    </p>
   {/param}
 {/call}
 
@@ -2554,6 +2416,58 @@ or the value could be a custom platform flavor:
 {/call}
 
 {call buckconfig.section}
+  {param name: 'd' /}
+  {param description}
+    This section configures how code written in D is compiled.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'd' /}
+  {param name: 'base_compiler_flags' /}
+  {param example_value: '-I/some/path -g -O3' /}
+  {param description}
+    Flags to pass to every invocation of the D compiler.
+    This is a space-separated list.
+    It defaults to an empty list.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'd' /}
+  {param name: 'compiler' /}
+  {param example_value: '/opt/dmd/bin/dmd' /}
+  {param description}
+    Path to the D compiler.
+    If this parameter is not specified, Buck attempts to find the D
+    compiler automatically.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'd' /}
+  {param name: 'library_path' /}
+  {param example_value: '/usr/local/lib:/opt/dmd/lib' /}
+  {param description}
+    Directories to be searched for the D runtime libraries.
+    This is a colon-separated list.
+    If this parameter is not specified, Buck attempts to detect the
+    location of the libraries automatically.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'd' /}
+  {param name: 'linker_flags' /}
+  {param example_value: '"-L/path to phobos" -lphobos2' /}
+  {param description}
+    Flags to pass to the linker when linking D code into an executable.
+    This is a space-separated list.
+    If omitted, this value is constructed from d.library_path.
+  {/param}
+{/call}
+
+{call buckconfig.section}
   {param name: 'doctor' /}
   {param description}
     This section defines variables that are associated with command <code>doctor</code>.
@@ -2641,6 +2555,130 @@ or the value could be a custom platform flavor:
   {param example_value: '/custom/script/to/run.sh' /}
   {param description}
     An extra command that the report should and attach the information to the uploaded report.
+  {/param}
+{/call}
+{call buckconfig.section}
+  {param name: 'download' /}
+  {param description}
+    This section configures downloading from the network during {call buck.cmd_fetch /}.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'proxy' /}
+  {param description}
+    Buck will attempt to fetch files from the network, however, if you happen to be behind a]
+    firewall, this may not work correctly.  You can supply a proxy when downloading from HTTP[S]
+    servers with these three settings.  Valid types for <code>proxy_type</code> are{sp}
+    <code>HTTP</code> (default) and <code>SOCKS</code>.  These values correspond to {sp}
+    <a href="http://docs.oracle.com/javase/8/docs/api/java/net/Proxy.Type.html">Java's
+    Proxy.Type</a>.
+  {/param}
+  {param raw_example}
+{literal}<pre class="prettyprint lang-ini">
+[download]
+    proxy_host=proxy.example.com
+    proxy_port=8080
+    proxy_type=HTTP
+</pre>{/literal}
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'maven_repo' /}
+  {param example_value: 'https://repo1.maven.org/maven2' /}
+  {param description}
+    If a remote file's URL starts with <code>mvn:</code>, that file (usually a jar) is supposed to
+    come from a maven repo.  You can specify the repo to download from here, or by setting one or
+    more repositories in {call buckconfig.maven_repositories /}.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'max_number_of_retries' /}
+  {param example_value: '3' /}
+  {param description}
+    In case buck is unable to download a file, it will retry specified number of times before
+    giving up. By default it's not set, so Buck is not going to retry failed downloads.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'download' /}
+  {param name: 'in_build' /}
+  {param example_value: 'true' /}
+  {param description}
+    If true, allow downloads to be part of the build process. If false, buck build / run / test
+    will require the user to run 'buck fetch' first. This generally should not be changed, to
+    avoid surprising users with unexpected build times, when the cause is mostly download times.
+    By default this set to false.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'dx' /}
+  {param description}
+    This section controls how Buck invokes the dx tool.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'dx' /}
+  {param name: 'threads' /}
+  {param example_value: '4' /}
+  {param description}
+    Fixed number of threads to run dexing steps with. If not specified, the optimal number is
+    inferred from hardware specification of running machine.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'dx' /}
+  {param name: 'max_threads' /}
+  {param example_value: '8' /}
+  {param description}
+    The maximum number of threads allowed to run the dexing steps with. Since the dexing steps can
+    use a lot of memory, it might be useful to set this to a lower value to avoid out-of-memory
+    on systems that have a lot of CPU cores. This parameter is mostly useful
+    when {call buckconfig.dx_threads /} is not specified and the number of threads is obtained based on
+    hardware.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'dx' /}
+  {param name: 'max_heap_size' /}
+  {param example_value: '2g' /}
+  {param description}
+    This option specifies how much memory is available when running dx out of process.
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'export_file' /}
+  {param description}
+    This section configures behavior of <code>export_file</code> build rule.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'export_file' /}
+  {param name: 'input_directory_action' /}
+  {param example_value: 'fail' /}
+  {param description}
+    <p>Defines the behavior of <code>export_file</code> when input of a build rule is a directory.
+    Support for directories will be removed soon and this option provides a way to migrate a project
+    to a state when none of the <code>export_file</code> rules use directories as inputs.</p>
+    <p>The valid values are:
+      <ul>
+        <li><code>allow</code> (default): directories are allowed and no action is taken,</li>
+        <li><code>warn</code>: emit a warning to the console,</li>
+        <li><code>fail</code>: fail the build.</li>
+      </ul>
+    </p>
   {/param}
 {/call}
 
@@ -3222,45 +3260,6 @@ or the value could be a custom platform flavor:
     searching for the <code>kotlinc</code> executable in the paths specified by the
     {sp}<code>PATH</code> environment variable.  If the <code>kotlinc</code> executable is found,
     Buck assumes that the <i>parent directory</i> of that executable is the Kotlin home.
-  {/param}
-{/call}
-
-{call buckconfig.section}
-  {param name: 'dx' /}
-  {param description}
-    This section controls how Buck invokes the dx tool.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'dx' /}
-  {param name: 'threads' /}
-  {param example_value: '4' /}
-  {param description}
-    Fixed number of threads to run dexing steps with. If not specified, the optimal number is
-    inferred from hardware specification of running machine.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'dx' /}
-  {param name: 'max_threads' /}
-  {param example_value: '8' /}
-  {param description}
-    The maximum number of threads allowed to run the dexing steps with. Since the dexing steps can
-    use a lot of memory, it might be useful to set this to a lower value to avoid out-of-memory
-    on systems that have a lot of CPU cores. This parameter is mostly useful
-    when {call buckconfig.dx_threads /} is not specified and the number of threads is obtained based on
-    hardware.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'dx' /}
-  {param name: 'max_heap_size' /}
-  {param example_value: '2g' /}
-  {param description}
-    This option specifies how much memory is available when running dx out of process.
   {/param}
 {/call}
 
