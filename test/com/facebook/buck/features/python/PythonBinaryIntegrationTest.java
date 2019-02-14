@@ -451,4 +451,20 @@ public class PythonBinaryIntegrationTest {
                 .build());
     Assert.assertEquals(0, ret.getExitCode());
   }
+
+  @Test
+  public void preloadDeps() throws IOException, InterruptedException {
+    assumeThat(packageStyle, Matchers.is(PackageStyle.INPLACE));
+    Path pexPath = workspace.buildAndReturnOutput("//preload_deps:bin");
+
+    DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+
+    Result ret =
+        executor.launchAndExecute(
+            ProcessExecutorParams.builder()
+                .setDirectory(workspace.resolve("pathtest"))
+                .setCommand(ImmutableList.of(pexPath.toString()))
+                .build());
+    Assert.assertEquals(0, ret.getExitCode());
+  }
 }

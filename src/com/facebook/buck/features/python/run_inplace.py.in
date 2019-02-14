@@ -24,8 +24,12 @@ if native_libs_dir is not None:
 # to preload.
 if native_libs_preload is not None:
     old_native_libs_preload = os.environ.get(native_libs_preload_env_var)
-    os.environ[native_libs_preload_env_var] = native_libs_preload
     env_vals_to_restore[native_libs_preload_env_var] = old_native_libs_preload
+
+    # On macos, preloaded libs are found via paths.
+    os.environ[native_libs_preload_env_var] = (
+        ':'.join(os.path.join(dirpath, native_libs_dir, l)
+                 for l in native_libs_preload.split(':')))
 
 STARTUP = """\
 # Wrap everything in a private function to prevent globals being captured by

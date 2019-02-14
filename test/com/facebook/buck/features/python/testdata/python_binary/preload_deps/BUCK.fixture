@@ -1,0 +1,24 @@
+python_library(
+    name = "main",
+    srcs = [
+        "main.py",
+    ],
+)
+
+cxx_library(
+    name = "preload",
+    srcs = [
+        "preload.c",
+    ],
+)
+
+python_binary(
+    name = "bin",
+    main_module = "preload_deps.main",
+    preload_deps = [
+        ":preload",
+    ],
+    deps = [
+        ":main",
+    ],
+)
