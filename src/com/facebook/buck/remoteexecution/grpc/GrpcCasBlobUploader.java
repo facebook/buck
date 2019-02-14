@@ -103,7 +103,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
       throw new BuckUncheckedExecutionException(
           e,
           "When uploading a batch of blobs: <%s>.",
-          blobs.stream().map(b -> b.data.describe()).collect(Collectors.joining(">, <")));
+          blobs.stream().map(b -> b.digest.toString()).collect(Collectors.joining(">, <")));
     }
   }
 }
