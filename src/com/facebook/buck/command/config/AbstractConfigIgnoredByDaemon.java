@@ -68,6 +68,8 @@ public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckCo
             "warn_on_config_file_overrides",
             "warn_on_config_file_overrides_ignored_files"));
     ignoreFieldsForDaemonRestartBuilder.put("color", ImmutableSet.of("ui"));
+    ignoreFieldsForDaemonRestartBuilder.put(
+        "version_control", ImmutableSet.of("generate_statistics"));
     return ignoreFieldsForDaemonRestartBuilder.build();
   }
 
