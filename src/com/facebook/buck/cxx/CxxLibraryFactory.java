@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -64,7 +63,6 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -72,14 +70,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class CxxLibraryFactory {
-
-  private static final ImmutableSet<Flavor> FLAVORS_WITH_DEFAULT_PLATFORM =
-      ImmutableSet.<Flavor>builder()
-          .add(CxxCompilationDatabase.COMPILATION_DATABASE)
-          .add(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
-          .addAll(CxxInferEnhancer.INFER_FLAVOR_DOMAIN.getFlavors())
-          .build();
-
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
@@ -371,50 +361,18 @@ public class CxxLibraryFactory {
   }
 
   /**
-   * Calculates a platform flavor for a given target. If a target has no flavor, then calculate it
-   * using other flavors.
-   *
-   * <p>Note that this logic should be kept in sync with {@link #createBuildRule}.
-   */
-  private Flavor getPlatformFlavor(BuildTarget buildTarget, HasDefaultPlatform args) {
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
-    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
-    Optional<CxxPlatform> platform = cxxPlatforms.getValue(buildTarget);
-    if (buildTarget.getFlavors().contains(CxxCompilationDatabase.COMPILATION_DATABASE)
-        || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors())) {
-      CxxPlatform cxxPlatformOrDefault =
-          platform.orElse(
-              cxxPlatforms.getValue(args.getDefaultPlatform().orElse(defaultCxxFlavor)));
-      return cxxPlatformOrDefault.getFlavor();
-    } else if (buildTarget
-        .getFlavors()
-        .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
-      return platform.isPresent()
-          ? platform.get().getFlavor()
-          : args.getDefaultPlatform().orElse(defaultCxxFlavor);
-    } else {
-      throw new IllegalArgumentException(
-          String.format(
-              "Target %s contains unrecognized flavors: %s",
-              buildTarget.getFullyQualifiedName(), buildTarget.getFlavors()));
-    }
-  }
-
-  /**
    * @return an {@link Iterable} with platform dependencies that need to be resolved at parse time.
    */
-  public Iterable<BuildTarget> getPlatformParseTimeDeps(
-      BuildTarget buildTarget, HasDefaultPlatform args) {
-    if (Sets.intersection(buildTarget.getFlavors(), FLAVORS_WITH_DEFAULT_PLATFORM).isEmpty()) {
-      return CxxPlatforms.getParseTimeDeps(
-          getCxxPlatformsProvider().getCxxPlatforms().getValues(buildTarget));
-    } else {
-      return CxxPlatforms.getParseTimeDeps(
-          getCxxPlatformsProvider()
-              .getCxxPlatforms()
-              .getValue(getPlatformFlavor(buildTarget, args)));
-    }
+  public Iterable<BuildTarget> getPlatformParseTimeDeps() {
+    // Since we don't have context on the top-level rules using this C/C++ library (e.g. it may be
+    // a `python_binary`), we eagerly add the deps for all possible platforms to guarantee that the
+    // correct ones are included.
+    return getCxxPlatformsProvider()
+        .getCxxPlatforms()
+        .getValues()
+        .stream()
+        .flatMap(p -> RichStream.from(CxxPlatforms.getParseTimeDeps(p)))
+        .collect(ImmutableList.toImmutableList());
   }
 
   private static ImmutableList<SourcePath> requireObjects(
