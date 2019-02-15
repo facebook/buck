@@ -287,128 +287,140 @@ public class NdkCxxPlatforms {
 
     // ARM Platform
     if (cpuAbis.contains("arm")) {
-      String androidPlatform =
-          androidConfig
-              .getNdkAppPlatformForCpuAbi("arm")
-              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
-      NdkCxxPlatformTargetConfiguration targetConfiguration =
-          getTargetConfiguration(TargetCpuType.ARM, compiler, androidPlatform);
-      NdkCxxPlatform armeabi =
-          build(
+      ndkCxxPlatformBuilder.put(
+          TargetCpuType.ARM,
+          getNdkCxxPlatform(
               config,
               androidConfig,
               filesystem,
-              InternalFlavor.of("android-arm"),
-              platform,
               ndkRoot,
-              targetConfiguration,
+              compiler,
               cxxRuntime,
               runtimeType,
+              platform,
               executableFinder,
-              strictToolchainPaths);
-      ndkCxxPlatformBuilder.put(TargetCpuType.ARM, armeabi);
+              strictToolchainPaths,
+              "arm",
+              TargetCpuType.ARM,
+              "android-arm"));
     }
 
     // ARMv7 Platform
     if (cpuAbis.contains("armv7")) {
-      String androidPlatform =
-          androidConfig
-              .getNdkAppPlatformForCpuAbi("armv7")
-              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
-      NdkCxxPlatformTargetConfiguration targetConfiguration =
-          getTargetConfiguration(TargetCpuType.ARMV7, compiler, androidPlatform);
-      NdkCxxPlatform armeabiv7 =
-          build(
+      ndkCxxPlatformBuilder.put(
+          TargetCpuType.ARMV7,
+          getNdkCxxPlatform(
               config,
               androidConfig,
               filesystem,
-              InternalFlavor.of("android-armv7"),
-              platform,
               ndkRoot,
-              targetConfiguration,
+              compiler,
               cxxRuntime,
               runtimeType,
+              platform,
               executableFinder,
-              strictToolchainPaths);
-      ndkCxxPlatformBuilder.put(TargetCpuType.ARMV7, armeabiv7);
+              strictToolchainPaths,
+              "armv7",
+              TargetCpuType.ARMV7,
+              "android-armv7"));
     }
 
     // ARM64 Platform
     if (cpuAbis.contains("arm64")) {
-      String androidPlatform =
-          androidConfig
-              .getNdkAppPlatformForCpuAbi("arm64")
-              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
-      NdkCxxPlatformTargetConfiguration targetConfiguration =
-          getTargetConfiguration(TargetCpuType.ARM64, compiler, androidPlatform);
-      NdkCxxPlatform arm64 =
-          build(
+      ndkCxxPlatformBuilder.put(
+          TargetCpuType.ARM64,
+          getNdkCxxPlatform(
               config,
               androidConfig,
               filesystem,
-              InternalFlavor.of("android-arm64"),
-              platform,
               ndkRoot,
-              targetConfiguration,
+              compiler,
               cxxRuntime,
               runtimeType,
+              platform,
               executableFinder,
-              strictToolchainPaths);
-      ndkCxxPlatformBuilder.put(TargetCpuType.ARM64, arm64);
+              strictToolchainPaths,
+              "arm64",
+              TargetCpuType.ARM64,
+              "android-arm64"));
     }
 
     // x86 Platform
     if (cpuAbis.contains("x86")) {
-      String androidPlatform =
-          androidConfig
-              .getNdkAppPlatformForCpuAbi("x86")
-              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
-      NdkCxxPlatformTargetConfiguration targetConfiguration =
-          getTargetConfiguration(TargetCpuType.X86, compiler, androidPlatform);
-      NdkCxxPlatform x86 =
-          build(
+      ndkCxxPlatformBuilder.put(
+          TargetCpuType.X86,
+          getNdkCxxPlatform(
               config,
               androidConfig,
               filesystem,
-              InternalFlavor.of("android-x86"),
-              platform,
               ndkRoot,
-              targetConfiguration,
+              compiler,
               cxxRuntime,
               runtimeType,
+              platform,
               executableFinder,
-              strictToolchainPaths);
-      ndkCxxPlatformBuilder.put(TargetCpuType.X86, x86);
+              strictToolchainPaths,
+              "x86",
+              TargetCpuType.X86,
+              "android-x86"));
     }
 
     // x86_64 Platform
     if (cpuAbis.contains("x86_64")) {
-      String androidPlatform =
-          androidConfig
-              .getNdkAppPlatformForCpuAbi("x86_64")
-              .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
-      NdkCxxPlatformTargetConfiguration targetConfiguration =
-          getTargetConfiguration(TargetCpuType.X86_64, compiler, androidPlatform);
-      // CHECKSTYLE.OFF: LocalVariableName
-
-      NdkCxxPlatform x86_64 =
-          // CHECKSTYLE.ON
-          build(
+      ndkCxxPlatformBuilder.put(
+          TargetCpuType.X86_64,
+          getNdkCxxPlatform(
               config,
               androidConfig,
               filesystem,
-              InternalFlavor.of("android-x86_64"),
-              platform,
               ndkRoot,
-              targetConfiguration,
+              compiler,
               cxxRuntime,
               runtimeType,
+              platform,
               executableFinder,
-              strictToolchainPaths);
-      ndkCxxPlatformBuilder.put(TargetCpuType.X86_64, x86_64);
+              strictToolchainPaths,
+              "x86_64",
+              TargetCpuType.X86_64,
+              "android-x86_64"));
     }
 
     return ndkCxxPlatformBuilder.build();
+  }
+
+  private static NdkCxxPlatform getNdkCxxPlatform(
+      CxxBuckConfig config,
+      AndroidBuckConfig androidConfig,
+      ProjectFilesystem filesystem,
+      Path ndkRoot,
+      NdkCxxPlatformCompiler compiler,
+      NdkCxxRuntime cxxRuntime,
+      NdkCxxRuntimeType runtimeType,
+      Platform platform,
+      ExecutableFinder executableFinder,
+      boolean strictToolchainPaths,
+      String cpuAbi,
+      TargetCpuType cpuType,
+      String flavorValue) {
+    Flavor flavor = InternalFlavor.of(flavorValue);
+    String androidPlatform =
+        androidConfig
+            .getNdkAppPlatformForCpuAbi(cpuAbi)
+            .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
+    NdkCxxPlatformTargetConfiguration targetConfiguration =
+        getTargetConfiguration(cpuType, compiler, androidPlatform);
+    return build(
+        config,
+        androidConfig,
+        filesystem,
+        flavor,
+        platform,
+        ndkRoot,
+        targetConfiguration,
+        cxxRuntime,
+        runtimeType,
+        executableFinder,
+        strictToolchainPaths);
   }
 
   @VisibleForTesting
