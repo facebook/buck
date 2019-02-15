@@ -29,7 +29,7 @@
 {call buck.rule}
 {param status: 'UNFROZEN' /}
 {param overview}
-An <code>apple_library()</code> rule represents a set of Objective-C/C++
+An <code>apple_library()</code> rule represents a set of Objective-C/C++/Swift
 source files and is similar to a <a href="{ROOT}rule/cxx_library.html"><code>cxx_library()</code> rule</a> with which it shares many
 attributes. In addition to those common attributes, <code>apple_library()</code> has a some additional attributes 
 that are specific to binaries intended to be built using the Apple toolchain. 
@@ -119,6 +119,7 @@ apple_library(
   ],
   srcs = [
     'MySource.m',
+    'MySource.swift',
   ],
   frameworks = [
     '$SDKROOT/System/Library/Frameworks/UIKit.framework',
