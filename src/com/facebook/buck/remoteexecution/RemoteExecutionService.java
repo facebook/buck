@@ -40,6 +40,8 @@ public interface RemoteExecutionService {
     Optional<String> getStderr();
 
     RemoteExecutionMetadata getMetadata();
+
+    Digest getActionResultDigest();
   }
 
   /**

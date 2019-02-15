@@ -26,6 +26,7 @@ import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Action;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Command;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -118,6 +119,11 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
                   @Override
                   public RemoteExecutionMetadata getMetadata() {
                     return RemoteExecutionMetadata.getDefaultInstance();
+                  }
+
+                  @Override
+                  public Digest getActionResultDigest() {
+                    return protocol.newDigest("", 0);
                   }
                 });
           }

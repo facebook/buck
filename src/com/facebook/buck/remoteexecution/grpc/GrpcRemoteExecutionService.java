@@ -29,6 +29,7 @@ import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputDirectory;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcOutputFile;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -58,16 +59,19 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
   private final ByteStreamStub byteStreamStub;
   private final String instanceName;
   private final MetadataProvider metadataProvider;
+  private final Protocol protocol;
 
   public GrpcRemoteExecutionService(
       ExecutionStub executionStub,
       ByteStreamStub byteStreamStub,
       String instanceName,
-      MetadataProvider metadataProvider) {
+      MetadataProvider metadataProvider,
+      Protocol protocol) {
     this.executionStub = executionStub;
     this.byteStreamStub = byteStreamStub;
     this.instanceName = instanceName;
     this.metadataProvider = metadataProvider;
+    this.protocol = protocol;
   }
 
   @Override
@@ -202,6 +206,11 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
       @Override
       public RemoteExecutionMetadata getMetadata() {
         return metadata;
+      }
+
+      @Override
+      public Digest getActionResultDigest() {
+        return protocol.computeDigest(actionResult.toByteArray());
       }
     };
   }
