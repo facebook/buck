@@ -445,19 +445,18 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   }
 
   private String getFriendsPath(
-      SourcePathResolver sourcePathResolver,
-      ImmutableList<SourcePath> friendPathsSourcePaths) {
+      SourcePathResolver sourcePathResolver, ImmutableList<SourcePath> friendPathsSourcePaths) {
 
     // https://youtrack.jetbrains.com/issue/KT-29933
-    ImmutableSortedSet<String> absoluteFriendPaths = ImmutableSortedSet.copyOf(
-        friendPathsSourcePaths
-            .stream()
-            .map(path -> sourcePathResolver.getAbsolutePath(path).toString())
-            .collect(Collectors.toSet()));
+    ImmutableSortedSet<String> absoluteFriendPaths =
+        ImmutableSortedSet.copyOf(
+            friendPathsSourcePaths
+                .stream()
+                .map(path -> sourcePathResolver.getAbsolutePath(path).toString())
+                .collect(Collectors.toSet()));
 
-    return "-Xfriend-paths=" + absoluteFriendPaths
-        .stream()
-        .reduce("", (path1, path2) -> path1 + "," + path2);
+    return "-Xfriend-paths="
+        + absoluteFriendPaths.stream().reduce("", (path1, path2) -> path1 + "," + path2);
   }
 
   @Override
