@@ -32,8 +32,6 @@ interface AbstractNdkCxxPlatform {
 
   NdkCxxRuntime getCxxRuntime();
 
-  NdkCxxRuntimeType getCxxRuntimeType();
-
   Tool getObjdump();
 
   /** @return the {@link Path} to the C/C++ runtime library, if one is required. */

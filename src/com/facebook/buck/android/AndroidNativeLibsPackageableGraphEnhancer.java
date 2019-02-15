@@ -23,7 +23,6 @@ import com.facebook.buck.android.relinker.NativeRelinker;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -57,6 +56,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -365,9 +365,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             targetCpuType -> {
               NdkCxxPlatform platform = Objects.requireNonNull(nativePlatforms.get(targetCpuType));
               NdkCxxRuntime cxxRuntime = platform.getCxxRuntime();
-              if (cxxRuntime.equals(NdkCxxRuntime.SYSTEM)
-                  || (platform.getCxxRuntimeType() == NdkCxxRuntimeType.STATIC)) {
-                // The system / statically compiled runtime doesn't need to be packaged with apks.
+              Optional<Path> cxxSharedRuntimePath = platform.getCxxSharedRuntimePath();
+              if (!cxxSharedRuntimePath.isPresent()) {
+                // Not all ndk cxx platforms require a packages c++ runtime.
                 return;
               }
               AndroidLinkableMetadata runtimeLinkableMetadata =
@@ -378,7 +378,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                       .build();
               nativeLinkableLibsBuilder.put(
                   runtimeLinkableMetadata,
-                  PathSourcePath.of(projectFilesystem, platform.getCxxSharedRuntimePath().get()));
+                  PathSourcePath.of(projectFilesystem, cxxSharedRuntimePath.get()));
             });
   }
 
