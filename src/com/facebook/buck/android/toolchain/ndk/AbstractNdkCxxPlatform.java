@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain.ndk;
 
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -35,5 +36,5 @@ interface AbstractNdkCxxPlatform {
   Tool getObjdump();
 
   /** @return the {@link Path} to the C/C++ runtime library, if one is required. */
-  Optional<Path> getCxxSharedRuntimePath();
+  Optional<SourcePath> getCxxSharedRuntimePath();
 }

@@ -613,7 +613,9 @@ public class NdkCxxPlatforms {
         .setObjdump(getGccTool(toolchainPaths, "objdump", version, executableFinder));
     if ((cxxRuntime != NdkCxxRuntime.SYSTEM) && (runtimeType != NdkCxxRuntimeType.STATIC)) {
       builder.setCxxSharedRuntimePath(
-          toolchainPaths.getCxxRuntimeLibsDirectory().resolve(cxxRuntime.getSoname()));
+          PathSourcePath.of(
+              filesystem,
+              toolchainPaths.getCxxRuntimeLibsDirectory().resolve(cxxRuntime.getSoname())));
     }
     return builder.build();
   }

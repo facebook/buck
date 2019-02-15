@@ -34,7 +34,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -56,7 +55,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -365,7 +363,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             targetCpuType -> {
               NdkCxxPlatform platform = Objects.requireNonNull(nativePlatforms.get(targetCpuType));
               NdkCxxRuntime cxxRuntime = platform.getCxxRuntime();
-              Optional<Path> cxxSharedRuntimePath = platform.getCxxSharedRuntimePath();
+              Optional<SourcePath> cxxSharedRuntimePath = platform.getCxxSharedRuntimePath();
               if (!cxxSharedRuntimePath.isPresent()) {
                 // Not all ndk cxx platforms require a packages c++ runtime.
                 return;
@@ -376,9 +374,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                       .setSoName(cxxRuntime.getSoname())
                       .setApkModule(apkModuleGraph.getRootAPKModule())
                       .build();
-              nativeLinkableLibsBuilder.put(
-                  runtimeLinkableMetadata,
-                  PathSourcePath.of(projectFilesystem, cxxSharedRuntimePath.get()));
+              nativeLinkableLibsBuilder.put(runtimeLinkableMetadata, cxxSharedRuntimePath.get());
             });
   }
 

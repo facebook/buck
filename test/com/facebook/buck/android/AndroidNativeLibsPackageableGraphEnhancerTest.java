@@ -57,7 +57,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -134,7 +133,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         NdkCxxPlatform.builder()
             .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
             .setCxxRuntime(NdkCxxRuntime.GNUSTL)
-            .setCxxSharedRuntimePath(Paths.get("runtime"))
+            .setCxxSharedRuntimePath(FakeSourcePath.of("runtime"))
             .setObjdump(new CommandTool.Builder().addArg("objdump").build())
             .build();
 
@@ -329,7 +328,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         NdkCxxPlatform.builder()
             .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
             .setCxxRuntime(NdkCxxRuntime.GNUSTL)
-            .setCxxSharedRuntimePath(Paths.get("runtime"))
+            .setCxxSharedRuntimePath(FakeSourcePath.of("runtime"))
             .setObjdump(new CommandTool.Builder().addArg("objdump").build())
             .build();
 
