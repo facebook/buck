@@ -40,14 +40,14 @@ java_library(
     srcs = [
         "JavacPlugin.java",
     ],
-    deps = [
-        ":jp_util",
-    ],
     provided_deps = [
         ":compiler-tree-api",
     ],
     resources = ["resources/META-INF/services/com.sun.source.util.Plugin"],
     resources_root = "resources",
+    deps = [
+        ":jp_util",
+    ],
 )
 
 prebuilt_jar(
