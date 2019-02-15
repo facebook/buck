@@ -23,8 +23,6 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 
 public class ShTestBuilder
     extends AbstractNodeBuilder<
@@ -49,7 +47,7 @@ public class ShTestBuilder
     return this;
   }
 
-  public ShTestBuilder setResources(ImmutableSortedSet<Path> resources) {
+  public ShTestBuilder setResources(Iterable<? extends SourcePath> resources) {
     getArgForPopulating().setResources(resources);
     return this;
   }

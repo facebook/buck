@@ -1,0 +1,8 @@
+sh_test(
+    name = "test",
+    resources = [
+        "as_path/resource_file_as_path",
+        "//resources:resources",
+    ],
+    test = "test.sh",
+)

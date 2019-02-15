@@ -24,8 +24,12 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Comparator;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
@@ -77,5 +81,26 @@ public class ShTestIntegrationTest {
             "test.external_runner=" + workspace.getPath("external_runner.sh"),
             "//:test")
         .assertSuccess();
+  }
+
+  @Test
+  public void resourcesAreMarkedAsInputs() throws IOException {
+    Assume.assumeTrue(ImmutableSet.of(Platform.MACOS, Platform.LINUX).contains(Platform.detect()));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sh_test_resources", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand("audit", "inputs", "//:test");
+    result.assertSuccess();
+    ImmutableList<String> lines =
+        ImmutableList.sortedCopyOf(
+            Comparator.naturalOrder(), Splitter.on("\n").split(result.getStdout().trim()));
+
+    ImmutableList<String> expected =
+        ImmutableList.of(
+            "as_path/resource_file_as_path",
+            "resources/BUCK",
+            "resources/subdir/resource_file",
+            "test.sh");
+    Assert.assertEquals(expected, lines);
   }
 }
