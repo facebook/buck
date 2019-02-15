@@ -348,7 +348,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     ImmutableList<String> parameters = scenario.buildAndGetCompileParameters();
 
-    assertHasProcessorPath(parameters, apClasspathPath + ":" + pluginClasspath);
+    assertHasProcessorPath(parameters, apClasspathPath + File.pathSeparator + pluginClasspath);
   }
 
   private void assertHasProcessor(List<String> params, String processor) {
