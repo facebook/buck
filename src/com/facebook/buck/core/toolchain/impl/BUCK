@@ -7,7 +7,9 @@ java_library(
     tests = [
         "//test/com/facebook/buck/core/toolchain/impl:impl",
     ],
-    visibility = ["PUBLIC"],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io:executable-finder",

@@ -1,4 +1,8 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+    "java_test",
+)
 
 STANDARD_TEST_SRCS = [
     "*Test.java",
@@ -17,7 +21,9 @@ UTILS_SRCS = [
 java_immutables_library(
     name = "utils",
     srcs = UTILS_SRCS,
-    visibility = ["PUBLIC"],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         "//src/com/facebook/buck/android:config",
         "//src/com/facebook/buck/android:helpers",
@@ -664,7 +670,9 @@ java_test(
     srcs = [
         "AndroidBinaryIntegrationTest.java",
     ],
-    labels = ["long_running"],
+    labels = [
+        "long_running",
+    ],
     resources = glob(["testdata/**"]),
     deps = [
         ":testutil",
@@ -702,7 +710,9 @@ java_test(
     srcs = [
         "AndroidAppBundleIntegrationTest.java",
     ],
-    labels = ["long_running"],
+    labels = [
+        "long_running",
+    ],
     resources = glob(["testdata/**"]),
     deps = [
         ":testutil",
@@ -742,7 +752,9 @@ java_test(
             "AndroidBinaryIntegrationTest.java",
         ],
     ),
-    labels = ["long_running"],
+    labels = [
+        "long_running",
+    ],
     resources = glob(["testdata/**"]),
     deps = [
         "//src/com/facebook/buck/android:config",
@@ -1075,7 +1087,9 @@ java_test(
                   ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
     ),
     fork_mode = "PER_TEST",
-    labels = ["long_running"],
+    labels = [
+        "long_running",
+    ],
     module_deps = [
         "//src/com/facebook/buck/features/filegroup:filegroup",
     ],
@@ -1238,7 +1252,9 @@ java_test(
                   ANDROID_INSTRUMENTATION_INTEGRATION_TEST_SRCS,
     ),
     fork_mode = "PER_TEST",
-    labels = ["long_running"],
+    labels = [
+        "long_running",
+    ],
     resources = glob(
         ["testdata/**"],
     ),
