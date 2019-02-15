@@ -301,8 +301,8 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return getDelegate().getValue(SECTION, key).map(Paths::get);
   }
 
-  /** Whether SuperConsole output of Remote Execution information is enabled. */
-  public boolean isSuperConsoleEnabled() {
+  /** Whether Console output of Remote Execution information is enabled. */
+  public boolean isConsoleEnabled() {
     return getType() != RemoteExecutionType.NONE;
   }
 

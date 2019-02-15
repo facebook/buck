@@ -36,6 +36,7 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
+import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.test.TestStatusMessage;
@@ -65,6 +66,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
   private final ImmutableList.Builder<TestStatusMessage> testStatusMessageBuilder =
       ImmutableList.builder();
   private final boolean hideSucceededRules;
+  public final ImmutableList<AdditionalConsoleLineProvider> buildFinishedLineProvider;
 
   @GuardedBy("distBuildSlaveTracker")
   private final Map<BuildSlaveRunId, BuildStatus> distBuildSlaveTracker;
@@ -84,7 +86,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       BuildId buildId,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
-      Optional<String> reSessionIDInfo) {
+      Optional<String> reSessionIDInfo,
+      ImmutableList<AdditionalConsoleLineProvider> buildFinishedLineProvider) {
     super(
         console,
         clock,
@@ -98,6 +101,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     this.buildId = buildId;
     this.buildDetailsTemplate = buildDetailsTemplate;
     this.hideSucceededRules = hideSucceededRules;
+    this.buildFinishedLineProvider = buildFinishedLineProvider;
 
     this.testFormatter =
         new TestResultFormatter(
@@ -166,6 +170,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     super.buildFinished(finished);
 
     ImmutableList.Builder<String> lines = ImmutableList.builder();
+
+    for (AdditionalConsoleLineProvider lineProvider : buildFinishedLineProvider) {
+      lines.addAll(lineProvider.createConsoleLinesAtTime(finished.getTimestampMillis()));
+    }
 
     lines.add(getNetworkStatsLine(finished));
 

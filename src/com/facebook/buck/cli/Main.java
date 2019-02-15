@@ -921,7 +921,7 @@ public final class Main {
 
       RemoteExecutionConfig remoteExecutionConfig = buckConfig.getView(RemoteExecutionConfig.class);
       Optional<RemoteExecutionEventListener> remoteExecutionListener =
-          remoteExecutionConfig.isSuperConsoleEnabled()
+          remoteExecutionConfig.isConsoleEnabled()
               ? Optional.of(new RemoteExecutionEventListener())
               : Optional.empty();
       MetadataProvider metadataProvider =
@@ -1461,7 +1461,7 @@ public final class Main {
       Optional<RemoteExecutionEventListener> remoteExecutionListener,
       RemoteExecutionConfig remoteExecutionConfig,
       MetadataProvider metadataProvider) {
-    if (!remoteExecutionListener.isPresent() || !remoteExecutionConfig.isSuperConsoleEnabled()) {
+    if (!remoteExecutionListener.isPresent() || !remoteExecutionConfig.isConsoleEnabled()) {
       return ImmutableList.of();
     }
 
@@ -2007,7 +2007,7 @@ public final class Main {
       BuildId buildId,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
-      ImmutableList<AdditionalConsoleLineProvider> remoteExecutionConsoleLineProvider,
+      ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders,
       Optional<String> reSessionIDInfo) {
     RenderingConsole renderingConsole = new RenderingConsole(clock, console);
     if (config.isEnabled(console.getAnsi(), console.getVerbosity())) {
@@ -2024,7 +2024,7 @@ public final class Main {
               buildId,
               printBuildId,
               buildDetailsTemplate,
-              remoteExecutionConsoleLineProvider);
+              additionalConsoleLineProviders);
       return superConsole;
     }
     if (renderingConsole.getVerbosity().isSilent()) {
@@ -2044,7 +2044,8 @@ public final class Main {
         buildId,
         printBuildId,
         buildDetailsTemplate,
-        reSessionIDInfo);
+        reSessionIDInfo,
+        additionalConsoleLineProviders);
   }
 
   /**
