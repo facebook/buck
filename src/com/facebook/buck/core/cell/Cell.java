@@ -20,6 +20,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.google.common.collect.ImmutableList;
@@ -41,6 +42,13 @@ public interface Cell {
   Optional<String> getCanonicalName();
 
   ProjectFilesystem getFilesystem();
+
+  /**
+   * @return {@link ProjectFilesystemView} that filters out ignores specified for this cell, like
+   *     blacklisted paths and buck-out, to iterate over files which are potential direct sources,
+   *     build files, etc.
+   */
+  ProjectFilesystemView getFilesystemViewForSourceFiles();
 
   BuckConfig getBuckConfig();
 

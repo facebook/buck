@@ -24,7 +24,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.ProjectFilesystemView;
+import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -32,8 +35,10 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -52,6 +57,23 @@ abstract class AbstractImmutableCell implements Cell {
   @Override
   @Value.Auxiliary
   public abstract ProjectFilesystem getFilesystem();
+
+  @Override
+  @Value.Auxiliary
+  @Value.Derived
+  public ProjectFilesystemView getFilesystemViewForSourceFiles() {
+    ProjectFilesystem filesystem = getFilesystem();
+    ImmutableSet.Builder<PathMatcher> ignores =
+        ImmutableSet.builderWithExpectedSize(filesystem.getBlacklistedPaths().size() + 1);
+    ignores.addAll(filesystem.getBlacklistedPaths());
+    ignores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
+    for (Path subCellRoots : getKnownRoots()) {
+      if (!subCellRoots.equals(getRoot())) {
+        ignores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
+      }
+    }
+    return filesystem.asView().withView(Paths.get(""), ignores.build());
+  }
 
   @Override
   public abstract BuckConfig getBuckConfig();
