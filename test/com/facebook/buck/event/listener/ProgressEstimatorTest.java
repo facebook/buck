@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
+import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;

@@ -607,7 +607,7 @@ public class SimpleConsoleEventBusListenerTest {
             reSessionIdInfo,
             enableAdditionalLineProviders ? createAdditionalLineProvider() : ImmutableList.of());
 
-    eventBus.register(listener);
+    listener.register(eventBus);
   }
 
   private ImmutableList<AdditionalConsoleLineProvider> createAdditionalLineProvider() {

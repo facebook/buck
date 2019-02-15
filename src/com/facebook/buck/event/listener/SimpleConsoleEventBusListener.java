@@ -38,7 +38,6 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.EventInterval;
-import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.util.ExitCode;
@@ -120,6 +119,14 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     if (reSessionIDInfo.isPresent()) {
       printLines(ImmutableList.of(String.format("[RE] SessionInfo: [%s].", reSessionIDInfo.get())));
     }
+
+    this.parseStats.registerListener(this::parseFinished);
+  }
+
+  private void parseFinished() {
+    printLine(
+        "PARSING BUCK FILES: FINISHED IN %s",
+        formatElapsedTime(parseStats.getInterval().getElapsedTimeMs()));
   }
 
   /** Print information regarding the current distributed build. */
@@ -130,22 +137,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
             "StampedeId=[%s] BuildSlaveRunId=[%s]",
             event.getStampedeId().id, event.getBuildSlaveRunId().id);
     printLines(ImmutableList.<String>builder().add(line));
-  }
-
-  @Override
-  @Subscribe
-  public void parseFinished(ParseEvent.Finished finished) {
-    super.parseFinished(finished);
-    ImmutableList.Builder<String> lines = ImmutableList.builder();
-    addLineFromEvents(
-        "PARSING BUCK FILES",
-        /* suffix */ Optional.empty(),
-        clock.currentTimeMillis(),
-        buckFilesParsingEvents.values(),
-        getEstimatedProgressOfParsingBuckFiles(),
-        Optional.empty(),
-        lines);
-    printLines(lines);
   }
 
   @Override
@@ -381,6 +372,10 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     ImmutableList.Builder<String> lines =
         ImmutableList.<String>builder().add(distBuildCreatedEvent.getConsoleLogLine());
     printLines(lines);
+  }
+
+  private void printLine(String format, Object... args) {
+    printLines(ImmutableList.of(String.format(format, args)));
   }
 
   private void printLines(ImmutableList.Builder<String> lines) {

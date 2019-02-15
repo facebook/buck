@@ -149,6 +149,7 @@ standard_java_test(
         "//src/com/facebook/buck/event/listener:listener",
         "//src/com/facebook/buck/event/listener/interfaces:interfaces",
         "//src/com/facebook/buck/event/listener/stats/cache:cache",
+        "//src/com/facebook/buck/event/listener/util:util",
         "//src/com/facebook/buck/httpserver:httpserver",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",

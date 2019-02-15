@@ -38,10 +38,9 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.stats.parse.ParseStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
-import com.facebook.buck.json.ProjectBuildFileParseEvents;
-import com.facebook.buck.parser.ParseEvent;
-import com.facebook.buck.parser.events.ParseBuckFileEvent;
+import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.test.TestRuleEvent;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Verbosity;
@@ -55,6 +54,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
@@ -116,23 +116,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   private final boolean showSlowRulesInConsole;
   private final Map<UnflavoredBuildTarget, Long> timeSpentMillisecondsInRules;
 
-  @Nullable protected volatile ProjectBuildFileParseEvents.Started projectBuildFileParseStarted;
-  @Nullable protected volatile ProjectBuildFileParseEvents.Finished projectBuildFileParseFinished;
-
   @Nullable protected volatile ProjectGenerationEvent.Started projectGenerationStarted;
   @Nullable protected volatile ProjectGenerationEvent.Finished projectGenerationFinished;
 
   @Nullable protected volatile WatchmanStatusEvent.Started watchmanStarted;
   @Nullable protected volatile WatchmanStatusEvent.Finished watchmanFinished;
 
-  protected ConcurrentLinkedDeque<ParseEvent.Started> parseStarted;
-  protected ConcurrentLinkedDeque<ParseEvent.Finished> parseFinished;
-
   protected ConcurrentLinkedDeque<ActionGraphEvent.Started> actionGraphStarted;
   protected ConcurrentLinkedDeque<ActionGraphEvent.Finished> actionGraphFinished;
 
   protected ConcurrentHashMap<EventKey, EventInterval> actionGraphEvents;
-  protected ConcurrentHashMap<EventKey, EventInterval> buckFilesParsingEvents;
 
   @Nullable protected volatile BuildEvent.Started buildStarted;
   @Nullable protected volatile BuildEvent.Finished buildFinished;
@@ -164,8 +157,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected Optional<ProgressEstimator> progressEstimator = Optional.empty();
 
   protected final CacheRateStatsKeeper cacheRateStatsKeeper;
-
   protected final NetworkStatsKeeper networkStatsKeeper;
+  protected final ParseStatsTracker parseStats;
 
   protected volatile int distBuildTotalRulesCount = 0;
   protected volatile int distBuildFinishedRulesCount = 0;
@@ -192,6 +185,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       int numberOfSlowRulesToShow,
       boolean showSlowRulesInConsole) {
     this.console = console;
+    this.parseStats = new ParseStatsTracker();
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
@@ -201,23 +195,16 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.showSlowRulesInConsole = showSlowRulesInConsole;
     this.timeSpentMillisecondsInRules = new HashMap<>();
 
-    this.projectBuildFileParseStarted = null;
-    this.projectBuildFileParseFinished = null;
-
     this.projectGenerationStarted = null;
     this.projectGenerationFinished = null;
 
     this.watchmanStarted = null;
     this.watchmanFinished = null;
 
-    this.parseStarted = new ConcurrentLinkedDeque<>();
-    this.parseFinished = new ConcurrentLinkedDeque<>();
-
     this.actionGraphStarted = new ConcurrentLinkedDeque<>();
     this.actionGraphFinished = new ConcurrentLinkedDeque<>();
 
     this.actionGraphEvents = new ConcurrentHashMap<>();
-    this.buckFilesParsingEvents = new ConcurrentHashMap<>();
 
     this.buildStarted = null;
     this.buildFinished = null;
@@ -229,6 +216,11 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.networkStatsKeeper = new NetworkStatsKeeper();
 
     this.buildRuleThreadTracker = new BuildRuleThreadTracker(executionEnvironment);
+  }
+
+  public void register(BuckEventBus buildEventBus) {
+    buildEventBus.register(this);
+    buildEventBus.register(parseStats);
   }
 
   public static String getBuildDetailsLine(BuildId buildId, String buildDetailsTemplate) {
@@ -251,6 +243,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void setProgressEstimator(ProgressEstimator estimator) {
     if (displaysEstimatedProgress()) {
       progressEstimator = Optional.of(estimator);
+      parseStats.setProgressEstimator(estimator);
     }
   }
 
@@ -440,9 +433,28 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       Optional<Double> progress,
       Optional<Long> minimum,
       ImmutableList.Builder<String> lines) {
+    return addLineFromEventInterval(
+        prefix, suffix, currentMillis, getStartAndFinish(eventIntervals), progress, minimum, lines);
+  }
 
-    EventInterval startAndFinish = getStartAndFinish(eventIntervals);
-
+  /**
+   * Adds a line about an eventIntervale to lines.
+   *
+   * @param prefix Prefix to print for this event pair.
+   * @param suffix Suffix to print for this event pair.
+   * @param currentMillis The current time in milliseconds.
+   * @param startAndFinish the event interval to measure elapsed time.
+   * @param lines The builder to append lines to.
+   * @return True if all events are finished, false otherwise
+   */
+  protected boolean addLineFromEventInterval(
+      String prefix,
+      Optional<String> suffix,
+      long currentMillis,
+      EventInterval startAndFinish,
+      Optional<Double> progress,
+      Optional<Long> minimum,
+      Builder<String> lines) {
     if (!startAndFinish.getStart().isPresent()) {
       // nothing to display, event has not even started yet
       return false;
@@ -678,20 +690,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  public void projectBuildFileParseStarted(ProjectBuildFileParseEvents.Started started) {
-    if (projectBuildFileParseStarted == null) {
-      projectBuildFileParseStarted = started;
-    }
-    aggregateStartedEvent(buckFilesParsingEvents, started);
-  }
-
-  @Subscribe
-  public void projectBuildFileParseFinished(ProjectBuildFileParseEvents.Finished finished) {
-    projectBuildFileParseFinished = finished;
-    aggregateFinishedEvent(buckFilesParsingEvents, finished);
-  }
-
-  @Subscribe
   public void projectGenerationStarted(ProjectGenerationEvent.Started started) {
     projectGenerationStarted = started;
   }
@@ -706,25 +704,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void projectGenerationFinished(ProjectGenerationEvent.Finished finished) {
     projectGenerationFinished = finished;
     progressEstimator.ifPresent(ProgressEstimator::didFinishProjectGeneration);
-  }
-
-  @Subscribe
-  public void parseStarted(ParseEvent.Started started) {
-    parseStarted.add(started);
-    aggregateStartedEvent(buckFilesParsingEvents, started);
-  }
-
-  @Subscribe
-  public void ruleParseFinished(ParseBuckFileEvent.Finished ruleParseFinished) {
-    progressEstimator.ifPresent(
-        estimator -> estimator.didParseBuckRules(ruleParseFinished.getNumRules()));
-  }
-
-  @Subscribe
-  public void parseFinished(ParseEvent.Finished finished) {
-    parseFinished.add(finished);
-    progressEstimator.ifPresent(ProgressEstimator::didFinishParsing);
-    aggregateFinishedEvent(buckFilesParsingEvents, finished);
   }
 
   @Subscribe

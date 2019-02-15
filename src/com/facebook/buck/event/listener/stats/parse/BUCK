@@ -1,0 +1,22 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+)
+
+java_library(
+    name = "parse",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/build/event:event",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/event/external:external_lib",
+        "//src/com/facebook/buck/event/listener/util:util",
+        "//src/com/facebook/buck/json:json",
+        "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/parser/events:events",
+        "//third-party/java/guava:guava",
+    ],
+)

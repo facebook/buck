@@ -22,6 +22,7 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 
 /** Events posted before and after running buck.py. */
+// TODO(cjhopman): wtf is this doing in this package?
 public abstract class ProjectBuildFileParseEvents extends AbstractBuckEvent
     implements LeafEvent, WorkAdvanceEvent {
   // This class does nothing; it exists only to group two AbstractBuckEvents.

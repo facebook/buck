@@ -69,6 +69,7 @@ import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
+import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
@@ -768,7 +769,6 @@ public class SuperConsoleEventBusListenerTest {
 
     ProgressEstimator e = new ProgressEstimator(getStorageForTest(), eventBus);
     listener.setProgressEstimator(e);
-    eventBus.register(listener);
 
     BuildEvent.RuleCountCalculated ruleCountCalculated =
         BuildEvent.ruleCountCalculated(ImmutableSet.of(), 10);
@@ -968,7 +968,6 @@ public class SuperConsoleEventBusListenerTest {
 
     ProgressEstimator e = new ProgressEstimator(getStorageForTest(), eventBus);
     listener.setProgressEstimator(e);
-    eventBus.register(listener);
 
     long timeMillis = 0;
 
@@ -1492,7 +1491,6 @@ public class SuperConsoleEventBusListenerTest {
 
     ProgressEstimator e = new ProgressEstimator(getStorageForTest(), eventBus);
     listener.setProgressEstimator(e);
-    eventBus.register(listener);
 
     long timeMillis = 0;
 
@@ -2283,7 +2281,7 @@ public class SuperConsoleEventBusListenerTest {
             false,
             Optional.empty(),
             ImmutableList.of());
-    eventBus.register(listener);
+    listener.register(eventBus);
 
     ProjectBuildFileParseEvents.Started parseEventStarted =
         new ProjectBuildFileParseEvents.Started();
@@ -3277,7 +3275,7 @@ public class SuperConsoleEventBusListenerTest {
             printBuildId,
             buildDetailsTemplate,
             ImmutableList.of());
-    eventBus.register(listener);
+    listener.register(eventBus);
     return listener;
   }
 

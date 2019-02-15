@@ -82,7 +82,6 @@ import com.facebook.buck.event.listener.LogUploaderListener;
 import com.facebook.buck.event.listener.LoggingBuildListener;
 import com.facebook.buck.event.listener.MachineReadableLoggerListener;
 import com.facebook.buck.event.listener.ParserProfilerLoggerListener;
-import com.facebook.buck.event.listener.ProgressEstimator;
 import com.facebook.buck.event.listener.PublicAnnouncementManager;
 import com.facebook.buck.event.listener.RenderingConsole;
 import com.facebook.buck.event.listener.RuleKeyDiagnosticsListener;
@@ -93,6 +92,7 @@ import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
 import com.facebook.buck.event.listener.devspeed.DevspeedTelemetryPlugin;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
+import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.AsynchronousDirectoryContentsCleaner;
 import com.facebook.buck.io.ExecutableFinder;
@@ -1165,7 +1165,7 @@ public final class Main {
                   counterRegistry,
                   commandEventListeners,
                   managerScope);
-          buildEventBus.register(consoleListener);
+          consoleListener.register(buildEventBus);
 
           if (logBuckConfig.isBuckConfigLocalWarningEnabled()
               && !console.getVerbosity().isSilent()) {
