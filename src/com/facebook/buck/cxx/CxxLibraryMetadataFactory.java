@@ -107,13 +107,14 @@ public class CxxLibraryMetadataFactory {
 
           // TODO(agallagher): We currently always add exported flags and frameworks to the
           // preprocessor input to mimic existing behavior, but this should likely be fixed.
+          CxxPlatform cxxPlatform = platform.getValue();
           addCxxPreprocessorInputFromArgs(
               cxxPreprocessorInputBuilder,
               args,
               platform,
               f ->
                   CxxDescriptionEnhancer.toStringWithMacrosArgs(
-                      buildTarget, cellRoots, graphBuilder, platform.getValue(), f));
+                      buildTarget, cellRoots, graphBuilder, cxxPlatform, f));
 
           if (visibility.getValue() == HeaderVisibility.PRIVATE && !args.getHeaders().isEmpty()) {
             HeaderSymlinkTree symlinkTree =
@@ -133,9 +134,9 @@ public class CxxLibraryMetadataFactory {
                     baseTarget,
                     CxxDescriptionEnhancer.getHeaderModeForPlatform(
                         graphBuilder,
-                        platform.getValue(),
+                        cxxPlatform,
                         args.getXcodePublicHeadersSymlinks()
-                            .orElse(platform.getValue().getPublicHeadersSymlinksEnabled())))
+                            .orElse(cxxPlatform.getPublicHeadersSymlinksEnabled())))
                 .ifPresent(cxxPreprocessorInputBuilder::addIncludes);
 
             // Add platform-specific headers.
