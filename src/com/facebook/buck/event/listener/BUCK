@@ -39,6 +39,7 @@ java_immutables_library(
         "//src/com/facebook/buck/event/listener/interfaces:interfaces",
         "//src/com/facebook/buck/event/listener/stats/cache:cache",
         "//src/com/facebook/buck/event/listener/stats/parse:parse",
+        "//src/com/facebook/buck/event/listener/stats/stampede:stampede",
         "//src/com/facebook/buck/event/listener/util:util",
         "//src/com/facebook/buck/httpserver:httpserver",
         "//src/com/facebook/buck/io:io",

@@ -1,0 +1,17 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "standard_java_test",
+)
+
+standard_java_test(
+    name = "listener",
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/core/build/event:event",
+        "//src/com/facebook/buck/distributed:common",
+        "//src/com/facebook/buck/distributed/build_client:build_client",
+        "//src/com/facebook/buck/event/listener/stats/stampede:stampede",
+        "//test/com/facebook/buck/event:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

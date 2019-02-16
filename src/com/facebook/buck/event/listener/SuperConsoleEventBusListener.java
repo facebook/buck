@@ -23,14 +23,8 @@ import com.facebook.buck.core.test.event.TestStatusMessageEvent;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
-import com.facebook.buck.distributed.DistBuildStatusEvent;
-import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
 import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
-import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
-import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
-import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.CommandEvent.Finished;
@@ -44,6 +38,8 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper.CacheRateStatsUpdateEvent;
+import com.facebook.buck.event.listener.stats.stampede.DistBuildTrackedStatus;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
@@ -68,7 +64,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -84,7 +79,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.logging.Level;
-import javax.annotation.concurrent.GuardedBy;
 
 /** Console that provides rich, updating ansi output about the current build. */
 public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListener {
@@ -99,11 +93,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private final Locale locale;
   private final Function<Long, String> formatTimeFunction;
+
+  private final ConcurrentMap<Long, ConcurrentLinkedDeque<LeafEvent>> threadsToRunningStep;
+
   private final ConcurrentMap<Long, Optional<? extends TestSummaryEvent>>
       threadsToRunningTestSummaryEvent;
   private final ConcurrentMap<Long, Optional<? extends TestStatusMessageEvent>>
       threadsToRunningTestStatusMessageEvent;
-  private final ConcurrentMap<Long, ConcurrentLinkedDeque<LeafEvent>> threadsToRunningStep;
 
   private final TestResultFormatter testFormatter;
 
@@ -135,18 +131,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   // way the user can know that their changes, if they made any, were not picked up from Watchman.
   private boolean isZeroFileChanges = false;
 
-  private final Object distBuildSlaveTrackerLock = new Object();
-
   private long minimumDurationMillisecondsToShowParse;
   private long minimumDurationMillisecondsToShowActionGraph;
   private long minimumDurationMillisecondsToShowWatchman;
   private boolean hideEmptyDownload;
 
-  @GuardedBy("distBuildSlaveTrackerLock")
-  private final Map<BuildSlaveRunId, BuildSlaveStatus> distBuildSlaveTracker;
-
-  private volatile StampedeLocalBuildStatusEvent stampedeLocalBuildStatus =
-      new StampedeLocalBuildStatusEvent("init");
   private volatile Optional<DistBuildSuperConsoleEvent> stampedeSuperConsoleEvent =
       Optional.empty();
   private Optional<String> stampedeIdLogLine = Optional.empty();
@@ -253,9 +242,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     DateFormat dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", this.locale);
     dateFormat.setTimeZone(timeZone);
 
-    // Using LinkedHashMap because we want a predictable iteration order.
-    this.distBuildSlaveTracker = new LinkedHashMap<>();
-
     int outputMaxColumns = 80;
     if (config.getThreadLineOutputMaxColumns().isPresent()) {
       outputMaxColumns = config.getThreadLineOutputMaxColumns().getAsInt();
@@ -356,7 +342,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     String localBuildLinePrefix = "Building";
 
     if (stampedeSuperConsoleEvent.isPresent()) {
-      localBuildLinePrefix = stampedeLocalBuildStatus.getLocalBuildLinePrefix();
+      localBuildLinePrefix = distStatsTracker.getLocalBuildLinePrefix();
 
       stampedeIdLogLine.ifPresent(lines::add);
       stampedeSuperConsoleEvent
@@ -371,17 +357,16 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
               0,
               this.distBuildStarted,
               this.distBuildFinished,
-              getApproximateDistBuildProgress(),
+              distStatsTracker.getApproximateProgress(),
               Optional.empty(),
               lines);
 
       if (distBuildMs == UNFINISHED_EVENT_PAIR) {
         MultiStateRenderer renderer;
-        synchronized (distBuildSlaveTrackerLock) {
-          renderer =
-              new DistBuildSlaveStateRenderer(
-                  ansi, currentTimeMillis, ImmutableList.copyOf(distBuildSlaveTracker.values()));
-        }
+
+        renderer =
+            new DistBuildSlaveStateRenderer(
+                ansi, currentTimeMillis, distStatsTracker.getSlaveStatuses());
 
         renderLines(renderer, lines, maxThreadLines, true);
       }
@@ -529,57 +514,48 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
   private Optional<String> getOptionalDistBuildLineSuffix() {
     List<String> columns = new ArrayList<>();
+    DistBuildTrackedStatus distBuildStatus = distStatsTracker.getTrackedStatus();
 
-    synchronized (distBuildStatusLock) {
-      if (!distBuildStatus.isPresent()) {
-        columns.add("remote status: init");
-      } else {
-        distBuildStatus
-            .get()
-            .getStatus()
-            .ifPresent(status -> columns.add("remote status: " + status.toLowerCase()));
+    if (!distBuildStatus.hasRemoteStatus()) {
+      columns.add("remote status: init");
+    } else {
+      distBuildStatus
+          .getStatus()
+          .ifPresent(status -> columns.add("remote status: " + status.toLowerCase()));
 
-        int totalUploadErrorsCount = 0;
-        ImmutableList.Builder<CacheRateStatsKeeper.CacheRateStatsUpdateEvent> slaveCacheStats =
-            new ImmutableList.Builder<>();
+      int totalUploadErrorsCount = 0;
+      for (CacheRateStatsUpdateEvent slaveCacheStat : distBuildStatus.getSlaveCacheStats()) {
+        totalUploadErrorsCount += slaveCacheStat.getCacheErrorCount();
+      }
 
-        for (BuildSlaveStatus slaveStatus : distBuildStatus.get().getSlaveStatuses()) {
-          totalUploadErrorsCount += slaveStatus.getHttpArtifactUploadsFailureCount();
+      if (distBuildStatus.getTotalRulesCount() > 0) {
+        columns.add(
+            String.format(
+                "%d/%d jobs",
+                distBuildStatus.getFinishedRulesCount(), distBuildStatus.getTotalRulesCount()));
+      }
 
-          if (slaveStatus.isSetCacheRateStats()) {
-            slaveCacheStats.add(
-                CacheRateStatsKeeper.getCacheRateStatsUpdateEventFromSerializedStats(
-                    slaveStatus.getCacheRateStats()));
-          }
-        }
+      CacheRateStatsKeeper.CacheRateStatsUpdateEvent aggregatedCacheStats =
+          CacheRateStatsKeeper.getAggregatedCacheRateStats(distBuildStatus.getSlaveCacheStats());
 
-        if (distBuildTotalRulesCount > 0) {
+      if (aggregatedCacheStats.getTotalRulesCount() != 0) {
+        columns.add(String.format("%.1f%% cache miss", aggregatedCacheStats.getCacheMissRate()));
+
+        if (aggregatedCacheStats.getCacheErrorCount() != 0) {
           columns.add(
-              String.format("%d/%d jobs", distBuildFinishedRulesCount, distBuildTotalRulesCount));
+              String.format(
+                  "%d [%.1f%%] cache errors",
+                  aggregatedCacheStats.getCacheErrorCount(),
+                  aggregatedCacheStats.getCacheErrorRate()));
         }
+      }
 
-        CacheRateStatsKeeper.CacheRateStatsUpdateEvent aggregatedCacheStats =
-            CacheRateStatsKeeper.getAggregatedCacheRateStats(slaveCacheStats.build());
-
-        if (aggregatedCacheStats.getTotalRulesCount() != 0) {
-          columns.add(String.format("%.1f%% cache miss", aggregatedCacheStats.getCacheMissRate()));
-
-          if (aggregatedCacheStats.getCacheErrorCount() != 0) {
-            columns.add(
-                String.format(
-                    "%d [%.1f%%] cache errors",
-                    aggregatedCacheStats.getCacheErrorCount(),
-                    aggregatedCacheStats.getCacheErrorRate()));
-          }
-        }
-
-        if (totalUploadErrorsCount > 0) {
-          columns.add(String.format("%d upload errors", totalUploadErrorsCount));
-        }
+      if (totalUploadErrorsCount > 0) {
+        columns.add(String.format("%d upload errors", totalUploadErrorsCount));
       }
     }
 
-    String localStatus = String.format("local status: %s", stampedeLocalBuildStatus.getStatus());
+    String localStatus = String.format("local status: %s", distBuildStatus.getLocalStatus());
     String remoteStatusAndSummary = String.join(", ", columns);
     if (remoteStatusAndSummary.length() == 0) {
       return Optional.of(localStatus);
@@ -706,30 +682,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void ruleKeyCalculationFinished(RuleKeyCalculationEvent.Finished finished) {
     runningStepFinished(finished.getThreadId());
-  }
-
-  @Override
-  @Subscribe
-  public void onDistBuildStatusEvent(DistBuildStatusEvent event) {
-    super.onDistBuildStatusEvent(event);
-    synchronized (distBuildSlaveTrackerLock) {
-      for (BuildSlaveStatus status : event.getStatus().getSlaveStatuses()) {
-        distBuildSlaveTracker.put(status.buildSlaveRunId, status);
-      }
-
-      // Don't track the status of failed or lost minions
-      for (BuildSlaveInfo slaveInfo : event.getJob().getBuildSlaves()) {
-        if (slaveInfo.getStatus().equals(BuildStatus.FAILED)
-            || slaveInfo.getStatus().equals(BuildStatus.LOST)) {
-          distBuildSlaveTracker.remove(slaveInfo.buildSlaveRunId);
-        }
-      }
-    }
-  }
-
-  @Subscribe
-  public void onStampedeLocalBuildStatusEvent(StampedeLocalBuildStatusEvent event) {
-    this.stampedeLocalBuildStatus = event;
   }
 
   @Subscribe

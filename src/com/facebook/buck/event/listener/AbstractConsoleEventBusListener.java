@@ -21,10 +21,6 @@ import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.distributed.DistBuildStatus;
-import com.facebook.buck.distributed.DistBuildStatusEvent;
-import com.facebook.buck.distributed.build_client.DistBuildRemoteProgressEvent;
-import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -40,6 +36,7 @@ import com.facebook.buck.event.listener.stats.cache.NetworkStatsTracker;
 import com.facebook.buck.event.listener.stats.cache.RemoteArtifactUploadStats;
 import com.facebook.buck.event.listener.stats.cache.RemoteDownloadStats;
 import com.facebook.buck.event.listener.stats.parse.ParseStatsTracker;
+import com.facebook.buck.event.listener.stats.stampede.DistBuildStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.test.TestRuleEvent;
@@ -81,7 +78,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import javax.annotation.concurrent.GuardedBy;
 import org.stringtemplate.v4.ST;
 
 /**
@@ -145,16 +141,9 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected final NetworkStatsTracker networkStatsTracker;
   protected final ParseStatsTracker parseStats;
-
-  protected volatile int distBuildTotalRulesCount = 0;
-  protected volatile int distBuildFinishedRulesCount = 0;
+  protected final DistBuildStatsTracker distStatsTracker;
 
   protected BuildRuleThreadTracker buildRuleThreadTracker;
-
-  protected final Object distBuildStatusLock = new Object();
-
-  @GuardedBy("distBuildStatusLock")
-  protected Optional<DistBuildStatus> distBuildStatus = Optional.empty();
 
   /** Commands that should print out the build details, if provided */
   protected final ImmutableSet<String> buildDetailsCommands =
@@ -173,6 +162,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.console = console;
     this.parseStats = new ParseStatsTracker();
     this.networkStatsTracker = new NetworkStatsTracker();
+    this.distStatsTracker = new DistBuildStatsTracker();
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
@@ -206,6 +196,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     buildEventBus.register(this);
     buildEventBus.register(parseStats);
     buildEventBus.register(networkStatsTracker);
+    buildEventBus.register(distStatsTracker);
   }
 
   public static String getBuildDetailsLine(BuildId buildId, String buildDetailsTemplate) {
@@ -238,15 +229,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     return minutes == 0 ? String.valueOf(seconds) : String.format("%2$dm %1$s", seconds, minutes);
   }
 
-  protected Optional<Double> getApproximateDistBuildProgress() {
-    if (distBuildTotalRulesCount == 0) {
-      return Optional.of(0.0);
-    }
-
-    double buildRatio = (double) distBuildFinishedRulesCount / distBuildTotalRulesCount;
-    return Optional.of(Math.floor(100 * buildRatio) / 100.0);
-  }
-
   /** Local build progress. */
   protected Optional<Double> getApproximateLocalBuildProgress() {
     if (progressEstimator.isPresent()) {
@@ -258,7 +240,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected Optional<Double> getApproximateBuildProgress() {
     if (distBuildStarted != null && distBuildFinished == null) {
-      return getApproximateDistBuildProgress();
+      return distStatsTracker.getApproximateProgress();
     } else {
       return getApproximateLocalBuildProgress();
     }
@@ -878,22 +860,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void installFinished(InstallEvent.Finished finished) {
     installFinished = finished;
-  }
-
-  @Subscribe
-  public void onDistBuildStatusEvent(DistBuildStatusEvent event) {
-    synchronized (distBuildStatusLock) {
-      distBuildStatus = Optional.of(event.getStatus());
-    }
-  }
-
-  /** Update distributed build progress. */
-  @Subscribe
-  public void onDistBuildProgressEvent(DistBuildRemoteProgressEvent event) {
-    CoordinatorBuildProgress buildProgress = event.getBuildProgress();
-    distBuildTotalRulesCount =
-        buildProgress.getTotalRulesCount() - buildProgress.getSkippedRulesCount();
-    distBuildFinishedRulesCount = buildProgress.getBuiltRulesCount();
   }
 
   @Subscribe
