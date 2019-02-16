@@ -933,7 +933,7 @@ public class AppleLibraryDescription
     CxxLibraryMetadataFactory.addCxxPreprocessorInputFromArgs(
         cxxPreprocessorInputBuilder,
         args,
-        platform,
+        platform.getValue(),
         f ->
             CxxDescriptionEnhancer.toStringWithMacrosArgs(
                 buildTarget, cellRoots, graphBuilder, platform.getValue(), f));

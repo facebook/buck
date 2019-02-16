@@ -33,7 +33,6 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.base.Function;
 import com.google.common.collect.Multimaps;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 public class CxxLibraryMetadataFactory {
@@ -111,7 +110,7 @@ public class CxxLibraryMetadataFactory {
           addCxxPreprocessorInputFromArgs(
               cxxPreprocessorInputBuilder,
               args,
-              platform,
+              cxxPlatform,
               f ->
                   CxxDescriptionEnhancer.toStringWithMacrosArgs(
                       buildTarget, cellRoots, graphBuilder, cxxPlatform, f));
@@ -171,7 +170,7 @@ public class CxxLibraryMetadataFactory {
   public static void addCxxPreprocessorInputFromArgs(
       Builder cxxPreprocessorInputBuilder,
       CommonArg args,
-      Entry<Flavor, CxxPlatform> platform,
+      CxxPlatform platform,
       Function<StringWithMacros, Arg> stringWithMacrosArgFunction) {
     cxxPreprocessorInputBuilder.putAllPreprocessorFlags(
         Multimaps.transformValues(
@@ -180,7 +179,7 @@ public class CxxLibraryMetadataFactory {
                 args.getExportedPlatformPreprocessorFlags(),
                 args.getExportedLangPreprocessorFlags(),
                 args.getExportedLangPlatformPreprocessorFlags(),
-                platform.getValue()),
+                platform),
             stringWithMacrosArgFunction));
     cxxPreprocessorInputBuilder.addAllFrameworks(args.getFrameworks());
   }
