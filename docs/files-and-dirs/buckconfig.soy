@@ -1671,13 +1671,13 @@ artifact_cache_size_limit = 52428800
 {/call}
 
 {call buckconfig.entry}
-	{param section: 'cache' /}
-	{param name: 'max_action_graph_cache_entries' /}
-	{param example_value: '3' /}
-	{param description}
-		Sets the maximum number of action graphs to cache. After this number, the least-recently-used
-		graph will be evicted. Defaults to 1.
-	{/param}
+  {param section: 'cache' /}
+  {param name: 'max_action_graph_cache_entries' /}
+  {param example_value: '3' /}
+  {param description}
+    Sets the maximum number of action graphs to cache. After this number, the least-recently-used
+    graph will be evicted. Defaults to 1.
+  {/param}
 {/call}
 
 {call buckconfig.entry}
@@ -2833,6 +2833,43 @@ or the value could be a custom platform flavor:
 {/call}
 
 {call buckconfig.section}
+  {param name: 'httpserver' /}
+  {param description}
+    Option to enable an experimental web server that presents a UI to explore build data.  Note that
+    Buck must be run as a daemon in order for the web server to be available.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'httpserver' /}
+  {param name: 'port' /}
+  {param example_value: '8080' /}
+  {param description}
+    This sets the port to use for the web server.  There are three possible values:
+    <ul>
+      <li>
+        <code>n > 0</code>: For any positive integer, Buck will attempt to make the server
+        available on that port.
+      </li>
+      <li>
+        <code>0</code>: Buck will find a free port for the server to use and print it out on the
+        command line.
+      </li>
+      <li>
+        <code>-1</code>: Explicitly disables the server.
+      </li>
+    </ul>
+  {/param}
+{/call}
+
+{call buckconfig.section}
+  {param name: 'incompatible' /}
+  {param description}
+    This section controls features of buck that are in the process of being deprecated. 
+  {/param}
+{/call}
+
+{call buckconfig.section}
   {param name: 'intellij' /}
   {param description}
     This section configures a project generated for IntelliJ IDEA by <code>buck project</code> command.
@@ -2910,20 +2947,6 @@ or the value could be a custom platform flavor:
   {param description}
     Default minimum Android SDK version supported for this project. Overwritten by min SDK version if
     specified in target's AndroidManifest.xml.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'project' /}
-  {param name: 'generate_android_manifest' /}
-  {param example_value: 'true' /}
-  {param description}
-    Forces Buck to generate "AndroidManifest.xml" files for Android IntelliJ modules. The generated
-    manifests contain package name only to allow Android IntelliJ plugin resolve references to
-    resources correctly.
-    <p>Manifests are generated for modules that have information about package name and have either
-    none or more than one targets with Android manifests. When a module has exactly one target with
-    Android manifest this manifest is used as a manifest in the module.</p>
   {/param}
 {/call}
 
@@ -3260,43 +3283,6 @@ or the value could be a custom platform flavor:
     searching for the <code>kotlinc</code> executable in the paths specified by the
     {sp}<code>PATH</code> environment variable.  If the <code>kotlinc</code> executable is found,
     Buck assumes that the <i>parent directory</i> of that executable is the Kotlin home.
-  {/param}
-{/call}
-
-{call buckconfig.section}
-  {param name: 'httpserver' /}
-  {param description}
-    Option to enable an experimental web server that presents a UI to explore build data.  Note that
-    Buck must be run as a daemon in order for the web server to be available.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'httpserver' /}
-  {param name: 'port' /}
-  {param example_value: '8080' /}
-  {param description}
-    This sets the port to use for the web server.  There are three possible values:
-    <ul>
-      <li>
-        <code>n > 0</code>: For any positive integer, Buck will attempt to make the server
-        available on that port.
-      </li>
-      <li>
-        <code>0</code>: Buck will find a free port for the server to use and print it out on the
-        command line.
-      </li>
-      <li>
-        <code>-1</code>: Explicitly disables the server.
-      </li>
-    </ul>
-  {/param}
-{/call}
-
-{call buckconfig.section}
-  {param name: 'incompatible' /}
-  {param description}
-    This section controls features of buck that are in the process of being deprecated. 
   {/param}
 {/call}
 
@@ -3860,6 +3846,20 @@ Pkg.Revision = 13.1.3345770
   {param name: 'project' /}
   {param description}
     This section defines project-level settings.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'project' /}
+  {param name: 'generate_android_manifest' /}
+  {param example_value: 'true' /}
+  {param description}
+    Forces Buck to generate "AndroidManifest.xml" files for Android IntelliJ modules. The generated
+    manifests contain package name only to allow Android IntelliJ plugin resolve references to
+    resources correctly.
+    <p>Manifests are generated for modules that have information about package name and have either
+    none or more than one targets with Android manifests. When a module has exactly one target with
+    Android manifest this manifest is used as a manifest in the module.</p>
   {/param}
 {/call}
 
