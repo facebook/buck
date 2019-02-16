@@ -17,7 +17,6 @@ package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.BUILT_LOCALLY;
 
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
@@ -121,12 +120,19 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     }
 
     this.parseStats.registerListener(this::parseFinished);
+    this.networkStatsTracker.registerListener(this::onCacheUploadsFinished);
   }
 
   private void parseFinished() {
     printLine(
         "PARSING BUCK FILES: FINISHED IN %s",
         formatElapsedTime(parseStats.getInterval().getElapsedTimeMs()));
+  }
+
+  private void onCacheUploadsFinished() {
+    ImmutableList.Builder<String> lines = ImmutableList.builder();
+    logHttpCacheUploads(lines);
+    printLines(lines);
   }
 
   /** Print information regarding the current distributed build. */
@@ -188,7 +194,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         lines);
 
     String httpStatus = renderRemoteUploads();
-    if (remoteArtifactUploadsScheduledCount.get() > 0) {
+    if (networkStatsTracker.haveUploadsStarted() && !networkStatsTracker.haveUploadsFinished()) {
       lines.add("WAITING FOR HTTP CACHE UPLOADS " + httpStatus);
     }
 
@@ -341,16 +347,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         || console.getVerbosity().shouldPrintBinaryRunInformation()) {
       console.logLines(line);
     }
-  }
-
-  @Override
-  @Subscribe
-  public void onHttpArtifactCacheShutdownEvent(HttpArtifactCacheEvent.Shutdown event) {
-    super.onHttpArtifactCacheShutdownEvent(event);
-    ImmutableList.Builder<String> lines = ImmutableList.builder();
-    logHttpCacheUploads(lines);
-
-    printLines(lines);
   }
 
   @Subscribe

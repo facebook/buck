@@ -14,38 +14,43 @@
  * under the License.
  */
 
-package com.facebook.buck.event.listener;
+package com.facebook.buck.event.listener.stats.cache;
 
-import com.facebook.buck.util.types.Pair;
-import com.facebook.buck.util.unit.SizeUnit;
+import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import org.immutables.value.Value;
 
 public class NetworkStatsKeeper {
-
   /** remote: For caches out of the local machine. */
   private final AtomicInteger remoteDownloadedArtifactsCount;
 
   private final AtomicLong remoteDownloadedArtifactsBytes;
+
+  /** Stats about remote artifact downloads. */
+  @Value.Immutable
+  @BuckStyleTuple
+  interface AbstractRemoteDownloadStats {
+    int getArtifacts();
+
+    long getBytes();
+  }
 
   NetworkStatsKeeper() {
     remoteDownloadedArtifactsCount = new AtomicInteger(0);
     remoteDownloadedArtifactsBytes = new AtomicLong(0);
   }
 
-  public long getRemoteDownloadedArtifactsCount() {
-    return remoteDownloadedArtifactsCount.get();
-  }
-
-  public Pair<Long, SizeUnit> getRemoteDownloadedArtifactsBytes() {
-    return new Pair<>(remoteDownloadedArtifactsBytes.get(), SizeUnit.BYTES);
-  }
-
-  public void incrementRemoteDownloadedArtifactsCount() {
+  void incrementRemoteDownloadedArtifactsCount() {
     remoteDownloadedArtifactsCount.incrementAndGet();
   }
 
-  public void addRemoteDownloadedArtifactsBytes(long bytes) {
+  void addRemoteDownloadedArtifactsBytes(long bytes) {
     remoteDownloadedArtifactsBytes.addAndGet(bytes);
+  }
+
+  RemoteDownloadStats getRemoteDownloadStats() {
+    return RemoteDownloadStats.of(
+        remoteDownloadedArtifactsCount.get(), remoteDownloadedArtifactsBytes.get());
   }
 }

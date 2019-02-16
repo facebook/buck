@@ -284,8 +284,10 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
     RuleKey getRequestedRuleKey();
 
+    // TODO(cjhopman): This is in the CacheResult already.
     Optional<String> getArtifactContentHash();
 
+    // TODO(cjhopman): This is in the CacheResult already.
     Optional<Long> getArtifactSizeBytes();
 
     Optional<String> getErrorMessage();

@@ -15,8 +15,6 @@
  */
 package com.facebook.buck.event.listener;
 
-import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
@@ -38,6 +36,9 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
+import com.facebook.buck.event.listener.stats.cache.NetworkStatsTracker;
+import com.facebook.buck.event.listener.stats.cache.RemoteArtifactUploadStats;
+import com.facebook.buck.event.listener.stats.cache.RemoteDownloadStats;
 import com.facebook.buck.event.listener.stats.parse.ParseStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
@@ -54,7 +55,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeSet;
@@ -78,8 +78,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -138,17 +136,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Nullable protected volatile CommandEvent.Finished commandFinished;
 
-  protected AtomicReference<HttpArtifactCacheEvent.Scheduled> firstHttpCacheUploadScheduled =
-      new AtomicReference<>();
-
-  protected final AtomicInteger remoteArtifactUploadsScheduledCount = new AtomicInteger(0);
-  protected final AtomicInteger remoteArtifactUploadsStartedCount = new AtomicInteger(0);
-  protected final AtomicInteger remoteArtifactUploadedCount = new AtomicInteger(0);
-  protected final AtomicLong remoteArtifactTotalBytesUploaded = new AtomicLong(0);
-  protected final AtomicInteger remoteArtifactUploadFailedCount = new AtomicInteger(0);
-
-  @Nullable protected volatile HttpArtifactCacheEvent.Shutdown httpShutdownEvent;
-
   protected volatile OptionalInt ruleCount = OptionalInt.empty();
   protected Optional<String> publicAnnouncements = Optional.empty();
 
@@ -156,8 +143,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   protected Optional<ProgressEstimator> progressEstimator = Optional.empty();
 
-  protected final CacheRateStatsKeeper cacheRateStatsKeeper;
-  protected final NetworkStatsKeeper networkStatsKeeper;
+  protected final NetworkStatsTracker networkStatsTracker;
   protected final ParseStatsTracker parseStats;
 
   protected volatile int distBuildTotalRulesCount = 0;
@@ -186,6 +172,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       boolean showSlowRulesInConsole) {
     this.console = console;
     this.parseStats = new ParseStatsTracker();
+    this.networkStatsTracker = new NetworkStatsTracker();
     this.clock = clock;
     this.locale = locale;
     this.ansi = console.getAnsi();
@@ -212,15 +199,13 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.installStarted = null;
     this.installFinished = null;
 
-    this.cacheRateStatsKeeper = new CacheRateStatsKeeper();
-    this.networkStatsKeeper = new NetworkStatsKeeper();
-
     this.buildRuleThreadTracker = new BuildRuleThreadTracker(executionEnvironment);
   }
 
   public void register(BuckEventBus buildEventBus) {
     buildEventBus.register(this);
     buildEventBus.register(parseStats);
+    buildEventBus.register(networkStatsTracker);
   }
 
   public static String getBuildDetailsLine(BuildId buildId, String buildDetailsTemplate) {
@@ -407,8 +392,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @param lines The builder to append lines to.
    */
   protected void logHttpCacheUploads(ImmutableList.Builder<String> lines) {
-    if (firstHttpCacheUploadScheduled.get() != null) {
-      boolean isFinished = httpShutdownEvent != null;
+    if (networkStatsTracker.haveUploadsStarted()) {
+      boolean isFinished = networkStatsTracker.haveUploadsFinished();
       String line = "HTTP CACHE UPLOAD" + (isFinished ? ": FINISHED " : "... ");
       line += renderRemoteUploads();
       lines.add(line);
@@ -438,7 +423,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   /**
-   * Adds a line about an eventIntervale to lines.
+   * Adds a line about an {@link EventInterval} to lines.
    *
    * @param prefix Prefix to print for this event pair.
    * @param suffix Suffix to print for this event pair.
@@ -454,7 +439,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       EventInterval startAndFinish,
       Optional<Double> progress,
       Optional<Long> minimum,
-      Builder<String> lines) {
+      ImmutableList.Builder<String> lines) {
     if (!startAndFinish.getStart().isPresent()) {
       // nothing to display, event has not even started yet
       return false;
@@ -743,14 +728,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   public void ruleCountCalculated(BuildEvent.RuleCountCalculated calculated) {
     ruleCount = OptionalInt.of(calculated.getNumRules());
     progressEstimator.ifPresent(estimator -> estimator.setNumberOfRules(calculated.getNumRules()));
-    cacheRateStatsKeeper.ruleCountCalculated(calculated);
   }
 
   @Subscribe
   public void ruleCountUpdated(BuildEvent.UnskippedRuleCountUpdated updated) {
     ruleCount = OptionalInt.of(updated.getNumRules());
     progressEstimator.ifPresent(estimator -> estimator.setNumberOfRules(updated.getNumRules()));
-    cacheRateStatsKeeper.ruleCountUpdated(updated);
   }
 
   protected Optional<String> getOptionalBuildLineSuffix() {
@@ -765,7 +748,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
               numRulesCompleted.get(),
               ruleCount.getAsInt()));
       CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
-          cacheRateStatsKeeper.getStats();
+          networkStatsTracker.getCacheRateStats();
       columns.add(
           String.format(
               locale,
@@ -784,23 +767,22 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
             : convertToAllCapsIfNeeded("Downloading") + "...";
     List<String> columns = new ArrayList<>();
 
-    Pair<Long, SizeUnit> remoteDownloadedBytes =
-        networkStatsKeeper.getRemoteDownloadedArtifactsBytes();
+    RemoteDownloadStats downloadStats = networkStatsTracker.getRemoteDownloadStats();
+
+    long remoteDownloadedBytes = downloadStats.getBytes();
     Pair<Double, SizeUnit> redableRemoteDownloadedBytes =
-        SizeUnit.getHumanReadableSize(
-            remoteDownloadedBytes.getFirst(), remoteDownloadedBytes.getSecond());
+        SizeUnit.getHumanReadableSize(remoteDownloadedBytes, SizeUnit.BYTES);
     columns.add(
         String.format(
-            locale,
-            "%d " + convertToAllCapsIfNeeded("artifacts"),
-            networkStatsKeeper.getRemoteDownloadedArtifactsCount()));
+            locale, "%d " + convertToAllCapsIfNeeded("artifacts"), downloadStats.getArtifacts()));
     columns.add(
         String.format(
             locale,
             "%s",
             convertToAllCapsIfNeeded(
                 SizeUnit.toHumanReadableString(redableRemoteDownloadedBytes, locale))));
-    CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats = cacheRateStatsKeeper.getStats();
+    CacheRateStatsKeeper.CacheRateStatsUpdateEvent cacheRateStats =
+        networkStatsTracker.getCacheRateStats();
     columns.add(
         String.format(
             locale,
@@ -863,7 +845,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     }
 
     buildRuleThreadTracker.didFinishBuildRule(finished);
-    cacheRateStatsKeeper.buildRuleFinished(finished);
   }
 
   @Subscribe
@@ -900,57 +881,6 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   }
 
   @Subscribe
-  public void onHttpArtifactCacheScheduledEvent(HttpArtifactCacheEvent.Scheduled event) {
-    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
-      firstHttpCacheUploadScheduled.compareAndSet(null, event);
-      remoteArtifactUploadsScheduledCount.incrementAndGet();
-    }
-  }
-
-  @Subscribe
-  public void onHttpArtifactCacheStartedEvent(HttpArtifactCacheEvent.Started event) {
-    if (event.getOperation() == ArtifactCacheEvent.Operation.STORE) {
-      remoteArtifactUploadsStartedCount.incrementAndGet();
-    }
-  }
-
-  @Subscribe
-  public void onHttpArtifactCacheFinishedEvent(HttpArtifactCacheEvent.Finished event) {
-    switch (event.getOperation()) {
-      case MULTI_FETCH:
-      case FETCH:
-        if (event.getCacheResult().isPresent()
-            && event.getCacheResult().get().getType().isSuccess()) {
-          networkStatsKeeper.incrementRemoteDownloadedArtifactsCount();
-          event
-              .getCacheResult()
-              .get()
-              .artifactSizeBytes()
-              .ifPresent(networkStatsKeeper::addRemoteDownloadedArtifactsBytes);
-        }
-        break;
-      case STORE:
-        if (event.getStoreData().wasStoreSuccessful().orElse(false)) {
-          remoteArtifactUploadedCount.incrementAndGet();
-          event
-              .getStoreData()
-              .getArtifactSizeBytes()
-              .ifPresent(remoteArtifactTotalBytesUploaded::addAndGet);
-        } else {
-          remoteArtifactUploadFailedCount.incrementAndGet();
-        }
-        break;
-      case MULTI_CONTAINS:
-        break;
-    }
-  }
-
-  @Subscribe
-  public void onHttpArtifactCacheShutdownEvent(HttpArtifactCacheEvent.Shutdown event) {
-    httpShutdownEvent = event;
-  }
-
-  @Subscribe
   public void onDistBuildStatusEvent(DistBuildStatusEvent event) {
     synchronized (distBuildStatusLock) {
       distBuildStatus = Optional.of(event.getStatus());
@@ -977,15 +907,17 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
    * @return the line
    */
   protected String renderRemoteUploads() {
-    long bytesUploaded = remoteArtifactTotalBytesUploaded.longValue();
+    RemoteArtifactUploadStats uploadStats = networkStatsTracker.getRemoteArtifactUploadStats();
+
+    long bytesUploaded = uploadStats.getTotalBytes();
     String humanReadableBytesUploaded =
         convertToAllCapsIfNeeded(
             SizeUnit.toHumanReadableString(
                 SizeUnit.getHumanReadableSize(bytesUploaded, SizeUnit.BYTES), locale));
-    int scheduled = remoteArtifactUploadsScheduledCount.get();
-    int complete = remoteArtifactUploadedCount.get();
-    int failed = remoteArtifactUploadFailedCount.get();
-    int uploading = remoteArtifactUploadsStartedCount.get() - (complete + failed);
+    int scheduled = uploadStats.getScheduled();
+    int complete = uploadStats.getUploaded();
+    int failed = uploadStats.getFailed();
+    int uploading = uploadStats.getStarted() - (complete + failed);
     int pending = scheduled - (uploading + complete + failed);
     if (scheduled > 0) {
       return String.format(

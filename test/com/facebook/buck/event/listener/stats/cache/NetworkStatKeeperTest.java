@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.event.listener;
+package com.facebook.buck.event.listener.stats.cache;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,8 +25,7 @@ public class NetworkStatKeeperTest {
     NetworkStatsKeeper networkStatsKeeper = new NetworkStatsKeeper();
     networkStatsKeeper.addRemoteDownloadedArtifactsBytes(5000);
     networkStatsKeeper.addRemoteDownloadedArtifactsBytes(3000);
-    Assert.assertEquals(
-        8000, (long) networkStatsKeeper.getRemoteDownloadedArtifactsBytes().getFirst());
+    Assert.assertEquals(8000, networkStatsKeeper.getRemoteDownloadStats().getBytes());
   }
 
   @Test
@@ -36,6 +35,6 @@ public class NetworkStatKeeperTest {
     networkStatsKeeper.incrementRemoteDownloadedArtifactsCount();
     networkStatsKeeper.incrementRemoteDownloadedArtifactsCount();
 
-    Assert.assertEquals(2, networkStatsKeeper.getRemoteDownloadedArtifactsCount());
+    Assert.assertEquals(2, networkStatsKeeper.getRemoteDownloadStats().getArtifacts());
   }
 }

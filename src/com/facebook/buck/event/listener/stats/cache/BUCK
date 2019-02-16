@@ -1,6 +1,6 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
-java_library(
+java_immutables_library(
     name = "cache",
     srcs = glob(["*.java"]),
     tests = [
