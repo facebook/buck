@@ -262,6 +262,8 @@
       implementation="com.facebook.buck.intellij.ideabuck.config.BcfgColorSettingsPage"/>
     <lang.commenter language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.commenter.BuckCommenter"/>
+    <lang.commenter language="Buckconfig"
+      implementationClass="com.facebook.buck.intellij.ideabuck.commenter.BcfgCommenter"/>
     <lang.braceMatcher
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckBraceMatcher"/>

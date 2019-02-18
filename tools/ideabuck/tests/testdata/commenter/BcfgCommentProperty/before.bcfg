@@ -1,0 +1,4 @@
+[section1]
+    field1 = value<caret>
+[section2]
+    field2 = value
