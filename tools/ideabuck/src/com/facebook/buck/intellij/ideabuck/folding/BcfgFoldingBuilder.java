@@ -16,6 +16,8 @@
 package com.facebook.buck.intellij.ideabuck.folding;
 
 import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgProperty;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgPropertyName;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgPropertyValue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgSection;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BcfgTypes;
 import com.intellij.lang.ASTNode;
@@ -36,27 +38,31 @@ public class BcfgFoldingBuilder extends FoldingBuilderEx {
 
   /** Folds up all the properties in a section. */
   static @Nullable FoldingDescriptor sectionFoldingDescriptor(BcfgSection section) {
-    return new FoldingDescriptor(section.getNode(), section.getTextRange()) {
+    int start = section.getSectionHeader().getTextRange().getStartOffset();
+    int end = section.getTextRange().getEndOffset();
+    return new FoldingDescriptor(section.getNode(), new TextRange(start, end)) {
       @Nullable
       @Override
       public String getPlaceholderText() {
-        String sectionName = section.getSectionHeader().getSectionName().getText();
+        String name = section.getName();
         int numProperties = section.getPropertyList().size();
         String propertiesPluralized = numProperties == 1 ? "property" : "properties";
-        return "[" + sectionName + "] (" + numProperties + " " + propertiesPluralized + ")";
+        return "[" + name + "] (" + numProperties + " " + propertiesPluralized + ")";
       }
     };
   }
 
   /** Create a folding descriptor for the given property. */
   static @Nullable FoldingDescriptor propertyFoldingDescriptor(BcfgProperty property) {
-    int start = property.getAssign().getTextRange().getEndOffset();
-    int end = property.getTextRange().getEndOffset();
+    BcfgPropertyName name = property.getPropertyName();
+    BcfgPropertyValue value = property.getPropertyValue();
+    int start = name.getTextRange().getStartOffset();
+    int end = value.getTextRange().getEndOffset();
     return new FoldingDescriptor(property.getNode(), new TextRange(start, end)) {
       @Nullable
       @Override
       public String getPlaceholderText() {
-        return property.getPropertyValueAsText();
+        return name.getValue() + " = " + value.getValue();
       }
     };
   }

@@ -54,7 +54,7 @@ public class BcfgParserDefinition implements ParserDefinition {
   @NotNull
   @Override
   public TokenSet getCommentTokens() {
-    return COMMENTS;
+    return TokenSet.EMPTY;
   }
 
   @NotNull
@@ -89,8 +89,14 @@ public class BcfgParserDefinition implements ParserDefinition {
     if (lType == BcfgTypes.COMMENT) {
       return SpaceRequirements.MUST_LINE_BREAK; // Must break *after* line comment
     }
-    if (rType == BcfgTypes.PROPERTY) {
-      return SpaceRequirements.MUST_LINE_BREAK; // Must line break *before* property
+    if (rType == BcfgTypes.PROPERTY_NAME) {
+      return SpaceRequirements.MUST_LINE_BREAK; // Must line break *before* property name
+    }
+    if (rType == BcfgTypes.SECTION_HEADER) {
+      return SpaceRequirements.MUST_LINE_BREAK; // Must line break *before* section header
+    }
+    if (rType == BcfgTypes.REQUIRED_FILE || rType == BcfgTypes.OPTIONAL_FILE) {
+      return SpaceRequirements.MUST_LINE_BREAK; // Must line break *before* <file> import
     }
     return SpaceRequirements.MAY;
   }

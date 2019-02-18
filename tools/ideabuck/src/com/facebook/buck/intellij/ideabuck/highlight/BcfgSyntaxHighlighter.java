@@ -69,8 +69,8 @@ public class BcfgSyntaxHighlighter extends SyntaxHighlighterBase {
       return COMMENT_KEYS;
     } else if (BcfgTypes.L_BRACKET.equals(tokenType)
         || BcfgTypes.R_BRACKET.equals(tokenType)
-        || BcfgTypes.REQUIRED_INLINE.equals(tokenType)
-        || BcfgTypes.OPTIONAL_INLINE.equals(tokenType)
+        || BcfgTypes.REQUIRED_FILE.equals(tokenType)
+        || BcfgTypes.OPTIONAL_FILE.equals(tokenType)
         || BcfgTypes.END_INLINE.equals(tokenType)
         || BcfgTypes.ASSIGN.equals(tokenType)) {
       return PUNCTUATION_KEYS;

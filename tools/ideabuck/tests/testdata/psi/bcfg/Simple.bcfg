@@ -1,4 +1,2 @@
-# Comment
 [foo]
-    bar = unquoted
-    baz = "quoted"
+    bar = baz

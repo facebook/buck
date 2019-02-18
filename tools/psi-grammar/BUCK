@@ -35,14 +35,19 @@ BNF_SRCS = [
 ]
 
 MIXIN_SRCS = [
+    "src/com/facebook/buck/intellij/ideabuck/lang/BcfgFile.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/BuckFile.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/BcfgFileType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/BuckFileType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/BcfgLanguage.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/BuckLanguage.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgElementFactory.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgElementType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckElementType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgTokenType.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/BuckTokenType.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/BcfgNamedElement.java",
+    "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BcfgNamedElementImpl.java",
     "src/com/facebook/buck/intellij/ideabuck/lang/psi/impl/BcfgPsiImplUtil.java",
 ]
 

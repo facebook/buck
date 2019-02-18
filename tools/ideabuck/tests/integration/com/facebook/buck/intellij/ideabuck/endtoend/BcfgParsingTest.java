@@ -47,7 +47,11 @@ public class BcfgParsingTest extends ParsingTestCase {
     doTest();
   }
 
-  public void testQuoted() {
+  public void testImportFile() {
+    doTest();
+  }
+
+  public void testComments() {
     doTest();
   }
 

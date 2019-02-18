@@ -33,49 +33,68 @@ import com.intellij.psi.TokenType;
 %eof}
 
 EOL = \r|\n|\r\n
-WHITE_SPACE = [\ \t\f]
+LINE_WHITESPACE = [\ \t\f]+
 LINE_CONTINUATION = \\(\r|\n|\r\n)
-LINE_CONTINUATION_PLUS_INDENT = {LINE_CONTINUATION}{WHITE_SPACE}*
+LINE_CONTINUATION_PLUS_INDENT = {LINE_CONTINUATION}{LINE_WHITESPACE}*
 COMMENT = [#;][^\r\n]*
 
-SECTION_NAME = [A-Za-z_][-A-Za-z0-9_#.]*
-PROPERTY_NAME = [A-Za-z_][-A-Za-z0-9_#.]*
-PROPERTY_VALUE_FRAGMENT = [^\s]([^\\\r\n]|\\[^\r\n])*
+L_BRACKET = \[
+R_BRACKET = \]
 ASSIGN = [:=]
 REQUIRED_FILE = "<file:"
 OPTIONAL_FILE = "<?file:"
 
+// Section and property names strip leading/trailing whitespace, so we
+// will reconstruct the name from the non-whitespace fragments
+SECTION_NAME_FRAGMENT   = ([^\\\s\r\n\]]|\\[^\r\n])+
+PROPERTY_NAME_FRAGMENT  = ([^\\\s\r\n\]<:=]|\\[^\r\n])+
+// Property values cannot have leading whitespace, but they can have trailing whitespace
+PROPERTY_VALUE_FRAGMENT = ([^\\\s\r\n]|\\[^\r\n]) ([^\\\r\n]|\\[^\r\n])*
+
 %state IN_SECTION_HEADER
+%state IN_PROPERTY_NAME
 %state IN_PROPERTY_VALUE
 %state IN_FILE_PATH
 
 %%
 
 <YYINITIAL> {
-  ({EOL})+           { return TokenType.WHITE_SPACE; }
-  ({WHITE_SPACE})+   { return TokenType.WHITE_SPACE; }
-  {COMMENT}          { return BcfgTypes.COMMENT; }
-  "["                { yybegin(IN_SECTION_HEADER); return BcfgTypes.L_BRACKET; }
-  "<file:"           { yybegin(IN_FILE_PATH); return BcfgTypes.REQUIRED_INLINE; }
-  "<?file:"          { yybegin(IN_FILE_PATH); return BcfgTypes.OPTIONAL_INLINE; }
-  {PROPERTY_NAME}    { return BcfgTypes.PROPERTY_NAME; }
-  {ASSIGN}({WHITE_SPACE})* { yybegin(IN_PROPERTY_VALUE); return BcfgTypes.ASSIGN; }
-  [^]                { return TokenType.BAD_CHARACTER; }
+  {EOL}                     { return TokenType.WHITE_SPACE; }
+  {LINE_WHITESPACE}         { return TokenType.WHITE_SPACE; }
+  {LINE_CONTINUATION}       { return TokenType.WHITE_SPACE; }
+  {COMMENT}                 { return BcfgTypes.COMMENT; }
+  "["                       { yybegin(IN_SECTION_HEADER); return BcfgTypes.L_BRACKET; }
+  "<file:"                  { yybegin(IN_FILE_PATH); return BcfgTypes.REQUIRED_FILE; }
+  "<?file:"                 { yybegin(IN_FILE_PATH); return BcfgTypes.OPTIONAL_FILE; }
+  [^]                       { yybegin(IN_PROPERTY_NAME); }
+  <<EOF>>                   { return null; }
 }
 
 // Inside "[section_name]"
 <IN_SECTION_HEADER> {
-  ({WHITE_SPACE})+   { return TokenType.WHITE_SPACE; }
-  {SECTION_NAME}     { return BcfgTypes.SECTION_NAME; }
-  "]"                { yybegin(YYINITIAL); return BcfgTypes.R_BRACKET; }
-  [^]                { return TokenType.BAD_CHARACTER; }
+  {LINE_WHITESPACE}                { return TokenType.WHITE_SPACE; }
+  {LINE_CONTINUATION_PLUS_INDENT}  { return TokenType.WHITE_SPACE; }
+  {SECTION_NAME_FRAGMENT}          { return BcfgTypes.SECTION_NAME_FRAGMENT; }
+  "]"                              { yybegin(YYINITIAL); return BcfgTypes.R_BRACKET; }
+  [^]                              { return TokenType.BAD_CHARACTER; }
+}
+
+// Collecting multiple parts of property name before the '='
+<IN_PROPERTY_NAME> {
+  {LINE_WHITESPACE}                { return TokenType.WHITE_SPACE; } // significant
+  {LINE_CONTINUATION_PLUS_INDENT}  { return TokenType.WHITE_SPACE; }
+  {ASSIGN}                         { yybegin(IN_PROPERTY_VALUE); return BcfgTypes.ASSIGN; }
+  {PROPERTY_NAME_FRAGMENT}         { return BcfgTypes.PROPERTY_NAME_FRAGMENT; }
+  [^]                              { return TokenType.BAD_CHARACTER; }
 }
 
 // Collecting multiple values for "property = ..."
 <IN_PROPERTY_VALUE> {
-  {EOL}                            { yybegin(YYINITIAL); return TokenType.WHITE_SPACE; }
+  {EOL}                            { yypushback(1); yybegin(YYINITIAL); return BcfgTypes.PROPERTY_END; }
+  {LINE_WHITESPACE}                { return TokenType.WHITE_SPACE; }
   {LINE_CONTINUATION_PLUS_INDENT}  { return TokenType.WHITE_SPACE; }
   {PROPERTY_VALUE_FRAGMENT}        { return BcfgTypes.PROPERTY_VALUE_FRAGMENT; }
+  <<EOF>>                          { yybegin(YYINITIAL); return BcfgTypes.PROPERTY_END; }
   [^]                              { return TokenType.BAD_CHARACTER; }
 }
 
