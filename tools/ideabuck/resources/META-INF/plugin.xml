@@ -254,8 +254,13 @@
     <gotoDeclarationHandler
       implementation="com.facebook.buck.intellij.ideabuck.navigation.BuckGotoProvider"
       order="FIRST"/>
+    <gotoDeclarationHandler
+      implementation="com.facebook.buck.intellij.ideabuck.navigation.BcfgGotoFileProvider"
+      language="Buckconfig"/>
     <annotator language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.annotator.BuckAnnotator"/>
+    <annotator language="Buckconfig"
+      implementationClass="com.facebook.buck.intellij.ideabuck.annotator.BcfgAnnotator"/>
     <colorSettingsPage
       implementation="com.facebook.buck.intellij.ideabuck.config.BuckColorSettingsPage"/>
     <colorSettingsPage

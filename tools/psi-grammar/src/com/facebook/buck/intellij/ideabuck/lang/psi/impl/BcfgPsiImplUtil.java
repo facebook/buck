@@ -28,6 +28,7 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiNameIdentifierOwner;
 import com.intellij.psi.TokenType;
+import com.intellij.psi.tree.IElementType;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +51,15 @@ public class BcfgPsiImplUtil {
 
   /** Returns true if the inlined file is required. */
   public static boolean isRequired(BcfgInline inline) {
-    return inline.getFirstChild().getNode().getElementType().equals(BcfgTypes.REQUIRED_FILE);
+    PsiElement requiredField = inline.getFirstChild();
+    IElementType elementType = requiredField.getNode().getElementType();
+    if (elementType.equals(BcfgTypes.REQUIRED_FILE)) {
+      return true;
+    } else if (elementType.equals(BcfgTypes.OPTIONAL_FILE)) {
+      return false;
+    } else {
+      return false; // How could this be a BcfgInline?
+    }
   }
 
   /**
@@ -62,6 +71,7 @@ public class BcfgPsiImplUtil {
     return Optional.of(inline)
         .map(BcfgInline::getContainingFile)
         .map(PsiFile::getVirtualFile)
+        .map(VirtualFile::getParent)
         .map(virtualFile -> virtualFile.findFileByRelativePath(inline.getFilePath().getText()));
   }
 
@@ -76,7 +86,7 @@ public class BcfgPsiImplUtil {
         .map(PsiFile::getVirtualFile)
         .map(VirtualFile::getPath)
         .map(Paths::get)
-        .map(path -> path.resolve(inline.getFilePath().getText()));
+        .map(path -> path.resolveSibling(inline.getFilePath().getText()));
   }
 
   // BcfgSection mixins
