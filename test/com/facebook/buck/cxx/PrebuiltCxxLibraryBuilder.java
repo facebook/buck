@@ -22,9 +22,9 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -45,13 +45,15 @@ public class PrebuiltCxxLibraryBuilder
         PrebuiltCxxLibraryDescription,
         BuildRule> {
 
-  public PrebuiltCxxLibraryBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public PrebuiltCxxLibraryBuilder(
+      BuildTarget target, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         new PrebuiltCxxLibraryDescription(
             new ToolchainProviderBuilder()
                 .withToolchain(
                     CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM, cxxPlatforms))
+                    CxxPlatformsProvider.of(
+                        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
                 .build(),
             CxxPlatformUtils.DEFAULT_CONFIG),
         target);

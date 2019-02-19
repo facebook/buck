@@ -85,7 +85,7 @@ public class RobolectricTestBuilder
         .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
         .withToolchain(
             JavaCxxPlatformProvider.DEFAULT_NAME,
-            JavaCxxPlatformProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM))
+            JavaCxxPlatformProvider.of(CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM))
         .withToolchain(
             JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(ANDROID_JAVAC_OPTIONS))
         .withToolchain(

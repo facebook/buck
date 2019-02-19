@@ -23,6 +23,7 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.ErrorToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -97,7 +98,9 @@ public class LuaBuckConfig {
    * @return for each passed in {@link CxxPlatform}, build and wrap it in a {@link LuaPlatform}
    *     defined in the `lua#<cxx-platform-flavor>` config section.
    */
-  FlavorDomain<LuaPlatform> getPlatforms(FlavorDomain<CxxPlatform> cxxPlatforms) {
-    return cxxPlatforms.convert(LuaPlatform.FLAVOR_DOMAIN_NAME, this::getPlatform);
+  FlavorDomain<LuaPlatform> getPlatforms(FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
+    return cxxPlatforms.convert(
+        LuaPlatform.FLAVOR_DOMAIN_NAME,
+        platformProvider -> getPlatform(platformProvider.getLegacyTotallyUnsafe()));
   }
 }

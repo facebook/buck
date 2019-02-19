@@ -41,6 +41,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
@@ -505,14 +506,14 @@ public class PythonTestDescriptionTest {
         new PythonLibraryBuilder(
                 BuildTargetFactory.newInstance("//:libA"),
                 PythonTestUtils.PYTHON_PLATFORMS,
-                cxxPlatforms)
+                cxxPlatforms.map(StaticUnresolvedCxxPlatform::new))
             .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libASrc)));
     SourcePath libBSrc = FakeSourcePath.of("libB.py");
     PythonLibraryBuilder libraryBBuilder =
         new PythonLibraryBuilder(
                 BuildTargetFactory.newInstance("//:libB"),
                 PythonTestUtils.PYTHON_PLATFORMS,
-                cxxPlatforms)
+                cxxPlatforms.map(StaticUnresolvedCxxPlatform::new))
             .setSrcs(SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of(libBSrc)));
     PythonTestBuilder binaryBuilder =
         PythonTestBuilder.create(
@@ -520,8 +521,8 @@ public class PythonTestDescriptionTest {
                 PythonTestUtils.PYTHON_CONFIG,
                 new ExecutableFinder(),
                 PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                cxxPlatforms)
+                CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+                cxxPlatforms.map(StaticUnresolvedCxxPlatform::new))
             .setCxxPlatform(platformA.getFlavor())
             .setPlatformDeps(
                 PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()

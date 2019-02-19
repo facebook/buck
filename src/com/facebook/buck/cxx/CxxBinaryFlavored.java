@@ -47,7 +47,7 @@ public class CxxBinaryFlavored implements Flavored {
         Sets.intersection(
             flavors,
             Sets.union(
-                getCxxPlatformsProvider().getCxxPlatforms().getFlavors(),
+                getCxxPlatformsProvider().getUnresolvedCxxPlatforms().getFlavors(),
                 cxxBuckConfig.getDeclaredPlatforms()));
     if (platformFlavors.size() > 1) {
       return false;
@@ -80,7 +80,7 @@ public class CxxBinaryFlavored implements Flavored {
             // Missing: CXX Compilation Database
             // Missing: CXX Description Enhancer
             // Missing: CXX Infer Enhancer
-            getCxxPlatformsProvider().getCxxPlatforms(),
+            getCxxPlatformsProvider().getUnresolvedCxxPlatforms(),
             LinkerMapMode.FLAVOR_DOMAIN,
             StripStyle.FLAVOR_DOMAIN));
   }

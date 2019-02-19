@@ -20,8 +20,8 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import java.util.Optional;
@@ -34,12 +34,12 @@ public class JavaCxxPlatformProviderFactory implements ToolchainFactory<JavaCxxP
     JavaBuckConfig javaConfig = context.getBuckConfig().getView(JavaBuckConfig.class);
     CxxPlatformsProvider cxxPlatformsProvider =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    CxxPlatform defaultJavaCxxPlatform =
+    UnresolvedCxxPlatform defaultJavaCxxPlatform =
         javaConfig
             .getDefaultCxxPlatform()
             .map(InternalFlavor::of)
-            .map(cxxPlatformsProvider.getCxxPlatforms()::getValue)
-            .orElse(cxxPlatformsProvider.getDefaultCxxPlatform());
+            .map(cxxPlatformsProvider.getUnresolvedCxxPlatforms()::getValue)
+            .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
     return Optional.of(JavaCxxPlatformProvider.of(defaultJavaCxxPlatform));
   }
 }

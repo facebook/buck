@@ -24,9 +24,9 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -45,8 +45,8 @@ public class CxxTestBuilder
 
   private static CxxTestDescription createCxxTestDescription(
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
@@ -60,13 +60,17 @@ public class CxxTestBuilder
   public CxxTestBuilder(
       BuildTarget target,
       CxxBuckConfig cxxBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(createCxxTestDescription(cxxBuckConfig, defaultCxxPlatform, cxxPlatforms), target);
   }
 
   public CxxTestBuilder(BuildTarget target, CxxBuckConfig config) {
-    this(target, config, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
+    this(
+        target,
+        config,
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+        CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxTestBuilder setEnv(ImmutableMap<String, StringWithMacros> env) {

@@ -20,8 +20,8 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import java.util.Optional;
 
 public class HaskellPlatformsProviderFactory implements ToolchainFactory<HaskellPlatformsProvider> {
@@ -32,8 +32,10 @@ public class HaskellPlatformsProviderFactory implements ToolchainFactory<Haskell
 
     CxxPlatformsProvider cxxPlatformsProviderFactory =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
-    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
+    UnresolvedCxxPlatform defaultCxxPlatform =
+        cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform();
 
     HaskellPlatformsFactory haskellPlatformsFactory =
         new HaskellPlatformsFactory(context.getBuckConfig(), context.getExecutableFinder());

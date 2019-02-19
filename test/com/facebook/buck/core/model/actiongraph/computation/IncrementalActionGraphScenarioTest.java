@@ -60,8 +60,9 @@ import com.facebook.buck.cxx.CxxTestUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.SharedLibraryInterfacePlatforms;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.event.BuckEventBus;
@@ -430,10 +431,12 @@ public class IncrementalActionGraphScenarioTest {
             .build();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
 
-    Optional<CxxPlatform> testPlatform =
-        SharedLibraryInterfacePlatforms.getTestPlatform(filesystem, buckConfig, cxxBuckConfig);
+    Optional<UnresolvedCxxPlatform> testPlatform =
+        SharedLibraryInterfacePlatforms.getTestPlatform(filesystem, buckConfig, cxxBuckConfig)
+            .map(StaticUnresolvedCxxPlatform::new);
     assumeTrue(testPlatform.isPresent());
-    FlavorDomain cxxFlavorDomain = FlavorDomain.of("C/C++ Platform", testPlatform.get());
+    FlavorDomain<UnresolvedCxxPlatform> cxxFlavorDomain =
+        FlavorDomain.of("C/C++ Platform", testPlatform.get());
 
     BuildTarget sharedLibraryTarget = BuildTargetFactory.newInstance("//:shared_lib");
     CxxLibraryBuilder sharedLibraryBuilder =
@@ -1171,9 +1174,10 @@ public class IncrementalActionGraphScenarioTest {
 
   @Test
   public void testPrebuiltCxxLibrary() {
-    CxxPlatform plat1 = CxxPlatformUtils.DEFAULT_PLATFORM;
-    CxxPlatform plat2 = CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("other"));
-    FlavorDomain<CxxPlatform> platforms = FlavorDomain.of("C/C++ Platform", plat1, plat2);
+    UnresolvedCxxPlatform plat1 = CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM;
+    UnresolvedCxxPlatform plat2 =
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.withFlavor(InternalFlavor.of("other"));
+    FlavorDomain<UnresolvedCxxPlatform> platforms = FlavorDomain.of("C/C++ Platform", plat1, plat2);
 
     // Create an action graph with two different binaries using two different platforms, both
     // consuming the same location macro exported by a library dependency.

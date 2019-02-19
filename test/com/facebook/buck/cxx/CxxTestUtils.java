@@ -17,11 +17,11 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.model.FlavorDomain;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 
 public class CxxTestUtils {
-  public static FlavorDomain<CxxPlatform> createDefaultPlatforms() {
-    return FlavorDomain.of("C/C++ Platform", CxxPlatformUtils.DEFAULT_PLATFORM);
+  public static FlavorDomain<UnresolvedCxxPlatform> createDefaultPlatforms() {
+    return FlavorDomain.of("C/C++ Platform", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM);
   }
 }

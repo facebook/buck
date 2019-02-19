@@ -255,11 +255,12 @@ public class CxxPlatforms {
         .addAllRanlibflags(config.getRanlibflags().orElse(DEFAULT_RANLIBFLAGS));
   }
 
-  public static CxxPlatform getConfigDefaultCxxPlatform(
+  /** Returns the configured default cxx platform. */
+  public static UnresolvedCxxPlatform getConfigDefaultCxxPlatform(
       CxxBuckConfig cxxBuckConfig,
-      ImmutableMap<Flavor, CxxPlatform> cxxPlatformsMap,
-      CxxPlatform systemDefaultCxxPlatform) {
-    CxxPlatform defaultCxxPlatform;
+      ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxPlatformsMap,
+      UnresolvedCxxPlatform systemDefaultCxxPlatform) {
+    UnresolvedCxxPlatform defaultCxxPlatform;
     Optional<String> defaultPlatform = cxxBuckConfig.getDefaultPlatform();
     if (defaultPlatform.isPresent()) {
       defaultCxxPlatform = cxxPlatformsMap.get(InternalFlavor.of(defaultPlatform.get()));
@@ -313,23 +314,30 @@ public class CxxPlatforms {
     return deps.build();
   }
 
-  public static Iterable<BuildTarget> getParseTimeDeps(Iterable<CxxPlatform> cxxPlatforms) {
+  /** Gets parse time deps. Will be inlined in a moment. */
+  public static Iterable<BuildTarget> getParseTimeDeps(UnresolvedCxxPlatform cxxPlatform) {
+    return cxxPlatform.getParseTimeDeps();
+  }
+
+  /** Gets parse time deps. Will be inlined in a moment. */
+  public static Iterable<BuildTarget> getParseTimeDeps(
+      Iterable<UnresolvedCxxPlatform> cxxPlatforms) {
     ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
-    for (CxxPlatform cxxPlatform : cxxPlatforms) {
-      deps.addAll(getParseTimeDeps(cxxPlatform));
-    }
+    cxxPlatforms.forEach(platform -> deps.addAll(getParseTimeDeps(platform)));
     return deps.build();
   }
 
-  public static CxxPlatform getCxxPlatform(
+  /** Returns the configured cxx platform for a particular target. */
+  public static UnresolvedCxxPlatform getCxxPlatform(
       CxxPlatformsProvider cxxPlatformsProvider,
       BuildTarget target,
       Optional<Flavor> defaultCxxPlatformFlavor) {
 
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
     // First check if the build target is setting a particular target.
-    Optional<CxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
+    Optional<UnresolvedCxxPlatform> targetPlatform = cxxPlatforms.getValue(target.getFlavors());
     if (targetPlatform.isPresent()) {
       return targetPlatform.get();
     }
@@ -340,7 +348,8 @@ public class CxxPlatforms {
     }
 
     // Otherwise, fallback to the description-level default platform.
-    return cxxPlatforms.getValue(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor());
+    return cxxPlatforms.getValue(
+        cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor());
   }
 
   public static Iterable<BuildTarget> findDepsForTargetFromConstructorArgs(

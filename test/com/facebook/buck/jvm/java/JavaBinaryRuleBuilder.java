@@ -25,9 +25,9 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
@@ -47,8 +47,8 @@ public class JavaBinaryRuleBuilder
       JavaOptions javaOptions,
       JavacOptions javacOptions,
       JavaBuckConfig javaBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         new JavaBinaryDescription(
             new ToolchainProviderBuilder()
@@ -71,7 +71,9 @@ public class JavaBinaryRuleBuilder
   }
 
   public JavaBinaryRuleBuilder(
-      BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
+      BuildTarget target,
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     this(
         target,
         DEFAULT_JAVA_OPTIONS,
@@ -82,7 +84,7 @@ public class JavaBinaryRuleBuilder
   }
 
   public JavaBinaryRuleBuilder(BuildTarget target) {
-    this(target, CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS);
+    this(target, CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS);
   }
 
   public JavaBinaryRuleBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {

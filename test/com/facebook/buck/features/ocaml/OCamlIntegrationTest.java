@@ -101,7 +101,8 @@ public class OCamlIntegrationTest {
             .withToolchain(
                 CxxPlatformsProvider.DEFAULT_NAME,
                 CxxPlatformsProvider.of(
-                    CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS))
+                    CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+                    CxxPlatformUtils.DEFAULT_PLATFORMS))
             .build();
 
     ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());

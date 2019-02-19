@@ -101,7 +101,7 @@ public class DBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig),
+            DDescriptionUtils.getCxxPlatform(graphBuilder, toolchainProvider, dBuckConfig),
             dBuckConfig,
             cxxBuckConfig,
             /* compilerFlags */ ImmutableList.of(),
@@ -136,7 +136,7 @@ public class DBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(
-            DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig)));
+            DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)));
   }
 
   @BuckStyleImmutable

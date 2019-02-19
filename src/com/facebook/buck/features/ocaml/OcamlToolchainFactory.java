@@ -27,6 +27,7 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -110,13 +111,19 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
 
     CxxPlatformsProvider cxxPlatformsProviderFactory =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
-    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
+    UnresolvedCxxPlatform defaultCxxPlatform =
+        cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform();
 
     FlavorDomain<OcamlPlatform> ocamlPlatforms =
         cxxPlatforms.convert(
             "OCaml platform",
-            cxxPlatform -> getPlatform(context, cxxPlatform, getSection(cxxPlatform.getFlavor())));
+            cxxPlatform ->
+                getPlatform(
+                    context,
+                    cxxPlatform.getLegacyTotallyUnsafe(),
+                    getSection(cxxPlatform.getFlavor())));
     OcamlPlatform defaultOcamlPlatform = ocamlPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
     return Optional.of(OcamlToolchain.of(defaultOcamlPlatform, ocamlPlatforms));

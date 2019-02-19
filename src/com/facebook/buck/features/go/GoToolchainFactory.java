@@ -22,9 +22,9 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
@@ -38,8 +38,10 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
 
     CxxPlatformsProvider cxxPlatformsProviderFactory =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
+    UnresolvedCxxPlatform defaultCxxPlatform =
+        cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform();
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
 
     GoPlatformFactory platformFactory =
         GoPlatformFactory.of(

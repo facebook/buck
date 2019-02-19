@@ -26,10 +26,11 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -51,12 +52,14 @@ public class CxxLibraryBuilder
         BuildRule> {
 
   private static CxxLibraryDescription createCxxLibraryDescription(
-      CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
+      CxxBuckConfig cxxBuckConfig, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
                 CxxPlatformsProvider.DEFAULT_NAME,
-                CxxPlatformsProvider.of(CxxPlatformUtils.build(cxxBuckConfig), cxxPlatforms))
+                CxxPlatformsProvider.of(
+                    new StaticUnresolvedCxxPlatform(CxxPlatformUtils.build(cxxBuckConfig)),
+                    cxxPlatforms))
             .build();
     CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
         new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
@@ -75,7 +78,9 @@ public class CxxLibraryBuilder
   }
 
   public CxxLibraryBuilder(
-      BuildTarget target, CxxBuckConfig cxxBuckConfig, FlavorDomain<CxxPlatform> cxxPlatforms) {
+      BuildTarget target,
+      CxxBuckConfig cxxBuckConfig,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(createCxxLibraryDescription(cxxBuckConfig, cxxPlatforms), target);
   }
 

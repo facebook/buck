@@ -56,6 +56,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -161,7 +162,7 @@ public class SwiftLibraryDescription
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform =
+    Optional<Map.Entry<Flavor, UnresolvedCxxPlatform>> platform =
         getCxxPlatforms().getFlavorAndValue(buildTarget);
     ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
@@ -189,7 +190,8 @@ public class SwiftLibraryDescription
     CellPathResolver cellRoots = context.getCellPathResolver();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
-      CxxPlatform cxxPlatform = platform.get().getValue();
+      // TODO(cjhopman): This doesn't properly handle parse time deps...
+      CxxPlatform cxxPlatform = platform.get().getValue().resolve(graphBuilder);
       Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(buildTarget);
       if (!swiftPlatform.isPresent()) {
         throw new HumanReadableException("Platform %s is missing swift compiler", cxxPlatform);
@@ -471,10 +473,10 @@ public class SwiftLibraryDescription
         || buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
   }
 
-  private FlavorDomain<CxxPlatform> getCxxPlatforms() {
+  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms() {
     return toolchainProvider
         .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-        .getCxxPlatforms();
+        .getUnresolvedCxxPlatforms();
   }
 
   @BuckStyleImmutable

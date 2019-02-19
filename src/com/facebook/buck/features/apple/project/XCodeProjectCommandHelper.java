@@ -481,7 +481,8 @@ public class XCodeProjectCommandHelper {
           cell.getToolchainProvider()
               .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
 
-      CxxPlatform defaultCxxPlatform = cxxPlatformsProvider.getDefaultCxxPlatform();
+      CxxPlatform defaultCxxPlatform =
+          cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getLegacyTotallyUnsafe();
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
               xcodeDescriptions,

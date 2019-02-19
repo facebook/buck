@@ -30,6 +30,6 @@ public class TestCxxPlatformsProviderFactory {
     return NamedToolchain.of(
         CxxPlatformsProvider.DEFAULT_NAME,
         CxxPlatformsProvider.of(
-            CxxPlatformUtils.DEFAULT_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS));
+            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, CxxPlatformUtils.DEFAULT_PLATFORMS));
   }
 }

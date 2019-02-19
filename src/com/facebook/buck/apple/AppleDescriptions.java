@@ -589,6 +589,7 @@ public class AppleDescriptions {
             dsymBuildTarget -> {
               AppleCxxPlatform appleCxxPlatform =
                   ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+                      graphBuilder,
                       cxxPlatformsProvider,
                       appleCxxPlatforms,
                       unstrippedBinaryRule.getBuildTarget(),
@@ -644,6 +645,7 @@ public class AppleDescriptions {
       boolean cacheStrips) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+            graphBuilder,
             cxxPlatformsProvider,
             appleCxxPlatforms,
             buildTarget,
@@ -957,11 +959,11 @@ public class AppleDescriptions {
                 flavors,
                 ImmutableSet.of(
                     AppleDescriptions.FRAMEWORK_FLAVOR, AppleBinaryDescription.APP_FLAVOR)));
-    if (!cxxPlatformsProvider.getCxxPlatforms().containsAnyOf(flavors)) {
+    if (!cxxPlatformsProvider.getUnresolvedCxxPlatforms().containsAnyOf(flavors)) {
       flavors =
           new ImmutableSet.Builder<Flavor>()
               .addAll(flavors)
-              .add(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor())
+              .add(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor())
               .build();
     }
 

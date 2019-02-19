@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.java.toolchain;
 
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import org.immutables.value.Value;
 
 @Value.Immutable(builder = false, copy = false)
@@ -27,7 +27,7 @@ public interface AbstractJavaCxxPlatformProvider extends Toolchain {
   String DEFAULT_NAME = "java-cxx-platform";
 
   @Value.Parameter
-  CxxPlatform getDefaultJavaCxxPlatform();
+  UnresolvedCxxPlatform getDefaultJavaCxxPlatform();
 
   @Override
   default String getName() {

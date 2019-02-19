@@ -22,6 +22,7 @@ import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.util.RichStream;
 import java.util.Optional;
 
@@ -34,8 +35,10 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
 
     CxxPlatformsProvider cxxPlatformsProviderFactory =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProviderFactory.getCxxPlatforms();
-    CxxPlatform defaultCxxPlatform = cxxPlatformsProviderFactory.getDefaultCxxPlatform();
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms();
+    CxxPlatform defaultCxxPlatform =
+        cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform().getLegacyTotallyUnsafe();
 
     RustPlatformFactory platformFactory =
         RustPlatformFactory.of(context.getBuckConfig(), context.getExecutableFinder());
@@ -47,7 +50,9 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
                 // TODO: Allow overlaying flavor-specific section configuration.
                 .map(
                     cxxPlatform ->
-                        platformFactory.getPlatform(cxxPlatform.getFlavor().getName(), cxxPlatform))
+                        platformFactory.getPlatform(
+                            cxxPlatform.getLegacyTotallyUnsafe().getFlavor().getName(),
+                            cxxPlatform.getLegacyTotallyUnsafe()))
                 .toImmutableList());
     RustPlatform defaultRustPlatform = rustPlatforms.getValue(defaultCxxPlatform.getFlavor());
 

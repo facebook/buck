@@ -33,9 +33,9 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
@@ -78,12 +78,12 @@ public class JavaBinaryDescription
     return JavaBinaryDescriptionArg.class;
   }
 
-  private CxxPlatform getCxxPlatform(AbstractJavaBinaryDescriptionArg args) {
+  private UnresolvedCxxPlatform getCxxPlatform(AbstractJavaBinaryDescriptionArg args) {
     return args.getDefaultCxxPlatform()
         .map(
             toolchainProvider
                     .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-                    .getCxxPlatforms()
+                    .getUnresolvedCxxPlatforms()
                 ::getValue)
         .orElse(
             toolchainProvider
@@ -102,7 +102,9 @@ public class JavaBinaryDescription
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableMap<String, SourcePath> nativeLibraries =
         JavaLibraryRules.getNativeLibraries(
-            params.getBuildDeps(), getCxxPlatform(args), context.getActionGraphBuilder());
+            params.getBuildDeps(),
+            getCxxPlatform(args).resolve(graphBuilder),
+            context.getActionGraphBuilder());
     BuildTarget binaryBuildTarget = buildTarget;
 
     // If we're packaging native libraries, we'll build the binary JAR in a separate rule and

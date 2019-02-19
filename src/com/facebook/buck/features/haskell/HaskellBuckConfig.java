@@ -18,7 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.base.Splitter;
@@ -62,7 +62,7 @@ public class HaskellBuckConfig {
     return SECTION_PREFIX;
   }
 
-  public String getSectionForPlatform(CxxPlatform cxxPlatform) {
+  public String getSectionForPlatform(UnresolvedCxxPlatform cxxPlatform) {
     return String.format("%s#%s", SECTION_PREFIX, cxxPlatform.getFlavor());
   }
 

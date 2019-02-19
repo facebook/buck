@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.base.Function;
@@ -79,9 +80,9 @@ public class CxxLibraryMetadataFactory {
 
       case CXX_PREPROCESSOR_INPUT:
         {
-          Map.Entry<Flavor, CxxPlatform> platform =
+          Map.Entry<Flavor, UnresolvedCxxPlatform> platform =
               getCxxPlatformsProvider()
-                  .getCxxPlatforms()
+                  .getUnresolvedCxxPlatforms()
                   .getFlavorAndValue(buildTarget)
                   .orElseThrow(
                       () ->
@@ -89,7 +90,9 @@ public class CxxLibraryMetadataFactory {
                               String.format(
                                   "%s: cannot extract platform from target flavors (available platforms: %s)",
                                   buildTarget,
-                                  getCxxPlatformsProvider().getCxxPlatforms().getFlavors())));
+                                  getCxxPlatformsProvider()
+                                      .getUnresolvedCxxPlatforms()
+                                      .getFlavors())));
           Map.Entry<Flavor, HeaderVisibility> visibility =
               CxxLibraryDescription.HEADER_VISIBILITY
                   .getFlavorAndValue(buildTarget)
@@ -106,7 +109,7 @@ public class CxxLibraryMetadataFactory {
 
           // TODO(agallagher): We currently always add exported flags and frameworks to the
           // preprocessor input to mimic existing behavior, but this should likely be fixed.
-          CxxPlatform cxxPlatform = platform.getValue();
+          CxxPlatform cxxPlatform = platform.getValue().resolve(graphBuilder);
           addCxxPreprocessorInputFromArgs(
               cxxPreprocessorInputBuilder,
               args,

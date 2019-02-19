@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
@@ -39,6 +40,7 @@ import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -173,14 +175,20 @@ abstract class DDescriptionUtils {
     return baseTarget.withAppendedFlavors(SOURCE_LINK_TREE);
   }
 
-  static CxxPlatform getCxxPlatform(ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig) {
+  static UnresolvedCxxPlatform getUnresolvedCxxPlatform(
+      ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig) {
     CxxPlatformsProvider cxxPlatformsProviderFactory =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
     return dBuckConfig
         .getDefaultCxxPlatform()
         .map(InternalFlavor::of)
-        .map(cxxPlatformsProviderFactory.getCxxPlatforms()::getValue)
-        .orElse(cxxPlatformsProviderFactory.getDefaultCxxPlatform());
+        .map(flavor -> cxxPlatformsProviderFactory.getUnresolvedCxxPlatforms().getValue(flavor))
+        .orElse(cxxPlatformsProviderFactory.getDefaultUnresolvedCxxPlatform());
+  }
+
+  static CxxPlatform getCxxPlatform(
+      BuildRuleResolver resolver, ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig) {
+    return getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig).resolve(resolver);
   }
 
   public static SymlinkTree createSourceSymlinkTree(

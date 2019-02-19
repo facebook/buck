@@ -89,7 +89,8 @@ public class DTestDescription
     SymlinkTree sourceTree =
         (SymlinkTree) graphBuilder.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
-    CxxPlatform cxxPlatform = DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig);
+    CxxPlatform cxxPlatform =
+        DDescriptionUtils.getCxxPlatform(graphBuilder, toolchainProvider, dBuckConfig);
 
     // Create a helper rule to build the test binary.
     // The rule needs its own target so that we can depend on it without creating cycles.
@@ -141,7 +142,7 @@ public class DTestDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(
-            DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig)));
+            DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)));
   }
 
   @BuckStyleImmutable

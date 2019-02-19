@@ -52,8 +52,8 @@ import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
@@ -871,11 +871,11 @@ public class PythonBinaryDescriptionTest {
 
   @Test
   public void cxxPlatform() {
-    CxxPlatform platformA =
-        CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("platA"));
-    CxxPlatform platformB =
-        CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(InternalFlavor.of("platB"));
-    FlavorDomain<CxxPlatform> cxxPlatforms =
+    UnresolvedCxxPlatform platformA =
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.withFlavor(InternalFlavor.of("platA"));
+    UnresolvedCxxPlatform platformB =
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.withFlavor(InternalFlavor.of("platB"));
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         FlavorDomain.from("C/C++ platform", ImmutableList.of(platformA, platformB));
     SourcePath libASrc = FakeSourcePath.of("libA.py");
     PythonLibraryBuilder libraryABuilder =
@@ -896,7 +896,7 @@ public class PythonBinaryDescriptionTest {
                 BuildTargetFactory.newInstance("//:bin"),
                 PythonTestUtils.PYTHON_CONFIG,
                 PythonTestUtils.PYTHON_PLATFORMS,
-                CxxPlatformUtils.DEFAULT_PLATFORM,
+                CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
                 cxxPlatforms)
             .setMainModule("main")
             .setCxxPlatform(platformA.getFlavor())

@@ -44,6 +44,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.cxx.AbstractCxxSource.Type;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -375,7 +376,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
             ImmutableMap.of(platform1.getFlavor(), platform1, platform2.getFlavor(), platform2));
 
     PrebuiltCxxLibraryBuilder libraryBuilder =
-        new PrebuiltCxxLibraryBuilder(TARGET, platforms)
+        new PrebuiltCxxLibraryBuilder(TARGET, platforms.map(StaticUnresolvedCxxPlatform::new))
             .setPlatformStaticLib(
                 PatternMatchedCollection.<SourcePath>builder()
                     .add(

@@ -91,9 +91,11 @@ public class CxxPlatformUtils {
           .setPublicHeadersSymlinksEnabled(true)
           .setPrivateHeadersSymlinksEnabled(true)
           .build();
+  public static final UnresolvedCxxPlatform DEFAULT_UNRESOLVED_PLATFORM =
+      new StaticUnresolvedCxxPlatform(DEFAULT_PLATFORM);
 
-  public static final FlavorDomain<CxxPlatform> DEFAULT_PLATFORMS =
-      FlavorDomain.of("C/C++ Platform", DEFAULT_PLATFORM);
+  public static final FlavorDomain<UnresolvedCxxPlatform> DEFAULT_PLATFORMS =
+      FlavorDomain.of("C/C++ Platform", DEFAULT_UNRESOLVED_PLATFORM);
 
   public static CxxPlatform build(CxxBuckConfig config) {
     return DefaultCxxPlatforms.build(Platform.detect(), config);

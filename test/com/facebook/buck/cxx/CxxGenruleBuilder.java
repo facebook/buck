@@ -23,9 +23,9 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 
@@ -36,14 +36,15 @@ public class CxxGenruleBuilder
         CxxGenruleDescription,
         BuildRule> {
 
-  public CxxGenruleBuilder(BuildTarget target, FlavorDomain<CxxPlatform> cxxPlatforms) {
+  public CxxGenruleBuilder(BuildTarget target, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         new CxxGenruleDescription(
             new CxxBuckConfig(FakeBuckConfig.builder().build()),
             new ToolchainProviderBuilder()
                 .withToolchain(
                     CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM, cxxPlatforms))
+                    CxxPlatformsProvider.of(
+                        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
                 .build(),
             new NoSandboxExecutionStrategy()),
         target);

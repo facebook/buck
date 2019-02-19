@@ -124,7 +124,8 @@ public class DLibraryDescription
       DIncludes dIncludes,
       PicType pic) {
 
-    CxxPlatform cxxPlatform = DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig);
+    CxxPlatform cxxPlatform =
+        DDescriptionUtils.getCxxPlatform(graphBuilder, toolchainProvider, dBuckConfig);
 
     ImmutableList<SourcePath> compiledSources =
         DDescriptionUtils.sourcePathsForCompiledSources(
@@ -175,7 +176,7 @@ public class DLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(
-            DDescriptionUtils.getCxxPlatform(toolchainProvider, dBuckConfig)));
+            DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)));
   }
 
   @BuckStyleImmutable

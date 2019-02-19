@@ -45,6 +45,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -452,8 +453,8 @@ public class CxxBinaryDescriptionTest {
     CxxBinaryBuilder binaryBuilder =
         new CxxBinaryBuilder(
             BuildTargetFactory.newInstance("//:foo"),
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            cxxPlatforms);
+            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+            cxxPlatforms.map(StaticUnresolvedCxxPlatform::new));
     binaryBuilder.setDefaultPlatform(alternatePlatform.getFlavor());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
@@ -476,8 +477,8 @@ public class CxxBinaryDescriptionTest {
     CxxBinaryBuilder binaryBuilder =
         new CxxBinaryBuilder(
             BuildTargetFactory.newInstance("//:foo"),
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            cxxPlatforms);
+            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+            cxxPlatforms.map(StaticUnresolvedCxxPlatform::new));
     binaryBuilder.setDefaultPlatform(alternatePlatform.getFlavor());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
@@ -502,8 +503,8 @@ public class CxxBinaryDescriptionTest {
     CxxBinaryBuilder binaryBuilder =
         new CxxBinaryBuilder(
             BuildTargetFactory.newInstance("//:foo"),
-            CxxPlatformUtils.DEFAULT_PLATFORM,
-            cxxPlatforms);
+            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+            cxxPlatforms.map(StaticUnresolvedCxxPlatform::new));
     binaryBuilder.setExecutableName(Optional.of("FooBarBaz"));
     binaryBuilder.setDefaultPlatform(alternatePlatform.getFlavor());
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());

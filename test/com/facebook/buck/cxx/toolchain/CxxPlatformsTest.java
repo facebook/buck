@@ -97,9 +97,12 @@ public class CxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.getConfigDefaultCxxPlatform(
-            new CxxBuckConfig(buckConfig),
-            ImmutableMap.of(borlandCxx452Platform.getFlavor(), borlandCxx452Platform),
-            CxxPlatformUtils.DEFAULT_PLATFORM),
+                new CxxBuckConfig(buckConfig),
+                ImmutableMap.of(
+                    borlandCxx452Platform.getFlavor(),
+                    new StaticUnresolvedCxxPlatform(borlandCxx452Platform)),
+                CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
+            .resolve(new TestActionGraphBuilder()),
         equalTo(borlandCxx452Platform));
   }
 
@@ -110,8 +113,10 @@ public class CxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.getConfigDefaultCxxPlatform(
-            new CxxBuckConfig(buckConfig), ImmutableMap.of(), CxxPlatformUtils.DEFAULT_PLATFORM),
-        equalTo(CxxPlatformUtils.DEFAULT_PLATFORM));
+            new CxxBuckConfig(buckConfig),
+            ImmutableMap.of(),
+            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM),
+        equalTo(CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM));
   }
 
   public LinkerProvider getPlatformLinker(LinkerProvider.Type linkerType) {

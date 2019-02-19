@@ -35,8 +35,8 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -97,10 +97,10 @@ public class PythonLibraryDescription
       return Optional.empty();
     }
 
-    FlavorDomain<CxxPlatform> cxxPlatforms =
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         toolchainProvider
             .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-            .getCxxPlatforms();
+            .getUnresolvedCxxPlatforms();
 
     Map.Entry<Flavor, MetadataType> type = optionalType.get();
 
@@ -112,7 +112,7 @@ public class PythonLibraryDescription
               getPythonPlatforms()
                   .getFlavorAndValue(baseTarget)
                   .orElseThrow(IllegalArgumentException::new);
-          Map.Entry<Flavor, CxxPlatform> cxxPlatform =
+          Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
               cxxPlatforms.getFlavorAndValue(baseTarget).orElseThrow(IllegalArgumentException::new);
           baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
 
@@ -127,7 +127,7 @@ public class PythonLibraryDescription
                       ruleFinder,
                       pathResolver,
                       pythonPlatform.getValue(),
-                      cxxPlatform.getValue(),
+                      cxxPlatform.getValue().resolve(graphBuilder),
                       "srcs",
                       baseModule,
                       args.getSrcs(),
@@ -140,7 +140,7 @@ public class PythonLibraryDescription
                       ruleFinder,
                       pathResolver,
                       pythonPlatform.getValue(),
-                      cxxPlatform.getValue(),
+                      cxxPlatform.getValue().resolve(graphBuilder),
                       "resources",
                       baseModule,
                       args.getResources(),
@@ -160,13 +160,12 @@ public class PythonLibraryDescription
               getPythonPlatforms()
                   .getFlavorAndValue(baseTarget)
                   .orElseThrow(IllegalArgumentException::new);
-          Map.Entry<Flavor, CxxPlatform> cxxPlatform =
+          Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
               cxxPlatforms.getFlavorAndValue(baseTarget).orElseThrow(IllegalArgumentException::new);
-          baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
           ImmutableList<BuildTarget> depTargets =
               PythonUtil.getDeps(
                   pythonPlatform.getValue(),
-                  cxxPlatform.getValue(),
+                  cxxPlatform.getValue().resolve(graphBuilder),
                   args.getDeps(),
                   args.getPlatformDeps());
           return Optional.of(graphBuilder.getAllRules(depTargets)).map(metadataClass::cast);

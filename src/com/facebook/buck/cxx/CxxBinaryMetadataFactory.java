@@ -44,7 +44,7 @@ public class CxxBinaryMetadataFactory {
             buildTarget,
             toolchainProvider
                 .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-                .getCxxPlatforms(),
+                .getUnresolvedCxxPlatforms(),
             graphBuilder,
             deps)
         .map(metadataClass::cast);

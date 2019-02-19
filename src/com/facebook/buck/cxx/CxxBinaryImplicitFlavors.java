@@ -39,7 +39,7 @@ public class CxxBinaryImplicitFlavors {
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
       ImmutableSortedSet<Flavor> argDefaultFlavors, RuleType... types) {
     Optional<Flavor> platformFlavor =
-        getCxxPlatformsProvider().getCxxPlatforms().getFlavor(argDefaultFlavors);
+        getCxxPlatformsProvider().getUnresolvedCxxPlatforms().getFlavor(argDefaultFlavors);
 
     for (RuleType type : types) {
       ImmutableMap<String, Flavor> libraryDefaults =

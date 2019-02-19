@@ -20,9 +20,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -41,7 +41,7 @@ public class PythonLibraryBuilder
   public PythonLibraryBuilder(
       BuildTarget target,
       FlavorDomain<PythonPlatform> pythonPlatforms,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         new PythonLibraryDescription(
             new ToolchainProviderBuilder()
@@ -50,7 +50,8 @@ public class PythonLibraryBuilder
                     PythonPlatformsProvider.of(pythonPlatforms))
                 .withToolchain(
                     CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM, cxxPlatforms))
+                    CxxPlatformsProvider.of(
+                        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
                 .build()),
         target);
   }

@@ -88,7 +88,7 @@ public class CxxTestDescriptionTest {
     return new CxxTestBuilder(
         BuildTargetFactory.newInstance(target),
         cxxBuckConfig,
-        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
         CxxTestUtils.createDefaultPlatforms());
   }
 

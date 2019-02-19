@@ -21,6 +21,8 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
@@ -35,12 +37,14 @@ public abstract class AbstractAppleCxxPlatformsProvider implements CxxPlatformsS
 
   /** @return {@link CxxPlatform} of all {@link AppleCxxPlatform}s */
   @Override
-  public ImmutableMap<Flavor, CxxPlatform> getCxxPlatforms() {
-    ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
+  public ImmutableMap<Flavor, UnresolvedCxxPlatform> getCxxPlatforms() {
+    ImmutableMap.Builder<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsBuilder =
+        ImmutableMap.builder();
 
     for (AppleCxxPlatform appleCxxPlatform : getAppleCxxPlatforms().getValues()) {
       cxxSystemPlatformsBuilder.put(
-          appleCxxPlatform.getCxxPlatform().getFlavor(), appleCxxPlatform.getCxxPlatform());
+          appleCxxPlatform.getCxxPlatform().getFlavor(),
+          new StaticUnresolvedCxxPlatform(appleCxxPlatform.getCxxPlatform()));
     }
     return cxxSystemPlatformsBuilder.build();
   }

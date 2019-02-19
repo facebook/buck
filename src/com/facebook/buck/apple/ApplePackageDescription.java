@@ -201,7 +201,7 @@ public class ApplePackageDescription
       return ImmutableSet.of(
           toolchainProvider
               .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-              .getDefaultCxxPlatform()
+              .getDefaultUnresolvedCxxPlatform()
               .getFlavor());
     } else {
       return intersection.immutableCopy();

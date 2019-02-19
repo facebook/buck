@@ -21,8 +21,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.FlavorDomainException;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import java.util.Optional;
 
 public class ApplePlatforms {
@@ -30,15 +32,16 @@ public class ApplePlatforms {
   private ApplePlatforms() {}
 
   /** Only works with thin binaries. */
-  static CxxPlatform getCxxPlatformForBuildTarget(
+  static UnresolvedCxxPlatform getCxxPlatformForBuildTarget(
       CxxPlatformsProvider cxxPlatformsProvider, BuildTarget target) {
     return cxxPlatformsProvider
-        .getCxxPlatforms()
+        .getUnresolvedCxxPlatforms()
         .getValue(target)
-        .orElse(cxxPlatformsProvider.getDefaultCxxPlatform());
+        .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
   }
 
   public static AppleCxxPlatform getAppleCxxPlatformForBuildTarget(
+      BuildRuleResolver ruleResolver,
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain,
       BuildTarget target,
@@ -47,7 +50,8 @@ public class ApplePlatforms {
     if (fatBinaryInfo.isPresent()) {
       appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
     } else {
-      CxxPlatform cxxPlatform = getCxxPlatformForBuildTarget(cxxPlatformsProvider, target);
+      CxxPlatform cxxPlatform =
+          getCxxPlatformForBuildTarget(cxxPlatformsProvider, target).resolve(ruleResolver);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
       } catch (FlavorDomainException e) {

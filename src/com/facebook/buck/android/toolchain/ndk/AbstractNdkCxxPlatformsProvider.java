@@ -21,6 +21,8 @@ import com.facebook.buck.core.toolchain.BaseToolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
@@ -37,12 +39,14 @@ public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain
 
   /** @return {@link CxxPlatform} of all {@link NdkCxxPlatform}s */
   @Override
-  public ImmutableMap<Flavor, CxxPlatform> getCxxPlatforms() {
-    ImmutableMap.Builder<Flavor, CxxPlatform> cxxSystemPlatformsBuilder = ImmutableMap.builder();
+  public ImmutableMap<Flavor, UnresolvedCxxPlatform> getCxxPlatforms() {
+    ImmutableMap.Builder<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsBuilder =
+        ImmutableMap.builder();
 
     for (NdkCxxPlatform ndkCxxPlatform : getNdkCxxPlatforms().values()) {
       cxxSystemPlatformsBuilder.put(
-          ndkCxxPlatform.getCxxPlatform().getFlavor(), ndkCxxPlatform.getCxxPlatform());
+          ndkCxxPlatform.getCxxPlatform().getFlavor(),
+          new StaticUnresolvedCxxPlatform(ndkCxxPlatform.getCxxPlatform()));
     }
     return cxxSystemPlatformsBuilder.build();
   }

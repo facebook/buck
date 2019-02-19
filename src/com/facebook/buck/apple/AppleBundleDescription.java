@@ -43,10 +43,11 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.versions.Version;
@@ -207,22 +208,26 @@ public class AppleBundleDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    if (!cxxPlatformsProvider.getCxxPlatforms().containsAnyOf(buildTarget.getFlavors())) {
+    if (!cxxPlatformsProvider.getUnresolvedCxxPlatforms().containsAnyOf(buildTarget.getFlavors())) {
       buildTarget =
-          buildTarget.withAppendedFlavors(cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor());
+          buildTarget.withAppendedFlavors(
+              cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor());
     }
 
     FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
         getAppleCxxPlatformFlavorDomain();
     Optional<MultiarchFileInfo> fatBinaryInfo =
         MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
-    CxxPlatform cxxPlatform;
+    UnresolvedCxxPlatform cxxPlatform;
     if (fatBinaryInfo.isPresent()) {
       AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
-      cxxPlatform = appleCxxPlatform.getCxxPlatform();
+      cxxPlatform = new StaticUnresolvedCxxPlatform(appleCxxPlatform.getCxxPlatform());
     } else {
       cxxPlatform = ApplePlatforms.getCxxPlatformForBuildTarget(cxxPlatformsProvider, buildTarget);
     }
+
+    // TODO(cjhopman): Why doesn't this add parse time deps from the cxxPlatform? Does it just
+    // happen to work because something else in the graph probably does that?
 
     String platformName = cxxPlatform.getFlavor().getName();
     Flavor[] actualWatchFlavors;
@@ -245,11 +250,12 @@ public class AppleBundleDescription
     {
       FluentIterable<BuildTarget> targetsWithPlatformFlavors =
           depsExcludingBinary.filter(
-              Flavors.containsFlavors(cxxPlatformsProvider.getCxxPlatforms())::test);
+              Flavors.containsFlavors(cxxPlatformsProvider.getUnresolvedCxxPlatforms())::test);
 
       FluentIterable<BuildTarget> targetsWithoutPlatformFlavors =
           depsExcludingBinary.filter(
-              Flavors.containsFlavors(cxxPlatformsProvider.getCxxPlatforms()).negate()::test);
+              Flavors.containsFlavors(cxxPlatformsProvider.getUnresolvedCxxPlatforms()).negate()
+                  ::test);
 
       FluentIterable<BuildTarget> watchTargets =
           targetsWithoutPlatformFlavors
@@ -267,7 +273,7 @@ public class AppleBundleDescription
               .append(
                   Flavors.propagateFlavorDomains(
                       buildTarget,
-                      ImmutableSet.of(cxxPlatformsProvider.getCxxPlatforms()),
+                      ImmutableSet.of(cxxPlatformsProvider.getUnresolvedCxxPlatforms()),
                       targetsWithoutPlatformFlavors));
     }
 
@@ -318,6 +324,7 @@ public class AppleBundleDescription
     FlavorDomain<AppleCxxPlatform> appleCxxPlatforms = getAppleCxxPlatformFlavorDomain();
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+            graphBuilder,
             cxxPlatformsProvider,
             appleCxxPlatforms,
             buildTarget,

@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -173,7 +174,11 @@ public class KnownRuleTypesTest {
     CxxPlatformsProvider cxxPlatformsProvider =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
     assertThat(
-        cxxPlatformsProvider.getCxxPlatforms().getValue(flavor).getCflags(),
+        cxxPlatformsProvider
+            .getUnresolvedCxxPlatforms()
+            .getValue(flavor)
+            .resolve(new TestActionGraphBuilder())
+            .getCflags(),
         Matchers.contains(flag));
     TestKnownRuleTypesFactory.create(
         buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));

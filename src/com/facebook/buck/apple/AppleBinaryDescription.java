@@ -39,6 +39,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -60,6 +61,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -349,11 +351,15 @@ public class AppleBinaryDescription
           buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
     }
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
-    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
     if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
       CxxPlatform cxxPlatform =
-          cxxPlatforms.getValue(buildTarget).orElse(cxxPlatforms.getValue(defaultCxxFlavor));
+          cxxPlatforms
+              .getValue(buildTarget)
+              .orElse(cxxPlatforms.getValue(defaultCxxFlavor))
+              .resolve(graphBuilder);
       ApplePlatform applePlatform =
           appleCxxPlatformsFlavorDomain
               .getValue(cxxPlatform.getFlavor())
@@ -521,7 +527,7 @@ public class AppleBinaryDescription
                 pathResolver, delegateArg, args, buildTarget);
 
             Optional<ApplePlatform> applePlatform =
-                getApplePlatformForTarget(buildTarget, appleCxxPlatformsFlavorDomain);
+                getApplePlatformForTarget(buildTarget, appleCxxPlatformsFlavorDomain, graphBuilder);
             if (applePlatform.isPresent()
                 && ApplePlatform.needsEntitlementsInBinary(applePlatform.get().getName())) {
               Optional<SourcePath> entitlements = args.getEntitlementsFile();
@@ -580,12 +586,18 @@ public class AppleBinaryDescription
   }
 
   private Optional<ApplePlatform> getApplePlatformForTarget(
-      BuildTarget buildTarget, FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
+      BuildTarget buildTarget,
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain,
+      BuildRuleResolver ruleResolver) {
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
-    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
     CxxPlatform cxxPlatform =
-        cxxPlatforms.getValue(buildTarget).orElse(cxxPlatforms.getValue(defaultCxxFlavor));
+        cxxPlatforms
+            .getValue(buildTarget)
+            .orElse(cxxPlatforms.getValue(defaultCxxFlavor))
+            .resolve(ruleResolver);
 
     if (!appleCxxPlatformsFlavorDomain.contains(cxxPlatform.getFlavor())) {
       return Optional.empty();
@@ -626,7 +638,7 @@ public class AppleBinaryDescription
     }
 
     Optional<Flavor> cxxPlatformFlavor =
-        getCxxPlatformsProvider().getCxxPlatforms().getFlavor(buildTarget);
+        getCxxPlatformsProvider().getUnresolvedCxxPlatforms().getFlavor(buildTarget);
     Preconditions.checkState(
         cxxPlatformFlavor.isPresent(),
         "Could not find cxx platform in:\n%s",

@@ -31,9 +31,10 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
@@ -54,11 +55,12 @@ public class OcamlToolchainFactoryTest {
 
   @Test
   public void getCFlags() {
-    CxxPlatform cxxPlatform =
-        CxxPlatformUtils.DEFAULT_PLATFORM
-            .withAsflags("-asflag")
-            .withCppflags("-cppflag")
-            .withCflags("-cflag");
+    UnresolvedCxxPlatform cxxPlatform =
+        new StaticUnresolvedCxxPlatform(
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .withAsflags("-asflag")
+                .withCppflags("-cppflag")
+                .withCflags("-cflag"));
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(
@@ -93,7 +95,8 @@ public class OcamlToolchainFactoryTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
 
     Flavor custom = InternalFlavor.of("custom");
-    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM.withFlavor(custom);
+    UnresolvedCxxPlatform cxxPlatform =
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.withFlavor(custom);
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
             .withToolchain(

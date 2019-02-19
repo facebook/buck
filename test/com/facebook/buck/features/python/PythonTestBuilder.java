@@ -24,9 +24,9 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonInterpreter;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -88,7 +88,7 @@ public class PythonTestBuilder
         buckConfig,
         executableFinder,
         pythonPlatforms,
-        CxxPlatformUtils.DEFAULT_PLATFORM,
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
         CxxPlatformUtils.DEFAULT_PLATFORMS);
   }
 
@@ -97,8 +97,8 @@ public class PythonTestBuilder
       PythonBuckConfig buckConfig,
       ExecutableFinder executableFinder,
       FlavorDomain<PythonPlatform> pythonPlatforms,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     return new PythonTestBuilder(
         target,
         new ToolchainProviderBuilder()

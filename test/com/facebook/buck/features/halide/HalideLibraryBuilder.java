@@ -30,6 +30,8 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -55,8 +57,8 @@ public class HalideLibraryBuilder
   public HalideLibraryBuilder(
       BuildTarget target,
       HalideBuckConfig halideBuckConfig,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms) {
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         new HalideLibraryDescription(
             new ToolchainProviderBuilder()
@@ -96,27 +98,28 @@ public class HalideLibraryBuilder
     return new HalideBuckConfig(buckConfig);
   }
 
-  public static CxxPlatform createDefaultPlatform() {
-    return CxxPlatform.builder()
-        .from(CxxPlatformUtils.DEFAULT_PLATFORM)
-        .setFlagMacros(ImmutableMap.of("TEST_MACRO", "test_macro_expansion"))
-        .build();
+  public static UnresolvedCxxPlatform createDefaultPlatform() {
+    return new StaticUnresolvedCxxPlatform(
+        CxxPlatform.builder()
+            .from(CxxPlatformUtils.DEFAULT_PLATFORM)
+            .setFlagMacros(ImmutableMap.of("TEST_MACRO", "test_macro_expansion"))
+            .build());
   }
 
   // The #halide-compiler version of the HalideLibrary rule expects to be able
   // to find a CxxFlavor to use when building for the host architecture.
   // AbstractCxxSourceBuilder doesn't create the default host flavor, so we "override"
   // the createDefaultPlatforms() method here.
-  public static FlavorDomain<CxxPlatform> createDefaultPlatforms() {
+  public static FlavorDomain<UnresolvedCxxPlatform> createDefaultPlatforms() {
     Flavor hostFlavor = CxxPlatforms.getHostFlavor();
-    CxxPlatform hostCxxPlatform =
-        CxxPlatform.builder().from(CxxPlatformUtils.DEFAULT_PLATFORM).setFlavor(hostFlavor).build();
+    UnresolvedCxxPlatform hostCxxPlatform =
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.withFlavor(hostFlavor);
 
-    CxxPlatform defaultCxxPlatform = createDefaultPlatform();
+    UnresolvedCxxPlatform defaultCxxPlatform = createDefaultPlatform();
 
     return new FlavorDomain<>(
         "C/C++ Platform",
-        ImmutableMap.<Flavor, CxxPlatform>builder()
+        ImmutableMap.<Flavor, UnresolvedCxxPlatform>builder()
             .put(defaultCxxPlatform.getFlavor(), defaultCxxPlatform)
             .put(hostCxxPlatform.getFlavor(), hostCxxPlatform)
             .build());

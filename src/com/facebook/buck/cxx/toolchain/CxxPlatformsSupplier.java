@@ -22,5 +22,5 @@ import com.google.common.collect.ImmutableMap;
 
 /** A toolchain that provides CXX platforms. */
 public interface CxxPlatformsSupplier extends ToolchainWithCapability {
-  ImmutableMap<Flavor, CxxPlatform> getCxxPlatforms();
+  ImmutableMap<Flavor, UnresolvedCxxPlatform> getCxxPlatforms();
 }

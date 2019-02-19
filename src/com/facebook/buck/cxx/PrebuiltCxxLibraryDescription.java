@@ -49,6 +49,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
@@ -87,6 +88,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -371,11 +373,8 @@ public class PrebuiltCxxLibraryDescription
     // See if we're building a particular "type" of this library, and if so, extract
     // it as an enum.
     Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
-    Optional<Map.Entry<Flavor, CxxPlatform>> platform =
-        toolchainProvider
-            .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
-            .getCxxPlatforms()
-            .getFlavorAndValue(buildTarget);
+    Optional<Map.Entry<Flavor, UnresolvedCxxPlatform>> platform =
+        getUnresolvedCxxPlatform(buildTarget);
 
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         context.getTargetGraph().get(buildTarget).getSelectedVersions();
@@ -390,13 +389,14 @@ public class PrebuiltCxxLibraryDescription
       Preconditions.checkState(platform.isPresent());
       BuildTarget baseTarget =
           buildTarget.withoutFlavors(type.get().getKey(), platform.get().getKey());
+      CxxPlatform cxxPlatform = platform.get().getValue().resolve(graphBuilder);
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
         return createExportedHeaderSymlinkTreeBuildRule(
             buildTarget,
             projectFilesystem,
             new SourcePathRuleFinder(graphBuilder),
             graphBuilder,
-            platform.get().getValue(),
+            cxxPlatform,
             args);
       } else if (type.get().getValue() == Type.SHARED) {
         return createSharedLibraryBuildRule(
@@ -405,7 +405,7 @@ public class PrebuiltCxxLibraryDescription
             params,
             graphBuilder,
             cellRoots,
-            platform.get().getValue(),
+            cxxPlatform,
             selectedVersions,
             args);
       } else if (type.get().getValue() == Type.SHARED_INTERFACE) {
@@ -414,7 +414,7 @@ public class PrebuiltCxxLibraryDescription
             projectFilesystem,
             graphBuilder,
             cellRoots,
-            platform.get().getValue(),
+            cxxPlatform,
             selectedVersions,
             args);
       }
@@ -875,6 +875,14 @@ public class PrebuiltCxxLibraryDescription
             });
       }
     };
+  }
+
+  private Optional<Entry<Flavor, UnresolvedCxxPlatform>> getUnresolvedCxxPlatform(
+      BuildTarget buildTarget) {
+    return toolchainProvider
+        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getUnresolvedCxxPlatforms()
+        .getFlavorAndValue(buildTarget);
   }
 
   private ImmutableList<Arg> getExportedLinkerArgs(

@@ -47,7 +47,7 @@ public class JavaTestBuilder
                 .withToolchain(TestCxxPlatformsProviderFactory.createDefaultCxxPlatformsProvider())
                 .withToolchain(
                     JavaCxxPlatformProvider.DEFAULT_NAME,
-                    JavaCxxPlatformProvider.of(CxxPlatformUtils.DEFAULT_PLATFORM))
+                    JavaCxxPlatformProvider.of(CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM))
                 .withToolchain(
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))

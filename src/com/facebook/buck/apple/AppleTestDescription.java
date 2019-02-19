@@ -63,6 +63,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
@@ -201,8 +202,9 @@ public class AppleTestDescription
     }
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<CxxPlatform> cxxPlatformFlavorDomain = cxxPlatformsProvider.getCxxPlatforms();
-    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatformFlavorDomain =
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms();
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
 
     boolean createBundle =
         Sets.intersection(buildTarget.getFlavors(), AUXILIARY_LIBRARY_FLAVORS).isEmpty();
@@ -232,7 +234,8 @@ public class AppleTestDescription
     if (multiarchFileInfo.isPresent()) {
       ImmutableList.Builder<CxxPlatform> cxxPlatformBuilder = ImmutableList.builder();
       for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
-        cxxPlatformBuilder.add(cxxPlatformFlavorDomain.getValue(thinTarget).get());
+        cxxPlatformBuilder.add(
+            cxxPlatformFlavorDomain.getValue(thinTarget).get().resolve(graphBuilder));
       }
       cxxPlatforms = cxxPlatformBuilder.build();
       appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
@@ -240,7 +243,8 @@ public class AppleTestDescription
       CxxPlatform cxxPlatform =
           cxxPlatformFlavorDomain
               .getValue(buildTarget)
-              .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor));
+              .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor))
+              .resolve(graphBuilder);
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
@@ -509,13 +513,13 @@ public class AppleTestDescription
     extraDepsBuilder.addAll(appleConfig.getCodesignProvider().getParseTimeDeps());
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    ImmutableList<CxxPlatform> cxxPlatforms =
-        cxxPlatformsProvider.getCxxPlatforms().getValues(buildTarget);
+    ImmutableList<UnresolvedCxxPlatform> cxxPlatforms =
+        cxxPlatformsProvider.getUnresolvedCxxPlatforms().getValues(buildTarget);
 
     extraDepsBuilder.addAll(
         CxxPlatforms.getParseTimeDeps(
             cxxPlatforms.isEmpty()
-                ? Collections.singleton(cxxPlatformsProvider.getDefaultCxxPlatform())
+                ? Collections.singleton(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform())
                 : cxxPlatforms));
   }
 

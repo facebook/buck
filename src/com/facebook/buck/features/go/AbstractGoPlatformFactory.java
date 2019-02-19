@@ -26,6 +26,7 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -99,9 +100,9 @@ abstract class AbstractGoPlatformFactory {
 
   abstract ExecutableFinder getExecutableFinder();
 
-  abstract FlavorDomain<CxxPlatform> getCxxPlatforms();
+  abstract FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms();
 
-  abstract CxxPlatform getDefaultCxxPlatform();
+  abstract UnresolvedCxxPlatform getDefaultCxxPlatform();
 
   @Value.Lazy
   String getDefaultOs() {
@@ -141,7 +142,8 @@ abstract class AbstractGoPlatformFactory {
             .getValue(section, "cxx_platform")
             .map(InternalFlavor::of)
             .map(getCxxPlatforms()::getValue)
-            .orElse(getDefaultCxxPlatform());
+            .orElse(getDefaultCxxPlatform())
+            .getLegacyTotallyUnsafe();
     return GoPlatform.builder()
         .setFlavor(flavor)
         .setGoOs(getOs(section))

@@ -64,6 +64,8 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -1195,7 +1197,8 @@ public class CxxLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.DEFAULT_PLATFORM.withArchiveContents(ArchiveContents.THIN);
-    FlavorDomain<CxxPlatform> cxxPlatforms = FlavorDomain.of("C/C++ Platforms", cxxPlatform);
+    FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+        FlavorDomain.of("C/C++ Platforms", new StaticUnresolvedCxxPlatform(cxxPlatform));
 
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")

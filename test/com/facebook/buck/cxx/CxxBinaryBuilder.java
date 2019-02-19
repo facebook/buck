@@ -26,10 +26,10 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
-import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -47,8 +47,8 @@ public class CxxBinaryBuilder
         CxxBinaryDescriptionArg.Builder, CxxBinaryDescriptionArg, CxxBinaryDescription, CxxBinary> {
 
   private static CxxBinaryDescription createCxxBinaryDescription(
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms,
       CxxBuckConfig cxxBuckConfig) {
     ToolchainProvider toolchainProvider =
         new ToolchainProviderBuilder()
@@ -69,7 +69,9 @@ public class CxxBinaryBuilder
   }
 
   public CxxBinaryBuilder(
-      BuildTarget target, CxxPlatform defaultCxxPlatform, FlavorDomain<CxxPlatform> cxxPlatforms) {
+      BuildTarget target,
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         createCxxBinaryDescription(
             defaultCxxPlatform, cxxPlatforms, CxxPlatformUtils.DEFAULT_CONFIG),
@@ -78,14 +80,17 @@ public class CxxBinaryBuilder
 
   public CxxBinaryBuilder(
       BuildTarget target,
-      CxxPlatform defaultCxxPlatform,
-      FlavorDomain<CxxPlatform> cxxPlatforms,
+      UnresolvedCxxPlatform defaultCxxPlatform,
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms,
       CxxBuckConfig cxxBuckConfig) {
     super(createCxxBinaryDescription(defaultCxxPlatform, cxxPlatforms, cxxBuckConfig), target);
   }
 
   public CxxBinaryBuilder(BuildTarget target) {
-    this(target, CxxPlatformUtils.DEFAULT_PLATFORM, CxxTestUtils.createDefaultPlatforms());
+    this(
+        target,
+        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM,
+        CxxTestUtils.createDefaultPlatforms());
   }
 
   public CxxBinaryBuilder setDepQuery(Query depQuery) {

@@ -99,8 +99,9 @@ public class CxxLibraryFactory {
       Optional<CxxLibraryDescriptionDelegate> delegate) {
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<CxxPlatform> cxxPlatforms = cxxPlatformsProvider.getCxxPlatforms();
-    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultCxxPlatform().getFlavor();
+    FlavorDomain<CxxPlatform> cxxPlatforms =
+        cxxPlatformsProvider.getResolvedCxxPlatforms(graphBuilder);
+    Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -368,7 +369,7 @@ public class CxxLibraryFactory {
     // a `python_binary`), we eagerly add the deps for all possible platforms to guarantee that the
     // correct ones are included.
     return getCxxPlatformsProvider()
-        .getCxxPlatforms()
+        .getUnresolvedCxxPlatforms()
         .getValues()
         .stream()
         .flatMap(p -> RichStream.from(CxxPlatforms.getParseTimeDeps(p)))
