@@ -17,10 +17,12 @@
 package com.facebook.buck.util;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,5 +97,16 @@ public class MoreMaps {
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
                 Ordering.natural(), e -> e.getKey(), e -> ImmutableList.copyOf(e.getValue())));
+  }
+
+  /**
+   * Version of {@link Maps#filterValues(Map, Predicate)} that collects the results in an immutable
+   * map.
+   *
+   * @see Maps#filterValues(Map, Predicate)
+   */
+  public static <K, V> ImmutableMap<K, V> filterValues(
+      Map<K, V> unfiltered, final Predicate<? super V> valuePredicate) {
+    return ImmutableMap.copyOf(Maps.filterValues(unfiltered, valuePredicate));
   }
 }

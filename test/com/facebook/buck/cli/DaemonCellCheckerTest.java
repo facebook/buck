@@ -57,4 +57,28 @@ public class DaemonCellCheckerTest {
         DaemonCellChecker.equalsForDaemonRestart(
             buckConfigMoreThreads, buckConfigDifferentCompiler));
   }
+
+  @Test
+  public void testEmptySectionsIgnoredWhenComparingBuckConfig() {
+    BuckConfig buckConfigWithEmptyValue =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "cxx", ImmutableMap.of("cc", "/some_location/gcc"),
+                    "client", ImmutableMap.of()))
+            .build();
+    BuckConfig buckConfigWithRealValue =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "cxx", ImmutableMap.of("cc", "/some_location/gcc"),
+                    "client", ImmutableMap.of("id", "clientid")))
+            .build();
+
+    assertFalse(buckConfigWithEmptyValue.equals(buckConfigWithRealValue));
+
+    assertTrue(
+        DaemonCellChecker.equalsForDaemonRestart(
+            buckConfigWithEmptyValue, buckConfigWithRealValue));
+  }
 }

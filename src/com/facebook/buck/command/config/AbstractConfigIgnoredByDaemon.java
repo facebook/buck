@@ -18,6 +18,7 @@ package com.facebook.buck.command.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.MoreMaps;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -108,12 +109,9 @@ public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckCo
       // Otherwise, filter out the ignored fields.
       ImmutableMap<String, String> remainingKeys =
           ImmutableMap.copyOf(Maps.filterKeys(fields, Predicates.not(ignoredFieldNames::contains)));
-
-      if (!remainingKeys.isEmpty()) {
-        filtered.put(sectionName, remainingKeys);
-      }
+      filtered.put(sectionName, remainingKeys);
     }
 
-    return filtered.build();
+    return MoreMaps.filterValues(filtered.build(), Predicates.not(Map::isEmpty));
   }
 }
