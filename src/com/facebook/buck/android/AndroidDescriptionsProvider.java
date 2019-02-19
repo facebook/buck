@@ -70,8 +70,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new AndroidBuildConfigDescription(toolchainProvider),
         new AndroidBundleDescription(
             javaConfig,
-            androidBuckConfig,
             proGuardConfig,
+            androidBuckConfig,
             config,
             cxxBuckConfig,
             dxConfig,
