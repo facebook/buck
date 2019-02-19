@@ -14,6 +14,9 @@ kotlin_library(
     srcs = [
         "AnnotationProcessorKotlin.kt",
     ],
+    plugins = [
+        "//com/example/ap/libs:google_auto_service",
+    ],
     resources = glob([
         "resources/**",
     ]),
@@ -22,7 +25,10 @@ kotlin_library(
         "PUBLIC",
     ],
     deps = [
+        "buck//third-party/java/guava:guava",
         "//com/example/ap/kotlinannotation:annotation-lib",
+        "//com/example/ap/libs:auto-common.jar",
+        "//com/example/ap/libs:auto-service.jar",
         "//com/example/ap/libs:kotlinpoet.jar",
     ],
 )

@@ -12,3 +12,16 @@ for jar in glob(['*.jar']):
     binary_jar = jar,
     visibility = ['PUBLIC'],
   )
+
+java_annotation_processor(
+    name = "google_auto_service",
+    processor_classes = [
+        "com.google.auto.service.processor.AutoServiceProcessor",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "buck//third-party/java/guava:guava",
+        ":auto-common.jar",
+        ":auto-service.jar",
+    ],
+)
