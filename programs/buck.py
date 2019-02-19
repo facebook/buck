@@ -236,6 +236,8 @@ if __name__ == "__main__":
     reporter = BuckStatusReporter(sys.argv)
     fn_exec = None
     exception = None
+    exc_type = None
+    exc_traceback = None
     try:
         setup_logging()
         exit_code = main(sys.argv, reporter)
@@ -243,8 +245,8 @@ if __name__ == "__main__":
         # this is raised once 'buck run' has the binary
         # it can get here only if exit_code of corresponding buck build is 0
         fn_exec = e.execve
-    except NoBuckConfigFoundException:
-        exc_type, exception, exc_traceback = sys.exc_info()
+    except NoBuckConfigFoundException as e:
+        exception = e
         # buck is started outside project root
         exit_code = ExitCode.COMMANDLINE_ERROR
     except BuckDaemonErrorException:
@@ -269,7 +271,12 @@ if __name__ == "__main__":
         exit_code = ExitCode.FATAL_BOOTSTRAP
 
     if exception is not None:
-        logging.error(exception, exc_info=(exc_type, exception, exc_traceback))
+        # If exc_info is non-None, a stacktrace is printed out, which we don't always
+        # want, but we want the exception data for the reporter
+        exc_info = None
+        if exc_type and exc_traceback:
+            exc_info = (exc_type, exception, exc_traceback)
+        logging.error(exception, exc_info=exc_info)
         if reporter.status_message is None:
             reporter.status_message = str(exception)
 

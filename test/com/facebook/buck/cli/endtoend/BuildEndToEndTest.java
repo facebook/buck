@@ -17,6 +17,7 @@
 package com.facebook.buck.cli.endtoend;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.testutil.ProcessResult;
@@ -27,6 +28,7 @@ import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
 import com.facebook.buck.testutil.endtoend.Environment;
 import com.facebook.buck.testutil.endtoend.EnvironmentFor;
 import com.facebook.buck.testutil.endtoend.ToggleState;
+import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,6 +80,11 @@ public class BuildEndToEndTest {
         .withBuckdToggled(ToggleState.ON);
   }
 
+  @EnvironmentFor(testNames = {"printsErrorWhenBuckConfigIsMissing"})
+  public static EndToEndEnvironment setSimpleEnv() {
+    return getBaseEnvironment().addTemplates("cli");
+  }
+
   @Test
   public void shouldRewriteFailureMessagesAndAppendThem(
       EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
@@ -92,7 +99,7 @@ public class BuildEndToEndTest {
             Pattern.MULTILINE | Pattern.DOTALL);
 
     ProcessResult result = workspace.runBuckCommand(test);
-    result.assertFailure();
+    result.assertExitCode(ExitCode.PARSE_ERROR);
     Assert.assertTrue(
         String.format("'%s' was not contained in '%s'", expected.pattern(), result.getStderr()),
         expected.matcher(result.getStderr()).find());
@@ -191,5 +198,27 @@ public class BuildEndToEndTest {
 
     result = workspace.runBuckCommand("run", "@mode/opt", "//main_bin:main_bin");
     result.assertSuccess();
+  }
+
+  @Test
+  public void printsErrorWhenBuckConfigIsMissing(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Throwable {
+    workspace.setup();
+
+    String[] expected =
+        new String[] {
+          "This does not appear to be the root of a Buck project. Please 'cd'",
+          "to the root of your project before running buck. If this really is",
+          "the root of your project, run",
+          "'touch .buckconfig'",
+          "and then re-run your buck command."
+        };
+
+    ProcessResult result = workspace.runBuckCommand("query", "//:");
+    result.assertExitCode(ExitCode.COMMANDLINE_ERROR);
+    for (String line : expected) {
+      assertThat(result.getStderr(), containsString(line));
+    }
+    assertThat(result.getStderr(), not(containsString("NoBuckConfigFoundException")));
   }
 }

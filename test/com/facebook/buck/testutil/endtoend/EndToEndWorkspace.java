@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -373,8 +374,13 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
             /* stdin */ Optional.empty(),
             timeoutMS,
             /* timeoutHandler */ Optional.empty());
+    ExitCode exitCode =
+        Arrays.stream(ExitCode.values())
+            .filter(e -> e.getCode() == result.getExitCode())
+            .findAny()
+            .orElse(ExitCode.BUILD_ERROR);
     return new ProcessResult(
-        ExitCode.map(result.getExitCode()),
+        exitCode,
         result.getStdout().orElse(""),
         result.getStderr().orElse(""),
         result.isTimedOut());

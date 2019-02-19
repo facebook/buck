@@ -24,6 +24,7 @@ import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
 import com.facebook.buck.testutil.endtoend.Environment;
 import com.facebook.buck.testutil.endtoend.EnvironmentFor;
 import com.facebook.buck.testutil.endtoend.ToggleState;
+import com.facebook.buck.util.ExitCode;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -65,8 +66,9 @@ public class CxxEndToEndTest {
       throws Exception {
     // Uses successful environment, but fixture BUCK file is empty
     ProcessResult result = workspace.runBuckCommand(test);
-    result.assertFailure(
-        String.format("%s successfully built when it has an empty BUCK file", test.getName()));
+    result.assertExitCode(
+        String.format("%s successfully built when it has an empty BUCK file", test.getName()),
+        ExitCode.PARSE_ERROR);
   }
 
   @Test
