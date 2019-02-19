@@ -38,7 +38,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.test.config.TestBuckConfig;
@@ -141,8 +140,8 @@ public class DTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)));
+        DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)
+            .getParseTimeDeps());
   }
 
   @BuckStyleImmutable

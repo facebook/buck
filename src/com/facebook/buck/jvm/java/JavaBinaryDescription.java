@@ -33,7 +33,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -179,8 +178,7 @@ public class JavaBinaryDescription
       AbstractJavaBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(getCxxPlatform(constructorArg)));
+    targetGraphOnlyDepsBuilder.addAll(getCxxPlatform(constructorArg).getParseTimeDeps());
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
     javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }

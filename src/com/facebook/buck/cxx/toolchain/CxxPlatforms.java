@@ -314,19 +314,6 @@ public class CxxPlatforms {
     return deps.build();
   }
 
-  /** Gets parse time deps. Will be inlined in a moment. */
-  public static Iterable<BuildTarget> getParseTimeDeps(UnresolvedCxxPlatform cxxPlatform) {
-    return cxxPlatform.getParseTimeDeps();
-  }
-
-  /** Gets parse time deps. Will be inlined in a moment. */
-  public static Iterable<BuildTarget> getParseTimeDeps(
-      Iterable<UnresolvedCxxPlatform> cxxPlatforms) {
-    ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
-    cxxPlatforms.forEach(platform -> deps.addAll(getParseTimeDeps(platform)));
-    return deps.build();
-  }
-
   /** Returns the configured cxx platform for a particular target. */
   public static UnresolvedCxxPlatform getCxxPlatform(
       CxxPlatformsProvider cxxPlatformsProvider,
@@ -360,8 +347,8 @@ public class CxxPlatforms {
 
     // Get any parse time deps from the C/C++ platforms.
     deps.addAll(
-        getParseTimeDeps(
-            getCxxPlatform(cxxPlatformsProvider, buildTarget, defaultCxxPlatformFlavor)));
+        getCxxPlatform(cxxPlatformsProvider, buildTarget, defaultCxxPlatformFlavor)
+            .getParseTimeDeps());
 
     return deps.build();
   }

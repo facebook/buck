@@ -38,7 +38,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -338,7 +337,7 @@ public class CxxTestDescription
 
     // Get any parse time deps from the C/C++ platforms.
     targetGraphOnlyDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(getCxxPlatform(buildTarget, constructorArg)));
+        getCxxPlatform(buildTarget, constructorArg).getParseTimeDeps());
 
     // Add in any implicit framework deps.
     extraDepsBuilder.addAll(getImplicitFrameworkDeps(constructorArg));

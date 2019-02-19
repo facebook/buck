@@ -42,7 +42,6 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
@@ -301,7 +300,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add in all parse time deps from the C/C++ platforms.
     for (UnresolvedCxxPlatform cxxPlatform : getCxxPlatforms().getValues()) {
-      targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(cxxPlatform));
+      targetGraphOnlyDepsBuilder.addAll(cxxPlatform.getParseTimeDeps());
     }
   }
 

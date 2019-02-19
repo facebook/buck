@@ -58,7 +58,6 @@ import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -92,7 +91,6 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -516,11 +514,12 @@ public class AppleTestDescription
     ImmutableList<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms().getValues(buildTarget);
 
-    extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            cxxPlatforms.isEmpty()
-                ? Collections.singleton(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform())
-                : cxxPlatforms));
+    if (cxxPlatforms.isEmpty()) {
+      extraDepsBuilder.addAll(
+          cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getParseTimeDeps());
+    } else {
+      cxxPlatforms.forEach(platform -> extraDepsBuilder.addAll(platform.getParseTimeDeps()));
+    }
   }
 
   private AppleBundle getBuildRuleForTestHostAppTarget(

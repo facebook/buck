@@ -32,7 +32,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
@@ -372,7 +371,7 @@ public class CxxLibraryFactory {
         .getUnresolvedCxxPlatforms()
         .getValues()
         .stream()
-        .flatMap(p -> RichStream.from(CxxPlatforms.getParseTimeDeps(p)))
+        .flatMap(p -> RichStream.from(p.getParseTimeDeps()))
         .collect(ImmutableList.toImmutableList());
   }
 

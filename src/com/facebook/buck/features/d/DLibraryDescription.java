@@ -37,7 +37,6 @@ import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -175,8 +174,8 @@ public class DLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(
-            DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)));
+        DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)
+            .getParseTimeDeps());
   }
 
   @BuckStyleImmutable

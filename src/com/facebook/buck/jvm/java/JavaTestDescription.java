@@ -35,7 +35,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -201,7 +200,7 @@ public class JavaTestDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.getUseCxxLibraries().orElse(false)) {
       targetGraphOnlyDepsBuilder.addAll(
-          CxxPlatforms.getParseTimeDeps(getUnresolvedCxxPlatform(constructorArg)));
+          getUnresolvedCxxPlatform(constructorArg).getParseTimeDeps());
     }
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
     javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);

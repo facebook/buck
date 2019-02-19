@@ -49,7 +49,6 @@ import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.CxxSourceRuleFactory;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
@@ -569,8 +568,9 @@ public class CxxPythonExtensionDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
-    extraDepsBuilder.addAll(
-        CxxPlatforms.getParseTimeDeps(getCxxPlatforms().getValues(buildTarget)));
+    getCxxPlatforms()
+        .getValues(buildTarget)
+        .forEach(p -> extraDepsBuilder.addAll(p.getParseTimeDeps()));
 
     for (PythonPlatform pythonPlatform : getPythonPlatforms().getValues()) {
       Optionals.addIfPresent(pythonPlatform.getCxxLibrary(), extraDepsBuilder);

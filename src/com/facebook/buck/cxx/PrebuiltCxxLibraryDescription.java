@@ -910,6 +910,9 @@ public class PrebuiltCxxLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     getPaths(buildTarget, constructorArg)
         .findParseTimeDeps(cellRoots, extraDepsBuilder, targetGraphOnlyDepsBuilder);
+    getUnresolvedCxxPlatform(buildTarget)
+        .ifPresent(
+            provider -> targetGraphOnlyDepsBuilder.addAll(provider.getValue().getParseTimeDeps()));
   }
 
   @Override
