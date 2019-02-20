@@ -518,7 +518,7 @@ public class DaemonicParserState {
       if (envDiff.isPresent()) {
         hasInvalidated = true;
         MapDifference<String, String> diff = envDiff.get();
-        LOG.warn("Invalidating cache on environment change (%s)", diff);
+        LOG.info("Invalidating cache on environment change (%s)", diff);
         Set<String> environmentChanges = new HashSet<>();
         environmentChanges.addAll(diff.entriesOnlyOnLeft().keySet());
         environmentChanges.addAll(diff.entriesOnlyOnRight().keySet());

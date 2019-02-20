@@ -502,7 +502,7 @@ public final class Main {
                       || e instanceof ClosedByInterruptException) {
                     message = "Command was interrupted:";
                   }
-                  LOG.warn(e, message);
+                  LOG.info(e, message);
                 }
               },
               augmentor);
@@ -644,7 +644,7 @@ public final class Main {
 
           System.err.println(
               String.format("Buck Daemon is busy executing '%s'.", activeCommandLine));
-          LOG.warn(
+          LOG.info(
               "Buck server was busy executing '%s'. Maybe retrying later will help.",
               activeCommandLine);
         }
@@ -833,7 +833,7 @@ public final class Main {
       BackgroundTaskManager bgTaskManager;
       boolean blocking = cliConfig.getFlushEventsBeforeExit();
       if (!blocking && !daemon.isPresent()) {
-        LOG.warn(
+        LOG.info(
             "Manager cannot be async (as currently set in config) when not on daemon. Initializing blocking manager.");
       }
       bgTaskManager =
@@ -1918,7 +1918,7 @@ public final class Main {
         LOG.error("Unable to create ChromeTrace listener!");
       }
     } else {
-      LOG.warn("::: ChromeTrace listener disabled");
+      LOG.info("::: ChromeTrace listener disabled");
     }
     if (webServer.isPresent()) {
       eventListenersBuilder.add(webServer.get().createListener());

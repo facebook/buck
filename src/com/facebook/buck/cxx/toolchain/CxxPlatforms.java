@@ -266,7 +266,7 @@ public class CxxPlatforms {
     if (defaultPlatform.isPresent()) {
       defaultCxxPlatform = cxxPlatformsMap.get(InternalFlavor.of(defaultPlatform.get()));
       if (defaultCxxPlatform == null) {
-        LOG.warn(
+        LOG.info(
             "Couldn't find default platform %s, falling back to system default",
             defaultPlatform.get());
       } else {

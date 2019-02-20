@@ -569,7 +569,7 @@ public class InstallCommand extends BuildCommand {
       }
     } else {
       if (connectedDevices.size() > 1) {
-        LOG.warn(
+        LOG.info(
             "More than one connected device found, and no device ID specified.  A device will be"
                 + " arbitrarily picked.");
       }
@@ -741,7 +741,7 @@ public class InstallCommand extends BuildCommand {
         new AppleSimulatorController(processExecutor, simctlPath, iosSimulatorPath);
 
     if (!appleSimulatorController.canStartSimulator(appleSimulator.get().getUdid())) {
-      LOG.warn("Cannot start simulator %s, killing simulators and trying again.");
+      LOG.info("Cannot start simulator %s, killing simulators and trying again.");
       if (!appleCoreSimulatorServiceController.killSimulatorProcesses()) {
         params.getConsole().printBuildFailure("Could not kill running simulator processes.");
         return FAILURE;

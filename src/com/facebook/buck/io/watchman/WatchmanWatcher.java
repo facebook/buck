@@ -406,7 +406,7 @@ public class WatchmanWatcher {
   }
 
   private void postWatchEvent(BuckEventBus eventBus, WatchmanEvent event) {
-    LOG.warn("Posting WatchEvent: %s", event);
+    LOG.debug("Posting WatchEvent: %s", event);
     fileChangeEventBus.post(event);
 
     // Post analogous Status events for logging/status.

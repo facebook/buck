@@ -293,7 +293,7 @@ public class BuildCommand extends AbstractCommand {
    */
   public boolean tryConvertingToStampede(DistBuildConfig config) {
     if (forceDisableDistributedBuild) {
-      LOG.warn(
+      LOG.info(
           String.format(
               "%s has been specified. Will not auto-convert build to stampede.",
               LOCAL_BUILD_LONG_ARG));

@@ -80,7 +80,7 @@ public class AndroidNdkHelper {
                       new ExecutableFinder(),
                       TestRuleKeyConfigurationFactory.create()));
     } catch (HumanReadableException e) {
-      LOG.warn(e, "Cannot detect Android NDK");
+      LOG.info(e, "Cannot detect Android NDK");
       androidNdk = Optional.empty();
     }
     return androidNdk;

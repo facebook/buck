@@ -58,7 +58,7 @@ abstract class AbstractDiffAbisStep implements Step {
       case OFF:
         return StepExecutionResults.SUCCESS;
       case LOG:
-        LOG.warn(message);
+        LOG.info(message);
         return StepExecutionResults.SUCCESS;
       case FAIL:
         return StepExecutionResults.ERROR.withStderr(message);

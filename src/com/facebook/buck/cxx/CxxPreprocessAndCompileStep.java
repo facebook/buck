@@ -362,7 +362,7 @@ class CxxPreprocessAndCompileStep implements Step {
     }
 
     if (exitCode != 0) {
-      LOG.warn("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
+      LOG.debug("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
     }
 
     return StepExecutionResult.of(result);

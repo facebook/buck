@@ -508,7 +508,7 @@ public class TestRunning {
 
           @Override
           public void onFailure(Throwable throwable) {
-            LOG.warn(throwable, "Test command step failed, marking %s as failed", testRule);
+            LOG.info(throwable, "Test command step failed, marking %s as failed", testRule);
             // If the test command steps themselves fail, report this as special test result.
             TestResults testResults =
                 TestResults.of(

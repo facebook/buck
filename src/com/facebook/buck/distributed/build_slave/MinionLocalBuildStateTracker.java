@@ -171,7 +171,7 @@ public class MinionLocalBuildStateTracker {
 
       // Anything left is an unexpected cache miss.
       if (depsWithCacheMisses.size() > 0) {
-        LOG.warn(
+        LOG.info(
             "Got [%d] cache misses for direct dependencies of target [%s], built them locally.",
             depsWithCacheMisses.size(), target);
         minionBuildProgressTracker.onUnexpectedCacheMiss(depsWithCacheMisses.size());
