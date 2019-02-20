@@ -18,37 +18,32 @@ package com.facebook.buck.support.cli.args;
 
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.util.Console;
-import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /** Utility class for methods related to args handling. */
 public class BuckArgsMethods {
-  static final Logger LOG = Logger.get(BuckArgsMethods.class);
 
   private static final ImmutableSet<String> FLAG_FILE_OPTIONS = ImmutableSet.of("--flagfile");
   private static final String PASS_THROUGH_DELIMITER = "--";
@@ -65,7 +60,7 @@ public class BuckArgsMethods {
   }
 
   private static Iterable<String> getArgsFromPythonFile(Path argsPath, String suffix)
-      throws InterruptedException, IOException {
+      throws IOException {
     Path interpreter = Paths.get("python");
     Path pyScriptPath = argsPath.toAbsolutePath();
     String pyScriptPathString = pyScriptPath.toString();
@@ -81,37 +76,23 @@ public class BuckArgsMethods {
               .orElse(interpreter);
     }
 
-    ProcessExecutorParams.Builder paramsBuilder = ProcessExecutorParams.builder();
-    if (executeDirectly) {
-      paramsBuilder.addCommand(pyScriptPathString);
-    } else {
-      paramsBuilder.addCommand(interpreter.toString(), pyScriptPathString);
+    Process proc =
+        Runtime.getRuntime()
+            .exec(
+                executeDirectly
+                    ? new String[] {pyScriptPathString, "--flavors", suffix}
+                    : new String[] {
+                      interpreter.toString(), pyScriptPathString, "--flavors", suffix
+                    });
+    try (InputStream input = proc.getInputStream();
+        OutputStream output = proc.getOutputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
+      return reader.lines().filter(line -> !line.isEmpty()).collect(Collectors.toList());
     }
-    paramsBuilder.addCommand("--flavors", suffix);
-
-    ProcessExecutor.Result result;
-    ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
-    result =
-        processExecutor.launchAndExecute(
-            paramsBuilder.build(),
-            EnumSet.of(
-                ProcessExecutor.Option.EXPECTING_STD_OUT, ProcessExecutor.Option.EXPECTING_STD_ERR),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
-    if (result.getExitCode() != 0) {
-      throw new IOException(
-          String.format(
-              "Error while reading output of %s: exit code %d (%s)",
-              pyScriptPathString, result.getExitCode(), result.getStderr().orElse("")));
-    }
-    return Arrays.stream(result.getStdout().get().split(Pattern.quote(System.lineSeparator())))
-        .filter(line -> !line.isEmpty())
-        .collect(Collectors.toList());
   }
 
   private static Iterable<String> getArgsFromPath(Path argsPath, Optional<String> flavors)
-      throws InterruptedException, IOException {
+      throws IOException {
     if (!argsPath.toAbsolutePath().toString().endsWith(".py")) {
       if (flavors.isPresent()) {
         throw new HumanReadableException(
@@ -137,7 +118,7 @@ public class BuckArgsMethods {
    * @return args array with AT-files expanded.
    */
   public static ImmutableList<String> expandAtFiles(
-      Iterable<String> args, ImmutableMap<CellName, Path> cellMapping) throws InterruptedException {
+      Iterable<String> args, ImmutableMap<CellName, Path> cellMapping) {
     // LinkedHashSet is used to preserve insertion order, so that a path can be printed
     Set<String> expansionPath = new LinkedHashSet<>();
     return expandFlagFilesRecursively(args, cellMapping, expansionPath);
@@ -149,8 +130,7 @@ public class BuckArgsMethods {
    * <p>Loops are not allowed and result in runtime exception.
    */
   private static ImmutableList<String> expandFlagFilesRecursively(
-      Iterable<String> args, ImmutableMap<CellName, Path> cellMapping, Set<String> expansionPath)
-      throws InterruptedException {
+      Iterable<String> args, ImmutableMap<CellName, Path> cellMapping, Set<String> expansionPath) {
     Iterator<String> argsIterator = args.iterator();
     ImmutableList.Builder<String> argumentsBuilder = ImmutableList.builder();
     while (argsIterator.hasNext()) {
@@ -178,8 +158,7 @@ public class BuckArgsMethods {
 
   /** Recursively expands flag files into a list of command line flags. */
   private static ImmutableList<String> expandFlagFile(
-      String nextFlagFile, ImmutableMap<CellName, Path> cellMapping, Set<String> expansionPath)
-      throws InterruptedException {
+      String nextFlagFile, ImmutableMap<CellName, Path> cellMapping, Set<String> expansionPath) {
     if (expansionPath.contains(nextFlagFile)) {
       // expansion path is a linked hash set, so it preserves order
       throw new HumanReadableException(
@@ -198,8 +177,7 @@ public class BuckArgsMethods {
   }
 
   /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */
-  private static Iterable<String> expandFile(String arg, ImmutableMap<CellName, Path> cellMapping)
-      throws InterruptedException {
+  private static Iterable<String> expandFile(String arg, ImmutableMap<CellName, Path> cellMapping) {
     BuckCellArg argfile = BuckCellArg.of(arg);
     String[] parts = argfile.getArg().split("#", 2);
     String unresolvedArgsPath = parts[0];
@@ -232,8 +210,7 @@ public class BuckArgsMethods {
     try {
       return getArgsFromPath(argsPath, flavors);
     } catch (IOException e) {
-      throw new HumanReadableException(
-          e, String.format("Could not read options from %s (%s)", arg, e.getMessage()));
+      throw new HumanReadableException(e, "Could not read options from " + arg);
     }
   }
 
