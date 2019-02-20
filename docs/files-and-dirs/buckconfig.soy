@@ -69,13 +69,40 @@ The <code>.buckconfig</code> implementation supports some modifications
 to the INI file format; these are discussed below.
 </p>
 
+<h5>Other INI file parsers</h5>
+
 <p>
-<strong>Note:</strong> As just mentioned, we have extended the INI
-file parser that Buck uses to parse configuration files. As a result,
-{sp}<em>INI file parsers provided by other languages or libraries are
-often not able to parse Buck's configuration files successfully</em>.
+As mentioned previously, we have extended the INI file parser that Buck
+uses to parse configuration files. As a result, {sp}<em>INI file parsers
+provided by other languages or libraries are often not able to parse
+Buck's configuration files successfully</em>.
 </p>
 
+<h5>Dot character not supported in section names</h5>
+
+<p>
+We do not support the use of the <em>dot</em> character (<code>.</code>)
+in section names within Buck configuration files. For example, the
+following is <strong>not</strong> supported&mdash;<em>although Buck
+does not issue a warning or error</em>.
+</p>
+
+<p>
+<pre>
+{literal}
+[foo.bar]
+  baz=1
+{/literal}
+</pre>
+</p>
+
+<p>
+This constraint is because Buck uses the dot character to delimit
+section names and key names in other contexts such as 
+the <code>--config</code> command-line parameter. For information 
+about <code>--config</code>, see 
+the {call buck.cmd_link}{param name: 'common_parameters' /}{param rendered_text: '<strong>Common Parameters</strong>' /}{/call} topic.
+</p>
 
 <h2>Character encoding</h2>
 
