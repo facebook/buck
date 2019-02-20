@@ -26,7 +26,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
@@ -40,7 +39,7 @@ public class BuckArgsMethodsTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
-  public void testArgFileExpansion() throws IOException {
+  public void testArgFileExpansion() throws Exception {
     assertThat(
         BuckArgsMethods.expandAtFiles(
             ImmutableList.of("arg1"), ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
@@ -220,7 +219,7 @@ public class BuckArgsMethodsTest {
   }
 
   @Test
-  public void invalidUsageOfFlagFileArgumentIsReported() {
+  public void invalidUsageOfFlagFileArgumentIsReported() throws Exception {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("--flagfile should be followed by a path.");
 
@@ -292,7 +291,7 @@ public class BuckArgsMethodsTest {
   }
 
   @Test
-  public void testStripsEmptyLines() throws IOException {
+  public void testStripsEmptyLines() throws Exception {
     Path staticArgs = tmp.newFile("args_static");
     Path pythonArgs = tmp.newFile("args.py");
 
@@ -311,7 +310,7 @@ public class BuckArgsMethodsTest {
   }
 
   @Test
-  public void testHandlesAtSymbolAfterTwoDashes() throws IOException {
+  public void testHandlesAtSymbolAfterTwoDashes() throws Exception {
     Path arg = tmp.newFile("argsfile");
     Files.write(arg, ImmutableList.of("arg2", "arg3"));
     String atArg = "@" + arg.toString();

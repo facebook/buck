@@ -250,5 +250,9 @@ public class AuditConfigCommandIntegrationTest {
       assertTrue(jsonNode.has("py_at_arg_test.test"));
       assertEquals(jsonNode.get("py_at_arg_test.test").asText(), "value");
     }
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "audit", "config", "--json", "--config", "@at_expansion_any_fail.py");
+    result.assertFailure();
   }
 }
