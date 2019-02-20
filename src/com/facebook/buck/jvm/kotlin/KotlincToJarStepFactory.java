@@ -399,6 +399,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             kotlinc,
             ImmutableList.<String>builder()
                 .addAll(extraKotlincArguments)
+                .add(friendPathsArg)
                 .add(MODULE_NAME)
                 .add(invokingRule.getShortNameAndFlavorPostfix())
                 .add(COMPILER_BUILTINS)
@@ -446,6 +447,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   private String getFriendsPath(
       SourcePathResolver sourcePathResolver, ImmutableList<SourcePath> friendPathsSourcePaths) {
+    if (friendPathsSourcePaths.isEmpty()) {
+      return "";
+    }
 
     // https://youtrack.jetbrains.com/issue/KT-29933
     ImmutableSortedSet<String> absoluteFriendPaths =
