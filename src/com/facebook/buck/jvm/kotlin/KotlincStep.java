@@ -161,7 +161,11 @@ public class KotlincStep implements Step {
     builder.add(VERBOSE);
 
     if (!extraArguments.isEmpty()) {
-      builder.addAll(extraArguments);
+      for (String extraArgument : extraArguments) {
+        if (!extraArgument.isEmpty()) {
+          builder.add(extraArgument);
+        }
+      }
     }
 
     return builder.build();
