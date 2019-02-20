@@ -309,6 +309,10 @@ public class GoProjectCommandHelper {
                 .getCxxDeps()
                 .getDeps()
                 .stream()
+                .filter(
+                    target ->
+                        targetGraphAndTargets.getTargetGraph().get(target).getConstructorArg()
+                            instanceof CxxConstructorArg)
                 .map(
                     target ->
                         (CxxConstructorArg)
