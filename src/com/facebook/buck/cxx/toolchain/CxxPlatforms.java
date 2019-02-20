@@ -132,8 +132,9 @@ public class CxxPlatforms {
         .setSharedLibraryExtension(
             config.getSharedLibraryExtension().orElse(sharedLibraryExtension))
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
-        .setStaticLibraryExtension(staticLibraryExtension)
-        .setObjectFileExtension(objectFileExtension)
+        .setStaticLibraryExtension(
+            config.getStaticLibraryExtension().orElse(staticLibraryExtension))
+        .setObjectFileExtension(config.getObjectFileExtension().orElse(objectFileExtension))
         .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
         .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setFlagMacros(flagMacros)

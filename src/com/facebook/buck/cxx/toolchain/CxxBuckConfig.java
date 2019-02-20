@@ -88,6 +88,8 @@ public class CxxBuckConfig {
       "independent_shlib_interface_ldflags";
   private static final String DECLARED_PLATFORMS = "declared_platforms";
   private static final String SHARED_LIBRARY_EXT = "shared_library_extension";
+  private static final String STATIC_LIBRARY_EXT = "static_library_extension";
+  private static final String OBJECT_FILE_EXT = "object_file_extension";
   private static final String CONFLICTING_HEADER_BASENAME_WHITELIST =
       "conflicting_header_basename_whitelist";
   private static final String HEADER_MODE = "header_mode";
@@ -553,6 +555,16 @@ public class CxxBuckConfig {
   /** @return the extension to use for shared libraries (e.g. ".so"). */
   public Optional<String> getSharedLibraryExtension() {
     return delegate.getValue(cxxSection, SHARED_LIBRARY_EXT);
+  }
+
+  /** @return the extension to use for static libraries (e.g. ".a"). */
+  public Optional<String> getStaticLibraryExtension() {
+    return delegate.getValue(cxxSection, STATIC_LIBRARY_EXT);
+  }
+
+  /** @return the extension to use for object files (e.g. ".o"). */
+  public Optional<String> getObjectFileExtension() {
+    return delegate.getValue(cxxSection, OBJECT_FILE_EXT);
   }
 
   public ImmutableSortedSet<String> getConflictingHeaderBasenameWhitelist() {
