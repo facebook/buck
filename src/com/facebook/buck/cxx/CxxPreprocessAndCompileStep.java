@@ -253,7 +253,8 @@ class CxxPreprocessAndCompileStep implements Step {
     }
 
     String err;
-    if (compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_INCLUDES) {
+    if (depFile.isPresent()
+        && compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_INCLUDES) {
       // Include lines and errors lines should be processed differently.
       Map<Boolean, List<String>> includesAndErrors =
           lines.collect(Collectors.partitioningBy(CxxPreprocessAndCompileStep::isShowIncludeLine));
@@ -265,9 +266,10 @@ class CxxPreprocessAndCompileStep implements Step {
               .stream()
               .map(CxxPreprocessAndCompileStep::parseShowIncludeLine)
               .collect(Collectors.toList());
-      writeSrcAndIncludes(includeLines);
+      writeSrcAndIncludes(includeLines, depFile.get());
       err = formatErrors(errorLines.stream(), context);
-    } else if (compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_HEADERS) {
+    } else if (depFile.isPresent()
+        && compiler.getDependencyTrackingMode() == DependencyTrackingMode.SHOW_HEADERS) {
       // Headers lines and errors lines should be processed differently.
       Map<Boolean, List<String>> includesAndErrors =
           lines.collect(Collectors.partitioningBy(CxxPreprocessAndCompileStep::isShowHeadersLine));
@@ -279,7 +281,7 @@ class CxxPreprocessAndCompileStep implements Step {
               .stream()
               .map(CxxPreprocessAndCompileStep::parseShowHeadersLine)
               .collect(Collectors.toList());
-      writeSrcAndIncludes(includeLines);
+      writeSrcAndIncludes(includeLines, depFile.get());
       // We are not interested in showing suggestions about include guards.
       errorLines = stripIncludeGuardSuggestions(errorLines);
       err = formatErrors(errorLines.stream(), context);
@@ -298,10 +300,10 @@ class CxxPreprocessAndCompileStep implements Step {
     }
   }
 
-  private void writeSrcAndIncludes(List<String> includeLines) throws IOException {
+  private void writeSrcAndIncludes(List<String> includeLines, Path depFile) throws IOException {
     Iterable<String> srcAndIncludes =
         Iterables.concat(ImmutableList.of(filesystem.resolve(input).toString()), includeLines);
-    filesystem.writeLinesToPath(srcAndIncludes, depFile.get());
+    filesystem.writeLinesToPath(srcAndIncludes, depFile);
   }
 
   private String formatErrors(Stream<String> errorLines, ExecutionContext context) {

@@ -147,6 +147,22 @@ public class WindowsClangCxxIntegrationTest {
   }
 
   @Test
+  public void asmAndDependencyTracking() throws IOException {
+    // no depfile is created for assembly, make sure header tracking is OK with it.
+    ProcessResult runResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "cxx.untracked_headers=warn",
+            "-c",
+            "cxx.detailed_untracked_header_messages=true",
+            "//app_asm:log");
+    runResult.assertSuccess();
+    Path outputPath = workspace.resolve("buck-out/gen/app_asm/log/log.txt");
+    assertThat(workspace.getFileContents(outputPath), Matchers.equalToIgnoringCase("42"));
+  }
+
+  @Test
   public void testLibIsHermetic() throws IOException {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//lib:lib-out");
     buildResult.assertSuccess();
