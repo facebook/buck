@@ -32,7 +32,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.Arrays;
 import org.ini4j.Ini;
 import org.junit.Rule;
 import org.junit.Test;
@@ -229,26 +228,5 @@ public class AuditConfigCommandIntegrationTest {
     // Make sure that we can handle two sections with identical keys
     assertEquals(jsonNode.get("python#py2.interpreter").asText(), "python2");
     assertEquals(jsonNode.get("python#py3.interpreter").asText(), "python3");
-  }
-
-  @Test
-  public void testAuditCLIPythonAtExpansion() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "audit_config", tmp);
-    workspace.setUp();
-
-    for (String variant : Arrays.asList("any", "py2", "py3")) {
-      ProcessResult result =
-          workspace.runBuckCommand(
-              "audit",
-              "config",
-              "--json",
-              "--config",
-              String.format("@at_expansion_%s.py", variant));
-      result.assertSuccess();
-      JsonNode jsonNode = ObjectMappers.READER.readTree(result.getStdout());
-      assertTrue(jsonNode.has("py_at_arg_test.test"));
-      assertEquals(jsonNode.get("py_at_arg_test.test").asText(), "value");
-    }
   }
 }

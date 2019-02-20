@@ -18,9 +18,6 @@ package com.facebook.buck.support.cli.args;
 
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.util.environment.EnvVariablesProvider;
-import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -61,29 +57,10 @@ public class BuckArgsMethods {
 
   private static Iterable<String> getArgsFromPythonFile(Path argsPath, String suffix)
       throws IOException {
-    Path interpreter = Paths.get("python");
-    Path pyScriptPath = argsPath.toAbsolutePath();
-    String pyScriptPathString = pyScriptPath.toString();
-    boolean executeDirectly =
-        FileSystems.getDefault().supportedFileAttributeViews().contains("posix")
-            && Files.isExecutable(pyScriptPath);
-
-    // Use shebang aware py.exe launcher as interpreter on Windows if found in PATH
-    if (!executeDirectly && Platform.detect() == Platform.WINDOWS) {
-      interpreter =
-          new ExecutableFinder()
-              .getOptionalExecutable(Paths.get("py"), EnvVariablesProvider.getSystemEnv())
-              .orElse(interpreter);
-    }
-
     Process proc =
         Runtime.getRuntime()
             .exec(
-                executeDirectly
-                    ? new String[] {pyScriptPathString, "--flavors", suffix}
-                    : new String[] {
-                      interpreter.toString(), pyScriptPathString, "--flavors", suffix
-                    });
+                new String[] {"python", argsPath.toAbsolutePath().toString(), "--flavors", suffix});
     try (InputStream input = proc.getInputStream();
         OutputStream output = proc.getOutputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
