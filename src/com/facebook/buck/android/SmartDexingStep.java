@@ -483,7 +483,7 @@ public class SmartDexingStep implements Step {
       // simply easier and cleaner to extract the dex file number to be used as unique
       // identifier rather than creating another map and pass it around
       String[] tokens = Files.getNameWithoutExtension(outputPath.toString()).split("classes");
-      String id = tokens.length == 0 ? "" /* primary */ : tokens[1] /* secondary */;
+      String id = tokens.length == 1 ? "" /* primary */ : tokens[1] /* secondary */;
       buckedId = Optional.of(id);
     }
 
