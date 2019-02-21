@@ -209,6 +209,11 @@ public class RustCompileTest {
       public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
         return ImmutableMap.of();
       }
+
+      @Override
+      public boolean getUseUnixPathSeparator() {
+        return false;
+      }
     };
   }
 

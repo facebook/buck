@@ -90,7 +90,7 @@ public class CxxWriteArgsToFileStepTest {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
     CxxWriteArgsToFileStep step =
         CxxWriteArgsToFileStep.create(
-            argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolver);
+            argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolver, false);
 
     step.execute(context);
 

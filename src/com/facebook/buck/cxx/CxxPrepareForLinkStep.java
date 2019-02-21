@@ -60,7 +60,10 @@ public class CxxPrepareForLinkStep {
         "Link command (pwd=%s): %s %s",
         currentCellPath.toString(),
         String.join("", linker.getCommandPrefix(resolver)),
-        String.join(" ", CxxWriteArgsToFileStep.stringify(allArgs, currentCellPath, resolver)));
+        String.join(
+            " ",
+            CxxWriteArgsToFileStep.stringify(
+                allArgs, currentCellPath, resolver, linker.getUseUnixPathSeparator())));
 
     CxxWriteArgsToFileStep createArgFileStep =
         CxxWriteArgsToFileStep.create(
@@ -73,7 +76,8 @@ public class CxxPrepareForLinkStep {
                 : allArgs,
             Optional.of(Escaper.SHELL_ESCAPER),
             currentCellPath,
-            resolver);
+            resolver,
+            linker.getUseUnixPathSeparator());
 
     if (!hasLinkArgsToSupportFileList) {
       LOG.verbose("linkerArgsToSupportFileList is empty, filelist feature is not supported");
@@ -89,7 +93,8 @@ public class CxxPrepareForLinkStep {
                 .collect(ImmutableList.toImmutableList()),
             Optional.empty(),
             currentCellPath,
-            resolver);
+            resolver,
+            linker.getUseUnixPathSeparator());
 
     return ImmutableList.of(createArgFileStep, createFileListStep);
   }

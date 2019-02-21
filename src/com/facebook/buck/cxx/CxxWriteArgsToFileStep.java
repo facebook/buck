@@ -48,8 +48,10 @@ class CxxWriteArgsToFileStep implements Step {
       ImmutableList<Arg> args,
       Optional<Function<String, String>> escaper,
       Path currentCellPath,
-      SourcePathResolver pathResolver) {
-    ImmutableList<String> argFileContents = stringify(args, currentCellPath, pathResolver);
+      SourcePathResolver pathResolver,
+      boolean useUnixPathSeparator) {
+    ImmutableList<String> argFileContents =
+        stringify(args, currentCellPath, pathResolver, useUnixPathSeparator);
     if (escaper.isPresent()) {
       argFileContents =
           argFileContents.stream().map(escaper.get()).collect(ImmutableList.toImmutableList());
@@ -68,14 +70,20 @@ class CxxWriteArgsToFileStep implements Step {
   }
 
   static ImmutableList<String> stringify(
-      ImmutableCollection<Arg> args, Path currentCellPath, SourcePathResolver pathResolver) {
+      ImmutableCollection<Arg> args,
+      Path currentCellPath,
+      SourcePathResolver pathResolver,
+      boolean useUnixPathSeparator) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     for (Arg arg : args) {
       if (arg instanceof FileListableLinkerInputArg) {
         ((FileListableLinkerInputArg) arg)
-            .appendToCommandLineRel(builder::add, currentCellPath, pathResolver);
+            .appendToCommandLineRel(
+                builder::add, currentCellPath, pathResolver, useUnixPathSeparator);
       } else if (arg instanceof SourcePathArg) {
-        ((SourcePathArg) arg).appendToCommandLineRel(builder::add, currentCellPath, pathResolver);
+        ((SourcePathArg) arg)
+            .appendToCommandLineRel(
+                builder::add, currentCellPath, pathResolver, useUnixPathSeparator);
       } else {
         arg.appendToCommandLine(builder::add, pathResolver);
       }

@@ -176,6 +176,11 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
     return Optional.empty();
   }
 
+  @Override
+  public boolean getUseUnixPathSeparator() {
+    return true;
+  }
+
   /**
    * An {@link Arg} which reads undefined symbols from files and propagates them to the Darwin
    * linker via the `-u` argument.

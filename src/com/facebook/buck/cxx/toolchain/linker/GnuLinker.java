@@ -33,6 +33,7 @@ import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.FileScrubber;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -151,7 +152,7 @@ public class GnuLinker extends DelegatingTool implements Linker {
 
   @Override
   public Iterable<String> outputArgs(String path) {
-    return ImmutableList.of("-o", path);
+    return ImmutableList.of("-o", MorePaths.pathWithUnixSeparators(path));
   }
 
   @Override
@@ -167,6 +168,11 @@ public class GnuLinker extends DelegatingTool implements Linker {
   @Override
   public Optional<ExtraOutputsDeriver> getExtraOutputsDeriver() {
     return Optional.empty();
+  }
+
+  @Override
+  public boolean getUseUnixPathSeparator() {
+    return true;
   }
 
   // Write all symbols to a linker script, using the `EXTERN` command to mark them as undefined

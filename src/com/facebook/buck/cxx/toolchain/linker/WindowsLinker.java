@@ -171,4 +171,9 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
   public Path importLibraryPath(Path output) {
     return Paths.get(output + ".imp.lib");
   }
+
+  @Override
+  public boolean getUseUnixPathSeparator() {
+    return false;
+  }
 }

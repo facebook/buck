@@ -10,6 +10,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/core/toolchain/tool:tool",
+        "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/rules/modern:types",
         "//src/com/facebook/buck/shell:worker_tool",
         "//src/com/facebook/buck/util:exceptions",

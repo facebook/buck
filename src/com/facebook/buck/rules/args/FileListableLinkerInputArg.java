@@ -55,8 +55,11 @@ public class FileListableLinkerInputArg implements Arg, HasSourcePath {
   }
 
   public void appendToCommandLineRel(
-      Consumer<String> consumer, Path currentCellPath, SourcePathResolver pathResolver) {
-    value.appendToCommandLineRel(consumer, currentCellPath, pathResolver);
+      Consumer<String> consumer,
+      Path currentCellPath,
+      SourcePathResolver pathResolver,
+      boolean useUnixPathSeparator) {
+    value.appendToCommandLineRel(consumer, currentCellPath, pathResolver, useUnixPathSeparator);
   }
 
   @Override

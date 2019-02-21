@@ -123,6 +123,8 @@ public interface Linker extends Tool {
 
   Optional<ExtraOutputsDeriver> getExtraOutputsDeriver();
 
+  boolean getUseUnixPathSeparator();
+
   /** Derives extra outputs from linker args */
   interface ExtraOutputsDeriver {
     ImmutableMap<String, Path> deriveExtraOutputsFromArgs(
