@@ -18,9 +18,6 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,7 +30,6 @@ public class GoBuckConfig {
 
   private static final String VENDOR_PATH = "vendor_path";
   private static final String PROJECT_PATH = "project_path";
-  private static final String TEST_MAIN_GEN = "test_main_gen";
   private static final String DEFAULT_PLATFORM = "default_platform";
   private static final String PREFIX = "prefix";
 
@@ -79,17 +75,6 @@ public class GoBuckConfig {
       return vendorPaths.get().stream().map(Paths::get).collect(ImmutableList.toImmutableList());
     }
     return ImmutableList.of();
-  }
-
-  /**
-   * Get test main generator. The tool is a middle-step utility that utilizes selected .go sources
-   * and generates the main.go which is later on compiled and used as test binary (run by "buck
-   * test").
-   *
-   * @return test_main_gen tool
-   */
-  Optional<Tool> getGoTestMainGenerator(BuildRuleResolver resolver) {
-    return delegate.getView(ToolConfig.class).getTool(SECTION, TEST_MAIN_GEN, resolver);
   }
 
   /**

@@ -25,6 +25,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Abstracting the tooling/flags/libraries used to build Go rules. */
@@ -59,6 +60,8 @@ abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
   public abstract Tool getLinker();
 
   public abstract Tool getCover();
+
+  public abstract Optional<Tool> getTestMainGen();
 
   public abstract CxxPlatform getCxxPlatform();
 

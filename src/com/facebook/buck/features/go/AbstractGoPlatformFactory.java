@@ -155,6 +155,7 @@ abstract class AbstractGoPlatformFactory {
         .setPacker(getGoTool(section, goRoot, "packer", "pack", ""))
         .setLinker(getGoTool(section, goRoot, "linker", "link", "linker_flags"))
         .setCover(getGoTool(section, goRoot, "cover", "cover", ""))
+        .setTestMainGen(getGoToolFromSection(section, goRoot, "testmaingen", "testmaingen", ""))
         .setCxxPlatform(cxxPlatform)
         .setExternalLinkerFlags(getFlags(section, "external_linker_flags"))
         .build();
@@ -221,6 +222,17 @@ abstract class AbstractGoPlatformFactory {
     }
     builder.addEnv("GOROOT", goRoot.toString());
     return builder.build();
+  }
+
+  private Optional<Tool> getGoToolFromSection(
+      String section, Path goRoot, String configName, String toolName, String extraFlagsConfigKey) {
+
+    Optional<Path> goTool = getBuckConfig().getPath(section, configName);
+    if (!goTool.isPresent()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(getGoTool(section, goRoot, configName, toolName, extraFlagsConfigKey));
   }
 
   private ImmutableList<String> getFlags(String section, String key) {

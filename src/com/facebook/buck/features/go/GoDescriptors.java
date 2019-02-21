@@ -450,7 +450,7 @@ abstract class GoDescriptors {
       BuildRuleParams sourceParams,
       ActionGraphBuilder graphBuilder) {
 
-    Optional<Tool> configTool = goBuckConfig.getGoTestMainGenerator(graphBuilder);
+    Optional<Tool> configTool = platform.getTestMainGen();
     if (configTool.isPresent()) {
       return configTool.get();
     }
