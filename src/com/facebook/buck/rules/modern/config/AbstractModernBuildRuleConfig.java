@@ -40,7 +40,7 @@ abstract class AbstractModernBuildRuleConfig
   public ModernBuildRuleBuildStrategy getBuildStrategy() {
     ModernBuildRuleBuildStrategy strategy = getDefaultStrategyConfig().getBuildStrategy();
     if (ModernBuildRuleBuildStrategy.NONE == strategy && isRemoteExecutionExperimentEnabled()) {
-      LOG.warn("Remote Execution experiment is enabled for the current user.");
+      LOG.info("Remote Execution experiment is enabled for the current user.");
       return ModernBuildRuleBuildStrategy.HYBRID_LOCAL;
     }
 
