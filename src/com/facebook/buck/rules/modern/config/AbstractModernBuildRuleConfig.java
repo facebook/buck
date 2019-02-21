@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern.config;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.log.Logger;
 import org.immutables.value.Value;
 
 /** Various configuration for ModernBuildRule behavior. */
@@ -26,6 +27,8 @@ import org.immutables.value.Value;
 @BuckStyleTuple
 abstract class AbstractModernBuildRuleConfig
     implements ConfigView<BuckConfig>, ModernBuildRuleStrategyConfig {
+  private final Logger LOG = Logger.get(AbstractModernBuildRuleConfig.class);
+
   public static final String SECTION = "modern_build_rule";
 
   @Value.Derived
@@ -35,11 +38,21 @@ abstract class AbstractModernBuildRuleConfig
 
   @Override
   public ModernBuildRuleBuildStrategy getBuildStrategy() {
+    ModernBuildRuleBuildStrategy strategy = getDefaultStrategyConfig().getBuildStrategy();
+    if (ModernBuildRuleBuildStrategy.NONE == strategy && isRemoteExecutionExperimentEnabled()) {
+      LOG.warn("Remote Execution experiment is enabled for the current user.");
+      return ModernBuildRuleBuildStrategy.HYBRID_LOCAL;
+    }
+
     return getDefaultStrategyConfig().getBuildStrategy();
   }
 
   @Override
   public HybridLocalBuildStrategyConfig getHybridLocalConfig() {
     return getDefaultStrategyConfig().getHybridLocalConfig();
+  }
+
+  private boolean isRemoteExecutionExperimentEnabled() {
+    return getDelegate().getBooleanValue("experiments", "remote_execution_beta_test", false);
   }
 }
