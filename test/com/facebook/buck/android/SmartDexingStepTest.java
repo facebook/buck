@@ -88,7 +88,8 @@ public class SmartDexingStepTest {
             OptionalInt.empty(),
             Optional.empty(),
             DxStep.DX,
-            null);
+            null,
+            false);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -121,7 +122,8 @@ public class SmartDexingStepTest {
         OptionalInt.empty(),
         Optional.empty(),
         DxStep.DX,
-        null);
+        null,
+        false);
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -164,7 +166,8 @@ public class SmartDexingStepTest {
         OptionalInt.of(9),
         Optional.empty(),
         DxStep.DX,
-        null);
+        null,
+        false);
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -207,7 +210,8 @@ public class SmartDexingStepTest {
         OptionalInt.empty(),
         Optional.empty(),
         DxStep.DX,
-        null);
+        null,
+        false);
 
     assertEquals(
         Joiner.on(" ")
@@ -244,7 +248,8 @@ public class SmartDexingStepTest {
         OptionalInt.empty(),
         Optional.empty(),
         DxStep.DX,
-        null);
+        null,
+        false);
 
     MoreAsserts.assertSteps(
         "Wrong steps",
@@ -285,7 +290,8 @@ public class SmartDexingStepTest {
         OptionalInt.empty(),
         Optional.empty(),
         DxStep.DX,
-        null);
+        null,
+        false);
   }
 
   private AndroidPlatformTarget createAndroidPlatformTarget() {
