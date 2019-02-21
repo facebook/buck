@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution.event;
 
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
+import java.util.Optional;
 
 /** Event containing info about single BuildRule executions inside LocalFallbackStrategy. */
 public abstract class LocalFallbackEvent extends AbstractBuckEvent {
@@ -48,8 +49,12 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
     }
 
     public Finished createFinished(
-        Result remoteResult, Result localResult, long remoteDurationMillis) {
-      return new Finished(this, remoteResult, localResult, remoteDurationMillis);
+        Result remoteResult,
+        Result localResult,
+        long remoteDurationMillis,
+        Optional<String> remoteErrorMessage) {
+      return new Finished(
+          this, remoteResult, localResult, remoteDurationMillis, remoteErrorMessage);
     }
 
     public String getBuildTarget() {
@@ -65,16 +70,22 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
   /** When the LocalFallbackStrategy finished processing a single BuildRule. */
   public static class Finished extends LocalFallbackEvent {
     private final Started startedEvent;
-    private final Result remoteResult;
     private final Result localResult;
     private final long remoteDurationMillis;
+    private final Result remoteResult;
+    private final Optional<String> remoteErrorMessage;
 
     private Finished(
-        Started startedEvent, Result remoteResult, Result localResult, long remoteDurationMillis) {
+        Started startedEvent,
+        Result remoteResult,
+        Result localResult,
+        long remoteDurationMillis,
+        Optional<String> remoteErrorMessage) {
       this.startedEvent = startedEvent;
       this.remoteResult = remoteResult;
       this.localResult = localResult;
       this.remoteDurationMillis = remoteDurationMillis;
+      this.remoteErrorMessage = remoteErrorMessage;
     }
 
     public Started getStartedEvent() {
@@ -83,6 +94,10 @@ public abstract class LocalFallbackEvent extends AbstractBuckEvent {
 
     public Result getRemoteResult() {
       return remoteResult;
+    }
+
+    public Optional<String> getRemoteErrorMessage() {
+      return remoteErrorMessage;
     }
 
     public Result getLocalResult() {

@@ -82,6 +82,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private Optional<ListenableFuture<Optional<BuildResult>>> localStrategyBuildResult;
     private boolean hasCancellationBeenRequested;
     private Optional<LocalFallbackEvent.Result> remoteBuildResult;
+    private Optional<String> remoteBuildErrorMessage;
 
     public FallbackStrategyBuildResult(
         String buildTarget,
@@ -99,6 +100,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       this.startedEvent = LocalFallbackEvent.createStarted(buildTarget);
       this.remoteBuildResult = Optional.empty();
       this.remoteExecutionTimer = Stopwatch.createStarted();
+      this.remoteBuildErrorMessage = Optional.empty();
 
       this.eventBus.post(this.startedEvent);
       this.remoteStrategyBuildResult
@@ -169,6 +171,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       LOG.warn(
           "Remote build failed so trying locally. The error was: [%s]", result.get().toString());
       remoteBuildResult = Optional.of(Result.FAIL);
+      remoteBuildErrorMessage = Optional.of(result.toString());
       fallbackBuildToLocalStrategy();
     }
 
@@ -177,6 +180,7 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
           t, "Remote build failed for a build rule so trying locally now for [%s].", buildTarget);
       remoteBuildResult =
           Optional.of(t instanceof InterruptedException ? Result.INTERRUPTED : Result.EXCEPTION);
+      remoteBuildErrorMessage = Optional.of(t.toString());
       fallbackBuildToLocalStrategy();
     }
 
@@ -224,7 +228,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       combinedFinalResult.set(result);
       eventBus.post(
           startedEvent.createFinished(
-              remote, local, remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS)));
+              remote,
+              local,
+              remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS),
+              remoteBuildErrorMessage));
     }
 
     private void completeCombinedFutureWithException(
@@ -232,7 +239,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
       combinedFinalResult.setException(throwable);
       eventBus.post(
           startedEvent.createFinished(
-              remote, local, remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS)));
+              remote,
+              local,
+              remoteExecutionTimer.elapsed(TimeUnit.MILLISECONDS),
+              remoteBuildErrorMessage));
     }
   }
 }
