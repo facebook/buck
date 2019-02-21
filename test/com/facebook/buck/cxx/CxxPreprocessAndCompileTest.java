@@ -127,6 +127,7 @@ public class CxxPreprocessAndCompileTest {
                   PathSourcePath.of(
                       projectFilesystem,
                       PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")))),
+          false,
           false);
   private Preprocessor PREPROCESSOR_WITH_COLOR_SUPPORT =
       new PreprocessorWithColorSupport(
@@ -641,8 +642,7 @@ public class CxxPreprocessAndCompileTest {
                             PathSourcePath.of(
                                 projectFilesystem,
                                 PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")))),
-                    false,
-                    true),
+                    false),
                 flags,
                 DEFAULT_USE_ARG_FILE),
             outputName,

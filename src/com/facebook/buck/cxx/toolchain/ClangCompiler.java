@@ -32,7 +32,7 @@ public class ClangCompiler extends DefaultCompiler {
   @AddToRuleKey private final DependencyTrackingMode dependencyTrackingMode;
 
   public ClangCompiler(Tool tool, boolean useDependencyTree) {
-    this(tool, useDependencyTree, false);
+    this(tool, useDependencyTree, true);
   }
 
   public ClangCompiler(Tool tool, boolean useDependencyTree, boolean useUnixPathSeparator) {

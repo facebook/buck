@@ -70,7 +70,7 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
   protected Compiler build(CxxToolProvider.Type type, Tool tool) {
     switch (type) {
       case CLANG:
-        return new ClangCompiler(tool, preferDependencyTree, getUseUnixPathSeparator());
+        return new ClangCompiler(tool, preferDependencyTree);
       case CLANG_CL:
         return new ClangClCompiler(tool);
       case CLANG_WINDOWS:
