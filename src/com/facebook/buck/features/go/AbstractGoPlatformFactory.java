@@ -104,8 +104,7 @@ abstract class AbstractGoPlatformFactory {
 
   abstract UnresolvedCxxPlatform getDefaultCxxPlatform();
 
-  @Value.Lazy
-  String getDefaultOs() {
+  public static String getDefaultOs() {
     Platform platform = Platform.detect();
     if (platform == Platform.UNKNOWN) {
       throw new HumanReadableException("Unable to detect system platform");
@@ -119,8 +118,7 @@ abstract class AbstractGoPlatformFactory {
         .orElseThrow(() -> new HumanReadableException("No Go OS corresponding to %s", platform));
   }
 
-  @Value.Lazy
-  String getDefaultArch() {
+  public static String getDefaultArch() {
     Architecture arch = Architecture.detect();
     if (arch == Architecture.UNKNOWN) {
       throw new HumanReadableException("Unable to detect system architecture");
@@ -172,7 +170,7 @@ abstract class AbstractGoPlatformFactory {
               }
               return os;
             })
-        .orElseGet(this::getDefaultOs);
+        .orElse(AbstractGoPlatformFactory.getDefaultOs());
   }
 
   private String getArchFromSection(String section) {
@@ -185,7 +183,7 @@ abstract class AbstractGoPlatformFactory {
               }
               return os;
             })
-        .orElseGet(this::getDefaultArch);
+        .orElse(AbstractGoPlatformFactory.getDefaultArch());
   }
 
   private String getArch(String section) {

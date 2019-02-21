@@ -159,7 +159,18 @@ public class GoTestDescription
       Path packageName) {
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
-            goBuckConfig, platform, buildTarget, projectFilesystem, params, graphBuilder);
+            goBuckConfig,
+            // Since TestMainGenRule produces a go binary that is later exec'd
+            // to produce a go test, we want it to use the platform of the
+            // current machine, not whatever was specified in the rule or config.
+            // That way, tests can be generated properly on this machine.
+            platform
+                .withGoOs(AbstractGoPlatformFactory.getDefaultOs())
+                .withGoArch(AbstractGoPlatformFactory.getDefaultArch()),
+            buildTarget,
+            projectFilesystem,
+            params,
+            graphBuilder);
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
