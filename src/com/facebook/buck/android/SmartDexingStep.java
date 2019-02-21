@@ -50,6 +50,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import com.google.common.io.Files;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -481,7 +482,7 @@ public class SmartDexingStep implements Step {
       // are generated in SplitZipStep and passed around as part of a multi-map - it is
       // simply easier and cleaner to extract the dex file number to be used as unique
       // identifier rather than creating another map and pass it around
-      String[] tokens = outputPath.getFileName().toString().split("\\.")[0].split("classes");
+      String[] tokens = Files.getNameWithoutExtension(outputPath.toString()).split("classes");
       String id = tokens.length == 0 ? "" /* primary */ : tokens[1] /* secondary */;
       buckedId = Optional.of(id);
     }
