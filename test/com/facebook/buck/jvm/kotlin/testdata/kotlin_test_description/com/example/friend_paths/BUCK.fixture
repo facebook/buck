@@ -1,0 +1,23 @@
+kotlin_library(
+    name = "main",
+    srcs = [
+        "Main.kt",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+kotlin_test(
+    name = "passing",
+    srcs = [
+        "PassingUnitTest.kt",
+    ],
+    friend_paths = [
+        ":main",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+        ":main",
+    ],
+)

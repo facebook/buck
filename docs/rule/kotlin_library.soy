@@ -77,6 +77,15 @@ the <code>resources</code> argument.
 {/call}
 
 {call buck.arg}
+  {param name: 'friend_paths' /}
+  {param default: '[]' /}
+  {param desc}
+  List of source paths to pass into the Kotlin compiler as friend-paths, that is, modules
+  you can have access to internal methods.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'annotation_processing_tool' /}
   {param default : 'kapt' /}
   {param desc}

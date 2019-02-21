@@ -69,4 +69,10 @@ public class KotlinTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("test", "//com/example/basic:failing");
     result.assertTestFailure("Test should've failed.");
   }
+
+  @Test
+  public void weCanAccessAnotherModuleInternalModuleByAddingItToFriendPaths() throws Exception {
+    ProcessResult result = workspace.runBuckCommand("test", "//com/example/friend_paths:passing");
+    result.assertSuccess("Build should've succeeded.");
+  }
 }
