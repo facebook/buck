@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.StringResources.Gender;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -25,7 +26,6 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.xml.XmlDomParser;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -231,9 +231,11 @@ public class CompileStringsStep implements Step {
 
         localeToFiles.put(locale, filepath);
       } else {
-        Preconditions.checkState(
-            path.endsWith(ENGLISH_STRING_PATH_SUFFIX),
-            "Invalid path passed to compile strings: " + path);
+        if (!path.endsWith(ENGLISH_STRING_PATH_SUFFIX)) {
+          throw new HumanReadableException(
+              "Invalid path passed to compile strings. Expected path to end with %s, got path %s.",
+              ENGLISH_STRING_PATH_SUFFIX, path);
+        }
 
         localeToFiles.put(ENGLISH_LOCALE, filepath);
       }
