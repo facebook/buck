@@ -1073,25 +1073,14 @@ artifact_cache_size_limit = 52428800
   {/param}
 {/call}
 
-
 {call buckconfig.entry}
   {param section: 'build' /}
-  {param name: 'engine' /}
-  {param example_value: 'shallow' /}
+  {param name: 'delete_temporaries' /}
+  {param example_value: 'false' /}
   {param description}
-    This has two possible values that change the behavior of how Buck operates when building a{sp}
-    {call buck.build_target /}:
-    <ul>
-      <li>
-        <code>shallow</code> (default): only the required transitive dependencies of a{sp}
-        {call buck.build_target /} are materialized locally. Cache hits can result in missing
-        transitive dependencies that are not needed for the final output.
-      </li>
-      <li>
-        <code>deep</code>: ensure that all transitive dependencies of a {call buck.build_target /}
-        {sp}are materialized locally.
-      </li>
-    </ul>
+      If true, Buck deletes some temporary files immediate after executing a build rule. This is
+      useful for conserving disk space when performing large builds. By default, temporary files
+      are not deleted.
   {/param}
 {/call}
 
@@ -1120,12 +1109,22 @@ artifact_cache_size_limit = 52428800
 
 {call buckconfig.entry}
   {param section: 'build' /}
-  {param name: 'delete_temporaries' /}
-  {param example_value: 'false' /}
+  {param name: 'engine' /}
+  {param example_value: 'shallow' /}
   {param description}
-      If true, Buck deletes some temporary files immediate after executing a build rule. This is
-      useful for conserving disk space when performing large builds. By default, temporary files
-      are not deleted.
+    This has two possible values that change the behavior of how Buck operates when building a{sp}
+    {call buck.build_target /}:
+    <ul>
+      <li>
+        <code>shallow</code> (default): only the required transitive dependencies of a{sp}
+        {call buck.build_target /} are materialized locally. Cache hits can result in missing
+        transitive dependencies that are not needed for the final output.
+      </li>
+      <li>
+        <code>deep</code>: ensure that all transitive dependencies of a {call buck.build_target /}
+        {sp}are materialized locally.
+      </li>
+    </ul>
   {/param}
 {/call}
 
@@ -1143,17 +1142,20 @@ artifact_cache_size_limit = 52428800
 
 {call buckconfig.entry}
   {param section: 'build' /}
-  {param name: 'type' /}
-  {param example_value: 'RELEASE_PEX' /}
+  {param name: 'network_threads' /}
+  {param example_value: '8' /}
   {param description}
-    Sets the type of the build that buck has been built with. This allows buck to distinguish
-    different kinds of builds. When you run <code>ant</code> locally, this will be automatically
-    set to <code>LOCAL_ANT</code>. When you build buck using buck locally, e.g. <code>buck build buck</code>,
-    this will be automatically set to <code>LOCAL_PEX</code>. If you are deploying buck through
-    central deployment system, you may want to set build type to <code>RELEASE_PEX</code>:{sp}
-    <pre>buck build buck --config build.type=RELEASE_PEX</pre>
-    <p><b>Note:</b> this setting does not affect how buck builds other rules. It only affects
-    the way how <i>buck will build buck</i>.</p>
+    The number of threads to be used for network I/O. The default value is number of cores of the
+    machine.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'build' /}
+  {param name: 'rule_key_caching' /}
+  {param example_value: 'true' /}
+  {param description}
+    Enables caching of rule key calculations between builds when using the Buck daemon.
   {/param}
 {/call}
 
@@ -1214,20 +1216,17 @@ artifact_cache_size_limit = 52428800
 
 {call buckconfig.entry}
   {param section: 'build' /}
-  {param name: 'network_threads' /}
-  {param example_value: '8' /}
+  {param name: 'type' /}
+  {param example_value: 'RELEASE_PEX' /}
   {param description}
-    The number of threads to be used for network I/O. The default value is number of cores of the
-    machine.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'build' /}
-  {param name: 'rule_key_caching' /}
-  {param example_value: 'true' /}
-  {param description}
-    Enables caching of rule key calculations between builds when using the Buck daemon.
+    Sets the type of the build that buck has been built with. This allows buck to distinguish
+    different kinds of builds. When you run <code>ant</code> locally, this will be automatically
+    set to <code>LOCAL_ANT</code>. When you build buck using buck locally, e.g. <code>buck build buck</code>,
+    this will be automatically set to <code>LOCAL_PEX</code>. If you are deploying buck through
+    central deployment system, you may want to set build type to <code>RELEASE_PEX</code>:{sp}
+    <pre>buck build buck --config build.type=RELEASE_PEX</pre>
+    <p><b>Note:</b> this setting does not affect how buck builds other rules. It only affects
+    the way how <i>buck will build buck</i>.</p>
   {/param}
 {/call}
 
