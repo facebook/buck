@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.io.impl;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
@@ -37,6 +38,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.vfs.Path;
 import java.util.Collections;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -91,5 +93,22 @@ public class HybridGlobberTest {
     assertEquals(
         ImmutableSet.of("some.txt"),
         globber.run(ImmutableList.of("*.txt"), ImmutableList.of(), false));
+  }
+
+  @Test
+  public void testWatchmanGlobFailsOnBrokenPattern() throws Exception {
+    tmp.newFile("some.txt");
+    WatchmanGlobber watchmanGlobber = newGlobber(Optional.empty());
+    globber = new HybridGlobber(nativeGlobber, watchmanGlobber);
+    Exception capturedException = null;
+    try {
+      globber.run(ImmutableList.of("**folder/*.txt"), ImmutableList.of(), false);
+      fail("Globber should fail on attempt to parse incorrect path");
+    } catch (IllegalArgumentException e) {
+      capturedException = e;
+    }
+    assertThat(
+        capturedException.getMessage(),
+        Matchers.containsString("recursive wildcard must be its own segment"));
   }
 }
