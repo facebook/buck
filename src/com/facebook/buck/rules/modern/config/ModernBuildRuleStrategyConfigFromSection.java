@@ -33,8 +33,18 @@ public class ModernBuildRuleStrategyConfigFromSection implements ModernBuildRule
   @Override
   public ModernBuildRuleBuildStrategy getBuildStrategy() {
     return delegate
-        .getEnum(section, "strategy", ModernBuildRuleBuildStrategy.class)
+        .getEnum(
+            section,
+            isRemoteExecutionExperimentEnabled() ? "experimental_strategy" : "strategy",
+            ModernBuildRuleBuildStrategy.class)
         .orElse(ModernBuildRuleBuildStrategy.DEFAULT);
+  }
+
+  private boolean isRemoteExecutionExperimentEnabled() {
+    if (section.equals(AbstractModernBuildRuleConfig.SECTION)) {
+      return delegate.getBooleanValue("experiments", "remote_execution_beta_test", false);
+    }
+    return false;
   }
 
   @Override
