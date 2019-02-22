@@ -16,10 +16,6 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.android.WriteAppModuleMetadataStep.CLASS_SECTION_HEADER;
-import static com.facebook.buck.android.WriteAppModuleMetadataStep.DEPS_SECTION_HEADER;
-import static com.facebook.buck.android.WriteAppModuleMetadataStep.ITEM_INDENTATION;
-import static com.facebook.buck.android.WriteAppModuleMetadataStep.MODULE_INDENTATION;
 
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -43,6 +39,8 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
 
   public ProjectFilesystem filesystem;
 
+  private Path testdataDir;
+
   @Before
   public void setUp() throws InterruptedException, IOException {
     AssumeAndroidPlatform.assumeSdkIsAvailable();
@@ -53,47 +51,17 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    testdataDir = TestDataHelper.getTestDataDirectory(this).resolve("app_modularity_integration");
   }
 
   @Test
   public void testAppModularityMetadata() throws IOException {
     String target = "//apps/multidex:modularity-metadata";
     Path result = workspace.buildAndReturnOutput(target);
+
     String expected =
-        CLASS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample2"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample3"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/sample/app/MyApplication"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Small"
-            + EOL
-            + DEPS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL;
+        workspace.getFileContents(testdataDir.resolve("testAppModularityMetadata.txt"));
+
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);
@@ -104,43 +72,8 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String target = "//apps/multidex:modularity-metadata-inner-class";
     Path result = workspace.buildAndReturnOutput(target);
     String expected =
-        CLASS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample2"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample3"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/sample/app/MyApplication"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_inner_class_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/SmallWithInnerClass"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/SmallWithInnerClass$Inner"
-            + EOL
-            + DEPS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_inner_class_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL;
+        workspace.getFileContents(
+            testdataDir.resolve("testAppModularityMetadataWithInnerClass.txt"));
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);
@@ -151,58 +84,8 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String target = "//apps/multidex:modularity-metadata-simple-declared-dep";
     Path result = workspace.buildAndReturnOutput(target);
     String expected =
-        CLASS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample2"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample3"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/sample/app/MyApplication"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_inner_class_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/SmallWithInnerClass"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/SmallWithInnerClass$Inner"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Small"
-            + EOL
-            + DEPS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_inner_class_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "small_inner_class_with_no_resource_deps"
-            + EOL;
+        workspace.getFileContents(
+            testdataDir.resolve("testAppModularityMetadataWithDeclaredDependency.txt"));
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);
@@ -213,70 +96,8 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String target = "//apps/multidex:modularity-metadata-shared-module";
     Path result = workspace.buildAndReturnOutput(target);
     String expected =
-        CLASS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample2"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample3"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/sample/app/MyApplication"
-            + EOL
-            + MODULE_INDENTATION
-            + "shared0"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Shared"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_shared2_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/SmallWithShared2"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_shared_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/SmallWithShared"
-            + EOL
-            + DEPS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + MODULE_INDENTATION
-            + "shared0"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_shared2_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "shared0"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_shared_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "shared0"
-            + EOL;
+        workspace.getFileContents(
+            testdataDir.resolve("testAppModularityMetadataWithSharedModule.txt"));
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);
@@ -287,58 +108,8 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String target = "//apps/multidex:modularity-metadata-declared-dep-with-shared-target";
     Path result = workspace.buildAndReturnOutput(target);
     String expected =
-        CLASS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample2"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Sample3"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/sample/app/MyApplication"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_shared2_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/Shared"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/SmallWithShared2"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_shared_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "com/facebook/sample/SmallWithShared"
-            + EOL
-            + DEPS_SECTION_HEADER
-            + EOL
-            + MODULE_INDENTATION
-            + "dex"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_shared2_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL
-            + MODULE_INDENTATION
-            + "small_with_shared_with_no_resource_deps"
-            + EOL
-            + ITEM_INDENTATION
-            + "dex"
-            + EOL
-            + ITEM_INDENTATION
-            + "small_with_shared2_with_no_resource_deps"
-            + EOL;
+        workspace.getFileContents(
+            testdataDir.resolve("testAppModularityMetadataWithDecDepsWithSharedTarget.txt"));
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);

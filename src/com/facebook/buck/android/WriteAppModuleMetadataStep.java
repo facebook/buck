@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -46,6 +47,7 @@ public class WriteAppModuleMetadataStep implements Step {
   private final boolean skipProguard;
 
   public static final String CLASS_SECTION_HEADER = "CLASSES";
+  public static final String TARGETS_SECTION_HEADER = "TARGETS";
   public static final String DEPS_SECTION_HEADER = "DEPS";
   public static final String MODULE_INDENTATION = "  ";
   public static final String ITEM_INDENTATION = "    ";
@@ -98,6 +100,15 @@ public class WriteAppModuleMetadataStep implements Step {
       TreeMultimap<APKModule, String> orderedModuleToClassesMap =
           sortModuleToStringsMultimap(moduleToClassesMap);
 
+      TreeMultimap<APKModule, String> orderedModuleToTargetsMap =
+          TreeMultimap.create(
+              (left, right) -> left.getName().compareTo(right.getName()), Ordering.natural());
+      for (APKModule module : apkModuleGraph.getAPKModules()) {
+        for (BuildTarget target : apkModuleGraph.getBuildTargets(module)) {
+          orderedModuleToTargetsMap.put(module, target.getFullyQualifiedName());
+        }
+      }
+
       // Module to module deps map is already sorted
       SortedMap<APKModule, ? extends SortedSet<APKModule>> moduleToDepsMap =
           apkModuleGraph.toOutgoingEdgesMap();
@@ -106,6 +117,8 @@ public class WriteAppModuleMetadataStep implements Step {
       LinkedList<String> metadataLines = new LinkedList<>();
       metadataLines.add(CLASS_SECTION_HEADER);
       writeModuleToStringsMultimap(orderedModuleToClassesMap, metadataLines);
+      metadataLines.add(TARGETS_SECTION_HEADER);
+      writeModuleToStringsMultimap(orderedModuleToTargetsMap, metadataLines);
       metadataLines.add(DEPS_SECTION_HEADER);
       writeModuleToModulesMap(moduleToDepsMap, metadataLines);
       filesystem.writeLinesToPath(metadataLines, metadataOutput);
