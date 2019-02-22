@@ -70,6 +70,12 @@ many additional examples, see the {call buck.cmd_query /} reference page.
       How do I find the dependencies for a target?
     </a>
   </li>
+  <li>
+    <a href="#find-buildfile-owner">
+      How do I find buildfile that contains the target that owns a
+      source file?
+    </a>
+  </li>
 </ul>
 
 <hr><br/>
@@ -204,6 +210,22 @@ buck query "deps(set('//foo:bar' '//foo:lib' '//foo/baz:util'))"
       set of transitive dependencies.
     </p>
   {/param}
+{/call}
+
+
+{call .faq}
+  {param id: 'find-buildfile-owner' /}
+  {param question}
+    <p>
+      How do I find the buildfile that contains the target that owns a
+      source file?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+  {call buckquery.example_buildfile_owner /}
+  {/param}
+
 {/call}
 
     {/param}

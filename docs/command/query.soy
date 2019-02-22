@@ -602,25 +602,7 @@ files that define the targets that result from the evaluation
 of <code>expression</code>.
 </p>
 
-<p>
-In order to find the build file associated with a source file, combine the <code>owner</code>
-{sp}operator with <code>buildfile</code>.
-For example, 
-</p>
-
-<p>
-<pre>
-{literal}
-buck query "buildfile(owner('foo/bar/main.cpp'))" 
-{/literal}
-</pre>
-</p>
-
-<p>
-first finds the targets that <em>own</em> <code>foo/bar/main.cpp</code> and 
-then returns the build files, such as <code>foo/bar/BUCK</code>, that define 
-those targets. 
-</p>
+{call buckquery.example_buildfile_owner /}
 
 
 {call .section}
