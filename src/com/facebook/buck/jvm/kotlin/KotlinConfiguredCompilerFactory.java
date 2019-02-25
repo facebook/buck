@@ -90,8 +90,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private ImmutableList<String> condenseCompilerArguments(CoreArg kotlinArgs) {
     ImmutableMap.Builder<String, Optional<String>> optionBuilder = ImmutableMap.builder();
     LinkedHashMap<String, Optional<String>> freeArgs = Maps.newLinkedHashMap();
-    kotlinArgs.getFreeCompilerArgs()
-        .forEach(arg -> freeArgs.put(arg, Optional.empty()));
+    kotlinArgs.getFreeCompilerArgs().forEach(arg -> freeArgs.put(arg, Optional.empty()));
     optionBuilder.putAll(freeArgs);
 
     // Args from CommonToolArguments.kt and KotlinCommonToolOptions.kt
@@ -110,7 +109,9 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     if (kotlinArgs.getIncludeRuntime()) {
       optionBuilder.put("-include-runtime", Optional.empty());
     }
-    kotlinArgs.getJdkHome().ifPresent(jdkHome -> optionBuilder.put("-jdk-home", Optional.of(jdkHome)));
+    kotlinArgs
+        .getJdkHome()
+        .ifPresent(jdkHome -> optionBuilder.put("-jdk-home", Optional.of(jdkHome)));
     if (kotlinArgs.getNoJdk()) {
       optionBuilder.put("-no-jdk", Optional.empty());
     }
@@ -123,22 +124,27 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     if (kotlinArgs.getJavaParameters()) {
       optionBuilder.put("-java-parameters", Optional.empty());
     }
-    kotlinArgs.getApiVersion().ifPresent(apiVersion -> optionBuilder.put("-api-version", Optional.of(apiVersion)));
-    kotlinArgs.languageVersion().ifPresent(languageVersion -> optionBuilder.put("-language-version", Optional.of(languageVersion)));
+    kotlinArgs
+        .getApiVersion()
+        .ifPresent(apiVersion -> optionBuilder.put("-api-version", Optional.of(apiVersion)));
+    kotlinArgs
+        .languageVersion()
+        .ifPresent(
+            languageVersion ->
+                optionBuilder.put("-language-version", Optional.of(languageVersion)));
 
     // Return de-duping keys and sorting by them.
-    return optionBuilder.build()
-        .entrySet()
-        .stream()
+    return optionBuilder.build().entrySet().stream()
         .filter(distinctByKey(Map.Entry::getKey))
         .sorted(comparing(Map.Entry::getKey, String.CASE_INSENSITIVE_ORDER))
-        .flatMap(entry -> {
-          if (entry.getValue().isPresent()) {
-            return ImmutableList.of(entry.getKey(), entry.getValue().get()).stream();
-          } else {
-            return ImmutableList.of(entry.getKey()).stream();
-          }
-        })
+        .flatMap(
+            entry -> {
+              if (entry.getValue().isPresent()) {
+                return ImmutableList.of(entry.getKey(), entry.getValue().get()).stream();
+              } else {
+                return ImmutableList.of(entry.getKey()).stream();
+              }
+            })
         .collect(toImmutableList());
   }
 
