@@ -20,13 +20,18 @@ import static com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -47,6 +52,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final int DEFAULT_REMOTE_CONCURRENT_EXECUTIONS = 80;
   public static final int DEFAULT_REMOTE_CONCURRENT_RESULT_HANDLING = 6;
   public static final boolean DEFAULT_IS_LOCAL_FALLBACK_ENABLED = false;
+
+  private static final String CONFIG_CERT = "cert";
+  private static final String CONFIG_KEY = "key";
 
   /**
    * Limit on the number of outstanding execution requests. This is probably the value that's most
@@ -115,16 +123,16 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   /** client TLS certificate file in PEM format */
   public Optional<Path> getCertFile() {
-    return getFileOption("cert");
+    return getFileOption(CONFIG_CERT);
   }
 
   /** client TLS private key in PEM format */
   public Optional<Path> getKeyFile() {
-    return getFileOption("key");
+    return getFileOption(CONFIG_KEY);
   }
 
   /** file containing all TLS authorities to verify server certificate with (PEM format) */
-  public Optional<Path> getCAsFile() {
+  public Optional<Path> getCerticateAuthoritiesFile() {
     return getFileOption("ca");
   }
 
@@ -308,5 +316,42 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   public String getReSessionLabel() {
     return getDelegate().getValue(SECTION, RE_SESSION_LABEL_KEY).orElse("");
+  }
+
+  public void validateCertificatesOrThrow() {
+    List<String> errors = Lists.newArrayList();
+    if (!getInsecure() || !getCasInsecure()) {
+      getErrorOnInvalidFile(CONFIG_CERT, getCertFile()).ifPresent(errorMsg -> errors.add(errorMsg));
+      getErrorOnInvalidFile(CONFIG_KEY, getKeyFile()).ifPresent(errorMsg -> errors.add(errorMsg));
+    }
+
+    if (getCerticateAuthoritiesFile().isPresent()) {
+      Path caFile = getCerticateAuthoritiesFile().get();
+      if (!Files.exists(caFile)) {
+        errors.add(
+            String.format(
+                "Config [%s.ca] points to file [%s] that does not exist.", SECTION, caFile));
+      }
+    }
+
+    if (!errors.isEmpty()) {
+      throw new HumanReadableException(Joiner.on("\n").join(errors));
+    }
+  }
+
+  private Optional<String> getErrorOnInvalidFile(String configName, Optional<Path> certPath) {
+    if (!certPath.isPresent()) {
+      return Optional.of(
+          String.format("Config [%s.%s] must point to a file.", SECTION, configName));
+    }
+
+    if (!Files.exists(certPath.get())) {
+      return Optional.of(
+          String.format(
+              "Config [%s.%s] points to a file [%s] that does not exist.",
+              SECTION, configName, certPath.get()));
+    }
+
+    return Optional.empty();
   }
 }

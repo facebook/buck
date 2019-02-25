@@ -920,6 +920,10 @@ public final class Main {
               filesystem.getBuckPaths().getLogDir());
 
       RemoteExecutionConfig remoteExecutionConfig = buckConfig.getView(RemoteExecutionConfig.class);
+      if (isRemoteExecutionBuild(command, buckConfig)) {
+        remoteExecutionConfig.validateCertificatesOrThrow();
+      }
+
       Optional<RemoteExecutionEventListener> remoteExecutionListener =
           remoteExecutionConfig.isConsoleEnabled()
               ? Optional.of(new RemoteExecutionEventListener())

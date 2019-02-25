@@ -7,6 +7,7 @@ java_test(
     ]),
     has_immutable_types = True,
     deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/remoteexecution/config:config",
         "//src/com/facebook/buck/util:util",

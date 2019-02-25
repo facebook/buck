@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import org.junit.Assert;
 import org.junit.Test;
@@ -44,6 +45,23 @@ public class RemoteExecutionConfigTest {
     RemoteExecutionConfig config = getConfig("https://localhost/test?blah={id}");
     Assert.assertEquals(
         "https://localhost/test?blah=topspin", config.getDebugURLString(RE_SESSION_ID));
+  }
+
+  @Test
+  public void testValidationOfCertificateFiles() {
+    BuckConfig config =
+        FakeBuckConfig.builder().setSections("[remoteexecution]", "ca=does_not_exist").build();
+    RemoteExecutionConfig reConfig = config.getView(RemoteExecutionConfig.class);
+    try {
+      reConfig.validateCertificatesOrThrow();
+      Assert.fail("Should've thrown.");
+    } catch (HumanReadableException e) {
+      Assert.assertEquals(
+          "Config [remoteexecution.cert] must point to a file.\n"
+              + "Config [remoteexecution.key] must point to a file.\n"
+              + "Config [remoteexecution.ca] points to file [does_not_exist] that does not exist.",
+          e.getMessage());
+    }
   }
 
   private RemoteExecutionConfig getConfig(String debugFormatString) {
