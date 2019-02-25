@@ -7,6 +7,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src-gen:protobuf",
         "//src-gen:thrift",
         "//src/com/facebook/buck/artifact_cache:artifact_cache",
         "//src/com/facebook/buck/core/build/event:event",

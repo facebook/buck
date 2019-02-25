@@ -16,11 +16,13 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/build/event:event",
+        "//src/com/facebook/buck/event/listener:listener",
         "//src/com/facebook/buck/event/listener/interfaces:interfaces",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/remoteexecution/config:config",
         "//src/com/facebook/buck/remoteexecution/event:event",
+        "//src/com/facebook/buck/remoteexecution/event/listener/model:model",
         "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
         "//src/com/facebook/buck/util/network:network",
         "//src/com/facebook/buck/util/unit:unit",
