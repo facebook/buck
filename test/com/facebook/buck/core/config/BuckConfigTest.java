@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.config;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -137,16 +136,6 @@ public class BuckConfigTest {
   public void testGetAndroidTargetSdkWithSpaces() throws IOException {
     BuckConfig config = createFromText("[android]", "target = Google Inc.:Google APIs:16");
     assertEquals("Google Inc.:Google APIs:16", config.getValue("android", "target").get());
-  }
-
-  @Test
-  public void getEnvUsesSuppliedEnvironment() {
-    String name = "SOME_ENVIRONMENT_VARIABLE";
-    String value = "SOME_VALUE";
-    BuckConfig config =
-        FakeBuckConfig.builder().setEnvironment(ImmutableMap.of(name, value)).build();
-    String[] expected = {value};
-    assertArrayEquals("Should match value in environment.", expected, config.getEnv(name, ":"));
   }
 
   private BuckConfig createFromText(String... lines) throws IOException {

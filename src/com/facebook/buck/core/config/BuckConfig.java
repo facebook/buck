@@ -389,14 +389,6 @@ public class BuckConfig {
     return environment;
   }
 
-  public String[] getEnv(String propertyName, String separator) {
-    String value = getEnvironment().get(propertyName);
-    if (value == null) {
-      value = "";
-    }
-    return value.split(separator);
-  }
-
   /** @return the path for the given section and property. */
   public Optional<Path> getPath(String sectionName, String name) {
     return getPath(sectionName, name, true);
