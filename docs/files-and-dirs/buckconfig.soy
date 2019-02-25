@@ -97,6 +97,13 @@ does not issue a warning or error</em>.
 </p>
 
 <p>
+Note that sometimes you might need to define your own custom sections, 
+such as for platform flavors for <a href="#cxx">C++</a> or <a href="#python">Python</a>.
+These scenarios are examples of when you should be careful not to
+introduce the dot character in section names.
+</p>
+
+<p>
 This constraint is because Buck uses the dot character to delimit
 section names and key names in other contexts such as 
 the <code>--config</code> command-line parameter. For information 
