@@ -25,7 +25,9 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.artifact_cache.config.HttpCacheEntry;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -362,5 +364,52 @@ public class ArtifactCacheBuckConfigTest {
             Architecture.detect(),
             Platform.detect(),
             EnvVariablesProvider.getSystemEnv()));
+  }
+
+  @Test
+  public void testGetStringOrEnvironmentVariable() throws IOException {
+    BuckConfig config = FakeBuckConfig.builder().setSections("[section]", "field = value").build();
+    assertEquals(
+        Optional.of("value"),
+        ArtifactCacheBuckConfig.getStringOrEnvironmentVariable(config, "section", "field"));
+
+    config =
+        FakeBuckConfig.builder()
+            .setSections("[section]", "field = value", "field_env_var = env_var")
+            .setEnvironment(ImmutableMap.of("env_var", "other_value"))
+            .build();
+    assertEquals(
+        "env_var content overrides field value",
+        Optional.of("other_value"),
+        ArtifactCacheBuckConfig.getStringOrEnvironmentVariable(config, "section", "field"));
+
+    config =
+        FakeBuckConfig.builder()
+            .setSections("[section]", "field_env_var = env_var")
+            .setEnvironment(ImmutableMap.of("env_var", "other_value"))
+            .build();
+    assertEquals(
+        "set field_env_var works without set field",
+        Optional.of("other_value"),
+        ArtifactCacheBuckConfig.getStringOrEnvironmentVariable(config, "section", "field"));
+
+    config =
+        FakeBuckConfig.builder()
+            .setSections("[section]", "field = value", "field_env_var = env_var")
+            .build();
+    assertEquals(
+        "use field value if env var does not exist",
+        Optional.of("value"),
+        ArtifactCacheBuckConfig.getStringOrEnvironmentVariable(config, "section", "field"));
+
+    config =
+        FakeBuckConfig.builder()
+            .setSections("[section]", "field = value", "field_env_var = env_var")
+            .setEnvironment(ImmutableMap.of("env_var", " \t\r\n "))
+            .build();
+    assertEquals(
+        "use field value if env var holds just whitespace",
+        Optional.of("value"),
+        ArtifactCacheBuckConfig.getStringOrEnvironmentVariable(config, "section", "field"));
   }
 }

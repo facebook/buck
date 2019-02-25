@@ -391,24 +391,26 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Gets the path to a PEM encoded X509 certifiate to use as the TLS client certificate for HTTP
-   * cache requests
+   * Gets the path to a PEM encoded X509 certificate to use as the TLS client certificate for HTTP
+   * cache requests, from the content of the env var specified in http_client_tls_cert_env_var if
+   * set or the field value
    *
    * <p>Both the key and certificate must be set for client TLS certificates to be used
    */
   public Optional<Path> getClientTlsCertificate() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, "http_client_tls_cert").map(Paths::get);
+    return getPathWithEnv("http_client_tls_cert");
   }
 
   /**
-   * Gets the path to a PEM encoded PCKS#8 key to use as the TLS client key for HTTP cache requests.
-   * This may be a file that contains both the private key and the certificate if both objects are
-   * newline delimited.
+   * Gets the path to a PEM encoded PCKS#8 key to use as the TLS client key for HTTP cache requests,
+   * from the content of the env var specified in http_client_tls_key_env_var if set or the field
+   * value. This may be a file that contains both the private key and the certificate if both
+   * objects are newline delimited.
    *
    * <p>Both the key and certificate must be set for client TLS certificates to be used
    */
   public Optional<Path> getClientTlsKey() {
-    return buckConfig.getValue(CACHE_SECTION_NAME, "http_client_tls_key").map(Paths::get);
+    return getPathWithEnv("http_client_tls_key");
   }
 
   /** Thread pools that are available for task execution. */
@@ -424,6 +426,10 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig
         .getEnum(CACHE_SECTION_NAME, "dir_cache_store_executor", Executor.class)
         .orElse(Executor.DIRECT);
+  }
+
+  private Optional<Path> getPathWithEnv(String field) {
+    return getStringOrEnvironmentVariable(buckConfig, CACHE_SECTION_NAME, field).map(Paths::get);
   }
 
   private boolean getServingLocalCacheEnabled() {
@@ -593,5 +599,21 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig
         .getInteger(CACHE_SECTION_NAME, DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS)
         .orElse(DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS);
+  }
+
+  /**
+   * @return field value or content of environment variable specified in field
+   *     "${section}.${field}_env_var" if this environment variable exists and does not just contain
+   *     0 or more whitespaces
+   */
+  public static Optional<String> getStringOrEnvironmentVariable(
+      BuckConfig buckConfig, String section, String field) {
+    Optional<String> defaultValue = buckConfig.getValue(section, field);
+    Optional<String> envVariable = buckConfig.getValue(section, field + "_env_var");
+    if (!envVariable.isPresent()) {
+      return defaultValue;
+    }
+    String envValue = buckConfig.getEnvironment().getOrDefault(envVariable.get(), "").trim();
+    return envValue.isEmpty() ? defaultValue : Optional.of(envValue);
   }
 }

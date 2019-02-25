@@ -18,6 +18,7 @@ package com.facebook.buck.remoteexecution.config;
 
 import static com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy.REMOTE;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -123,17 +124,17 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
 
   /** client TLS certificate file in PEM format */
   public Optional<Path> getCertFile() {
-    return getFileOption(CONFIG_CERT);
+    return getPathWithEnv(CONFIG_CERT);
   }
 
   /** client TLS private key in PEM format */
   public Optional<Path> getKeyFile() {
-    return getFileOption(CONFIG_KEY);
+    return getPathWithEnv(CONFIG_KEY);
   }
 
   /** file containing all TLS authorities to verify server certificate with (PEM format) */
-  public Optional<Path> getCerticateAuthoritiesFile() {
-    return getFileOption("ca");
+  public Optional<Path> getCertificateAuthoritiesFile() {
+    return getPathWithEnv("ca");
   }
 
   private String getDebugURLFormatString() {
@@ -305,10 +306,6 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     return value;
   }
 
-  public Optional<Path> getFileOption(String key) {
-    return getDelegate().getValue(SECTION, key).map(Paths::get);
-  }
-
   /** Whether Console output of Remote Execution information is enabled. */
   public boolean isConsoleEnabled() {
     return getType() != RemoteExecutionType.NONE;
@@ -325,8 +322,8 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       getErrorOnInvalidFile(CONFIG_KEY, getKeyFile()).ifPresent(errorMsg -> errors.add(errorMsg));
     }
 
-    if (getCerticateAuthoritiesFile().isPresent()) {
-      Path caFile = getCerticateAuthoritiesFile().get();
+    if (getCertificateAuthoritiesFile().isPresent()) {
+      Path caFile = getCertificateAuthoritiesFile().get();
       if (!Files.exists(caFile)) {
         errors.add(
             String.format(
@@ -353,5 +350,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
     }
 
     return Optional.empty();
+  }
+
+  private Optional<Path> getPathWithEnv(String field) {
+    return ArtifactCacheBuckConfig.getStringOrEnvironmentVariable(getDelegate(), SECTION, field)
+        .map(Paths::get);
   }
 }
