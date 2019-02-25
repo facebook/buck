@@ -61,6 +61,7 @@ import com.facebook.buck.test.XmlTestResultParser;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ZipFileTraversal;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -555,10 +556,18 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
 
       Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
-      for (SourcePath path : sources) {
-        // We support multiple languages in this rule - the file extension doesn't matter so long
-        // as the language supports filename == classname.
-        sourceClassNames.add(MorePaths.getNameWithoutExtension(resolver.getRelativePath(path)));
+      try {
+        JavaPaths.getExpandedSourcePaths(
+                sources
+                    .stream()
+                    .map(resolver::getAbsolutePath)
+                    .collect(ImmutableList.toImmutableList()))
+            .stream()
+            .map(MorePaths::getNameWithoutExtension)
+            .forEach(sourceClassNames::add);
+      } catch (IOException e) {
+        throw new BuckUncheckedExecutionException(
+            e, "When determining possible java test class names.");
       }
 
       ImmutableSet.Builder<String> testClassNames = ImmutableSet.builder();

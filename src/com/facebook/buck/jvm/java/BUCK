@@ -158,6 +158,7 @@ java_immutables_library(
         "JavaInMemoryFileManager.java",
         "JavaInMemoryFileObject.java",
         "JavaNoOpFileObject.java",
+        "JavaPaths.java",
         "Javac.java",
         "JavacErrorParser.java",
         "JavacEventSinkToBuckEventBusBridge.java",

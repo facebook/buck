@@ -72,7 +72,7 @@ public class JavaSourceJarTest {
     assertNotNull(output);
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
-    assertThat(pathResolver.getRelativePath(output).toString(), endsWith(Javac.SRC_JAR));
+    assertThat(pathResolver.getRelativePath(output).toString(), endsWith(JavaPaths.SRC_JAR));
   }
 
   @Test

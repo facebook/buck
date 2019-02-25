@@ -31,3 +31,19 @@ java_test(
         "buck//third-party/java/junit:junit",
     ],
 )
+
+zip_file(
+    name = "zip",
+    srcs = ["SlowTest.java"],
+    out = "classes.src.zip",
+)
+
+java_test(
+    name = "slow_zip",
+    srcs = [
+        ":zip",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.jvm.java.Javac;
+import com.facebook.buck.jvm.java.JavaPaths;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -51,7 +51,7 @@ public class PublishCommandIntegrationTest {
   public static final String EXPECTED_PUT_URL_PATH_BASE = "/com/example/foo/1.0/foo-1.0";
   public static final String JAR = ".jar";
   public static final String POM = ".pom";
-  public static final String SRC_JAR = Javac.SRC_JAR;
+  public static final String SRC_JAR = JavaPaths.SRC_JAR;
   public static final String SHA1 = ".sha1";
   public static final String TARGET = "//:foo";
 
@@ -146,7 +146,7 @@ public class PublishCommandIntegrationTest {
     assertTrue(
         stdOut, stdOut.contains("com.example:foo:jar:" + AetherUtil.CLASSIFIER_SOURCES + ":1.0"));
     assertTrue(stdOut, stdOut.contains(MorePaths.pathWithPlatformSeparators("/foo#maven.jar")));
-    assertTrue(stdOut, stdOut.contains(Javac.SRC_JAR));
+    assertTrue(stdOut, stdOut.contains(JavaPaths.SRC_JAR));
     assertTrue(stdOut, stdOut.contains(getMockRepoUrl()));
   }
 

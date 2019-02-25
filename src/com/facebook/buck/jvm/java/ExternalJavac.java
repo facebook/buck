@@ -21,21 +21,16 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.jvm.java.abi.source.api.SourceOnlyAbiRuleInfoFactory;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.unarchive.ArchiveFormat;
-import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -122,7 +117,7 @@ public class ExternalJavac implements Javac {
         ImmutableList<Path> expandedSources;
         try {
           expandedSources =
-              getExpandedSourcePaths(
+              JavaPaths.extractArchivesAndGetPaths(
                   context.getProjectFilesystem(),
                   context.getProjectFilesystemFactory(),
                   javaSourceFilePaths,
@@ -191,35 +186,5 @@ public class ExternalJavac implements Javac {
         // Nothing to do
       }
     };
-  }
-
-  private ImmutableList<Path> getExpandedSourcePaths(
-      ProjectFilesystem projectFilesystem,
-      ProjectFilesystemFactory projectFilesystemFactory,
-      ImmutableSet<Path> javaSourceFilePaths,
-      Path workingDirectory)
-      throws InterruptedException, IOException {
-
-    // Add sources file or sources list to command
-    ImmutableList.Builder<Path> sources = ImmutableList.builder();
-    for (Path path : javaSourceFilePaths) {
-      String pathString = path.toString();
-      if (pathString.endsWith(".java")) {
-        sources.add(path);
-      } else if (pathString.endsWith(SRC_ZIP) || pathString.endsWith(SRC_JAR)) {
-        // For a Zip of .java files, create a JavaFileObject for each .java entry.
-        ImmutableList<Path> zipPaths =
-            ArchiveFormat.ZIP
-                .getUnarchiver()
-                .extractArchive(
-                    projectFilesystemFactory,
-                    projectFilesystem.resolve(path),
-                    projectFilesystem.resolve(workingDirectory),
-                    ExistingFileMode.OVERWRITE);
-        sources.addAll(
-            zipPaths.stream().filter(input -> input.toString().endsWith(".java")).iterator());
-      }
-    }
-    return sources.build();
   }
 }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.android;
 
-import static com.facebook.buck.jvm.java.Javac.SRC_ZIP;
+import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;

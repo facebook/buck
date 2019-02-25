@@ -252,6 +252,9 @@ SLOW_INTEGRATION_TESTS = [
 java_test(
     name = "integration-slow",
     srcs = SLOW_INTEGRATION_TESTS,
+    module_deps = [
+        "//src/com/facebook/buck/features/zip/rules:rules",
+    ],
     resources = glob(
         ["testdata/**"],
     ),

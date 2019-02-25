@@ -7,3 +7,19 @@ java_test(
         "buck//third-party/java/junit:junit",
     ],
 )
+
+zip_file(
+    name = "zip",
+    srcs = ["SimpleTest.java"],
+    out = "classes.src.zip",
+)
+
+java_test(
+    name = "simple_zip",
+    srcs = [
+        ":zip",
+    ],
+    deps = [
+        "buck//third-party/java/junit:junit",
+    ],
+)
