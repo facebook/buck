@@ -367,7 +367,12 @@ public class InstallCommand extends BuildCommand {
       TargetNode<?> node =
           params
               .getParser()
-              .getTargetNode(params.getCell(), getEnableParserProfiling(), executor, target);
+              .getTargetNode(
+                  params.getCell(),
+                  getEnableParserProfiling(),
+                  executor,
+                  SpeculativeParsing.DISABLED,
+                  target);
 
       if (node != null
           && node.getRuleType()
