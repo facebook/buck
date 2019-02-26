@@ -189,7 +189,8 @@ public class GoProjectCommandHelper {
                       BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
           .getTargetGraph();
     }
-    return parser.buildTargetGraph(cell, enableParserProfiling, executor, passedInTargets);
+    return parser.buildTargetGraph(
+        cell, enableParserProfiling, executor, SpeculativeParsing.ENABLED, passedInTargets);
   }
 
   /**
@@ -401,7 +402,11 @@ public class GoProjectCommandHelper {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       projectGraph =
           parser.buildTargetGraph(
-              cell, enableParserProfiling, executor, Sets.union(graphRoots, explicitTestTargets));
+              cell,
+              enableParserProfiling,
+              executor,
+              SpeculativeParsing.ENABLED,
+              Sets.union(graphRoots, explicitTestTargets));
     }
 
     TargetGraphAndTargets targetGraphAndTargets =

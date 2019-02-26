@@ -1154,6 +1154,7 @@ public class TargetsCommand extends AbstractCommand {
                   params.getCell(),
                   getEnableParserProfiling(),
                   executor,
+                  SpeculativeParsing.ENABLED,
                   matchingBuildTargetsWithTests);
 
       return new Pair<>(

@@ -231,7 +231,8 @@ public class IjProjectCommandHelper {
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(cell, enableParserProfiling, executor, passedInTargets);
+    return parser.buildTargetGraph(
+        cell, enableParserProfiling, executor, SpeculativeParsing.ENABLED, passedInTargets);
   }
 
   /** Run intellij specific project generation actions. */
@@ -400,7 +401,11 @@ public class IjProjectCommandHelper {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       projectGraph =
           parser.buildTargetGraph(
-              cell, enableParserProfiling, executor, Sets.union(graphRoots, explicitTestTargets));
+              cell,
+              enableParserProfiling,
+              executor,
+              SpeculativeParsing.ENABLED,
+              Sets.union(graphRoots, explicitTestTargets));
     }
 
     TargetGraphAndTargets targetGraphAndTargets =

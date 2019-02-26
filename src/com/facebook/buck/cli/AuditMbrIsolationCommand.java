@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.modern.tools.IsolationChecker;
 import com.facebook.buck.rules.modern.tools.IsolationChecker.FailureReporter;
@@ -87,6 +88,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
                     params.getCell(),
                     getEnableParserProfiling(),
                     pool.getListeningExecutorService(),
+                    SpeculativeParsing.ENABLED,
                     targets);
       } catch (BuildFileParseException e) {
         params

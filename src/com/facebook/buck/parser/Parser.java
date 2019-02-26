@@ -85,6 +85,7 @@ public interface Parser {
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
+      SpeculativeParsing speculativeParsing,
       Iterable<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException;
 

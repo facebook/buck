@@ -350,7 +350,9 @@ public class DefaultParserTest {
     FakeBuckEventListener listener = new FakeBuckEventListener();
     eventBus.register(listener);
 
-    TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    TargetGraph targetGraph =
+        parser.buildTargetGraph(
+            cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
     ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
     BuildRule fooRule = graphBuilder.requireRule(fooTarget);
     assertNotNull(fooRule);
@@ -379,7 +381,8 @@ public class DefaultParserTest {
         "The rule //java/com/facebook:raz could not be found.\nPlease check the spelling and whether it exists in "
             + filesystem.resolve(razTarget.getBasePath()).resolve(DEFAULT_BUILD_FILE_NAME));
 
-    parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
   }
 
   @Test
@@ -394,7 +397,8 @@ public class DefaultParserTest {
             "No build file at %s when resolving target //path/to/nowhere:nowhere",
             Paths.get("path", "to", "nowhere", "BUCK").toString()));
 
-    parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
   }
 
   @Test
@@ -431,6 +435,7 @@ public class DefaultParserTest {
         cell,
         false,
         executorService,
+        SpeculativeParsing.DISABLED,
         Collections.singleton(
             BuildTargetFactory.newInstance(cell.getFilesystem().getRootPath(), "//:cake")));
   }
@@ -490,7 +495,8 @@ public class DefaultParserTest {
         containsString(
             "The following flavor(s) are not supported on target "
                 + "//java/com/facebook:foo#doesNotExist"));
-    parser.buildTargetGraph(cell, false, executorService, ImmutableSortedSet.of(flavored));
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, ImmutableSortedSet.of(flavored));
   }
 
   @Test
@@ -510,7 +516,8 @@ public class DefaultParserTest {
             "android-unknown: Please make sure you have the Android SDK/NDK "
                 + "installed and set up. "
                 + "See https://buckbuild.com/setup/install.html#locate-android-sdk"));
-    parser.buildTargetGraph(cell, false, executorService, ImmutableSortedSet.of(flavored));
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, ImmutableSortedSet.of(flavored));
   }
 
   @Test
@@ -522,7 +529,8 @@ public class DefaultParserTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "The following flavor(s) are not supported on target //java/com/facebook:baz:\n" + "src.");
-    parser.buildTargetGraph(cell, false, executorService, ImmutableSortedSet.of(flavored));
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, ImmutableSortedSet.of(flavored));
   }
 
   @Test
@@ -550,7 +558,8 @@ public class DefaultParserTest {
         BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook/invalid", "foo");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(fooTarget);
 
-    parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
   }
 
   @Test
@@ -1561,7 +1570,8 @@ public class DefaultParserTest {
       throws BuildFileParseException, IOException, InterruptedException {
     filterAllTargetsInProject(parser, cell, executorService);
     BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
-    parser.buildTargetGraph(cell, false, executorService, ImmutableList.of(foo));
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, ImmutableList.of(foo));
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
   }
@@ -1570,7 +1580,8 @@ public class DefaultParserTest {
   public void whenSingleTargetThenAllRulesRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
     BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
-    parser.buildTargetGraph(cell, false, executorService, ImmutableList.of(foo));
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, ImmutableList.of(foo));
     filterAllTargetsInProject(parser, cell, executorService);
 
     assertEquals("Should have replaced build rules", 1, counter.calls);
@@ -1595,7 +1606,8 @@ public class DefaultParserTest {
         BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
     Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
 
-    parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
 
     // Rewrite //bar:bar so it doesn't depend on //foo:foo any more.
     // Delete foo/BUCK and invalidate the cache, which should invalidate
@@ -1615,7 +1627,8 @@ public class DefaultParserTest {
             Paths.get("bar").resolve("BUCK"));
     parser.getPermState().invalidateBasedOn(modifyEvent);
 
-    parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
   }
 
   @Test
@@ -1637,7 +1650,8 @@ public class DefaultParserTest {
         BuildTargetFactory.newInstance(cellRoot, "//bar", "bar", InternalFlavor.of("src"));
     Iterable<BuildTarget> buildTargets = ImmutableList.of(barTarget);
 
-    parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
   }
 
   @Test
@@ -1818,7 +1832,9 @@ public class DefaultParserTest {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     {
-      TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
+      TargetGraph targetGraph =
+          parser.buildTargetGraph(
+              cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1834,7 +1850,9 @@ public class DefaultParserTest {
     parser.getPermState().invalidateBasedOn(createEvent);
 
     {
-      TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
+      TargetGraph targetGraph =
+          parser.buildTargetGraph(
+              cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1868,7 +1886,9 @@ public class DefaultParserTest {
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
     {
-      TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
+      TargetGraph targetGraph =
+          parser.buildTargetGraph(
+              cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1887,7 +1907,9 @@ public class DefaultParserTest {
     parser.getPermState().invalidateBasedOn(deleteEvent);
 
     {
-      TargetGraph targetGraph = parser.buildTargetGraph(cell, false, executorService, buildTargets);
+      TargetGraph targetGraph =
+          parser.buildTargetGraph(
+              cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
       ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
@@ -1928,7 +1950,8 @@ public class DefaultParserTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
-    parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
   }
 
   @Test
@@ -1957,7 +1980,8 @@ public class DefaultParserTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     Iterable<BuildTarget> buildTargets = ImmutableList.of(libTarget);
 
-    parser.buildTargetGraph(cell, false, executorService, buildTargets);
+    parser.buildTargetGraph(
+        cell, false, executorService, SpeculativeParsing.DISABLED, buildTargets);
 
     DaemonicParserState permState = parser.getPermState();
     for (BuildTarget target : buildTargets) {
@@ -2263,17 +2287,20 @@ public class DefaultParserTest {
         cell,
         false,
         executorService,
+        SpeculativeParsing.DISABLED,
         ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_pass")));
     parser.buildTargetGraph(
         cell,
         false,
         executorService,
+        SpeculativeParsing.DISABLED,
         ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_pass2")));
     try {
       parser.buildTargetGraph(
           cell,
           false,
           executorService,
+          SpeculativeParsing.DISABLED,
           ImmutableSet.of(BuildTargetFactory.newInstance(cellRoot, "//:should_fail")));
       Assert.fail("did not expect to succeed parsing");
     } catch (Exception e) {
@@ -2548,7 +2575,8 @@ public class DefaultParserTest {
 
     ImmutableList<BuildTarget> buildTargetsList = ImmutableList.copyOf(buildTargets);
     TargetGraph targetGraph =
-        parser.buildTargetGraph(cell, false, executorService, buildTargetsList);
+        parser.buildTargetGraph(
+            cell, false, executorService, SpeculativeParsing.DISABLED, buildTargetsList);
 
     ImmutableMap<BuildTarget, Map<String, Object>> attributes =
         getRawTargetNodes(

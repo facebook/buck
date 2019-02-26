@@ -697,7 +697,8 @@ public class XCodeProjectCommandHelper {
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(cell, enableParserProfiling, executor, passedInTargets);
+    return parser.buildTargetGraph(
+        cell, enableParserProfiling, executor, SpeculativeParsing.ENABLED, passedInTargets);
   }
 
   private TargetGraphAndTargets createTargetGraph(
@@ -722,13 +723,18 @@ public class XCodeProjectCommandHelper {
       if (!needsFullRecursiveParse) {
         projectGraph =
             parser.buildTargetGraph(
-                cell, enableParserProfiling, executor, Sets.union(graphRoots, explicitTestTargets));
+                cell,
+                enableParserProfiling,
+                executor,
+                SpeculativeParsing.ENABLED,
+                Sets.union(graphRoots, explicitTestTargets));
       } else {
         projectGraph =
             parser.buildTargetGraph(
                 cell,
                 enableParserProfiling,
                 executor,
+                SpeculativeParsing.ENABLED,
                 Sets.union(
                     projectGraph
                         .getNodes()

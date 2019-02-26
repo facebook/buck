@@ -46,6 +46,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.Bootclasspath;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.ProcessResult;
@@ -382,6 +383,7 @@ public class InterCellIntegrationTest {
         primaryCell,
         false,
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+        SpeculativeParsing.DISABLED,
         ImmutableSet.of(namedTarget));
   }
 

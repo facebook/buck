@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.ProcessResult;
@@ -71,6 +72,7 @@ public class IntraCellIntegrationTest {
         cell,
         false,
         MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+        SpeculativeParsing.DISABLED,
         ImmutableSet.of(
             BuildTargetFactory.newInstance(
                 cell.getFilesystem().getRootPath(), "//just-a-directory:rule")));
@@ -86,6 +88,7 @@ public class IntraCellIntegrationTest {
           childCell,
           false,
           MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+          SpeculativeParsing.DISABLED,
           ImmutableSet.of(
               BuildTargetFactory.newInstance(
                   childCell.getFilesystem().getRootPath(), "child//:child-target")));

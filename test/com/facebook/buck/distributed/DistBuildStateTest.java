@@ -249,6 +249,7 @@ public class DistBuildStateTest {
             cell,
             /* enableProfiling */ false,
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
+            SpeculativeParsing.DISABLED,
             ImmutableSet.of(
                 BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib1"),
                 BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib2"),

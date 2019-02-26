@@ -235,6 +235,7 @@ class DefaultParser implements Parser {
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
+      SpeculativeParsing speculativeParsing,
       Iterable<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
     if (Iterables.isEmpty(toExplore)) {
@@ -250,7 +251,7 @@ class DefaultParser implements Parser {
             targetPlatforms.get(),
             enableProfiling,
             processedBytes,
-            SpeculativeParsing.ENABLED)) {
+            speculativeParsing)) {
       return buildTargetGraph(state, toExplore, processedBytes);
     }
   }
