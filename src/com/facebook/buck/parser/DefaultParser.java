@@ -197,12 +197,21 @@ class DefaultParser implements Parser {
   @Deprecated
   @Override
   public SortedMap<String, Object> getTargetNodeRawAttributes(
-      Cell cell, ListeningExecutorService executor, TargetNode<?> targetNode)
+      Cell cell,
+      ListeningExecutorService executor,
+      SpeculativeParsing speculativeParsing,
+      boolean enableProfiling,
+      TargetNode<?> targetNode)
       throws BuildFileParseException {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState, executor, cell, targetPlatforms.get(), false, SpeculativeParsing.DISABLED)) {
+            permState,
+            executor,
+            cell,
+            targetPlatforms.get(),
+            enableProfiling,
+            speculativeParsing)) {
       return getTargetNodeRawAttributes(state, cell, targetNode);
     }
   }

@@ -34,6 +34,7 @@ import com.facebook.buck.distributed.thrift.BuildJobState;
 import com.facebook.buck.distributed.thrift.RemoteCommand;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.PathTypeCoercer;
@@ -107,7 +108,11 @@ public class AsyncJobStateFactory {
               return params
                   .getParser()
                   .getTargetNodeRawAttributes(
-                      params.getCell().getCell(input.getBuildTarget()), executorService, input);
+                      params.getCell().getCell(input.getBuildTarget()),
+                      executorService,
+                      SpeculativeParsing.DISABLED,
+                      false,
+                      input);
             },
             targetGraphAndBuildTargets
                 .getBuildTargets()
