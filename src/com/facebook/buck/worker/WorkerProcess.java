@@ -136,7 +136,7 @@ public class WorkerProcess implements Closeable {
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
     LOG.debug("Closing process %d", this.hashCode());
     try {
       if (protocol != null) {

@@ -182,12 +182,16 @@ public class WorkerProcessProtocolZero {
         processStdinWriter.close();
         processStdoutReader.endArray();
         processStdoutReader.close();
-      } finally {
+      } catch (IOException e) {
         if (!isAlive.get()) {
-          LOG.error(
-              "%s (%d)'s process was already killed",
-              getClass().getSimpleName(), System.identityHashCode(this));
+          LOG.warn(
+              e,
+              "Streams already closed when closing protocol. Process is alive %s",
+              isAlive.get());
+        } else {
+          throw e;
         }
+      } finally {
         onClose.run();
         isClosed = true;
       }
