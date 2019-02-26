@@ -50,6 +50,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -673,6 +674,7 @@ public class BuildCommand extends AbstractCommand {
               parseArgumentsAsTargetNodeSpecs(
                   params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments()),
               getExcludeIncompatibleTargets(),
+              SpeculativeParsing.ENABLED,
               parserConfig.getDefaultFlavorsMode());
     } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));

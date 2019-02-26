@@ -43,6 +43,7 @@ import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.file.downloader.impl.StackedDownloader;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
@@ -89,6 +90,7 @@ public class FetchCommand extends BuildCommand {
                         params.getBuckConfig(),
                         getArguments()),
                     getExcludeIncompatibleTargets(),
+                    SpeculativeParsing.ENABLED,
                     parserConfig.getDefaultFlavorsMode());
         if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
           result = toVersionedTargetGraph(params, result);

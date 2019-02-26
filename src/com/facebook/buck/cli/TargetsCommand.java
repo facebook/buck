@@ -520,6 +520,7 @@ public class TargetsCommand extends AbstractCommand {
                           BuildFileSpec.fromRecursivePath(
                               Paths.get(""), params.getCell().getRoot()))),
                   getExcludeIncompatibleTargets(),
+                  SpeculativeParsing.ENABLED,
                   parserConfig.getDefaultFlavorsMode());
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
@@ -542,6 +543,7 @@ public class TargetsCommand extends AbstractCommand {
                       params.getBuckConfig(),
                       getArguments()),
                   false,
+                  SpeculativeParsing.ENABLED,
                   ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
           descriptionClasses);
     }
@@ -647,6 +649,7 @@ public class TargetsCommand extends AbstractCommand {
                               BuildFileSpec.fromRecursivePath(
                                   Paths.get(""), params.getCell().getRoot()))),
                       getExcludeIncompatibleTargets(),
+                      SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())
                   .getTargetGraph(),
               ImmutableSet.of());
@@ -663,6 +666,7 @@ public class TargetsCommand extends AbstractCommand {
                       params.getBuckConfig(),
                       getArguments()),
                   getExcludeIncompatibleTargets(),
+                  SpeculativeParsing.ENABLED,
                   parserConfig.getDefaultFlavorsMode());
     }
     return params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions()

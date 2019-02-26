@@ -339,6 +339,7 @@ class DefaultParser implements Parser {
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean excludeUnsupportedTargets,
+      SpeculativeParsing speculativeParsing,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
@@ -348,6 +349,7 @@ class DefaultParser implements Parser {
         targetNodeSpecs,
         excludeUnsupportedTargets,
         false,
+        speculativeParsing,
         applyDefaultFlavorsMode);
   }
 
@@ -358,6 +360,7 @@ class DefaultParser implements Parser {
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean excludeUnsupportedTargets,
+      SpeculativeParsing speculativeParsing,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
@@ -367,6 +370,7 @@ class DefaultParser implements Parser {
         targetNodeSpecs,
         excludeUnsupportedTargets,
         true,
+        speculativeParsing,
         applyDefaultFlavorsMode);
   }
 
@@ -377,6 +381,7 @@ class DefaultParser implements Parser {
       ListeningExecutorService executor,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean excludeUnsupportedTargets,
+      SpeculativeParsing speculativeParsing,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
@@ -386,6 +391,7 @@ class DefaultParser implements Parser {
         targetNodeSpecs,
         excludeUnsupportedTargets,
         false,
+        speculativeParsing,
         applyDefaultFlavorsMode);
   }
 
@@ -396,6 +402,7 @@ class DefaultParser implements Parser {
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean excludeUnsupportedTargets,
       boolean excludeConfigurationTargets,
+      SpeculativeParsing speculativeParsing,
       ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException {
 
@@ -408,7 +415,7 @@ class DefaultParser implements Parser {
             targetPlatforms.get(),
             enableProfiling,
             processedBytes,
-            SpeculativeParsing.ENABLED)) {
+            speculativeParsing)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           collectBuildTargetsFromTargetNodeSpecs(

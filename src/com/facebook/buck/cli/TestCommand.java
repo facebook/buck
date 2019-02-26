@@ -493,6 +493,7 @@ public class TestCommand extends BuildCommand {
                                       Paths.get(""), params.getCell().getRoot()))
                               .withOnlyTests(true)),
                       getExcludeIncompatibleTargets(),
+                      SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode());
           targetGraphAndBuildTargets =
               targetGraphAndBuildTargets.withBuildTargets(ImmutableSet.of());
@@ -513,6 +514,7 @@ public class TestCommand extends BuildCommand {
                           params.getBuckConfig(),
                           getArguments()),
                       getExcludeIncompatibleTargets(),
+                      SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode());
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());

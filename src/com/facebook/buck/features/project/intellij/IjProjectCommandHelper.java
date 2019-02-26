@@ -229,6 +229,7 @@ public class IjProjectCommandHelper {
                   TargetNodePredicateSpec.of(
                       BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
               false,
+              SpeculativeParsing.ENABLED,
               ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
           .getTargetGraph();
     }

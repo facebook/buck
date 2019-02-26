@@ -2098,6 +2098,7 @@ public class DefaultParserTest {
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))),
                 false,
+                SpeculativeParsing.ENABLED,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
@@ -2146,6 +2147,7 @@ public class DefaultParserTest {
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))),
                 false,
+                SpeculativeParsing.ENABLED,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
@@ -2198,6 +2200,7 @@ public class DefaultParserTest {
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))),
                 false,
+                SpeculativeParsing.ENABLED,
                 ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
             .getBuildTargets();
 
@@ -2240,6 +2243,7 @@ public class DefaultParserTest {
             AbstractBuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
         false,
+        SpeculativeParsing.ENABLED,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
@@ -2259,6 +2263,7 @@ public class DefaultParserTest {
             AbstractBuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
         false,
+        SpeculativeParsing.ENABLED,
         ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
@@ -2564,6 +2569,7 @@ public class DefaultParserTest {
                         TargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
                     false,
+                    SpeculativeParsing.ENABLED,
                     ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
                 .getTargetGraph()
                 .getNodes())
