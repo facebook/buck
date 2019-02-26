@@ -1,4 +1,8 @@
-bazel_deploy.jar was built by running `update.sh` script.
+To re-build bazel_deploy.jar on the same commit in bazel repository use the following command:
+
+update.sh $(cat COMMIT_HASH.facebook)
+
+To build bazel_deploy.jar using master in bazel repository run `update.sh`
 
 NOTE: this is not an official public API and is a subject to change, so the
 process described above might have to be updated.
