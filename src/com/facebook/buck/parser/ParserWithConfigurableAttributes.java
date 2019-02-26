@@ -17,7 +17,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -53,7 +52,6 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -231,7 +229,9 @@ class ParserWithConfigurableAttributes extends DefaultParser {
         targetNodeFilter =
             new TargetNodeFilterForSpecResolverWithNodeFiltering<>(
                 targetNodeFilter,
-                node -> targetNodeMatchesPlatform(constraintResolver, node, targetPlatform));
+                node ->
+                    TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
+                        constraintResolver, node.getConstructorArg(), targetPlatform));
       }
 
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
@@ -277,7 +277,9 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       targetNodeFilter =
           new TargetNodeFilterForSpecResolverWithNodeFiltering<>(
               targetNodeFilter,
-              node -> targetNodeMatchesPlatform(constraintResolver, node, targetPlatform));
+              node ->
+                  TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
+                      constraintResolver, node.getConstructorArg(), targetPlatform));
     }
 
     return ImmutableSet.copyOf(
@@ -294,21 +296,5 @@ class ParserWithConfigurableAttributes extends DefaultParser {
 
   private static boolean filterOutNonBuildTargets(TargetNode<?> node) {
     return node.getRuleType().getKind() == RuleType.Kind.BUILD;
-  }
-
-  private boolean targetNodeMatchesPlatform(
-      ConstraintResolver constraintResolver, TargetNode<?> targetNode, Platform platform) {
-    if (!(targetNode.getConstructorArg() instanceof HasTargetCompatibleWith)) {
-      return true;
-    }
-    HasTargetCompatibleWith argWithTargetCompatible =
-        (HasTargetCompatibleWith) targetNode.getConstructorArg();
-
-    return platform.matchesAll(
-        argWithTargetCompatible
-            .getTargetCompatibleWith()
-            .stream()
-            .map(constraintResolver::getConstraintValue)
-            .collect(Collectors.toList()));
   }
 }
