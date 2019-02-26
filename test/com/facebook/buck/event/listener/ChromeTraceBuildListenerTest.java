@@ -127,6 +127,7 @@ public class ChromeTraceBuildListenerTest {
             .setSuperConsoleEnabled(false)
             .setUnexpandedCommandArgs(ImmutableList.of("@mode/arglist", "--foo", "--bar"))
             .setCommandArgs(ImmutableList.of("--config", "configvalue", "--foo", "--bar"))
+            .setIsRemoteExecution(false)
             .build();
     durationTracker = new BuildRuleDurationTracker();
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);

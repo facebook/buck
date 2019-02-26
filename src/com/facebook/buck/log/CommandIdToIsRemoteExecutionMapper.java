@@ -14,27 +14,9 @@
  * under the License.
  */
 
-package com.facebook.buck.util;
+package com.facebook.buck.log;
 
-import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.log.InvocationInfo;
-import com.google.common.collect.ImmutableList;
-import java.nio.file.Paths;
-
-public class FakeInvocationInfoFactory {
-  private FakeInvocationInfoFactory() {
-    // Utility class.
-  }
-
-  public static InvocationInfo create() {
-    return InvocationInfo.of(
-        new BuildId(),
-        false,
-        false,
-        "test",
-        ImmutableList.of(),
-        ImmutableList.of(),
-        Paths.get(""),
-        false);
-  }
+/** This tracks where a given command was run with remote execution. */
+public interface CommandIdToIsRemoteExecutionMapper {
+  Boolean commandIdToIsRunningAsRemoteExecution(String commandId);
 }

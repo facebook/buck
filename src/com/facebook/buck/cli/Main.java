@@ -917,7 +917,8 @@ public final class Main {
               command.getSubCommandNameForLogging(),
               args,
               unexpandedCommandLineArgs,
-              filesystem.getBuckPaths().getLogDir());
+              filesystem.getBuckPaths().getLogDir(),
+              isRemoteExecutionBuild(command, buckConfig));
 
       RemoteExecutionConfig remoteExecutionConfig = buckConfig.getView(RemoteExecutionConfig.class);
       if (isRemoteExecutionBuild(command, buckConfig)) {

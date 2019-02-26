@@ -96,6 +96,10 @@ abstract class AbstractInvocationInfo {
         LOG_MSG_TEMPLATE, getBuildId().toString(), Joiner.on(", ").join(getCommandArgs()));
   }
 
+  @Value.Parameter
+  @JsonView(JsonViews.MachineReadableLog.class)
+  public abstract boolean getIsRemoteExecution();
+
   public Path getLogDirectoryPath() {
     return getBuckLogDir().resolve(getLogDirectoryName());
   }

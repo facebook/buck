@@ -42,6 +42,8 @@ abstract class AbstractErrorLogRecord {
       GlobalStateManager.singleton().getCommandIdToIsDaemonMapper();
   private static final CommandIdToIsSuperConsoleEnabledMapper IS_SUPERCONSOLE_ENABLED_MAPPER =
       GlobalStateManager.singleton().getCommandIdToIsSuperConsoleEnabledMapper();
+  private static final CommandIdToIsRemoteExecutionMapper IS_REMOTE_EXECUTION_MAPPER =
+      GlobalStateManager.singleton().getCommandIdToIsRemoteExecutionMapper();
   private static final Logger LOG = Logger.get(AbstractErrorLogRecord.class);
 
   public abstract LogRecord getRecord();
@@ -70,6 +72,7 @@ abstract class AbstractErrorLogRecord {
         .put("isConsoleEnabled", getIsSuperConsoleEnabled().map(Object::toString).orElse("null"))
         .put("isDaemon", getIsDaemon().map(Object::toString).orElse("null"))
         .put("commandId", getBuildUuid().orElse("null"))
+        .put("isRemoteExecution", getIsRemoteExecution().map(Object::toString).orElse("null"))
         .build();
   }
 
@@ -161,6 +164,16 @@ abstract class AbstractErrorLogRecord {
       return Optional.empty();
     }
     return Optional.ofNullable(IS_DAEMON_MAPPER.commandIdToIsRunningAsDaemon(buildUuid));
+  }
+
+  @Value.Derived
+  public Optional<Boolean> getIsRemoteExecution() {
+    String buildUuid = MAPPER.threadIdToCommandId(getRecord().getThreadID());
+    if (buildUuid == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(
+        IS_REMOTE_EXECUTION_MAPPER.commandIdToIsRunningAsRemoteExecution(buildUuid));
   }
 
   @Value.Derived

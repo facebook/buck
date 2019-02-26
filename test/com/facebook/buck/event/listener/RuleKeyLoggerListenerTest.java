@@ -73,7 +73,8 @@ public class RuleKeyLoggerListenerTest {
             "topspin",
             ImmutableList.of(),
             ImmutableList.of(),
-            tempDirectory.getRoot().toPath());
+            tempDirectory.getRoot().toPath(),
+            false);
     durationTracker = new BuildRuleDurationTracker();
     managerScope = new TestBackgroundTaskManager().getNewScope(info.getBuildId());
   }
