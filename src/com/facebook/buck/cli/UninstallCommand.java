@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.util.CommandLineException;
@@ -106,7 +107,9 @@ public class UninstallCommand extends AbstractCommand {
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),
-                      getArguments()));
+                      getArguments()),
+                  false,
+                  ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
       buildTargets = result.getBuildTargets();
       graphBuilder =
           params

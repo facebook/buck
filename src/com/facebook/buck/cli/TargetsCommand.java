@@ -540,7 +540,9 @@ public class TargetsCommand extends AbstractCommand {
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),
-                      getArguments())),
+                      getArguments()),
+                  false,
+                  ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
           descriptionClasses);
     }
   }

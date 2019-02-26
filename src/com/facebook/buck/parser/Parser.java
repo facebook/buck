@@ -97,7 +97,9 @@ public interface Parser {
       Cell rootCell,
       boolean enableProfiling,
       ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> targetNodeSpecs)
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      boolean excludeUnsupportedTargets,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
       throws BuildFileParseException, IOException, InterruptedException;
 
   /**

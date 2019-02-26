@@ -693,7 +693,9 @@ public class XCodeProjectCommandHelper {
               executor,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
+              false,
+              ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
