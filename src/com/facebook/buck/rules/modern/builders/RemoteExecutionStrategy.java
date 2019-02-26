@@ -416,7 +416,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           buildTarget.getFullyQualifiedName(),
           result.getExitCode(),
           result.getStderr().orElse("<empty>"),
-          result.getMetadata(),
+          result.getMetadata().toString(),
           actionDigest);
       RemoteExecutionActionEvent.sendTerminalEvent(
           eventBus, State.ACTION_FAILED, buildTarget, Optional.of(actionDigest));
