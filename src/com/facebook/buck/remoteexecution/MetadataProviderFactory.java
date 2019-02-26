@@ -45,7 +45,7 @@ public class MetadataProviderFactory {
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest) {
+      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
         return get();
       }
     };
@@ -58,6 +58,7 @@ public class MetadataProviderFactory {
   public static MetadataProvider minimalMetadataProviderForBuild(BuildId buildId, String username) {
     return new MetadataProvider() {
       final RemoteExecutionMetadata metadata;
+      RemoteExecutionMetadata.Builder builder;
 
       {
         // TODO(msienkiewicz): Allow overriding RE Session ID, client type, username with config
@@ -70,12 +71,12 @@ public class MetadataProviderFactory {
                 .setClientType(DEFAULT_CLIENT_TYPE)
                 .setUsername(username)
                 .build();
-        metadata =
+        builder =
             RemoteExecutionMetadata.newBuilder()
                 .setReSessionId(reSessionID)
                 .setBuckInfo(buckInfo)
-                .setCreatorInfo(creatorInfo)
-                .build();
+                .setCreatorInfo(creatorInfo);
+        metadata = builder.build();
       }
 
       @Override
@@ -84,8 +85,14 @@ public class MetadataProviderFactory {
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest) {
-        return get();
+      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
+        BuckInfo buckInfo =
+            BuckInfo.newBuilder()
+                .setBuildId(get().getBuckInfo().getBuildId())
+                .setRuleName(ruleName)
+                .build();
+        builder.setBuckInfo(buckInfo);
+        return builder.build();
       }
     };
   }
@@ -102,7 +109,7 @@ public class MetadataProviderFactory {
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest) {
+      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
         TraceInfo traceInfo =
             TraceInfo.newBuilder()
                 .setTraceId(traceInfoProvider.getTraceId())

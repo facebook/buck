@@ -26,4 +26,22 @@ public interface BuckInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getBuildIdBytes();
+
+  /**
+   * <pre>
+   * Name of the Build Rule that's being executed
+   * </pre>
+   *
+   * <code>string rule_name = 2;</code>
+   */
+  java.lang.String getRuleName();
+  /**
+   * <pre>
+   * Name of the Build Rule that's being executed
+   * </pre>
+   *
+   * <code>string rule_name = 2;</code>
+   */
+  com.google.protobuf.ByteString
+      getRuleNameBytes();
 }

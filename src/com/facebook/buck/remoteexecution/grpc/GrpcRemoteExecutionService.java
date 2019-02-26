@@ -75,7 +75,7 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
   }
 
   @Override
-  public ListenableFuture<ExecutionResult> execute(Protocol.Digest actionDigest)
+  public ListenableFuture<ExecutionResult> execute(Protocol.Digest actionDigest, String ruleName)
       throws IOException, InterruptedException {
     SettableFuture<Operation> future = SettableFuture.create();
 
@@ -83,7 +83,7 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
         GrpcHeaderHandler.wrapStubToSendAndReceiveMetadata(
             executionStub,
             metadataProvider.getForAction(
-                RemoteExecutionActionEvent.actionDigestToString(actionDigest)));
+                RemoteExecutionActionEvent.actionDigestToString(actionDigest), ruleName));
     stubAndMetadata
         .getStub()
         .execute(

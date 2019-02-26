@@ -49,6 +49,6 @@ public interface RemoteExecutionService {
    *
    * <p>Returns an ActionResult with exit code, outputs, stdout/stderr, etc.
    */
-  ListenableFuture<ExecutionResult> execute(Digest actionDigest)
+  ListenableFuture<ExecutionResult> execute(Digest actionDigest, String ruleName)
       throws IOException, InterruptedException;
 }

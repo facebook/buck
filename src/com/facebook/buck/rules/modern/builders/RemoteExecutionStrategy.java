@@ -286,7 +286,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               buildTarget,
               tryStart,
               actionDigest,
-              actionOutputs);
+              actionOutputs,
+              rule.getFullyQualifiedName());
         },
         service);
   }
@@ -311,7 +312,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuildTarget buildTarget,
       Callable<Throwable> tryStart,
       Digest actionDigest,
-      Iterable<? extends Path> actionOutputs) {
+      Iterable<? extends Path> actionOutputs,
+      String ruleName) {
     AtomicReference<Throwable> cancelled = new AtomicReference<>(null);
     ListenableFuture<ExecutionResult> executionResult =
         executionLimiter.schedule(
@@ -328,7 +330,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   RemoteExecutionActionEvent.sendEvent(
                       eventBus, State.EXECUTING, buildTarget, Optional.of(actionDigest));
               return Futures.transform(
-                  executionClients.getRemoteExecutionService().execute(actionDigest),
+                  executionClients.getRemoteExecutionService().execute(actionDigest, ruleName),
                   result -> {
                     executingScope.close();
                     return result;

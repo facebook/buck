@@ -140,7 +140,7 @@ public class GrpcRemoteExecutionClientsTest {
     ExecutionResult executionResult =
         clients
             .getRemoteExecutionService()
-            .execute(clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)))
+            .execute(clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)), "")
             .get();
 
     assertEquals(0, executionResult.getExitCode());

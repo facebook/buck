@@ -64,7 +64,7 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
         new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
     this.protocol = protocol;
     this.executionService =
-        (actionDigest) -> {
+        (actionDigest, ruleName) -> {
           Action action = storage.materializeAction(actionDigest);
 
           Path buildDir = workDir.getPath().resolve(action.getInputRootDigest().getHash());

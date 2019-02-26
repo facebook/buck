@@ -41,6 +41,8 @@ message RESessionID {
 message BuckInfo {
   // The buck build id of the command starting the remote execution session.
   string build_id = 1;
+  // Name of the Build Rule that's being executed
+  string rule_name = 2;
 }
 
 // Data about the client that wants to start the session - will be ignored if
