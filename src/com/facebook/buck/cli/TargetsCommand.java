@@ -1059,42 +1059,9 @@ public class TargetsCommand extends AbstractCommand {
         }
       }
 
-      for (Map.Entry<BuildTarget, TargetResult.Builder> entry :
-          targetResultBuilders.map.entrySet()) {
-        BuildTarget target = entry.getKey();
-        TargetResult.Builder builder = entry.getValue();
-        if (graphBuilder.isPresent()) {
-          BuildRule rule = graphBuilder.get().requireRule(target);
-          builder.setRuleType(rule.getType());
-          if (isShowOutput || isShowFullOutput) {
-            SourcePathResolver sourcePathResolver =
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder.get()));
-            getUserFacingOutputPath(
-                    sourcePathResolver,
-                    rule,
-                    params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
-                .map(
-                    path ->
-                        isShowFullOutput ? path : params.getCell().getFilesystem().relativize(path))
-                .map(Path::toString)
-                .ifPresent(builder::setOutputPath);
-            // If the output dir is requested, also calculate the generated src dir
-            if (rule instanceof JavaLibrary) {
-              ((JavaLibrary) rule)
-                  .getGeneratedAnnotationSourcePath()
-                  .map(sourcePathResolver::getRelativePath)
-                  .map(path -> rule.getProjectFilesystem().resolve(path))
-                  .map(
-                      path ->
-                          isShowFullOutput
-                              ? path
-                              : params.getCell().getFilesystem().relativize(path))
-                  .map(Path::toString)
-                  .ifPresent(builder::setGeneratedSourcePath);
-            }
-          }
-        }
-      }
+      graphBuilder.ifPresent(
+          actionGraphBuilder ->
+              processBuildRules(targetResultBuilders.map, actionGraphBuilder, params));
 
       ImmutableSortedMap.Builder<BuildTarget, TargetResult> builder =
           ImmutableSortedMap.naturalOrder();
@@ -1104,6 +1071,42 @@ public class TargetsCommand extends AbstractCommand {
       }
       return builder.build();
     }
+  }
+
+  private void processBuildRules(
+      Map<BuildTarget, TargetResult.Builder> buildTargetToTargetBuilderMap,
+      ActionGraphBuilder graphBuilder,
+      CommandRunnerParams params) {
+    buildTargetToTargetBuilderMap.forEach(
+        (target, builder) -> {
+          BuildRule rule = graphBuilder.requireRule(target);
+          builder.setRuleType(rule.getType());
+          if (isShowOutput || isShowFullOutput) {
+            SourcePathResolver sourcePathResolver =
+                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+            getUserFacingOutputPath(
+                    sourcePathResolver,
+                    rule,
+                    params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
+                .map(path -> pathToString(path, params))
+                .ifPresent(builder::setOutputPath);
+            // If the output dir is requested, also calculate the generated src dir
+            if (rule instanceof JavaLibrary) {
+              ((JavaLibrary) rule)
+                  .getGeneratedAnnotationSourcePath()
+                  .map(sourcePathResolver::getRelativePath)
+                  .map(rule.getProjectFilesystem()::resolve)
+                  .map(path -> pathToString(path, params))
+                  .ifPresent(builder::setGeneratedSourcePath);
+            }
+          }
+        });
+  }
+
+  private String pathToString(Path path, CommandRunnerParams params) {
+    Path formattedPath =
+        isShowFullOutput ? path : params.getCell().getFilesystem().relativize(path);
+    return formattedPath.toString();
   }
 
   /** Returns absolute path to the output rule, if the rule has an output. */
