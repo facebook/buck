@@ -70,7 +70,7 @@ public class KotlinTestIntegrationTest {
     result.assertTestFailure("Test should've failed.");
   }
 
-  @Test
+  @Test(timeout = 150000)
   public void weCanAccessAnotherModuleInternalModuleByAddingItToFriendPaths() throws Exception {
     ProcessResult result = workspace.runBuckCommand("test", "//com/example/friend_paths:passing");
     result.assertSuccess("Build should've succeeded.");
