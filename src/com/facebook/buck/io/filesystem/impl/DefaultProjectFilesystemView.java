@@ -30,6 +30,7 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -86,8 +87,19 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   }
 
   @Override
+  public boolean isFile(Path path, LinkOption... options) {
+    return filesystemParent.isFile(projectRoot.resolve(path), options);
+  }
+
+  @Override
   public boolean isDirectory(Path path) {
     return filesystemParent.isDirectory(projectRoot.resolve(path));
+  }
+
+  @Override
+  public <A extends BasicFileAttributes> A readAttributes(
+      Path path, Class<A> type, LinkOption... options) throws IOException {
+    return filesystemParent.readAttributes(projectRoot.resolve(path), type, options);
   }
 
   @Override

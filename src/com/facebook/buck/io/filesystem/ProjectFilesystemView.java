@@ -22,7 +22,9 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitor;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -54,10 +56,30 @@ public interface ProjectFilesystemView {
   Path resolve(String path);
 
   /**
+   * Checks whether there is a normal file at the specified path
+   *
+   * @param path relative path to the root
+   * @param options whether to resolve symlinks
+   * @return true if path is a file
+   */
+  boolean isFile(Path path, LinkOption... options);
+
+  /**
    * @param path relative path to the root
    * @return true iff the given path maps to a directory
    */
   boolean isDirectory(Path path);
+
+  /**
+   * Read basic attributes of a file from a file system
+   *
+   * @param path relative path to the root
+   * @param type type of attributes object
+   * @param options whether to resolve symlinks
+   * @return File attributes object
+   */
+  <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options)
+      throws IOException;
 
   /** @return the absolute path of the root of this view */
   Path getRootPath();

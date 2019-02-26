@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -324,5 +325,40 @@ public class DefaultProjectFilesystemViewTest {
     assertThat(
         filesystemView.getDirectoryContents(Paths.get("dir1")),
         containsInAnyOrder(Paths.get("dir1/file1"), Paths.get("dir1/file2")));
+  }
+
+  @Test
+  public void isFile() throws IOException {
+    tmp.newFolder("dir1");
+    tmp.newFile("dir1/file1");
+
+    assertTrue(filesystemView.isFile(Paths.get("dir1/file1")));
+    assertTrue(filesystemView.isFile(Paths.get("dir1/file1"), LinkOption.NOFOLLOW_LINKS));
+    assertFalse(filesystemView.isFile(Paths.get("dir1/file2")));
+  }
+
+  @Test
+  public void isDirectory() throws IOException {
+    tmp.newFolder("dir1");
+    tmp.newFolder("dir1/dir2");
+
+    assertTrue(filesystemView.isDirectory(Paths.get("dir1/dir2")));
+    assertFalse(filesystemView.isDirectory(Paths.get("dir2")));
+    assertFalse(filesystemView.isDirectory(Paths.get("dir1/dir3")));
+  }
+
+  @Test
+  public void canReadAttributes() throws IOException {
+    tmp.newFolder("dir1");
+    tmp.newFile("dir1/file1");
+
+    BasicFileAttributes attributes =
+        filesystemView.readAttributes(Paths.get("dir1/file1"), BasicFileAttributes.class);
+    assertTrue(attributes.isRegularFile());
+    assertFalse(attributes.isDirectory());
+
+    attributes = filesystemView.readAttributes(Paths.get("dir1"), BasicFileAttributes.class);
+    assertFalse(attributes.isRegularFile());
+    assertTrue(attributes.isDirectory());
   }
 }
