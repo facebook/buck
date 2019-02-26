@@ -34,14 +34,15 @@ import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.gson.Gson;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -398,7 +399,7 @@ public class CacheCommand extends AbstractCommand {
     }
 
     @Override
-    public ArtifactRunner call() throws InterruptedException {
+    public ArtifactRunner call() throws InterruptedException, JsonProcessingException {
       statusString = "Fetching";
       // TODO(skotch): don't use intermediate files, that just slows us down
       // instead, unzip from the ~/buck-cache/ directly
@@ -410,7 +411,8 @@ public class CacheCommand extends AbstractCommand {
       ImmutableMap<String, String> metadata =
           success.metadata().orElse(ImmutableMap.<String, String>builder().build());
       resultString.append("Artifact metadata:\n");
-      resultString.append(new Gson().toJson(metadata));
+      resultString.append(ObjectMappers.WRITER.writeValueAsString(metadata));
+      resultString.append(System.lineSeparator());
       boolean cacheSuccess = success.getType().isSuccess();
       if (!cacheSuccess) {
         statusString = String.format("FAILED FETCHING %s %s", ruleKey, cacheResult);

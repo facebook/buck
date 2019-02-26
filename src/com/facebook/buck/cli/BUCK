@@ -201,7 +201,6 @@ java_immutables_library(
         "//third-party/java/asm:asm",
         "//third-party/java/bazel:bazel",
         "//third-party/java/dd-plist:dd-plist",
-        "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
         "//third-party/java/immutables:immutables",
         "//third-party/java/infer-annotations:infer-annotations",
