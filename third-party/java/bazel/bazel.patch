@@ -1,3 +1,12 @@
+diff --git a/.bazelrc b/.bazelrc
+new file mode 100644
+index 0000000000..a1ffc9999d
+--- /dev/null
++++ b/.bazelrc
+@@ -0,0 +1,3 @@
++build --distinct_host_configuration=false
++build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
++build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
 index 943dee6176..70a9030f92 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
