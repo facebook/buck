@@ -46,7 +46,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.Bootclasspath;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.ProcessResult;
@@ -380,10 +380,9 @@ public class InterCellIntegrationTest {
 
     // It's enough that this parses cleanly.
     parser.buildTargetGraph(
-        primaryCell,
-        false,
-        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-        SpeculativeParsing.DISABLED,
+        ParsingContext.builder(
+                primaryCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+            .build(),
         ImmutableSet.of(namedTarget));
   }
 

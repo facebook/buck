@@ -222,11 +222,7 @@ class DefaultParser implements Parser {
 
   @Override
   public TargetGraph buildTargetGraph(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      SpeculativeParsing speculativeParsing,
-      Iterable<BuildTarget> toExplore)
+      ParsingContext parsingContext, Iterable<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException {
     if (Iterables.isEmpty(toExplore)) {
       return TargetGraph.EMPTY;
@@ -236,12 +232,12 @@ class DefaultParser implements Parser {
     try (PerBuildState state =
         perBuildStateFactory.create(
             permState,
-            executor,
-            rootCell,
+            parsingContext.getExecutor(),
+            parsingContext.getCell(),
             targetPlatforms.get(),
-            enableProfiling,
+            parsingContext.isProfilingEnabled(),
             processedBytes,
-            speculativeParsing)) {
+            parsingContext.getSpeculativeParsing())) {
       return buildTargetGraph(state, toExplore, processedBytes);
     }
   }

@@ -50,6 +50,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
@@ -97,8 +98,8 @@ public class IjProjectCommandHelper {
   private final @Nullable String outputDir;
   private final BuckBuildRunner buckBuildRunner;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
-
   private final ProjectGeneratorParameters projectGeneratorParameters;
+  private final ParsingContext parsingContext;
 
   public IjProjectCommandHelper(
       BuckEventBus buckEventBus,
@@ -133,9 +134,13 @@ public class IjProjectCommandHelper {
     this.outputDir = outputDir;
     this.buckBuildRunner = buckBuildRunner;
     this.argsParser = argsParser;
-
     this.projectGeneratorParameters = projectGeneratorParameters;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+    this.parsingContext =
+        ParsingContext.builder(cell, executor)
+            .setProfilingEnabled(enableParserProfiling)
+            .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+            .build();
   }
 
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments)
@@ -166,7 +171,7 @@ public class IjProjectCommandHelper {
                       argsParser.apply(targets),
                       SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
-      projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
+      projectGraph = getProjectGraphForIde(passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -190,7 +195,7 @@ public class IjProjectCommandHelper {
     TargetGraphAndTargets targetGraphAndTargets;
     try {
       targetGraphAndTargets =
-          createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty(), executor);
+          createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty());
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -215,8 +220,7 @@ public class IjProjectCommandHelper {
     return actionGraphProvider.getFreshActionGraph(transformer, targetGraph);
   }
 
-  private TargetGraph getProjectGraphForIde(
-      ListeningExecutorService executor, ImmutableSet<BuildTarget> passedInTargets)
+  private TargetGraph getProjectGraphForIde(ImmutableSet<BuildTarget> passedInTargets)
       throws InterruptedException, BuildFileParseException, IOException {
 
     if (passedInTargets.isEmpty()) {
@@ -234,8 +238,7 @@ public class IjProjectCommandHelper {
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(
-        cell, enableParserProfiling, executor, SpeculativeParsing.ENABLED, passedInTargets);
+    return parser.buildTargetGraph(parsingContext, passedInTargets);
   }
 
   /** Run intellij specific project generation actions. */
@@ -388,8 +391,7 @@ public class IjProjectCommandHelper {
   private TargetGraphAndTargets createTargetGraph(
       TargetGraph projectGraph,
       ImmutableSet<BuildTarget> graphRoots,
-      boolean needsFullRecursiveParse,
-      ListeningExecutorService executor)
+      boolean needsFullRecursiveParse)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     boolean isWithTests = isWithTests();
@@ -403,12 +405,7 @@ public class IjProjectCommandHelper {
     if (isWithTests) {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       projectGraph =
-          parser.buildTargetGraph(
-              cell,
-              enableParserProfiling,
-              executor,
-              SpeculativeParsing.ENABLED,
-              Sets.union(graphRoots, explicitTestTargets));
+          parser.buildTargetGraph(parsingContext, Sets.union(graphRoots, explicitTestTargets));
     }
 
     TargetGraphAndTargets targetGraphAndTargets =

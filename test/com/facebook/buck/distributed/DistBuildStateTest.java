@@ -60,7 +60,6 @@ import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.parser.ParsingContext;
-import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
@@ -247,10 +246,9 @@ public class DistBuildStateTest {
     Parser parser = TestParserFactory.create(buckConfig);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            cell,
-            /* enableProfiling */ false,
-            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-            SpeculativeParsing.DISABLED,
+            ParsingContext.builder(
+                    cell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+                .build(),
             ImmutableSet.of(
                 BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib1"),
                 BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:lib2"),

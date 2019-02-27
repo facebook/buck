@@ -55,6 +55,7 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -1160,10 +1161,10 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  params.getCell(),
-                  getEnableParserProfiling(),
-                  executor,
-                  SpeculativeParsing.ENABLED,
+                  ParsingContext.builder(params.getCell(), executor)
+                      .setProfilingEnabled(getEnableParserProfiling())
+                      .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                      .build(),
                   matchingBuildTargetsWithTests);
 
       return new Pair<>(

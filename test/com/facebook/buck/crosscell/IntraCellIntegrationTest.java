@@ -25,7 +25,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.ProcessResult;
@@ -69,10 +69,9 @@ public class IntraCellIntegrationTest {
 
     // This parses cleanly
     parser.buildTargetGraph(
-        cell,
-        false,
-        MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-        SpeculativeParsing.DISABLED,
+        ParsingContext.builder(
+                cell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+            .build(),
         ImmutableSet.of(
             BuildTargetFactory.newInstance(
                 cell.getFilesystem().getRootPath(), "//just-a-directory:rule")));
@@ -85,10 +84,9 @@ public class IntraCellIntegrationTest {
     try {
       // Whereas, because visibility is limited to the same cell, this won't.
       parser.buildTargetGraph(
-          childCell,
-          false,
-          MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-          SpeculativeParsing.DISABLED,
+          ParsingContext.builder(
+                  childCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+              .build(),
           ImmutableSet.of(
               BuildTargetFactory.newInstance(
                   childCell.getFilesystem().getRootPath(), "child//:child-target")));

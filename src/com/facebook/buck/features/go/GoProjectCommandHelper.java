@@ -43,6 +43,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
@@ -84,6 +85,7 @@ public class GoProjectCommandHelper {
   private final Cell cell;
   private final boolean enableParserProfiling;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
+  private final ParsingContext parsingContext;
 
   private final ProjectGeneratorParameters projectGeneratorParameters;
 
@@ -104,6 +106,11 @@ public class GoProjectCommandHelper {
     this.enableParserProfiling = enableParserProfiling;
     this.argsParser = argsParser;
     this.projectGeneratorParameters = projectGeneratorParameters;
+    this.parsingContext =
+        ParsingContext.builder(cell, executor)
+            .setProfilingEnabled(enableParserProfiling)
+            .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+            .build();
   }
 
   public ExitCode parseTargetsAndRunProjectGenerator(List<String> arguments) throws Exception {
@@ -151,7 +158,7 @@ public class GoProjectCommandHelper {
     TargetGraphAndTargets targetGraphAndTargets;
     try {
       targetGraphAndTargets =
-          createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty(), executor);
+          createTargetGraph(projectGraph, graphRoots, passedInTargetsSet.isEmpty());
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -192,8 +199,7 @@ public class GoProjectCommandHelper {
               ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
           .getTargetGraph();
     }
-    return parser.buildTargetGraph(
-        cell, enableParserProfiling, executor, SpeculativeParsing.ENABLED, passedInTargets);
+    return parser.buildTargetGraph(parsingContext, passedInTargets);
   }
 
   /**
@@ -389,8 +395,7 @@ public class GoProjectCommandHelper {
   private TargetGraphAndTargets createTargetGraph(
       TargetGraph projectGraph,
       ImmutableSet<BuildTarget> graphRoots,
-      boolean needsFullRecursiveParse,
-      ListeningExecutorService executor)
+      boolean needsFullRecursiveParse)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     boolean isWithTests = isWithTests();
@@ -404,12 +409,7 @@ public class GoProjectCommandHelper {
     if (isWithTests) {
       explicitTestTargets = getExplicitTestTargets(graphRoots, projectGraph);
       projectGraph =
-          parser.buildTargetGraph(
-              cell,
-              enableParserProfiling,
-              executor,
-              SpeculativeParsing.ENABLED,
-              Sets.union(graphRoots, explicitTestTargets));
+          parser.buildTargetGraph(parsingContext, Sets.union(graphRoots, explicitTestTargets));
     }
 
     TargetGraphAndTargets targetGraphAndTargets =

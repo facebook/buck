@@ -51,6 +51,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -474,6 +475,11 @@ public class TestCommand extends BuildCommand {
       // all of the test rules.
       TargetGraphAndBuildTargets targetGraphAndBuildTargets;
       ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
+      ParsingContext parsingContext =
+          ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
+              .setProfilingEnabled(getEnableParserProfiling())
+              .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+              .build();
 
       try {
 
@@ -535,14 +541,7 @@ public class TestCommand extends BuildCommand {
             Iterable<BuildTarget> allTargets =
                 Iterables.concat(targetGraphAndBuildTargets.getBuildTargets(), testTargets);
             TargetGraph targetGraph =
-                params
-                    .getParser()
-                    .buildTargetGraph(
-                        params.getCell(),
-                        getEnableParserProfiling(),
-                        pool.getListeningExecutorService(),
-                        SpeculativeParsing.ENABLED,
-                        allTargets);
+                params.getParser().buildTargetGraph(parsingContext, allTargets);
             LOG.debug("Finished building new target graph with tests.");
             targetGraphAndBuildTargets = TargetGraphAndBuildTargets.of(targetGraph, allTargets);
           }

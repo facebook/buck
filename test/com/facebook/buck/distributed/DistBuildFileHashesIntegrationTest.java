@@ -41,7 +41,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -93,10 +93,9 @@ public class DistBuildFileHashesIntegrationTest {
     Parser parser = TestParserFactory.create(rootCellConfig);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            rootCell,
-            /* enableProfiling */ false,
-            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-            SpeculativeParsing.DISABLED,
+            ParsingContext.builder(
+                    rootCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+                .build(),
             ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
 
     DistBuildTargetGraphCodec targetGraphCodec =
@@ -153,10 +152,9 @@ public class DistBuildFileHashesIntegrationTest {
     Parser parser = TestParserFactory.create(rootCellConfig);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
-            rootCell,
-            /* enableProfiling */ false,
-            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()),
-            SpeculativeParsing.DISABLED,
+            ParsingContext.builder(
+                    rootCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+                .build(),
             ImmutableSet.of(BuildTargetFactory.newInstance(rootFs.getRootPath(), "//:libA")));
 
     DistBuildTargetGraphCodec targetGraphCodec =

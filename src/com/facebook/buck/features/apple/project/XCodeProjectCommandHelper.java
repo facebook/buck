@@ -52,6 +52,7 @@ import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
@@ -131,6 +132,7 @@ public class XCodeProjectCommandHelper {
   private final boolean dryRun;
   private final boolean readOnly;
   private final PathOutputPresenter outputPresenter;
+  private final ParsingContext parsingContext;
 
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final Function<ImmutableList<String>, ExitCode> buildRunner;
@@ -196,6 +198,11 @@ public class XCodeProjectCommandHelper {
     this.outputPresenter = outputPresenter;
     this.argsParser = argsParser;
     this.buildRunner = buildRunner;
+    this.parsingContext =
+        ParsingContext.builder(cell, parsingExecutorService)
+            .setProfilingEnabled(enableParserProfiling)
+            .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+            .build();
   }
 
   public ExitCode parseTargetsAndRunXCodeGenerator() throws IOException, InterruptedException {
@@ -698,12 +705,7 @@ public class XCodeProjectCommandHelper {
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
-    return parser.buildTargetGraph(
-        cell,
-        enableParserProfiling,
-        parsingExecutorService,
-        SpeculativeParsing.ENABLED,
-        passedInTargets);
+    return parser.buildTargetGraph(parsingContext, passedInTargets);
   }
 
   private TargetGraphAndTargets createTargetGraph(
@@ -726,19 +728,11 @@ public class XCodeProjectCommandHelper {
               graphRootsOrSourceTargets, projectGraph, isWithDependenciesTests, focusedModules);
       if (!needsFullRecursiveParse) {
         projectGraph =
-            parser.buildTargetGraph(
-                cell,
-                enableParserProfiling,
-                parsingExecutorService,
-                SpeculativeParsing.ENABLED,
-                Sets.union(graphRoots, explicitTestTargets));
+            parser.buildTargetGraph(parsingContext, Sets.union(graphRoots, explicitTestTargets));
       } else {
         projectGraph =
             parser.buildTargetGraph(
-                cell,
-                enableParserProfiling,
-                parsingExecutorService,
-                SpeculativeParsing.ENABLED,
+                parsingContext,
                 Sets.union(
                     projectGraph
                         .getNodes()

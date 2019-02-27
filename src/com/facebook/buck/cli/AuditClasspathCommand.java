@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.CommandLineException;
@@ -101,10 +102,10 @@ public class AuditClasspathCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  params.getCell(),
-                  getEnableParserProfiling(),
-                  pool.getListeningExecutorService(),
-                  SpeculativeParsing.ENABLED,
+                  ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
+                      .setProfilingEnabled(getEnableParserProfiling())
+                      .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                      .build(),
                   targets);
     } catch (BuildFileParseException e) {
       params
