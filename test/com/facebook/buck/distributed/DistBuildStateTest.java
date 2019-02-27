@@ -59,6 +59,7 @@ import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -415,10 +416,11 @@ public class DistBuildStateTest {
               return parser
                   .get()
                   .getTargetNodeRawAttributes(
-                      cell.getCell(input.getBuildTarget()),
-                      MoreExecutors.listeningDecorator(MoreExecutors.newDirectExecutorService()),
-                      SpeculativeParsing.DISABLED,
-                      false,
+                      ParsingContext.builder(
+                              cell.getCell(input.getBuildTarget()),
+                              MoreExecutors.listeningDecorator(
+                                  MoreExecutors.newDirectExecutorService()))
+                          .build(),
                       input);
             } catch (BuildFileParseException e) {
               throw new RuntimeException(e);

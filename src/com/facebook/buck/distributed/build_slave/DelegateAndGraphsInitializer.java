@@ -34,7 +34,7 @@ import com.facebook.buck.distributed.DistBuildTargetGraphCodec;
 import com.facebook.buck.distributed.build_slave.BuildSlaveTimingStatsTracker.SlaveEvents;
 import com.facebook.buck.parser.DefaultParserTargetNodeFactory;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
-import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -229,10 +229,10 @@ public class DelegateAndGraphsInitializer {
           try {
             return args.getParser()
                 .getTargetNodeRawAttributes(
-                    args.getState().getRootCell().getCell(input.getBuildTarget()),
-                    args.getExecutorService(),
-                    SpeculativeParsing.DISABLED,
-                    false,
+                    ParsingContext.builder(
+                            args.getState().getRootCell().getCell(input.getBuildTarget()),
+                            args.getExecutorService())
+                        .build(),
                     input);
           } catch (BuildFileParseException e) {
             throw new RuntimeException(e);

@@ -1801,8 +1801,7 @@ public class DefaultParserTest {
     assertThat(targetNode.getBuildTarget(), equalTo(fooLibTarget));
 
     SortedMap<String, Object> targetNodeAttributes =
-        parser.getTargetNodeRawAttributes(
-            cell, executorService, SpeculativeParsing.DISABLED, false, targetNode);
+        parser.getTargetNodeRawAttributes(parsingContext, targetNode);
     assertThat(targetNodeAttributes, Matchers.hasKey("name"));
     assertThat(
         targetNodeAttributes.get("name"), equalTo(targetNode.getBuildTarget().getShortName()));
