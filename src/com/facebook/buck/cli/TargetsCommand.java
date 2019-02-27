@@ -536,16 +536,14 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphForTargetNodeSpecs(
-                  params.getCell(),
-                  getEnableParserProfiling(),
-                  executor,
+                  ParsingContext.builder(params.getCell(), executor)
+                      .setProfilingEnabled(getEnableParserProfiling())
+                      .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                      .build(),
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),
-                      getArguments()),
-                  false,
-                  SpeculativeParsing.ENABLED,
-                  ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
+                      getArguments())),
           descriptionClasses);
     }
   }

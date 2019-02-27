@@ -553,8 +553,8 @@ public class DefaultParserTest {
   @Test
   public void whenAllRulesAreRequestedMultipleTimesThenRulesAreOnlyParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, executorService);
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
+    filterAllTargetsInProject(parser, parsingContext);
 
     assertEquals("Should have cached build rules.", 1, counter.calls);
   }
@@ -563,13 +563,13 @@ public class DefaultParserTest {
   public void whenNotifiedOfNonPathEventThenCacheRulesAreInvalidated()
       throws BuildFileParseException, IOException, InterruptedException {
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
 
     // Process event.
     parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -578,13 +578,13 @@ public class DefaultParserTest {
   @Test
   public void pathInvalidationWorksAfterOverflow() throws Exception {
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
 
     // Send overflow event.
     parser.getPermState().invalidateBasedOn(WatchmanOverflowEvent.of(filesystem.getRootPath(), ""));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 2, counter.calls);
@@ -599,7 +599,7 @@ public class DefaultParserTest {
                 Paths.get("java/com/facebook/Something.java")));
 
     // Call filterAllTargetsInProject to request cached rules.
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
 
     // Test that the third parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated cache.", 3, counter.calls);
@@ -622,10 +622,10 @@ public class DefaultParserTest {
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext.withCell(cell));
 
     // Call filterAllTargetsInProject to request cached rules with identical environment.
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext.withCell(cell));
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
@@ -1511,7 +1511,7 @@ public class DefaultParserTest {
   @Test
   public void whenAllRulesAreRequestedWithDifferingIncludesThenRulesAreParsedTwice()
       throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
 
     BuckConfig config =
         FakeBuckConfig.builder()
@@ -1523,7 +1523,7 @@ public class DefaultParserTest {
             .build();
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext.withCell(cell));
 
     assertEquals("Should have invalidated cache.", 2, counter.calls);
   }
@@ -1531,7 +1531,7 @@ public class DefaultParserTest {
   @Test
   public void whenAllRulesAreRequestedWithDifferingCellsThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
 
     assertEquals("Should have parsed once.", 1, counter.calls);
 
@@ -1548,7 +1548,7 @@ public class DefaultParserTest {
             .build();
     Cell cell = new TestCellBuilder().setFilesystem(newFilesystem).setBuckConfig(config).build();
 
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext.withCell(cell));
 
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
   }
@@ -1556,7 +1556,7 @@ public class DefaultParserTest {
   @Test
   public void whenAllRulesThenSingleTargetRequestedThenRulesAreParsedOnce()
       throws BuildFileParseException, IOException, InterruptedException {
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
     BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
     parser.buildTargetGraph(parsingContext, ImmutableList.of(foo));
 
@@ -1568,7 +1568,7 @@ public class DefaultParserTest {
       throws BuildFileParseException, IOException, InterruptedException {
     BuildTarget foo = BuildTargetFactory.newInstance(cellRoot, "//java/com/facebook", "foo");
     parser.buildTargetGraph(parsingContext, ImmutableList.of(foo));
-    filterAllTargetsInProject(parser, cell, executorService);
+    filterAllTargetsInProject(parser, parsingContext);
 
     assertEquals("Should have replaced build rules", 1, counter.calls);
   }
@@ -2513,20 +2513,16 @@ public class DefaultParserTest {
    * @return The build targets in the project filtered by the given filter.
    */
   public static synchronized ImmutableSet<BuildTarget> filterAllTargetsInProject(
-      Parser parser, Cell cell, ListeningExecutorService executor)
+      Parser parser, ParsingContext parsingContext)
       throws BuildFileParseException, IOException, InterruptedException {
     return FluentIterable.from(
             parser
                 .buildTargetGraphForTargetNodeSpecs(
-                    cell,
-                    false,
-                    executor,
+                    parsingContext,
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
-                            BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-                    false,
-                    SpeculativeParsing.ENABLED,
-                    ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
+                            BuildFileSpec.fromRecursivePath(
+                                Paths.get(""), parsingContext.getCell().getRoot()))))
                 .getTargetGraph()
                 .getNodes())
         .transform(TargetNode::getBuildTarget)

@@ -121,14 +121,11 @@ public class ParserBenchmark {
   @Benchmark
   public void parseMultipleTargets() throws Exception {
     parser.buildTargetGraphForTargetNodeSpecs(
-        cell,
-        /* enableProfiling */ false,
-        executorService,
+        ParsingContext.builder(cell, executorService)
+            .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+            .build(),
         ImmutableList.of(
             TargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-        false,
-        SpeculativeParsing.ENABLED,
-        ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
+                BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))));
   }
 }

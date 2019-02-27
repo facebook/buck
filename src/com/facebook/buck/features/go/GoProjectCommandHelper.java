@@ -134,7 +134,7 @@ public class GoProjectCommandHelper {
                       argsParser.apply(targets),
                       SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
-      projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
+      projectGraph = getProjectGraphForIde(passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -181,22 +181,16 @@ public class GoProjectCommandHelper {
     return params.getActionGraphProvider().getActionGraph(targetGraph);
   }
 
-  private TargetGraph getProjectGraphForIde(
-      ListeningExecutorService executor, ImmutableSet<BuildTarget> passedInTargets)
+  private TargetGraph getProjectGraphForIde(ImmutableSet<BuildTarget> passedInTargets)
       throws InterruptedException, BuildFileParseException, IOException {
 
     if (passedInTargets.isEmpty()) {
       return parser
           .buildTargetGraphForTargetNodeSpecs(
-              cell,
-              enableParserProfiling,
-              executor,
+              parsingContext,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-              false,
-              SpeculativeParsing.ENABLED,
-              ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
           .getTargetGraph();
     }
     return parser.buildTargetGraph(parsingContext, passedInTargets);

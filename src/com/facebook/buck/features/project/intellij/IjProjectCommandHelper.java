@@ -226,15 +226,10 @@ public class IjProjectCommandHelper {
     if (passedInTargets.isEmpty()) {
       return parser
           .buildTargetGraphForTargetNodeSpecs(
-              cell,
-              enableParserProfiling,
-              executor,
+              parsingContext,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
-              false,
-              SpeculativeParsing.ENABLED,
-              ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());

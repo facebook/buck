@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.parser.AbstractParserConfig.ApplyDefaultFlavorsMode;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import org.immutables.builder.Builder;
 import org.immutables.value.Value;
@@ -58,5 +59,24 @@ public abstract class AbstractParsingContext {
   @Value.Default
   public SpeculativeParsing getSpeculativeParsing() {
     return SpeculativeParsing.DISABLED;
+  }
+
+  /**
+   * Whether targets with constraints that are not compatible with the target platform should be
+   * excluded.
+   */
+  @Value.Default
+  public boolean excludeUnsupportedTargets() {
+    return false;
+  }
+
+  /**
+   * Controls how flavors are appended to the build targets.
+   *
+   * @see ApplyDefaultFlavorsMode
+   */
+  @Value.Default
+  public ApplyDefaultFlavorsMode getApplyDefaultFlavorsMode() {
+    return ApplyDefaultFlavorsMode.DISABLED;
   }
 }
