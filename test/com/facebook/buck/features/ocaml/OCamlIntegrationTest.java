@@ -529,8 +529,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetCanceled(target.toString());
-    buildLog.assertTargetCanceled(binary.toString());
+    buildLog.assertTargetCanceled(target);
+    buildLog.assertTargetCanceled(binary);
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents(".buckconfig", "warnings_flags=+a", "");
@@ -564,8 +564,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertThat(buildLog.getAllTargets(), Matchers.hasItems(targets.toArray(new BuildTarget[0])));
-    buildLog.assertTargetCanceled(target.toString());
-    buildLog.assertTargetCanceled(binary.toString());
+    buildLog.assertTargetCanceled(target);
+    buildLog.assertTargetCanceled(binary);
 
     workspace.resetBuildLogFile();
 

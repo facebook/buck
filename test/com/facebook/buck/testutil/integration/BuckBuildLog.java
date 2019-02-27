@@ -121,8 +121,8 @@ public class BuckBuildLog {
     assertEquals(BuildRuleStatus.FAIL, logEntry.status);
   }
 
-  public void assertTargetCanceled(String buildTargetRaw) {
-    BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
+  public void assertTargetCanceled(BuildTarget buildTarget) {
+    BuildLogEntry logEntry = getLogEntry(buildTarget);
     assertEquals(BuildRuleStatus.CANCELED, logEntry.status);
   }
 
