@@ -163,7 +163,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     if (sharedLibraryTarget.isPresent()) {
       log.assertTargetBuiltLocally(sharedLibraryTarget.get());
     }
-    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget.toString());
+    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget);
   }
 
   @Test
@@ -212,7 +212,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     if (sharedLibraryTarget.isPresent()) {
       log.assertTargetBuiltLocally(sharedLibraryTarget.get());
     }
-    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget.toString());
+    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget);
   }
 
   @Test
@@ -264,7 +264,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     if (sharedLibraryTarget.isPresent()) {
       log.assertTargetBuiltLocally(sharedLibraryTarget.get());
     }
-    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget.toString());
+    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget);
   }
 
   @Test
@@ -358,6 +358,6 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     if (sharedLibraryTarget.isPresent()) {
       log.assertTargetBuiltLocally(sharedLibraryTarget.get());
     }
-    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget.toString());
+    log.assertTargetHadMatchingInputRuleKey(sharedBinaryBuiltTarget);
   }
 }

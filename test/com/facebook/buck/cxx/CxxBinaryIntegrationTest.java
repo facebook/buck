@@ -1607,7 +1607,7 @@ public class CxxBinaryIntegrationTest {
         ImmutableSet.of(
             headerSymlinkTreeTarget, aggregatedDepsTarget, compileTarget, binaryTarget, target),
         buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingInputRuleKey(headerSymlinkTreeTarget.toString());
+    buildLog.assertTargetHadMatchingInputRuleKey(headerSymlinkTreeTarget);
     buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
     buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
@@ -1731,9 +1731,9 @@ public class CxxBinaryIntegrationTest {
         containsInAnyOrder(builder.build().toArray(new BuildTarget[] {})));
     buildLog.assertTargetBuiltLocally(depAggregatedDepsTarget);
     buildLog.assertTargetBuiltLocally(depCompileTarget);
-    buildLog.assertTargetHadMatchingInputRuleKey(depArchiveTarget.toString());
+    buildLog.assertTargetHadMatchingInputRuleKey(depArchiveTarget);
     buildLog.assertTargetHadMatchingRuleKey(depHeaderSymlinkTreeTarget.toString());
-    buildLog.assertTargetHadMatchingInputRuleKey(depHeaderExportedSymlinkTreeTarget.toString());
+    buildLog.assertTargetHadMatchingInputRuleKey(depHeaderExportedSymlinkTreeTarget);
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depTarget.toString());
     buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);

@@ -373,7 +373,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     assertThat(bizRuleKey, not(equalTo(getContents(bizRuleKeyPath))));
     assertEquals(bizAbiRuleKey, getContents(bizAbiRuleKeyPath));
-    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(bizTarget.toString());
+    workspace.getBuildLog().assertTargetHadMatchingInputRuleKey(bizTarget);
 
     assertThat(
         "util.jar should have been rewritten, so its file size should have changed.",

@@ -100,6 +100,10 @@ public class BuckBuildLog {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_INPUT_BASED_RULE_KEY);
   }
 
+  public void assertTargetHadMatchingInputRuleKey(BuildTarget buildTarget) {
+    assertTargetHadMatchingInputRuleKey(buildTarget.getFullyQualifiedName());
+  }
+
   public void assertTargetHadMatchingDepfileRuleKey(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_DEP_FILE_RULE_KEY);
   }
