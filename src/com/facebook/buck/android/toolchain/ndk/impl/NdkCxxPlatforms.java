@@ -597,6 +597,11 @@ public class NdkCxxPlatforms {
           Linker.LinkableDepType.STATIC, "-l" + cxxRuntime.staticName);
 
       if (getNdkMajorVersion(ndkVersion) >= 12 && cxxRuntime == NdkCxxRuntime.LIBCXX) {
+        if (getNdkMajorVersion(ndkVersion) < 17
+            || targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI_V7A
+            || targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.X86) {
+          cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-landroid_support");
+        }
         cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-lc++abi");
         if (targetConfiguration.getTargetArchAbi() == NdkTargetArchAbi.ARMEABI) {
           cxxPlatformBuilder.putRuntimeLdflags(Linker.LinkableDepType.STATIC, "-latomic");
