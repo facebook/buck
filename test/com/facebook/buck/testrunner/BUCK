@@ -120,3 +120,13 @@ standard_java_test(
         "//third-party/java/thrift:libthrift",
     ],
 )
+
+python_test(
+    name = "check-allowed-entries-in-testrunner-jar",
+    srcs = [
+        "check-allowed-entries-in-archive.py",
+    ],
+    resources = [
+        "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
+    ],
+)
