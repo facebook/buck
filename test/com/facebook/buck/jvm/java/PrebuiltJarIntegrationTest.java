@@ -79,7 +79,7 @@ public class PrebuiltJarIntegrationTest {
     result = workspace.runBuckBuild("//:depends_on_jar");
     result.assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetHadMatchingRuleKey(target.getFullyQualifiedName());
+    buildLog.assertTargetHadMatchingRuleKey(target);
 
     // We expect the binary jar to have a different hash to the stub jar.
     Path binaryJar = workspace.getPath("junit.jar");

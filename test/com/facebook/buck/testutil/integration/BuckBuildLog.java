@@ -112,6 +112,10 @@ public class BuckBuildLog {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.MATCHING_RULE_KEY);
   }
 
+  public void assertTargetHadMatchingRuleKey(BuildTarget buildTarget) {
+    assertTargetHadMatchingRuleKey(buildTarget.getFullyQualifiedName());
+  }
+
   public void assertTargetFailed(String buildTargetRaw) {
     BuildLogEntry logEntry = getLogEntry(buildTargetRaw);
     assertEquals(BuildRuleStatus.FAIL, logEntry.status);

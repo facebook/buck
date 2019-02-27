@@ -160,8 +160,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary);
+    buildLog.assertTargetHadMatchingRuleKey(target);
 
     workspace.resetBuildLogFile();
 
@@ -173,7 +173,7 @@ public class OCamlIntegrationTest {
     assertTrue(buildLog.getAllTargets().containsAll(targets));
 
     buildLog.assertTargetBuiltLocally(target);
-    buildLog.assertTargetHadMatchingRuleKey(staticLib.toString());
+    buildLog.assertTargetHadMatchingRuleKey(staticLib);
 
     workspace.resetBuildLogFile();
 
@@ -268,8 +268,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary);
+    buildLog.assertTargetHadMatchingRuleKey(target);
 
     workspace.resetBuildLogFile();
 
@@ -308,8 +308,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary);
+    buildLog.assertTargetHadMatchingRuleKey(target);
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("ctest/ctest.c", "NATIVE PLUS", "Native Plus");
@@ -341,8 +341,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(ImmutableSet.of(binary, target), buildLog.getAllTargets());
-    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary);
+    buildLog.assertTargetHadMatchingRuleKey(target);
   }
 
   @Test
@@ -405,8 +405,8 @@ public class OCamlIntegrationTest {
             String.format("Expected %s to be built", t.toString()),
             buildLog.getAllTargets().contains(t));
       }
-      buildLog.assertTargetHadMatchingRuleKey(target.toString());
-      buildLog.assertTargetHadMatchingRuleKey(binary.toString());
+      buildLog.assertTargetHadMatchingRuleKey(target);
+      buildLog.assertTargetHadMatchingRuleKey(binary);
 
       workspace.resetBuildLogFile();
       workspace.replaceFileContents("ocaml_ext_mac/BUCK", "libplus_lib", "libplus_lib1");
@@ -449,8 +449,8 @@ public class OCamlIntegrationTest {
             String.format("Expected %s to be built", t.toString()),
             buildLog.getAllTargets().contains(t));
       }
-      buildLog.assertTargetHadMatchingRuleKey(target.toString());
-      buildLog.assertTargetHadMatchingRuleKey(binary.toString());
+      buildLog.assertTargetHadMatchingRuleKey(target);
+      buildLog.assertTargetHadMatchingRuleKey(binary);
 
       workspace.resetBuildLogFile();
       workspace.replaceFileContents("ocaml_ext_mac/BUCK", "libplus_lib", "libplus_lib1");
@@ -501,8 +501,8 @@ public class OCamlIntegrationTest {
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetHadMatchingRuleKey(binary.toString());
-    buildLog.assertTargetHadMatchingRuleKey(target.toString());
+    buildLog.assertTargetHadMatchingRuleKey(binary);
+    buildLog.assertTargetHadMatchingRuleKey(target);
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("clib/cc/cc.cpp", "Hi there", "hi there");

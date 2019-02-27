@@ -127,7 +127,7 @@ public class PrecompiledHeaderIntegrationTest {
         "referenced_by_prefix_header_from_dependency.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetHadMatchingRuleKey(findPchTarget().toString());
+    buildLog.assertTargetHadMatchingRuleKey(findPchTarget());
     buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
