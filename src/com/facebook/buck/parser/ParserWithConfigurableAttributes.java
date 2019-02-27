@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.util.Map;
@@ -203,27 +202,21 @@ class ParserWithConfigurableAttributes extends DefaultParser {
 
   @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> specs,
-      SpeculativeParsing speculativeParsing,
-      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode,
-      boolean excludeUnsupportedTargets)
+      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, InterruptedException, IOException {
 
     try (PerBuildStateWithConfigurableAttributes state =
         (PerBuildStateWithConfigurableAttributes)
             perBuildStateFactory.create(
                 permState,
-                executor,
-                rootCell,
+                parsingContext.getExecutor(),
+                parsingContext.getCell(),
                 targetPlatforms.get(),
-                enableProfiling,
-                speculativeParsing)) {
+                parsingContext.isProfilingEnabled(),
+                parsingContext.getSpeculativeParsing())) {
       TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
           (spec, nodes) -> spec.filter(nodes);
-      if (excludeUnsupportedTargets) {
+      if (parsingContext.excludeUnsupportedTargets()) {
         Platform targetPlatform = state.getTargetPlatform().get();
         ConstraintResolver constraintResolver = state.getConstraintResolver();
         targetNodeFilter =
@@ -237,10 +230,11 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
           createTargetNodeProviderForSpecResolver(state);
       return targetSpecResolver.resolveTargetSpecs(
-          rootCell,
+          parsingContext.getCell(),
           specs,
           (buildTarget, targetNode, targetType) ->
-              applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+              applyDefaultFlavors(
+                  buildTarget, targetNode, targetType, parsingContext.getApplyDefaultFlavorsMode()),
           targetNodeProvider,
           targetNodeFilter);
     }

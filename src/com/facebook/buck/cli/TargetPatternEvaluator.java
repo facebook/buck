@@ -25,7 +25,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.query.QueryBuildTarget;
@@ -150,15 +150,14 @@ class TargetPatternEvaluator {
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         parser.resolveTargetSpecs(
-            rootCell,
-            enableProfiling,
-            executor,
-            specs,
-            SpeculativeParsing.DISABLED,
             // We disable mapping //path/to:lib to //path/to:lib#default,static
             // because the query engine doesn't handle flavors very well.
-            ParserConfig.ApplyDefaultFlavorsMode.DISABLED,
-            excludeUnsupportedTargets);
+            ParsingContext.builder(rootCell, executor)
+                .setProfilingEnabled(enableProfiling)
+                .setApplyDefaultFlavorsMode(ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
+                .setExcludeUnsupportedTargets(excludeUnsupportedTargets)
+                .build(),
+            specs);
     LOG.verbose("Resolved target patterns %s -> targets %s", patterns, buildTargets);
 
     // Convert the ordered result into a result map of pattern to set of resolved targets.

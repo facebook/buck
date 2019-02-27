@@ -59,7 +59,6 @@ import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
-import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -337,11 +336,12 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException {
 
+    ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
         ParsingContext.builder(params.getCell(), executor)
             .setProfilingEnabled(getEnableParserProfiling())
+            .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .build();
-    ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
     // TODO(cjhopman): This shouldn't be doing parsing outside of the normal parse stage.
     // The first step to that would be to move the Apple install helpers to be deps available from
@@ -356,15 +356,7 @@ public class InstallCommand extends BuildCommand {
 
       BuildTarget target =
           FluentIterable.from(
-                  params
-                      .getParser()
-                      .resolveTargetSpecs(
-                          params.getCell(),
-                          getEnableParserProfiling(),
-                          executor,
-                          ImmutableList.of(spec),
-                          SpeculativeParsing.DISABLED,
-                          parserConfig.getDefaultFlavorsMode()))
+                  params.getParser().resolveTargetSpecs(parsingContext, ImmutableList.of(spec)))
               .transformAndConcat(Functions.identity())
               .first()
               .get();

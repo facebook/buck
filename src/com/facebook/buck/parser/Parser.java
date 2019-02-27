@@ -26,7 +26,6 @@ import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.SortedMap;
@@ -99,21 +98,6 @@ public interface Parser {
       throws BuildFileParseException, IOException, InterruptedException;
 
   ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> specs,
-      SpeculativeParsing speculativeParsing,
-      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
-      throws BuildFileParseException, InterruptedException, IOException;
-
-  ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> specs,
-      SpeculativeParsing speculativeParsing,
-      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode,
-      boolean excludeUnsupportedTargets)
+      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, InterruptedException, IOException;
 }

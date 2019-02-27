@@ -78,12 +78,10 @@ public class GoProjectCommandHelper {
   private final CommandRunnerParams params;
   private final BuckEventBus buckEventBus;
   private final Console console;
-  private final ListeningExecutorService executor;
   private final Parser parser;
   private final GoBuckConfig goBuckConfig;
   private final BuckConfig buckConfig;
   private final Cell cell;
-  private final boolean enableParserProfiling;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final ParsingContext parsingContext;
 
@@ -98,18 +96,18 @@ public class GoProjectCommandHelper {
     this.params = params;
     this.buckEventBus = params.getBuckEventBus();
     this.console = projectGeneratorParameters.getConsole();
-    this.executor = executor;
     this.parser = projectGeneratorParameters.getParser();
     this.goBuckConfig = new GoBuckConfig(params.getBuckConfig());
     this.buckConfig = params.getBuckConfig();
     this.cell = params.getCell();
-    this.enableParserProfiling = enableParserProfiling;
     this.argsParser = argsParser;
     this.projectGeneratorParameters = projectGeneratorParameters;
     this.parsingContext =
         ParsingContext.builder(cell, executor)
             .setProfilingEnabled(enableParserProfiling)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+            .setApplyDefaultFlavorsMode(
+                buckConfig.getView(ParserConfig.class).getDefaultFlavorsMode())
             .build();
   }
 
@@ -123,17 +121,10 @@ public class GoProjectCommandHelper {
     TargetGraph projectGraph;
 
     try {
-      ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
-                  parser.resolveTargetSpecs(
-                      cell,
-                      enableParserProfiling,
-                      executor,
-                      argsParser.apply(targets),
-                      SpeculativeParsing.ENABLED,
-                      parserConfig.getDefaultFlavorsMode())));
+                  parser.resolveTargetSpecs(parsingContext, argsParser.apply(targets))));
       projectGraph = getProjectGraphForIde(passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));

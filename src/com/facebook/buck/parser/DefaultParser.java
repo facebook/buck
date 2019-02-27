@@ -447,46 +447,28 @@ class DefaultParser implements Parser {
 
   @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> specs,
-      SpeculativeParsing speculativeParsing,
-      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, InterruptedException, IOException {
 
     try (PerBuildState state =
         perBuildStateFactory.create(
             permState,
-            executor,
-            rootCell,
+            parsingContext.getExecutor(),
+            parsingContext.getCell(),
             targetPlatforms.get(),
-            enableProfiling,
-            speculativeParsing)) {
+            parsingContext.isProfilingEnabled(),
+            parsingContext.getSpeculativeParsing())) {
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
           createTargetNodeProviderForSpecResolver(state);
       return targetSpecResolver.resolveTargetSpecs(
-          rootCell,
+          parsingContext.getCell(),
           specs,
           (buildTarget, targetNode, targetType) ->
-              applyDefaultFlavors(buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+              applyDefaultFlavors(
+                  buildTarget, targetNode, targetType, parsingContext.getApplyDefaultFlavorsMode()),
           targetNodeProvider,
           (spec, nodes) -> spec.filter(nodes));
     }
-  }
-
-  @Override
-  public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> specs,
-      SpeculativeParsing speculativeParsing,
-      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode,
-      boolean excludeUnsupportedTargets)
-      throws BuildFileParseException, InterruptedException, IOException {
-    return resolveTargetSpecs(
-        rootCell, enableProfiling, executor, specs, speculativeParsing, applyDefaultFlavorsMode);
   }
 
   @VisibleForTesting

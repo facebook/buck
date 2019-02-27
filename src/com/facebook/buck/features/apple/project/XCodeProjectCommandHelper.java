@@ -118,11 +118,9 @@ public class XCodeProjectCommandHelper {
   private final Optional<ProcessManager> processManager;
   private final ImmutableMap<String, String> environment;
   private final ListeningExecutorService executorService;
-  private final ListeningExecutorService parsingExecutorService;
   private final List<String> arguments;
   private final boolean absoluteHeaderMapPaths;
   private final boolean sharedLibrariesInBundles;
-  private final boolean enableParserProfiling;
   private final boolean withTests;
   private final boolean withoutTests;
   private final boolean withoutDependenciesTests;
@@ -182,11 +180,9 @@ public class XCodeProjectCommandHelper {
     this.processManager = processManager;
     this.environment = environment;
     this.executorService = executorService;
-    this.parsingExecutorService = parsingExecutorService;
     this.arguments = arguments;
     this.absoluteHeaderMapPaths = absoluteHeaderMapPaths;
     this.sharedLibrariesInBundles = sharedLibrariesInBundles;
-    this.enableParserProfiling = enableParserProfiling;
     this.withTests = withTests;
     this.withoutTests = withoutTests;
     this.withoutDependenciesTests = withoutDependenciesTests;
@@ -202,6 +198,8 @@ public class XCodeProjectCommandHelper {
         ParsingContext.builder(cell, parsingExecutorService)
             .setProfilingEnabled(enableParserProfiling)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+            .setApplyDefaultFlavorsMode(
+                buckConfig.getView(ParserConfig.class).getDefaultFlavorsMode())
             .build();
   }
 
@@ -212,17 +210,10 @@ public class XCodeProjectCommandHelper {
     LOG.debug("Xcode project generation: Getting the target graph");
 
     try {
-      ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
-                  parser.resolveTargetSpecs(
-                      cell,
-                      enableParserProfiling,
-                      parsingExecutorService,
-                      argsParser.apply(arguments),
-                      SpeculativeParsing.ENABLED,
-                      parserConfig.getDefaultFlavorsMode())));
+                  parser.resolveTargetSpecs(parsingContext, argsParser.apply(arguments))));
       projectGraph = getProjectGraphForIde(passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -542,17 +533,11 @@ public class XCodeProjectCommandHelper {
 
     // Resolve the list of targets matching the patterns.
     ImmutableSet<BuildTarget> passedInTargetsSet;
-    ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     try {
       passedInTargetsSet =
           parser
               .resolveTargetSpecs(
-                  cell,
-                  enableParserProfiling,
-                  parsingExecutorService,
-                  specs,
-                  SpeculativeParsing.DISABLED,
-                  parserConfig.getDefaultFlavorsMode())
+                  parsingContext.withSpeculativeParsing(SpeculativeParsing.DISABLED), specs)
               .stream()
               .flatMap(Collection::stream)
               .collect(ImmutableSet.toImmutableSet());
