@@ -19,7 +19,6 @@ package com.facebook.buck.testrunner;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.environment.PlatformType;
-import com.facebook.buck.util.string.MoreStrings;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -62,7 +61,7 @@ public abstract class BaseRunner {
 
   private static String removeCRIfNeeded(String text) {
     if (NEED_TO_REMOVE_CR) {
-      return MoreStrings.replaceCR(text);
+      return text.replace("\r\n", "\n").replace('\r', '\n');
     }
     return text;
   }
