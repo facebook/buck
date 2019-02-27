@@ -216,7 +216,7 @@ public class IjProjectCommandHelper {
 
     if (passedInTargets.isEmpty()) {
       return parser
-          .buildTargetGraphForTargetNodeSpecs(
+          .buildTargetGraphWithConfigurationTargets(
               parsingContext,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(

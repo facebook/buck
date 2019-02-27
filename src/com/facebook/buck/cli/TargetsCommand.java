@@ -537,7 +537,7 @@ public class TargetsCommand extends AbstractCommand {
       return filterTargetGraphAndBuildTargetsByType(
           params
               .getParser()
-              .buildTargetGraphForTargetNodeSpecs(
+              .buildTargetGraphWithConfigurationTargets(
                   parsingContext,
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),

@@ -77,14 +77,6 @@ public interface Parser {
    * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
    * @return the target graph containing the build targets and their related targets.
    */
-  TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
-      throws BuildFileParseException, IOException, InterruptedException;
-
-  /**
-   * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
-   * @return the target graph containing the build targets and their related targets.
-   */
   TargetGraphAndBuildTargets buildTargetGraphWithoutConfigurationTargets(
       ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, IOException, InterruptedException;

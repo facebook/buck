@@ -2501,7 +2501,7 @@ public class DefaultParserTest {
       throws BuildFileParseException, IOException, InterruptedException {
     return FluentIterable.from(
             parser
-                .buildTargetGraphForTargetNodeSpecs(
+                .buildTargetGraphWithConfigurationTargets(
                     parsingContext,
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(

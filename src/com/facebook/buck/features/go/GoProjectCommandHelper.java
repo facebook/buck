@@ -177,7 +177,7 @@ public class GoProjectCommandHelper {
 
     if (passedInTargets.isEmpty()) {
       return parser
-          .buildTargetGraphForTargetNodeSpecs(
+          .buildTargetGraphWithConfigurationTargets(
               parsingContext,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(

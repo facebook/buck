@@ -314,25 +314,6 @@ class DefaultParser implements Parser {
     }
   }
 
-  /**
-   * @param targetNodeSpecs the specs representing the build targets to generate a target graph for.
-   * @return the target graph containing the build targets and their related targets.
-   */
-  @Override
-  public synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
-      throws BuildFileParseException, IOException, InterruptedException {
-    return buildTargetGraphForTargetNodeSpecs(
-        parsingContext.getCell(),
-        parsingContext.isProfilingEnabled(),
-        parsingContext.getExecutor(),
-        targetNodeSpecs,
-        parsingContext.excludeUnsupportedTargets(),
-        false,
-        parsingContext.getSpeculativeParsing(),
-        parsingContext.getApplyDefaultFlavorsMode());
-  }
-
   @Override
   public synchronized TargetGraphAndBuildTargets buildTargetGraphWithoutConfigurationTargets(
       ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
