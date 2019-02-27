@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -195,12 +196,12 @@ public class QueryCommand extends AbstractCommand {
                     params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory())
                 .create(
+                    ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
+                        .setProfilingEnabled(getEnableParserProfiling())
+                        .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                        .build(),
                     params.getParser().getPermState(),
-                    pool.getListeningExecutorService(),
-                    params.getCell(),
-                    getTargetPlatforms(),
-                    getEnableParserProfiling(),
-                    SpeculativeParsing.ENABLED)) {
+                    getTargetPlatforms())) {
       ListeningExecutorService executor = pool.getListeningExecutorService();
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(

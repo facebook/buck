@@ -24,11 +24,10 @@ public class TestPerBuildStateFactory {
     return parser
         .getPerBuildStateFactory()
         .create(
+            ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService())
+                .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                .build(),
             parser.getPermState(),
-            MoreExecutors.newDirectExecutorService(),
-            cell,
-            ImmutableList.of(),
-            false,
-            SpeculativeParsing.ENABLED);
+            ImmutableList.of());
   }
 }

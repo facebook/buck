@@ -216,12 +216,9 @@ public class DefaultParserTest {
                     ImmutableMap.of(buildFile, HashCode.fromBytes(new byte[] {1}))),
                 new ParsingUnconfiguredBuildTargetFactory())
             .create(
+                ParsingContext.builder(cell, executor).setProfilingEnabled(enableProfiling).build(),
                 parser.getPermState(),
-                executor,
-                cell,
-                ImmutableList.of(),
-                enableProfiling,
-                SpeculativeParsing.DISABLED)) {
+                ImmutableList.of())) {
       DefaultParser.getTargetNodeRawAttributes(state, cell, buildFile).getTargets();
     }
   }
@@ -2576,12 +2573,9 @@ public class DefaultParserTest {
                 new FakeFileHashCache(hashes),
                 new ParsingUnconfiguredBuildTargetFactory())
             .create(
+                ParsingContext.builder(cell, executor).build(),
                 parser.getPermState(),
-                executor,
-                cell,
-                ImmutableList.of(),
-                false,
-                SpeculativeParsing.DISABLED)) {
+                ImmutableList.of())) {
       for (BuildTarget buildTarget : buildTargets) {
         attributesByTarget.put(
             buildTarget,

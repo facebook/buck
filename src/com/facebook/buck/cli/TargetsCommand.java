@@ -313,12 +313,12 @@ public class TargetsCommand extends AbstractCommand {
                 .getParser()
                 .getPerBuildStateFactory()
                 .create(
+                    ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
+                        .setProfilingEnabled(getEnableParserProfiling())
+                        .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                        .build(),
                     params.getParser().getPermState(),
-                    pool.getListeningExecutorService(),
-                    params.getCell(),
-                    getTargetPlatforms(),
-                    getEnableParserProfiling(),
-                    SpeculativeParsing.ENABLED)) {
+                    getTargetPlatforms())) {
           ResolveAliasHelper.resolveAlias(params, parserState, getArguments());
         }
         return ExitCode.SUCCESS;
@@ -847,12 +847,11 @@ public class TargetsCommand extends AbstractCommand {
                 params.getFileHashCache(),
                 params.getUnconfiguredBuildTargetFactory())
             .create(
+                ParsingContext.builder(params.getCell(), executor)
+                    .setProfilingEnabled(getEnableParserProfiling())
+                    .build(),
                 params.getParser().getPermState(),
-                executor,
-                params.getCell(),
-                getTargetPlatforms(),
-                getEnableParserProfiling(),
-                SpeculativeParsing.DISABLED)) {
+                getTargetPlatforms())) {
 
       JsonAttributeFormat jsonAttributeFormat =
           params.getBuckConfig().getView(CliConfig.class).getJsonAttributeFormat();
@@ -1244,12 +1243,11 @@ public class TargetsCommand extends AbstractCommand {
                 params.getFileHashCache(),
                 params.getUnconfiguredBuildTargetFactory())
             .create(
+                ParsingContext.builder(params.getCell(), executor)
+                    .setProfilingEnabled(getEnableParserProfiling())
+                    .build(),
                 params.getParser().getPermState(),
-                executor,
-                params.getCell(),
-                getTargetPlatforms(),
-                getEnableParserProfiling(),
-                SpeculativeParsing.DISABLED)) {
+                getTargetPlatforms())) {
       buildTargetHashes =
           new TargetGraphHashing(
                   params.getBuckEventBus(),

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -28,7 +27,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -85,38 +83,19 @@ public abstract class PerBuildStateFactory {
   }
 
   public PerBuildState create(
+      ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
-      ListeningExecutorService executorService,
-      Cell rootCell,
-      ImmutableList<String> targetPlatforms,
-      boolean enableProfiling,
-      SpeculativeParsing speculativeParsing) {
-    return create(
-        ParsingContext.builder(rootCell, executorService)
-            .setSpeculativeParsing(speculativeParsing)
-            .setProfilingEnabled(enableProfiling)
-            .build(),
-        daemonicParserState,
-        targetPlatforms,
-        Optional.empty());
+      ImmutableList<String> targetPlatforms) {
+    return create(parsingContext, daemonicParserState, targetPlatforms, Optional.empty());
   }
 
   public PerBuildState create(
+      ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
-      ListeningExecutorService executorService,
-      Cell rootCell,
       ImmutableList<String> targetPlatforms,
-      boolean enableProfiling,
-      AtomicLong processedBytes,
-      SpeculativeParsing speculativeParsing) {
+      AtomicLong processedBytes) {
     return create(
-        ParsingContext.builder(rootCell, executorService)
-            .setSpeculativeParsing(speculativeParsing)
-            .setProfilingEnabled(enableProfiling)
-            .build(),
-        daemonicParserState,
-        targetPlatforms,
-        Optional.of(processedBytes));
+        parsingContext, daemonicParserState, targetPlatforms, Optional.of(processedBytes));
   }
 
   protected abstract PerBuildState create(

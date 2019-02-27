@@ -34,6 +34,7 @@ import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -124,12 +125,11 @@ public class QueryCommandTest {
                 new FakeFileHashCache(ImmutableMap.of()),
                 new ParsingUnconfiguredBuildTargetFactory())
             .create(
+                ParsingContext.builder(cell, executorService)
+                    .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                    .build(),
                 params.getParser().getPermState(),
-                executorService,
-                cell,
-                ImmutableList.of(),
-                false,
-                SpeculativeParsing.ENABLED);
+                ImmutableList.of());
     env =
         new FakeBuckQueryEnvironment(
             cell,

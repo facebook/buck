@@ -206,13 +206,7 @@ class ParserWithConfigurableAttributes extends DefaultParser {
 
     try (PerBuildStateWithConfigurableAttributes state =
         (PerBuildStateWithConfigurableAttributes)
-            perBuildStateFactory.create(
-                permState,
-                parsingContext.getExecutor(),
-                parsingContext.getCell(),
-                targetPlatforms.get(),
-                parsingContext.isProfilingEnabled(),
-                parsingContext.getSpeculativeParsing())) {
+            perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
       TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
           (spec, nodes) -> spec.filter(nodes);
       if (parsingContext.excludeUnsupportedTargets()) {

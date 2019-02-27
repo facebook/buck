@@ -40,6 +40,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -129,12 +130,11 @@ public class BuckQueryEnvironmentTest {
     Parser parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory, eventBus);
     parserState =
         perBuildStateFactory.create(
+            ParsingContext.builder(cell, executor)
+                .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                .build(),
             parser.getPermState(),
-            executor,
-            cell,
-            ImmutableList.of(),
-            /* enableProfiling */ false,
-            SpeculativeParsing.ENABLED);
+            ImmutableList.of());
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(

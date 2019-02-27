@@ -114,13 +114,7 @@ class DefaultParser implements Parser {
   public TargetNode<?> getTargetNode(ParsingContext parsingContext, BuildTarget target)
       throws BuildFileParseException {
     try (PerBuildState state =
-        perBuildStateFactory.create(
-            permState,
-            parsingContext.getExecutor(),
-            parsingContext.getCell(),
-            targetPlatforms.get(),
-            parsingContext.isProfilingEnabled(),
-            parsingContext.getSpeculativeParsing())) {
+        perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
       return state.getTargetNode(target);
     }
   }
@@ -193,13 +187,7 @@ class DefaultParser implements Parser {
       ParsingContext parsingContext, TargetNode<?> targetNode) throws BuildFileParseException {
 
     try (PerBuildState state =
-        perBuildStateFactory.create(
-            permState,
-            parsingContext.getExecutor(),
-            parsingContext.getCell(),
-            targetPlatforms.get(),
-            parsingContext.isProfilingEnabled(),
-            parsingContext.getSpeculativeParsing())) {
+        perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
       return getTargetNodeRawAttributes(state, parsingContext.getCell(), targetNode);
     }
   }
@@ -229,13 +217,7 @@ class DefaultParser implements Parser {
     AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState,
-            parsingContext.getExecutor(),
-            parsingContext.getCell(),
-            targetPlatforms.get(),
-            parsingContext.isProfilingEnabled(),
-            processedBytes,
-            parsingContext.getSpeculativeParsing())) {
+            parsingContext, permState, targetPlatforms.get(), processedBytes)) {
       return buildTargetGraph(state, toExplore, processedBytes);
     }
   }
@@ -335,13 +317,7 @@ class DefaultParser implements Parser {
     AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
         perBuildStateFactory.create(
-            permState,
-            parsingContext.getExecutor(),
-            parsingContext.getCell(),
-            targetPlatforms.get(),
-            parsingContext.isProfilingEnabled(),
-            processedBytes,
-            parsingContext.getSpeculativeParsing())) {
+            parsingContext, permState, targetPlatforms.get(), processedBytes)) {
 
       ImmutableSet<BuildTarget> buildTargets =
           collectBuildTargetsFromTargetNodeSpecs(
@@ -405,13 +381,7 @@ class DefaultParser implements Parser {
       throws BuildFileParseException, InterruptedException, IOException {
 
     try (PerBuildState state =
-        perBuildStateFactory.create(
-            permState,
-            parsingContext.getExecutor(),
-            parsingContext.getCell(),
-            targetPlatforms.get(),
-            parsingContext.isProfilingEnabled(),
-            parsingContext.getSpeculativeParsing())) {
+        perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
           createTargetNodeProviderForSpecResolver(state);
       return targetSpecResolver.resolveTargetSpecs(

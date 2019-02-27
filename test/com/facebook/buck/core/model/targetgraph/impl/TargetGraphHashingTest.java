@@ -44,9 +44,9 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
-import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -114,12 +114,9 @@ public class TargetGraphHashingTest {
                 new FakeFileHashCache(ImmutableMap.of()),
                 new ParsingUnconfiguredBuildTargetFactory())
             .create(
+                ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService()).build(),
                 parser.getPermState(),
-                MoreExecutors.newDirectExecutorService(),
-                cell,
-                ImmutableList.of(),
-                false,
-                SpeculativeParsing.DISABLED);
+                ImmutableList.of());
     targetNodeRawAttributesProvider =
         node -> parser.getTargetNodeRawAttributesJob(parserState, cell, node);
   }
