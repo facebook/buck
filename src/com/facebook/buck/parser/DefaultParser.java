@@ -30,7 +30,6 @@ import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.parser.AbstractParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -46,7 +45,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -318,62 +316,36 @@ class DefaultParser implements Parser {
   public synchronized TargetGraphAndBuildTargets buildTargetGraphWithoutConfigurationTargets(
       ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, IOException, InterruptedException {
-    return buildTargetGraphForTargetNodeSpecs(
-        parsingContext.getCell(),
-        parsingContext.isProfilingEnabled(),
-        parsingContext.getExecutor(),
-        targetNodeSpecs,
-        parsingContext.excludeUnsupportedTargets(),
-        true,
-        parsingContext.getSpeculativeParsing(),
-        parsingContext.getApplyDefaultFlavorsMode());
+    return buildTargetGraphForTargetNodeSpecs(parsingContext, targetNodeSpecs, true);
   }
 
   @Override
   public synchronized TargetGraphAndBuildTargets buildTargetGraphWithConfigurationTargets(
       ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, IOException, InterruptedException {
-    return buildTargetGraphForTargetNodeSpecs(
-        parsingContext.getCell(),
-        parsingContext.isProfilingEnabled(),
-        parsingContext.getExecutor(),
-        targetNodeSpecs,
-        parsingContext.excludeUnsupportedTargets(),
-        false,
-        parsingContext.getSpeculativeParsing(),
-        parsingContext.getApplyDefaultFlavorsMode());
+    return buildTargetGraphForTargetNodeSpecs(parsingContext, targetNodeSpecs, false);
   }
 
   private synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
+      ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      boolean excludeUnsupportedTargets,
-      boolean excludeConfigurationTargets,
-      SpeculativeParsing speculativeParsing,
-      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      boolean excludeConfigurationTargets)
       throws BuildFileParseException, IOException, InterruptedException {
 
     AtomicLong processedBytes = new AtomicLong();
     try (PerBuildState state =
         perBuildStateFactory.create(
             permState,
-            executor,
-            rootCell,
+            parsingContext.getExecutor(),
+            parsingContext.getCell(),
             targetPlatforms.get(),
-            enableProfiling,
+            parsingContext.isProfilingEnabled(),
             processedBytes,
-            speculativeParsing)) {
+            parsingContext.getSpeculativeParsing())) {
 
       ImmutableSet<BuildTarget> buildTargets =
           collectBuildTargetsFromTargetNodeSpecs(
-              rootCell,
-              state,
-              targetNodeSpecs,
-              excludeUnsupportedTargets,
-              excludeConfigurationTargets,
-              applyDefaultFlavorsMode);
+              parsingContext, state, targetNodeSpecs, excludeConfigurationTargets);
       TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
 
       return TargetGraphAndBuildTargets.of(graph, buildTargets);
@@ -382,12 +354,10 @@ class DefaultParser implements Parser {
 
   @SuppressWarnings("unused")
   protected ImmutableSet<BuildTarget> collectBuildTargetsFromTargetNodeSpecs(
-      Cell rootCell,
+      ParsingContext parsingContext,
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      boolean excludeUnsupportedTargets,
-      boolean excludeConfigurationTargets,
-      ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      boolean excludeConfigurationTargets)
       throws IOException, InterruptedException {
     TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
         createTargetNodeProviderForSpecResolver(state);
@@ -395,11 +365,14 @@ class DefaultParser implements Parser {
     return ImmutableSet.copyOf(
         Iterables.concat(
             targetSpecResolver.resolveTargetSpecs(
-                rootCell,
+                parsingContext.getCell(),
                 targetNodeSpecs,
                 (buildTarget, targetNode, targetType) ->
                     applyDefaultFlavors(
-                        buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+                        buildTarget,
+                        targetNode,
+                        targetType,
+                        parsingContext.getApplyDefaultFlavorsMode()),
                 targetNodeProvider,
                 (spec, nodes) -> spec.filter(nodes))));
   }

@@ -31,7 +31,6 @@ import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.AbstractParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -242,12 +241,10 @@ class ParserWithConfigurableAttributes extends DefaultParser {
 
   @Override
   protected ImmutableSet<BuildTarget> collectBuildTargetsFromTargetNodeSpecs(
-      Cell rootCell,
+      ParsingContext parsingContext,
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      boolean excludeUnsupportedTargets,
-      boolean excludeConfigurationTargets,
-      ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      boolean excludeConfigurationTargets)
       throws IOException, InterruptedException {
     PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
         (PerBuildStateWithConfigurableAttributes) state;
@@ -264,7 +261,7 @@ class ParserWithConfigurableAttributes extends DefaultParser {
               targetNodeFilter, ParserWithConfigurableAttributes::filterOutNonBuildTargets);
     }
 
-    if (excludeUnsupportedTargets) {
+    if (parsingContext.excludeUnsupportedTargets()) {
       Platform targetPlatform = stateWithConfigurableAttributes.getTargetPlatform().get();
       ConstraintResolver constraintResolver =
           stateWithConfigurableAttributes.getConstraintResolver();
@@ -279,11 +276,14 @@ class ParserWithConfigurableAttributes extends DefaultParser {
     return ImmutableSet.copyOf(
         Iterables.concat(
             targetSpecResolver.resolveTargetSpecs(
-                rootCell,
+                parsingContext.getCell(),
                 targetNodeSpecs,
                 (buildTarget, targetNode, targetType) ->
                     applyDefaultFlavors(
-                        buildTarget, targetNode, targetType, applyDefaultFlavorsMode),
+                        buildTarget,
+                        targetNode,
+                        targetType,
+                        parsingContext.getApplyDefaultFlavorsMode()),
                 targetNodeProvider,
                 targetNodeFilter)));
   }
