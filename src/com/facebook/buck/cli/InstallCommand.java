@@ -58,6 +58,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -336,6 +337,10 @@ public class InstallCommand extends BuildCommand {
       CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException {
 
+    ParsingContext parsingContext =
+        ParsingContext.builder(params.getCell(), executor)
+            .setProfilingEnabled(getEnableParserProfiling())
+            .build();
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
     // TODO(cjhopman): This shouldn't be doing parsing outside of the normal parse stage.
@@ -364,15 +369,7 @@ public class InstallCommand extends BuildCommand {
               .first()
               .get();
 
-      TargetNode<?> node =
-          params
-              .getParser()
-              .getTargetNode(
-                  params.getCell(),
-                  getEnableParserProfiling(),
-                  executor,
-                  SpeculativeParsing.DISABLED,
-                  target);
+      TargetNode<?> node = params.getParser().getTargetNode(parsingContext, target);
 
       if (node != null
           && node.getRuleType()

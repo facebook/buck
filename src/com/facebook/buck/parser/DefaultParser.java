@@ -113,21 +113,16 @@ class DefaultParser implements Parser {
   }
 
   @Override
-  public TargetNode<?> getTargetNode(
-      Cell cell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      SpeculativeParsing speculativeParsing,
-      BuildTarget target)
+  public TargetNode<?> getTargetNode(ParsingContext parsingContext, BuildTarget target)
       throws BuildFileParseException {
     try (PerBuildState state =
         perBuildStateFactory.create(
             permState,
-            executor,
-            cell,
+            parsingContext.getExecutor(),
+            parsingContext.getCell(),
             targetPlatforms.get(),
-            enableProfiling,
-            speculativeParsing)) {
+            parsingContext.isProfilingEnabled(),
+            parsingContext.getSpeculativeParsing())) {
       return state.getTargetNode(target);
     }
   }
