@@ -150,8 +150,8 @@ public class OCamlIntegrationTest {
 
     assertTrue(buildLog.getAllTargets().containsAll(targets));
 
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(staticLib.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(staticLib);
 
     workspace.resetBuildLogFile();
 
@@ -172,7 +172,7 @@ public class OCamlIntegrationTest {
     buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
 
-    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(target);
     buildLog.assertTargetHadMatchingRuleKey(staticLib.toString());
 
     workspace.resetBuildLogFile();
@@ -184,8 +184,8 @@ public class OCamlIntegrationTest {
     buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
 
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(staticLib.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(staticLib);
 
     workspace.resetBuildLogFile();
 
@@ -196,8 +196,8 @@ public class OCamlIntegrationTest {
     buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
 
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(staticLib.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(staticLib);
 
     workspace.resetBuildLogFile();
 
@@ -215,8 +215,8 @@ public class OCamlIntegrationTest {
     buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets1));
 
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(staticLib1.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(staticLib1);
   }
 
   @Test
@@ -260,8 +260,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertEquals(targets, buildLog.getAllTargets());
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
 
     workspace.resetBuildLogFile();
 
@@ -277,8 +277,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(targets, buildLog.getAllTargets());
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
 
     workspace.resetBuildLogFile();
 
@@ -286,8 +286,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertEquals(targets, buildLog.getAllTargets());
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
   }
 
   @Test
@@ -302,7 +302,7 @@ public class OCamlIntegrationTest {
 
     assertTrue(buildLog.getAllTargets().containsAll(targets));
 
-    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(target);
 
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -316,16 +316,16 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("ctest/BUCK", "#INSERTION_POINT", "compiler_flags=['-noassert']");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents(
@@ -333,8 +333,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents("ctest/BUCK", "compiler_flags=[]", "compiler_flags=[]");
@@ -372,8 +372,8 @@ public class OCamlIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
     assertFalse(buildLog.getAllTargets().contains(binary));
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(bytecode.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(bytecode);
   }
 
   @Test
@@ -395,8 +395,8 @@ public class OCamlIntegrationTest {
             String.format("Expected %s to be built", t.toString()),
             buildLog.getAllTargets().contains(t));
       }
-      buildLog.assertTargetBuiltLocally(target.toString());
-      buildLog.assertTargetBuiltLocally(binary.toString());
+      buildLog.assertTargetBuiltLocally(target);
+      buildLog.assertTargetBuiltLocally(binary);
 
       workspace.resetBuildLogFile();
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -413,8 +413,8 @@ public class OCamlIntegrationTest {
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
       buildLog = workspace.getBuildLog();
       assertTrue(buildLog.getAllTargets().containsAll(targets));
-      buildLog.assertTargetBuiltLocally(target.toString());
-      buildLog.assertTargetBuiltLocally(binary.toString());
+      buildLog.assertTargetBuiltLocally(target);
+      buildLog.assertTargetBuiltLocally(binary);
     }
   }
 
@@ -439,8 +439,8 @@ public class OCamlIntegrationTest {
             String.format("Expected %s to be built", t.toString()),
             buildLog.getAllTargets().contains(t));
       }
-      buildLog.assertTargetBuiltLocally(target.toString());
-      buildLog.assertTargetBuiltLocally(binary.toString());
+      buildLog.assertTargetBuiltLocally(target);
+      buildLog.assertTargetBuiltLocally(binary);
 
       workspace.resetBuildLogFile();
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -457,8 +457,8 @@ public class OCamlIntegrationTest {
       workspace.runBuckCommand("build", target.toString()).assertSuccess();
       buildLog = workspace.getBuildLog();
       assertTrue(buildLog.getAllTargets().containsAll(targets));
-      buildLog.assertTargetBuiltLocally(target.toString());
-      buildLog.assertTargetBuiltLocally(binary.toString());
+      buildLog.assertTargetBuiltLocally(target);
+      buildLog.assertTargetBuiltLocally(binary);
     }
   }
 
@@ -491,12 +491,12 @@ public class OCamlIntegrationTest {
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(binary.toString());
-    buildLog.assertTargetBuiltLocally(libplusStatic.toString());
-    buildLog.assertTargetBuiltLocally(cclibbin.toString());
-    buildLog.assertTargetBuiltLocally(ccObj.toString());
-    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(exportedHeaderSymlinkTreeTarget.toString());
+    buildLog.assertTargetBuiltLocally(binary);
+    buildLog.assertTargetBuiltLocally(libplusStatic);
+    buildLog.assertTargetBuiltLocally(cclibbin);
+    buildLog.assertTargetBuiltLocally(ccObj);
+    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget);
+    buildLog.assertTargetBuiltLocally(exportedHeaderSymlinkTreeTarget);
 
     workspace.resetBuildLogFile();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -508,10 +508,10 @@ public class OCamlIntegrationTest {
     workspace.replaceFileContents("clib/cc/cc.cpp", "Hi there", "hi there");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(binary.toString());
-    buildLog.assertTargetBuiltLocally(libplusStatic.toString());
-    buildLog.assertTargetBuiltLocally(cclibbin.toString());
-    buildLog.assertTargetBuiltLocally(ccObj.toString());
+    buildLog.assertTargetBuiltLocally(binary);
+    buildLog.assertTargetBuiltLocally(libplusStatic);
+    buildLog.assertTargetBuiltLocally(cclibbin);
+    buildLog.assertTargetBuiltLocally(ccObj);
   }
 
   @Test
@@ -536,8 +536,8 @@ public class OCamlIntegrationTest {
     workspace.replaceFileContents(".buckconfig", "warnings_flags=+a", "");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
   }
 
   @Test
@@ -574,8 +574,8 @@ public class OCamlIntegrationTest {
         ".buckconfig", "interop.includes=lib", "interop.includes=" + stdlibPath);
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
 
     workspace.resetBuildLogFile();
 
@@ -583,8 +583,8 @@ public class OCamlIntegrationTest {
     workspace.replaceFileContents(".buckconfig", "interop.includes=" + stdlibPath, "");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(target.toString());
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(target);
+    buildLog.assertTargetBuiltLocally(binary);
   }
 
   @Test
@@ -601,7 +601,7 @@ public class OCamlIntegrationTest {
     // Make sure the generated target is built as well.
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(binary);
   }
 
   @Test
@@ -625,7 +625,7 @@ public class OCamlIntegrationTest {
     // Make sure the helper target is built as well.
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(binary);
 
     // Make sure the ppx flag worked
     String out = workspace.runBuckCommand("run", binary.toString()).getStdout();
@@ -643,7 +643,7 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", binary.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetBuiltLocally(binary.toString());
+    buildLog.assertTargetBuiltLocally(binary);
 
     // Make sure the ppx flag worked
     String out = workspace.runBuckCommand("run", binary.toString()).getStdout();

@@ -76,7 +76,7 @@ public class CxxDependencyFileIntegrationTest {
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target, cxxPlatform);
     String source = "test.cpp";
     compileTarget = cxxSourceRuleFactory.createCompileBuildTarget(source);
-    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget);
   }
 
   @Test

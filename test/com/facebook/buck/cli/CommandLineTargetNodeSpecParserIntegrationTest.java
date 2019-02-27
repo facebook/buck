@@ -49,7 +49,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
             BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/foo:foo"),
             BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/bar:bar"));
     for (BuildTarget target : targets) {
-      workspace.getBuildLog().assertTargetBuiltLocally(target.toString());
+      workspace.getBuildLog().assertTargetBuiltLocally(target);
     }
     assertEquals(targets, workspace.getBuildLog().getAllTargets());
   }
@@ -144,7 +144,7 @@ public class CommandLineTargetNodeSpecParserIntegrationTest {
             BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple:simple"),
             BuildTargetFactory.newInstance(workspace.getDestPath(), "//simple/foo:foo"));
     for (BuildTarget target : targets) {
-      workspace.getBuildLog().assertTargetBuiltLocally(target.toString());
+      workspace.getBuildLog().assertTargetBuiltLocally(target);
     }
     assertEquals(targets, workspace.getBuildLog().getAllTargets());
   }

@@ -835,7 +835,7 @@ public class AppleBundleIntegrationTest {
     workspace.runBuckCommand("build", appTarget.getFullyQualifiedName()).assertSuccess();
 
     // Check that the genrule was invoked
-    workspace.getBuildLog().assertTargetBuiltLocally(genruleTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(genruleTarget);
 
     // Check the actool output: Merged.bundle/Assets.car
     assertFileInOutputContainsString(

@@ -56,6 +56,10 @@ public class BuckBuildLog {
     this.buildLogEntries = Preconditions.checkNotNull(buildLogEntries);
   }
 
+  public void assertTargetBuiltLocally(BuildTarget buildTarget) {
+    assertTargetBuiltLocally(buildTarget.getFullyQualifiedName());
+  }
+
   public void assertTargetBuiltLocally(String buildTargetRaw) {
     assertBuildSuccessType(buildTargetRaw, BuildRuleSuccessType.BUILT_LOCALLY);
   }

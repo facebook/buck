@@ -88,11 +88,11 @@ public class CxxRawHeadersIntegrationTest {
 
     runCommand("build", "//depfiles1:test").assertSuccess();
     compileTarget1 = cxxSourceRuleFactory1.createCompileBuildTarget(source);
-    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget1.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget1);
 
     compileTarget2 = cxxSourceRuleFactory2.createCompileBuildTarget(source);
     runCommand("build", "//depfiles2/test:test").assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget2.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(compileTarget2);
   }
 
   @Test

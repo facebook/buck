@@ -152,12 +152,12 @@ public class NdkCxxPlatformIntegrationTest {
     BuildTarget linkTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target, Optional.empty());
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget);
 
     // Change the app platform and verify that our rulekey has changed.
     workspace.writeContentsToPath("[ndk]\n  app_platform = android-17", ".buckconfig");
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
-    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget);
   }
 
   @Test

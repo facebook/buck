@@ -369,7 +369,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
 
     assertThat(utilRuleKey, not(equalTo(getContents(utilRuleKeyPath))));
     assertThat(utilAbiRuleKey, not(equalTo(getContents(utilAbiRuleKeyPath))));
-    workspace.getBuildLog().assertTargetBuiltLocally(utilTarget.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(utilTarget);
 
     assertThat(bizRuleKey, not(equalTo(getContents(bizRuleKeyPath))));
     assertEquals(bizAbiRuleKey, getContents(bizAbiRuleKeyPath));

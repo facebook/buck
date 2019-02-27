@@ -342,11 +342,11 @@ public class CxxBinaryIntegrationTest {
 
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertThat(buildLog.getAllTargets(), containsInAnyOrder(targetsBuilder.build().toArray()));
-    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(captureBuildTarget.toString());
-    buildLog.assertTargetBuiltLocally(inferAnalysisTarget.toString());
-    buildLog.assertTargetBuiltLocally(inferReportTarget.toString());
+    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
+    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget);
+    buildLog.assertTargetBuiltLocally(captureBuildTarget);
+    buildLog.assertTargetBuiltLocally(inferAnalysisTarget);
+    buildLog.assertTargetBuiltLocally(inferReportTarget);
 
     /*
      * Check that running a build again results in no builds since nothing has changed.
@@ -373,8 +373,8 @@ public class CxxBinaryIntegrationTest {
                 inferReportTarget,
                 headerSymlinkTreeTarget);
     assertEquals(buildLog.getAllTargets(), targetsBuilder.build());
-    buildLog.assertTargetBuiltLocally(captureBuildTarget.toString());
-    buildLog.assertTargetBuiltLocally(inferAnalysisTarget.toString());
+    buildLog.assertTargetBuiltLocally(captureBuildTarget);
+    buildLog.assertTargetBuiltLocally(inferAnalysisTarget);
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
   }
 
@@ -533,12 +533,12 @@ public class CxxBinaryIntegrationTest {
                 depOneInferAnalysisTarget // analysis of the library runs again
                 );
     assertEquals(buildTargets.build(), buildLog.getAllTargets());
-    buildLog.assertTargetBuiltLocally(topInferAnalysisTarget.toString());
-    buildLog.assertTargetBuiltLocally(topInferReportTarget.toString());
+    buildLog.assertTargetBuiltLocally(topInferAnalysisTarget);
+    buildLog.assertTargetBuiltLocally(topInferReportTarget);
     buildLog.assertTargetHadMatchingRuleKey(topCaptureBuildTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depTwoInferAnalysisTarget.toString());
-    buildLog.assertTargetBuiltLocally(depOneCaptureBuildTarget.toString());
-    buildLog.assertTargetBuiltLocally(depOneInferAnalysisTarget.toString());
+    buildLog.assertTargetBuiltLocally(depOneCaptureBuildTarget);
+    buildLog.assertTargetBuiltLocally(depOneInferAnalysisTarget);
     buildLog.assertTargetHadMatchingRuleKey(depOneAggregatedDepsTarget.toString());
   }
 
@@ -1027,7 +1027,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     buildLog = workspace.getBuildLog();
 
-    buildLog.assertTargetBuiltLocally(simpleOneCppCaptureTarget.toString());
+    buildLog.assertTargetBuiltLocally(simpleOneCppCaptureTarget);
   }
 
   @Test
@@ -1397,7 +1397,7 @@ public class CxxBinaryIntegrationTest {
         .assertSuccess();
 
     // Make sure the binary change caused a rebuild.
-    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget.toString());
+    workspace.getBuildLog().assertTargetBuiltLocally(linkTarget);
   }
 
   @Test
@@ -1423,7 +1423,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(target);
     assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
   }
 
@@ -1488,11 +1488,11 @@ public class CxxBinaryIntegrationTest {
             .add(aggregatedDepsTarget, headerSymlinkTreeTarget, compileTarget, binaryTarget, target)
             .build(),
         buildLog.getAllTargets());
-    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(compileTarget.toString());
-    buildLog.assertTargetBuiltLocally(binaryTarget.toString());
-    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
+    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget);
+    buildLog.assertTargetBuiltLocally(compileTarget);
+    buildLog.assertTargetBuiltLocally(binaryTarget);
+    buildLog.assertTargetBuiltLocally(target);
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1521,7 +1521,7 @@ public class CxxBinaryIntegrationTest {
             .build(),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingRuleKey(aggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(compileTarget.toString());
+    buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
         Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
@@ -1587,11 +1587,11 @@ public class CxxBinaryIntegrationTest {
         ImmutableSet.of(
             aggregatedDepsTarget, headerSymlinkTreeTarget, compileTarget, binaryTarget, target),
         buildLog.getAllTargets());
-    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(compileTarget.toString());
-    buildLog.assertTargetBuiltLocally(binaryTarget.toString());
-    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
+    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget);
+    buildLog.assertTargetBuiltLocally(compileTarget);
+    buildLog.assertTargetBuiltLocally(binaryTarget);
+    buildLog.assertTargetBuiltLocally(target);
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1608,8 +1608,8 @@ public class CxxBinaryIntegrationTest {
             headerSymlinkTreeTarget, aggregatedDepsTarget, compileTarget, binaryTarget, target),
         buildLog.getAllTargets());
     buildLog.assertTargetHadMatchingInputRuleKey(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(compileTarget.toString());
+    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
+    buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
         Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
@@ -1692,14 +1692,14 @@ public class CxxBinaryIntegrationTest {
     assertThat(
         buildLog.getAllTargets(),
         containsInAnyOrder(builder.build().toArray(new BuildTarget[] {})));
-    buildLog.assertTargetBuiltLocally(depHeaderSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
-    buildLog.assertTargetBuiltLocally(depArchiveTarget.toString());
-    buildLog.assertTargetBuiltLocally(depTarget.toString());
-    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget.toString());
-    buildLog.assertTargetBuiltLocally(compileTarget.toString());
-    buildLog.assertTargetBuiltLocally(binaryTarget.toString());
-    buildLog.assertTargetBuiltLocally(target.toString());
+    buildLog.assertTargetBuiltLocally(depHeaderSymlinkTreeTarget);
+    buildLog.assertTargetBuiltLocally(depCompileTarget);
+    buildLog.assertTargetBuiltLocally(depArchiveTarget);
+    buildLog.assertTargetBuiltLocally(depTarget);
+    buildLog.assertTargetBuiltLocally(headerSymlinkTreeTarget);
+    buildLog.assertTargetBuiltLocally(compileTarget);
+    buildLog.assertTargetBuiltLocally(binaryTarget);
+    buildLog.assertTargetBuiltLocally(target);
 
     // Clear for new build.
     workspace.resetBuildLogFile();
@@ -1729,15 +1729,15 @@ public class CxxBinaryIntegrationTest {
     assertThat(
         buildLog.getAllTargets(),
         containsInAnyOrder(builder.build().toArray(new BuildTarget[] {})));
-    buildLog.assertTargetBuiltLocally(depAggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
+    buildLog.assertTargetBuiltLocally(depAggregatedDepsTarget);
+    buildLog.assertTargetBuiltLocally(depCompileTarget);
     buildLog.assertTargetHadMatchingInputRuleKey(depArchiveTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depHeaderSymlinkTreeTarget.toString());
     buildLog.assertTargetHadMatchingInputRuleKey(depHeaderExportedSymlinkTreeTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(headerSymlinkTreeTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(depTarget.toString());
-    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(compileTarget.toString());
+    buildLog.assertTargetBuiltLocally(aggregatedDepsTarget);
+    buildLog.assertTargetBuiltLocally(compileTarget);
     assertThat(
         buildLog.getLogEntry(binaryTarget).getSuccessType().get(),
         Matchers.not(Matchers.equalTo(BuildRuleSuccessType.MATCHING_RULE_KEY)));
@@ -1769,11 +1769,11 @@ public class CxxBinaryIntegrationTest {
         buildLog.getAllTargets(),
         containsInAnyOrder(builder.build().toArray(new BuildTarget[] {})));
     buildLog.assertTargetHadMatchingRuleKey(depAggregatedDepsTarget.toString());
-    buildLog.assertTargetBuiltLocally(depCompileTarget.toString());
-    buildLog.assertTargetBuiltLocally(depArchiveTarget.toString());
+    buildLog.assertTargetBuiltLocally(depCompileTarget);
+    buildLog.assertTargetBuiltLocally(depArchiveTarget);
     buildLog.assertTargetHadMatchingRuleKey(depTarget.toString());
     buildLog.assertTargetHadMatchingRuleKey(compileTarget.toString());
-    buildLog.assertTargetBuiltLocally(binaryTarget.toString());
+    buildLog.assertTargetBuiltLocally(binaryTarget);
   }
 
   @Test
@@ -2350,8 +2350,7 @@ public class CxxBinaryIntegrationTest {
         .getBuildLog()
         .assertTargetBuiltLocally(
             CxxDescriptionEnhancer.createCxxLinkTarget(
-                    BuildTargetFactory.newInstance("//foo:simple"), Optional.empty())
-                .toString());
+                BuildTargetFactory.newInstance("//foo:simple"), Optional.empty()));
   }
 
   @Test
@@ -2387,8 +2386,7 @@ public class CxxBinaryIntegrationTest {
         .getBuildLog()
         .assertTargetBuiltLocally(
             CxxDescriptionEnhancer.createCxxLinkTarget(
-                    BuildTargetFactory.newInstance("//foo:binary_with_dep"), Optional.empty())
-                .toString());
+                BuildTargetFactory.newInstance("//foo:binary_with_dep"), Optional.empty()));
     ImmutableSortedSet<Path> subsequentObjects =
         findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
     assertThat(initialObjects, Matchers.equalTo(subsequentObjects));

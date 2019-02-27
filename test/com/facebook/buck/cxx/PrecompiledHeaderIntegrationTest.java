@@ -80,7 +80,7 @@ public class PrecompiledHeaderIntegrationTest {
         "prefix_header.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally(findPchTarget());
     buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
@@ -94,7 +94,7 @@ public class PrecompiledHeaderIntegrationTest {
         "#pragma once\n#define REFERENCED_BY_PREFIX_HEADER 3\n", "referenced_by_prefix_header.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally(findPchTarget());
     buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
@@ -109,7 +109,7 @@ public class PrecompiledHeaderIntegrationTest {
         "referenced_by_prefix_header_from_dependency.h");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally(findPchTarget());
     buildLog.assertTargetBuiltLocally("//:some_library#default,static");
   }
 
@@ -141,7 +141,7 @@ public class PrecompiledHeaderIntegrationTest {
     workspace.writeContentsToPath("int lib_func() { return 0; }", "lib.c");
     workspace.runBuckBuild("//:some_binary#default").assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(findPchTarget().toString());
+    buildLog.assertTargetBuiltLocally(findPchTarget());
     assertThat(
         workspace.asCell().getFilesystem(),
         ProjectFilesystemMatchers.pathExists(

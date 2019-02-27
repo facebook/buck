@@ -85,7 +85,7 @@ public class BuiltinApplePackageIntegrationTest {
         .runBuckCommand("build", appTarget.getUnflavoredBuildTarget().getFullyQualifiedName())
         .assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(appTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(appTarget);
 
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
 
@@ -93,7 +93,7 @@ public class BuiltinApplePackageIntegrationTest {
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
     workspace.getBuildLog().assertTargetWasFetchedFromCache(appTarget.getFullyQualifiedName());
-    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget);
 
     Path templateDir =
         TestDataHelper.getTestDataScenario(this, "simple_application_bundle_no_debug");
@@ -123,7 +123,7 @@ public class BuiltinApplePackageIntegrationTest {
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget);
 
     ZipInspector zipInspector =
         new ZipInspector(
@@ -142,7 +142,7 @@ public class BuiltinApplePackageIntegrationTest {
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
-    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(packageTarget);
 
     ZipInspector zipInspector =
         new ZipInspector(

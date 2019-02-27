@@ -121,9 +121,8 @@ public class WindowsClangCxxIntegrationTest {
         .getBuildLog()
         .assertTargetBuiltLocally(
             CxxDescriptionEnhancer.createCxxLinkTarget(
-                    BuildTargetFactory.newInstance("//app_lib:app_lib#windows-x86_64"),
-                    Optional.empty())
-                .toString());
+                BuildTargetFactory.newInstance("//app_lib:app_lib#windows-x86_64"),
+                Optional.empty()));
     ImmutableSortedSet<Path> subsequentObjects =
         findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.obj"));
     assertThat(initialObjects, Matchers.equalTo(subsequentObjects));

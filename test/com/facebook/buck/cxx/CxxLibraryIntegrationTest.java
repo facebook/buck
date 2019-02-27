@@ -235,7 +235,7 @@ public class CxxLibraryIntegrationTest {
     BuildTarget implicitTarget =
         target.withAppendedFlavors(
             InternalFlavor.of("static-pic"), InternalFlavor.of("android-armv7"));
-    workspace.getBuildLog().assertTargetBuiltLocally(implicitTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(implicitTarget);
   }
 
   @Test

@@ -74,7 +74,7 @@ public class PrebuiltJarIntegrationTest {
     result.assertSuccess();
 
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetBuiltLocally(target.getFullyQualifiedName());
+    buildLog.assertTargetBuiltLocally(target);
 
     result = workspace.runBuckBuild("//:depends_on_jar");
     result.assertSuccess();

@@ -66,7 +66,7 @@ public class CalculateSourceAbiIntegrationTest {
 
     // Make sure we built the source ABI
     BuildTarget abiTarget = BuildTargetFactory.newInstance("//:lib#source-abi");
-    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget);
 
     Path abiJarPath =
         filesystem.getPathForRelativePath(
@@ -118,7 +118,7 @@ public class CalculateSourceAbiIntegrationTest {
 
     // Make sure we built the source ABI
     BuildTarget abiTarget = BuildTargetFactory.newInstance("//:lib-stripped#source-abi");
-    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetBuiltLocally(abiTarget);
 
     Path abiJarPath =
         filesystem.getPathForRelativePath(
