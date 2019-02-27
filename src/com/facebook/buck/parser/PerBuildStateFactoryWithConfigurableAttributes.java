@@ -96,14 +96,13 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
   @Override
   protected PerBuildStateWithConfigurableAttributes create(
+      ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
-      ListeningExecutorService executorService,
-      Cell rootCell,
       ImmutableList<String> targetPlatforms,
-      boolean enableProfiling,
-      Optional<AtomicLong> parseProcessedBytes,
-      SpeculativeParsing speculativeParsing) {
+      Optional<AtomicLong> parseProcessedBytes) {
 
+    Cell rootCell = parsingContext.getCell();
+    ListeningExecutorService executorService = parsingContext.getExecutor();
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
     CellManager cellManager = new CellManager(symlinkCache);
 
@@ -114,7 +113,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         new DefaultProjectBuildFileParserFactory(
             typeCoercerFactory,
             parserPythonInterpreterProvider,
-            enableProfiling,
+            parsingContext.isProfilingEnabled(),
             parseProcessedBytes,
             knownRuleTypesProvider,
             manifestServiceSupplier,
@@ -123,7 +122,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
             projectBuildFileParserFactory,
-            enableProfiling);
+            parsingContext.isProfilingEnabled());
 
     TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
 
@@ -143,7 +142,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             ? executorService
             : MoreExecutors.newDirectExecutorService();
     boolean enableSpeculativeParsing =
-        parserConfig.getEnableParallelParsing() && speculativeParsing == SpeculativeParsing.ENABLED;
+        parserConfig.getEnableParallelParsing()
+            && parsingContext.getSpeculativeParsing() == SpeculativeParsing.ENABLED;
     RawTargetNodePipeline rawTargetNodePipeline =
         new RawTargetNodePipeline(
             pipelineExecutorService,

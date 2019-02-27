@@ -95,6 +95,7 @@ public class BuckQueryEnvironmentTest {
 
   @Before
   public void setUp() throws IOException {
+    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     eventBus = BuckEventBusForTests.newInstance();
     capturingConsoleEventListener = new CapturingConsoleEventListener();
     eventBus.register(capturingConsoleEventListener);
@@ -139,7 +140,6 @@ public class BuckQueryEnvironmentTest {
         new TargetPatternEvaluator(
             cell, FakeBuckConfig.builder().build(), parser, /* enableProfiling */ false, false);
     OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser, parserState);
-    executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
             cell,

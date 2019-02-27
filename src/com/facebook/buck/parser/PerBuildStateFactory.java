@@ -92,13 +92,13 @@ public abstract class PerBuildStateFactory {
       boolean enableProfiling,
       SpeculativeParsing speculativeParsing) {
     return create(
+        ParsingContext.builder(rootCell, executorService)
+            .setSpeculativeParsing(speculativeParsing)
+            .setProfilingEnabled(enableProfiling)
+            .build(),
         daemonicParserState,
-        executorService,
-        rootCell,
         targetPlatforms,
-        enableProfiling,
-        Optional.empty(),
-        speculativeParsing);
+        Optional.empty());
   }
 
   public PerBuildState create(
@@ -110,21 +110,18 @@ public abstract class PerBuildStateFactory {
       AtomicLong processedBytes,
       SpeculativeParsing speculativeParsing) {
     return create(
+        ParsingContext.builder(rootCell, executorService)
+            .setSpeculativeParsing(speculativeParsing)
+            .setProfilingEnabled(enableProfiling)
+            .build(),
         daemonicParserState,
-        executorService,
-        rootCell,
         targetPlatforms,
-        enableProfiling,
-        Optional.of(processedBytes),
-        speculativeParsing);
+        Optional.of(processedBytes));
   }
 
   protected abstract PerBuildState create(
+      ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
-      ListeningExecutorService executorService,
-      Cell rootCell,
       ImmutableList<String> targetPlatforms,
-      boolean enableProfiling,
-      Optional<AtomicLong> parseProcessedBytes,
-      SpeculativeParsing speculativeParsing);
+      Optional<AtomicLong> parseProcessedBytes);
 }

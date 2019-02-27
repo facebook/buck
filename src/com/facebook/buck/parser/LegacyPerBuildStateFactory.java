@@ -65,14 +65,13 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
 
   @Override
   protected PerBuildState create(
+      ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
-      ListeningExecutorService executorService,
-      Cell rootCell,
       ImmutableList<String> targetPlatforms,
-      boolean enableProfiling,
-      Optional<AtomicLong> parseProcessedBytes,
-      SpeculativeParsing speculativeParsing) {
+      Optional<AtomicLong> parseProcessedBytes) {
 
+    Cell rootCell = parsingContext.getCell();
+    ListeningExecutorService executorService = parsingContext.getExecutor();
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
     CellManager cellManager = new CellManager(symlinkCache);
 
@@ -83,7 +82,7 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
         new DefaultProjectBuildFileParserFactory(
             typeCoercerFactory,
             parserPythonInterpreterProvider,
-            enableProfiling,
+            parsingContext.isProfilingEnabled(),
             parseProcessedBytes,
             knownRuleTypesProvider,
             manifestServiceSupplier,
@@ -92,7 +91,7 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
         new ProjectBuildFileParserPool(
             numParsingThreads, // Max parsers to create per cell.
             projectBuildFileParserFactory,
-            enableProfiling);
+            parsingContext.isProfilingEnabled());
 
     TargetNodeFactory targetNodeFactory = new TargetNodeFactory(typeCoercerFactory);
 
@@ -121,7 +120,7 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
                 : MoreExecutors.newDirectExecutorService(),
             eventBus,
             parserConfig.getEnableParallelParsing()
-                && speculativeParsing == SpeculativeParsing.ENABLED,
+                && parsingContext.getSpeculativeParsing() == SpeculativeParsing.ENABLED,
             buildFileRawNodeParsePipeline,
             buildTargetRawNodeParsePipeline);
 
