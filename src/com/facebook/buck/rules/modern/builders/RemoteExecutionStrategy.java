@@ -409,9 +409,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     if (result.getExitCode() != 0) {
       LOG.info(
           "[RE] Failed to build target [%s] with exit code [%d]. "
-              + "stderr: [%s] metadata: [%s] action: [%s]",
+              + "stdout: [%s] stderr: [%s] metadata: [%s] action: [%s]",
           buildTarget.getFullyQualifiedName(),
           result.getExitCode(),
+          result.getStdout().orElse("<empty>"),
           result.getStderr().orElse("<empty>"),
           result.getMetadata().toString(),
           actionDigest);

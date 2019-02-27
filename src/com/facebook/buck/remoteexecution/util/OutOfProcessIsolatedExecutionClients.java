@@ -112,6 +112,11 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
                   }
 
                   @Override
+                  public Optional<String> getStdout() {
+                    return Optional.of(actionResult.stdout);
+                  }
+
+                  @Override
                   public Optional<String> getStderr() {
                     return Optional.of(actionResult.stderr);
                   }

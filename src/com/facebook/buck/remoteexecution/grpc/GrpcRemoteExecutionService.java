@@ -180,6 +180,30 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
       }
 
       @Override
+      public Optional<String> getStdout() {
+        ByteString stdoutRaw = actionResult.getStdoutRaw();
+        if (stdoutRaw == null
+            || (stdoutRaw.isEmpty() && actionResult.getStdoutDigest().getSizeBytes() > 0)) {
+          LOG.debug("Got stdout digest.");
+          try {
+            ByteString data = ByteString.EMPTY;
+            GrpcRemoteExecutionClients.readByteStream(
+                    instanceName,
+                    new GrpcDigest(actionResult.getStdoutDigest()),
+                    byteStreamStub,
+                    data::concat)
+                .get();
+            return Optional.of(data.toStringUtf8());
+          } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+          }
+        } else {
+          LOG.debug("Got raw stdout: " + stdoutRaw.toStringUtf8());
+          return Optional.of(stdoutRaw.toStringUtf8());
+        }
+      }
+
+      @Override
       public Optional<String> getStderr() {
         ByteString stderrRaw = actionResult.getStderrRaw();
         if (stderrRaw == null

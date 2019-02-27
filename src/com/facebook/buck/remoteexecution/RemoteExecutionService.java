@@ -35,7 +35,7 @@ public interface RemoteExecutionService {
 
     int getExitCode();
 
-    // TODO(cjhopman): This needs a getStdout()
+    Optional<String> getStdout();
 
     Optional<String> getStderr();
 
