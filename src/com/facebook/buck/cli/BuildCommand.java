@@ -50,6 +50,7 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.ParserConfig;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -668,14 +669,14 @@ public class BuildCommand extends AbstractCommand {
       return params
           .getParser()
           .buildTargetGraphWithoutConfigurationTargets(
-              params.getCell(),
-              getEnableParserProfiling(),
-              executor,
+              ParsingContext.builder(params.getCell(), executor)
+                  .setProfilingEnabled(getEnableParserProfiling())
+                  .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
+                  .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
+                  .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                  .build(),
               parseArgumentsAsTargetNodeSpecs(
-                  params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments()),
-              getExcludeIncompatibleTargets(),
-              SpeculativeParsing.ENABLED,
-              parserConfig.getDefaultFlavorsMode());
+                  params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments()));
     } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }

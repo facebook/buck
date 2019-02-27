@@ -479,6 +479,8 @@ public class TestCommand extends BuildCommand {
           ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
               .setProfilingEnabled(getEnableParserProfiling())
               .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+              .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
+              .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
               .build();
 
       try {
@@ -490,17 +492,12 @@ public class TestCommand extends BuildCommand {
               params
                   .getParser()
                   .buildTargetGraphWithoutConfigurationTargets(
-                      params.getCell(),
-                      getEnableParserProfiling(),
-                      pool.getListeningExecutorService(),
+                      parsingContext,
                       ImmutableList.of(
                           TargetNodePredicateSpec.of(
                                   BuildFileSpec.fromRecursivePath(
                                       Paths.get(""), params.getCell().getRoot()))
-                              .withOnlyTests(true)),
-                      getExcludeIncompatibleTargets(),
-                      SpeculativeParsing.ENABLED,
-                      parserConfig.getDefaultFlavorsMode());
+                              .withOnlyTests(true)));
           targetGraphAndBuildTargets =
               targetGraphAndBuildTargets.withBuildTargets(ImmutableSet.of());
 
@@ -512,16 +509,11 @@ public class TestCommand extends BuildCommand {
               params
                   .getParser()
                   .buildTargetGraphWithoutConfigurationTargets(
-                      params.getCell(),
-                      getEnableParserProfiling(),
-                      pool.getListeningExecutorService(),
+                      parsingContext,
                       parseArgumentsAsTargetNodeSpecs(
                           params.getCell().getCellPathResolver(),
                           params.getBuckConfig(),
-                          getArguments()),
-                      getExcludeIncompatibleTargets(),
-                      SpeculativeParsing.ENABLED,
-                      parserConfig.getDefaultFlavorsMode());
+                          getArguments()));
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());
           ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();
