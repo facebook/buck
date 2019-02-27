@@ -95,13 +95,7 @@ public interface Parser {
    * @return the target graph containing the build targets and their related targets.
    */
   TargetGraphAndBuildTargets buildTargetGraphWithConfigurationTargets(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      boolean excludeUnsupportedTargets,
-      SpeculativeParsing speculativeParsing,
-      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, IOException, InterruptedException;
 
   ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(

@@ -350,23 +350,17 @@ class DefaultParser implements Parser {
 
   @Override
   public synchronized TargetGraphAndBuildTargets buildTargetGraphWithConfigurationTargets(
-      Cell rootCell,
-      boolean enableProfiling,
-      ListeningExecutorService executor,
-      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
-      boolean excludeUnsupportedTargets,
-      SpeculativeParsing speculativeParsing,
-      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode)
+      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
       throws BuildFileParseException, IOException, InterruptedException {
     return buildTargetGraphForTargetNodeSpecs(
-        rootCell,
-        enableProfiling,
-        executor,
+        parsingContext.getCell(),
+        parsingContext.isProfilingEnabled(),
+        parsingContext.getExecutor(),
         targetNodeSpecs,
-        excludeUnsupportedTargets,
+        parsingContext.excludeUnsupportedTargets(),
         false,
-        speculativeParsing,
-        applyDefaultFlavorsMode);
+        parsingContext.getSpeculativeParsing(),
+        parsingContext.getApplyDefaultFlavorsMode());
   }
 
   private synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(

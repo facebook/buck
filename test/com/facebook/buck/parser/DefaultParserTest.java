@@ -76,6 +76,7 @@ import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.json.JsonObjectHashing;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.manifestservice.ManifestService;
+import com.facebook.buck.parser.AbstractParserConfig.ApplyDefaultFlavorsMode;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -2059,16 +2060,13 @@ public class DefaultParserTest {
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphWithConfigurationTargets(
-                cell,
-                false,
-                executorService,
+                ParsingContext.builder(cell, executorService)
+                    .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
+                    .build(),
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))),
-                false,
-                SpeculativeParsing.ENABLED,
-                ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
+                            cellRoot, "//lib", "lib"))))
             .getBuildTargets();
 
     assertThat(
@@ -2108,16 +2106,13 @@ public class DefaultParserTest {
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphWithConfigurationTargets(
-                cell,
-                false,
-                executorService,
+                ParsingContext.builder(cell, executorService)
+                    .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
+                    .build(),
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))),
-                false,
-                SpeculativeParsing.ENABLED,
-                ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
+                            cellRoot, "//lib", "lib"))))
             .getBuildTargets();
 
     assertThat(
@@ -2161,16 +2156,13 @@ public class DefaultParserTest {
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphWithConfigurationTargets(
-                cell,
-                false,
-                executorService,
+                ParsingContext.builder(cell, executorService)
+                    .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
+                    .build(),
                 ImmutableList.of(
                     AbstractBuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))),
-                false,
-                SpeculativeParsing.ENABLED,
-                ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
+                            cellRoot, "//lib", "lib"))))
             .getBuildTargets();
 
     assertThat(
@@ -2204,16 +2196,13 @@ public class DefaultParserTest {
     EventListener eventListener = new EventListener();
     eventBus.register(eventListener);
 
+    ParsingContext parsingContext = ParsingContext.builder(cell, executorService).build();
+
     parser.buildTargetGraphWithConfigurationTargets(
-        cell,
-        false,
-        executorService,
+        parsingContext,
         ImmutableList.of(
             AbstractBuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
-        false,
-        SpeculativeParsing.ENABLED,
-        ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
+                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))));
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
     // of the temporary BUCK file we wrote, so let's just assert that there are a reasonable
@@ -2225,15 +2214,10 @@ public class DefaultParserTest {
     // The value should be cached, so no bytes are read when re-computing.
     events.clear();
     parser.buildTargetGraphWithConfigurationTargets(
-        cell,
-        false,
-        executorService,
+        parsingContext,
         ImmutableList.of(
             AbstractBuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
-        false,
-        SpeculativeParsing.ENABLED,
-        ParserConfig.ApplyDefaultFlavorsMode.DISABLED);
+                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))));
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
 
