@@ -117,6 +117,7 @@ public class XCodeProjectCommandHelper {
   private final Optional<ProcessManager> processManager;
   private final ImmutableMap<String, String> environment;
   private final ListeningExecutorService executorService;
+  private final ListeningExecutorService parsingExecutorService;
   private final List<String> arguments;
   private final boolean absoluteHeaderMapPaths;
   private final boolean sharedLibrariesInBundles;
@@ -148,6 +149,7 @@ public class XCodeProjectCommandHelper {
       Optional<ProcessManager> processManager,
       ImmutableMap<String, String> environment,
       ListeningExecutorService executorService,
+      ListeningExecutorService parsingExecutorService,
       List<String> arguments,
       ImmutableSet<Flavor> appleCxxFlavors,
       boolean absoluteHeaderMapPaths,
@@ -178,6 +180,7 @@ public class XCodeProjectCommandHelper {
     this.processManager = processManager;
     this.environment = environment;
     this.executorService = executorService;
+    this.parsingExecutorService = parsingExecutorService;
     this.arguments = arguments;
     this.absoluteHeaderMapPaths = absoluteHeaderMapPaths;
     this.sharedLibrariesInBundles = sharedLibrariesInBundles;
@@ -195,8 +198,7 @@ public class XCodeProjectCommandHelper {
     this.buildRunner = buildRunner;
   }
 
-  public ExitCode parseTargetsAndRunXCodeGenerator(ListeningExecutorService executor)
-      throws IOException, InterruptedException {
+  public ExitCode parseTargetsAndRunXCodeGenerator() throws IOException, InterruptedException {
     ImmutableSet<BuildTarget> passedInTargetsSet;
     TargetGraph projectGraph;
 
@@ -210,11 +212,11 @@ public class XCodeProjectCommandHelper {
                   parser.resolveTargetSpecs(
                       cell,
                       enableParserProfiling,
-                      executor,
+                      parsingExecutorService,
                       argsParser.apply(arguments),
                       SpeculativeParsing.ENABLED,
                       parserConfig.getDefaultFlavorsMode())));
-      projectGraph = getProjectGraphForIde(executor, passedInTargetsSet);
+      projectGraph = getProjectGraphForIde(passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -249,8 +251,7 @@ public class XCodeProjectCommandHelper {
               graphRoots,
               isWithTests(buckConfig),
               isWithDependenciesTests(buckConfig),
-              passedInTargetsSet.isEmpty(),
-              executor);
+              passedInTargetsSet.isEmpty());
     } catch (BuildFileParseException | NoSuchTargetException | VersionException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
       return ExitCode.PARSE_ERROR;
@@ -279,7 +280,7 @@ public class XCodeProjectCommandHelper {
     LOG.debug("Xcode project generation: Run the project generator");
 
     return runXcodeProjectGenerator(
-        executor, targetGraphAndTargets, passedInTargetsSet, sharedLibraryToBundle);
+        targetGraphAndTargets, passedInTargetsSet, sharedLibraryToBundle);
   }
 
   private static String getIDEForceKillSectionName() {
@@ -337,7 +338,6 @@ public class XCodeProjectCommandHelper {
 
   /** Run xcode specific project generation actions. */
   private ExitCode runXcodeProjectGenerator(
-      ListeningExecutorService executor,
       TargetGraphAndTargets targetGraphAndTargets,
       ImmutableSet<BuildTarget> passedInTargetsSet,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
@@ -378,7 +378,7 @@ public class XCodeProjectCommandHelper {
             passedInTargetsSet,
             options,
             appleCxxFlavors,
-            getFocusModules(executor),
+            getFocusModules(),
             new HashMap<>(),
             combinedProject,
             outputPresenter,
@@ -523,8 +523,7 @@ public class XCodeProjectCommandHelper {
     return requiredBuildTargetsBuilder.build();
   }
 
-  private FocusedModuleTargetMatcher getFocusModules(ListeningExecutorService executor)
-      throws IOException, InterruptedException {
+  private FocusedModuleTargetMatcher getFocusModules() throws IOException, InterruptedException {
     if (modulesToFocusOn == null) {
       return FocusedModuleTargetMatcher.noFocus();
     }
@@ -543,7 +542,7 @@ public class XCodeProjectCommandHelper {
               .resolveTargetSpecs(
                   cell,
                   enableParserProfiling,
-                  executor,
+                  parsingExecutorService,
                   specs,
                   SpeculativeParsing.DISABLED,
                   parserConfig.getDefaultFlavorsMode())
@@ -681,8 +680,7 @@ public class XCodeProjectCommandHelper {
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private TargetGraph getProjectGraphForIde(
-      ListeningExecutorService executor, ImmutableSet<BuildTarget> passedInTargets)
+  private TargetGraph getProjectGraphForIde(ImmutableSet<BuildTarget> passedInTargets)
       throws InterruptedException, BuildFileParseException, IOException {
 
     if (passedInTargets.isEmpty()) {
@@ -690,7 +688,7 @@ public class XCodeProjectCommandHelper {
           .buildTargetGraphForTargetNodeSpecs(
               cell,
               enableParserProfiling,
-              executor,
+              parsingExecutorService,
               ImmutableList.of(
                   TargetNodePredicateSpec.of(
                       BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
@@ -701,7 +699,11 @@ public class XCodeProjectCommandHelper {
     }
     Preconditions.checkState(!passedInTargets.isEmpty());
     return parser.buildTargetGraph(
-        cell, enableParserProfiling, executor, SpeculativeParsing.ENABLED, passedInTargets);
+        cell,
+        enableParserProfiling,
+        parsingExecutorService,
+        SpeculativeParsing.ENABLED,
+        passedInTargets);
   }
 
   private TargetGraphAndTargets createTargetGraph(
@@ -709,8 +711,7 @@ public class XCodeProjectCommandHelper {
       ImmutableSet<BuildTarget> graphRoots,
       boolean isWithTests,
       boolean isWithDependenciesTests,
-      boolean needsFullRecursiveParse,
-      ListeningExecutorService executor)
+      boolean needsFullRecursiveParse)
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
 
     ImmutableSet<BuildTarget> explicitTestTargets = ImmutableSet.of();
@@ -718,7 +719,7 @@ public class XCodeProjectCommandHelper {
         replaceWorkspacesWithSourceTargetsIfPossible(graphRoots, projectGraph);
 
     if (isWithTests) {
-      FocusedModuleTargetMatcher focusedModules = getFocusModules(executor);
+      FocusedModuleTargetMatcher focusedModules = getFocusModules();
 
       explicitTestTargets =
           getExplicitTestTargets(
@@ -728,7 +729,7 @@ public class XCodeProjectCommandHelper {
             parser.buildTargetGraph(
                 cell,
                 enableParserProfiling,
-                executor,
+                parsingExecutorService,
                 SpeculativeParsing.ENABLED,
                 Sets.union(graphRoots, explicitTestTargets));
       } else {
@@ -736,7 +737,7 @@ public class XCodeProjectCommandHelper {
             parser.buildTargetGraph(
                 cell,
                 enableParserProfiling,
-                executor,
+                parsingExecutorService,
                 SpeculativeParsing.ENABLED,
                 Sets.union(
                     projectGraph
