@@ -27,6 +27,8 @@ import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.xcode.XCScheme;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
+import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -75,6 +77,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -701,6 +704,12 @@ public class WorkspaceAndProjectGenerator {
         schemeConfigsBuilder,
         schemeNameToSrcTargetNodeBuilder,
         extraTestNodesBuilder);
+    addWorkspaceExtensionSchemes(
+        projectGraph,
+        workspaceName,
+        workspaceArguments,
+        schemeConfigsBuilder,
+        schemeNameToSrcTargetNodeBuilder);
     addExtraWorkspaceSchemes(
         xcodeDescriptions,
         projectGraph,
@@ -773,6 +782,93 @@ public class WorkspaceAndProjectGenerator {
 
     extraTestNodesBuilder.putAll(
         schemeName, getExtraTestTargetNodes(projectGraph, schemeArguments.getExtraTests()));
+  }
+
+  /**
+   * Add a workspace scheme for each extension bundled with the source target of the workspace.
+   *
+   * @param projectGraph
+   * @param schemeName
+   * @param schemeArguments
+   * @param schemeConfigsBuilder
+   * @param schemeNameToSrcTargetNodeBuilder
+   */
+  private static void addWorkspaceExtensionSchemes(
+      TargetGraph projectGraph,
+      String schemeName,
+      XcodeWorkspaceConfigDescriptionArg schemeArguments,
+      ImmutableMap.Builder<String, XcodeWorkspaceConfigDescriptionArg> schemeConfigsBuilder,
+      ImmutableSetMultimap.Builder<String, Optional<TargetNode<?>>>
+          schemeNameToSrcTargetNodeBuilder) {
+    if (!schemeArguments.getSrcTarget().isPresent()) {
+      return;
+    }
+
+    LOG.debug("Potentially adding extension schemes for %s", schemeName);
+
+    BuildTarget sourceBuildTarget = schemeArguments.getSrcTarget().get();
+    TargetNode<?> sourceTargetNode = projectGraph.get(sourceBuildTarget);
+    Set<BuildTarget> sourceTargetBuildDeps = sourceTargetNode.getBuildDeps();
+
+    // Filter all of the source target's deps to find the bundled extensions that get an implicit
+    // scheme.
+    ImmutableSet<BuildTarget> implicitSchemeBuildTargets =
+        sourceTargetBuildDeps
+            .stream()
+            .filter(t -> shouldIncludeImplicitExtensionSchemeForTargetNode(projectGraph.get(t)))
+            .collect(ImmutableSet.toImmutableSet());
+
+    // Create scheme for each bundled extension to allow Xcode to automatically begin debugging them
+    // when this scheme it selected.
+    implicitSchemeBuildTargets.forEach(
+        (buildTarget -> {
+          String extensionSchemeName = schemeName + "+" + buildTarget.getShortName();
+          TargetNode<?> targetNode = projectGraph.get(buildTarget);
+
+          schemeConfigsBuilder.put(
+              extensionSchemeName, createImplicitExtensionWorkspaceArgs(sourceBuildTarget));
+
+          schemeNameToSrcTargetNodeBuilder.put(extensionSchemeName, Optional.of(sourceTargetNode));
+          schemeNameToSrcTargetNodeBuilder.put(extensionSchemeName, Optional.of(targetNode));
+        }));
+  }
+
+  /**
+   * @param targetNode `TargetNode` for potential implicit scheme.
+   * @return True if implicit scheme should be included for `targetNode`, currently includes all app
+   *     extensions to make debugging easier. Otherwise, false.
+   */
+  private static boolean shouldIncludeImplicitExtensionSchemeForTargetNode(
+      TargetNode<?> targetNode) {
+    // Bundle description required to determine product type for target node.
+    if (!(targetNode.getConstructorArg() instanceof AppleBundleDescriptionArg)) {
+      return false;
+    }
+
+    // Product type required to determine if product type matches.
+    AppleBundleDescriptionArg bundleArg =
+        (AppleBundleDescriptionArg) targetNode.getConstructorArg();
+    if (!bundleArg.getXcodeProductType().isPresent()) {
+      return false;
+    }
+
+    // Only create schemes for APP_EXTENSION.
+    ProductType productType = ProductType.of(bundleArg.getXcodeProductType().get());
+    return productType.equals(ProductTypes.APP_EXTENSION);
+  }
+
+  /**
+   * @param sourceBuildTarget - The BuildTarget which will act as our fake workspace's `src_target`.
+   * @return Workspace Args that describe a generic extension Xcode workspace containing
+   *     `src_target` and one of its extensions.
+   */
+  private static XcodeWorkspaceConfigDescriptionArg createImplicitExtensionWorkspaceArgs(
+      BuildTarget sourceBuildTarget) {
+    return XcodeWorkspaceConfigDescriptionArg.builder()
+        .setName("extension-dummy")
+        .setSrcTarget(sourceBuildTarget)
+        .setWasCreatedForAppExtension(true)
+        .build();
   }
 
   private static void addExtraWorkspaceSchemes(
@@ -1151,6 +1247,7 @@ public class WorkspaceAndProjectGenerator {
     XCScheme.LaunchAction.LaunchStyle launchStyle = XCScheme.LaunchAction.LaunchStyle.AUTO;
     Optional<XCScheme.LaunchAction.WatchInterface> watchInterface = Optional.empty();
     Optional<String> notificationPayloadFile = Optional.empty();
+    Optional<Boolean> wasCreatedForAppExtension = Optional.empty();
 
     if (schemeConfigArg.isPresent()) {
       environmentVariables = schemeConfigArg.get().getEnvironmentVariables();
@@ -1158,6 +1255,7 @@ public class WorkspaceAndProjectGenerator {
       launchStyle = schemeConfigArg.get().getLaunchStyle().orElse(launchStyle);
       watchInterface = schemeConfigArg.get().getWatchInterface();
       notificationPayloadFile = schemeConfigArg.get().getNotificationPayloadFile();
+      wasCreatedForAppExtension = schemeConfigArg.get().getWasCreatedForAppExtension();
     }
 
     return new SchemeGenerator(
@@ -1169,6 +1267,7 @@ public class WorkspaceAndProjectGenerator {
         schemeName,
         combinedProject ? outputDirectory : outputDirectory.resolve(workspaceName + ".xcworkspace"),
         parallelizeBuild,
+        wasCreatedForAppExtension,
         runnablePath,
         remoteRunnablePath,
         XcodeWorkspaceConfigDescription.getActionConfigNamesFromArg(workspaceArguments),

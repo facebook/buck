@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.core.IsNull.notNullValue;
 import static org.hamcrest.core.IsNull.nullValue;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.apple.xcode.XCScheme;
@@ -114,6 +115,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -197,6 +199,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -288,6 +291,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -367,6 +371,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -428,6 +433,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -513,6 +519,7 @@ public class SchemeGeneratorTest {
               "TestScheme",
               Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
               false /* parallelizeBuild */,
+              Optional.empty() /* wasCreatedForAppExtension */,
               Optional.empty() /* runnablePath */,
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -549,6 +556,7 @@ public class SchemeGeneratorTest {
               "TestScheme",
               Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
               false /* parallelizeBuild */,
+              Optional.empty() /* wasCreatedForAppExtension */,
               Optional.empty() /* runnablePath */,
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -588,6 +596,7 @@ public class SchemeGeneratorTest {
               "TestScheme",
               Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
               false /* parallelizeBuild */,
+              Optional.empty() /* wasCreatedForAppExtension */,
               Optional.empty() /* runnablePath */,
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -624,6 +633,7 @@ public class SchemeGeneratorTest {
               "TestScheme",
               Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
               false /* parallelizeBuild */,
+              Optional.empty() /* wasCreatedForAppExtension */,
               Optional.empty() /* runnablePath */,
               Optional.empty() /* remoteRunnablePath */,
               SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -682,6 +692,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -789,6 +800,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -840,6 +852,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.of("/RemoteApp") /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -920,6 +933,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             false /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -994,6 +1008,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             true /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -1055,6 +1070,7 @@ public class SchemeGeneratorTest {
             "TestScheme",
             Paths.get("_gen/Foo.xcworkspace/scshareddata/xcshemes"),
             true /* parallelizeBuild */,
+            Optional.empty() /* wasCreatedForAppExtension */,
             Optional.empty() /* runnablePath */,
             Optional.empty() /* remoteRunnablePath */,
             SchemeActionType.DEFAULT_CONFIG_NAMES,
@@ -1081,5 +1097,124 @@ public class SchemeGeneratorTest {
     Node envVar = envVariableList.item(0);
     assertThat(envVar.getAttributes().getNamedItem("key").getNodeValue(), equalTo("ENV_VARIABLE"));
     assertThat(envVar.getAttributes().getNamedItem("value").getNodeValue(), equalTo("IS_SET"));
+  }
+
+  /**
+   * Include `wasCreatedForAppExtension` when true.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void serializesWasCreatedForAppExtension() throws Exception {
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
+    rootTarget.setProductType(ProductTypes.STATIC_LIBRARY);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
+
+    SchemeGenerator schemeGenerator =
+        new SchemeGenerator(
+            projectFilesystem,
+            Optional.of(rootTarget),
+            ImmutableSet.of(rootTarget),
+            ImmutableSet.of(),
+            ImmutableSet.of(),
+            "TestScheme",
+            Paths.get("_gen/Foo.xcworkspace/xcshareddata/xcshemes"),
+            true /* parallelizeBuild */,
+            Optional.of(true) /* wasCreatedForAppExtension */,
+            Optional.empty() /* runnablePath */,
+            Optional.empty() /* remoteRunnablePath */,
+            SchemeActionType.DEFAULT_CONFIG_NAMES,
+            targetToProjectPathMapBuilder.build(),
+            Optional.empty(),
+            Optional.empty(),
+            XCScheme.LaunchAction.LaunchStyle.AUTO,
+            Optional.empty(), /* watchAdapter */
+            Optional.empty() /* notificationPayloadFile */);
+
+    Path schemePath = schemeGenerator.writeScheme();
+
+    DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+    Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+    XPathFactory xpathFactory = XPathFactory.newInstance();
+    XPath buildActionXpath = xpathFactory.newXPath();
+    XPathExpression buildActionExpr = buildActionXpath.compile("//Scheme");
+    NodeList schemeElements = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
+
+    assertThat(schemeElements.getLength(), is(1));
+    Node schemeNode = schemeElements.item(0);
+    assertThat(
+        schemeNode.getAttributes().getNamedItem("wasCreatedForAppExtension").getNodeValue(),
+        equalTo("YES"));
+  }
+
+  /**
+   * Exclude `wasCreatedForAppExtension` when null or false.
+   *
+   * @throws Exception
+   */
+  @Test
+  public void excludesWasCreatedForAppExtension() throws Exception {
+    ImmutableMap.Builder<PBXTarget, Path> targetToProjectPathMapBuilder = ImmutableMap.builder();
+
+    PBXTarget rootTarget = new PBXNativeTarget("rootRule");
+    rootTarget.setGlobalID("rootGID");
+    rootTarget.setProductReference(
+        new PBXFileReference(
+            "root.a", "root.a", PBXReference.SourceTree.BUILT_PRODUCTS_DIR, Optional.empty()));
+    rootTarget.setProductType(ProductTypes.STATIC_LIBRARY);
+
+    Path pbxprojectPath = Paths.get("foo/Foo.xcodeproj/project.pbxproj");
+    targetToProjectPathMapBuilder.put(rootTarget, pbxprojectPath);
+
+    ImmutableList<Optional<Boolean>> testValues =
+        ImmutableList.of(Optional.empty(), Optional.of(false));
+
+    for (Optional<Boolean> wasCreatedForAppExtension : testValues) {
+      SchemeGenerator schemeGenerator =
+          new SchemeGenerator(
+              projectFilesystem,
+              Optional.of(rootTarget),
+              ImmutableSet.of(rootTarget),
+              ImmutableSet.of(),
+              ImmutableSet.of(),
+              "TestScheme",
+              Paths.get("_gen/Foo.xcworkspace/xcshareddata/xcshemes"),
+              true /* parallelizeBuild */,
+              wasCreatedForAppExtension,
+              Optional.empty() /* runnablePath */,
+              Optional.empty() /* remoteRunnablePath */,
+              SchemeActionType.DEFAULT_CONFIG_NAMES,
+              targetToProjectPathMapBuilder.build(),
+              Optional.empty(),
+              Optional.empty(),
+              XCScheme.LaunchAction.LaunchStyle.AUTO,
+              Optional.empty(), /* watchAdapter */
+              Optional.empty() /* notificationPayloadFile */);
+
+      Path schemePath = schemeGenerator.writeScheme();
+
+      DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+      DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+      Document scheme = dBuilder.parse(projectFilesystem.newFileInputStream(schemePath));
+
+      XPathFactory xpathFactory = XPathFactory.newInstance();
+      XPath buildActionXpath = xpathFactory.newXPath();
+      XPathExpression buildActionExpr = buildActionXpath.compile("//Scheme");
+      NodeList schemeElements = (NodeList) buildActionExpr.evaluate(scheme, XPathConstants.NODESET);
+
+      assertThat(schemeElements.getLength(), is(1));
+      Node schemeNode = schemeElements.item(0);
+      assertNull(schemeNode.getAttributes().getNamedItem("wasCreatedForAppExtension"));
+    }
   }
 }

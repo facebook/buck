@@ -25,6 +25,7 @@ import java.util.Optional;
 
 public class XCScheme {
   private String name;
+  private boolean wasCreatedForExtension;
   private Optional<BuildAction> buildAction;
   private Optional<TestAction> testAction;
   private Optional<LaunchAction> launchAction;
@@ -34,6 +35,7 @@ public class XCScheme {
 
   public XCScheme(
       String name,
+      boolean wasCreatedForExtension,
       Optional<BuildAction> buildAction,
       Optional<TestAction> testAction,
       Optional<LaunchAction> launchAction,
@@ -41,6 +43,7 @@ public class XCScheme {
       Optional<AnalyzeAction> analyzeAction,
       Optional<ArchiveAction> archiveAction) {
     this.name = name;
+    this.wasCreatedForExtension = wasCreatedForExtension;
     this.buildAction = buildAction;
     this.testAction = testAction;
     this.launchAction = launchAction;
@@ -51,6 +54,10 @@ public class XCScheme {
 
   public String getName() {
     return name;
+  }
+
+  public boolean getWasCreatedForExtension() {
+    return wasCreatedForExtension;
   }
 
   public Optional<BuildAction> getBuildAction() {

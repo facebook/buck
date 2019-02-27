@@ -99,6 +99,12 @@ public class XcodeWorkspaceConfigDescription
     Optional<ImmutableMap<SchemeActionType, ImmutableMap<String, String>>>
         getEnvironmentVariables();
 
+    /**
+     * Add value to scheme to indicate it will be used to work on an app extension. This should
+     * cause Xcode to automatically begin debugging the extension when it's launched.
+     */
+    Optional<Boolean> getWasCreatedForAppExtension();
+
     Optional<Boolean> getIsRemoteRunnable();
 
     Optional<String> getExplicitRunnablePath();
