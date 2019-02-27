@@ -407,10 +407,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         actionDigest,
         result.getActionResultDigest());
     if (result.getExitCode() != 0) {
-      // NOTE(ruibm): If we decide to change this to debug/info we should probably consider
-      //              appending the RemoteExecutionMetadata to the stderr passed to
-      //              StepExecutionResult.
-      LOG.error(
+      LOG.info(
           "[RE] Failed to build target [%s] with exit code [%d]. "
               + "stderr: [%s] metadata: [%s] action: [%s]",
           buildTarget.getFullyQualifiedName(),
