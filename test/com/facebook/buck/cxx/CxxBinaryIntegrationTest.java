@@ -119,7 +119,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
-      buildLog.assertTargetWasFetchedFromCache(buildTarget.toString());
+      buildLog.assertTargetWasFetchedFromCache(buildTarget);
     }
 
     /*
@@ -162,7 +162,7 @@ public class CxxBinaryIntegrationTest {
           || bt.equals(aggregatedDepsTarget.toString())) {
         buildLog.assertTargetBuiltLocally(bt);
       } else {
-        buildLog.assertTargetWasFetchedFromCache(buildTarget.toString());
+        buildLog.assertTargetWasFetchedFromCache(buildTarget);
       }
     }
   }
@@ -193,7 +193,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
-      buildLog.assertTargetWasFetchedFromCache(buildTarget.toString());
+      buildLog.assertTargetWasFetchedFromCache(buildTarget);
     }
 
     /*
@@ -723,7 +723,7 @@ public class CxxBinaryIntegrationTest {
     ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
     assertEquals(1, allInvolvedTargets.size()); // Only main target should be fetched from cache
     for (BuildTarget bt : allInvolvedTargets) {
-      buildLog.assertTargetWasFetchedFromCache(bt.toString());
+      buildLog.assertTargetWasFetchedFromCache(bt);
     }
 
     assertTrue(
@@ -841,7 +841,7 @@ public class CxxBinaryIntegrationTest {
     BuckBuildLog buildLog = workspace.getBuildLog();
     ImmutableSet<BuildTarget> allInvolvedTargets = buildLog.getAllTargets();
     for (BuildTarget bt : allInvolvedTargets) {
-      buildLog.assertTargetWasFetchedFromCache(bt.toString());
+      buildLog.assertTargetWasFetchedFromCache(bt);
     }
 
     assertTrue(
@@ -926,7 +926,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTargetName).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
-      buildLog.assertTargetWasFetchedFromCache(buildTarget.toString());
+      buildLog.assertTargetWasFetchedFromCache(buildTarget);
     }
 
     /*
@@ -1234,7 +1234,7 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("build", inputBuildTarget.getFullyQualifiedName()).assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     for (BuildTarget buildTarget : buildLog.getAllTargets()) {
-      buildLog.assertTargetWasFetchedFromCache(buildTarget.toString());
+      buildLog.assertTargetWasFetchedFromCache(buildTarget);
     }
 
     /*
@@ -1454,7 +1454,7 @@ public class CxxBinaryIntegrationTest {
         .runBuckCommand("build", "-c", "cxx.cache_binaries=true", target.toString())
         .assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
-    buildLog.assertTargetWasFetchedFromCache(target.toString());
+    buildLog.assertTargetWasFetchedFromCache(target);
     assertThat(Files.exists(Paths.get(outputPath + "-LinkMap.txt")), is(true));
   }
 

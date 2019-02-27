@@ -423,16 +423,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     // Confirm that we got an input based rule key hit on B#abi, C#abi, D#abi
     workspace
         .getBuildLog()
-        .assertTargetWasFetchedFromCache(
-            b.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+        .assertTargetWasFetchedFromCache(b.withFlavors(JavaAbis.CLASS_ABI_FLAVOR));
     workspace
         .getBuildLog()
-        .assertTargetWasFetchedFromCache(
-            c.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+        .assertTargetWasFetchedFromCache(c.withFlavors(JavaAbis.CLASS_ABI_FLAVOR));
     workspace
         .getBuildLog()
-        .assertTargetWasFetchedFromCache(
-            d.withFlavors(JavaAbis.CLASS_ABI_FLAVOR).getFullyQualifiedName());
+        .assertTargetWasFetchedFromCache(d.withFlavors(JavaAbis.CLASS_ABI_FLAVOR));
 
     // Confirm that B, C, and D were not re-built
     workspace.getBuildLog().assertNoLogEntry(b.getFullyQualifiedName());

@@ -92,7 +92,7 @@ public class BuiltinApplePackageIntegrationTest {
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 
-    workspace.getBuildLog().assertTargetWasFetchedFromCache(appTarget.getFullyQualifiedName());
+    workspace.getBuildLog().assertTargetWasFetchedFromCache(appTarget);
     workspace.getBuildLog().assertTargetBuiltLocally(packageTarget);
 
     Path templateDir =
