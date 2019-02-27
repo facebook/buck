@@ -19,14 +19,11 @@ package com.facebook.buck.core.config;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.file.MorePathsForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -36,15 +33,12 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
-import com.google.common.collect.FluentIterable;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -61,32 +55,6 @@ public class BuckConfigTest {
 
     // BuckConfig should allow nonexistent targets without throwing.
     BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-  }
-
-  @Test
-  public void testGetBuildTargetListResolvesAliases()
-      throws IOException, NoSuchBuildTargetException {
-    Reader reader =
-        new StringReader(
-            Joiner.on('\n')
-                .join(
-                    "[alias]",
-                    "foo = //java/com/example:foo",
-                    "[section]",
-                    "some_list = \\",
-                    "foo, \\",
-                    "//java/com/example:bar"));
-    BuckConfig config = BuckConfigTestUtils.createWithDefaultFilesystem(temporaryFolder, reader);
-
-    ImmutableList<String> expected =
-        ImmutableList.of("//java/com/example:foo", "//java/com/example:bar");
-    ImmutableList<String> result =
-        ImmutableList.copyOf(
-            FluentIterable.from(
-                    config.getBuildTargetList(
-                        "section", "some_list", EmptyTargetConfiguration.INSTANCE))
-                .transform(Object::toString));
-    assertThat(result, Matchers.equalTo(expected));
   }
 
   @Test

@@ -59,7 +59,7 @@ public class ScalaBuckConfig {
   }
 
   public Iterable<BuildTarget> getCompilerPlugins() {
-    return delegate.getBuildTargetList(
+    return delegate.getFullyQualifiedBuildTargets(
         SECTION, "compiler_plugins", EmptyTargetConfiguration.INSTANCE);
   }
 

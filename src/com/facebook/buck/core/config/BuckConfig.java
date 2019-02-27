@@ -43,7 +43,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -157,27 +156,16 @@ public class BuckConfig {
     return buildTargetParser.apply(target).configure(targetConfiguration);
   }
 
-  public ImmutableList<BuildTarget> getBuildTargetList(
+  public ImmutableList<BuildTarget> getFullyQualifiedBuildTargets(
       String section, String key, TargetConfiguration targetConfiguration) {
-    ImmutableList<String> targetsToForce = getListWithoutComments(section, key);
-    if (targetsToForce.isEmpty()) {
+    ImmutableList<String> buildTargets = getListWithoutComments(section, key);
+    if (buildTargets.isEmpty()) {
       return ImmutableList.of();
     }
-    // TODO(cjhopman): Should this be moved to AliasConfig? It depends on that. Should AliasConfig
-    // expose this logic here as a separate function?
-    ImmutableList.Builder<BuildTarget> targets = new ImmutableList.Builder<>();
-    for (String targetOrAlias : targetsToForce) {
-      Set<String> expandedAlias =
-          getView(AliasConfig.class).getBuildTargetForAliasAsString(targetOrAlias);
-      if (expandedAlias.isEmpty()) {
-        targets.add(getBuildTargetForFullyQualifiedTarget(targetOrAlias, targetConfiguration));
-      } else {
-        for (String target : expandedAlias) {
-          targets.add(getBuildTargetForFullyQualifiedTarget(target, targetConfiguration));
-        }
-      }
-    }
-    return targets.build();
+    return buildTargets
+        .stream()
+        .map(buildTarget -> getBuildTargetForFullyQualifiedTarget(buildTarget, targetConfiguration))
+        .collect(ImmutableList.toImmutableList());
   }
 
   /** @return the parsed BuildTarget in the given section and field, if set. */
