@@ -16,7 +16,8 @@
 
 package com.facebook.buck.util.environment;
 
-import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /** Represents the CPU architecture of a system. */
@@ -35,18 +36,16 @@ public enum Architecture {
   X86_64("x86_64");
 
   /** Maps names as used in the os.arch property to Architecture values. */
-  private static ImmutableMap<String, Architecture> nameToValueMap;
+  private static Map<String, Architecture> nameToValueMap;
 
   static {
-    // Initialize nameToValueMap
-    ImmutableMap.Builder<String, Architecture> builder = ImmutableMap.builder();
+    nameToValueMap = new HashMap<>();
     for (Architecture arch : Architecture.values()) {
-      builder.put(arch.toString(), arch);
+      nameToValueMap.put(arch.toString(), arch);
     }
     // Also add a few aliases
-    builder.put("amd64", X86_64);
-    builder.put("arm64", AARCH64);
-    nameToValueMap = builder.build();
+    nameToValueMap.put("amd64", X86_64);
+    nameToValueMap.put("arm64", AARCH64);
   }
 
   Architecture(String name) {
