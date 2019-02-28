@@ -1641,7 +1641,7 @@ on which the <code>one</code> library depends.
 <p>
 <pre>
 {literal}
-$ buck query "deps(//examples:one)"
+$ buck query --json "deps(//examples:one)"
 [
   "//examples:five",
   "//examples:four",
