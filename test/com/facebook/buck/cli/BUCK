@@ -441,6 +441,7 @@ java_test(
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/file:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/io/watchman:testutil",
         "//test/com/facebook/buck/jvm/java:fakepackagefinder",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/maven:testutil",

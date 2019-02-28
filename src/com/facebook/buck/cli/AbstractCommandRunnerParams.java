@@ -120,7 +120,7 @@ public abstract class AbstractCommandRunnerParams {
   public abstract Optional<WebServer> getWebServer();
 
   @Value.Parameter
-  public abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
+  public abstract ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools();
 
   @Value.Parameter
   public abstract BuckConfig getBuckConfig();

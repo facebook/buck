@@ -68,6 +68,7 @@ import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -319,7 +320,7 @@ public class CleanCommandTest {
         new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
         Optional.empty(),
         Optional.empty(),
-        Optional.empty(),
+        Maps.newConcurrentMap(),
         buckConfig,
         new StackedFileHashCache(ImmutableList.of()),
         ImmutableMap.of(),

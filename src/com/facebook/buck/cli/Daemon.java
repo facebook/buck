@@ -50,6 +50,7 @@ import com.facebook.buck.util.cache.impl.WatchedFileHashCache;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
+import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.EventBus;
@@ -94,7 +95,8 @@ final class Daemon implements Closeable {
       Watchman watchman,
       Optional<WebServer> webServerToReuse,
       Clock clock,
-      Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier) {
+      Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
+      Optional<NGContext> context) {
     this.rootCell = rootCell;
     this.fileEventBus = new EventBus("file-change-events");
 
@@ -149,9 +151,13 @@ final class Daemon implements Closeable {
     LOG.debug("Using Watchman Cursor: %s", cursor);
     persistentWorkerPools = new ConcurrentHashMap<>();
 
+    // When Nailgun context is not present it means the process will be finished immediately after
+    // the command. So, override task manager to be blocking one, i.e. execute background
+    // clean up tasks synchronously
     this.bgTaskManager =
         new AsyncBackgroundTaskManager(
-            rootCell.getBuckConfig().getView(CliConfig.class).getFlushEventsBeforeExit());
+            !context.isPresent()
+                || rootCell.getBuckConfig().getView(CliConfig.class).getFlushEventsBeforeExit());
     this.clock = clock;
     this.startTime = clock.currentTimeMillis();
 

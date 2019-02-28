@@ -20,6 +20,7 @@ java_library(
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:io",
+        "//src/com/facebook/buck/io/watchman:capability",
         "//src/com/facebook/buck/io/watchman:transport",
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/test/result/type:type",

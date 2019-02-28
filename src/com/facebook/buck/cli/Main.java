@@ -140,8 +140,6 @@ import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleStrategyConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
-import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.log.LogBuckConfig;
@@ -800,45 +798,36 @@ public final class Main {
                   buildTargetFactory)
               .getCellByPath(filesystem.getRootPath());
 
-      Optional<Daemon> daemon = Optional.empty();
+      List<DevspeedTelemetryPlugin> telemetryPlugins;
       if (context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)) {
-        List<DevspeedTelemetryPlugin> telemetryPlugins =
-            pluginManager.getExtensions(DevspeedTelemetryPlugin.class);
-
-        daemon =
-            Optional.of(
-                daemonLifecycleManager.getDaemon(
-                    rootCell,
-                    knownRuleTypesProvider,
-                    watchman,
-                    console,
-                    clock,
-                    telemetryPlugins.isEmpty()
-                        ? Optional::empty
-                        : () ->
-                            telemetryPlugins
-                                .get(0)
-                                .newBuildListenerFactoryForDaemon(
-                                    rootCell.getFilesystem(), System.getProperties())));
+        telemetryPlugins = pluginManager.getExtensions(DevspeedTelemetryPlugin.class);
+      } else {
+        telemetryPlugins = Lists.newArrayList();
       }
 
-      if (!daemon.isPresent()) {
+      Daemon daemon =
+          daemonLifecycleManager.getDaemon(
+              rootCell,
+              knownRuleTypesProvider,
+              watchman,
+              console,
+              clock,
+              telemetryPlugins.isEmpty()
+                  ? Optional::empty
+                  : () ->
+                      telemetryPlugins
+                          .get(0)
+                          .newBuildListenerFactoryForDaemon(
+                              rootCell.getFilesystem(), System.getProperties()),
+              context);
+
+      if (!context.isPresent()) {
         // Clean up the trash on a background thread if this was a
         // non-buckd read-write command. (We don't bother waiting
         // for it to complete; the thread is a daemon thread which
         // will just be terminated at shutdown time.)
         TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
       }
-
-      BackgroundTaskManager bgTaskManager;
-      boolean blocking = cliConfig.getFlushEventsBeforeExit();
-      if (!blocking && !daemon.isPresent()) {
-        LOG.info(
-            "Manager cannot be async (as currently set in config) when not on daemon. Initializing blocking manager.");
-      }
-      bgTaskManager =
-          daemon.map((d) -> d.getBgTaskManager()).orElse(new AsyncBackgroundTaskManager(true));
-      TaskManagerScope managerScope = bgTaskManager.getNewScope(buildId);
 
       ImmutableList<BuckEventListener> eventListeners = ImmutableList.of();
 
@@ -855,23 +844,7 @@ public final class Main {
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(rootCell.getFilesystem().getRootPath());
       BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
-      if (daemon.isPresent()) {
-        allCaches.addAll(getFileHashCachesFromDaemon(daemon.get()));
-      } else {
-        rootCell
-            .getAllCells()
-            .stream()
-            .map(
-                cell ->
-                    DefaultFileHashCache.createDefaultFileHashCache(
-                        cell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()))
-            .forEach(allCaches::add);
-        // The Daemon caches a buck-out filehashcache for the root cell, so the non-daemon case
-        // needs to create that itself.
-        allCaches.add(
-            DefaultFileHashCache.createBuckOutFileHashCache(
-                rootCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
-      }
+      allCaches.addAll(daemon.getFileHashCaches());
 
       rootCell
           .getAllCells()
@@ -896,10 +869,9 @@ public final class Main {
 
       StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 
-      Optional<WebServer> webServer = daemon.flatMap(Daemon::getWebServer);
-      Optional<ConcurrentMap<String, WorkerProcessPool>> persistentWorkerPools =
-          daemon.map(Daemon::getPersistentWorkerPools);
-
+      Optional<WebServer> webServer = daemon.getWebServer();
+      ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools =
+          daemon.getPersistentWorkerPools();
       TestBuckConfig testConfig = buckConfig.getView(TestBuckConfig.class);
       ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
@@ -913,7 +885,7 @@ public final class Main {
           InvocationInfo.of(
               buildId,
               superConsoleConfig.isEnabled(console.getAnsi(), console.getVerbosity()),
-              daemon.isPresent(),
+              context.isPresent(),
               command.getSubCommandNameForLogging(),
               args,
               unexpandedCommandLineArgs,
@@ -935,7 +907,8 @@ public final class Main {
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 
-      try (GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
+      try (TaskManagerScope managerScope = daemon.getBgTaskManager().getNewScope(buildId);
+          GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
@@ -1063,7 +1036,7 @@ public final class Main {
                     ? new ProcessTracker(
                         buildEventBus,
                         invocationInfo,
-                        daemon.isPresent(),
+                        context.isPresent(),
                         logBuckConfig.isProcessTrackerDeepEnabled())
                     : null;
             ArtifactCaches artifactCacheFactory =
@@ -1159,9 +1132,9 @@ public final class Main {
 
           eventListeners =
               addEventListeners(
-                  daemon.flatMap(Daemon::getDevspeedDaemonListener),
+                  daemon.getDevspeedDaemonListener(),
                   buildEventBus,
-                  daemon.map(d -> d.getFileEventBus()),
+                  daemon.getFileEventBus(),
                   rootCell.getFilesystem(),
                   invocationInfo,
                   rootCell.getBuckConfig(),
@@ -1242,9 +1215,7 @@ public final class Main {
               CommandEvent.started(
                   command.getDeclaredSubCommandName(),
                   remainingArgs,
-                  daemon.isPresent()
-                      ? OptionalLong.of(daemon.get().getUptime())
-                      : OptionalLong.empty(),
+                  context.isPresent() ? OptionalLong.of(daemon.getUptime()) : OptionalLong.empty(),
                   getBuckPID());
           buildEventBus.post(startedEvent);
 
@@ -1360,7 +1331,7 @@ public final class Main {
           // signal nailgun that we are not interested in client disconnect events anymore
           context.ifPresent(c -> c.removeAllClientListeners());
 
-          if (daemon.isPresent()) {
+          if (context.isPresent()) {
             // Clean up the trash in the background if this was a buckd
             // read-write command. (We don't bother waiting for it to
             // complete; the cleaner will ensure subsequent cleans are
@@ -1383,8 +1354,6 @@ public final class Main {
 
           // TODO(buck_team): refactor eventListeners for RAII
           flushAndCloseEventListeners(console, eventListeners);
-
-          managerScope.close();
         }
       }
     }
@@ -1501,7 +1470,7 @@ public final class Main {
       KnownRuleTypesProvider knownRuleTypesProvider,
       Cell rootCell,
       Supplier<ImmutableList<String>> targetPlatforms,
-      Optional<Daemon> daemonOptional,
+      Daemon daemon,
       BuckEventBus buildEventBus,
       CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier,
       RuleKeyConfiguration ruleKeyConfiguration,
@@ -1510,20 +1479,20 @@ public final class Main {
       FileHashCache fileHashCache,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory)
       throws IOException, InterruptedException {
-    WatchmanWatcher watchmanWatcher = null;
-    if (daemonOptional.isPresent() && watchman.getTransportPath().isPresent()) {
-      Daemon daemon = daemonOptional.get();
+    Optional<WatchmanWatcher> watchmanWatcher = Optional.empty();
+    if (watchman.getTransportPath().isPresent()) {
       try {
         watchmanWatcher =
-            new WatchmanWatcher(
-                watchman,
-                daemon.getFileEventBus(),
-                ImmutableSet.<PathMatcher>builder()
-                    .addAll(filesystem.getIgnorePaths())
-                    .addAll(DEFAULT_IGNORE_GLOBS)
-                    .build(),
-                daemon.getWatchmanCursor(),
-                buckConfig.getView(BuildBuckConfig.class).getNumThreads());
+            Optional.of(
+                new WatchmanWatcher(
+                    watchman,
+                    daemon.getFileEventBus(),
+                    ImmutableSet.<PathMatcher>builder()
+                        .addAll(filesystem.getIgnorePaths())
+                        .addAll(DEFAULT_IGNORE_GLOBS)
+                        .build(),
+                    daemon.getWatchmanCursor(),
+                    buckConfig.getView(BuildBuckConfig.class).getNumThreads()));
       } catch (WatchmanWatcherException e) {
         buildEventBus.post(
             ConsoleEvent.warning(
@@ -1534,11 +1503,12 @@ public final class Main {
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     // Create or get Parser and invalidate cached command parameters.
     ParserAndCaches parserAndCaches;
-    if (watchmanWatcher != null) {
+    if (context.isPresent()) {
       // Note that watchmanWatcher is non-null only when daemon.isPresent().
-      Daemon daemon = daemonOptional.get();
       registerClientDisconnectedListener(context.get(), daemon);
-      daemon.watchFileSystem(buildEventBus, watchmanWatcher, watchmanFreshInstanceAction);
+      if (watchmanWatcher.isPresent()) {
+        daemon.watchFileSystem(buildEventBus, watchmanWatcher.get(), watchmanFreshInstanceAction);
+      }
       Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler;
       if (buckConfig.getView(BuildBuckConfig.class).getRuleKeyCaching()) {
         LOG.debug("Using rule key calculation caching");
@@ -1833,10 +1803,6 @@ public final class Main {
     }
   }
 
-  private ImmutableList<ProjectFileHashCache> getFileHashCachesFromDaemon(Daemon daemon) {
-    return daemon.getFileHashCaches();
-  }
-
   /**
    * Try to acquire global semaphore if needed to do so. Attach closer to acquired semaphore in a
    * form of a wrapper object so it can be used with try-with-resources.
@@ -1894,7 +1860,7 @@ public final class Main {
   private ImmutableList<BuckEventListener> addEventListeners(
       Optional<BuckEventListener> devspeedDaemonEventListener,
       BuckEventBus buckEventBus,
-      Optional<EventBus> fileEventBus,
+      EventBus fileEventBus,
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       BuckConfig buckConfig,
@@ -1918,7 +1884,7 @@ public final class Main {
             new ChromeTraceBuildListener(
                 projectFilesystem, invocationInfo, clock, chromeTraceConfig, managerScope);
         eventListenersBuilder.add(chromeTraceBuildListener);
-        fileEventBus.ifPresent(bus -> bus.register(chromeTraceBuildListener));
+        fileEventBus.register(chromeTraceBuildListener);
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");
       }

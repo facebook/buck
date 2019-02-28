@@ -18,15 +18,15 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.DaemonCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.listener.devspeed.DevspeedBuildListenerFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.watchman.Watchman;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.timing.Clock;
-import java.nio.file.Path;
+import com.facebook.nailgun.NGContext;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
@@ -54,70 +54,76 @@ class DaemonLifecycleManager {
       Watchman watchman,
       Console console,
       Clock clock,
-      Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier) {
-    Path rootPath = rootCell.getFilesystem().getRootPath();
-    if (daemon == null) {
-      LOG.debug("Starting up daemon for project root [%s]", rootPath);
-      daemon =
-          new Daemon(
-              rootCell,
-              knownRuleTypesProvider,
-              watchman,
-              Optional.empty(),
-              clock,
-              devspeedBuildListenerFactorySupplier);
-    } else {
-      // Buck daemons cache build files within a single project root, changing to a different
-      // project root is not supported and will likely result in incorrect builds. The buck and
-      // buckd scripts attempt to enforce this, so a change in project root is an error that
-      // should be reported rather than silently worked around by invalidating the cache and
-      // creating a new daemon object.
-      Path parserRoot = rootCell.getFilesystem().getRootPath();
-      if (!rootPath.equals(parserRoot)) {
-        throw new HumanReadableException(
-            String.format("Unsupported root path change from %s to %s", rootPath, parserRoot));
-      }
+      Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
+      Optional<NGContext> context) {
 
-      // If Buck config has changed or SDKs have changed, invalidate the cache and
-      // create a new daemon.
+    Daemon currentState = daemon;
+    @Nullable String daemonRestartReason = null;
+
+    // If Watchman failed to start, drop all caches
+    if (daemon != null && watchman == WatchmanFactory.NULL_WATCHMAN) {
+      // TODO(buck_team): make Watchman a requirement
+      LOG.info("Restarting daemon because watchman failed to start");
+      daemonRestartReason = "Watchman failed to start";
+      daemon = null;
+    }
+
+    // If Buck config has changed or SDKs have changed, drop all caches
+    if (daemon != null) {
       IsCompatibleForCaching cacheCompat =
           DaemonCellChecker.areCellsCompatibleForCaching(daemon.getRootCell(), rootCell);
       if (cacheCompat != IsCompatibleForCaching.IS_COMPATIBLE) {
         LOG.info(
             "Shutting down and restarting daemon on config or directory graphBuilder change (%s != %s)",
             daemon.getRootCell(), rootCell);
-        // Use the raw stream because otherwise this will stop superconsole from ever printing again
-        if (console.getVerbosity().shouldPrintStandardInformation()) {
-          console
-              .getStdErr()
-              .getRawStream()
-              .println(
-                  console
-                      .getAnsi()
-                      .asWarningText(
-                          String.format(
-                              "Invalidating internal cached state: %s. This may cause slower builds.",
-                              cacheCompat.toHumanReasonableError())));
-        }
-
-        Optional<WebServer> webServer;
-        if (shouldReuseWebServer(rootCell)) {
-          webServer = daemon.getWebServer();
-          LOG.info("Reusing web server");
-        } else {
-          webServer = Optional.empty();
-        }
-        daemon.close();
-        daemon =
-            new Daemon(
-                rootCell,
-                knownRuleTypesProvider,
-                watchman,
-                webServer,
-                clock,
-                devspeedBuildListenerFactorySupplier);
+        daemonRestartReason = cacheCompat.toHumanReasonableError();
+        daemon = null;
       }
     }
+
+    // if we restart daemon, notify user that caches are screwed
+    if (daemon == null
+        && currentState != null
+        && console.getVerbosity().shouldPrintStandardInformation()) {
+      // Use the raw stream because otherwise this will stop superconsole from ever printing again
+      console
+          .getStdErr()
+          .getRawStream()
+          .println(
+              console
+                  .getAnsi()
+                  .asWarningText(
+                      String.format(
+                          "Invalidating internal cached state: %s. This may cause slower builds.",
+                          daemonRestartReason)));
+    }
+
+    // start new daemon, clean old one if needed
+    if (daemon == null) {
+      LOG.debug("Starting up daemon for project root [%s]", rootCell.getFilesystem().getRootPath());
+
+      // try to reuse webserver from previous state
+      // does it need to be in daemon at all?
+      Optional<WebServer> webServer =
+          currentState != null && shouldReuseWebServer(rootCell)
+              ? currentState.getWebServer()
+              : Optional.empty();
+
+      if (currentState != null) {
+        currentState.close();
+      }
+
+      daemon =
+          new Daemon(
+              rootCell,
+              knownRuleTypesProvider,
+              watchman,
+              webServer,
+              clock,
+              devspeedBuildListenerFactorySupplier,
+              context);
+    }
+
     return daemon;
   }
 

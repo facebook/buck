@@ -65,6 +65,7 @@ import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -131,7 +132,7 @@ public class CommandRunnerParamsForTesting {
         new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
         Optional.empty(),
         webServer,
-        Optional.empty(),
+        Maps.newConcurrentMap(),
         config,
         new StackedFileHashCache(ImmutableList.of()),
         ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()),

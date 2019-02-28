@@ -24,9 +24,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.watchman.Capability;
 import com.facebook.buck.io.watchman.FakeWatchmanClient;
-import com.facebook.buck.io.watchman.ProjectWatch;
+import com.facebook.buck.io.watchman.FakeWatchmanFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -36,7 +35,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.junit.Rule;
 import org.junit.Test;
@@ -253,18 +251,7 @@ public class BuildFileSpecTest {
 
   private static Watchman createWatchman(
       WatchmanClient client, ProjectFilesystem filesystem, Path watchRoot) {
-    return new Watchman(
-        ImmutableMap.of(
-            filesystem.getRootPath(),
-            ProjectWatch.of(watchRoot.toString(), Optional.of("project-name"))),
-        ImmutableSet.of(
-            Capability.SUPPORTS_PROJECT_WATCH, Capability.DIRNAME, Capability.WILDMATCH_GLOB),
-        ImmutableMap.of(),
-        Optional.of(Paths.get(".watchman-sock"))) {
-      @Override
-      public WatchmanClient createClient() {
-        return client;
-      }
-    };
+    return FakeWatchmanFactory.createWatchman(
+        client, filesystem.getRootPath(), watchRoot, "project-name");
   }
 }
