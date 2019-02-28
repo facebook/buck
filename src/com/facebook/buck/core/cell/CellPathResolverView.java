@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -71,5 +72,22 @@ public final class CellPathResolverView extends AbstractCellPathResolver {
   public Optional<String> getCanonicalCellName(Path cellPath) {
     // TODO(cjhopman): This should verify that this path is visible in this view.
     return delegate.getCanonicalCellName(cellPath);
+  }
+
+  @Override
+  public boolean equals(Object another) {
+    if (this == another) return true;
+    return another instanceof CellPathResolverView && equalTo((CellPathResolverView) another);
+  }
+
+  private boolean equalTo(CellPathResolverView another) {
+    return delegate.equals(another.delegate)
+        && declaredCellNames.equals(another.declaredCellNames)
+        && cellPath.equals(another.cellPath);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(delegate, declaredCellNames, cellPath);
   }
 }
