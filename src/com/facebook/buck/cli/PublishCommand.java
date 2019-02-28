@@ -20,8 +20,6 @@ import static com.facebook.buck.jvm.core.JavaLibrary.MAVEN_JAR;
 import static com.facebook.buck.jvm.core.JavaLibrary.SRC_JAR;
 import static com.facebook.buck.jvm.java.Javadoc.DOC_JAR;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -132,7 +130,8 @@ public class PublishCommand extends BuildCommand {
     BuildRunResult buildRunResult;
     try (CommandThreadManager pool =
         new CommandThreadManager("Publish", getConcurrencyLimit(params.getBuckConfig()))) {
-      buildRunResult = super.run(params, pool, ImmutableSet.of());
+      buildRunResult =
+          super.run(params, pool, this::enhanceFlavorsForPublishing, ImmutableSet.of());
     }
 
     ExitCode exitCode = buildRunResult.getExitCode();
@@ -209,11 +208,8 @@ public class PublishCommand extends BuildCommand {
     return artifact + " < " + artifact.getFile();
   }
 
-  @Override
-  public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      CellPathResolver cellPathResolver, BuckConfig config, Iterable<String> targetsAsArgs) {
-    ImmutableList<TargetNodeSpec> specs =
-        super.parseArgumentsAsTargetNodeSpecs(cellPathResolver, config, targetsAsArgs);
+  private ImmutableList<TargetNodeSpec> enhanceFlavorsForPublishing(
+      ImmutableList<TargetNodeSpec> specs) {
 
     Map<UnconfiguredBuildTarget, TargetNodeSpec> uniqueSpecs = new HashMap<>();
     for (TargetNodeSpec spec : specs) {

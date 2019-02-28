@@ -39,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -187,7 +188,8 @@ public class DistBuildSourceFilesCommand extends AbstractDistBuildCommand {
     GraphsAndBuildTargets graphsAndBuildTargets = null;
     try {
       graphsAndBuildTargets =
-          buildCommand.createGraphsAndTargets(params, executor, Optional.empty());
+          buildCommand.createGraphsAndTargets(
+              params, executor, Function.identity(), Optional.empty());
     } catch (ActionGraphCreationException e) {
       throw BuildFileParseException.createForUnknownParseError(e.getMessage());
     }

@@ -52,6 +52,7 @@ import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
+import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -89,6 +90,7 @@ import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Immutable;
@@ -337,7 +339,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getEnvironment(),
                 getArguments())) {
       prehook.startPrehookScript();
-      return run(params, pool, ImmutableSet.of()).getExitCode();
+      return run(params, pool, Function.identity(), ImmutableSet.of()).getExitCode();
     }
   }
 
@@ -363,6 +365,7 @@ public class BuildCommand extends AbstractCommand {
   protected BuildRunResult run(
       CommandRunnerParams params,
       CommandThreadManager commandThreadManager,
+      Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer,
       ImmutableSet<String> additionalTargets)
       throws Exception {
     if (!additionalTargets.isEmpty()) {
@@ -371,7 +374,7 @@ public class BuildCommand extends AbstractCommand {
     BuildEvent.Started started = postBuildStartedEvent(params);
     BuildRunResult result = ImmutableBuildRunResult.of(ExitCode.BUILD_ERROR, ImmutableList.of());
     try {
-      result = executeBuildAndProcessResult(params, commandThreadManager);
+      result = executeBuildAndProcessResult(params, commandThreadManager, targetNodeSpecEnhancer);
     } catch (ActionGraphCreationException e) {
       params.getConsole().printBuildFailure(e.getMessage());
       result = ImmutableBuildRunResult.of(ExitCode.PARSE_ERROR, ImmutableList.of());
@@ -391,10 +394,11 @@ public class BuildCommand extends AbstractCommand {
   GraphsAndBuildTargets createGraphsAndTargets(
       CommandRunnerParams params,
       ListeningExecutorService executorService,
+      Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger)
       throws ActionGraphCreationException, IOException, InterruptedException {
     TargetGraphAndBuildTargets unversionedTargetGraph =
-        createUnversionedTargetGraph(params, executorService);
+        createUnversionedTargetGraph(params, executorService, targetNodeSpecEnhancer);
 
     Optional<TargetGraphAndBuildTargets> versionedTargetGraph = Optional.empty();
     try {
@@ -446,7 +450,10 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private BuildRunResult executeBuildAndProcessResult(
-      CommandRunnerParams params, CommandThreadManager commandThreadManager) throws Exception {
+      CommandRunnerParams params,
+      CommandThreadManager commandThreadManager,
+      Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer)
+      throws Exception {
     ExitCode exitCode = ExitCode.SUCCESS;
     GraphsAndBuildTargets graphsAndBuildTargets;
     if (isUsingDistributedBuild()) {
@@ -457,7 +464,10 @@ public class BuildCommand extends AbstractCommand {
         Optional<ThriftRuleKeyLogger> optionalRuleKeyLogger = Optional.ofNullable(ruleKeyLogger);
         graphsAndBuildTargets =
             createGraphsAndTargets(
-                params, commandThreadManager.getListeningExecutorService(), optionalRuleKeyLogger);
+                params,
+                commandThreadManager.getListeningExecutorService(),
+                targetNodeSpecEnhancer,
+                optionalRuleKeyLogger);
         try (RuleKeyCacheScope<RuleKey> ruleKeyCacheScope =
             getDefaultRuleKeyCacheScope(
                 params, graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder())) {
@@ -661,7 +671,9 @@ public class BuildCommand extends AbstractCommand {
   }
 
   private TargetGraphAndBuildTargets createUnversionedTargetGraph(
-      CommandRunnerParams params, ListeningExecutorService executor)
+      CommandRunnerParams params,
+      ListeningExecutorService executor,
+      Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer)
       throws IOException, InterruptedException, ActionGraphCreationException {
     // Parse the build files to create a ActionGraph.
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
@@ -675,8 +687,11 @@ public class BuildCommand extends AbstractCommand {
                   .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
                   .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                   .build(),
-              parseArgumentsAsTargetNodeSpecs(
-                  params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments()));
+              targetNodeSpecEnhancer.apply(
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getCell().getCellPathResolver(),
+                      params.getBuckConfig(),
+                      getArguments())));
     } catch (BuildTargetException e) {
       throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }

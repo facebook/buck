@@ -96,6 +96,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public class DistBuildCommandDelegate {
@@ -142,7 +143,10 @@ public class DistBuildCommandDelegate {
     distBuildClientStatsTracker.startTimer(LOCAL_GRAPH_CONSTRUCTION);
     GraphsAndBuildTargets graphsAndBuildTargets =
         buildCommand.createGraphsAndTargets(
-            params, commandThreadManager.getListeningExecutorService(), Optional.empty());
+            params,
+            commandThreadManager.getListeningExecutorService(),
+            Function.identity(),
+            Optional.empty());
     distBuildClientStatsTracker.stopTimer(LOCAL_GRAPH_CONSTRUCTION);
 
     ExitCode exitCode;

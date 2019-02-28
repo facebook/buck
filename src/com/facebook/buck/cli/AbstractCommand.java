@@ -291,7 +291,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     return enableParserProfiling;
   }
 
-  public ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
+  ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
       CellPathResolver cellPathResolver, BuckConfig config, Iterable<String> targetsAsArgs) {
     ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
     CommandLineTargetNodeSpecParser parser =

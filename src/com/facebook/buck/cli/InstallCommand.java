@@ -90,6 +90,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
@@ -221,7 +222,7 @@ public class InstallCommand extends BuildCommand {
       }
 
       // Build the targets
-      buildRunResult = run(params, pool, installHelperTargets);
+      buildRunResult = run(params, pool, Function.identity(), installHelperTargets);
       ExitCode exitCode = buildRunResult.getExitCode();
       if (exitCode != ExitCode.SUCCESS) {
         return exitCode;
