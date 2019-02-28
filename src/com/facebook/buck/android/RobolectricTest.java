@@ -215,7 +215,7 @@ public class RobolectricTest extends JavaTest {
       SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
     String argValue;
     if (passDirectoriesInFile) {
-      argValue = "@" + resourceDirectoriesPath;
+      argValue = "@" + getProjectFilesystem().resolve(resourceDirectoriesPath);
     } else {
       argValue =
           Joiner.on(File.pathSeparator)
@@ -231,7 +231,7 @@ public class RobolectricTest extends JavaTest {
       SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
     String argValue;
     if (passDirectoriesInFile) {
-      argValue = "@" + assetDirectoriesPath;
+      argValue = "@" + getProjectFilesystem().resolve(assetDirectoriesPath);
     } else {
       argValue =
           Joiner.on(File.pathSeparator)

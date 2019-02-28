@@ -176,7 +176,8 @@ public class RobolectricTestRuleTest {
     Path resDirectoriesPath =
         RobolectricTest.getResourceDirectoriesPath(filesystem, robolectricBuildTarget);
     String result = robolectricTest.getRobolectricResourceDirectoriesArg(pathResolver, resDeps);
-    assertEquals("-Dbuck.robolectric_res_directories=@" + resDirectoriesPath, result);
+    assertEquals(
+        "-Dbuck.robolectric_res_directories=@" + filesystem.resolve(resDirectoriesPath), result);
   }
 
   @Test
@@ -219,7 +220,9 @@ public class RobolectricTestRuleTest {
     Path assetDirectoriesPath =
         RobolectricTest.getAssetDirectoriesPath(filesystem, robolectricBuildTarget);
     String result = robolectricTest.getRobolectricAssetsDirectories(pathResolver, resDeps);
-    assertEquals("-Dbuck.robolectric_assets_directories=@" + assetDirectoriesPath, result);
+    assertEquals(
+        "-Dbuck.robolectric_assets_directories=@" + filesystem.resolve(assetDirectoriesPath),
+        result);
   }
 
   @Test
