@@ -50,6 +50,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final SelectorListResolver selectorListResolver;
   private final ConstraintResolver constraintResolver;
   private final Supplier<Platform> targetPlatform;
+  private final boolean enforceCompatibleConstraints;
 
   public RawTargetNodeToTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
@@ -59,7 +60,8 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver,
       ConstraintResolver constraintResolver,
-      Supplier<Platform> targetPlatform) {
+      Supplier<Platform> targetPlatform,
+      boolean enforceCompatibleConstraints) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
@@ -68,6 +70,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     this.selectorListResolver = selectorListResolver;
     this.constraintResolver = constraintResolver;
     this.targetPlatform = targetPlatform;
+    this.enforceCompatibleConstraints = enforceCompatibleConstraints;
   }
 
   @Override
@@ -101,6 +104,14 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
               rawTargetNode.getAttributes().getAll());
     } catch (CoerceFailedException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
+    }
+
+    if (enforceCompatibleConstraints
+        && !TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
+            constraintResolver, constructorArg, targetPlatform.get())) {
+      throw new HumanReadableException(
+          "Build target %s is restricted to constraints in \"target_compatible_with\" that do not match the target platform %s",
+          target, targetPlatform.get());
     }
 
     TargetNode<?> targetNode =

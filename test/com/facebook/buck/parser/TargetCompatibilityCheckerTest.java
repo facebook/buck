@@ -57,7 +57,7 @@ public class TargetCompatibilityCheckerTest {
 
   @Before
   public void setUp() throws Exception {
-    platform = new ConstraintBasedPlatform(ImmutableSet.of(cs1v1));
+    platform = new ConstraintBasedPlatform("", ImmutableSet.of(cs1v1));
     constraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {

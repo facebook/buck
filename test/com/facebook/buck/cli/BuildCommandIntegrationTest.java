@@ -370,4 +370,31 @@ public class BuildCommandIntegrationTest {
     assertEquals(1, targets.size());
     assertEquals("//:echo", Iterables.getOnlyElement(targets).toString());
   }
+
+  @Test
+  public void testBuildFailsWhenDepDoesNotMatchTargetPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("build", "--target-platforms", "//config:osx_x86-64", "//:lib");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "Build target //:dep is restricted to constraints in \"target_compatible_with\" "
+                + "that do not match the target platform //config:osx_x86-64"));
+  }
+
+  @Test
+  public void testBuildSucceedsWhenDepMatchesTargetPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    workspace
+        .runBuckCommand("build", "--target-platforms", "//config:linux_x86-64", "//:lib")
+        .assertSuccess();
+  }
 }

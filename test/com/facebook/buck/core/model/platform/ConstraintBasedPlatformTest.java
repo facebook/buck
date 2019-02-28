@@ -45,7 +45,7 @@ public class ConstraintBasedPlatformTest {
   @Test
   public void testMatchesAllReturnsTrueForSubsetOfConstraints() {
     ConstraintBasedPlatform platform =
-        new ConstraintBasedPlatform(ImmutableSet.of(cs1v1, cs2v1, cs3v1));
+        new ConstraintBasedPlatform("", ImmutableSet.of(cs1v1, cs2v1, cs3v1));
 
     assertTrue(platform.matchesAll(Arrays.asList(cs1v1, cs2v1)));
   }
@@ -53,7 +53,7 @@ public class ConstraintBasedPlatformTest {
   @Test
   public void testMatchesAllReturnsTrueForAllOfConstraints() {
     ConstraintBasedPlatform platform =
-        new ConstraintBasedPlatform(ImmutableSet.of(cs1v1, cs2v1, cs3v1));
+        new ConstraintBasedPlatform("", ImmutableSet.of(cs1v1, cs2v1, cs3v1));
 
     assertTrue(platform.matchesAll(Arrays.asList(cs1v1, cs2v1, cs3v1)));
   }
@@ -61,14 +61,15 @@ public class ConstraintBasedPlatformTest {
   @Test
   public void testMatchesAllReturnsTrueForEmptyConstraints() {
     ConstraintBasedPlatform platform =
-        new ConstraintBasedPlatform(ImmutableSet.of(cs1v1, cs2v1, cs3v1));
+        new ConstraintBasedPlatform("", ImmutableSet.of(cs1v1, cs2v1, cs3v1));
 
     assertTrue(platform.matchesAll(Collections.emptyList()));
   }
 
   @Test
   public void testMatchesAllReturnsFalseForUnknownConstraints() {
-    ConstraintBasedPlatform platform = new ConstraintBasedPlatform(ImmutableSet.of(cs1v1, cs2v1));
+    ConstraintBasedPlatform platform =
+        new ConstraintBasedPlatform("", ImmutableSet.of(cs1v1, cs2v1));
 
     assertFalse(platform.matchesAll(Arrays.asList(cs1v1, cs2v1, cs3v1)));
   }

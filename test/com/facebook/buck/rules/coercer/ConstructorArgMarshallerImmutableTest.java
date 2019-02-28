@@ -645,7 +645,7 @@ public class ConstructorArgMarshallerImmutableTest {
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             new RuleBasedConstraintResolver(DummyConfigurationRule::of),
-            new ConstraintBasedPlatform(ImmutableSet.of()));
+            new ConstraintBasedPlatform("", ImmutableSet.of()));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
     DtoWithString dto =

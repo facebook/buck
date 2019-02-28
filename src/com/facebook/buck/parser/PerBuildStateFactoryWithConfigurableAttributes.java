@@ -205,7 +205,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             symlinkCheckers,
             selectorListResolver,
             constraintResolver,
-            targetPlatform);
+            targetPlatform,
+            !parsingContext.excludeUnsupportedTargets());
 
     ListeningExecutorService configuredPipeline =
         MoreExecutors.listeningDecorator(
@@ -263,7 +264,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
       Cell rootCell,
       ImmutableList<String> targetPlatforms) {
     if (targetPlatforms.isEmpty()) {
-      return new ConstraintBasedPlatform(ImmutableSet.of());
+      return new ConstraintBasedPlatform("", ImmutableSet.of());
     }
 
     String targetPlatformName = targetPlatforms.get(0);
@@ -288,6 +289,6 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 
-    return new ConstraintBasedPlatform(constraintValues);
+    return new ConstraintBasedPlatform(targetPlatformName, constraintValues);
   }
 }

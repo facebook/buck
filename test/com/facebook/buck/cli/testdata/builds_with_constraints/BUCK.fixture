@@ -1,0 +1,19 @@
+java_library(
+    name = "dep",
+    srcs = [
+        "A.java",
+    ],
+    target_compatible_with = [
+        "//config:linux",
+    ],
+)
+
+java_library(
+    name = "lib",
+    srcs = [
+        "B.java",
+    ],
+    deps = [
+        ":dep",
+    ],
+)

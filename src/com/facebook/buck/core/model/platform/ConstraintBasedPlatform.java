@@ -21,9 +21,12 @@ import java.util.Collection;
 
 /** An implementation of a {@link Platform} that has a fixed set of constraints. */
 public class ConstraintBasedPlatform implements Platform {
+  private final String platformName;
   private final ImmutableSet<ConstraintValue> constraintValues;
 
-  public ConstraintBasedPlatform(ImmutableSet<ConstraintValue> constraintValues) {
+  public ConstraintBasedPlatform(
+      String platformName, ImmutableSet<ConstraintValue> constraintValues) {
+    this.platformName = platformName;
     this.constraintValues = constraintValues;
   }
 
@@ -34,5 +37,10 @@ public class ConstraintBasedPlatform implements Platform {
   @Override
   public boolean matchesAll(Collection<ConstraintValue> constraintValues) {
     return this.constraintValues.containsAll(constraintValues);
+  }
+
+  @Override
+  public String toString() {
+    return platformName;
   }
 }
