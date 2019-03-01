@@ -207,8 +207,14 @@ public class NdkCxxPlatforms {
     AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
     Path ndkRoot = androidNdk.getNdkRootPath();
 
-    NdkCompilerType compilerType =
-        androidConfig.getNdkCompiler().orElse(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE);
+    NdkCompilerType defaultCompilerType = NdkCxxPlatforms.DEFAULT_COMPILER_TYPE;
+    NdkCxxRuntime defaultCxxRuntime = NdkCxxPlatforms.DEFAULT_CXX_RUNTIME;
+    // Starting from Android NDK 18 there is only Clang and LLVM runtime.
+    if (getNdkMajorVersion(ndkVersion) >= 18) {
+      defaultCompilerType = NdkCompilerType.CLANG;
+      defaultCxxRuntime = NdkCxxRuntime.LIBCXX;
+    }
+    NdkCompilerType compilerType = androidConfig.getNdkCompiler().orElse(defaultCompilerType);
     String gccVersion =
         androidConfig
             .getNdkGccVersion()
@@ -230,12 +236,7 @@ public class NdkCxxPlatforms {
         filesystem,
         ndkRoot,
         compiler,
-        androidConfig
-            .getNdkCxxRuntime()
-            .orElse(
-                getNdkMajorVersion(ndkVersion) < 18
-                    ? NdkCxxPlatforms.DEFAULT_CXX_RUNTIME
-                    : NdkCxxRuntime.LIBCXX),
+        androidConfig.getNdkCxxRuntime().orElse(defaultCxxRuntime),
         androidConfig.getNdkCxxRuntimeType().orElse(NdkCxxRuntimeType.DYNAMIC),
         androidConfig.getNdkCpuAbis().orElseGet(() -> getDefaultCpuAbis(ndkVersion)),
         platform);

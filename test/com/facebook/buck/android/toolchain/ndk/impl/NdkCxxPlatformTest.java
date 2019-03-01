@@ -299,7 +299,7 @@ public class NdkCxxPlatformTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage(
         "Unified Headers can be only used with Android NDK 14 and newer.\n"
-            + "Current configuration has Unified Headers enabled, but detected Android NDK has version is 13.\n"
+            + "Current configuration has Unified Headers enabled, but detected Android NDK version is 13.\n"
             + "Either change the configuration or upgrade to a newer Android NDK");
 
     NdkCxxPlatforms.getUseUnifiedHeaders(androidBuckConfig, "13");
