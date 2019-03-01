@@ -17,6 +17,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/source/java8" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.abi.source" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/plugin/adapter/java8" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.plugin.adapter" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/android/annotations/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/third-party/java/aosp/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/ant-out" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
@@ -90,7 +91,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="asm" level="project" />
     <orderEntry type="library" name="buck-lib" level="project" />
-    <orderEntry type="module" module-name="aosp" />
     <orderEntry type="library" name="concurrent-locks" level="project" />
     <orderEntry type="library" name="dd-plist" level="project" />
     <orderEntry type="library" name="gson" level="project" />
