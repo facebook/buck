@@ -90,7 +90,8 @@ public class ClientCertificateHandlerTest {
   @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
   @Rule public ExpectedException expected = ExpectedException.none();
 
-  ArtifactCacheBuckConfig config;
+  ArtifactCacheBuckConfig config_required;
+  ArtifactCacheBuckConfig config_optional;
   private Path clientCertPath;
   private Path clientKeyPath;
 
@@ -100,21 +101,53 @@ public class ClientCertificateHandlerTest {
     clientKeyPath = temporaryPaths.newFile("client.key");
     Files.write(clientCertPath, sampleClientCert.getBytes(Charsets.UTF_8));
     Files.write(clientKeyPath, sampleClientKey.getBytes(Charsets.UTF_8));
-    config =
+    config_required =
         ArtifactCacheBuckConfigTest.createFromText(
             "[cache]",
             "http_client_tls_key = " + clientKeyPath.toString(),
-            "http_client_tls_cert = " + clientCertPath.toString());
+            "http_client_tls_cert = " + clientCertPath.toString(),
+            "http_client_tls_cert_required = yes");
+    config_optional =
+        ArtifactCacheBuckConfigTest.createFromText(
+            "[cache]",
+            "http_client_tls_key = " + clientKeyPath.toString(),
+            "http_client_tls_cert = " + clientCertPath.toString(),
+            "http_client_tls_cert_required = no");
+  }
+
+  @Test
+  public void throwsIfCertIsEmpty() throws IOException {
+    ArtifactCacheBuckConfig config =
+        ArtifactCacheBuckConfigTest.createFromText(
+            "[cache]", "http_client_tls_cert_required = yes");
+    expected.expect(HumanReadableException.class);
+    expected.expectMessage("Required option for certificate unset");
+
+    ClientCertificateHandler.fromConfiguration(config);
+  }
+
+  @Test
+  public void ignoreIfCertIsEmpty() throws IOException {
+    ArtifactCacheBuckConfig config =
+        ArtifactCacheBuckConfigTest.createFromText("[cache]", "http_client_tls_cert_required = no");
+    Assert.assertFalse(ClientCertificateHandler.fromConfiguration(config).isPresent());
   }
 
   @Test
   public void throwsIfCertIsMissing() throws IOException {
     expected.expect(HumanReadableException.class);
-    expected.expectMessage("Could not read the client certificate at ");
+    expected.expectMessage(String.format("Cannot read certificate file %s", clientCertPath));
 
     Files.delete(clientCertPath);
 
-    ClientCertificateHandler.fromConfiguration(config);
+    ClientCertificateHandler.fromConfiguration(config_required);
+  }
+
+  @Test
+  public void ignoreIfCertIsMissing() throws IOException {
+    Files.delete(clientCertPath);
+
+    Assert.assertFalse(ClientCertificateHandler.fromConfiguration(config_optional).isPresent());
   }
 
   @Test
@@ -124,31 +157,63 @@ public class ClientCertificateHandlerTest {
 
     Files.write(clientCertPath, "INVALID CERT".getBytes(Charsets.UTF_8));
 
-    ClientCertificateHandler.fromConfiguration(config);
+    ClientCertificateHandler.fromConfiguration(config_optional);
   }
 
   @Test
   public void throwsIfKeyIsMissing() throws IOException {
-    expected.expect(IOException.class);
-    expected.expectMessage("Could not read the client key at ");
+    expected.expect(HumanReadableException.class);
+    expected.expectMessage(String.format("Cannot read private key file %s", clientKeyPath));
 
     Files.delete(clientKeyPath);
+
+    ClientCertificateHandler.fromConfiguration(config_required);
+  }
+
+  @Test
+  public void ignoreIfKeyIsMissing() throws IOException {
+    Files.delete(clientKeyPath);
+
+    Assert.assertFalse(ClientCertificateHandler.fromConfiguration(config_optional).isPresent());
+  }
+
+  @Test
+  public void throwsIfKeyIsEmpty() throws IOException {
+    ArtifactCacheBuckConfig config =
+        ArtifactCacheBuckConfigTest.createFromText(
+            "[cache]",
+            "http_client_tls_cert = " + clientCertPath.toString(),
+            "http_client_tls_cert_required = yes");
+
+    expected.expect(HumanReadableException.class);
+    expected.expectMessage("Required option for private key unset");
 
     ClientCertificateHandler.fromConfiguration(config);
   }
 
   @Test
-  public void throwsIfHeaderOrTailerAreMissing() throws IOException {
+  public void ignoreIfKeyIsEmpty() throws IOException {
+    ArtifactCacheBuckConfig config =
+        ArtifactCacheBuckConfigTest.createFromText(
+            "[cache]",
+            "http_client_tls_cert = " + clientCertPath.toString(),
+            "http_client_tls_cert_required = no");
+
+    Assert.assertFalse(ClientCertificateHandler.fromConfiguration(config).isPresent());
+  }
+
+  @Test
+  public void throwsIfHeaderOrTrailerAreMissing() throws IOException {
     expected.expect(HumanReadableException.class);
     expected.expectMessage("Expected BEGIN PRIVATE KEY/END PRIVATE KEY ");
 
     Files.write(clientKeyPath, "TESTING".getBytes(Charsets.UTF_8));
 
-    ClientCertificateHandler.fromConfiguration(config);
+    ClientCertificateHandler.fromConfiguration(config_optional);
   }
 
   @Test
-  public void throwsIfBase64DecodingKeyFails() throws IOException {
+  public void throwsIfBase64DecodingKeyFailsAndRequired() throws IOException {
     expected.expect(HumanReadableException.class);
     expected.expectMessage("Expected base64-encoded PKCS#8 key");
 
@@ -157,7 +222,7 @@ public class ClientCertificateHandlerTest {
         "-----BEGIN PRIVATE KEY-----\nNOT BASE64\n-----END PRIVATE KEY-----\n"
             .getBytes(Charsets.UTF_8));
 
-    ClientCertificateHandler.fromConfiguration(config);
+    ClientCertificateHandler.fromConfiguration(config_optional);
   }
 
   @Test
@@ -172,7 +237,7 @@ public class ClientCertificateHandlerTest {
                 + "-----END PRIVATE KEY-----\n")
             .getBytes(Charsets.UTF_8));
 
-    ClientCertificateHandler.fromConfiguration(config);
+    ClientCertificateHandler.fromConfiguration(config_optional);
   }
 
   @Test
@@ -186,7 +251,8 @@ public class ClientCertificateHandlerTest {
             .decode(String.join("", Arrays.copyOfRange(keyLines, 1, keyLines.length - 1)));
     String expectedPublic = "CN=client.example.com, L=Seattle, ST=Washington, C=US";
 
-    Optional<ClientCertificateHandler> handler = ClientCertificateHandler.fromConfiguration(config);
+    Optional<ClientCertificateHandler> handler =
+        ClientCertificateHandler.fromConfiguration(config_required);
 
     X509KeyManager keyManager = handler.get().getHandshakeCertificates().keyManager();
     String alias = keyManager.getClientAliases("RSA", null)[0];

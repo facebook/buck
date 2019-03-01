@@ -532,7 +532,7 @@ public class ServedCacheIntegrationTest {
     return cacheResult.getType().isSuccess();
   }
 
-  private ArtifactCache createArtifactCache(ArtifactCacheBuckConfig buckConfig) throws IOException {
+  private ArtifactCache createArtifactCache(ArtifactCacheBuckConfig buckConfig) {
     return new ArtifactCaches(
             buckConfig,
             buckEventBus,

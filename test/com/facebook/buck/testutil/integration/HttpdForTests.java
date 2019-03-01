@@ -44,6 +44,7 @@ import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.servlet.http.HttpServletRequest;
@@ -111,9 +112,12 @@ public class HttpdForTests implements AutoCloseable {
 
     String password = "super_sekret";
 
-    X509Certificate caCert = ClientCertificateHandler.parseCertificate(caPath);
-    X509Certificate serverCert = ClientCertificateHandler.parseCertificate(certificatePath);
-    PrivateKey privateKey = ClientCertificateHandler.parsePrivateKey(keyPath, serverCert);
+    X509Certificate caCert =
+        ClientCertificateHandler.parseCertificate(Optional.of(caPath), true).get();
+    X509Certificate serverCert =
+        ClientCertificateHandler.parseCertificate(Optional.of(certificatePath), true).get();
+    PrivateKey privateKey =
+        ClientCertificateHandler.parsePrivateKey(Optional.of(keyPath), serverCert, true).get();
 
     KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
     ks.load(null, password.toCharArray());

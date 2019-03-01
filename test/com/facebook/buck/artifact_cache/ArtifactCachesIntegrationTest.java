@@ -437,9 +437,13 @@ public class ArtifactCachesIntegrationTest {
    */
   private ClientCertificateHandler createClientCertificateHandler(
       Path clientKeyPath, Path clientCertPath, Path caCertPath) throws IOException {
-    X509Certificate certificate = ClientCertificateHandler.parseCertificate(clientCertPath);
-    X509Certificate caCertificate = ClientCertificateHandler.parseCertificate(caCertPath);
-    PrivateKey privateKey = ClientCertificateHandler.parsePrivateKey(clientKeyPath, certificate);
+    X509Certificate certificate =
+        ClientCertificateHandler.parseCertificate(Optional.of(clientCertPath), true).get();
+    X509Certificate caCertificate =
+        ClientCertificateHandler.parseCertificate(Optional.of(caCertPath), true).get();
+    PrivateKey privateKey =
+        ClientCertificateHandler.parsePrivateKey(Optional.of(clientKeyPath), certificate, true)
+            .get();
 
     HeldCertificate cert =
         new HeldCertificate(new KeyPair(certificate.getPublicKey(), privateKey), certificate);

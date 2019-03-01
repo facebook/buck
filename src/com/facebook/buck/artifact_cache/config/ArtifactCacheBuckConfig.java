@@ -391,6 +391,14 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
+   * If true, fail if client TLS certificate or key paths are unspecified, don't exist, are not the
+   * right format or have expired
+   */
+  public boolean getClientTlsCertRequired() {
+    return buckConfig.getBooleanValue(CACHE_SECTION_NAME, "http_client_tls_cert_required", false);
+  }
+
+  /**
    * Gets the path to a PEM encoded X509 certificate to use as the TLS client certificate for HTTP
    * cache requests, from the content of the env var specified in http_client_tls_cert_env_var if
    * set or the field value

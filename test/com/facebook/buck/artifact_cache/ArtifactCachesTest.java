@@ -31,7 +31,6 @@ import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -269,8 +268,7 @@ public class ArtifactCachesTest {
       ArtifactCacheBuckConfig cacheConfig,
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
-      Optional<String> wifiSsid)
-      throws IOException {
+      Optional<String> wifiSsid) {
     return new ArtifactCaches(
         cacheConfig,
         buckEventBus,
