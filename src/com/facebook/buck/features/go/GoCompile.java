@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -112,7 +113,9 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-
+    if (srcs.size() == 0) {
+      throw new HumanReadableException("No source files provided for " + packageName);
+    }
     buildableContext.recordArtifact(output);
 
     ImmutableList.Builder<Path> compileSrcListBuilder = ImmutableList.builder();

@@ -17,7 +17,7 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +39,6 @@ public class GoCompileStep extends ShellStep {
   private final boolean allowExternalReferences;
   private final GoPlatform platform;
   private final Path output;
-  private static final Logger LOG = Logger.get(GoCompileStep.class);
 
   public GoCompileStep(
       Path workingDirectory,
@@ -107,8 +106,7 @@ public class GoCompileStep extends ShellStep {
 
       return commandBuilder.build();
     } else {
-      LOG.warn("No source files found in " + workingDirectory);
-      return ImmutableList.of();
+      throw new HumanReadableException("No valid source files found in " + packageName);
     }
   }
 
