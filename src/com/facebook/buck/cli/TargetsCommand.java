@@ -538,7 +538,8 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithConfigurationTargets(
-                  parsingContext,
+                  parsingContext.withApplyDefaultFlavorsMode(
+                      ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),
