@@ -389,36 +389,56 @@ public class VersionedTargetGraphBuilderTest {
   private Object[] builderFactory() {
     return new Object[] {
       new Object[] {
-        (VersionedTargetGraphBuilderFactory)
-            (pool,
-                executor,
+        new VersionedTargetGraphBuilderFactory() {
+
+          @Override
+          public VersionedTargetGraphBuilder create(
+              ForkJoinPool pool,
+              DepsAwareExecutor executor,
+              VersionSelector versionSelector,
+              TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+              TypeCoercerFactory typeCoercerFactory,
+              UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+            return new ParallelVersionedTargetGraphBuilder(
+                pool,
                 versionSelector,
                 unversionedTargetGraphAndBuildTargets,
                 typeCoercerFactory,
-                unconfiguredBuildTargetFactory) ->
-                new ParallelVersionedTargetGraphBuilder(
-                    pool,
-                    versionSelector,
-                    unversionedTargetGraphAndBuildTargets,
-                    typeCoercerFactory,
-                    unconfiguredBuildTargetFactory,
-                    20)
+                unconfiguredBuildTargetFactory,
+                20);
+          }
+
+          @Override
+          public String toString() {
+            return "parallel";
+          }
+        }
       },
       new Object[] {
-        (VersionedTargetGraphBuilderFactory)
-            (pool,
+        new VersionedTargetGraphBuilderFactory() {
+
+          @Override
+          public VersionedTargetGraphBuilder create(
+              ForkJoinPool pool,
+              DepsAwareExecutor executor,
+              VersionSelector versionSelector,
+              TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
+              TypeCoercerFactory typeCoercerFactory,
+              UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+            return new AsyncVersionedTargetGraphBuilder(
                 executor,
                 versionSelector,
                 unversionedTargetGraphAndBuildTargets,
                 typeCoercerFactory,
-                unconfiguredBuildTargetFactory) ->
-                new AsyncVersionedTargetGraphBuilder(
-                    executor,
-                    versionSelector,
-                    unversionedTargetGraphAndBuildTargets,
-                    typeCoercerFactory,
-                    unconfiguredBuildTargetFactory,
-                    20)
+                unconfiguredBuildTargetFactory,
+                20);
+          }
+
+          @Override
+          public String toString() {
+            return "async";
+          }
+        }
       }
     };
   }
