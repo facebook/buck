@@ -29,6 +29,7 @@ import java.io.PrintWriter; // NOPMD this is just a log
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import okhttp3.HttpUrl;
@@ -128,6 +129,14 @@ public final class Main {
         log.format("Uploading compressed trace...");
       } else {
         log.format("Uploading trace...");
+      }
+
+      if (traceFileKind.equals("build_log")) {
+        // Copy the log to a temp file in case buck is still writing to it.
+        // TODO launch uploader from buck *after* logs are flushed
+        Path tempFile = File.createTempFile(uuid, ".log").toPath();
+        Files.copy(fileToUpload, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        fileToUpload = tempFile;
       }
 
       Request request =
