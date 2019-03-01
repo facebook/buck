@@ -108,7 +108,8 @@ public class AuditTestsCommand extends AbstractCommand {
           "testsof('%s')",
           getArgumentsFormattedAsBuildTargets(params.getBuckConfig()),
           shouldGenerateJsonOutput(),
-          ImmutableSet.of());
+          ImmutableSet.of(),
+          params.getConsole().getStdOut());
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();

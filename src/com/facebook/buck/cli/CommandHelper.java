@@ -30,19 +30,34 @@ import java.io.PrintStream;
 import java.util.Objects;
 import java.util.Set;
 
-public abstract class CommandHelper {
+/** Utility class with print methods */
+public final class CommandHelper {
 
-  public static void printJSON(
-      CommandRunnerParams params, Multimap<String, QueryTarget> targetsAndResults)
-      throws IOException {
+  private CommandHelper() {}
+
+  /**
+   * Prints target and result map's json representation into printStream.
+   *
+   * @param targetsAndResults input to query result multi map
+   * @param printStream print stream for output
+   * @throws IOException in case of IO exception during json writing operation
+   */
+  public static void printJsonOutput(
+      Multimap<String, QueryTarget> targetsAndResults, PrintStream printStream) throws IOException {
     Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
             targetsAndResults, input -> stringify(Objects.requireNonNull(input)));
-    ObjectMappers.WRITER.writeValue(
-        params.getConsole().getStdOut(), targetsAndResultsNames.asMap());
+    ObjectMappers.WRITER.writeValue(printStream, targetsAndResultsNames.asMap());
   }
 
-  public static void printJSON(CommandRunnerParams params, Set<QueryTarget> targets)
+  /**
+   * Prints targets set json representation into printStream.
+   *
+   * @param targets set of query result
+   * @param printStream print stream for output
+   * @throws IOException in case of IO exception during json writing operation
+   */
+  public static void printJsonOutput(Set<QueryTarget> targets, PrintStream printStream)
       throws IOException {
     Set<String> targetsNames =
         targets
@@ -51,26 +66,43 @@ public abstract class CommandHelper {
             .map(CommandHelper::stringify)
             .collect(ImmutableSet.toImmutableSet());
 
-    ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetsNames);
+    ObjectMappers.WRITER.writeValue(printStream, targetsNames);
   }
 
-  public static void printToConsole(
-      CommandRunnerParams params, Multimap<String, QueryTarget> targetsAndDependencies) {
-    for (QueryTarget target : ImmutableSortedSet.copyOf(targetsAndDependencies.values())) {
-      params.getConsole().getStdOut().println(stringify(target));
-    }
+  /**
+   * Prints target and dependencies map into printStream.
+   *
+   * @param targetsAndDependencies input to query result multi map
+   * @param printStream print stream for output
+   */
+  public static void print(
+      Multimap<String, QueryTarget> targetsAndDependencies, PrintStream printStream) {
+    ImmutableSortedSet.copyOf(targetsAndDependencies.values())
+        .stream()
+        .map(CommandHelper::stringify)
+        .forEach(printStream::println);
   }
 
-  public static void printToConsole(CommandRunnerParams params, Set<QueryTarget> targets) {
-    for (QueryTarget target : targets) {
-      params.getConsole().getStdOut().println(stringify(target));
-    }
+  /**
+   * Prints target set into printStream.
+   *
+   * @param targets set of query result
+   * @param printStream print stream for output
+   */
+  public static void print(Set<QueryTarget> targets, PrintStream printStream) {
+    targets.stream().map(CommandHelper::stringify).forEach(printStream::println);
   }
 
-  public static void printShortDescription(Command command, PrintStream stream) {
-    stream.println("Description: ");
-    stream.println("  " + command.getShortDescription());
-    stream.println();
+  /**
+   * Prints short description of a given command into printStream.
+   *
+   * @param command CLI command
+   * @param printStream print stream for output
+   */
+  public static void printShortDescription(Command command, PrintStream printStream) {
+    printStream.println("Description: ");
+    printStream.println("  " + command.getShortDescription());
+    printStream.println();
   }
 
   private static String stringify(QueryTarget target) {
