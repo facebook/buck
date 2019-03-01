@@ -20,6 +20,7 @@ import logging
 import logging.config
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -47,6 +48,15 @@ TARGET_MACOS_VERSION_SPEC = TARGET_MACOS_VERSION + "_or_later"
 
 def parse_args(args):
     parser = argparse.ArgumentParser("Publish releases of buck to github")
+    parser.add_argument(
+        "--valid-git-upstreams",
+        default=(
+            "git@github.com:facebook/buck.git",
+            "https://github.com/facebook/buck.git",
+        ),
+        nargs="+",
+        help="List of valid upstreams for the git repository in order to publish",
+    )
     parser.add_argument(
         "--github-token-file",
         default=os.path.expanduser("~/.buck-github-token"),
@@ -248,8 +258,21 @@ def configure_logging():
     )
 
 
+def validate_repo_upstream(args):
+    """ Make sure we're in the right repository, not a fork """
+    output = subprocess.check_output(
+        ["git", "remote", "get-url", "origin"], encoding="utf-8"
+    ).strip()
+    if output not in args.valid_git_upstreams:
+        raise ReleaseException(
+            "Releases may only be published from the upstream OSS buck repository"
+        )
+
+
 def validate_environment(args):
     """ Make sure we can build """
+
+    validate_repo_upstream(args)
     if args.build_deb:
         ret = docker(
             args.docker_linux_host,
