@@ -77,6 +77,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -265,10 +266,19 @@ public abstract class IsolatedBuildableBuilder {
                         unconfiguredPaths.getGenDir(), configuredPaths.getGenDir(),
                         unconfiguredPaths.getScratchDir(), configuredPaths.getScratchDir());
                 for (Map.Entry<Path, Path> entry : paths.entrySet()) {
-                  filesystem.createSymLink(
-                      entry.getKey(),
-                      entry.getKey().getParent().relativize(entry.getValue()),
-                      /* force */ false);
+                  try {
+                    filesystem.createSymLink(
+                        entry.getKey(),
+                        entry.getKey().getParent().relativize(entry.getValue()),
+                        /* force */ false);
+                  } catch (FileAlreadyExistsException e) {
+                    // Verify that the symlink is valid then continue gracefully
+                    if (!filesystem
+                        .readSymLink(entry.getKey())
+                        .equals(entry.getKey().getParent().relativize(entry.getValue()))) {
+                      throw e;
+                    }
+                  }
                 }
               }
             });
