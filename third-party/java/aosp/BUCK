@@ -18,6 +18,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//third-party/java/android:sdklib",
+        "//third-party/java/android/annotations:annotations",
         "//third-party/java/gson:gson",
         "//third-party/java/guava:guava",
     ],

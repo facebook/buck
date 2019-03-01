@@ -8,7 +8,10 @@ java_library(
     ],
     required_for_source_only_abi = True,
     visibility = ["PUBLIC"],
-    deps = ["//third-party/java/guava:guava"],
+    deps = [
+        "//third-party/java/android/annotations:annotations",
+        "//third-party/java/guava:guava",
+    ],
 )
 
 file_alias(
