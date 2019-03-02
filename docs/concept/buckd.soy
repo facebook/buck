@@ -73,17 +73,18 @@ created by text editors.
 <p>
 The Buck daemon process is killed if
 <ul>
-<li>the <code>buck clean</code> command is run.</li>
+<li>the {call buck.cmd_clean /} command is run.</li>
 <li>the <code>.buckd</code> directory in the project root directory is deleted.</li>
 <li>the daemon has been idle for 24 hours.</li>
 </ul>
 </p>
 
 <p>
-You can also kill the Buck daemon explicitly by running <code>buck kill</code> in 
-the directory tree for your project. Note that if&mdash;for some
-reason&mdash;multiple instances of the daemon are running, 
-the <code>buck kill</code> command kills only one of them.
+You can also kill the Buck daemon explicitly by 
+running {call buck.cmd_kill /} in the directory tree for your project.
+Note that if&mdash;for some reason&mdash;multiple instances of the
+daemon are running, the <code>buck kill</code> command kills only one of
+them.
 </p>
 
 <p>
