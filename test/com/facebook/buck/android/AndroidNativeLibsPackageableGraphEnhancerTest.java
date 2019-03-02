@@ -105,8 +105,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(
-            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
+        new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(ndkLibrary)), graphBuilder);
 
@@ -185,8 +184,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(
-            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
+        new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(cxxLibrary)), graphBuilder);
 
@@ -259,8 +257,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(
-            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
+        new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
 
     collector.addNativeLinkable(cxxLibrary);
 
@@ -306,8 +303,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(
-            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
+        new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
 
     collector.addNativeLinkableAsset(cxxLibrary);
 
@@ -391,8 +387,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             apkModuleGraph);
 
     AndroidPackageableCollector collector =
-        new AndroidPackageableCollector(
-            target, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph);
+        new AndroidPackageableCollector(target, ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(ImmutableSet.of(cxxLibrary1, cxxLibrary2)),
         graphBuilder);

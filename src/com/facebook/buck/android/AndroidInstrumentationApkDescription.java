@@ -43,11 +43,13 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -114,18 +116,35 @@ public class AndroidInstrumentationApkDescription
             .addAll(getClasspathDeps(apkUnderTest.getClasspathDeps()))
             .build();
 
-    // TODO(natthu): Instrumentation APKs should also exclude native libraries and assets from the
-    // apk under test.
+    APKModule rootAPKModule = APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true);
     AndroidPackageableCollection.ResourceDetails resourceDetails =
-        apkUnderTest
-            .getAndroidPackageableCollection()
-            .getResourceDetails()
-            .get(APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true));
+        apkUnderTest.getAndroidPackageableCollection().getResourceDetails().get(rootAPKModule);
     ImmutableSet<BuildTarget> resourcesToExclude =
         ImmutableSet.copyOf(
             Iterables.concat(
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
+
+    ImmutableCollection<SourcePath> nativeLibsToExclude =
+        apkUnderTest
+            .getAndroidPackageableCollection()
+            .getNativeLibsDirectories()
+            .get(rootAPKModule);
+
+    ImmutableCollection<NativeLinkable> nativeLinkablesToExclude =
+        apkUnderTest.getAndroidPackageableCollection().getNativeLinkables().get(rootAPKModule);
+
+    ImmutableCollection<SourcePath> nativeLibAssetsToExclude =
+        apkUnderTest
+            .getAndroidPackageableCollection()
+            .getNativeLibAssetsDirectories()
+            .get(rootAPKModule);
+
+    ImmutableCollection<NativeLinkable> nativeLinkableAssetsToExclude =
+        apkUnderTest
+            .getAndroidPackageableCollection()
+            .getNativeLinkablesAssets()
+            .get(rootAPKModule);
 
     ListeningExecutorService dxExecutorService =
         toolchainProvider
@@ -192,6 +211,10 @@ public class AndroidInstrumentationApkDescription
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableSet.toImmutableSet()),
             resourcesToExclude,
+            nativeLibsToExclude,
+            nativeLinkablesToExclude,
+            nativeLibAssetsToExclude,
+            nativeLinkableAssetsToExclude,
             /* skipCrunchPngs */ false,
             args.getIncludesVectorDrawables(),
             /* noAutoVersionResources */ false,

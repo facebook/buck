@@ -60,7 +60,7 @@ public class AndroidAppModularityGraphEnhancer {
 
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
-            originalBuildTarget, buildTargetsToExcludeFromDex, ImmutableSet.of(), apkModuleGraph);
+            originalBuildTarget, buildTargetsToExcludeFromDex, apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalDeps), ruleResolver);
     AndroidPackageableCollection packageableCollection = collector.build();
