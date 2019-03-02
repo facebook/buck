@@ -32,6 +32,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
+import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
@@ -49,7 +50,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -126,6 +126,9 @@ public class QueryCommand extends AbstractCommand {
 
     /** Format output as JSON */
     JSON,
+
+    /** Format output as Thrift binary */
+    THRIFT,
   }
 
   @Option(
@@ -134,7 +137,8 @@ public class QueryCommand extends AbstractCommand {
           "Output format (default: list).\n"
               + " dot -  dot graph format.\n"
               + " dot_bfs -  dot graph format in bfs order.\n"
-              + " json - JSON format.\n")
+              + " json - JSON format.\n"
+              + " thrift - thrift binary format.\n")
   private OutputFormat outputFormat = OutputFormat.LIST;
 
   @Option(
@@ -165,7 +169,7 @@ public class QueryCommand extends AbstractCommand {
           "Sort output format (default: label). "
               + "minrank/maxrank: Sort the output in rank order and output the ranks "
               + "according to the length of the shortest or longest path from a root node, "
-              + "respectively. This does not apply to --output-format equals to dot, dot_bfs and json.")
+              + "respectively. This does not apply to --output-format equals to dot, dot_bfs, json and thrift.")
   private SortOutputFormat sortOutputFormat = SortOutputFormat.LABEL;
 
   @Deprecated
@@ -271,7 +275,7 @@ public class QueryCommand extends AbstractCommand {
       return;
     }
     if (queryFormat.contains("%s")) {
-      try (PrintStreamWrapper printStreamWrapper = new PrintStreamWrapper(params)) {
+      try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
         runMultipleQuery(
             params,
             env,
@@ -280,7 +284,7 @@ public class QueryCommand extends AbstractCommand {
             // generateJsonOutput is deprecated and have to be set as outputFormat parameter
             outputFormat == OutputFormat.JSON,
             outputAttributes(),
-            printStreamWrapper.printStream);
+            printStreamWrapper.get());
       }
       return;
     }
@@ -394,29 +398,34 @@ public class QueryCommand extends AbstractCommand {
     ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);
     LOG.debug("Printing out the following targets: %s", queryResult);
 
-    try (PrintStreamWrapper printStreamWrapper = new PrintStreamWrapper(params)) {
+    try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
+      PrintStream printStream = printStreamWrapper.get();
 
       if (sortOutputFormat.needToSortByRank()) {
-        printRankOutput(params, env, queryResult, printStreamWrapper.printStream);
+        printRankOutput(params, env, queryResult, printStream);
         return;
       }
 
       switch (outputFormat) {
         case DOT:
-          printDotOutput(params, env, queryResult, false, printStreamWrapper.printStream);
+          printDotOutput(params, env, queryResult, false, printStream);
           break;
 
         case DOT_BFS:
-          printDotOutput(params, env, queryResult, true, printStreamWrapper.printStream);
+          printDotOutput(params, env, queryResult, true, printStream);
           break;
 
         case JSON:
-          printJsonOutput(params, env, queryResult, printStreamWrapper.printStream);
+          printJsonOutput(params, env, queryResult, printStream);
+          break;
+
+        case THRIFT:
+          printThriftOutput(params, env, queryResult, printStream);
           break;
 
         case LIST:
         default:
-          printListOutput(params, env, queryResult, printStreamWrapper.printStream);
+          printListOutput(params, env, queryResult, printStream);
       }
     }
   }
@@ -520,6 +529,29 @@ public class QueryCommand extends AbstractCommand {
               String name = toPresentationForm(entry.getKey());
               printStream.println(rank + " " + name);
             });
+  }
+
+  private void printThriftOutput(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult,
+      PrintStream printStream)
+      throws IOException, QueryException {
+
+    ThriftOutput.Builder<TargetNode<?>> targetNodeBuilder =
+        ThriftOutput.builder(env.getTargetGraph())
+            .filter(env.getNodesFromQueryTargets(queryResult)::contains)
+            .nodeToNameMappingFunction(
+                targetNode -> targetNode.getBuildTarget().getFullyQualifiedName());
+
+    if (shouldOutputAttributes()) {
+      Function<TargetNode<?>, ImmutableSortedMap<String, String>> nodeToAttributes =
+          getNodeToAttributeFunction(params, env);
+      targetNodeBuilder.nodeToAttributesFunction(nodeToAttributes);
+    }
+
+    ThriftOutput<TargetNode<?>> thriftOutput = targetNodeBuilder.build();
+    thriftOutput.writeOutput(printStream);
   }
 
   /**
@@ -755,27 +787,23 @@ public class QueryCommand extends AbstractCommand {
     return " --output-format json";
   }
 
-  private class PrintStreamWrapper implements AutoCloseable {
-
-    private final PrintStream printStream;
-
-    private PrintStreamWrapper(CommandRunnerParams params) throws IOException {
-      this.printStream = getPrintStream(params);
+  /**
+   * Returns PrintStream wrapper with modified {@code close()} operation.
+   *
+   * <p>If {@code --output-file} parameter is specified then print stream will be opened from {@code
+   * outputFile}. During the {@code close()} operation this stream will be closed.
+   *
+   * <p>Else if {@code --output-file} parameter is not specified then standard console output will
+   * be returned as print stream. {@code close()} operation is ignored in this case.
+   */
+  private CloseableWrapper<PrintStream> getPrintStreamWrapper(CommandRunnerParams params)
+      throws IOException {
+    if (outputFile == null) {
+      // use stdout for output, do not close stdout stream as it is not owned here
+      return CloseableWrapper.of(params.getConsole().getStdOut(), stream -> {});
     }
-
-    private PrintStream getPrintStream(CommandRunnerParams params) throws IOException {
-      if (outputFile != null) {
-        OutputStream outputStream = Files.newOutputStream(outputFile.toPath());
-        return new PrintStream(new BufferedOutputStream(outputStream));
-      }
-      return params.getConsole().getStdOut();
-    }
-
-    @Override
-    public void close() {
-      if (outputFile != null) {
-        printStream.close();
-      }
-    }
+    return CloseableWrapper.of(
+        new PrintStream(new BufferedOutputStream(Files.newOutputStream(outputFile.toPath()))),
+        stream -> stream.close());
   }
 }

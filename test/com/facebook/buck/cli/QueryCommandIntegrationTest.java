@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.cli.ThriftOutputUtils.edgesToStringList;
+import static com.facebook.buck.cli.ThriftOutputUtils.nodesToStringList;
 import static com.facebook.buck.util.MoreStringsForTests.containsIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -28,6 +30,9 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
+import com.facebook.buck.slb.ThriftProtocol;
+import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -38,6 +43,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1398,8 +1404,52 @@ public class QueryCommandIntegrationTest {
         is(equalTo(parseJSON(workspace.getFileContents("stdout-all-deps-tests-map.json")))));
   }
 
+  @Test
+  public void testThriftOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    // Print all of the inputs to the rule.
+    ProcessResult result =
+        workspace.runBuckCommand("query", "deps(//example:one)", "--output-format", "thrift");
+    result.assertSuccess();
+
+    String stdout = result.getStdout();
+    DirectedAcyclicGraph thriftDag = parseThrift(stdout.getBytes(StandardCharsets.UTF_8));
+    assertEquals(6, thriftDag.getNodesSize());
+    assertThat(
+        nodesToStringList(thriftDag.getNodes()),
+        containsInAnyOrder(
+            "//example:one",
+            "//example:two",
+            "//example:three",
+            "//example:four",
+            "//example:five",
+            "//example:six"));
+
+    assertEquals(8, thriftDag.getEdgesSize());
+    assertThat(
+        edgesToStringList(thriftDag.getEdges()),
+        containsInAnyOrder(
+            "//example:one->//example:two",
+            "//example:one->//example:three",
+            "//example:two->//example:four",
+            "//example:three->//example:five",
+            "//example:three->//example:four",
+            "//example:three->//example:six",
+            "//example:four->//example:six",
+            "//example:five->//example:six"));
+  }
+
   private static JsonNode parseJSON(String content) throws IOException {
     return ObjectMappers.READER.readTree(ObjectMappers.createParser(content));
+  }
+
+  private static DirectedAcyclicGraph parseThrift(byte[] bytes) throws IOException {
+    DirectedAcyclicGraph thriftDag = new DirectedAcyclicGraph();
+    ThriftUtil.deserialize(ThriftProtocol.BINARY, bytes, thriftDag);
+    return thriftDag;
   }
 
   Object getJsonParams() {

@@ -1421,6 +1421,15 @@ $ dot -Tpng graph.dot -o graph.png
 {/call}
 
 {call buck.param}
+    {param name: 'output-format thrift' /}
+    {param desc}
+      <p>
+        Outputs the results as thrift binary.
+      </p>
+    {/param}
+{/call}
+
+{call buck.param}
     {param name: 'output-file' /}
     {param desc}
       <p>
