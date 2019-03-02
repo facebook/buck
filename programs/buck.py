@@ -181,6 +181,20 @@ def _emit_java_version_warnings_if_any(java_version_status_queue):
 
 
 def main(argv, reporter):
+    # Change environment at startup to ensure we don't have any other threads
+    # running yet.
+    # We set BUCK_ROOT_BUILD_ID to ensure that if we're called in a nested fashion
+    # from, say, a genrule, we do not reuse the UUID, and logs do not end up with
+    # confusing / incorrect data
+    # TODO: remove ability to inject BUCK_BUILD_ID completely. It mostly causes
+    #       problems, and is not a generally useful feature for users.
+    if "BUCK_BUILD_ID" in os.environ and "BUCK_ROOT_BUILD_ID" not in os.environ:
+        build_id = os.environ["BUCK_BUILD_ID"]
+    else:
+        build_id = str(uuid.uuid4())
+    if "BUCK_ROOT_BUILD_ID" not in os.environ:
+        os.environ["BUCK_ROOT_BUILD_ID"] = build_id
+
     java_version_status_queue = Queue(maxsize=1)
     required_java_version = "8"
 
@@ -213,7 +227,6 @@ def main(argv, reporter):
     install_signal_handlers()
     try:
         tracing_dir = None
-        build_id = os.environ.get("BUCK_BUILD_ID", str(uuid.uuid4()))
         reporter.build_id = build_id
         with Tracing("main"):
             with BuckProject.from_current_dir() as project:

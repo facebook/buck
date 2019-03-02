@@ -11,6 +11,9 @@ java_test(
     ),
     deps = [
         "//programs:buck",
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/doctor:doctor",
+        "//src/com/facebook/buck/doctor/config:config",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//test/com/facebook/buck/cli:testutil",
