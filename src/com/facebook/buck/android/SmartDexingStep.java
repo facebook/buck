@@ -100,6 +100,7 @@ public class SmartDexingStep implements Step {
   private final Optional<String> dxMaxHeapSize;
   private final String dexTool;
   private final boolean useDexBuckedId;
+  private final Optional<Set<Path>> additonalDesugarDeps;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -129,7 +130,8 @@ public class SmartDexingStep implements Step {
       Optional<String> dxMaxHeapSize,
       String dexTool,
       boolean desugarInterfaceMethods,
-      boolean useDexBuckedId) {
+      boolean useDexBuckedId,
+      Optional<Set<Path>> additonalDesugarDeps) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildContext = buildContext;
     this.filesystem = filesystem;
@@ -153,6 +155,7 @@ public class SmartDexingStep implements Step {
     this.dxMaxHeapSize = dxMaxHeapSize;
     this.dexTool = dexTool;
     this.useDexBuckedId = useDexBuckedId;
+    this.additonalDesugarDeps = additonalDesugarDeps;
   }
 
   /**
@@ -329,10 +332,11 @@ public class SmartDexingStep implements Step {
                     dxMaxHeapSize,
                     dexTool,
                     desugarInterfaceMethods
-                        ? Sets.difference(
-                            allDexInputPaths, ImmutableSet.copyOf(outputInputsPair.getValue()))
-                        : null,
-                    useDexBuckedId))
+                        ? Sets.union(
+                            Sets.difference(
+                                allDexInputPaths, ImmutableSet.copyOf(outputInputsPair.getValue())),
+                            additonalDesugarDeps.orElse(ImmutableSet.of()))
+                        : null, useDexBuckedId))
         .filter(dxPseudoRule -> !dxPseudoRule.checkIsCached())
         .map(
             dxPseudoRule -> {
