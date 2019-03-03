@@ -26,7 +26,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -478,24 +477,13 @@ public class SmartDexingStep implements Step {
 
     Optional<String> buckedId = Optional.empty();
     String output = outputPath.toString();
-    if (useDexBuckedId) {
-      String fileName = Files.getNameWithoutExtension(outputPath.toString());
-      // Find the dex outputPath's prefix. It can be either "classes" or "secondary-dex-"
-      // depending on the target's desired dex format i.e dex and jar respectively
-      String prefix;
-      if (fileName.startsWith("classes")) {
-        prefix = "classes";
-      } else if (fileName.startsWith("secondary-dex-")) {
-        prefix = "secondary-dex-";
-      } else {
-        throw new HumanReadableException("Output path file name for d8 dexing not recognized: " + outputPath);
-      }
-
-      // We know what the output file name is ("<prefix>.dex" or "<prefix>N.dex") as these
+    String fileName = Files.getNameWithoutExtension(output);
+    if (useDexBuckedId && fileName.startsWith("classes")) {
+      // We know what the output file name is ("classes.dex" or "classesN.dex") as these
       // are generated in SplitZipStep and passed around as part of a multi-map - it is
       // simply easier and cleaner to extract the dex file number to be used as unique
       // identifier rather than creating another map and pass it around
-      String[] tokens = Files.getNameWithoutExtension(outputPath.toString()).split(prefix);
+      String[] tokens = fileName.split("classes");
       String id = tokens.length == 0 ? "" /* primary */ : tokens[1] /* secondary */;
       buckedId = Optional.of(id);
     }
