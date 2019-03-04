@@ -84,7 +84,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     Path aab =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.signed.apk"));
+                filesystem, BuildTargetFactory.newInstance(target), "%s.signed.aab"));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(Files.newInputStream(aab))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
@@ -175,7 +175,7 @@ public class AndroidAppBundleIntegrationTest extends AbiCompilationModeTest {
     Path aab =
         workspace.getPath(
             BuildTargetPaths.getGenPath(
-                filesystem, BuildTargetFactory.newInstance(target), "%s.signed.apk"));
+                filesystem, BuildTargetFactory.newInstance(target), "%s.signed.aab"));
 
     ZipInspector zipInspector = new ZipInspector(aab);
     zipInspector.assertFileExists("small_with_no_resource_deps/assets.pb");
