@@ -25,6 +25,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -199,6 +200,19 @@ public class GoTestIntegrationTest {
   public void testGoTestWithEnv() throws IOException {
     ProcessResult result = workspace.runBuckCommand("test", "//:test-with-env");
     result.assertSuccess();
+  }
+
+  @Test
+  public void testGoTestWithSystemEnv() throws IOException {
+    workspace
+        .runBuckdCommand(ImmutableMap.of(), "test", "//:test-with-system-env")
+        .assertTestFailure();
+    workspace
+        .runBuckdCommand(ImmutableMap.of("FOO", "BAR"), "test", "//:test-with-system-env")
+        .assertSuccess();
+    workspace
+        .runBuckdCommand(ImmutableMap.of(), "test", "//:test-with-system-env")
+        .assertTestFailure();
   }
 
   private static void assertIsSymbolicLink(Path link, Path target) throws IOException {

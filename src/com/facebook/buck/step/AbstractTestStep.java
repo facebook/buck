@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -78,7 +77,7 @@ public abstract class AbstractTestStep implements Step {
     // of the many that ran.  So, our best bet is to just combine them all into stdout,
     // so they get properly interleaved with the test start and end messages that we
     // use when we parse the test output.
-    Map<String, String> environment = new HashMap<>(EnvVariablesProvider.getSystemEnv());
+    Map<String, String> environment = new HashMap<>(context.getEnvironment());
     if (env.isPresent()) {
       environment.putAll(env.get());
     }

@@ -39,6 +39,14 @@ go_test(
 )
 
 go_test(
+    name = "test-with-system-env",
+    srcs = [
+        "env_test.go",
+    ],
+    deps = [":base"],
+)
+
+go_test(
     name = "test-success-internal",
     srcs = ["lib_test.go"],
     library = ":lib",
