@@ -878,7 +878,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             xzCompressionLevel,
             dxMaxHeapSize,
             dexTool,
-            desugarInterfaceMethods);
+            desugarInterfaceMethods,
+            true);
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {

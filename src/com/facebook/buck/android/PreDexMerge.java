@@ -372,6 +372,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             xzCompressionLevel,
             dxMaxHeapSize,
             dexTool,
+            false,
             false));
 
     for (PreDexedFilesSorter.Result result : sortResults.values()) {
