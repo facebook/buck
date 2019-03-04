@@ -167,6 +167,9 @@ public class NdkCxxPlatformIntegrationTest {
             + "  cpu_abis = "
             + architectures
             + "\n"
+            + "  compiler = "
+            + compiler
+            + "\n"
             + "  gcc_version = 4.9\n"
             + "  app_platform = android-21\n";
 
