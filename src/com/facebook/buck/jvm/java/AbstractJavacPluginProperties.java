@@ -94,6 +94,10 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
           if (entry.getSourcePathToOutput() != null) {
             addInputs(entry.getSourcePathToOutput());
           }
+
+          // Resources from dependency JavaLibraries must be included as inputs otherwise
+          // remote builds will fail with missing files in the execution sandbox.
+          entry.getResources().forEach(this::addInputs);
         }
         addAllClasspathEntries(hasClasspathEntries.getTransitiveClasspaths());
       } else {
