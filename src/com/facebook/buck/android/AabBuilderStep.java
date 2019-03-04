@@ -404,8 +404,7 @@ public class AabBuilderStep implements Step {
       while (zipEntryEnumeration.hasMoreElements()) {
         ZipEntry entry = zipEntryEnumeration.nextElement();
 
-        if ((entry.isDirectory() && ApkBuilder.checkFolderForPackaging(entry.getName()))
-            || ApkBuilder.checkFileForPackaging(entry.getName())) {
+        if (validateDirectoryEntry(entry) || validateFileEntry(entry)) {
 
           String location = resolveFileInModule(entry);
           addFile(
@@ -417,6 +416,22 @@ public class AabBuilderStep implements Step {
         }
       }
     }
+  }
+
+  private boolean validateDirectoryEntry(ZipEntry entry) {
+    return entry.isDirectory() && ApkBuilder.checkFolderForPackaging(entry.getName());
+  }
+
+  private boolean validateFileEntry(ZipEntry entry) {
+    String entryName = entry.getName();
+    return ApkBuilder.checkFileForPackaging(entry.getName()) && validateMetaInf(entryName);
+  }
+
+  private boolean validateMetaInf(String entryName) {
+    return !entryName.startsWith("META-INF")
+        || entryName.endsWith("CERT.SF")
+        || entryName.endsWith("MANIFEST.MF")
+        || entryName.endsWith("CERT.RSA");
   }
 
   private String resolveFileInModule(ZipEntry entry) {
