@@ -780,30 +780,34 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
   /** The APK at this path will be jar signed, but not zipaligned. */
   private Path getSignedApkPath() {
-    return Paths.get(getUnsignedApkPath()
-        .replaceAll("\\.unsigned\\.apk$", ".signed.apk")
-        .replaceAll("\\.unsigned\\.aab$", ".signed.aab"));
+    return Paths.get(
+        getUnsignedApkPath()
+            .replaceAll("\\.unsigned\\.apk$", ".signed.apk")
+            .replaceAll("\\.unsigned\\.aab$", ".signed.aab"));
   }
 
   /** The APK at this path will be zipaligned and jar signed. */
   private Path getZipalignedApkPath() {
-    return Paths.get(getUnsignedApkPath()
-        .replaceAll("\\.unsigned\\.apk$", ".zipaligned.apk")
-        .replaceAll("\\.unsigned\\.aab$", ".signed.aab"));
+    return Paths.get(
+        getUnsignedApkPath()
+            .replaceAll("\\.unsigned\\.apk$", ".zipaligned.apk")
+            .replaceAll("\\.unsigned\\.aab$", ".signed.aab"));
   }
 
   /** The APK at this path will be zipaligned and v2 signed. */
   Path getFinalApkPath() {
-    return Paths.get(getUnsignedApkPath()
-        .replaceAll("\\.unsigned\\.apk$", ".apk")
-        .replaceAll("\\.unsigned\\.aab$", ".aab"));
+    return Paths.get(
+        getUnsignedApkPath()
+            .replaceAll("\\.unsigned\\.apk$", ".apk")
+            .replaceAll("\\.unsigned\\.aab$", ".aab"));
   }
 
   /** The APK at this path will have compressed resources, but will not be zipaligned. */
   private Path getCompressedResourcesApkPath() {
-    return Paths.get(getUnsignedApkPath()
-        .replaceAll("\\.unsigned\\.apk$", ".compressed.apk")
-        .replaceAll("\\.unsigned\\.aab$", ".compressed.aab"));
+    return Paths.get(
+        getUnsignedApkPath()
+            .replaceAll("\\.unsigned\\.apk$", ".compressed.apk")
+            .replaceAll("\\.unsigned\\.aab$", ".compressed.aab"));
   }
 
   private String getUnsignedApkPath() {
