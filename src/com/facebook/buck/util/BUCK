@@ -29,7 +29,6 @@ java_library(
 )
 
 IO_SRCS = [
-    "AbstractCharsetProcessListener.java",
     "AbstractDirectoryCleanerArgs.java",
     "AnsiEnvironmentChecking.java",
     "DefaultFilteredDirectoryCopier.java",
