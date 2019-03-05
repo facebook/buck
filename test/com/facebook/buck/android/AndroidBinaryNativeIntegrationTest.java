@@ -373,11 +373,7 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
 
     Symbols unstrippedSyms = syms.getNormalSymbolsFromFile(filesystem.resolve(unstrippedPath));
     assertThat(unstrippedSyms.global, hasItem("get_value"));
-    if (AssumeAndroidPlatform.isGnuStlAvailable()) {
-      assertThat(unstrippedSyms.all, hasItem("supply_value"));
-    } else {
-      assertThat(unstrippedSyms.all, hasItem("ndk_version"));
-    }
+    assertThat(unstrippedSyms.all, hasItem("supply_value"));
   }
 
   @Test

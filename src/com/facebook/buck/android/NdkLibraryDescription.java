@@ -56,7 +56,6 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.Escaper;
-import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.types.Pair;
@@ -233,15 +232,12 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the
       // NDK build.
-      VersionStringComparator versionComparator = new VersionStringComparator();
-      boolean shouldEscapeLdFlags =
-          versionComparator.compare(androidNdk.getNdkVersion(), "18") >= 0;
       String localLdflags =
           Joiner.on(' ')
               .join(
                   escapeForMakefile(
                       projectFilesystem,
-                      shouldEscapeLdFlags,
+                      false,
                       Arg.stringify(nativeLinkableInput.getArgs(), pathResolver)));
 
       // Write the relevant lines to the generated makefile.

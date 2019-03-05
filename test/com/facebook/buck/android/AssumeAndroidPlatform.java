@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.android;
 
-import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeNotNull;
 import static org.junit.Assume.assumeTrue;
@@ -61,28 +60,6 @@ public class AssumeAndroidPlatform {
     VersionStringComparator comparator = new VersionStringComparator();
 
     return comparator.compare(androidNdk.get().getNdkVersion(), "17") < 0;
-  }
-
-  public static void assumeGnuStlIsAvailable() {
-    assumeTrue(isGnuStlAvailable());
-  }
-
-  public static void assumeGnuStlIsNotAvailable() {
-    assumeFalse(isGnuStlAvailable());
-  }
-
-  public static boolean isGnuStlAvailable() {
-    ProjectFilesystem projectFilesystem =
-        TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
-    Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-
-    if (!androidNdk.isPresent()) {
-      return false;
-    }
-
-    VersionStringComparator comparator = new VersionStringComparator();
-
-    return comparator.compare(androidNdk.get().getNdkVersion(), "18") < 0;
   }
 
   public static void assumeUnifiedHeadersAvailable() {

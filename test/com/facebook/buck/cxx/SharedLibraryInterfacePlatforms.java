@@ -45,8 +45,8 @@ public class SharedLibraryInterfacePlatforms {
     }
 
     Path ndkDir = androidNdk.get().getNdkRootPath();
+    NdkCompilerType compilerType = NdkCxxPlatforms.DEFAULT_COMPILER_TYPE;
     String ndkVersion = androidNdk.get().getNdkVersion();
-    NdkCompilerType compilerType = NdkCxxPlatforms.getDefaultCompilerTypeForNdk(ndkVersion);
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
     String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
     String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
@@ -63,7 +63,7 @@ public class SharedLibraryInterfacePlatforms {
             filesystem,
             ndkDir,
             compiler,
-            NdkCxxPlatforms.getDefaultCxxRuntimeForNdk(ndkVersion),
+            NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
             NdkCxxRuntimeType.DYNAMIC,
             AndroidNdkHelper.getDefaultCpuAbis(ndkVersion),
             Platform.detect());
