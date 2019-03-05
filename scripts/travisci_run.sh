@@ -48,7 +48,7 @@ if [ "$CI_ACTION" = "heavy_integration" ]; then
   ./bin/buck test  --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
 fi
 
-if [ "$CI_ACTION" = "android_ndk_15" ] || [ "$CI_ACTION" = "android_ndk_16" ] || [ "$CI_ACTION" = "android_ndk_17" ]; then
+if [ "$CI_ACTION" = "android_ndk_15" ] || [ "$CI_ACTION" = "android_ndk_16" ] || [ "$CI_ACTION" = "android_ndk_17" ] || [ "$CI_ACTION" = "android_ndk_18" ]; then
   ./bin/buck build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
   ./bin/buck test  --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
 fi

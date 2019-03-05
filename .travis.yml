@@ -220,6 +220,38 @@ matrix:
       directories:
         - $HOME/ndk_cache
     env: CI_ACTION=android_ndk_17
+  - os: linux
+    jdk: openjdk8
+    android:
+      components:
+        - tools
+        - platform-tools
+        - build-tools-23.0.2
+        - android-23
+        - addon-google_apis-google-23
+        - android-21
+        - addon-google_apis-google-21
+        - extra-android-support
+    dist: trusty
+    addons:
+      apt:
+        packages:
+          - ant
+          # Travis is on 64bit and there will be a cryptic aapt error w/o these libs.
+          # For native code tests, we need some additional libraries if we are in a 64-bit environment.
+          - libgd2-xpm-dev
+          - libc6:i386
+          - libstdc++6:i386
+          - zlib1g:i386
+            # We rely on -gno-record-gcc-switches which was added in 4.7.
+          - gcc
+          - g++
+    # https://docs.travis-ci.com/user/caching#Things-not-to-cache
+    # https://docs.travis-ci.com/user/caching#Explicitly-disabling-caching
+    cache:
+      directories:
+        - $HOME/ndk_cache
+    env: CI_ACTION=android_ndk_18
 
 # Enable container-based architecture.
 sudo: false
@@ -246,6 +278,10 @@ before_install:
   - if \[ ${TRAVIS_OS_NAME} == "linux" \] && \[ "${CI_ACTION}" == "android_ndk_17" \]; then
       export NDK_HOME="${HOME}/android-ndk-linux" ;
       ./scripts/travisci_unzip_android_ndk.sh android-ndk-r17b ;
+    fi
+  - if \[ ${TRAVIS_OS_NAME} == "linux" \] && \[ "${CI_ACTION}" == "android_ndk_18" \]; then
+      export NDK_HOME="${HOME}/android-ndk-linux" ;
+      ./scripts/travisci_unzip_android_ndk.sh android-ndk-r18b ;
     fi
   # Install go 1.10.x, which generates a different .c file name from cgo than previous versions
   - eval "$(gimme 1.10.1)"
