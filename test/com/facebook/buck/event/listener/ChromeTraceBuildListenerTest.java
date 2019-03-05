@@ -48,6 +48,7 @@ import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
@@ -204,6 +205,36 @@ public class ChromeTraceBuildListenerTest {
         testEvent.getMicroThreadUserTime(),
         Matchers.equalTo(
             TimeUnit.NANOSECONDS.toMicros(FAKE_CLOCK.threadUserNanoTime(testEvent.getThreadId()))));
+  }
+
+  @Test
+  public void testDisabledLeafEvents() throws IOException {
+    ProjectFilesystem projectFilesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
+
+    ChromeTraceBuildListener listener =
+        new ChromeTraceBuildListener(
+            projectFilesystem,
+            invocationInfo,
+            FAKE_CLOCK,
+            Locale.US,
+            TimeZone.getTimeZone("America/Los_Angeles"),
+            ManagementFactory.getThreadMXBean(),
+            chromeTraceConfig(42, false),
+            managerScope);
+    eventBus.register(listener);
+
+    LeafEvents.scope(eventBus, "testing_scope", false).close();
+
+    listener.close();
+    managerScope.close();
+
+    List<ChromeTraceEvent> originalResultList =
+        ObjectMappers.readValue(
+            tmpDir.getRoot().toPath().resolve("buck-out").resolve("log").resolve("build.trace"),
+            new TypeReference<List<ChromeTraceEvent>>() {});
+    List<ChromeTraceEvent> resultListCopy = new ArrayList<>(originalResultList);
+    assertEquals(3, resultListCopy.size());
   }
 
   @Test

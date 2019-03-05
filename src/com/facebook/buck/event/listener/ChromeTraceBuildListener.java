@@ -375,6 +375,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   // step-like things can subscribe to.
   @Subscribe
   public void simpleLeafEventStarted(LeafEvents.SimpleLeafEvent.Started started) {
+    if (!started.isLogToChromeTrace()) {
+      return;
+    }
+
     writeChromeTraceEvent(
         "buck",
         started.getEventName(),
@@ -385,6 +389,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void simpleLeafEventFinished(LeafEvents.SimpleLeafEvent.Finished finished) {
+    if (!finished.isLogToChromeTrace()) {
+      return;
+    }
+
     writeChromeTraceEvent(
         "buck",
         finished.getEventName(),

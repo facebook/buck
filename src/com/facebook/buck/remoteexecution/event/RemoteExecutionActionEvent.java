@@ -65,7 +65,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       BuckEventBus eventBus, State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
     final Started startedEvent = new Started(state, buildTarget, actionDigest);
     eventBus.post(startedEvent);
-    final Scope leftEventScope = LeafEvents.scope(eventBus, state.toString().toLowerCase());
+    final Scope leftEventScope = LeafEvents.scope(eventBus, state.toString().toLowerCase(), false);
     return () -> {
       leftEventScope.close();
       eventBus.post(new Finished(startedEvent));
