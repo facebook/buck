@@ -20,16 +20,14 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.facebook.buck.util.ListeningProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.SimpleProcessListener;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 
 /** A step that compiles Swift sources to a single module. */
 class SwiftCompileStep implements Step {
@@ -63,18 +61,18 @@ class SwiftCompileStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    ListeningProcessExecutor executor = new ListeningProcessExecutor();
     ProcessExecutorParams params = makeProcessExecutorParams();
-    SimpleProcessListener listener = new SimpleProcessListener();
 
     // TODO(markwang): parse the output, print build failure errors, etc.
     LOG.debug("%s", compilerCommand);
-    ListeningProcessExecutor.LaunchedProcess process = executor.launchProcess(params, listener);
-    int result = executor.waitForProcess(process);
+
+    Result processResult = context.getProcessExecutor().launchAndExecute(params);
+
+    int result = processResult.getExitCode();
     if (result != 0) {
-      LOG.error("Error running %s: %s", getDescription(context), listener.getStderr());
+      LOG.error("Error running %s: %s", getDescription(context), processResult.getStderr());
     }
-    return StepExecutionResult.of(result, Optional.of(listener.getStderr()));
+    return StepExecutionResult.of(result, processResult.getStderr());
   }
 
   @Override
