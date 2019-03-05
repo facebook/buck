@@ -39,7 +39,6 @@ IO_SRCS = [
     "ListeningCharsetEncoder.java",
     "NamedTemporaryDirectory.java",
     "PkillProcessManager.java",
-    "SimpleProcessListener.java",
     "TimeFormat.java",
     "UnixUserIdFetcher.java",
     "UserIdFetcher.java",
