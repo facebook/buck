@@ -31,6 +31,7 @@ import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -58,30 +59,54 @@ public class AndroidPackageableCollector {
   private final BuildTarget collectionRoot;
   private final ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex;
   private final ImmutableSet<BuildTarget> resourcesToExclude;
+  private final ImmutableCollection<SourcePath> nativeLibsToExclude;
+  private final ImmutableCollection<NativeLinkable> nativeLinkablesToExclude;
+  private final ImmutableCollection<SourcePath> nativeLibAssetsToExclude;
+  private final ImmutableCollection<NativeLinkable> nativeLinkablesAssetsToExclude;
   private final APKModuleGraph apkModuleGraph;
 
   @VisibleForTesting
   public AndroidPackageableCollector(BuildTarget collectionRoot) {
+    this(collectionRoot, ImmutableSet.of(), new APKModuleGraph(TargetGraph.EMPTY, collectionRoot));
+  }
+
+  public AndroidPackageableCollector(
+      BuildTarget collectionRoot,
+      ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
+      APKModuleGraph apkModuleGraph) {
     this(
         collectionRoot,
+        buildTargetsToExcludeFromDex,
         ImmutableSet.of(),
         ImmutableSet.of(),
-        new APKModuleGraph(TargetGraph.EMPTY, collectionRoot));
+        ImmutableSet.of(),
+        ImmutableSet.of(),
+        ImmutableSet.of(),
+        apkModuleGraph);
   }
 
   /**
    * @param resourcesToExclude Only relevant to {@link AndroidInstrumentationApk} which needs to
    *     remove resources that are already included in the {@link
-   *     AndroidInstrumentationApkDescription.AndroidInstrumentationApkDescriptionArg#apk}
+   *     AndroidInstrumentationApkDescription.AndroidInstrumentationApkDescriptionArg#apk}. The same
+   *     goes for native libs and native linkables, and their asset counterparts.
    */
   public AndroidPackageableCollector(
       BuildTarget collectionRoot,
       ImmutableSet<BuildTarget> buildTargetsToExcludeFromDex,
       ImmutableSet<BuildTarget> resourcesToExclude,
+      ImmutableCollection<SourcePath> nativeLibsToExclude,
+      ImmutableCollection<NativeLinkable> nativeLinkablesToExclude,
+      ImmutableCollection<SourcePath> nativeLibAssetsToExclude,
+      ImmutableCollection<NativeLinkable> nativeLinkableAssetsToExclude,
       APKModuleGraph apkModuleGraph) {
     this.collectionRoot = collectionRoot;
     this.buildTargetsToExcludeFromDex = buildTargetsToExcludeFromDex;
     this.resourcesToExclude = resourcesToExclude;
+    this.nativeLibsToExclude = nativeLibsToExclude;
+    this.nativeLinkablesToExclude = nativeLinkablesToExclude;
+    this.nativeLibAssetsToExclude = nativeLibAssetsToExclude;
+    this.nativeLinkablesAssetsToExclude = nativeLinkableAssetsToExclude;
     this.apkModuleGraph = apkModuleGraph;
     apkModuleGraph
         .getAPKModules()
@@ -146,6 +171,9 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addNativeLibsDirectory(
       BuildTarget owner, SourcePath nativeLibDir) {
+    if (nativeLibsToExclude.contains(nativeLibDir)) {
+      return this;
+    }
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
     if (module.isRootModule()) {
       collectionBuilder.putNativeLibsDirectories(module, nativeLibDir);
@@ -156,6 +184,9 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addNativeLinkable(NativeLinkable nativeLinkable) {
+    if (nativeLinkablesToExclude.contains(nativeLinkable)) {
+      return this;
+    }
     APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkable.getBuildTarget());
     if (module.isRootModule()) {
       collectionBuilder.putNativeLinkables(module, nativeLinkable);
@@ -166,6 +197,9 @@ public class AndroidPackageableCollector {
   }
 
   public AndroidPackageableCollector addNativeLinkableAsset(NativeLinkable nativeLinkable) {
+    if (nativeLinkablesAssetsToExclude.contains(nativeLinkable)) {
+      return this;
+    }
     APKModule module = apkModuleGraph.findModuleForTarget(nativeLinkable.getBuildTarget());
     collectionBuilder.putNativeLinkablesAssets(module, nativeLinkable);
     return this;
@@ -173,6 +207,9 @@ public class AndroidPackageableCollector {
 
   public AndroidPackageableCollector addNativeLibAssetsDirectory(
       BuildTarget owner, SourcePath assetsDir) {
+    if (nativeLibAssetsToExclude.contains(assetsDir)) {
+      return this;
+    }
     // We need to build the native target in order to have the assets available still.
     APKModule module = apkModuleGraph.findModuleForTarget(owner);
     collectionBuilder.putNativeLibAssetsDirectories(module, assetsDir);

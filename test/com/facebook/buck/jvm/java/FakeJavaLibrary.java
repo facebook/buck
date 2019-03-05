@@ -39,7 +39,17 @@ import java.util.Set;
 public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, AndroidPackageable {
 
   private ImmutableSortedSet<SourcePath> srcs = ImmutableSortedSet.of();
+  private ImmutableSortedSet<SourcePath> resources = ImmutableSortedSet.of();
   private Optional<String> mavenCoords = Optional.empty();
+
+  public FakeJavaLibrary(
+      BuildTarget target,
+      ProjectFilesystem filesystem,
+      ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<SourcePath> resources) {
+    super(target, filesystem, deps.toArray(new BuildRule[0]));
+    this.resources = resources;
+  }
 
   public FakeJavaLibrary(
       BuildTarget target, ProjectFilesystem filesystem, ImmutableSortedSet<BuildRule> deps) {
@@ -48,6 +58,14 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   public FakeJavaLibrary(BuildTarget target, ImmutableSortedSet<BuildRule> deps) {
     super(target, deps);
+  }
+
+  public FakeJavaLibrary(
+      BuildTarget target,
+      ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<SourcePath> resources) {
+    super(target, deps);
+    this.resources = resources;
   }
 
   public FakeJavaLibrary(BuildTarget target) {
@@ -104,7 +122,7 @@ public class FakeJavaLibrary extends FakeBuildRule implements JavaLibrary, Andro
 
   @Override
   public ImmutableSortedSet<SourcePath> getResources() {
-    return ImmutableSortedSet.of();
+    return resources;
   }
 
   @Override

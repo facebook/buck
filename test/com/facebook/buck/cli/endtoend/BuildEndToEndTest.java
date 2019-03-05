@@ -18,8 +18,14 @@ package com.facebook.buck.cli.endtoend;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.doctor.BuildLogHelper;
+import com.facebook.buck.doctor.config.BuildLogEntry;
+import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.testutil.PlatformUtils;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
@@ -29,10 +35,13 @@ import com.facebook.buck.testutil.endtoend.Environment;
 import com.facebook.buck.testutil.endtoend.EnvironmentFor;
 import com.facebook.buck.testutil.endtoend.ToggleState;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Test;
@@ -83,6 +92,11 @@ public class BuildEndToEndTest {
   @EnvironmentFor(testNames = {"printsErrorWhenBuckConfigIsMissing"})
   public static EndToEndEnvironment setSimpleEnv() {
     return getBaseEnvironment().addTemplates("cli");
+  }
+
+  @EnvironmentFor(testNames = {"nestedBuildsUseDifferentUUID"})
+  public static EndToEndEnvironment setupNestedBuildsEnv() {
+    return getBaseEnvironment().addTemplates("nested_build");
   }
 
   @Test
@@ -220,5 +234,58 @@ public class BuildEndToEndTest {
       assertThat(result.getStderr(), containsString(line));
     }
     assertThat(result.getStderr(), not(containsString("NoBuckConfigFoundException")));
+  }
+
+  @Test
+  public void nestedBuildsUseDifferentUUID(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
+      throws Throwable {
+    workspace.setup();
+
+    ImmutableList<String> fullBuckCommand =
+        PlatformUtils.getForPlatform().getBuckCommandBuilder().build();
+    String buckCommand = fullBuckCommand.get(fullBuckCommand.size() - 1);
+
+    workspace
+        .runBuckCommand(
+            false,
+            ImmutableMap.of("BUCK_BUILD_ID", "1234-5678"),
+            test.getTemplateSet(),
+            "build",
+            "-c",
+            "user.buck_path=" + buckCommand,
+            "//:query")
+        .assertSuccess();
+
+    ImmutableList<BuildLogEntry> helper =
+        new BuildLogHelper(
+                new DefaultProjectFilesystemFactory()
+                    .createProjectFilesystem(workspace.getDestPath()))
+            .getBuildLogs();
+
+    assertEquals(2, helper.size());
+    Optional<BuildLogEntry> buildCommand =
+        helper
+            .stream()
+            .filter(
+                log -> {
+                  Optional<List<String>> args = log.getCommandArgs();
+                  return args.isPresent()
+                      && args.get().containsAll(ImmutableList.of("build", "//:query"));
+                })
+            .findFirst();
+    Optional<BuildLogEntry> queryCommand =
+        helper
+            .stream()
+            .filter(
+                log -> {
+                  Optional<List<String>> args = log.getCommandArgs();
+                  return args.isPresent()
+                      && args.get().containsAll(ImmutableList.of("query", "//:query"));
+                })
+            .findFirst();
+    Assert.assertTrue("Build command was not found in logs", buildCommand.isPresent());
+    Assert.assertTrue("Query command was not found in logs", queryCommand.isPresent());
+    assertEquals(Optional.of(new BuildId("1234-5678")), buildCommand.get().getBuildId());
+    Assert.assertNotEquals(Optional.of(new BuildId("1234-5678")), queryCommand.get().getBuildId());
   }
 }

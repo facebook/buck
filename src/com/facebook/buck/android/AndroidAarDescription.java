@@ -132,10 +132,7 @@ public class AndroidAarDescription
     /* assemble dirs */
     AndroidPackageableCollector collector =
         new AndroidPackageableCollector(
-            buildTarget,
-            /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
-            /* resourcesToExclude */ ImmutableSet.of(),
-            apkModuleGraph);
+            buildTarget, /* buildTargetsToExcludeFromDex */ ImmutableSet.of(), apkModuleGraph);
     collector.addPackageables(
         AndroidPackageableCollector.getPackageableRules(originalBuildRuleParams.getBuildDeps()),
         graphBuilder);

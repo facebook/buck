@@ -1,0 +1,5 @@
+genrule(
+    name = "query",
+    out = "test.out",
+    cmd = "{buck} query //:query > $OUT".format(buck = read_config("user", "buck_path")),
+)

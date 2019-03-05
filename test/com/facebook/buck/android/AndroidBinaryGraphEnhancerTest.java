@@ -165,6 +165,10 @@ public class AndroidBinaryGraphEnhancerTest {
             DexSplitMode.NO_SPLIT,
             /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
             /* resourcesToExclude */ ImmutableSet.of(),
+            /* nativeLibsToExclude */ ImmutableSet.of(),
+            /* nativeLinkablesToExclude */ ImmutableSet.of(),
+            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
+            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* noAutoVersionResources */ false,
@@ -220,7 +224,6 @@ public class AndroidBinaryGraphEnhancerTest {
         new AndroidPackageableCollector(
                 /* collectionRoot */ apkTarget,
                 /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
-                /* resourcesToExclude */ ImmutableSet.of(),
                 new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
             .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
@@ -350,6 +353,10 @@ public class AndroidBinaryGraphEnhancerTest {
             DexSplitMode.NO_SPLIT,
             /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
             /* resourcesToExclude */ ImmutableSet.of(),
+            /* nativeLibsToExclude */ ImmutableSet.of(),
+            /* nativeLinkablesToExclude */ ImmutableSet.of(),
+            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
+            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* noAutoVersionResources */ false,
@@ -405,7 +412,6 @@ public class AndroidBinaryGraphEnhancerTest {
         new AndroidPackageableCollector(
                 /* collectionRoot */ apkTarget,
                 /* buildTargetsToExcludeFromDex */ ImmutableSet.of(),
-                /* resourcesToExclude */ ImmutableSet.of(),
                 new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
             .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
@@ -557,6 +563,10 @@ public class AndroidBinaryGraphEnhancerTest {
             DexSplitMode.NO_SPLIT,
             buildRulesToExcludeFromDex,
             /* resourcesToExclude */ ImmutableSet.of(),
+            /* nativeLibsToExclude */ ImmutableSet.of(),
+            /* nativeLinkablesToExclude */ ImmutableSet.of(),
+            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
+            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* noAutoVersionResources */ false,
@@ -612,7 +622,6 @@ public class AndroidBinaryGraphEnhancerTest {
         new AndroidPackageableCollector(
                 /* collectionRoot */ apkTarget,
                 ImmutableSet.of(javaDep2BuildTarget),
-                /* resourcesToExclude */ ImmutableSet.of(),
                 new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty()))
             .addClasspathEntry(((HasJavaClassHashes) javaDep1), FakeSourcePath.of("ignored"))
             .addClasspathEntry(((HasJavaClassHashes) javaDep2), FakeSourcePath.of("ignored"))
@@ -706,6 +715,10 @@ public class AndroidBinaryGraphEnhancerTest {
             DexSplitMode.NO_SPLIT,
             /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
             /* resourcesToExclude */ ImmutableSet.of(),
+            /* nativeLibsToExclude */ ImmutableSet.of(),
+            /* nativeLinkablesToExclude */ ImmutableSet.of(),
+            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
+            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* noAutoVersionResources */ false,
@@ -841,6 +854,10 @@ public class AndroidBinaryGraphEnhancerTest {
             DexSplitMode.NO_SPLIT,
             /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
             /* resourcesToExclude */ ImmutableSet.of(),
+            /* nativeLibsToExclude */ ImmutableSet.of(),
+            /* nativeLinkablesToExclude */ ImmutableSet.of(),
+            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
+            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* noAutoVersionResources */ false,
@@ -919,6 +936,10 @@ public class AndroidBinaryGraphEnhancerTest {
             DexSplitMode.NO_SPLIT,
             /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
             /* resourcesToExclude */ ImmutableSet.of(),
+            /* nativeLibsToExclude */ ImmutableSet.of(),
+            /* nativeLinkablesToExclude */ ImmutableSet.of(),
+            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
+            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* noAutoVersionResources */ false,
@@ -1026,6 +1047,10 @@ public class AndroidBinaryGraphEnhancerTest {
             DexSplitMode.NO_SPLIT,
             /* buildRulesToExcludeFromDex */ ImmutableSet.of(),
             /* resourcesToExclude */ ImmutableSet.of(),
+            /* nativeLibsToExclude */ ImmutableSet.of(),
+            /* nativeLinkablesToExclude */ ImmutableSet.of(),
+            /* nativeLibAssetsToExclude */ ImmutableSet.of(),
+            /* nativeLinkableAssetsToExclude */ ImmutableSet.of(),
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* noAutoVersionResources */ false,

@@ -60,9 +60,7 @@ public class AndroidBinaryFilesInfoTest {
     APKModuleGraph apkModuleGraph =
         new APKModuleGraph(TargetGraph.EMPTY, apkTarget, Optional.empty());
     AndroidPackageableCollection collection =
-        new AndroidPackageableCollector(
-                apkTarget, ImmutableSet.of(), ImmutableSet.of(), apkModuleGraph)
-            .build();
+        new AndroidPackageableCollector(apkTarget, ImmutableSet.of(), apkModuleGraph).build();
 
     preDexMerge = new FakePreDexMerge(apkTarget, apkModuleGraph);
     preDexMerge.dexInfo =

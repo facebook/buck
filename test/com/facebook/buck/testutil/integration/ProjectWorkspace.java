@@ -459,8 +459,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
         new ExecutableFinder(Platform.detect())
             .getOptionalExecutable(Paths.get("watchman"), EnvVariablesProvider.getSystemEnv())
             .isPresent());
+
+    ImmutableMap<String, String> clientEnv = ImmutableMap.copyOf((Map) context.getEnv());
     return runBuckCommandWithEnvironmentOverridesAndContext(
-        repoRoot, Optional.of(context), ImmutableMap.of(), stderr, args);
+        repoRoot, Optional.of(context), clientEnv, stderr, args);
   }
 
   public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(

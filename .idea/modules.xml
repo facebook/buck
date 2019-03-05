@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/third-party/java/aosp/aosp.iml" filepath="$PROJECT_DIR$/third-party/java/aosp/aosp.iml" />
       <module fileurl="file://$PROJECT_DIR$/buck.iml" filepath="$PROJECT_DIR$/buck.iml" />
       <module fileurl="file://$PROJECT_DIR$/tools/consistency_checker/consistency_checker.iml" filepath="$PROJECT_DIR$/tools/consistency_checker/consistency_checker.iml" />
       <module fileurl="file://$PROJECT_DIR$/tools/documentation_generator/documentation_generator.iml" filepath="$PROJECT_DIR$/tools/documentation_generator/documentation_generator.iml" />

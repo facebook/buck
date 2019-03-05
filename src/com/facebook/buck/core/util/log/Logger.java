@@ -242,16 +242,6 @@ public class Logger {
   }
 
   /**
-   * Logs given message at given level.
-   *
-   * @param level level
-   * @param message message to log
-   */
-  public void logWithLevel(Level level, String message) {
-    logger.log(level, message);
-  }
-
-  /**
    * Logs a message at WARN level. <br>
    * Usage example:
    *

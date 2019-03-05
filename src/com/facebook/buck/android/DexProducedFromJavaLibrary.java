@@ -213,7 +213,8 @@ public class DexProducedFromJavaLibrary extends AbstractBuildRuleWithDeclaredAnd
               dexTool.equals(DxStep.D8),
               desugarDeps != null
                   ? getAbsolutePaths(desugarDeps, context.getSourcePathResolver())
-                  : null);
+                  : null,
+              Optional.empty());
       steps.add(dx);
 
       // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making

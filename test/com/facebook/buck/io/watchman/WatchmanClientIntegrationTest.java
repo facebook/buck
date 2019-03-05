@@ -23,7 +23,7 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.SimpleProcessListener;
+import com.facebook.buck.util.ProcessListeners.CapturingListener;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -106,7 +106,7 @@ public class WatchmanClientIntegrationTest {
             .build();
     executor = new ListeningProcessExecutor();
 
-    watchmanProcess = executor.launchProcess(params, new SimpleProcessListener());
+    watchmanProcess = executor.launchProcess(params, new CapturingListener());
 
     waitForWatchman();
   }

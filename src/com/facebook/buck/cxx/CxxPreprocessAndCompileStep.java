@@ -38,6 +38,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -351,14 +352,22 @@ class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutor.Result result = executeCompilation(context);
     int exitCode = result.getExitCode();
 
-    // If the compilation completed successfully and we didn't effect debug-info normalization
-    // through #line directive modification, perform the in-place update of the compilation per
-    // above.  This locates the relevant debug section and swaps out the expanded actual
-    // compilation directory with the one we really want.
-    if (exitCode == 0 && shouldSanitizeOutputBinary()) {
+    if (exitCode == 0) {
       Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
-      sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
-      FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
+
+      // Guarantee that the output file exists
+      if (!Files.exists(path)) {
+        LOG.warn("Execution has exitCode 0 but output file does not exist: %s", path);
+      }
+
+      // If the compilation completed successfully and we didn't effect debug-info normalization
+      // through #line directive modification, perform the in-place update of the compilation per
+      // above.  This locates the relevant debug section and swaps out the expanded actual
+      // compilation directory with the one we really want.
+      if (shouldSanitizeOutputBinary()) {
+        sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
+        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
+      }
     }
 
     if (exitCode != 0) {
