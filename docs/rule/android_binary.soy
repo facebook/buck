@@ -314,6 +314,19 @@ use_split_dex = True
 {/call}
 
 {call buck.arg}
+  {param name : 'application_module_configs' /}
+  {param default : '[]' /}
+  {param desc}
+  <p>
+  A map of module names to lists of targets, where the targets should <em>seed</em> the corresponding module. The seed
+  targets and their exclusive dependencies are packaged into the APK in separate files to allow 
+  them to be loaded independently.
+  </p>
+
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name : 'linear_alloc_hard_limit' /}
   {param default : '4194304' /}
   {param desc}
