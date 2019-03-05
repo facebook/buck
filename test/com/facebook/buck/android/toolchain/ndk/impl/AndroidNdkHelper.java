@@ -16,8 +16,6 @@
 
 package com.facebook.buck.android.toolchain.ndk.impl;
 
-import static com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms.getDefaultClangVersionForNdk;
-import static com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms.getNdkMajorVersion;
 import static org.junit.Assert.assertFalse;
 
 import com.facebook.buck.android.AndroidBuckConfig;
@@ -97,15 +95,10 @@ public class AndroidNdkHelper {
     Path ndkPath = androidNdk.get().getNdkRootPath();
     String ndkVersion = AndroidNdkResolver.findNdkVersionFromDirectory(ndkPath).get();
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
-    String compilerVersion = gccVersion;
-    NdkCompilerType defaultCompilerType = NdkCxxPlatforms.DEFAULT_COMPILER_TYPE;
-    NdkCxxRuntime defaultCxxRuntime = NdkCxxPlatforms.DEFAULT_CXX_RUNTIME;
-    // Starting from Android NDK 18 there is only Clang and LLVM runtime.
-    if (getNdkMajorVersion(ndkVersion) >= 18) {
-      defaultCompilerType = NdkCompilerType.CLANG;
-      defaultCxxRuntime = NdkCxxRuntime.LIBCXX;
-      compilerVersion = getDefaultClangVersionForNdk(ndkVersion);
-    }
+    String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
+    NdkCompilerType compilerType = NdkCxxPlatforms.getDefaultCompilerTypeForNdk(ndkVersion);
+    NdkCxxRuntime cxxRuntime = NdkCxxPlatforms.getDefaultCxxRuntimeForNdk(ndkVersion);
+    String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
 
     ImmutableCollection<NdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
@@ -114,11 +107,11 @@ public class AndroidNdkHelper {
                 filesystem,
                 ndkPath,
                 NdkCxxPlatformCompiler.builder()
-                    .setType(defaultCompilerType)
+                    .setType(compilerType)
                     .setVersion(compilerVersion)
                     .setGccVersion(gccVersion)
                     .build(),
-                defaultCxxRuntime,
+                cxxRuntime,
                 NdkCxxRuntimeType.DYNAMIC,
                 getDefaultCpuAbis(ndkVersion),
                 Platform.detect())
