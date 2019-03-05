@@ -808,7 +808,7 @@ public class AndroidBinaryGraphEnhancer {
         apkModuleGraph.toOutgoingEdgesMap();
     APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
 
-    ImmutableSortedSet<SourcePath> additionalJarsForProguard =
+    ImmutableSortedSet<SourcePath> additionalJarsForProguardandDesugar =
         rulesToExcludeFromDex
             .stream()
             .flatMap((javaLibrary) -> javaLibrary.getImmediateClasspaths().stream())
@@ -828,7 +828,7 @@ public class AndroidBinaryGraphEnhancer {
         new NonPreDexedDexBuildable(
             androidPlatformTarget,
             ruleFinder,
-            additionalJarsForProguard,
+            additionalJarsForProguardandDesugar,
             apkModuleMap,
             classpathEntriesToDexSourcePaths,
             dexSplitMode,
