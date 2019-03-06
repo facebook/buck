@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.proto.BuckInfo;
+import com.facebook.buck.remoteexecution.proto.CasClientInfo;
 import com.facebook.buck.remoteexecution.proto.CreatorInfo;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -71,11 +72,13 @@ public class MetadataProviderFactory {
                 .setClientType(DEFAULT_CLIENT_TYPE)
                 .setUsername(username)
                 .build();
+        CasClientInfo casClientInfo = CasClientInfo.newBuilder().setName("buck").build();
         builder =
             RemoteExecutionMetadata.newBuilder()
                 .setReSessionId(reSessionID)
                 .setBuckInfo(buckInfo)
-                .setCreatorInfo(creatorInfo);
+                .setCreatorInfo(creatorInfo)
+                .setCasClientInfo(casClientInfo);
         metadata = builder.build();
       }
 

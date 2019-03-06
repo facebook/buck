@@ -20,6 +20,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.event.CasBlobDownloadEvent;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.Scope;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.Futures;
@@ -37,9 +38,12 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   private final BuckEventBus buckEventBus;
 
   public GrpcAsyncBlobFetcher(
-      String instanceName, ByteStreamStub byteStreamStub, BuckEventBus buckEventBus) {
+      String instanceName,
+      ByteStreamStub byteStreamStub,
+      BuckEventBus buckEventBus,
+      RemoteExecutionMetadata metadata) {
     this.instanceName = instanceName;
-    this.byteStreamStub = byteStreamStub;
+    this.byteStreamStub = GrpcHeaderHandler.wrapStubToSendMetadata(byteStreamStub, metadata);
     this.buckEventBus = buckEventBus;
   }
 

@@ -49,6 +49,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   private final GrpcRemoteExecutionServiceClient executionService;
   private final ManagedChannel executionEngineChannel;
   private final ManagedChannel casChannel;
+  private final MetadataProvider metadataProvider;
 
   /** A parsed read resource path. */
   @Value.Immutable
@@ -67,6 +68,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       BuckEventBus buckEventBus) {
     this.executionEngineChannel = executionEngineChannel;
     this.casChannel = casChannel;
+    this.metadataProvider = metadataProvider;
 
     ByteStreamStub byteStreamStub = ByteStreamGrpc.newStub(casChannel);
     this.storage =
@@ -156,6 +158,6 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
       Protocol protocol,
       BuckEventBus buckEventBus) {
     return new GrpcContentAddressableStorageClient(
-        storageStub, byteStreamStub, instanceName, protocol, buckEventBus);
+        storageStub, byteStreamStub, instanceName, protocol, buckEventBus, metadataProvider.get());
   }
 }

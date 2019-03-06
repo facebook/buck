@@ -26,6 +26,7 @@ import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.event.CasBlobUploadEvent;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.MoreThrowables;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
@@ -46,8 +47,10 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   private final BuckEventBus buckEventBus;
 
   public GrpcCasBlobUploader(
-      ContentAddressableStorageFutureStub storageStub, BuckEventBus buckEventBus) {
-    this.storageStub = storageStub;
+      ContentAddressableStorageFutureStub storageStub,
+      BuckEventBus buckEventBus,
+      RemoteExecutionMetadata metadata) {
+    this.storageStub = GrpcHeaderHandler.wrapStubToSendMetadata(storageStub, metadata);
     this.buckEventBus = buckEventBus;
   }
 

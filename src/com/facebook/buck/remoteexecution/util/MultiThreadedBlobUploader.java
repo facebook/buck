@@ -16,6 +16,8 @@
 
 package com.facebook.buck.remoteexecution.util;
 
+import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
+
 import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
@@ -121,18 +123,19 @@ public class MultiThreadedBlobUploader {
                       containedHashes.add(digest.getHash());
                       return null;
                     },
-                    MoreExecutors.directExecutor());
+                    directExecutor());
               });
       Futures.addCallback(
           resultFuture,
           MoreFutures.finallyCallback(
               () -> {
                 pendingUploads.remove(digest.getHash());
-              }));
+              }),
+          directExecutor());
       futures.add(resultFuture);
       uploadService.submit(this::processUploads);
     }
-    return Futures.whenAllSucceed(futures.build()).call(() -> null, MoreExecutors.directExecutor());
+    return Futures.whenAllSucceed(futures.build()).call(() -> null, directExecutor());
   }
 
   private void processMissing() {

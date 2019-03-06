@@ -24,6 +24,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -44,17 +45,19 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
       ByteStreamStub byteStreamStub,
       String instanceName,
       Protocol protocol,
-      BuckEventBus buckEventBus) {
+      BuckEventBus buckEventBus,
+      RemoteExecutionMetadata metadata) {
     this.uploader =
         new MultiThreadedBlobUploader(
             1000,
             10 * 1024 * 1024,
             MostExecutors.newMultiThreadExecutor("blob-uploader", 4),
-            new GrpcCasBlobUploader(storageStub, buckEventBus));
+            new GrpcCasBlobUploader(storageStub, buckEventBus, metadata));
 
     this.outputsMaterializer =
         new OutputsMaterializer(
-            new GrpcAsyncBlobFetcher(instanceName, byteStreamStub, buckEventBus), protocol);
+            new GrpcAsyncBlobFetcher(instanceName, byteStreamStub, buckEventBus, metadata),
+            protocol);
   }
 
   @Override
