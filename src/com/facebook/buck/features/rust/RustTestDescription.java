@@ -106,6 +106,7 @@ public class RustTestDescription
                         rustBuckConfig,
                         rustPlatform,
                         args.getCrate(),
+                        args.getEdition(),
                         args.getFeatures(),
                         Stream.of(
                                 args.isFramework() ? Stream.of("--test") : Stream.<String>empty(),
@@ -164,6 +165,8 @@ public class RustTestDescription
   interface AbstractRustTestDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasDefaultPlatform {
     ImmutableSet<String> getContacts();
+
+    Optional<String> getEdition();
 
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();

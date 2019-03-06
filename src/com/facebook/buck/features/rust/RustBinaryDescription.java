@@ -96,6 +96,7 @@ public class RustBinaryDescription
         rustBuckConfig,
         rustPlatform,
         args.getCrate(),
+        args.getEdition(),
         args.getFeatures(),
         Stream.of(rustPlatform.getRustBinaryFlags().stream(), args.getRustcFlags().stream())
             .flatMap(x -> x)
@@ -178,6 +179,8 @@ public class RustBinaryDescription
   @Value.Immutable
   interface AbstractRustBinaryDescriptionArg
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
+    Optional<String> getEdition();
+
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
 

@@ -212,6 +212,28 @@ public class RustLibraryIntegrationTest {
   }
 
   @Test
+  public void libraryRust2015() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace.runBuckBuild("//:rust2015#check").assertSuccess();
+  }
+
+  @Test
+  public void libraryRust2018() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace.runBuckBuild("//:rust2018#check").assertSuccess();
+  }
+
+  @Test
   public void binaryWithLibrary() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_library", tmp);

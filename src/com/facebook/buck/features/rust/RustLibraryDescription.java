@@ -103,6 +103,7 @@ public class RustLibraryDescription
       Iterable<Arg> linkerInputs,
       String crate,
       CrateType crateType,
+      Optional<String> edition,
       LinkableDepType depType,
       RustLibraryDescriptionArg args,
       Iterable<BuildRule> deps) {
@@ -130,6 +131,7 @@ public class RustLibraryDescription
         linkerInputs,
         crate,
         crateType,
+        edition,
         depType,
         rootModuleAndSources.getSecond(),
         rootModuleAndSources.getFirst(),
@@ -209,6 +211,7 @@ public class RustLibraryDescription
           /* linkerInputs */ ImmutableList.of(),
           crate,
           crateType,
+          args.getEdition(),
           depType,
           args,
           allDeps.get(graphBuilder, platform.getCxxPlatform()));
@@ -281,6 +284,7 @@ public class RustLibraryDescription
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
                 crateType,
+                args.getEdition(),
                 depType,
                 args,
                 allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()));
@@ -320,7 +324,8 @@ public class RustLibraryDescription
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
                 CrateType.DYLIB,
-                Linker.LinkableDepType.SHARED,
+                args.getEdition(),
+                LinkableDepType.SHARED,
                 args,
                 allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()));
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
@@ -413,6 +418,7 @@ public class RustLibraryDescription
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
                 crateType,
+                args.getEdition(),
                 depType,
                 args,
                 allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()));
@@ -451,7 +457,8 @@ public class RustLibraryDescription
                 /* linkerInputs */ ImmutableList.of(),
                 crate,
                 CrateType.CDYLIB,
-                Linker.LinkableDepType.SHARED,
+                args.getEdition(),
+                LinkableDepType.SHARED,
                 args,
                 allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()));
         libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
@@ -493,6 +500,8 @@ public class RustLibraryDescription
       extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs, HasTests, HasDefaultPlatform {
     @Value.NaturalOrder
     ImmutableSortedSet<String> getFeatures();
+
+    Optional<String> getEdition();
 
     List<String> getRustcFlags();
 

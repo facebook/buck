@@ -104,6 +104,7 @@ public class RustCompileUtils {
       ImmutableList<String> extraLinkerFlags,
       Iterable<Arg> linkerInputs,
       CrateType crateType,
+      Optional<String> edition,
       LinkableDepType depType,
       boolean rpath,
       ImmutableSortedSet<SourcePath> sources,
@@ -163,6 +164,10 @@ public class RustCompileUtils {
         .flatMap(x -> x)
         .map(StringArg::of)
         .forEach(args::add);
+
+    if (edition.isPresent()) {
+      args.add(StringArg.of(String.format("--edition=%s", edition.get())));
+    }
 
     if (incremental.isPresent()) {
       Path path =
@@ -284,6 +289,7 @@ public class RustCompileUtils {
       Iterable<Arg> linkerInputs,
       String crateName,
       CrateType crateType,
+      Optional<String> edition,
       LinkableDepType depType,
       ImmutableSortedSet<SourcePath> sources,
       SourcePath rootModule,
@@ -308,6 +314,7 @@ public class RustCompileUtils {
                     extraLinkerFlags,
                     linkerInputs,
                     crateType,
+                    edition,
                     depType,
                     true,
                     sources,
@@ -374,6 +381,7 @@ public class RustCompileUtils {
       RustBuckConfig rustBuckConfig,
       RustPlatform rustPlatform,
       Optional<String> crateName,
+      Optional<String> edition,
       ImmutableSortedSet<String> features,
       Iterator<String> rustcFlags,
       Iterator<String> linkerFlags,
@@ -494,6 +502,7 @@ public class RustCompileUtils {
                         linkerArgs.build(),
                         /* linkerInputs */ ImmutableList.of(),
                         crateType,
+                        edition,
                         linkStyle,
                         rpath,
                         rootModuleAndSources.getSecond(),

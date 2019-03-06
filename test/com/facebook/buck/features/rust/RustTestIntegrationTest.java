@@ -125,4 +125,26 @@ public class RustTestIntegrationTest {
 
     workspace.runBuckCommand("test", "//:with_crate_root").assertSuccess();
   }
+
+  @Test
+  public void simpleTestEdition2015() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace.runBuckCommand("test", "//:test2015").assertSuccess();
+  }
+
+  @Test
+  public void simpleTestEdition2018() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace.runBuckCommand("test", "//:test2018").assertSuccess();
+  }
 }

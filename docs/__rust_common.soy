@@ -78,6 +78,20 @@ to allow for extra warnings, etc.
 {/template}
 
 /***/
+{template .edition_arg}
+{call buck.arg}
+  {param name : 'edition' /}
+  {param desc}
+  <p>
+    Set the language edition to be used for this rule. Can be set to any edition the
+    compiler supports (<code>2018</code> right now). If unset it uses the compiler's default
+    (<code>2015</code>).
+  </p>
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .rustc_flags_arg}
 {call buck.arg}
   {param name : 'rustc_flags' /}

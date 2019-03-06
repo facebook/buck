@@ -266,6 +266,48 @@ public class RustBinaryIntegrationTest {
   }
 
   @Test
+  public void simpleBinaryEdition2015() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace.runBuckBuild("//:bin2015").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin2015");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace.resolve("buck-out/gen/bin2015#binary,default/bin2015").toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("Common called"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void simpleBinaryEdition2018() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "editions", tmp);
+    workspace.setUp();
+
+    RustAssumptions.assumeVersion(workspace, "1.31");
+
+    workspace.runBuckBuild("//:bin2018").assertSuccess();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:bin2018");
+    workspace.resetBuildLogFile();
+
+    ProcessExecutor.Result result =
+        workspace.runCommand(
+            workspace.resolve("buck-out/gen/bin2018#binary,default/bin2018").toString());
+    assertThat(result.getExitCode(), Matchers.equalTo(0));
+    assertThat(result.getStdout().get(), containsString("Common called"));
+    assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
   public void binaryWithGeneratedSource() throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_generated", tmp);

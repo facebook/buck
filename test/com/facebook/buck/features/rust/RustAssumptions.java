@@ -68,4 +68,42 @@ abstract class RustAssumptions {
     Result res = workspace.runCommand(rustc.get(0), "-Zhelp");
     assumeTrue("Requires nightly Rust", res.getExitCode() == 0);
   }
+
+  public static void assumeVersion(ProjectWorkspace workspace, String version)
+      throws IOException, InterruptedException {
+    BuildRuleResolver resolver = new TestActionGraphBuilder();
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+    RustPlatform rustPlatform =
+        RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
+    ImmutableList<String> rustc =
+        rustPlatform.getRustCompiler().resolve(resolver).getCommandPrefix(pathResolver);
+
+    String[] versionParts = version.split("\\.");
+
+    Result res = workspace.runCommand(rustc.get(0), "--version");
+    String stdout = res.getStdout().get();
+
+    // rustc 1.32.0 (9fda7c223 2019-01-16)
+    String[] rustOut = stdout.split(" +", 3);
+    assumeTrue(
+        "rustc --version produced wrong output", rustOut.length == 3 && rustOut[0].equals("rustc"));
+
+    String[] rustVersionParts = rustOut[1].split("\\.");
+
+    for (int i = 0; i < versionParts.length && i < rustVersionParts.length; i++) {
+      Integer rustcVer = Integer.parseInt(rustVersionParts[i]);
+      Integer wantVer = Integer.parseInt(versionParts[i]);
+
+      assumeTrue(
+          String.format("rustc version %s doesn't meet %s", rustOut[1], version),
+          rustcVer >= wantVer);
+
+      // No need to check the less significant parts if this one is larger than required.
+      if (rustcVer > wantVer) {
+        break;
+      }
+    }
+  }
 }
