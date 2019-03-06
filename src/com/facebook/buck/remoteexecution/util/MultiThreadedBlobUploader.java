@@ -56,17 +56,6 @@ public class MultiThreadedBlobUploader {
   private final int missingCheckLimit;
   private final int uploadSizeLimit;
 
-  public MultiThreadedBlobUploader(
-      int missingCheckLimit,
-      int uploadSizeLimit,
-      ExecutorService uploadService,
-      CasBlobUploader delegate) {
-    this.missingCheckLimit = missingCheckLimit;
-    this.uploadSizeLimit = uploadSizeLimit;
-    this.uploadService = uploadService;
-    this.asyncBlobUploader = delegate;
-  }
-
   private final ConcurrentHashMap<String, ListenableFuture<Void>> pendingUploads =
       new ConcurrentHashMap<>();
 
@@ -89,6 +78,17 @@ public class MultiThreadedBlobUploader {
     String getHash() {
       return uploadData.getHash();
     }
+  }
+
+  public MultiThreadedBlobUploader(
+      int missingCheckLimit,
+      int uploadSizeLimit,
+      ExecutorService uploadService,
+      CasBlobUploader delegate) {
+    this.missingCheckLimit = missingCheckLimit;
+    this.uploadSizeLimit = uploadSizeLimit;
+    this.uploadService = uploadService;
+    this.asyncBlobUploader = delegate;
   }
 
   /** Uploads missing items to the CAS. */
@@ -114,13 +114,19 @@ public class MultiThreadedBlobUploader {
                 SettableFuture<Void> future = SettableFuture.create();
                 waitingMissingCheck.add(
                     new PendingUpload(new UploadData(digest, entry.getValue()), future));
-                return future;
+                return Futures.transform(
+                    future,
+                    ignore -> {
+                      // If the upload was successful short circuit for future requests.
+                      containedHashes.add(digest.getHash());
+                      return null;
+                    },
+                    MoreExecutors.directExecutor());
               });
       Futures.addCallback(
           resultFuture,
           MoreFutures.finallyCallback(
               () -> {
-                containedHashes.add(digest.getHash());
                 pendingUploads.remove(digest.getHash());
               }));
       futures.add(resultFuture);
