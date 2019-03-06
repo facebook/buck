@@ -110,8 +110,9 @@ def _get_java_version(java_path):
     java_version = check_output(
         [java_path, "-version"], stderr=subprocess.STDOUT
     ).decode("utf-8")
-    # extract java version from a string like 'java version "1.8.0_144"'
-    match = re.search('java version "(?P<version>.+)"', java_version)
+    # extract java version from a string like 'java version "1.8.0_144"' or
+    # 'openjdk version "11.0.1" 2018-10-16'
+    match = re.search('(java|openjdk) version "(?P<version>.+)"', java_version)
     if not match:
         return None
     pieces = match.group("version").split(".")
