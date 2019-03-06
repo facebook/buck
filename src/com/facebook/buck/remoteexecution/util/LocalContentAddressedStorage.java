@@ -22,7 +22,7 @@ import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
-import com.facebook.buck.remoteexecution.ContentAddressedStorage;
+import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -63,7 +63,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /** A simple, on-disk content addressed storage. */
-public class LocalContentAddressedStorage implements ContentAddressedStorage {
+public class LocalContentAddressedStorage implements ContentAddressedStorageClient {
   private final Path cacheDir;
   private final StripedKeyedLocker<String> fileLock = new StripedKeyedLocker<>(8);
 

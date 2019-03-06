@@ -33,8 +33,8 @@ import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** A simple ByteStream impl backed by a {@link LocalContentAddressedStorage}. */
-class LocalBackedByteStreamImpl extends ByteStreamImplBase {
+/** A simple ByteStream server backed by a {@link LocalContentAddressedStorage}. */
+class LocalBackedByteStreamServer extends ByteStreamImplBase {
   /**
    * Matches blob patterns as specified by the remote execution api:
    * {instance_name}/blobs/{hash}/{size}
@@ -46,7 +46,7 @@ class LocalBackedByteStreamImpl extends ByteStreamImplBase {
 
   private final LocalContentAddressedStorage storage;
 
-  LocalBackedByteStreamImpl(LocalContentAddressedStorage storage) {
+  LocalBackedByteStreamServer(LocalContentAddressedStorage storage) {
     this.storage = storage;
   }
 

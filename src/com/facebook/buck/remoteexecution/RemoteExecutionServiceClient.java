@@ -25,8 +25,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-/** Interface for a remote execution service. Used by RemoteExecution to build rules. */
-public interface RemoteExecutionService {
+/**
+ * Interface for a client of the remote execution service. Used by RemoteExecution to build rules.
+ */
+public interface RemoteExecutionServiceClient {
   /** Represents the result of remote execution. */
   interface ExecutionResult {
     List<OutputDirectory> getOutputDirectories();

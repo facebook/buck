@@ -18,7 +18,7 @@ package com.facebook.buck.remoteexecution.grpc;
 
 import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddressableStorageFutureStub;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.remoteexecution.ContentAddressedStorage;
+import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -34,12 +34,12 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-/** Implementation of CAS using GRPC. */
-public class GrpcContentAddressableStorage implements ContentAddressedStorage {
+/** Implementation of a CAS client using GRPC. */
+public class GrpcContentAddressableStorageClient implements ContentAddressedStorageClient {
   private final MultiThreadedBlobUploader uploader;
   private final OutputsMaterializer outputsMaterializer;
 
-  public GrpcContentAddressableStorage(
+  public GrpcContentAddressableStorageClient(
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       String instanceName,

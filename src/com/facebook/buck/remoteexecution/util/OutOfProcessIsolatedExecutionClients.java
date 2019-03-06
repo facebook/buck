@@ -19,10 +19,10 @@ package com.facebook.buck.remoteexecution.util;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
-import com.facebook.buck.remoteexecution.ContentAddressedStorage;
+import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
-import com.facebook.buck.remoteexecution.RemoteExecutionService;
-import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Action;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Command;
@@ -46,7 +46,7 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
   private final Protocol protocol;
   private final NamedTemporaryDirectory workDir;
   private final LocalContentAddressedStorage storage;
-  private final RemoteExecutionService executionService;
+  private final RemoteExecutionServiceClient executionService;
 
   /**
    * Returns a RemoteExecution implementation that uses a local CAS and a separate local temporary
@@ -136,12 +136,12 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
   }
 
   @Override
-  public RemoteExecutionService getRemoteExecutionService() {
+  public RemoteExecutionServiceClient getRemoteExecutionService() {
     return executionService;
   }
 
   @Override
-  public ContentAddressedStorage getContentAddressedStorage() {
+  public ContentAddressedStorageClient getContentAddressedStorage() {
     return storage;
   }
 

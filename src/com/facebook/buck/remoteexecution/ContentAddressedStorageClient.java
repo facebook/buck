@@ -25,8 +25,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-/** This is a simple ContentAddressedStorage interface used for remote execution. */
-public interface ContentAddressedStorage {
+/** This is a simple ContentAddressedStorageClient interface used for remote execution. */
+public interface ContentAddressedStorageClient {
 
   ListenableFuture<Void> addMissing(ImmutableMap<Digest, UploadDataSupplier> data)
       throws IOException;

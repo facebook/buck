@@ -54,21 +54,21 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 /** A really simple implementation of remote execution (and CAS). Used for testing/debugging. */
-public class GrpcRemoteExecutionServiceImpl {
+public class GrpcRemoteExecutionServiceServer {
   private final LocalContentAddressedStorage storage;
   private final Path workDir;
 
   // Services
-  private final LocalBackedCasImpl casImpl;
-  private final LocalBackedByteStreamImpl byteStreamImpl;
+  private final LocalBackedCasServer casImpl;
+  private final LocalBackedByteStreamServer byteStreamImpl;
   private final OperationsFutureImpl operationsFutureImpl;
   private final ExecutionImpl executionImpl;
 
-  public GrpcRemoteExecutionServiceImpl(LocalContentAddressedStorage storage, Path workDir) {
+  public GrpcRemoteExecutionServiceServer(LocalContentAddressedStorage storage, Path workDir) {
     this.storage = storage;
     this.workDir = workDir;
-    this.casImpl = new LocalBackedCasImpl(storage);
-    this.byteStreamImpl = new LocalBackedByteStreamImpl(storage);
+    this.casImpl = new LocalBackedCasServer(storage);
+    this.byteStreamImpl = new LocalBackedByteStreamServer(storage);
     this.operationsFutureImpl = new OperationsFutureImpl();
     this.executionImpl = new ExecutionImpl();
   }

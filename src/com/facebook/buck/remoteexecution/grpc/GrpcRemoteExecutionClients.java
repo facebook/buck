@@ -23,9 +23,9 @@ import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.remoteexecution.ContentAddressedStorage;
+import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
-import com.facebook.buck.remoteexecution.RemoteExecutionService;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.util.function.ThrowingConsumer;
@@ -45,8 +45,8 @@ import org.immutables.value.Value;
 /** A RemoteExecution that sends jobs to a grpc-based remote execution service. */
 public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   public static final Protocol PROTOCOL = new GrpcProtocol();
-  private final ContentAddressedStorage storage;
-  private final GrpcRemoteExecutionService executionService;
+  private final ContentAddressedStorageClient storage;
+  private final GrpcRemoteExecutionServiceClient executionService;
   private final ManagedChannel executionEngineChannel;
   private final ManagedChannel casChannel;
 
@@ -78,7 +78,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
             buckEventBus);
     ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
     this.executionService =
-        new GrpcRemoteExecutionService(
+        new GrpcRemoteExecutionServiceClient(
             executionStub, byteStreamStub, instanceName, metadataProvider, getProtocol());
   }
 
@@ -120,12 +120,12 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   }
 
   @Override
-  public RemoteExecutionService getRemoteExecutionService() {
+  public RemoteExecutionServiceClient getRemoteExecutionService() {
     return executionService;
   }
 
   @Override
-  public ContentAddressedStorage getContentAddressedStorage() {
+  public ContentAddressedStorageClient getContentAddressedStorage() {
     return storage;
   }
 
@@ -149,13 +149,13 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
     }
   }
 
-  private ContentAddressedStorage createStorage(
+  private ContentAddressedStorageClient createStorage(
       ContentAddressableStorageFutureStub storageStub,
       ByteStreamStub byteStreamStub,
       String instanceName,
       Protocol protocol,
       BuckEventBus buckEventBus) {
-    return new GrpcContentAddressableStorage(
+    return new GrpcContentAddressableStorageClient(
         storageStub, byteStreamStub, instanceName, protocol, buckEventBus);
   }
 }

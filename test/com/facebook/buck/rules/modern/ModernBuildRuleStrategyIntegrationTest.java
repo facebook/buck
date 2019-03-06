@@ -297,7 +297,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    // MBR strategies use a ContentAddressedStorage that doesn't work correctly on Windows.
+    // MBR strategies use a ContentAddressedStorageClient that doesn't work correctly on Windows.
     assumeFalse(Platform.detect().equals(Platform.WINDOWS));
     workspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(

@@ -40,11 +40,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/** A simple CAS impl backed by a {@link LocalContentAddressedStorage}. */
-class LocalBackedCasImpl extends ContentAddressableStorageImplBase {
+/** A simple CAS server backed by a {@link LocalContentAddressedStorage}. */
+class LocalBackedCasServer extends ContentAddressableStorageImplBase {
   private final LocalContentAddressedStorage storage;
 
-  LocalBackedCasImpl(LocalContentAddressedStorage storage) {
+  LocalBackedCasServer(LocalContentAddressedStorage storage) {
     this.storage = storage;
   }
 

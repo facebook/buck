@@ -32,7 +32,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
-import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;

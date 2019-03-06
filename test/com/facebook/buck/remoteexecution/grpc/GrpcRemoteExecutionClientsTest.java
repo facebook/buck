@@ -27,7 +27,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
-import com.facebook.buck.remoteexecution.RemoteExecutionService.ExecutionResult;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -157,8 +157,8 @@ public class GrpcRemoteExecutionClientsTest {
     Files.createDirectories(workDir);
     LocalContentAddressedStorage storage =
         new LocalContentAddressedStorage(cacheDir, new GrpcProtocol());
-    services.add(new LocalBackedCasImpl(storage));
-    services.add(new LocalBackedByteStreamImpl(storage));
+    services.add(new LocalBackedCasServer(storage));
+    services.add(new LocalBackedByteStreamServer(storage));
 
     setupServer();
 

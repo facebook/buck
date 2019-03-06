@@ -21,7 +21,7 @@ import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.remoteexecution.RemoteExecutionService;
+import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.grpc.GrpcHeaderHandler.StubAndResponseMetadata;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
@@ -52,8 +52,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /** Implementation of the GRPC client for the Remote Execution service. */
-public class GrpcRemoteExecutionService implements RemoteExecutionService {
-  private static final Logger LOG = Logger.get(GrpcRemoteExecutionService.class);
+public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceClient {
+  private static final Logger LOG = Logger.get(GrpcRemoteExecutionServiceClient.class);
 
   private final ExecutionStub executionStub;
   private final ByteStreamStub byteStreamStub;
@@ -61,7 +61,7 @@ public class GrpcRemoteExecutionService implements RemoteExecutionService {
   private final MetadataProvider metadataProvider;
   private final Protocol protocol;
 
-  public GrpcRemoteExecutionService(
+  public GrpcRemoteExecutionServiceClient(
       ExecutionStub executionStub,
       ByteStreamStub byteStreamStub,
       String instanceName,

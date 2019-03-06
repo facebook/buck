@@ -54,8 +54,8 @@ public class GrpcExecutionFactory {
   public static RemoteExecutionClients createInProcess(BuckEventBus buckEventBus)
       throws IOException {
     NamedTemporaryDirectory workDir = new NamedTemporaryDirectory("__remote__");
-    GrpcRemoteExecutionServiceImpl remoteExecution =
-        new GrpcRemoteExecutionServiceImpl(
+    GrpcRemoteExecutionServiceServer remoteExecution =
+        new GrpcRemoteExecutionServiceServer(
             new LocalContentAddressedStorage(
                 workDir.getPath().resolve("__cache__"), GrpcRemoteExecutionClients.PROTOCOL),
             workDir.getPath().resolve("__work__"));
