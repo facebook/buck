@@ -162,21 +162,9 @@ public class NdkCxxPlatformIntegrationTest {
 
   @Test
   public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
-    String buckConfig =
-        "[ndk]\n"
-            + "  cpu_abis = "
-            + architectures
-            + "\n"
-            + "  compiler = "
-            + compiler
-            + "\n"
-            + "  gcc_version = 4.9\n"
-            + "  app_platform = android-21\n";
-
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths", tmp);
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-    workspace.writeContentsToPath(buckConfig, ".buckconfig");
 
     BuildTarget target =
         BuildTargetFactory.newInstance(String.format("//:lib#android-%s,static", arch));
@@ -202,7 +190,6 @@ public class NdkCxxPlatformIntegrationTest {
     ProjectWorkspace longPwdWorkspace = setupWorkspace("ndk_debug_paths", tmp_long_pwd);
     ProjectFilesystem longPwdFilesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-    longPwdWorkspace.writeContentsToPath(buckConfig, ".buckconfig");
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     lib =
         longPwdWorkspace.getPath(
