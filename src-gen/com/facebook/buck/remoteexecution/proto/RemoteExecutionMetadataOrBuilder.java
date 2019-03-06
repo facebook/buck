@@ -86,4 +86,17 @@ public interface RemoteExecutionMetadataOrBuilder extends
    * <code>.facebook.remote_execution.WorkerInfo worker_info = 6;</code>
    */
   com.facebook.buck.remoteexecution.proto.WorkerInfoOrBuilder getWorkerInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+   */
+  boolean hasCasClientInfo();
+  /**
+   * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CasClientInfo getCasClientInfo();
+  /**
+   * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder getCasClientInfoOrBuilder();
 }

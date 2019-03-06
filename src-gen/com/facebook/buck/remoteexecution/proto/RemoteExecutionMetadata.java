@@ -126,6 +126,19 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
+          case 58: {
+            com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder subBuilder = null;
+            if (casClientInfo_ != null) {
+              subBuilder = casClientInfo_.toBuilder();
+            }
+            casClientInfo_ = input.readMessage(com.facebook.buck.remoteexecution.proto.CasClientInfo.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(casClientInfo_);
+              casClientInfo_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownFieldProto3(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -284,6 +297,27 @@ private static final long serialVersionUID = 0L;
     return getWorkerInfo();
   }
 
+  public static final int CAS_CLIENT_INFO_FIELD_NUMBER = 7;
+  private com.facebook.buck.remoteexecution.proto.CasClientInfo casClientInfo_;
+  /**
+   * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+   */
+  public boolean hasCasClientInfo() {
+    return casClientInfo_ != null;
+  }
+  /**
+   * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.CasClientInfo getCasClientInfo() {
+    return casClientInfo_ == null ? com.facebook.buck.remoteexecution.proto.CasClientInfo.getDefaultInstance() : casClientInfo_;
+  }
+  /**
+   * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder getCasClientInfoOrBuilder() {
+    return getCasClientInfo();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -315,6 +349,9 @@ private static final long serialVersionUID = 0L;
     }
     if (workerInfo_ != null) {
       output.writeMessage(6, getWorkerInfo());
+    }
+    if (casClientInfo_ != null) {
+      output.writeMessage(7, getCasClientInfo());
     }
     unknownFields.writeTo(output);
   }
@@ -348,6 +385,10 @@ private static final long serialVersionUID = 0L;
     if (workerInfo_ != null) {
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(6, getWorkerInfo());
+    }
+    if (casClientInfo_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(7, getCasClientInfo());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -395,6 +436,11 @@ private static final long serialVersionUID = 0L;
       result = result && getWorkerInfo()
           .equals(other.getWorkerInfo());
     }
+    result = result && (hasCasClientInfo() == other.hasCasClientInfo());
+    if (hasCasClientInfo()) {
+      result = result && getCasClientInfo()
+          .equals(other.getCasClientInfo());
+    }
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -429,6 +475,10 @@ private static final long serialVersionUID = 0L;
     if (hasWorkerInfo()) {
       hash = (37 * hash) + WORKER_INFO_FIELD_NUMBER;
       hash = (53 * hash) + getWorkerInfo().hashCode();
+    }
+    if (hasCasClientInfo()) {
+      hash = (37 * hash) + CAS_CLIENT_INFO_FIELD_NUMBER;
+      hash = (53 * hash) + getCasClientInfo().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -603,6 +653,12 @@ private static final long serialVersionUID = 0L;
         workerInfo_ = null;
         workerInfoBuilder_ = null;
       }
+      if (casClientInfoBuilder_ == null) {
+        casClientInfo_ = null;
+      } else {
+        casClientInfo_ = null;
+        casClientInfoBuilder_ = null;
+      }
       return this;
     }
 
@@ -658,6 +714,11 @@ private static final long serialVersionUID = 0L;
         result.workerInfo_ = workerInfo_;
       } else {
         result.workerInfo_ = workerInfoBuilder_.build();
+      }
+      if (casClientInfoBuilder_ == null) {
+        result.casClientInfo_ = casClientInfo_;
+      } else {
+        result.casClientInfo_ = casClientInfoBuilder_.build();
       }
       onBuilt();
       return result;
@@ -724,6 +785,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.hasWorkerInfo()) {
         mergeWorkerInfo(other.getWorkerInfo());
+      }
+      if (other.hasCasClientInfo()) {
+        mergeCasClientInfo(other.getCasClientInfo());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1454,6 +1518,123 @@ private static final long serialVersionUID = 0L;
         workerInfo_ = null;
       }
       return workerInfoBuilder_;
+    }
+
+    private com.facebook.buck.remoteexecution.proto.CasClientInfo casClientInfo_ = null;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.CasClientInfo, com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder, com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder> casClientInfoBuilder_;
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    public boolean hasCasClientInfo() {
+      return casClientInfoBuilder_ != null || casClientInfo_ != null;
+    }
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CasClientInfo getCasClientInfo() {
+      if (casClientInfoBuilder_ == null) {
+        return casClientInfo_ == null ? com.facebook.buck.remoteexecution.proto.CasClientInfo.getDefaultInstance() : casClientInfo_;
+      } else {
+        return casClientInfoBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    public Builder setCasClientInfo(com.facebook.buck.remoteexecution.proto.CasClientInfo value) {
+      if (casClientInfoBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        casClientInfo_ = value;
+        onChanged();
+      } else {
+        casClientInfoBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    public Builder setCasClientInfo(
+        com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder builderForValue) {
+      if (casClientInfoBuilder_ == null) {
+        casClientInfo_ = builderForValue.build();
+        onChanged();
+      } else {
+        casClientInfoBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    public Builder mergeCasClientInfo(com.facebook.buck.remoteexecution.proto.CasClientInfo value) {
+      if (casClientInfoBuilder_ == null) {
+        if (casClientInfo_ != null) {
+          casClientInfo_ =
+            com.facebook.buck.remoteexecution.proto.CasClientInfo.newBuilder(casClientInfo_).mergeFrom(value).buildPartial();
+        } else {
+          casClientInfo_ = value;
+        }
+        onChanged();
+      } else {
+        casClientInfoBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    public Builder clearCasClientInfo() {
+      if (casClientInfoBuilder_ == null) {
+        casClientInfo_ = null;
+        onChanged();
+      } else {
+        casClientInfo_ = null;
+        casClientInfoBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder getCasClientInfoBuilder() {
+      
+      onChanged();
+      return getCasClientInfoFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder getCasClientInfoOrBuilder() {
+      if (casClientInfoBuilder_ != null) {
+        return casClientInfoBuilder_.getMessageOrBuilder();
+      } else {
+        return casClientInfo_ == null ?
+            com.facebook.buck.remoteexecution.proto.CasClientInfo.getDefaultInstance() : casClientInfo_;
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.CasClientInfo cas_client_info = 7;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.CasClientInfo, com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder, com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder> 
+        getCasClientInfoFieldBuilder() {
+      if (casClientInfoBuilder_ == null) {
+        casClientInfoBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.remoteexecution.proto.CasClientInfo, com.facebook.buck.remoteexecution.proto.CasClientInfo.Builder, com.facebook.buck.remoteexecution.proto.CasClientInfoOrBuilder>(
+                getCasClientInfo(),
+                getParentForChildren(),
+                isClean());
+        casClientInfo_ = null;
+      }
+      return casClientInfoBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

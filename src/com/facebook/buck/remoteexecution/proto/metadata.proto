@@ -66,6 +66,11 @@ message WorkerInfo {
   string execution_path = 2;
 }
 
+message CasClientInfo {
+  // Name of the tool reaching the CAS, eg, buck, worker, engine, ...
+  string name = 1;
+}
+
 // This is propagated in GRPC header "re-metadata-bin".
 message RemoteExecutionMetadata {
   RESessionID re_session_id = 1;
@@ -74,4 +79,5 @@ message RemoteExecutionMetadata {
   CreatorInfo creator_info = 4;
   ExecutionEngineInfo engine_info = 5;
   WorkerInfo worker_info = 6;
+  CasClientInfo cas_client_info = 7;
 }
