@@ -110,7 +110,8 @@ public class RustCompileUtils {
       SourcePath rootModule,
       boolean forceRlib,
       boolean preferStatic,
-      Iterable<BuildRule> ruledeps) {
+      Iterable<BuildRule> ruledeps,
+      Optional<String> incremental) {
     CxxPlatform cxxPlatform = rustPlatform.getCxxPlatform();
     ImmutableList.Builder<Arg> linkerArgs = ImmutableList.builder();
 
@@ -162,6 +163,20 @@ public class RustCompileUtils {
         .flatMap(x -> x)
         .map(StringArg::of)
         .forEach(args::add);
+
+    if (incremental.isPresent()) {
+      Path path =
+          projectFilesystem
+              .getBuckPaths()
+              .getTmpDir()
+              .resolve("rust-incremental")
+              .resolve(incremental.get());
+
+      for (Flavor f : target.getFlavors()) {
+        path = path.resolve(f.getName());
+      }
+      args.add(StringArg.of(String.format("-Cincremental=%s", path)));
+    }
 
     LinkableDepType rustDepType;
     // If we're building a CDYLIB then our Rust dependencies need to be static
@@ -274,7 +289,8 @@ public class RustCompileUtils {
       SourcePath rootModule,
       boolean forceRlib,
       boolean preferStatic,
-      Iterable<BuildRule> deps) {
+      Iterable<BuildRule> deps,
+      Optional<String> incremental) {
     return (RustCompileRule)
         graphBuilder.computeIfAbsent(
             getCompileBuildTarget(buildTarget, rustPlatform.getCxxPlatform(), crateType),
@@ -298,7 +314,8 @@ public class RustCompileUtils {
                     rootModule,
                     forceRlib,
                     preferStatic,
-                    deps));
+                    deps,
+                    incremental));
   }
 
   public static Linker.LinkableDepType getLinkStyle(
@@ -483,7 +500,8 @@ public class RustCompileUtils {
                         rootModuleAndSources.getFirst(),
                         forceRlib,
                         preferStatic,
-                        deps));
+                        deps,
+                        rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName())));
 
     // Add the binary as the first argument.
     executableBuilder.addArg(SourcePathArg.of(buildRule.getSourcePathToOutput()));

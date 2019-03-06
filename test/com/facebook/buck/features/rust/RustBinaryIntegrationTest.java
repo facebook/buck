@@ -28,6 +28,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -237,6 +238,31 @@ public class RustBinaryIntegrationTest {
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), containsString("Another top-level source"));
     assertThat(result.getStderr().get(), Matchers.blankString());
+  }
+
+  @Test
+  public void simpleBinaryIncremental() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "simple_binary", tmp);
+    workspace.setUp();
+    BuckBuildLog buildLog;
+
+    workspace
+        .runBuckCommand("build", "-c", "rust#default.incremental=opt", "//:xyzzy#check")
+        .assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy#check");
+
+    workspace
+        .runBuckCommand("build", "-c", "rust#default.incremental=dev", "//:xyzzy")
+        .assertSuccess();
+    buildLog = workspace.getBuildLog();
+    buildLog.assertTargetBuiltLocally("//:xyzzy");
+
+    assertTrue(
+        Files.isDirectory(workspace.resolve("buck-out/tmp/rust-incremental/dev/binary/default")));
+    assertTrue(
+        Files.isDirectory(workspace.resolve("buck-out/tmp/rust-incremental/opt/check/default")));
   }
 
   @Test

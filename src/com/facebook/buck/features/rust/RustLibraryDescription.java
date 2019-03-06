@@ -45,6 +45,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -102,7 +103,7 @@ public class RustLibraryDescription
       Iterable<Arg> linkerInputs,
       String crate,
       CrateType crateType,
-      Linker.LinkableDepType depType,
+      LinkableDepType depType,
       RustLibraryDescriptionArg args,
       Iterable<BuildRule> deps) {
     Pair<SourcePath, ImmutableSortedSet<SourcePath>> rootModuleAndSources =
@@ -134,7 +135,8 @@ public class RustLibraryDescription
         rootModuleAndSources.getFirst(),
         rustBuckConfig.getForceRlib(),
         rustBuckConfig.getPreferStaticLibs(),
-        deps);
+        deps,
+        rustBuckConfig.getIncremental(rustPlatform.getFlavor().getName()));
   }
 
   @Override

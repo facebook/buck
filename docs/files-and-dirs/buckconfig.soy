@@ -4636,6 +4636,7 @@ buck = .
     dynamically link with C/C++ shared objects.
   {/param}
 {/call}
+
 {call buckconfig.entry}
   {param section: 'rust' /}
   {param name: 'prefer_static_libs' /}
@@ -4644,6 +4645,30 @@ buck = .
     When <code>prefer_static_libs</code> is true, then buck will always prefer to link with static
     versions of a library when building a shared target. In practice, this only affects linking
     with the standard library crates.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'rust' /}
+  {param name: 'incremental' /}
+  {param example_value: 'opt' /}
+  {param description}
+    <p>
+    When set, enable rustc's incremental build option.
+    </p>
+    <p>
+    Rust's incremental compilation mode operates transparently to the build system - it is
+    guaranteed to produce bit-for-bit identical output to non-incremental builds. To do this
+    it maintains a separate incremental database to one side. The only requirement is that
+    there is only ever one instance of <code>rustc</code> for a given crate at one time. Buck
+    guarantees this by making sure there's a separate incremental database for each flavor
+    (since builds for different flavors of the same target can be run concurrently).
+    </p>
+    <p>
+    The value of this option is an additional path fragment used for the incremental database
+    path. This allows the user to use separate databases for optimized, debug, etc command lines.
+    If this is not required, then it can be any valid pathname fragment.
+    </p>
   {/param}
 {/call}
 
