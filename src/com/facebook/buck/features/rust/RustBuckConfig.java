@@ -41,19 +41,12 @@ public class RustBuckConfig {
 
   enum RemapSrcPaths {
     NO, // no path remapping
-    UNSTABLE, // remap using unstable command-line option
     YES, // remap using stable command-line option
     ;
 
     public void addRemapOption(Builder<String> cmd, String cwd, String basedir) {
       switch (this) {
         case NO:
-          break;
-        case UNSTABLE:
-          cmd.add("-Zremap-path-prefix-from=" + basedir);
-          cmd.add("-Zremap-path-prefix-to=");
-          cmd.add("-Zremap-path-prefix-from=" + cwd);
-          cmd.add("-Zremap-path-prefix-to=./");
           break;
         case YES:
           cmd.add("--remap-path-prefix", basedir + "=");
