@@ -126,7 +126,7 @@ public class MultiThreadedBlobUploader {
       futures.add(resultFuture);
       uploadService.submit(this::processUploads);
     }
-    return Futures.whenAllSucceed(futures.build()).call(() -> null);
+    return Futures.whenAllSucceed(futures.build()).call(() -> null, MoreExecutors.directExecutor());
   }
 
   private void processMissing() {
