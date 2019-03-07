@@ -34,10 +34,11 @@ def get_gen_buck_info_command(gen_buck_info_target):
     """
     version = get_release_version()
     timestamp = get_release_timestamp()
+    java_version = native.read_config("java", "target_level")
     if version and timestamp:
         return (
             '$(exe {target}) --release-version {version} ' +
-            '--release-timestamp {timestamp} > "$OUT"'
-        ).format(target=gen_buck_info_target, version=version, timestamp=timestamp)
+            '--release-timestamp {timestamp} --java-version {java_version} > "$OUT"'
+        ).format(target=gen_buck_info_target, version=version, timestamp=timestamp, java_version=java_version)
     else:
-        return "$(exe {target}) > $OUT".format(target=gen_buck_info_target)
+        return "$(exe {target}) --java-version {java_version} > $OUT".format(target=gen_buck_info_target, java_version=java_version)

@@ -983,6 +983,8 @@
   <target name="gen-buck-info">
     <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
       <arg value="programs/gen_buck_info.py"/>
+      <arg value="--java-version"/>
+      <arg value="${ant.java.version}"/>
     </exec>
   </target>
 

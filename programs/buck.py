@@ -118,9 +118,9 @@ def _get_java_version(java_path):
     pieces = match.group("version").split(".")
     if pieces[0] != "1":
         # versions starting at 9 look like "9.0.4"
-        return pieces[0]
+        return int(pieces[0])
     # versions <9 look like "1.8.0_144"
-    return pieces[1]
+    return int(pieces[1])
 
 
 def _try_to_verify_java_version(java_version_status_queue, required_java_version):
@@ -197,17 +197,11 @@ def main(argv, reporter):
         os.environ["BUCK_ROOT_BUILD_ID"] = build_id
 
     java_version_status_queue = Queue(maxsize=1)
-    required_java_version = "8"
 
     java11_test_mode_arg = "--java11-test-mode"
     java11_test_mode = java11_test_mode_arg in argv
     if java11_test_mode:
         argv.remove(java11_test_mode_arg)
-        required_java_version = "11"
-
-    _try_to_verify_java_version_off_thread(
-        java_version_status_queue, required_java_version
-    )
 
     def get_repo(p):
         # Try to detect if we're running a PEX by checking if we were invoked
@@ -233,6 +227,11 @@ def main(argv, reporter):
             with BuckProject.from_current_dir() as project:
                 tracing_dir = os.path.join(project.get_buck_out_log_dir(), "traces")
                 with get_repo(project) as buck_repo:
+                    _try_to_verify_java_version_off_thread(
+                        java_version_status_queue,
+                        buck_repo.get_buck_compiled_java_version(),
+                    )
+
                     # If 'kill' is the second argument, shut down the buckd
                     # process
                     if argv[1:] == ["kill"]:

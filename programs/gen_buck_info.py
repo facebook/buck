@@ -28,6 +28,11 @@ def main(argv):
     parser.add_argument(
         "--release-timestamp", help="The unix timestamp when the release happened"
     )
+    parser.add_argument(
+        "--java-version",
+        help="The Java version buck was compiled against",
+        required=True,
+    )
     args = parser.parse_args(argv[1:])
     if bool(args.release_version) != bool(args.release_timestamp):
         print(
@@ -72,8 +77,19 @@ def main(argv):
                 raise e
         dirty = False
 
+    java_version = (
+        int(args.java_version.split(".")[1])
+        if "." in args.java_version
+        else int(args.java_version)
+    )
+
     json.dump(
-        {"version": version, "timestamp": timestamp, "is_dirty": dirty},
+        {
+            "version": version,
+            "timestamp": timestamp,
+            "is_dirty": dirty,
+            "java_version": java_version,
+        },
         sys.stdout,
         sort_keys=True,
         indent=2,

@@ -241,6 +241,9 @@ class BuckTool(object):
     def _get_buck_repo_dirty(self):
         return self._package_info["is_dirty"]
 
+    def get_buck_compiled_java_version(self):
+        return self._package_info["java_version"]
+
     def _get_bootstrap_classpath(self):
         raise NotImplementedError()
 
