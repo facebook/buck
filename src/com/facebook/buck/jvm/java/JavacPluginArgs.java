@@ -35,14 +35,13 @@ public interface JavacPluginArgs extends CommonDescriptionArg, HasDeclaredDeps {
   }
 
   /**
-   * A value of false indicates that the plugin either generates classes that are intended
-   * for use outside of the code being processed or modifies bytecode in a way that modifies ABI.
-   * Plugins that affect the ABI of the rule in which they run must be run during ABI
-   * generation from source.
+   * A value of false indicates that the plugin either generates classes that are intended for use
+   * outside of the code being processed or modifies bytecode in a way that modifies ABI. Plugins
+   * that affect the ABI of the rule in which they run must be run during ABI generation from
+   * source.
    *
    * <p>Defaults to false because that's the "safe" value. When migrating to ABI generation from
-   * source, having as few ABI-affecting plugins as possible will yield the fastest ABI
-   * generation.
+   * source, having as few ABI-affecting plugins as possible will yield the fastest ABI generation.
    */
   @Value.Default
   default boolean isDoesNotAffectAbi() {
@@ -50,25 +49,24 @@ public interface JavacPluginArgs extends CommonDescriptionArg, HasDeclaredDeps {
   }
 
   /**
-   * If true, allows ABI-affecting plugins to run during ABI generation from source.
-   * To run during ABI generation from source, a plugin must meet all of the
-   * following criteria:
+   * If true, allows ABI-affecting plugins to run during ABI generation from source. To run during
+   * ABI generation from source, a plugin must meet all of the following criteria:
    * <li>
    *
    *     <ul>
-   *       Uses only the public APIs from JSR-269 (for annotation processing). Access to the Compiler
-   *       Tree API may also be possible via a Buck support library.
+   *       Uses only the public APIs from JSR-269 (for annotation processing). Access to the
+   *       Compiler Tree API may also be possible via a Buck support library.
    * </ul>
    *
    * <ul>
-   *   Does not require details about types beyond those being compiled as a general rule. There
-   *   are ways to ensure type information is available on a case by case basis, at some
-   *   performance cost.
+   *   Does not require details about types beyond those being compiled as a general rule. There are
+   *   ways to ensure type information is available on a case by case basis, at some performance
+   *   cost.
    * </ul>
    *
    * Defaults to false because that's the "safe" value. When migrating to ABI generation from
-   * source, having as many ABI-affecting plugins as possible running during ABI generation
-   * will result in the flattest build graph.
+   * source, having as many ABI-affecting plugins as possible running during ABI generation will
+   * result in the flattest build graph.
    */
   @Value.Default
   default boolean isSupportsAbiGenerationFromSource() {

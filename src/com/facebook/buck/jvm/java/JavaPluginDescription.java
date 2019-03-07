@@ -27,11 +27,8 @@ import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import org.immutables.value.Value;
 
-/**
- * Description of a rule that builds a javac {@link com.sun.source.util.Plugin}.
- */
-public class JavaPluginDescription
-    implements DescriptionWithTargetGraph<JavaPluginDescriptionArg> {
+/** Description of a rule that builds a javac {@link com.sun.source.util.Plugin}. */
+public class JavaPluginDescription implements DescriptionWithTargetGraph<JavaPluginDescriptionArg> {
 
   @Override
   public Class<JavaPluginDescriptionArg> getConstructorArgType() {
@@ -39,8 +36,11 @@ public class JavaPluginDescription
   }
 
   @Override
-  public BuildRule createBuildRule(BuildRuleCreationContextWithTargetGraph context,
-      BuildTarget buildTarget, BuildRuleParams params, JavaPluginDescriptionArg args) {
+  public BuildRule createBuildRule(
+      BuildRuleCreationContextWithTargetGraph context,
+      BuildTarget buildTarget,
+      BuildRuleParams params,
+      JavaPluginDescriptionArg args) {
 
     JavacPluginProperties.Builder propsBuilder = JavacPluginProperties.builder();
     propsBuilder.addProcessorNames(args.getPluginName());
@@ -62,14 +62,12 @@ public class JavaPluginDescription
     propsBuilder.setSupportsAbiGenerationFromSource(args.isSupportsAbiGenerationFromSource());
     JavacPluginProperties properties = propsBuilder.build();
 
-    return new StandardJavacPlugin(
-        buildTarget, context.getProjectFilesystem(), params, properties);
+    return new StandardJavacPlugin(buildTarget, context.getProjectFilesystem(), params, properties);
   }
 
   @BuckStyleImmutable
   @Value.Immutable
-  interface AbstractJavaPluginDescriptionArg
-      extends JavacPluginArgs {
+  interface AbstractJavaPluginDescriptionArg extends JavacPluginArgs {
 
     String getPluginName();
   }

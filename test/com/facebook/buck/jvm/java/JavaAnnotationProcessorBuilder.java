@@ -20,11 +20,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 
 public class JavaAnnotationProcessorBuilder
-  extends AbstractNodeBuilder<
-    JavaAnnotationProcessorDescriptionArg.Builder,
-    JavaAnnotationProcessorDescriptionArg,
-    JavaAnnotationProcessorDescription,
-    JavaAnnotationProcessor> {
+    extends AbstractNodeBuilder<
+        JavaAnnotationProcessorDescriptionArg.Builder,
+        JavaAnnotationProcessorDescriptionArg,
+        JavaAnnotationProcessorDescription,
+        JavaAnnotationProcessor> {
 
   private JavaAnnotationProcessorBuilder(BuildTarget target) {
     super(new JavaAnnotationProcessorDescription(), target);
@@ -49,8 +49,7 @@ public class JavaAnnotationProcessorBuilder
 
   public JavaAnnotationProcessorBuilder setSupportsAbiGenerationFromSource(
       boolean supportsAbiGenerationFromSource) {
-    getArgForPopulating()
-        .setSupportsAbiGenerationFromSource(supportsAbiGenerationFromSource);
+    getArgForPopulating().setSupportsAbiGenerationFromSource(supportsAbiGenerationFromSource);
     return this;
   }
 

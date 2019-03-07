@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
@@ -35,8 +34,7 @@ import org.junit.rules.ExpectedException;
 
 public class JavaPluginDescriptionTest {
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Test
   public void testPluginClassIsPassedToJavaPlugin() {
@@ -84,7 +82,8 @@ public class JavaPluginDescriptionTest {
   @Test
   public void testRaisesExceptionWhenNoPluginNameIsSpecified() {
     thrown.expect(IllegalStateException.class);
-    thrown.expectMessage("Cannot build JavaPluginDescriptionArg, some of required attributes are not set [pluginName]");
+    thrown.expectMessage(
+        "Cannot build JavaPluginDescriptionArg, some of required attributes are not set [pluginName]");
 
     JavaPluginDescriptionArg.builder()
         .setName("javac_plugin")
