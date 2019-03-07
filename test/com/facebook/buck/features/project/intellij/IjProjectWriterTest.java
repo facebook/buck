@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
@@ -30,6 +32,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.AbstractFakeClock;
 import com.fasterxml.jackson.core.JsonParser;
@@ -49,16 +52,17 @@ public class IjProjectWriterTest {
   private final long TIMESTAMP_B = 22122;
   private final Path MODULES_XML = Paths.get(".idea/modules.xml");
   private final Path WORKSPACE_XML = Paths.get(".idea/workspace.xml");
-  private final Path TARGET_MODULES_JSON = Paths.get(".idea/target-modules.json");
+  private final Path TARGET_INFO_MAP_JSON =
+      Paths.get(".idea/").resolve(IjProjectWriter.TARGET_INFO_MAP_FILENAME);
 
   @Test
   public void testModuleChangeOverwrite() throws IOException {
     FakeDynamicClock fakeClock = new FakeDynamicClock(TIMESTAMP_A);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(fakeClock);
-    writer(filesystem, filesystem, moduleGraph1()).write();
+    getWriterForModuleGraph1(filesystem, filesystem).write();
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
     fakeClock.currentTime = TIMESTAMP_B;
-    writer(filesystem, filesystem, moduleGraph2()).write();
+    getWriterForModuleGraph2(filesystem, filesystem).write();
     assertEquals(TIMESTAMP_B, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
   }
 
@@ -66,10 +70,10 @@ public class IjProjectWriterTest {
   public void testNoModuleChangeNoOverwrite() throws IOException {
     FakeDynamicClock fakeClock = new FakeDynamicClock(TIMESTAMP_A);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem(fakeClock);
-    writer(filesystem, filesystem, moduleGraph1()).write();
+    getWriterForModuleGraph1(filesystem, filesystem).write();
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
     fakeClock.currentTime = TIMESTAMP_B;
-    writer(filesystem, filesystem, moduleGraph1()).write();
+    getWriterForModuleGraph1(filesystem, filesystem).write();
     assertEquals(TIMESTAMP_A, filesystem.getLastModifiedTime(MODULES_XML).toMillis());
   }
 
@@ -78,7 +82,7 @@ public class IjProjectWriterTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path tmp = Files.createTempDirectory("IjProjectWriterTest");
     FakeProjectFilesystem outFilesystem = new FakeProjectFilesystem(tmp);
-    writer(filesystem, outFilesystem, moduleGraph1()).write();
+    getWriterForModuleGraph1(filesystem, outFilesystem).write();
     assertFalse(filesystem.exists(MODULES_XML));
     assertFalse(filesystem.exists(WORKSPACE_XML));
     assertTrue(outFilesystem.exists(MODULES_XML));
@@ -92,51 +96,165 @@ public class IjProjectWriterTest {
   }
 
   @Test
-  public void testTargetModuleMap() throws IOException {
+  public void testTargetInfoMap() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    writer(filesystem, filesystem, moduleGraph1()).write();
-    Map<String, String> targetModuleMap =
-        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    getWriterForModuleGraph1(filesystem, filesystem).write();
+    Map<String, Map<String, String>> targetInfoMap =
+        readJson(
+            filesystem,
+            TARGET_INFO_MAP_JSON,
+            new TypeReference<Map<String, Map<String, String>>>() {});
+    boolean isWindows = Platform.detect() == Platform.WINDOWS;
     assertEquals(
-        targetModuleMap,
         ImmutableMap.of(
-            "//java/com/example/base:base", "java_com_example_base",
-            "//third_party/guava:guava", "third_party_guava"));
+            "//java/com/example/base:base",
+                ImmutableMap.of(
+                    "buck.type",
+                    "java_library",
+                    IjProjectWriter.INTELLIJ_FILE_PATH,
+                    isWindows
+                        ? "java\\com\\example\\base\\java_com_example_base.iml"
+                        : "java/com/example/base/java_com_example_base.iml",
+                    IjProjectWriter.INTELLIJ_NAME,
+                    "java_com_example_base",
+                    IjProjectWriter.INTELLIJ_TYPE,
+                    IjProjectWriter.MODULE_TYPE),
+            "//third_party/guava:guava",
+                ImmutableMap.of(
+                    "buck.type",
+                    "java_library",
+                    IjProjectWriter.INTELLIJ_FILE_PATH,
+                    isWindows
+                        ? "third_party\\guava\\third_party_guava.iml"
+                        : "third_party/guava/third_party_guava.iml",
+                    IjProjectWriter.INTELLIJ_NAME,
+                    "third_party_guava",
+                    IjProjectWriter.INTELLIJ_TYPE,
+                    IjProjectWriter.MODULE_TYPE)),
+        targetInfoMap);
 
-    writer(filesystem, filesystem, moduleGraph2()).write();
-    targetModuleMap =
-        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    getWriterForModuleGraph2(filesystem, filesystem).write();
+    targetInfoMap =
+        readJson(
+            filesystem,
+            TARGET_INFO_MAP_JSON,
+            new TypeReference<Map<String, Map<String, String>>>() {});
     assertEquals(
-        targetModuleMap,
         ImmutableMap.of(
-            "//java/com/example/base:base", "java_com_example_base",
-            "//java/com/example/base2:base2", "java_com_example_base2"));
+            "//java/com/example/base2:base2",
+            ImmutableMap.of(
+                "buck.type",
+                "java_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "java\\com\\example\\base2\\java_com_example_base2.iml"
+                    : "java/com/example/base2/java_com_example_base2.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "java_com_example_base2",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE),
+            "//java/com/example/base:base",
+            ImmutableMap.of(
+                "buck.type",
+                "java_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "java\\com\\example\\base\\java_com_example_base.iml"
+                    : "java/com/example/base/java_com_example_base.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "java_com_example_base",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE)),
+        targetInfoMap);
   }
 
   @Test
-  public void testTargetModuleMapUpdate() throws IOException {
+  public void testTargetInfoMapUpdate() throws IOException {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-    writer(filesystem, filesystem, moduleGraph1()).write();
-    Map<String, String> targetModuleMap =
-        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    getWriterForModuleGraph1(filesystem, filesystem).write();
+    Map<String, Map<String, String>> targetInfoMap =
+        readJson(
+            filesystem,
+            TARGET_INFO_MAP_JSON,
+            new TypeReference<Map<String, Map<String, String>>>() {});
+    boolean isWindows = Platform.detect() == Platform.WINDOWS;
     assertEquals(
-        targetModuleMap,
         ImmutableMap.of(
-            "//java/com/example/base:base", "java_com_example_base",
-            "//third_party/guava:guava", "third_party_guava"));
+            "//java/com/example/base:base",
+            ImmutableMap.of(
+                "buck.type",
+                "java_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "java\\com\\example\\base\\java_com_example_base.iml"
+                    : "java/com/example/base/java_com_example_base.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "java_com_example_base",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE),
+            "//third_party/guava:guava",
+            ImmutableMap.of(
+                "buck.type",
+                "java_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "third_party\\guava\\third_party_guava.iml"
+                    : "third_party/guava/third_party_guava.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "third_party_guava",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE)),
+        targetInfoMap);
 
-    writer(filesystem, filesystem, moduleGraph2()).update();
-    targetModuleMap =
-        readJson(filesystem, TARGET_MODULES_JSON, new TypeReference<Map<String, String>>() {});
+    getWriterForModuleGraph2(filesystem, filesystem).update();
+    targetInfoMap =
+        readJson(
+            filesystem,
+            TARGET_INFO_MAP_JSON,
+            new TypeReference<Map<String, Map<String, String>>>() {});
     assertEquals(
-        targetModuleMap,
         ImmutableMap.of(
-            "//java/com/example/base:base", "java_com_example_base",
-            "//java/com/example/base2:base2", "java_com_example_base2",
-            "//third_party/guava:guava", "third_party_guava"));
+            "//java/com/example/base2:base2",
+            ImmutableMap.of(
+                "buck.type",
+                "java_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "java\\com\\example\\base2\\java_com_example_base2.iml"
+                    : "java/com/example/base2/java_com_example_base2.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "java_com_example_base2",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE),
+            "//java/com/example/base:base",
+            ImmutableMap.of(
+                "buck.type",
+                "java_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "java\\com\\example\\base\\java_com_example_base.iml"
+                    : "java/com/example/base/java_com_example_base.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "java_com_example_base",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE),
+            "//third_party/guava:guava",
+            ImmutableMap.of(
+                "buck.type",
+                "java_library",
+                IjProjectWriter.INTELLIJ_FILE_PATH,
+                isWindows
+                    ? "third_party\\guava\\third_party_guava.iml"
+                    : "third_party/guava/third_party_guava.iml",
+                IjProjectWriter.INTELLIJ_NAME,
+                "third_party_guava",
+                IjProjectWriter.INTELLIJ_TYPE,
+                IjProjectWriter.MODULE_TYPE)),
+        targetInfoMap);
   }
 
-  private IjModuleGraph moduleGraph1() {
+  private IjProjectWriter getWriterForModuleGraph1(
+      ProjectFilesystem filesystem, ProjectFilesystem outFileSystem) throws IOException {
     TargetNode<?> guavaTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//third_party/guava:guava"))
@@ -150,10 +268,16 @@ public class IjProjectWriterTest {
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
 
-    return IjModuleGraphTest.createModuleGraph(ImmutableSet.of(guavaTargetNode, baseTargetNode));
+    ImmutableSet<TargetNode<?>> targetNodes = ImmutableSet.of(guavaTargetNode, baseTargetNode);
+    return writer(
+        filesystem,
+        outFileSystem,
+        TargetGraphFactory.newInstance(targetNodes),
+        IjModuleGraphTest.createModuleGraph(targetNodes));
   }
 
-  private IjModuleGraph moduleGraph2() {
+  private IjProjectWriter getWriterForModuleGraph2(
+      ProjectFilesystem filesystem, ProjectFilesystem outFileSystem) throws IOException {
     TargetNode<?> baseTargetNode =
         JavaLibraryBuilder.createBuilder(
                 BuildTargetFactory.newInstance("//java/com/example/base:base"))
@@ -165,17 +289,25 @@ public class IjProjectWriterTest {
                 BuildTargetFactory.newInstance("//java/com/example/base2:base2"))
             .addSrc(Paths.get("java/com/example/base/Base.java"))
             .build();
-
-    return IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode, base2TargetNode));
+    ImmutableSet<TargetNode<?>> targetNodes = ImmutableSet.of(baseTargetNode, base2TargetNode);
+    return writer(
+        filesystem,
+        outFileSystem,
+        TargetGraphFactory.newInstance(targetNodes),
+        IjModuleGraphTest.createModuleGraph(ImmutableSet.of(baseTargetNode, base2TargetNode)));
   }
 
   private IjProjectWriter writer(
-      ProjectFilesystem filesystem, ProjectFilesystem outFilesystem, IjModuleGraph moduleGraph) {
+      ProjectFilesystem filesystem,
+      ProjectFilesystem outFilesystem,
+      TargetGraph targetGraph,
+      IjModuleGraph moduleGraph) {
     IjProjectTemplateDataPreparer dataPreparer = dataPreparer(filesystem, moduleGraph);
     IntellijModulesListParser parser = new IntellijModulesListParser();
     IjProjectConfig config = projectConfig();
     IJProjectCleaner cleaner = new IJProjectCleaner(filesystem);
-    return new IjProjectWriter(dataPreparer, config, filesystem, parser, cleaner, outFilesystem);
+    return new IjProjectWriter(
+        targetGraph, dataPreparer, config, filesystem, parser, cleaner, outFilesystem);
   }
 
   private IjProjectTemplateDataPreparer dataPreparer(
@@ -192,7 +324,7 @@ public class IjProjectWriterTest {
             FakeBuckConfig.builder()
                 .setSections(
                     ImmutableMap.of(
-                        "intellij", ImmutableMap.of("generate_target_module_map", "true")))
+                        "intellij", ImmutableMap.of("generate_target_info_map", "true")))
                 .build())
         .build();
   }

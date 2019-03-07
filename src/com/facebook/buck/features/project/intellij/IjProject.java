@@ -144,6 +144,7 @@ public class IjProject {
     IntellijModulesListParser modulesParser = new IntellijModulesListParser();
     IjProjectWriter writer =
         new IjProjectWriter(
+            targetGraphAndTargets.getTargetGraph(),
             templateDataPreparer,
             projectConfig,
             projectFilesystem,
