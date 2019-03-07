@@ -54,9 +54,9 @@ public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {
   protected Preprocessor build(Type type, Tool tool) {
     switch (type) {
       case CLANG:
-        return new ClangPreprocessor(tool, getUseUnixPathSeparator());
+        return new ClangPreprocessor(tool);
       case GCC:
-        return new GccPreprocessor(tool, getUseUnixPathSeparator());
+        return new GccPreprocessor(tool);
       case WINDOWS:
         return new WindowsPreprocessor(tool);
       case CLANG_WINDOWS:

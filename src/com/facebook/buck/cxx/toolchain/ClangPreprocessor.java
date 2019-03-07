@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -28,16 +28,8 @@ import java.nio.file.Path;
 /** Preprocessor implementation for the Clang toolchain. */
 public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
 
-  @AddToRuleKey private final boolean useUnixPathSeparator;
-
   public ClangPreprocessor(Tool tool) {
     super(tool);
-    useUnixPathSeparator = false;
-  }
-
-  public ClangPreprocessor(Tool tool, boolean useUnixPathSeparator) {
-    super(tool);
-    this.useUnixPathSeparator = useUnixPathSeparator;
   }
 
   @Override
@@ -52,17 +44,23 @@ public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
 
   @Override
   public final Iterable<String> localIncludeArgs(Iterable<String> includeRoots) {
-    return MoreIterables.zipAndConcat(Iterables.cycle("-I"), includeRoots);
+    return MoreIterables.zipAndConcat(
+        Iterables.cycle("-I"),
+        Iterables.transform(includeRoots, MorePaths::pathWithUnixSeparators));
   }
 
   @Override
   public final Iterable<String> systemIncludeArgs(Iterable<String> includeRoots) {
-    return MoreIterables.zipAndConcat(Iterables.cycle("-isystem"), includeRoots);
+    return MoreIterables.zipAndConcat(
+        Iterables.cycle("-isystem"),
+        Iterables.transform(includeRoots, MorePaths::pathWithUnixSeparators));
   }
 
   @Override
   public final Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
-    return MoreIterables.zipAndConcat(Iterables.cycle("-iquote"), includeRoots);
+    return MoreIterables.zipAndConcat(
+        Iterables.cycle("-iquote"),
+        Iterables.transform(includeRoots, MorePaths::pathWithUnixSeparators));
   }
 
   @Override
@@ -70,7 +68,7 @@ public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
     Preconditions.checkArgument(
         !prefixHeader.toString().endsWith(".gch"),
         "Expected non-precompiled file, got a '.gch': " + prefixHeader);
-    return ImmutableList.of("-include", prefixHeader.toString());
+    return ImmutableList.of("-include", MorePaths.pathWithUnixSeparators(prefixHeader));
   }
 
   @Override
@@ -80,7 +78,7 @@ public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
         "Expected a precompiled '.gch' file, got: " + pchOutputPath);
     return ImmutableList.of(
         "-include-pch",
-        pchOutputPath.toString(),
+        MorePaths.pathWithUnixSeparators(pchOutputPath),
         // Force clang to accept pch even if mtime of its input changes, since buck tracks
         // input contents, this should be safe.
         "-Wp,-fno-validate-pch");
@@ -88,6 +86,6 @@ public class ClangPreprocessor extends DelegatingTool implements Preprocessor {
 
   /** @returns whether this tool requires Unix path separated paths. */
   public boolean getUseUnixPathSeparator() {
-    return useUnixPathSeparator;
+    return true;
   }
 }
