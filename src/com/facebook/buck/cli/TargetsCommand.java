@@ -88,6 +88,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Streams;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
@@ -225,6 +226,18 @@ public class TargetsCommand extends AbstractCommand {
               + "compute the target hash. If set to PATHS_ONLY, only files' paths contribute to the "
               + "hash. See also --target-hash-modified-paths.")
   private TargetHashFileMode targetHashFileMode = TargetHashFileMode.PATHS_AND_CONTENTS;
+
+  private enum TargetHashFunction {
+    SHA1,
+    MURMUR_HASH3
+  }
+
+  @Option(
+      name = "--target-hash-function",
+      usage =
+          "Determines the hash function to use for computing target hashes. By default, "
+              + "murmurhash3 will be used. Not that this doesn't control how files are hashed.")
+  private TargetHashFunction targetHashFunction = TargetHashFunction.MURMUR_HASH3;
 
   @Option(
       name = "--target-hash-modified-paths",
@@ -1261,7 +1274,7 @@ public class TargetsCommand extends AbstractCommand {
                       params
                           .getParser()
                           .getTargetNodeRawAttributesJob(state, params.getCell(), node),
-                  Hashing.sha1())
+                  getHashFunction())
               .hashTargetGraph();
     }
 
@@ -1306,7 +1319,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetNode<?> node) {
     HashCode nodeHashCode = getHashCodeOrThrow(buildTargetHashes, node.getBuildTarget());
 
-    Hasher hasher = Hashing.sha1().newHasher();
+    Hasher hasher = getHashFunction().newHasher();
     hasher.putBytes(nodeHashCode.asBytes());
 
     Iterable<BuildTarget> dependentTargets = node.getParseDeps();
@@ -1324,6 +1337,16 @@ public class TargetsCommand extends AbstractCommand {
       }
     }
     hashesWithTests.put(node.getBuildTarget(), hasher.hash());
+  }
+
+  private HashFunction getHashFunction() {
+    switch (targetHashFunction) {
+      case SHA1:
+        return Hashing.sha1();
+      case MURMUR_HASH3:
+        return Hashing.murmur3_128();
+    }
+    throw new UnsupportedOperationException();
   }
 
   private static HashCode getHashCodeOrThrow(
