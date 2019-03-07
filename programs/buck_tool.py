@@ -854,6 +854,24 @@ class BuckTool(object):
             extra_java_args = os.environ.get("BUCK_EXTRA_JAVA_ARGS")
             if extra_java_args:
                 java_args.extend(shlex.split(extra_java_args))
+
+            # Remove unsupported args on newer Java versions. This is only here temporarily to
+            # simplify the transition while we need to support multiple versions of the JVM.
+            # TODO: Remove once Java 11 upgrade is done.
+            if self.get_buck_compiled_java_version() >= 9:
+                unsupported_args = set(["-XX:+UseParNewGC"])
+                stripped_args = []
+                for arg in java_args:
+                    if arg in unsupported_args:
+                        logging.warning(
+                            "Removing JVM arg %s, which is not supported in Java %d.",
+                            arg,
+                            self.get_buck_compiled_java_version(),
+                        )
+                    else:
+                        stripped_args.append(arg)
+                java_args = stripped_args
+
             return java_args
 
 
