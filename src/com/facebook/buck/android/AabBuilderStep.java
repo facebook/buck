@@ -427,6 +427,10 @@ public class AabBuilderStep implements Step {
     return ApkBuilder.checkFileForPackaging(entry.getName()) && validateMetaInf(entryName);
   }
 
+  // We should filter out anything from META-INF (except for the ones responsible for the
+  // apk validation itself). As described on:
+  // https://android.googlesource.com/platform/sdk/+/e162064a7b5db1eecec34271bc7e2a4296181ea6/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java#105
+  // and https://source.android.com/security/apksigning/v2#v1-verification
   private boolean validateMetaInf(String entryName) {
     return !entryName.startsWith("META-INF")
         || entryName.endsWith("CERT.SF")
