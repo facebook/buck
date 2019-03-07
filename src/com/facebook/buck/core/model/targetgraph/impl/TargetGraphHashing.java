@@ -193,7 +193,7 @@ public class TargetGraphHashing {
                     Futures.transform(
                         getDepPairsFuture(node),
                         depPairs -> finishNode(node.getBuildTarget(), hasher, depPairs),
-                        MoreExecutors.directExecutor()),
+                        executor),
                 executor);
         futures.put(node.getBuildTarget(), future);
       }
