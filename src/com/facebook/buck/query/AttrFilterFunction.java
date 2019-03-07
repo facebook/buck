@@ -22,6 +22,8 @@ import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Collection;
+import java.util.Map;
 import java.util.function.Predicate;
 
 /**
@@ -60,7 +62,14 @@ public class AttrFilterFunction implements QueryFunction {
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
     String attrValue = args.get(1).getWord();
-    Predicate<Object> predicate = input -> attrValue.equals(input.toString());
+    // filterAttributeContents() below will traverse the entire type hierarchy of each attr (see the
+    // various type coercers). Collection types are (1) very common (2) expensive to convert to
+    // string and (3) we shouldn't apply the filter to the stringified form, and so we have a fast
+    // path to ignore them.
+    Predicate<Object> predicate =
+        input ->
+            !(input instanceof Collection || input instanceof Map)
+                && attrValue.equals(input.toString());
 
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : evaluator.eval(argument, env)) {
