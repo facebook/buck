@@ -35,8 +35,8 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
-import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -69,6 +69,7 @@ public class TargetGraphHashing {
   private final ListeningExecutorService executor;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final Function<TargetNode<?>, ListenableFuture<?>> targetNodeRawAttributesProvider;
+  private final HashFunction hashFunction;
 
   public TargetGraphHashing(
       BuckEventBus eventBus,
@@ -77,10 +78,12 @@ public class TargetGraphHashing {
       Iterable<TargetNode<?>> roots,
       ListeningExecutorService executor,
       RuleKeyConfiguration ruleKeyConfiguration,
-      Function<TargetNode<?>, ListenableFuture<?>> targetNodeRawAttributesProvider) {
+      Function<TargetNode<?>, ListenableFuture<?>> targetNodeRawAttributesProvider,
+      HashFunction hashFunction) {
     this.eventBus = eventBus;
     this.targetGraph = targetGraph;
     this.fileHashLoader = fileHashLoader;
+    this.hashFunction = hashFunction;
     this.roots = roots;
     this.executor = executor;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
@@ -92,7 +95,7 @@ public class TargetGraphHashing {
    * (BuildTarget, HashCode)} pairs for all root build targets and their dependencies.
    */
   public ImmutableMap<BuildTarget, HashCode> hashTargetGraph() throws InterruptedException {
-    try (SimplePerfEvent.Scope scope =
+    try (SimplePerfEvent.Scope ignored =
         SimplePerfEvent.scope(eventBus, PerfEventId.of("ShowTargetHashes"))) {
       return new Runner().run();
     } catch (ExecutionException e) {
@@ -112,7 +115,7 @@ public class TargetGraphHashing {
      * @return the partial {@link Hasher}.
      */
     private Hasher startNode(TargetNode<?> node, Object nodeAttributes) {
-      Hasher hasher = Hashing.sha1().newHasher();
+      Hasher hasher = hashFunction.newHasher();
 
       // Hash the node's build target and rules.
       LOG.verbose("Hashing node %s", node);

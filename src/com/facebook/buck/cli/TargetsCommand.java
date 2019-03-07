@@ -1260,7 +1260,8 @@ public class TargetsCommand extends AbstractCommand {
                   node ->
                       params
                           .getParser()
-                          .getTargetNodeRawAttributesJob(state, params.getCell(), node))
+                          .getTargetNodeRawAttributesJob(state, params.getCell(), node),
+                  Hashing.sha1())
               .hashTargetGraph();
     }
 

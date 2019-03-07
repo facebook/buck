@@ -65,6 +65,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.file.Path;
@@ -133,7 +134,8 @@ public class TargetGraphHashingTest {
                 ImmutableList.of(),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
-                targetNodeRawAttributesProvider)
+                targetNodeRawAttributesProvider,
+                Hashing.murmur3_128())
             .hashTargetGraph()
             .entrySet(),
         empty());
@@ -165,7 +167,8 @@ public class TargetGraphHashingTest {
                 ImmutableList.of(node),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
-                targetNodeRawAttributesProvider)
+                targetNodeRawAttributesProvider,
+                Hashing.murmur3_128())
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> modifiedResult =
@@ -176,7 +179,8 @@ public class TargetGraphHashingTest {
                 ImmutableList.of(node),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
-                targetNodeRawAttributesProvider)
+                targetNodeRawAttributesProvider,
+                Hashing.murmur3_128())
             .hashTargetGraph();
 
     assertThat(baseResult, aMapWithSize(1));
@@ -216,7 +220,8 @@ public class TargetGraphHashingTest {
                 ImmutableList.of(nodeA),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
-                targetNodeRawAttributesProvider)
+                targetNodeRawAttributesProvider,
+                Hashing.murmur3_128())
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> resultsB =
@@ -227,7 +232,8 @@ public class TargetGraphHashingTest {
                 ImmutableList.of(nodeB),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
-                targetNodeRawAttributesProvider)
+                targetNodeRawAttributesProvider,
+                Hashing.murmur3_128())
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> commonResults =
@@ -238,7 +244,8 @@ public class TargetGraphHashingTest {
                 ImmutableList.of(nodeA, nodeB),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
-                targetNodeRawAttributesProvider)
+                targetNodeRawAttributesProvider,
+                Hashing.murmur3_128())
             .hashTargetGraph();
 
     assertThat(resultsA, aMapWithSize(1));
@@ -289,7 +296,8 @@ public class TargetGraphHashingTest {
                 ImmutableList.of(targetGraphA.get(nodeTarget)),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
-                targetNodeRawAttributesProvider)
+                targetNodeRawAttributesProvider,
+                Hashing.murmur3_128())
             .hashTargetGraph();
 
     Map<BuildTarget, HashCode> resultB =
@@ -300,7 +308,8 @@ public class TargetGraphHashingTest {
                 ImmutableList.of(targetGraphB.get(nodeTarget)),
                 MoreExecutors.newDirectExecutorService(),
                 ruleKeyConfiguration,
-                targetNodeRawAttributesProvider)
+                targetNodeRawAttributesProvider,
+                Hashing.murmur3_128())
             .hashTargetGraph();
 
     assertThat(resultA, aMapWithSize(2));
@@ -335,7 +344,8 @@ public class TargetGraphHashingTest {
             ImmutableList.of(node),
             MoreExecutors.newDirectExecutorService(),
             ruleKeyConfiguration,
-            targetNodeRawAttributesProvider)
+            targetNodeRawAttributesProvider,
+            Hashing.murmur3_128())
         .hashTargetGraph();
   }
 
