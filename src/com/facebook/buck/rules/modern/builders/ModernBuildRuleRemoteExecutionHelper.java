@@ -359,7 +359,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
       ImmutableList<String> command = getBuilderCommand(projectRoot, hash.toString());
       ImmutableSortedMap<String, String> commandEnvironment =
           getBuilderEnvironmentOverrides(
-              isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix);
+              isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix, outputs);
 
       Protocol.Command actionCommand = protocol.newCommand(command, commandEnvironment, outputs);
 
@@ -515,7 +515,10 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(
-      ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath, Path cellPrefixRoot) {
+      ImmutableList<Path> bootstrapClasspath,
+      Iterable<Path> classpath,
+      Path cellPrefixRoot,
+      Set<Path> outputs) {
 
     // TODO(shivanker): Pass all user environment overrides to remote workers.
     String relativePluginRoot = "";
@@ -529,18 +532,15 @@ public class ModernBuildRuleRemoteExecutionHelper {
         pluginResources == null
             ? ""
             : cellPrefixRoot.relativize(Paths.get(pluginResources)).toString();
-    return ImmutableSortedMap.of(
-        "CLASSPATH",
-        classpathArg(bootstrapClasspath),
-        "BUCK_CLASSPATH",
-        classpathArg(classpath),
-        "BUCK_PLUGIN_ROOT",
-        relativePluginRoot,
-        "BUCK_PLUGIN_RESOURCES",
-        relativePluginResources,
+    return ImmutableSortedMap.<String, String>naturalOrder()
+        .put("CLASSPATH", classpathArg(bootstrapClasspath))
+        .put("BUCK_CLASSPATH", classpathArg(classpath))
+        .put("BUCK_PLUGIN_ROOT", relativePluginRoot)
+        .put("BUCK_PLUGIN_RESOURCES", relativePluginResources)
         // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
-        "BUCK_DISTCC",
-        "0");
+        .put("BUCK_DISTCC", "0")
+        .put("OUTPUTS", Joiner.on(":").join(outputs))
+        .build();
   }
 
   private static ImmutableList<String> getBuilderCommand(Path projectRoot, String hash) {
