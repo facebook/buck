@@ -30,8 +30,8 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
+import com.facebook.buck.cxx.toolchain.linker.HasLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
-import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.ExtraOutputsDeriver;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
@@ -97,8 +97,10 @@ public class CxxLinkableEnhancer {
     }
 
     // Add lto object path if thin LTO is on.
-    if (linker instanceof HasThinLTO && linkOptions.getThinLto()) {
-      argsBuilder.addAll(((HasThinLTO) linker).thinLTO(output));
+    if (linker instanceof HasLTO && linkOptions.getThinLto()) {
+      argsBuilder.addAll(((HasLTO) linker).thinLTO(output));
+    } else if (linker instanceof HasLTO && linkOptions.getFatLto()) {
+      argsBuilder.addAll(((HasLTO) linker).fatLTO(output));
     }
 
     if (linker instanceof HasImportLibrary) {
@@ -147,7 +149,8 @@ public class CxxLinkableEnhancer {
         postprocessor,
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.shouldCacheLinks(),
-        linkOptions.getThinLto());
+        linkOptions.getThinLto(),
+        linkOptions.getFatLto());
   }
 
   /**

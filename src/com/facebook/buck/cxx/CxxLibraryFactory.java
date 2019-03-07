@@ -644,7 +644,8 @@ public class CxxLibraryFactory {
 
     CxxLinkOptions linkOptions =
         CxxLinkOptions.of(
-            args.getThinLto()
+            args.getThinLto(),
+            args.getFatLto()
             );
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,

@@ -104,7 +104,8 @@ public class CxxLinkTest {
                     Optional.empty(),
                     Optional.empty(),
                     /* cacheable */ true,
-                    /* thinLto */ false));
+                    /* thinLto */ false,
+                    /* fatLto */ false));
 
     // Verify that changing the archiver causes a rulekey change.
 
@@ -125,7 +126,8 @@ public class CxxLinkTest {
                     Optional.empty(),
                     Optional.empty(),
                     /* cacheable */ true,
-                    /* thinLto */ false));
+                    /* thinLto */ false,
+                    /* fatLto */ false));
     assertNotEquals(defaultRuleKey, linkerChange);
 
     // Verify that changing the output path causes a rulekey change.
@@ -145,7 +147,8 @@ public class CxxLinkTest {
                     Optional.empty(),
                     Optional.empty(),
                     /* cacheable */ true,
-                    /* thinLto */ false));
+                    /* thinLto */ false,
+                    /* fatLto */ false));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the flags causes a rulekey change.
@@ -165,7 +168,8 @@ public class CxxLinkTest {
                     Optional.empty(),
                     Optional.empty(),
                     /* cacheable */ true,
-                    /* thinLto */ false));
+                    /* thinLto */ false,
+                    /* fatLto */ false));
     assertNotEquals(defaultRuleKey, flagsChange);
   }
 
@@ -221,7 +225,8 @@ public class CxxLinkTest {
                 Optional.empty(),
                 Optional.empty(),
                 /* cacheable */ true,
-                /* thinLto */ false));
+                /* thinLto */ false,
+                /* fatLto */ false));
 
     // Generate another rule with a different path we need to sanitize to the
     // same consistent value as above.
@@ -243,7 +248,8 @@ public class CxxLinkTest {
                 Optional.empty(),
                 Optional.empty(),
                 /* cacheable */ true,
-                /* thinLto */ false));
+                /* thinLto */ false,
+                /* fatLto */ false));
 
     assertEquals(ruleKey1, ruleKey2);
   }

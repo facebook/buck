@@ -24,9 +24,11 @@ import org.immutables.value.Value;
 abstract class AbstractCxxLinkOptions {
   public abstract boolean getThinLto();
 
+  public abstract boolean getFatLto();
+
   public static CxxLinkOptions of() {
     return CxxLinkOptions.of(
-        false
+        false, false
         );
   }
 }

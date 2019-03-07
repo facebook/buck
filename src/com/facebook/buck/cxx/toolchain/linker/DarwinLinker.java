@@ -48,7 +48,7 @@ import java.util.function.Consumer;
 /**
  * A specialization of {@link Linker} containing information specific to the Darwin implementation.
  */
-public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap, HasThinLTO {
+public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap, HasLTO {
 
   private final boolean cacheLinks;
 
@@ -88,11 +88,17 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
   @Override
   public Iterable<Arg> thinLTO(Path output) {
     return StringArg.from(
-        "-flto=thin", "-Xlinker", "-object_path_lto", "-Xlinker", thinLTOPath(output).toString());
+        "-flto=thin", "-Xlinker", "-object_path_lto", "-Xlinker", ltoPath(output).toString());
   }
 
   @Override
-  public Path thinLTOPath(Path output) {
+  public Iterable<Arg> fatLTO(Path output) {
+    return StringArg.from(
+        "-flto", "-Xlinker", "-object_path_lto", "-Xlinker", ltoPath(output).toString());
+  }
+
+  @Override
+  public Path ltoPath(Path output) {
     return Paths.get(output + "-lto");
   }
 

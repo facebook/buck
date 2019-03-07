@@ -774,7 +774,8 @@ public class CxxDescriptionEnhancer {
 
     CxxLinkOptions linkOptions =
         CxxLinkOptions.of(
-            args.getThinLto()
+            args.getThinLto(),
+            args.getFatLto()
             );
     return createBuildRulesForCxxBinary(
         target,
@@ -918,6 +919,8 @@ public class CxxDescriptionEnhancer {
             f -> toStringWithMacrosArgs(target, cellRoots, graphBuilder, cxxPlatform, f)));
     if (linkOptions.getThinLto()) {
       allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto=thin")));
+    } else if (linkOptions.getFatLto()) {
+      allCompilerFlagsBuilder.putAll(CxxFlags.toLanguageFlags(StringArg.from("-flto")));
     }
     ImmutableListMultimap<CxxSource.Type, Arg> allCompilerFlags = allCompilerFlagsBuilder.build();
 

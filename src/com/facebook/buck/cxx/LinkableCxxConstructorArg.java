@@ -28,4 +28,9 @@ public interface LinkableCxxConstructorArg extends CxxConstructorArg {
     return false;
   }
 
+  @Value.Default
+  default boolean getFatLto() {
+    return false;
+  }
+
 }

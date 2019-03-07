@@ -31,8 +31,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
+import com.facebook.buck.cxx.toolchain.linker.HasLTO;
 import com.facebook.buck.cxx.toolchain.linker.HasLinkerMap;
-import com.facebook.buck.cxx.toolchain.linker.HasThinLTO;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -84,7 +84,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       Optional<LinkOutputPostprocessor> postprocessor,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
       boolean cacheable,
-      boolean thinLto) {
+      boolean thinLto,
+      boolean fatLto) {
     super(
         buildTarget,
         projectFilesystem,
@@ -96,6 +97,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
             args,
             postprocessor,
             thinLto,
+            fatLto,
             buildTarget,
             computeCellRoots(cellResolver, buildTarget.getCell())));
     this.output = output;
@@ -127,6 +129,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final ImmutableList<Arg> args;
     @AddToRuleKey private final Optional<LinkOutputPostprocessor> postprocessor;
     @AddToRuleKey private final boolean thinLto;
+    @AddToRuleKey private final boolean fatLto;
     @AddToRuleKey private final ImmutableSortedSet<String> relativeCellRoots;
     @AddToRuleKey private final PublicOutputPath output;
     @AddToRuleKey private final Optional<PublicOutputPath> linkerMapPath;
@@ -140,6 +143,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         ImmutableList<Arg> args,
         Optional<LinkOutputPostprocessor> postprocessor,
         boolean thinLto,
+        boolean fatLto,
         BuildTarget buildTarget,
         ImmutableSortedSet<Path> relativeCellRoots) {
       this.linker = linker;
@@ -157,9 +161,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       } else {
         this.linkerMapPath = Optional.empty();
       }
-      if (linker instanceof HasThinLTO && thinLto) {
-        this.thinLTOPath =
-            Optional.of(new PublicOutputPath(((HasThinLTO) linker).thinLTOPath(output)));
+      if (linker instanceof HasLTO && (thinLto || fatLto)) {
+        this.thinLTOPath = Optional.of(new PublicOutputPath(((HasLTO) linker).ltoPath(output)));
       } else {
         this.thinLTOPath = Optional.empty();
       }
@@ -167,6 +170,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       this.args = args;
       this.postprocessor = postprocessor;
       this.thinLto = thinLto;
+      this.fatLto = fatLto;
       this.relativeCellRoots =
           relativeCellRoots
               .stream()
