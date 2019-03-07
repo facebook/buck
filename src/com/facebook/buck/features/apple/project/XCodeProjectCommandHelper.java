@@ -41,7 +41,8 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFa
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
-import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -86,13 +87,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.concurrent.ThreadSafe;
@@ -822,30 +827,40 @@ public class XCodeProjectCommandHelper {
   private static class LazyActionGraph {
     private final TargetGraph targetGraph;
     private final ActionGraphBuilder graphBuilder;
+    private final Set<BuildTarget> traversedTargets;
 
     public LazyActionGraph(TargetGraph targetGraph, CellProvider cellProvider) {
       this.targetGraph = targetGraph;
       this.graphBuilder =
           new SingleThreadedActionGraphBuilder(
               targetGraph, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
+      this.traversedTargets = new HashSet<>();
     }
 
     public ActionGraphBuilder getActionGraphBuilderWhileRequiringSubgraph(TargetNode<?> root) {
-      TargetGraph subgraph = targetGraph.getSubgraph(ImmutableList.of(root));
-
-      try {
-        synchronized (this) {
-          new AbstractBottomUpTraversal<TargetNode<?>, NoSuchBuildTargetException>(subgraph) {
-            @Override
-            public void visit(TargetNode<?> node) throws NoSuchBuildTargetException {
-              graphBuilder.requireRule(node.getBuildTarget());
+      synchronized (this) {
+        try {
+          List<BuildTarget> currentTargets = new ArrayList<>();
+          for (TargetNode<?> targetNode :
+              new AcyclicDepthFirstPostOrderTraversal<TargetNode<?>>(
+                      node ->
+                          traversedTargets.contains(node.getBuildTarget())
+                              ? Collections.emptyIterator()
+                              : targetGraph.getOutgoingNodesFor(node).iterator())
+                  .traverse(ImmutableList.of(root))) {
+            if (!traversedTargets.contains(targetNode.getBuildTarget())) {
+              graphBuilder.requireRule(targetNode.getBuildTarget());
+              currentTargets.add(targetNode.getBuildTarget());
             }
-          }.traverse();
+          }
+          traversedTargets.addAll(currentTargets);
+        } catch (NoSuchBuildTargetException e) {
+          throw new HumanReadableException(e);
+        } catch (CycleException e) {
+          throw new RuntimeException(e);
         }
-      } catch (NoSuchBuildTargetException e) {
-        throw new HumanReadableException(e);
+        return graphBuilder;
       }
-      return graphBuilder;
     }
   }
 }
