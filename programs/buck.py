@@ -198,11 +198,6 @@ def main(argv, reporter):
 
     java_version_status_queue = Queue(maxsize=1)
 
-    java11_test_mode_arg = "--java11-test-mode"
-    java11_test_mode = java11_test_mode_arg in argv
-    if java11_test_mode:
-        argv.remove(java11_test_mode_arg)
-
     def get_repo(p):
         # Try to detect if we're running a PEX by checking if we were invoked
         # via a zip file.
@@ -237,7 +232,7 @@ def main(argv, reporter):
                     if argv[1:] == ["kill"]:
                         buck_repo.kill_buckd()
                         return ExitCode.SUCCESS
-                    return buck_repo.launch_buck(build_id, argv, java11_test_mode)
+                    return buck_repo.launch_buck(build_id, argv)
     finally:
         if tracing_dir:
             Tracing.write_to_dir(tracing_dir, build_id)
