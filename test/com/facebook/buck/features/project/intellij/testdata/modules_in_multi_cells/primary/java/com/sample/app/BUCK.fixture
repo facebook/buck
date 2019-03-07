@@ -1,0 +1,10 @@
+android_library(
+    name = "app",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//java/com/sample/lib:lib",
+    ],
+)

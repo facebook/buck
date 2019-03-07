@@ -26,6 +26,7 @@ import com.facebook.buck.features.project.intellij.model.IjModuleType;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.folders.SourceFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.google.common.collect.ImmutableList;
 
 public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescriptionArg> {
 
@@ -45,7 +46,12 @@ public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription
   public void apply(TargetNode<CxxLibraryDescriptionArg> target, ModuleBuildContext context) {
     addSourceFolders(
         SourceFolder.FACTORY,
-        getSourceFoldersToInputsIndex(target.getInputs()),
+        getSourceFoldersToInputsIndex(
+            target
+                .getInputs()
+                .stream()
+                .map(path -> projectFilesystem.relativize(target.getFilesystem().resolve(path)))
+                .collect(ImmutableList.toImmutableList())),
         false /* wantsPackagePrefix */,
         context);
   }

@@ -79,17 +79,6 @@ abstract class AbstractIjModule implements IjProjectElement {
   public abstract Optional<Path> getCompilerOutputPath();
 
   @Value.Check
-  protected void allRulesAreChildrenOfBasePath() {
-    Path moduleBasePath = getModuleBasePath();
-    for (BuildTarget target : getTargets()) {
-      Path targetBasePath = target.getBasePath();
-      Preconditions.checkArgument(
-          targetBasePath.startsWith(moduleBasePath),
-          "A module cannot be composed of targets which are outside of its base path.");
-    }
-  }
-
-  @Value.Check
   protected void checkDependencyConsistency() {
     for (Map.Entry<BuildTarget, DependencyType> entry : getDependencies().entrySet()) {
       BuildTarget depBuildTarget = entry.getKey();

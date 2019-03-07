@@ -37,6 +37,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.JvmLibraryArg;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
@@ -130,7 +131,12 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
       ModuleBuildContext context,
       ImmutableSet<Path> resourcePaths) {
     ImmutableMultimap<Path, Path> foldersToInputsIndex =
-        getSourceFoldersToInputsIndex(targetNode.getInputs());
+        getSourceFoldersToInputsIndex(
+            targetNode
+                .getInputs()
+                .stream()
+                .map(path -> projectFilesystem.relativize(targetNode.getFilesystem().resolve(path)))
+                .collect(ImmutableList.toImmutableList()));
 
     if (!resourcePaths.isEmpty()) {
       foldersToInputsIndex =
@@ -208,7 +214,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         .stream()
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
-        .map(PathSourcePath::getRelativePath)
+        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())))
         .collect(ImmutableSet.toImmutableSet());
   }
 
@@ -218,7 +224,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
         .stream()
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
-        .map(PathSourcePath::getRelativePath)
+        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())))
         .filter(path -> path.startsWith(resourcesRoot))
         .collect(ImmutableSet.toImmutableSet());
   }

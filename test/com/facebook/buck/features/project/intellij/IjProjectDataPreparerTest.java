@@ -28,7 +28,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
+import com.facebook.buck.features.project.intellij.lang.java.ParsingJavaPackageFinder;
 import com.facebook.buck.features.project.intellij.model.ContentRoot;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
@@ -38,18 +40,23 @@ import com.facebook.buck.features.project.intellij.model.folders.ExcludeFolder;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
 import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.features.project.intellij.model.folders.SourceFolder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.DefaultJavaPackageFinder;
+import com.facebook.buck.jvm.java.JavaCompilationConstants;
+import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -121,6 +128,100 @@ public class IjProjectDataPreparerTest {
                         Optional.of(
                             DependencyEntryData.builder()
                                 .setName("third_party_guava")
+                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
+                                .setExported(false)
+                                .build()))))));
+  }
+
+  @Test
+  public void testWriteModulesNoPackageNameWithMultiCellModulesEnabled() throws Exception {
+    testWriteModuleWithMultiCellModulesEnabledHelper(null);
+  }
+
+  @Test
+  public void testWriteModulesPackagePrefixWithMultiCellModulesEnabled() throws Exception {
+    testWriteModuleWithMultiCellModulesEnabledHelper("foo.bar");
+  }
+
+  private void testWriteModuleWithMultiCellModulesEnabledHelper(@Nullable String packageName)
+      throws Exception {
+    ProjectFilesystem depFileSystem = new FakeProjectFilesystem(Paths.get("dep").toAbsolutePath());
+    ProjectFilesystem mainFileSystem =
+        new FakeProjectFilesystem(Paths.get("main").toAbsolutePath());
+
+    Path depPath = Paths.get("java/com/example/Dep.java");
+    TargetNode<?> depTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance(depFileSystem, "dep//java/com/example:dep"),
+                depFileSystem)
+            .addSrc(depPath)
+            .build();
+
+    Path depPathToProjectRoot = mainFileSystem.relativize(depFileSystem.resolve(depPath));
+    if (packageName != null) {
+      mainFileSystem.writeContentsToPath(
+          "package " + packageName + ";\nclass Dep{}", depPathToProjectRoot);
+    }
+
+    TargetNode<?> mainTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance(mainFileSystem, "main//java/com/example:main"),
+                mainFileSystem)
+            .addSrc(Paths.get("java/com/example/Main.java"))
+            .addDep(depTargetNode.getBuildTarget())
+            .build();
+
+    IjModuleGraph moduleGraph =
+        IjModuleGraphTest.createModuleGraph(
+            mainFileSystem,
+            ImmutableSet.of(depTargetNode, mainTargetNode),
+            ImmutableMap.of(),
+            Functions.constant(Optional.empty()),
+            AggregationMode.NONE,
+            true);
+    IjModule depModule = IjModuleGraphTest.getModuleForTarget(moduleGraph, depTargetNode);
+
+    JavaFileParser javaFileParser =
+        JavaFileParser.createJavaFileParser(JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS);
+
+    IjProjectTemplateDataPreparer dataPreparer =
+        new IjProjectTemplateDataPreparer(
+            ParsingJavaPackageFinder.preparse(
+                javaFileParser,
+                mainFileSystem,
+                ImmutableSet.of(depPathToProjectRoot),
+                javaPackageFinder),
+            moduleGraph,
+            mainFileSystem,
+            IjTestProjectConfig.create(),
+            androidManifestParser);
+
+    ImmutableList<ContentRoot> contentRoots = dataPreparer.getContentRoots(depModule);
+    assertEquals(1, contentRoots.size());
+
+    ContentRoot contentRoot = contentRoots.get(0);
+    assertEquals("file://$MODULE_DIR$", contentRoot.getUrl());
+    assertEquals(1, contentRoot.getFolders().size());
+
+    IjSourceFolder sourceFolder = contentRoot.getFolders().get(0);
+    assertEquals("sourceFolder", sourceFolder.getType());
+    assertFalse(sourceFolder.getIsTestSource());
+    assertEquals(packageName, sourceFolder.getPackagePrefix());
+    assertEquals("file://$MODULE_DIR$", sourceFolder.getUrl());
+
+    IjModule mainModule = IjModuleGraphTest.getModuleForTarget(moduleGraph, mainTargetNode);
+
+    assertThat(
+        dataPreparer.getDependencies(mainModule),
+        contains(
+            allOf(
+                hasProperty("type", equalTo(IjDependencyListBuilder.Type.MODULE)),
+                hasProperty(
+                    "data",
+                    equalTo(
+                        Optional.of(
+                            DependencyEntryData.builder()
+                                .setName("___dep_java_com_example")
                                 .setScope(IjDependencyListBuilder.Scope.COMPILE)
                                 .setExported(false)
                                 .build()))))));
@@ -354,6 +455,62 @@ public class IjProjectDataPreparerTest {
                 .setFileUrl(
                     "file://$PROJECT_DIR$/javatests/com/example/base/javatests_com_example_base.iml")
                 .setFilePath(Paths.get("javatests/com/example/base/javatests_com_example_base.iml"))
+                .build()),
+        dataPreparer.getModuleIndexEntries());
+  }
+
+  @Test
+  public void testModuleIndexWithMultiCellModulesEnabled() {
+    ProjectFilesystem depFileSystem = new FakeProjectFilesystem(Paths.get("dep").toAbsolutePath());
+    ProjectFilesystem mainFileSystem =
+        new FakeProjectFilesystem(Paths.get("main").toAbsolutePath());
+
+    TargetNode<?> depTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance(depFileSystem, "dep//java/com/example:dep"),
+                depFileSystem)
+            .addSrc(Paths.get("java/com/example/Dep.java"))
+            .build();
+
+    TargetNode<?> mainTargetNode =
+        JavaLibraryBuilder.createBuilder(
+                BuildTargetFactory.newInstance(mainFileSystem, "main//java/com/example:main"),
+                mainFileSystem)
+            .addSrc(Paths.get("java/com/example/Main.java"))
+            .addDep(depTargetNode.getBuildTarget())
+            .build();
+
+    IjModuleGraph moduleGraph =
+        IjModuleGraphTest.createModuleGraph(
+            mainFileSystem,
+            ImmutableSet.of(depTargetNode, mainTargetNode),
+            ImmutableMap.of(),
+            Functions.constant(Optional.empty()),
+            AggregationMode.NONE,
+            true);
+    IjProjectTemplateDataPreparer dataPreparer =
+        new IjProjectTemplateDataPreparer(
+            javaPackageFinder,
+            moduleGraph,
+            filesystem,
+            IjTestProjectConfig.create(),
+            androidManifestParser);
+    assertEquals(
+        ImmutableSet.of(
+            ModuleIndexEntry.builder()
+                .setGroup("modules")
+                .setFileUrl(
+                    "file://$PROJECT_DIR$/../dep/java/com/example/___dep_java_com_example.iml")
+                .setFilePath(Paths.get("../dep/java/com/example/___dep_java_com_example.iml"))
+                .build(),
+            ModuleIndexEntry.builder()
+                .setGroup("modules")
+                .setFileUrl("file://$PROJECT_DIR$/java/com/example/java_com_example.iml")
+                .setFilePath(Paths.get("java/com/example/java_com_example.iml"))
+                .build(),
+            ModuleIndexEntry.builder()
+                .setFileUrl("file://$PROJECT_DIR$/project_root.iml")
+                .setFilePath(Paths.get("project_root.iml"))
                 .build()),
         dataPreparer.getModuleIndexEntries());
   }

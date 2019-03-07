@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="library_java_com_sample_lib_extra_classpath">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/buck-out/gen/java/com/sample/lib/__lib#dummy_r_dot_java_dummyrdotjava_output__/lib#dummy_r_dot_java.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

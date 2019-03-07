@@ -126,6 +126,10 @@ public class DefaultJavaPackageFinder implements JavaPackageFinder {
   }
 
   public static String findJavaPackageWithPackageFolder(Path packageFolder) {
+    // If the folder is not under the project root, don't be smart to guess the package name
+    if (packageFolder.startsWith("..")) {
+      return "";
+    }
     return packageFolder.toString().replace(File.separatorChar, '.');
   }
 }

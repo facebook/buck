@@ -110,4 +110,6 @@ abstract class AbstractIjProjectConfig {
   public abstract ImmutableSet<String> getIncludeTestPatterns();
 
   public abstract ImmutableSet<String> getExcludeTestPatterns();
+
+  public abstract boolean isMultiCellModuleSupportEnabled();
 }

@@ -50,6 +50,8 @@ public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckCo
     ignoreFieldsForDaemonRestartBuilder.put(
         "client", ImmutableSet.of("id", "skip-action-graph-cache"));
     ignoreFieldsForDaemonRestartBuilder.put(
+        "intellij", ImmutableSet.of("multi_cell_module_support"));
+    ignoreFieldsForDaemonRestartBuilder.put(
         "log",
         ImmutableSet.of(
             "chrome_trace_generation",

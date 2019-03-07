@@ -1,0 +1,6 @@
+genrule(
+    name = "generated",
+    out = "test.json",
+    cmd = "echo {} > $OUT",
+    visibility = ["PUBLIC"],
+)
