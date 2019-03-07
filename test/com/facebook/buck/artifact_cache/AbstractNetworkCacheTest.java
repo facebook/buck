@@ -18,6 +18,8 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -79,6 +81,10 @@ public class AbstractNetworkCacheTest {
                 .setFetchClient(httpService)
                 .setStoreClient(httpService)
                 .setCacheReadMode(CacheReadMode.READWRITE)
+                .setUnconfiguredBuildTargetFactory(
+                    target ->
+                        new ParsingUnconfiguredBuildTargetFactory()
+                            .create(TestCellPathResolver.get(filesystem), target))
                 .setProjectFilesystem(filesystem)
                 .setBuckEventBus(BuckEventBusForTests.newInstance())
                 .setHttpWriteExecutorService(service)

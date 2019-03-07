@@ -58,7 +58,7 @@ public class ArtifactCacheTestUtils {
 
   public static HttpArtifactCacheEvent.Scheduled newUploadScheduledEvent(
       BuildId buildId,
-      Optional<String> target,
+      Optional<BuildTarget> target,
       ImmutableSet<RuleKey> ruleKeys,
       StoreType storeType,
       boolean configureEvent) {
@@ -82,22 +82,22 @@ public class ArtifactCacheTestUtils {
   }
 
   public static HttpArtifactCacheEvent.Started newUploadConfiguredStartedEvent(
-      BuildId buildId, Optional<String> rulekey, ImmutableSet<RuleKey> ruleKeys) {
-    return newUploadStartedEventImpl(buildId, rulekey, ruleKeys, true);
+      BuildId buildId, Optional<BuildTarget> target, ImmutableSet<RuleKey> ruleKeys) {
+    return newUploadStartedEventImpl(buildId, target, ruleKeys, true);
   }
 
   static HttpArtifactCacheEvent.Started newUploadStartedEvent(
-      BuildId buildId, Optional<String> rulekey, ImmutableSet<RuleKey> ruleKeys) {
-    return newUploadStartedEventImpl(buildId, rulekey, ruleKeys, false);
+      BuildId buildId, Optional<BuildTarget> target, ImmutableSet<RuleKey> ruleKeys) {
+    return newUploadStartedEventImpl(buildId, target, ruleKeys, false);
   }
 
   private static HttpArtifactCacheEvent.Started newUploadStartedEventImpl(
       BuildId buildId,
-      Optional<String> rulekey,
+      Optional<BuildTarget> target,
       ImmutableSet<RuleKey> ruleKeys,
       boolean configureEvent) {
     HttpArtifactCacheEvent.Scheduled scheduled =
-        HttpArtifactCacheEvent.newStoreScheduledEvent(rulekey, ruleKeys, StoreType.ARTIFACT);
+        HttpArtifactCacheEvent.newStoreScheduledEvent(target, ruleKeys, StoreType.ARTIFACT);
     HttpArtifactCacheEvent.Started event = HttpArtifactCacheEvent.newStoreStartedEvent(scheduled);
     if (configureEvent) {
       event.configure(1, 0, 0, 0, buildId);
@@ -106,7 +106,7 @@ public class ArtifactCacheTestUtils {
   }
 
   static HttpArtifactCacheEvent.Scheduled postStoreScheduled(
-      BuckEventBus eventBus, long threadId, String target, long timeInMs) {
+      BuckEventBus eventBus, long threadId, BuildTarget target, long timeInMs) {
     HttpArtifactCacheEvent.Scheduled storeScheduled =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
             Optional.of(target), ImmutableSet.of(), StoreType.ARTIFACT);

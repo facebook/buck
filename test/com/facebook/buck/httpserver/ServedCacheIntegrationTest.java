@@ -29,9 +29,13 @@ import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -62,6 +66,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -77,6 +82,7 @@ public class ServedCacheIntegrationTest {
   private static final BuildId BUILD_ID = new BuildId("test");
 
   private ProjectFilesystem projectFilesystem;
+  private Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
   private WebServer webServer = null;
   private BuckEventBus buckEventBus;
   private ArtifactCache dirCache;
@@ -102,6 +108,12 @@ public class ServedCacheIntegrationTest {
 
     bgTaskManager = new TestBackgroundTaskManager();
     managerScope = bgTaskManager.getNewScope(BUILD_ID);
+
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
+    ParsingUnconfiguredBuildTargetFactory parsingUnconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory();
+    unconfiguredBuildTargetFactory =
+        target -> parsingUnconfiguredBuildTargetFactory.create(cellPathResolver, target);
   }
 
   @After
@@ -374,6 +386,7 @@ public class ServedCacheIntegrationTest {
                 "dir = test-cache",
                 "serve_local_cache = true",
                 "served_local_cache_mode = readwrite"),
+            unconfiguredBuildTargetFactory,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -412,6 +425,7 @@ public class ServedCacheIntegrationTest {
                 "dir = test-cache",
                 "serve_local_cache = true",
                 "served_local_cache_mode = readwrite"),
+            unconfiguredBuildTargetFactory,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -450,6 +464,7 @@ public class ServedCacheIntegrationTest {
                 "dir = test-cache",
                 "serve_local_cache = true",
                 "served_local_cache_mode = readonly"),
+            unconfiguredBuildTargetFactory,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -485,6 +500,7 @@ public class ServedCacheIntegrationTest {
                 "dir = test-cache",
                 "serve_local_cache = true",
                 "served_local_cache_mode = readonly"),
+            unconfiguredBuildTargetFactory,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -536,6 +552,7 @@ public class ServedCacheIntegrationTest {
     return new ArtifactCaches(
             buckConfig,
             buckEventBus,
+            unconfiguredBuildTargetFactory,
             projectFilesystem,
             Optional.empty(),
             DIRECT_EXECUTOR_SERVICE,

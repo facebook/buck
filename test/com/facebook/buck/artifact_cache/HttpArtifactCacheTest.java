@@ -23,7 +23,9 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -31,6 +33,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.slb.HttpResponse;
 import com.facebook.buck.slb.HttpService;
@@ -127,6 +130,7 @@ public class HttpArtifactCacheTest {
 
   @Before
   public void setUp() {
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     this.argsBuilder =
         NetworkCacheArgs.builder()
             .setCacheName("http")
@@ -136,7 +140,11 @@ public class HttpArtifactCacheTest {
             .setFetchClient(withMakeRequest((a, b) -> null))
             .setStoreClient(withMakeRequest((a, b) -> null))
             .setCacheReadMode(CacheReadMode.READWRITE)
-            .setProjectFilesystem(new FakeProjectFilesystem())
+            .setUnconfiguredBuildTargetFactory(
+                target ->
+                    new ParsingUnconfiguredBuildTargetFactory()
+                        .create(TestCellPathResolver.get(projectFilesystem), target))
+            .setProjectFilesystem(projectFilesystem)
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)
             .setHttpFetchExecutorService(DIRECT_EXECUTOR_SERVICE)

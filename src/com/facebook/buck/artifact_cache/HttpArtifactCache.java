@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.LazyPath;
@@ -30,6 +31,7 @@ import java.net.HttpURLConnection;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.function.Function;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -47,8 +49,11 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
    */
   private static final Logger LOG = Logger.get(HttpArtifactCache.class);
 
+  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+
   public HttpArtifactCache(NetworkCacheArgs args) {
     super(args);
+    this.unconfiguredBuildTargetFactory = args.getUnconfiguredBuildTargetFactory();
   }
 
   @Override
@@ -91,7 +96,9 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         }
 
         resultBuilder
-            .setBuildTarget(ArtifactCacheEvent.getTarget(fetchedData.getMetadata()))
+            .setBuildTarget(
+                AbstractArtifactCacheEventFactory.getTarget(
+                    unconfiguredBuildTargetFactory, fetchedData.getMetadata()))
             .setResponseSizeBytes(fetchedData.getResponseSizeBytes())
             .setArtifactContentHash(fetchedData.getArtifactOnlyHashCode().toString());
 

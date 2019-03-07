@@ -30,6 +30,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -104,6 +105,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -124,6 +126,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty()));
 
@@ -144,6 +147,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty()));
   }
@@ -168,6 +172,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -180,6 +185,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty()));
   }
@@ -198,6 +204,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -208,6 +215,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
     assertEquals("Apple SDK should still be not found", daemon1, daemon2);
@@ -230,6 +238,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
     assertNotEquals("Apple SDK should be found", daemon2, daemon3);
@@ -244,6 +253,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
     assertEquals("Apple SDK should still be found", daemon3, daemon4);
@@ -284,6 +294,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
     Object daemon2 =
@@ -293,6 +304,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
     assertEquals("Android SDK should be the same initial location", daemon1, daemon2);
@@ -308,6 +320,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -319,6 +332,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -360,6 +374,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
     Object daemon2 =
@@ -369,6 +384,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
     assertEquals("Android SDK should be the same initial location", daemon1, daemon2);
@@ -385,6 +401,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -396,6 +413,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -428,6 +446,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -441,6 +460,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -464,6 +484,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -477,6 +498,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -500,6 +522,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -513,6 +536,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -537,6 +561,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -548,6 +573,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -571,6 +597,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -582,6 +609,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 
@@ -599,6 +627,7 @@ public class DaemonLifecycleManagerTest {
             watchman,
             Console.createNullConsole(),
             clock,
+            new ParsingUnconfiguredBuildTargetFactory(),
             Optional::empty,
             Optional.empty());
 

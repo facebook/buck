@@ -730,7 +730,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   public interface AbstractFetchResult {
     Optional<Long> getResponseSizeBytes();
 
-    Optional<String> getBuildTarget();
+    Optional<BuildTarget> getBuildTarget();
 
     Optional<ImmutableSet<RuleKey>> getAssociatedRuleKeys();
 

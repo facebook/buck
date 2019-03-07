@@ -82,8 +82,8 @@ public class SimpleConsoleEventBusListenerTest {
   private static final StampedeId STAMPEDE_ID_ONE = new StampedeId().setId("stampedeIdOne");
   private static final String STAMPEDE_ID_ONE_MESSAGE =
       "StampedeId=[stampedeIdOne]" + System.lineSeparator();
-  private static final String TARGET_ONE = "TARGET_ONE";
-  private static final String TARGET_TWO = "TARGET_TWO";
+  private static final String TARGET_ONE = "//target:one";
+  private static final String TARGET_TWO = "//target:two";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
   private static final String ADDITIONAL_LINE_PROVIDER_TEXT = "[additional line from the provider]";
 
@@ -205,10 +205,12 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(started, 600L, TimeUnit.MILLISECONDS, threadId));
 
     HttpArtifactCacheEvent.Scheduled storeScheduledOne =
-        ArtifactCacheTestUtils.postStoreScheduled(eventBus, threadId, TARGET_ONE, 700L);
+        ArtifactCacheTestUtils.postStoreScheduled(
+            eventBus, threadId, BuildTargetFactory.newInstance(TARGET_ONE), 700L);
 
     HttpArtifactCacheEvent.Scheduled storeScheduledTwo =
-        ArtifactCacheTestUtils.postStoreScheduled(eventBus, threadId, TARGET_TWO, 700L);
+        ArtifactCacheTestUtils.postStoreScheduled(
+            eventBus, threadId, BuildTargetFactory.newInstance(TARGET_TWO), 700L);
 
     HttpArtifactCacheEvent.Started storeStartedOne =
         ArtifactCacheTestUtils.postStoreStarted(eventBus, threadId, 710L, storeScheduledOne);

@@ -41,7 +41,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   protected HttpArtifactCacheEvent(
       EventKey eventKey,
       ArtifactCacheEvent.Operation operation,
-      Optional<String> target,
+      Optional<BuildTarget> target,
       ImmutableSet<RuleKey> ruleKeys,
       ArtifactCacheEvent.InvocationType invocationType,
       StoreType storeType) {
@@ -61,7 +61,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
   }
 
   public static Scheduled newStoreScheduledEvent(
-      Optional<String> target, ImmutableSet<RuleKey> ruleKeys, StoreType storeType) {
+      Optional<BuildTarget> target, ImmutableSet<RuleKey> ruleKeys, StoreType storeType) {
     return new Scheduled(ArtifactCacheEvent.Operation.STORE, target, ruleKeys, storeType);
   }
 
@@ -82,7 +82,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
 
     public Scheduled(
         ArtifactCacheEvent.Operation operation,
-        Optional<String> target,
+        Optional<BuildTarget> target,
         ImmutableSet<RuleKey> ruleKeys,
         StoreType storeType) {
       super(
@@ -121,9 +121,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
           EventKey.unique(),
           CACHE_MODE,
           operation,
-          targets.size() == 1
-              ? Optional.of(targets.iterator().next().getFullyQualifiedName())
-              : Optional.empty(),
+          targets.size() == 1 ? Optional.of(Iterables.getOnlyElement(targets)) : Optional.empty(),
           ruleKeys,
           ArtifactCacheEvent.InvocationType.SYNCHRONOUS,
           storeType);
@@ -162,7 +160,8 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
     @JsonProperty("request_duration_millis")
     private long requestDurationMillis;
 
-    public Finished(Started event, Optional<String> target, HttpArtifactCacheEventFetchData data) {
+    public Finished(
+        Started event, Optional<BuildTarget> target, HttpArtifactCacheEventFetchData data) {
       super(
           event.getEventKey(),
           CACHE_MODE,
@@ -232,7 +231,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
       private final Started startedEvent;
       private HttpArtifactCacheEventFetchData.Builder fetchDataBuilder;
       private HttpArtifactCacheEventStoreData.Builder storeDataBuilder;
-      private Optional<String> target;
+      private Optional<BuildTarget> target;
 
       private Builder(Started event) {
         this.startedEvent = event;
@@ -268,7 +267,7 @@ public abstract class HttpArtifactCacheEvent extends ArtifactCacheEvent {
         return this;
       }
 
-      public Builder setTarget(Optional<String> target) {
+      public Builder setTarget(Optional<BuildTarget> target) {
         this.target = target;
         return this;
       }

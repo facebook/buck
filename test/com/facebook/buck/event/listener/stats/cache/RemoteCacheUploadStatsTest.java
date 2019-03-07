@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener.stats.cache;
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.junit.Assert;
@@ -36,7 +37,9 @@ public class RemoteCacheUploadStatsTest {
 
     HttpArtifactCacheEvent.Scheduled scheduledEventOne =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
+            Optional.of(BuildTargetFactory.newInstance("//target:fake")),
+            ImmutableSet.of(),
+            StoreType.ARTIFACT);
 
     uploadStats.processScheduledEvent(scheduledEventOne);
     Assert.assertEquals(1, uploadStats.getScheduledCount());
@@ -57,10 +60,14 @@ public class RemoteCacheUploadStatsTest {
     // Schedule, start, finish, events two and three
     HttpArtifactCacheEvent.Scheduled scheduledEventTwo =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
+            Optional.of(BuildTargetFactory.newInstance("//target:fake")),
+            ImmutableSet.of(),
+            StoreType.ARTIFACT);
     HttpArtifactCacheEvent.Scheduled scheduledEventThree =
         HttpArtifactCacheEvent.newStoreScheduledEvent(
-            Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT);
+            Optional.of(BuildTargetFactory.newInstance("//target:fake")),
+            ImmutableSet.of(),
+            StoreType.ARTIFACT);
     uploadStats.processScheduledEvent(scheduledEventTwo);
     uploadStats.processScheduledEvent(scheduledEventTwo);
     Assert.assertEquals(3, uploadStats.getScheduledCount());

@@ -17,19 +17,28 @@
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.Operation;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.EventKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class SQLiteArtifactCacheEvent {
   public static final ArtifactCacheEvent.CacheMode CACHE_MODE = ArtifactCacheEvent.CacheMode.sqlite;
 
   private SQLiteArtifactCacheEvent() {}
 
-  public static class SQLiteArtifactCacheEventFactory implements ArtifactCacheEventFactory {
+  public static class SQLiteArtifactCacheEventFactory extends AbstractArtifactCacheEventFactory {
+
+    protected SQLiteArtifactCacheEventFactory(
+        Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory) {
+      super(unconfiguredBuildTargetFactory);
+    }
+
     @Override
     public ArtifactCacheEvent.Started newFetchStartedEvent(ImmutableSet<RuleKey> ruleKeys) {
       return new Started(ArtifactCacheEvent.Operation.FETCH, ruleKeys, Optional.empty());
@@ -43,8 +52,7 @@ public class SQLiteArtifactCacheEvent {
     @Override
     public ArtifactCacheEvent.Started newStoreStartedEvent(
         ImmutableSet<RuleKey> ruleKeys, ImmutableMap<String, String> metadata) {
-      return new Started(
-          ArtifactCacheEvent.Operation.STORE, ruleKeys, ArtifactCacheEvent.getTarget(metadata));
+      return new Started(ArtifactCacheEvent.Operation.STORE, ruleKeys, getTarget(metadata));
     }
 
     @Override
@@ -82,7 +90,7 @@ public class SQLiteArtifactCacheEvent {
     public Started(
         ArtifactCacheEvent.Operation operation,
         ImmutableSet<RuleKey> ruleKeys,
-        Optional<String> target) {
+        Optional<BuildTarget> target) {
       super(
           EventKey.unique(),
           CACHE_MODE,
@@ -103,7 +111,7 @@ public class SQLiteArtifactCacheEvent {
         EventKey eventKey,
         ArtifactCacheEvent.CacheMode cacheMode,
         Operation operation,
-        Optional<String> target,
+        Optional<BuildTarget> target,
         ImmutableSet<RuleKey> ruleKeys,
         ArtifactCacheEvent.InvocationType invocationType,
         Optional<CacheResult> cacheResult) {

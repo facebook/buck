@@ -23,6 +23,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
@@ -83,6 +84,7 @@ final class Daemon implements Closeable {
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
+  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   private final Clock clock;
   private final long startTime;
   private final Optional<DevspeedBuildListenerFactory> devspeedBuildListenerFactory;
@@ -94,10 +96,12 @@ final class Daemon implements Closeable {
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
       Optional<WebServer> webServerToReuse,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Clock clock,
       Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
       Optional<NGContext> context) {
     this.rootCell = rootCell;
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.fileEventBus = new EventBus("file-change-events");
 
     ImmutableList<Cell> allCells = rootCell.getAllCells();
@@ -295,7 +299,10 @@ final class Daemon implements Closeable {
     if (webServer.isPresent()) {
       Optional<ArtifactCache> servedCache =
           ArtifactCaches.newServedCache(
-              new ArtifactCacheBuckConfig(rootCell.getBuckConfig()), rootCell.getFilesystem());
+              new ArtifactCacheBuckConfig(rootCell.getBuckConfig()),
+              target ->
+                  unconfiguredBuildTargetFactory.create(rootCell.getCellPathResolver(), target),
+              rootCell.getFilesystem());
       try {
         webServer.get().updateAndStartIfNeeded(servedCache);
         return true;

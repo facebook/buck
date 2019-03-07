@@ -411,7 +411,9 @@ public class ChromeTraceBuildListenerTest {
 
     HttpArtifactCacheEvent.Started httpStarted =
         ArtifactCacheTestUtils.newUploadStartedEvent(
-            new BuildId("horse"), Optional.of("TARGET_ONE"), ImmutableSet.of(ruleKey));
+            new BuildId("horse"),
+            Optional.of(BuildTargetFactory.newInstance("//target:one")),
+            ImmutableSet.of(ruleKey));
     eventBus.post(httpStarted);
     HttpArtifactCacheEvent.Finished httpFinished =
         ArtifactCacheTestUtils.newFinishedEvent(httpStarted, false);
@@ -575,7 +577,7 @@ public class ChromeTraceBuildListenerTest {
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.of(
             "rule_key", "abc123",
-            "rule", "TARGET_ONE"));
+            "rule", "//target:one"));
 
     assertNextResult(
         resultListCopy,
@@ -584,7 +586,7 @@ public class ChromeTraceBuildListenerTest {
         ImmutableMap.of(
             "success", "true",
             "rule_key", "abc123",
-            "rule", "TARGET_ONE"));
+            "rule", "//target:one"));
 
     assertNextResult(resultListCopy, "processingPartOne", ChromeTraceEvent.Phase.BEGIN, emptyArgs);
 

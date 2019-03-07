@@ -20,7 +20,11 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -47,11 +51,13 @@ public class ArtifactCachesTest {
 
   private BackgroundTaskManager bgTaskManager;
   private TaskManagerScope managerScope;
+  private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
 
   @Before
   public void setUp() {
     bgTaskManager = new TestBackgroundTaskManager();
     managerScope = bgTaskManager.getNewScope(BUILD_ID);
+    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
   }
 
   @After
@@ -269,9 +275,11 @@ public class ArtifactCachesTest {
       ProjectFilesystem projectFilesystem,
       BuckEventBus buckEventBus,
       Optional<String> wifiSsid) {
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     return new ArtifactCaches(
         cacheConfig,
         buckEventBus,
+        target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target),
         projectFilesystem,
         wifiSsid,
         MoreExecutors.newDirectExecutorService(),

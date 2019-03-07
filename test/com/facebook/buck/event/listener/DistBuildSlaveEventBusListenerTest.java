@@ -538,7 +538,9 @@ public class DistBuildSlaveEventBusListenerTest {
     for (int i = 0; i < 6; ++i) {
       scheduledEvents.add(
           HttpArtifactCacheEvent.newStoreScheduledEvent(
-              Optional.of("fake"), ImmutableSet.of(), StoreType.ARTIFACT));
+              Optional.of(BuildTargetFactory.newInstance("//target:fake")),
+              ImmutableSet.of(),
+              StoreType.ARTIFACT));
 
       startedEvents.add(HttpArtifactCacheEvent.newStoreStartedEvent(scheduledEvents.get(i)));
 

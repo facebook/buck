@@ -34,10 +34,14 @@ import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -70,6 +74,7 @@ import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
@@ -127,9 +132,9 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class SuperConsoleEventBusListenerTest {
-  private static final String TARGET_ONE = "TARGET_ONE";
-  private static final String TARGET_TWO = "TARGET_TWO";
-  private static final String TARGET_THREE = "TARGET_THREE";
+  private static final String TARGET_ONE = "//target:one";
+  private static final String TARGET_TWO = "//target:two";
+  private static final String TARGET_THREE = "//target:three";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
   private static final TestResultSummaryVerbosity noisySummaryVerbosity =
       TestResultSummaryVerbosity.of(true, true);
@@ -350,8 +355,12 @@ public class SuperConsoleEventBusListenerTest {
             "Building... 0.3 sec",
             " - //banana:stand... 0.1 sec (preparing)"));
 
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(new FakeProjectFilesystem());
+    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory();
     DirArtifactCacheEvent.DirArtifactCacheEventFactory dirArtifactCacheEventFactory =
-        new DirArtifactCacheEvent.DirArtifactCacheEventFactory();
+        new DirArtifactCacheEvent.DirArtifactCacheEventFactory(
+            target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target));
 
     ArtifactCacheEvent.Started dirFetchStarted =
         dirArtifactCacheEventFactory.newFetchStartedEvent(ImmutableSet.of());
@@ -640,13 +649,16 @@ public class SuperConsoleEventBusListenerTest {
             installingFinished));
 
     HttpArtifactCacheEvent.Scheduled storeScheduledOne =
-        ArtifactCacheTestUtils.postStoreScheduled(eventBus, 0L, TARGET_ONE, 6000L);
+        ArtifactCacheTestUtils.postStoreScheduled(
+            eventBus, 0L, BuildTargetFactory.newInstance(TARGET_ONE), 6000L);
 
     HttpArtifactCacheEvent.Scheduled storeScheduledTwo =
-        ArtifactCacheTestUtils.postStoreScheduled(eventBus, 0L, TARGET_TWO, 6010L);
+        ArtifactCacheTestUtils.postStoreScheduled(
+            eventBus, 0L, BuildTargetFactory.newInstance(TARGET_TWO), 6010L);
 
     HttpArtifactCacheEvent.Scheduled storeScheduledThree =
-        ArtifactCacheTestUtils.postStoreScheduled(eventBus, 0L, TARGET_THREE, 6020L);
+        ArtifactCacheTestUtils.postStoreScheduled(
+            eventBus, 0L, BuildTargetFactory.newInstance(TARGET_THREE), 6020L);
 
     validateBuildIdConsole(
         listener,

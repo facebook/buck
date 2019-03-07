@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.core.util.log.Logger;
@@ -572,7 +573,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ChromeTraceEvent.Phase.BEGIN,
         ImmutableMap.of(
             "rule_key", Joiner.on(", ").join(started.getRuleKeys()),
-            "rule", started.getTarget().orElse("unknown")),
+            "rule", started.getTarget().map(BuildTarget::getFullyQualifiedName).orElse("unknown")),
         started);
   }
 
@@ -582,7 +583,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         ImmutableMap.<String, String>builder()
             .put("success", Boolean.toString(finished.isSuccess()))
             .put("rule_key", Joiner.on(", ").join(finished.getRuleKeys()))
-            .put("rule", finished.getTarget().orElse("unknown"));
+            .put(
+                "rule",
+                finished.getTarget().map(BuildTarget::getFullyQualifiedName).orElse("unknown"));
     Optionals.putIfPresent(
         finished.getCacheResult().map(Object::toString), "cache_result", argumentsBuilder);
 

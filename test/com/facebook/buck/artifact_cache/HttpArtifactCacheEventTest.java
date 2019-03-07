@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.listener.ArtifactCacheTestUtils;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +37,9 @@ public class HttpArtifactCacheEventTest {
   public void storeDataContainsRuleKeys() {
     HttpArtifactCacheEvent.Started started =
         ArtifactCacheTestUtils.newUploadConfiguredStartedEvent(
-            new BuildId("monkey"), Optional.of("target"), TEST_RULE_KEYS);
+            new BuildId("monkey"),
+            Optional.of(BuildTargetFactory.newInstance("//target:target")),
+            TEST_RULE_KEYS);
     HttpArtifactCacheEvent.Finished finished =
         ArtifactCacheTestUtils.newFinishedEvent(started, true);
     Assert.assertEquals(TEST_RULE_KEYS, finished.getStoreData().getRuleKeys());

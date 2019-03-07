@@ -812,6 +812,7 @@ public final class Main {
               watchman,
               console,
               clock,
+              buildTargetFactory,
               telemetryPlugins.isEmpty()
                   ? Optional::empty
                   : () ->
@@ -1043,6 +1044,7 @@ public final class Main {
                 new ArtifactCaches(
                     cacheBuckConfig,
                     buildEventBus,
+                    target -> buildTargetFactory.create(cellPathResolver, target),
                     filesystem,
                     executionEnvironment.getWifiSsid(),
                     httpWriteExecutorService.get(),

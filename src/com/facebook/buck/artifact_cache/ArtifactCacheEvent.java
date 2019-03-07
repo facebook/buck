@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.EventKey;
@@ -70,7 +71,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   @JsonIgnore private final ArtifactCacheEvent.InvocationType invocationType;
 
-  @JsonIgnore private final Optional<String> target;
+  @JsonIgnore private final Optional<BuildTarget> target;
 
   @JsonIgnore private final ImmutableSet<RuleKey> ruleKeys;
 
@@ -80,7 +81,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
       EventKey eventKey,
       CacheMode cacheMode,
       Operation operation,
-      Optional<String> target,
+      Optional<BuildTarget> target,
       ImmutableSet<RuleKey> ruleKeys,
       ArtifactCacheEvent.InvocationType invocationType,
       StoreType storeType) {
@@ -111,7 +112,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
     return ruleKeys;
   }
 
-  public Optional<String> getTarget() {
+  public Optional<BuildTarget> getTarget() {
     return target;
   }
 
@@ -138,7 +139,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
         EventKey eventKey,
         CacheMode cacheMode,
         Operation operation,
-        Optional<String> target,
+        Optional<BuildTarget> target,
         ImmutableSet<RuleKey> ruleKeys,
         ArtifactCacheEvent.InvocationType invocationType) {
       super(
@@ -155,7 +156,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
         EventKey eventKey,
         CacheMode cacheMode,
         Operation operation,
-        Optional<String> target,
+        Optional<BuildTarget> target,
         ImmutableSet<RuleKey> ruleKeys,
         ArtifactCacheEvent.InvocationType invocationType,
         StoreType storeType) {
@@ -171,7 +172,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
         EventKey eventKey,
         CacheMode cacheMode,
         Operation operation,
-        Optional<String> target,
+        Optional<BuildTarget> target,
         ImmutableSet<RuleKey> ruleKeys,
         ArtifactCacheEvent.InvocationType invocationType,
         Optional<CacheResult> cacheResult) {
@@ -194,7 +195,7 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
         EventKey eventKey,
         CacheMode cacheMode,
         Operation operation,
-        Optional<String> target,
+        Optional<BuildTarget> target,
         ImmutableSet<RuleKey> ruleKeys,
         ArtifactCacheEvent.InvocationType invocationType,
         Optional<CacheResult> cacheResult,

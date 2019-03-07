@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -30,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import java.io.IOException;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import javax.annotation.Nullable;
 
@@ -51,7 +53,10 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
         args.getHttpWriteExecutorService(),
         args.getHttpFetchExecutorService(),
         new NetworkEventListener(
-            args.getBuckEventBus(), args.getCacheName(), new ErrorReporter(args)),
+            args.getUnconfiguredBuildTargetFactory(),
+            args.getBuckEventBus(),
+            args.getCacheName(),
+            new ErrorReporter(args)),
         args.getMaxStoreSizeBytes(),
         args.getProjectFilesystem());
     this.repository = args.getRepository();
@@ -76,12 +81,17 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
   }
 
   private static class NetworkEventListener implements CacheEventListener {
+    private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
     private final EventDispatcher dispatcher;
     private final String name;
     private final ErrorReporter errorReporter;
 
     private NetworkEventListener(
-        EventDispatcher dispatcher, String name, ErrorReporter errorReporter) {
+        Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+        EventDispatcher dispatcher,
+        String name,
+        ErrorReporter errorReporter) {
+      this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
       this.dispatcher = dispatcher;
       this.name = name;
       this.errorReporter = errorReporter;
@@ -177,7 +187,8 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
     public StoreEvents storeScheduled(ArtifactInfo info, long artifactSizeBytes) {
       HttpArtifactCacheEvent.Scheduled scheduled =
           HttpArtifactCacheEvent.newStoreScheduledEvent(
-              ArtifactCacheEvent.getTarget(info.getMetadata()),
+              AbstractArtifactCacheEventFactory.getTarget(
+                  unconfiguredBuildTargetFactory, info.getMetadata()),
               info.getRuleKeys(),
               StoreType.fromArtifactInfo(info));
       dispatcher.post(scheduled);

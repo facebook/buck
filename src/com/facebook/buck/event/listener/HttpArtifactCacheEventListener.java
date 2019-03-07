@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEventStoreData;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
@@ -78,7 +79,8 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
               .appendString(data.getArtifactContentHash().orElse(NOT_SET_STRING))
               .appendString(data.getArtifactSizeBytes().orElse(NOT_SET_LONG))
               .appendString(data.getErrorMessage().orElse(NOT_SET_STRING))
-              .appendString(event.getTarget().orElse(NOT_SET_STRING))
+              .appendString(
+                  event.getTarget().map(BuildTarget::getFullyQualifiedName).orElse(NOT_SET_STRING))
               .build();
       fetchRequestLogger.log(hiveRow);
     } else { // ArtifactCacheEvent.Operation.STORE
@@ -96,7 +98,8 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
                   data.wasStoreSuccessful().isPresent()
                       ? data.wasStoreSuccessful().get()
                       : NOT_SET_STRING)
-              .appendString(event.getTarget().orElse(NOT_SET_STRING))
+              .appendString(
+                  event.getTarget().map(BuildTarget::getFullyQualifiedName).orElse(NOT_SET_STRING))
               .build();
       storeRequestLogger.log(hiveRow);
     }

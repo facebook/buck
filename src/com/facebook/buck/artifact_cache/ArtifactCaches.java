@@ -28,6 +28,7 @@ import com.facebook.buck.artifact_cache.config.MultiFetchType;
 import com.facebook.buck.artifact_cache.config.SQLiteCacheEntry;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -62,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import okhttp3.ConnectionPool;
 import okhttp3.Dispatcher;
 import okhttp3.MediaType;
@@ -84,6 +86,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   private final ArtifactCacheBuckConfig buckConfig;
   private final BuckEventBus buckEventBus;
+  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
   private final ProjectFilesystem projectFilesystem;
   private final Optional<String> wifiSsid;
   private final ListeningExecutorService httpWriteExecutorService;
@@ -146,6 +149,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   public ArtifactCaches(
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
@@ -158,6 +162,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       Optional<ClientCertificateHandler> clientCertificateHandler) {
     this.buckConfig = buckConfig;
     this.buckEventBus = buckEventBus;
+    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.projectFilesystem = projectFilesystem;
     this.wifiSsid = wifiSsid;
     this.httpWriteExecutorService = httpWriteExecutorService;
@@ -223,6 +228,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         newInstanceInternal(
             buckConfig,
             buckEventBus,
+            unconfiguredBuildTargetFactory,
             projectFilesystem,
             wifiSsid,
             httpWriteExecutorService,
@@ -247,6 +253,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     return new ArtifactCaches(
         new ArtifactCacheBuckConfig(newConfig),
         buckEventBus,
+        unconfiguredBuildTargetFactory,
         projectFilesystem,
         wifiSsid,
         httpWriteExecutorService,
@@ -267,7 +274,9 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    * @return a cache
    */
   public static Optional<ArtifactCache> newServedCache(
-      ArtifactCacheBuckConfig buckConfig, ProjectFilesystem projectFilesystem) {
+      ArtifactCacheBuckConfig buckConfig,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      ProjectFilesystem projectFilesystem) {
     return buckConfig
         .getServedLocalCache()
         .map(
@@ -275,6 +284,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                 createDirArtifactCache(
                     Optional.empty(),
                     input,
+                    unconfiguredBuildTargetFactory,
                     projectFilesystem,
                     MoreExecutors.newDirectExecutorService()));
   }
@@ -282,6 +292,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache newInstanceInternal(
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
@@ -308,13 +319,19 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
           break;
         case dir:
           initializeDirCaches(
-              cacheEntries, buckEventBus, projectFilesystem, builder, dirWriteExecutorService);
+              cacheEntries,
+              buckEventBus,
+              unconfiguredBuildTargetFactory,
+              projectFilesystem,
+              builder,
+              dirWriteExecutorService);
           break;
         case http:
           initializeDistributedCaches(
               cacheEntries,
               buckConfig,
               buckEventBus,
+              unconfiguredBuildTargetFactory,
               projectFilesystem,
               wifiSsid,
               httpWriteExecutorService,
@@ -325,7 +342,12 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               clientCertificateHandler);
           break;
         case sqlite:
-          initializeSQLiteCaches(cacheEntries, buckEventBus, projectFilesystem, builder);
+          initializeSQLiteCaches(
+              cacheEntries,
+              buckEventBus,
+              unconfiguredBuildTargetFactory,
+              projectFilesystem,
+              builder);
           break;
         case thrift_over_http:
           Preconditions.checkArgument(
@@ -335,6 +357,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               cacheEntries,
               buckConfig,
               buckEventBus,
+              unconfiguredBuildTargetFactory,
               projectFilesystem,
               wifiSsid,
               httpWriteExecutorService,
@@ -382,6 +405,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static void initializeDirCaches(
       ArtifactCacheEntries artifactCacheEntries,
       BuckEventBus buckEventBus,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<ArtifactCache> builder,
       ListeningExecutorService storeExecutorService) {
@@ -390,6 +414,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
           createDirArtifactCache(
               Optional.ofNullable(buckEventBus),
               cacheEntry,
+              unconfiguredBuildTargetFactory,
               projectFilesystem,
               storeExecutorService));
     }
@@ -399,6 +424,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ArtifactCacheEntries artifactCacheEntries,
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
@@ -423,6 +449,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               cacheEntry,
               buckConfig.getHostToReportToRemoteCacheServer(),
               buckEventBus,
+              unconfiguredBuildTargetFactory,
               projectFilesystem,
               httpWriteExecutorService,
               httpFetchExecutorService,
@@ -436,6 +463,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static void initializeSQLiteCaches(
       ArtifactCacheEntries artifactCacheEntries,
       BuckEventBus buckEventBus,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<ArtifactCache> builder) {
     artifactCacheEntries
@@ -443,12 +471,17 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         .forEach(
             cacheEntry ->
                 builder.add(
-                    createSQLiteArtifactCache(buckEventBus, cacheEntry, projectFilesystem)));
+                    createSQLiteArtifactCache(
+                        buckEventBus,
+                        cacheEntry,
+                        unconfiguredBuildTargetFactory,
+                        projectFilesystem)));
   }
 
   private static ArtifactCache createDirArtifactCache(
       Optional<BuckEventBus> buckEventBus,
       DirCacheEntry dirCacheConfig,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService storeExecutorService) {
     Path cacheDir = dirCacheConfig.getCacheDir();
@@ -469,7 +502,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       return new LoggingArtifactCacheDecorator(
           buckEventBus.get(),
           dirArtifactCache,
-          new DirArtifactCacheEvent.DirArtifactCacheEventFactory());
+          new DirArtifactCacheEvent.DirArtifactCacheEventFactory(unconfiguredBuildTargetFactory));
 
     } catch (IOException e) {
       throw new HumanReadableException(
@@ -481,6 +514,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       HttpCacheEntry cacheDescription,
       String hostToReportToRemote,
       BuckEventBus buckEventBus,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
@@ -493,6 +527,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             cacheDescription,
             hostToReportToRemote,
             buckEventBus,
+            unconfiguredBuildTargetFactory,
             projectFilesystem,
             httpWriteExecutorService,
             httpFetchExecutorService,
@@ -507,6 +542,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       HttpCacheEntry cacheDescription,
       String hostToReportToRemote,
       BuckEventBus buckEventBus,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
@@ -638,6 +674,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             .setFetchClient(fetchService)
             .setStoreClient(storeService)
             .setCacheReadMode(cacheDescription.getCacheReadMode())
+            .setUnconfiguredBuildTargetFactory(unconfiguredBuildTargetFactory)
             .setProjectFilesystem(projectFilesystem)
             .setBuckEventBus(buckEventBus)
             .setHttpWriteExecutorService(httpWriteExecutorService)
@@ -650,6 +687,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache createSQLiteArtifactCache(
       BuckEventBus buckEventBus,
       SQLiteCacheEntry cacheConfig,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ProjectFilesystem projectFilesystem) {
     Path cacheDir = cacheConfig.getCacheDir();
     try {
@@ -666,7 +704,8 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       return new LoggingArtifactCacheDecorator(
           buckEventBus,
           sqLiteArtifactCache,
-          new SQLiteArtifactCacheEvent.SQLiteArtifactCacheEventFactory());
+          new SQLiteArtifactCacheEvent.SQLiteArtifactCacheEventFactory(
+              unconfiguredBuildTargetFactory));
     } catch (IOException | SQLException e) {
       throw new HumanReadableException(
           e, "Failure initializing artifact cache directory: %s", cacheDir);
