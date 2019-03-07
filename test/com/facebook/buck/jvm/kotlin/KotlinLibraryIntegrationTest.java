@@ -164,7 +164,7 @@ public class KotlinLibraryIntegrationTest {
     buildResult.assertSuccess("Build should have succeeded.");
   }
 
-  @Test
+  @Test(timeout = 180000)
   public void shouldCompileKotlinSrcZip() throws Exception {
     ProcessResult buildResult = workspace.runBuckCommand("build", "//com/example/zip:zip");
     buildResult.assertSuccess("Build should have succeeded.");
