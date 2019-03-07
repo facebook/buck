@@ -33,6 +33,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger; // NOPMD
 import java.util.logging.StreamHandler;
+import junit.framework.TestCase;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.internal.builders.AllDefaultPossibilitiesBuilder;
@@ -113,6 +114,12 @@ public final class JUnitRunner extends BaseRunner {
     if (Modifier.isInterface(klassModifiers) || Modifier.isAbstract(klassModifiers)) {
       return false;
     }
+
+    // Classes that extend junit.framework.TestCase are JUnit3-style test classes.
+    if (TestCase.class.equals(klass.getSuperclass())) {
+      return true;
+    }
+
     // Since no RunWith annotation, using standard runner, which requires
     // test classes to have exactly one public constructor (that has no args).
     // Classes may have (non-public) constructors (with or without args).
