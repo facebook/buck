@@ -43,39 +43,35 @@ class PipelineNodeCache<K, T> {
    *     ongoing job (job cache hit) or a new job (miss).
    */
   protected final ListenableFuture<T> getJobWithCacheLookup(
-      Cell cell, K key, JobSupplier<T> jobSupplier, BuckEventBus eventBus)
-      throws BuildTargetException {
-    Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key, eventBus);
-    if (cacheLookupResult.isPresent()) {
-      return Futures.immediateFuture(cacheLookupResult.get());
-    }
-
-    ListenableFuture<T> speculativeCacheLookupResult = jobsCache.get(key);
-    if (speculativeCacheLookupResult != null) {
-      return speculativeCacheLookupResult;
-    }
+      Cell cell, K key, JobSupplier<T> jobSupplier, BuckEventBus eventBus) {
 
     // We use a SettableFuture to resolve any races between threads that are trying to create the
-    // job for the given key. The SettableFuture is cheap to throw away in case we didn't "win" and
-    // can be easily "connected" to a future that actually does work in case we did.
-    SettableFuture<T> resultFutureCandidate = SettableFuture.create();
-    ListenableFuture<T> resultFutureInCache = jobsCache.putIfAbsent(key, resultFutureCandidate);
+    // job for the given key. The SettableFuture is cheap to throw away in case we didn't "win"
+    // and can be easily "connected" to a future that actually does work in case we did.
+    SettableFuture<T> resultFuture = SettableFuture.create();
+    ListenableFuture<T> resultFutureInCache = jobsCache.putIfAbsent(key, resultFuture);
     if (resultFutureInCache != null) {
       // Another thread succeeded in putting the new value into the cache.
       return resultFutureInCache;
     }
     // Ok, "our" candidate future went into the jobsCache, schedule the job and 'chain' the result
     // to the SettableFuture, so that anyone else waiting on it will get the same result.
-    SettableFuture<T> resultFuture = resultFutureCandidate;
+
     try {
-      ListenableFuture<T> nodeJob =
-          Futures.transformAsync(
-              jobSupplier.get(),
-              input ->
-                  Futures.immediateFuture(
-                      cache.putComputedNodeIfNotPresent(cell, key, input, eventBus)),
-              MoreExecutors.directExecutor());
-      resultFuture.setFuture(nodeJob);
+      Optional<T> cacheLookupResult = cache.lookupComputedNode(cell, key, eventBus);
+      if (cacheLookupResult.isPresent()) {
+        resultFuture.set(cacheLookupResult.get());
+      } else {
+        ListenableFuture<T> job = jobSupplier.get();
+        ListenableFuture<T> cacheJob =
+            Futures.transformAsync(
+                job,
+                input ->
+                    Futures.immediateFuture(
+                        cache.putComputedNodeIfNotPresent(cell, key, input, eventBus)),
+                MoreExecutors.directExecutor());
+        resultFuture.setFuture(cacheJob);
+      }
     } catch (Throwable t) {
       resultFuture.setException(t);
       throw t;
