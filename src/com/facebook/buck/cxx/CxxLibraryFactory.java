@@ -130,7 +130,7 @@ public class CxxLibraryFactory {
               cellRoots,
               cxxBuckConfig,
               cxxPlatformOrDefault,
-              PicType.PIC,
+              cxxPlatformOrDefault.getPicTypeForSharedLinking(),
               args,
               cxxDeps.get(graphBuilder, cxxPlatformOrDefault),
               transitiveCxxPreprocessorInputFunction,

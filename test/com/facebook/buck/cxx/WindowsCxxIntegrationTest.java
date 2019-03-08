@@ -214,4 +214,14 @@ public class WindowsCxxIntegrationTest {
                     + "header_check\\untracked_header_includer.h, which is included by: %n"
                     + "header_check\\parent_header.h")));
   }
+
+  @Test
+  public void compilationDatabaseCanBeBuilt() throws IOException {
+    workspace.runBuckBuild("//app:hello#compilation-database,windows-x86_64").assertSuccess();
+    workspace.runBuckBuild("//app_asm:app_asm#compilation-database,windows-x86_64").assertSuccess();
+    workspace.runBuckBuild("//app_lib:app_lib#compilation-database,windows-x86_64").assertSuccess();
+    workspace.runBuckBuild("//lib:lib#compilation-database,windows-x86_64,static").assertSuccess();
+    workspace.runBuckBuild("//lib:lib#compilation-database,windows-x86_64,shared").assertSuccess();
+    workspace.runBuckBuild("//lib:lib#compilation-database,windows-x86_64").assertSuccess();
+  }
 }
