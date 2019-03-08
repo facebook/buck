@@ -9,6 +9,7 @@ java_library(
         "FakeJavaLibrary.java",
         "FakeJavac.java",
         "FakeStandardJavaFileManager.java",
+        "JavaAnnotationProcessorBuilder.java",
         "JavaBinaryRuleBuilder.java",
         "JavaLibraryBuilder.java",
         "JavaTestBuilder.java",

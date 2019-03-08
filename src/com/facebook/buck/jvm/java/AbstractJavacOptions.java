@@ -31,10 +31,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -105,8 +102,14 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
 
   @Value.Default
   @AddToRuleKey
-  public AnnotationProcessingParams getAnnotationProcessingParams() {
-    return AnnotationProcessingParams.EMPTY;
+  public JavacPluginParams getJavaAnnotationProcessorParams() {
+    return JavacPluginParams.EMPTY;
+  }
+
+  @Value.Default
+  @AddToRuleKey
+  public JavacPluginParams getStandardJavacPluginParams() {
+    return JavacPluginParams.EMPTY;
   }
 
   @AddToRuleKey
@@ -202,31 +205,14 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       }
     }
 
+    ImmutableList.Builder<ResolvedJavacPluginProperties> allPluginsBuilder =
+        ImmutableList.builder();
     // Add annotation processors.
-    AnnotationProcessingParams annotationProcessingParams = getAnnotationProcessingParams();
+    JavacPluginParams annotationProcessingParams = getJavaAnnotationProcessorParams();
     if (!annotationProcessingParams.isEmpty()) {
       ImmutableList<ResolvedJavacPluginProperties> annotationProcessors =
-          annotationProcessingParams.getModernProcessors();
-
-      // Specify processorpath to search for processors.
-      optionsConsumer.addOptionValue(
-          "processorpath",
-          annotationProcessors
-              .stream()
-              .map(properties -> properties.getClasspath(pathResolver, filesystem))
-              .flatMap(Arrays::stream)
-              .distinct()
-              .map(
-                  url -> {
-                    try {
-                      return url.toURI();
-                    } catch (URISyntaxException e) {
-                      throw new RuntimeException(e);
-                    }
-                  })
-              .map(Paths::get)
-              .map(Path::toString)
-              .collect(Collectors.joining(File.pathSeparator)));
+          annotationProcessingParams.getPluginProperties();
+      allPluginsBuilder.addAll(annotationProcessors);
 
       // Specify names of processors.
       optionsConsumer.addOptionValue(
@@ -248,6 +234,28 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
     } else {
       // Disable automatic annotation processor lookup
       optionsConsumer.addFlag("proc:none");
+    }
+
+    JavacPluginParams standardJavacPluginParams = getStandardJavacPluginParams();
+    if (!standardJavacPluginParams.isEmpty()) {
+      ImmutableList<ResolvedJavacPluginProperties> javacPlugins =
+          standardJavacPluginParams.getPluginProperties();
+      allPluginsBuilder.addAll(javacPlugins);
+
+      for (ResolvedJavacPluginProperties properties : javacPlugins) {
+        optionsConsumer.addFlag("Xplugin:" + properties.getProcessorNames().first());
+      }
+
+      // Add plugin parameters.
+      optionsConsumer.addExtras(standardJavacPluginParams.getParameters());
+    }
+
+    // Specify classpath to include javac plugins and annotation processors.
+    ImmutableList<ResolvedJavacPluginProperties> allPlugins = allPluginsBuilder.build();
+    if (!allPlugins.isEmpty()) {
+      optionsConsumer.addOptionValue(
+          "processorpath",
+          ResolvedJavacPluginProperties.getJoinedClasspath(pathResolver, filesystem, allPlugins));
     }
 
     // Add extra arguments.

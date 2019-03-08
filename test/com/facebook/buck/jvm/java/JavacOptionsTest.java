@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasKey;
@@ -27,10 +28,12 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -41,11 +44,14 @@ import org.junit.Test;
 
 public class JavacOptionsTest {
 
+  private final ProjectFilesystem filesystem =
+      TestProjectFilesystems.createProjectFilesystem(Paths.get("").toAbsolutePath());
+
   @Test
   public void buildsAreDebugByDefault() {
     JavacOptions options = createStandardBuilder().build();
 
-    assertOptionFlags(options, hasItem("g"));
+    assertOptionsHasFlag(options, "g");
   }
 
   @Test
@@ -59,7 +65,7 @@ public class JavacOptionsTest {
   public void productionBuildsCanBeEnabled() {
     JavacOptions options = createStandardBuilder().setProductionBuild(true).build();
 
-    assertOptionFlags(options, not(hasItem("g")));
+    assertOptionsHasNoFlag(options, "g");
   }
 
   @Test
@@ -78,26 +84,88 @@ public class JavacOptionsTest {
 
   @Test
   public void shouldSetTheAnnotationSource() {
-    AnnotationProcessingParams params =
-        AnnotationProcessingParams.builder()
+    JavacPluginParams params =
+        JavacPluginParams.builder()
             .setLegacyAnnotationProcessorNames(Collections.singleton("processor"))
             .setProcessOnly(true)
             .build();
 
-    JavacOptions options = createStandardBuilder().setAnnotationProcessingParams(params).build();
+    JavacOptions options = createStandardBuilder().setJavaAnnotationProcessorParams(params).build();
 
-    assertOptionFlags(options, hasItem("proc:only"));
+    assertOptionsHasFlag(options, "proc:only");
+  }
+
+  @Test
+  public void shouldAddAllAddedJavacPlugins() {
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setType(Type.JAVAC_PLUGIN)
+            .setCanReuseClassLoader(true)
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .addProcessorNames("ThePlugin")
+            .build();
+
+    ResolvedJavacPluginProperties resolvedProps = new ResolvedJavacPluginProperties(props);
+
+    JavacPluginParams params =
+        JavacPluginParams.builder().addPluginProperties(resolvedProps).build();
+
+    JavacOptions options = createStandardBuilder().setStandardJavacPluginParams(params).build();
+
+    assertOptionsHasFlag(options, "Xplugin:ThePlugin");
+  }
+
+  @Test
+  public void shouldNotAddJavacPluginsIfNoSpecified() {
+    JavacOptions options = createStandardBuilder().build();
+    assertOptionsHasFlagMatching(options, not(hasItem(containsString("Xplugin"))));
+  }
+
+  @Test
+  public void shouldAddJavacPluginsResolvedClasspathToClasspath() {
+    String someMagicJar = "some-magic.jar";
+    String alsoJar = "also.jar";
+
+    PathSourcePath someMagicJarPath = FakeSourcePath.of(someMagicJar);
+    PathSourcePath alsoJarPath = FakeSourcePath.of(alsoJar);
+
+    JavacPluginProperties props =
+        JavacPluginProperties.builder()
+            .setType(Type.JAVAC_PLUGIN)
+            .setCanReuseClassLoader(true)
+            .addAllClasspathEntries(ImmutableList.of(someMagicJarPath, alsoJarPath))
+            .setDoesNotAffectAbi(true)
+            .setSupportsAbiGenerationFromSource(true)
+            .addProcessorNames("ThePlugin")
+            .build();
+
+    ResolvedJavacPluginProperties resolvedProps = new ResolvedJavacPluginProperties(props);
+
+    JavacPluginParams params =
+        JavacPluginParams.builder().addPluginProperties(resolvedProps).build();
+
+    JavacOptions options = createStandardBuilder().setStandardJavacPluginParams(params).build();
+
+    String resolvedSomeMagicPath =
+        filesystem.resolve(someMagicJarPath.getRelativePath()).toString();
+    String resolvedAlsoPath = filesystem.resolve(alsoJarPath.getRelativePath()).toString();
+
+    assertOptionsHasKeyValue(
+        options,
+        "processorpath",
+        String.format("%s%s%s", resolvedAlsoPath, File.pathSeparator, resolvedSomeMagicPath));
   }
 
   @Test
   public void shouldAddAllAddedAnnotationProcessors() {
-    AnnotationProcessingParams params =
-        AnnotationProcessingParams.builder()
+    JavacPluginParams params =
+        JavacPluginParams.builder()
             .setLegacyAnnotationProcessorNames(Lists.newArrayList("myproc", "theirproc"))
             .setProcessOnly(true)
             .build();
 
-    JavacOptions options = createStandardBuilder().setAnnotationProcessingParams(params).build();
+    JavacOptions options = createStandardBuilder().setJavaAnnotationProcessorParams(params).build();
 
     assertOptionsHasKeyValue(options, "processor", "myproc,theirproc");
   }
@@ -105,7 +173,7 @@ public class JavacOptionsTest {
   @Test
   public void shouldDisableAnnotationProcessingIfNoProcessorsSpecified() {
     JavacOptions options = createStandardBuilder().build();
-    assertOptionFlags(options, hasItem("proc:none"));
+    assertOptionsHasFlag(options, "proc:none");
   }
 
   @Test
@@ -196,10 +264,6 @@ public class JavacOptionsTest {
     return JavacOptions.builderForUseInJavaBuckConfig();
   }
 
-  private void assertOptionFlags(JavacOptions options, Matcher<Iterable<? super String>> matcher) {
-    assertThat(visitOptions(options).flags, matcher);
-  }
-
   private OptionAccumulator visitOptions(JavacOptions options) {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
     options.appendOptionsTo(
@@ -222,7 +286,7 @@ public class JavacOptionsTest {
             throw new UnsupportedOperationException();
           }
         },
-        TestProjectFilesystems.createProjectFilesystem(Paths.get("").toAbsolutePath()));
+        filesystem);
     return optionsConsumer;
   }
 
@@ -232,6 +296,19 @@ public class JavacOptionsTest {
 
   private void assertOptionsHasExtra(JavacOptions options, String extra) {
     assertThat(visitOptions(options).extras, hasItem(extra));
+  }
+
+  private void assertOptionsHasFlagMatching(
+      JavacOptions options, Matcher<Iterable<? super String>> matcher) {
+    assertThat(visitOptions(options).flags, matcher);
+  }
+
+  private void assertOptionsHasNoFlag(JavacOptions options, String flag) {
+    assertOptionsHasFlagMatching(options, not(hasItem(flag)));
+  }
+
+  private void assertOptionsHasFlag(JavacOptions options, String flag) {
+    assertOptionsHasFlagMatching(options, hasItem(flag));
   }
 
   private void assertOptionsHasKeyValue(

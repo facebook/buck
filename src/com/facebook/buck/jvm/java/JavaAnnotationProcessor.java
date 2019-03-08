@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -17,30 +17,17 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 
-public class JavaAnnotationProcessor extends NoopBuildRuleWithDeclaredAndExtraDeps {
-  @AddToRuleKey private final JavacPluginProperties properties;
-  private final ResolvedJavacPluginProperties resolvedProperties;
+/** Represents a Java Annotation Processor Plugin for the Java Compiler */
+public class JavaAnnotationProcessor extends JavacPlugin {
 
   public JavaAnnotationProcessor(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       JavacPluginProperties properties) {
-    super(buildTarget, projectFilesystem, params);
-    this.properties = properties;
-    this.resolvedProperties = new ResolvedJavacPluginProperties(properties);
-  }
-
-  public JavacPluginProperties getUnresolvedProperties() {
-    return properties; // Shut up PMD
-  }
-
-  public ResolvedJavacPluginProperties getProcessorProperties() {
-    return resolvedProperties;
+    super(buildTarget, projectFilesystem, params, properties);
   }
 }

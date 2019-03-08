@@ -35,12 +35,12 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.ClasspathChecker;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.jvm.java.CompilerParameters;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacStep;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.step.Step;
@@ -139,7 +139,7 @@ public class DummyRDotJavaTest {
                 new JavacStep(
                         DEFAULT_JAVAC,
                         JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
-                            .setAnnotationProcessingParams(AnnotationProcessingParams.EMPTY)
+                            .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
                             .build(),
                         dummyRDotJava.getBuildTarget(),
                         pathResolver,

@@ -25,8 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import java.nio.file.Paths;
+import com.facebook.buck.jvm.java.JavaAnnotationProcessorBuilder;
 import org.junit.Test;
 
 public class AndroidLibraryTest {
@@ -35,15 +34,14 @@ public class AndroidLibraryTest {
   public void testAndroidAnnotation() {
     BuildTarget processorTarget = BuildTargetFactory.newInstance("//java/processor:processor");
     TargetNode<?> processorNode =
-        JavaLibraryBuilder.createBuilder(processorTarget)
-            .addSrc(Paths.get("java/processor/processor.java"))
+        JavaAnnotationProcessorBuilder.createBuilder(processorTarget)
+            .addProcessorClass("java/processor/processor.java")
             .build();
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//java/lib:lib");
     TargetNode<?> libraryNode =
         AndroidLibraryBuilder.createBuilder(libTarget)
-            .addProcessor("MyProcessor")
-            .addProcessorBuildTarget(processorNode.getBuildTarget())
+            .addPluginTarget(processorNode.getBuildTarget())
             .build();
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(processorNode, libraryNode);

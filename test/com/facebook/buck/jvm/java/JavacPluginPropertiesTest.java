@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableMap;
@@ -59,6 +60,7 @@ public class JavacPluginPropertiesTest {
 
     JavacPluginProperties props =
         JavacPluginProperties.builder()
+            .setType(Type.ANNOTATION_PROCESSOR)
             .setCanReuseClassLoader(false)
             .setDoesNotAffectAbi(false)
             .setSupportsAbiGenerationFromSource(false)

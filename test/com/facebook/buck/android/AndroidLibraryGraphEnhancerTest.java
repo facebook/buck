@@ -34,11 +34,11 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.AnnotationProcessingParams;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
 import com.facebook.buck.jvm.java.JavacOptions;
+import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.util.DependencyMode;
 import com.google.common.collect.ImmutableList;
@@ -190,8 +190,8 @@ public class AndroidLibraryGraphEnhancerTest {
             ImmutableSortedSet.of(resourceRule1, resourceRule2),
             DEFAULT_JAVAC,
             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
-                .setAnnotationProcessingParams(
-                    AnnotationProcessingParams.builder().setProcessOnly(true).build())
+                .setJavaAnnotationProcessorParams(
+                    JavacPluginParams.builder().setProcessOnly(true).build())
                 .setSourceLevel("7")
                 .setTargetLevel("7")
                 .build(),
@@ -208,7 +208,7 @@ public class AndroidLibraryGraphEnhancerTest {
     assertTrue(dummyRDotJava.isPresent());
     JavacOptions javacOptions =
         ((JavacToJarStepFactory) dummyRDotJava.get().getCompileStepFactory()).getJavacOptions();
-    assertFalse(javacOptions.getAnnotationProcessingParams().getProcessOnly());
+    assertFalse(javacOptions.getJavaAnnotationProcessorParams().getProcessOnly());
     assertEquals("7", javacOptions.getSourceLevel());
   }
 

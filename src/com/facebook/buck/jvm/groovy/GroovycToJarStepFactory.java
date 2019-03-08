@@ -75,6 +75,6 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
 
   @Override
   public boolean hasAnnotationProcessing() {
-    return !javacOptions.getAnnotationProcessingParams().isEmpty();
+    return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 }

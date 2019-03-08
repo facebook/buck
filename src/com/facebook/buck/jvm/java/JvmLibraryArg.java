@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type.ANNOTATION_PROCESSOR;
+import static com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type.JAVAC_PLUGIN;
+
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -31,8 +34,10 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -61,6 +66,8 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   ImmutableSortedSet<BuildTarget> getAnnotationProcessorDeps();
 
   ImmutableList<String> getAnnotationProcessorParams();
+
+  ImmutableList<String> getJavaPluginParams();
 
   ImmutableSet<String> getAnnotationProcessors();
 
@@ -131,51 +138,80 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
     return true;
   }
 
+  default List<BuildRule> getPluginsOf(
+      BuildRuleResolver resolver, final AbstractJavacPluginProperties.Type type) {
+    return getPlugins()
+        .stream()
+        .map(pluginTarget -> resolver.getRule(pluginTarget))
+        .filter(
+            pluginRule -> ((JavacPlugin) pluginRule).getUnresolvedProperties().getType() == type)
+        .collect(Collectors.toList());
+  }
+
+  default void addPlugins(
+      AbstractJavacPluginParams.Builder builder,
+      BuildRuleResolver resolver,
+      BuildTarget owner,
+      AbstractJavacPluginProperties.Type type) {
+    for (BuildTarget pluginTarget : getPlugins()) {
+      BuildRule pluginRule = resolver.getRule(pluginTarget);
+      if (!(pluginRule instanceof JavacPlugin)) {
+        throw new HumanReadableException(
+            String.format(
+                "%s: only java_annotation_processor or java_plugin rules can be specified "
+                    + "as plugins. %s is not a java_annotation_processor nor java_plugin.",
+                owner, pluginTarget));
+      }
+      JavacPlugin javacPluginRule = (JavacPlugin) pluginRule;
+      if (javacPluginRule.getUnresolvedProperties().getType() == type) {
+        builder.addPluginProperties(javacPluginRule.getPluginProperties());
+      }
+    }
+  }
+
   @Value.Derived
-  default AnnotationProcessingParams buildAnnotationProcessingParams(
+  default JavacPluginParams buildStandardJavacParams(
       BuildTarget owner, BuildRuleResolver resolver) {
-    if (getAnnotationProcessors().isEmpty()
-        && getPlugins().isEmpty()
-        && getAnnotationProcessorDeps().isEmpty()) {
-      return AnnotationProcessingParams.EMPTY;
+
+    if (getPluginsOf(resolver, JAVAC_PLUGIN).isEmpty()) {
+      return JavacPluginParams.EMPTY;
     }
 
-    AbstractAnnotationProcessingParams.Builder builder = AnnotationProcessingParams.builder();
-    addLegacyProcessors(builder, resolver);
-    addProcessors(builder, resolver, owner);
-    for (String processorParam : getAnnotationProcessorParams()) {
+    AbstractJavacPluginParams.Builder builder = JavacPluginParams.builder();
+    addPlugins(builder, resolver, owner, JAVAC_PLUGIN);
+    for (String processorParam : getJavaPluginParams()) {
       builder.addParameters(processorParam);
     }
-    builder.setProcessOnly(getAnnotationProcessorOnly().orElse(Boolean.FALSE));
-
     return builder.build();
   }
 
-  default void addProcessors(
-      AbstractAnnotationProcessingParams.Builder builder,
-      BuildRuleResolver resolver,
-      BuildTarget owner) {
-    for (BuildTarget pluginTarget : getPlugins()) {
-      BuildRule pluginRule = resolver.getRule(pluginTarget);
-      if (!(pluginRule instanceof JavaAnnotationProcessor)) {
-        throw new HumanReadableException(
-            String.format(
-                "%s: only java_annotation_processor rules can be specified as plugins. "
-                    + "%s is not a java_annotation_processor.",
-                owner, pluginTarget));
-      }
-      JavaAnnotationProcessor plugin = (JavaAnnotationProcessor) pluginRule;
-      builder.addModernProcessors(plugin.getProcessorProperties());
-    }
-  }
-
   default void addLegacyProcessors(
-      AbstractAnnotationProcessingParams.Builder builder, BuildRuleResolver resolver) {
+      AbstractJavacPluginParams.Builder builder, BuildRuleResolver resolver) {
     builder.setLegacyAnnotationProcessorNames(getAnnotationProcessors());
     ImmutableSortedSet<BuildRule> processorDeps =
         resolver.getAllRules(getAnnotationProcessorDeps());
     for (BuildRule processorDep : processorDeps) {
       builder.addLegacyAnnotationProcessorDeps(processorDep);
     }
+  }
+
+  @Value.Derived
+  default JavacPluginParams buildJavaAnnotationProcessorParams(
+      BuildTarget owner, BuildRuleResolver resolver) {
+    if (getAnnotationProcessors().isEmpty()
+        && getAnnotationProcessorDeps().isEmpty()
+        && getPluginsOf(resolver, ANNOTATION_PROCESSOR).isEmpty()) {
+      return JavacPluginParams.EMPTY;
+    }
+
+    AbstractJavacPluginParams.Builder builder = JavacPluginParams.builder();
+    addLegacyProcessors(builder, resolver);
+    addPlugins(builder, resolver, owner, ANNOTATION_PROCESSOR);
+    for (String processorParam : getAnnotationProcessorParams()) {
+      builder.addParameters(processorParam);
+    }
+    builder.setProcessOnly(getAnnotationProcessorOnly().orElse(Boolean.FALSE));
+
+    return builder.build();
   }
 }

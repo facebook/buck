@@ -26,6 +26,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;
 import java.io.IOException;
@@ -58,6 +59,7 @@ public class AnnotationProcessorFactoryTest {
     ResolvedJavacPluginProperties processorGroup =
         new ResolvedJavacPluginProperties(
             JavacPluginProperties.builder()
+                .setType(Type.ANNOTATION_PROCESSOR)
                 .addClasspathEntries(classpath)
                 .addProcessorNames(annotationProcessor)
                 .setCanReuseClassLoader(canReuseClasspath)
