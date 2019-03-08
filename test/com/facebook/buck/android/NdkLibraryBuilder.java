@@ -81,7 +81,7 @@ public class NdkLibraryBuilder
   public NdkLibraryBuilder(
       BuildTarget target, ProjectFilesystem filesystem, ToolchainProvider toolchainProvider) {
     super(
-        new NdkLibraryDescription() {
+        new NdkLibraryDescription(toolchainProvider) {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem, Path buildRulePath) {

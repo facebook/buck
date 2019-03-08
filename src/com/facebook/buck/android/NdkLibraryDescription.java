@@ -20,9 +20,11 @@ import com.facebook.buck.android.toolchain.ndk.AndroidNdkConstants;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
@@ -61,6 +63,7 @@ import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -76,7 +79,14 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
-public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibraryDescriptionArg> {
+/**
+ * Defines the (now deprecated) ndk_library rule for building c-based libraries for android using
+ * android make.
+ */
+@Deprecated
+public class NdkLibraryDescription
+    implements DescriptionWithTargetGraph<NdkLibraryDescriptionArg>,
+        ImplicitDepsInferringDescription<NdkLibraryDescriptionArg> {
 
   private static final Pattern EXTENSIONS_REGEX =
       Pattern.compile(
@@ -86,6 +96,12 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
 
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(new EnvironmentVariableMacroExpander(Platform.detect()));
+
+  private final ToolchainProvider toolchainProvider;
+
+  public NdkLibraryDescription(ToolchainProvider toolchainProvider) {
+    this.toolchainProvider = toolchainProvider;
+  }
 
   @Override
   public Class<NdkLibraryDescriptionArg> getConstructorArgType() {
@@ -390,6 +406,23 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
         flags,
         args.getIsAsset(),
         androidNdk.getNdkVersion());
+  }
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellPathResolver cellRoots,
+      NdkLibraryDescriptionArg constructorArg,
+      Builder<BuildTarget> extraDepsBuilder,
+      Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    toolchainProvider
+        .getByNameIfPresent(NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class)
+        .ifPresent(
+            ndkCxxPlatformsProvider ->
+                ndkCxxPlatformsProvider
+                    .getNdkCxxPlatforms()
+                    .values()
+                    .forEach(platform -> extraDepsBuilder.addAll(platform.getParseTimeDeps())));
   }
 
   @BuckStyleImmutable

@@ -21,6 +21,7 @@ import static com.facebook.buck.android.AndroidBinaryResourcesGraphEnhancer.PACK
 import com.facebook.buck.android.FilterResourcesSteps.ResourceFilter;
 import com.facebook.buck.android.dalvik.ZipSplitter.DexSplitStrategy;
 import com.facebook.buck.android.exopackage.ExopackageMode;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
@@ -246,6 +247,15 @@ public class AndroidBinaryDescription
       Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget();
       redexTarget.ifPresent(extraDepsBuilder::add);
     }
+    // TODO(cjhopman): we could filter this by the abis that this binary supports.
+    toolchainProvider
+        .getByNameIfPresent(NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class)
+        .ifPresent(
+            ndkCxxPlatformsProvider ->
+                ndkCxxPlatformsProvider
+                    .getNdkCxxPlatforms()
+                    .values()
+                    .forEach(platform -> extraDepsBuilder.addAll(platform.getParseTimeDeps())));
   }
 
   @BuckStyleImmutable

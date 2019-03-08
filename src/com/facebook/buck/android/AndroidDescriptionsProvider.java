@@ -87,7 +87,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
-        new NdkLibraryDescription(),
+        new NdkLibraryDescription(toolchainProvider),
         new NdkToolchainDescription(),
         new GenAidlDescription(),
         new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
