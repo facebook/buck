@@ -90,10 +90,6 @@ def java_test(
             "//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib",
         ] + convert_module_deps_to_test(module_deps),
         vm_args = [
-            # Add -XX:-UseSplitVerifier by default to work around:
-            # http://arihantwin.blogspot.com/2012/08/getting-error-illegal-local-variable.html
-            "-XX:-UseSplitVerifier",
-
             # Don't use the system-installed JNA; extract it from the local jar.
             "-Djna.nosys=true",
 
