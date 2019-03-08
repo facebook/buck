@@ -74,6 +74,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
         cxxLibraryDescription,
         new CxxGenruleDescription(
             cxxBuckConfig, toolchainProvider, context.getSandboxExecutionStrategy()),
+        new CxxToolchainDescription(),
         new CxxTestDescription(toolchainProvider, cxxBuckConfig, cxxBinaryMetadataFactory),
         new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig),
         PrebuiltCxxLibraryGroupDescription.of(),

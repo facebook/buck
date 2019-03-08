@@ -269,6 +269,7 @@ java_test(
         "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
+        "//test/com/facebook/buck/core/toolchain/tool/impl/testutil:testutil",
         "//test/com/facebook/buck/cxx:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/file:testutil",
