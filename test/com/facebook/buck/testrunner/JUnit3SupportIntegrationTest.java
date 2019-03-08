@@ -46,7 +46,7 @@ public class JUnit3SupportIntegrationTest {
 
   @Test
   public void testShouldRun() throws IOException {
-    Set<String> expectedPassingTests = ImmutableSet.of("com.example.TestA");
+    Set<String> expectedPassingTests = ImmutableSet.of("com.example.TestA", "com.example.TestB");
     String[] args = new String[] {"test", "--all"};
     ProcessResult result = workspace.runBuckCommand(args);
     String[] lines = result.getStderr().split("\n");

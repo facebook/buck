@@ -116,7 +116,7 @@ public final class JUnitRunner extends BaseRunner {
     }
 
     // Classes that extend junit.framework.TestCase are JUnit3-style test classes.
-    if (TestCase.class.equals(klass.getSuperclass())) {
+    if (TestCase.class.isAssignableFrom(klass)) {
       return true;
     }
 
