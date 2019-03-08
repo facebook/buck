@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
@@ -37,12 +38,14 @@ import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -96,6 +99,7 @@ public class CxxBuckConfig {
   private static final String DETAILED_UNTRACKED_HEADER_MESSAGES =
       "detailed_untracked_header_messages";
   private static final String USE_ARG_FILE = "use_arg_file";
+  private static final String TOOLCHAIN_TARGET = "toolchain_target";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -584,6 +588,36 @@ public class CxxBuckConfig {
 
   public BuckConfig getDelegate() {
     return delegate;
+  }
+
+  /**
+   * If the config specifies a value for "toolchain_target", returns a {@link UnresolvedCxxPlatform}
+   * backed by the specified target.
+   */
+  public static Optional<UnresolvedCxxPlatform> getProviderBasedPlatform(
+      BuckConfig config, Flavor flavor) {
+    String cxxSection = new CxxBuckConfig(config, flavor).cxxSection;
+
+    Optional<BuildTarget> toolchainTarget =
+        config.getBuildTarget(cxxSection, TOOLCHAIN_TARGET, EmptyTargetConfiguration.INSTANCE);
+    if (!toolchainTarget.isPresent()) {
+      return Optional.empty();
+    }
+
+    if (!cxxSection.equals(UNFLAVORED_CXX_SECTION)) {
+      // In a flavored cxx section, we don't allow any configuration except for configuration of the
+      // platform.
+      ImmutableMap<String, String> allEntries = config.getEntriesForSection(cxxSection);
+      if (allEntries.size() != 1) {
+        throw new HumanReadableException(
+            "When configuring a cxx %s, no other configuration is allowed in that section. Got unexpected keys [%s]",
+            TOOLCHAIN_TARGET,
+            Joiner.on(", ")
+                .join(Sets.difference(allEntries.keySet(), ImmutableSet.of(TOOLCHAIN_TARGET))));
+      }
+    }
+
+    return Optional.of(new ProviderBasedUnresolvedCxxPlatform(toolchainTarget.get(), flavor));
   }
 
   @Value.Immutable

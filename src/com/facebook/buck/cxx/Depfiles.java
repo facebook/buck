@@ -43,6 +43,7 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 /** Specialized parser for .d Makefiles emitted by {@code gcc -MD}. */
+// TODO(cjhopman): This should be better documented about the format it is expecting.
 class Depfiles {
 
   private Depfiles() {}

@@ -1,0 +1,12 @@
+cxx_library(
+    name = "library",
+    srcs = [
+        "cxx_a.cpp",
+        "cxx_b.cpp",
+    ],
+)
+
+cxx_binary(
+    name = "binary",
+    deps = [":library"],
+)

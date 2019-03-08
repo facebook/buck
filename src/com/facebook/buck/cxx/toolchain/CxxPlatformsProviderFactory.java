@@ -136,31 +136,57 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
         new HashMap<>(cxxSystemPlatformsMap);
     ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
     for (Flavor flavor : cxxFlavors) {
-      UnresolvedCxxPlatform baseUnresolvedCxxPlatform = cxxSystemPlatformsMap.get(flavor);
+      Optional<UnresolvedCxxPlatform> newPlatform =
+          CxxBuckConfig.getProviderBasedPlatform(config, flavor);
 
-      CxxPlatform baseCxxPlatform;
-      if (baseUnresolvedCxxPlatform == null) {
-        if (possibleHostFlavors.contains(flavor)) {
-          // If a flavor is for an alternate host, it's safe to skip.
-          continue;
-        }
-        LOG.info("Applying \"%s\" overrides to default host platform", flavor);
-        baseCxxPlatform = defaultHostCxxPlatform;
-      } else {
-        if (!(baseUnresolvedCxxPlatform instanceof StaticUnresolvedCxxPlatform)) {
-          throw new HumanReadableException("Cannot override non-static cxx platform %s", flavor);
-        }
-        baseCxxPlatform =
-            ((StaticUnresolvedCxxPlatform) baseUnresolvedCxxPlatform).getCxxPlatform();
+      if (!newPlatform.isPresent()) {
+        newPlatform =
+            augmentSystemPlatform(
+                platform,
+                cxxSystemPlatformsMap,
+                defaultHostCxxPlatform,
+                possibleHostFlavors,
+                flavor,
+                new CxxBuckConfig(config, flavor));
       }
 
-      cxxOverridePlatformsMap.put(
-          flavor,
-          new StaticUnresolvedCxxPlatform(
-              CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                  baseCxxPlatform, platform, new CxxBuckConfig(config, flavor), flavor)));
+      if (!newPlatform.isPresent()) {
+        continue;
+      }
+
+      cxxOverridePlatformsMap.put(flavor, newPlatform.get());
     }
     return cxxOverridePlatformsMap;
+  }
+
+  private static Optional<UnresolvedCxxPlatform> augmentSystemPlatform(
+      Platform platform,
+      ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsMap,
+      CxxPlatform defaultHostCxxPlatform,
+      ImmutableSet<Flavor> possibleHostFlavors,
+      Flavor flavor,
+      CxxBuckConfig cxxConfig) {
+    UnresolvedCxxPlatform baseUnresolvedCxxPlatform = cxxSystemPlatformsMap.get(flavor);
+    CxxPlatform baseCxxPlatform;
+    if (baseUnresolvedCxxPlatform == null) {
+      if (possibleHostFlavors.contains(flavor)) {
+        // If a flavor is for an alternate host, it's safe to skip.
+        return Optional.empty();
+      }
+      LOG.info("Applying \"%s\" overrides to default host platform", flavor);
+      baseCxxPlatform = defaultHostCxxPlatform;
+    } else {
+      if (!(baseUnresolvedCxxPlatform instanceof StaticUnresolvedCxxPlatform)) {
+        throw new HumanReadableException("Cannot override non-static cxx platform %s", flavor);
+      }
+      baseCxxPlatform = ((StaticUnresolvedCxxPlatform) baseUnresolvedCxxPlatform).getCxxPlatform();
+    }
+
+    StaticUnresolvedCxxPlatform augmentedPlatform =
+        new StaticUnresolvedCxxPlatform(
+            CxxPlatforms.copyPlatformWithFlavorAndConfig(
+                baseCxxPlatform, platform, cxxConfig, flavor));
+    return Optional.of(augmentedPlatform);
   }
 
   private static UnresolvedCxxPlatform getHostCxxPlatform(
