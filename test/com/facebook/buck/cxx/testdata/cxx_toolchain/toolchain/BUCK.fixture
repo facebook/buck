@@ -7,7 +7,7 @@ def define_toolchain(**kwargs):
 
     object_file_extension = "object",
     static_library_extension = "static",
-    shared_library_extension = "shared",
+    shared_library_extension = "so",
     shared_library_versioned_extension_format = "%s.shared",
 
     use_header_map = True,
@@ -29,7 +29,7 @@ define_toolchain(
     nm = "//tools:unimplemented",
     objcopy_for_shared_library_interface = "//tools:unimplemented",
     ranlib = "//tools:ranlib",
-    strip = "//tools:unimplemented",
+    strip = "//tools:strip",
 )
 
 define_toolchain(

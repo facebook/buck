@@ -1,0 +1,5 @@
+export_file(
+    name = "runtime.so",
+    src = "runtime.so",
+    visibility = ["PUBLIC"],
+)

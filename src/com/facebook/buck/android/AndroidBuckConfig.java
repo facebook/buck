@@ -28,6 +28,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,6 +45,9 @@ public class AndroidBuckConfig {
 
   private static final String ANDROID_SECTION = "android";
   private static final String REDEX = "redex";
+
+  public static final ImmutableSet<String> VALID_ABI_KEYS =
+      ImmutableSet.of("arm", "armv7", "arm64", "x86", "x86_64");
 
   private final BuckConfig delegate;
   private final Platform platform;
@@ -179,6 +183,18 @@ public class AndroidBuckConfig {
     return specificAppPlatform.isPresent()
         ? specificAppPlatform
         : getNdkCpuAbiFallbackAppPlatform();
+  }
+
+  /** Gets the ndk_toolchain target for the abi if it is specified in the config. */
+  public Optional<BuildTarget> getNdkCxxToolchainTargetForAbi(String cpuAbi) {
+    ImmutableMap<String, String> platformMap =
+        delegate.getMap("ndk", "toolchain_target_per_cpu_abi");
+    platformMap.keySet().forEach(key -> Verify.verify(VALID_ABI_KEYS.contains(key)));
+    Optional<String> platformTarget = Optional.ofNullable(platformMap.get(cpuAbi));
+    return platformTarget.map(
+        target ->
+            delegate.getBuildTargetForFullyQualifiedTarget(
+                target, EmptyTargetConfiguration.INSTANCE));
   }
 
   /**

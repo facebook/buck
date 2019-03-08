@@ -405,6 +405,11 @@ public class NdkCxxPlatforms {
       TargetCpuType cpuType,
       String flavorValue) {
     Flavor flavor = InternalFlavor.of(flavorValue);
+    Optional<UnresolvedNdkCxxPlatform> dynamicPlatform =
+        getDynamicNdkCxxPlatform(androidConfig, cpuAbi, flavor);
+    if (dynamicPlatform.isPresent()) {
+      return dynamicPlatform.get();
+    }
     String androidPlatform =
         androidConfig
             .getNdkAppPlatformForCpuAbi(cpuAbi)
@@ -423,6 +428,13 @@ public class NdkCxxPlatforms {
         runtimeType,
         executableFinder,
         strictToolchainPaths);
+  }
+
+  private static Optional<UnresolvedNdkCxxPlatform> getDynamicNdkCxxPlatform(
+      AndroidBuckConfig androidConfig, String abi, Flavor flavor) {
+    return androidConfig
+        .getNdkCxxToolchainTargetForAbi(abi)
+        .map(target -> new ProviderBackedUnresolvedNdkCxxPlatform(target, flavor));
   }
 
   @VisibleForTesting

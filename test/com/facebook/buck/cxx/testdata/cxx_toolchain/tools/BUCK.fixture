@@ -1,6 +1,7 @@
 python_library(
     name = "impl",
     srcs = ["impl.py"],
+    visibility = ["PUBLIC"],
 )
 
 def define_impl(name):
@@ -20,3 +21,5 @@ define_impl("archiver")
 define_impl("ranlib")
 
 define_impl("linker")
+
+define_impl("strip")
