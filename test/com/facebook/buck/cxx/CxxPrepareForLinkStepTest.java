@@ -200,7 +200,7 @@ public class CxxPrepareForLinkStepTest {
             .build();
 
     ImmutableList<String> expectedFileListContents =
-        ImmutableList.of(Paths.get("libb.a").toAbsolutePath().toString());
+        ImmutableList.of(MorePaths.pathWithUnixSeparators(Paths.get("libb.a").toAbsolutePath()));
 
     checkContentsOfFile(argFilePath, expectedArgFileContents);
     checkContentsOfFile(fileListPath, expectedFileListContents);
@@ -266,8 +266,10 @@ public class CxxPrepareForLinkStepTest {
                 isWindows
                     ? "\"/Library/Application Support/blabla\""
                     : "'/Library/Application Support/blabla'")
-            .add(FakeSourcePath.of("libb.a").toString())
-            .add(FakeSourcePath.of("buck-out/gen/mylib#default,static/libmylib.lib").toString())
+            .add(MorePaths.pathWithUnixSeparators(FakeSourcePath.of("libb.a").toString()))
+            .add(
+                MorePaths.pathWithUnixSeparators(
+                    FakeSourcePath.of("buck-out/gen/mylib#default,static/libmylib.lib").toString()))
             .build();
 
     checkContentsOfFile(argFilePath, expectedArgFileContents);

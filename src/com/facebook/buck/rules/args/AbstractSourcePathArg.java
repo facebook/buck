@@ -37,7 +37,16 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
 
   @Override
   public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
-    consumer.accept(pathResolver.getAbsolutePath(getPath()).toString());
+    appendToCommandLine(consumer, pathResolver, false);
+  }
+
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolver pathResolver, boolean useUnixPathSeparator) {
+    String line = pathResolver.getAbsolutePath(getPath()).toString();
+    if (useUnixPathSeparator) {
+      line = MorePaths.pathWithUnixSeparators(line);
+    }
+    consumer.accept(line);
   }
 
   public void appendToCommandLineRel(
@@ -54,7 +63,7 @@ abstract class AbstractSourcePathArg implements Arg, HasSourcePath {
       }
       consumer.accept(line);
     } else {
-      appendToCommandLine(consumer, pathResolver);
+      appendToCommandLine(consumer, pathResolver, useUnixPathSeparator);
     }
   }
 
