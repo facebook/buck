@@ -24,8 +24,10 @@ import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
+import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -94,7 +96,7 @@ public class AndroidNdkHelper {
     String ndkVersion = AndroidNdkResolver.findNdkVersionFromDirectory(ndkPath).get();
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
 
-    ImmutableCollection<NdkCxxPlatform> platforms =
+    ImmutableCollection<UnresolvedNdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 AndroidNdkHelper.DEFAULT_CONFIG,
@@ -111,7 +113,7 @@ public class AndroidNdkHelper {
                 Platform.detect())
             .values();
     assertFalse(platforms.isEmpty());
-    return platforms.iterator().next();
+    return platforms.iterator().next().resolve(new TestActionGraphBuilder());
   }
 
   private static Path unzip(Path tmpDir, Path zipPath, String name) throws IOException {

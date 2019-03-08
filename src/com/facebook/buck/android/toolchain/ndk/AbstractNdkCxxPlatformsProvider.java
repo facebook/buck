@@ -17,13 +17,15 @@
 package com.facebook.buck.android.toolchain.ndk;
 
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.BaseToolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
-import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import java.util.Objects;
 import org.immutables.value.Value;
 
 /** Provides all {@link NdkCxxPlatform}s by {@link TargetCpuType}. */
@@ -33,9 +35,17 @@ public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain
     implements CxxPlatformsSupplier {
   public static final String DEFAULT_NAME = "ndk-cxx-platforms";
 
-  /** @return all {@link NdkCxxPlatform}s by {@link TargetCpuType}. */
+  /** @return all {@link UnresolvedNdkCxxPlatform}s by {@link TargetCpuType}. */
   @Value.Parameter
-  public abstract ImmutableMap<TargetCpuType, NdkCxxPlatform> getNdkCxxPlatforms();
+  public abstract ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getNdkCxxPlatforms();
+
+  /** @return all resolved {@link NdkCxxPlatform}s by {@link TargetCpuType}. */
+  public ImmutableMap<TargetCpuType, NdkCxxPlatform> getResolvedNdkCxxPlatforms(
+      BuildRuleResolver resolver) {
+    return ImmutableMap.copyOf(
+        Maps.transformValues(
+            getNdkCxxPlatforms(), platform -> Objects.requireNonNull(platform).resolve(resolver)));
+  }
 
   /** @return {@link CxxPlatform} of all {@link NdkCxxPlatform}s */
   @Override
@@ -43,10 +53,9 @@ public abstract class AbstractNdkCxxPlatformsProvider extends BaseToolchain
     ImmutableMap.Builder<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsBuilder =
         ImmutableMap.builder();
 
-    for (NdkCxxPlatform ndkCxxPlatform : getNdkCxxPlatforms().values()) {
+    for (UnresolvedNdkCxxPlatform ndkCxxPlatform : getNdkCxxPlatforms().values()) {
       cxxSystemPlatformsBuilder.put(
-          ndkCxxPlatform.getCxxPlatform().getFlavor(),
-          new StaticUnresolvedCxxPlatform(ndkCxxPlatform.getCxxPlatform()));
+          ndkCxxPlatform.getCxxPlatform().getFlavor(), ndkCxxPlatform.getCxxPlatform());
     }
     return cxxSystemPlatformsBuilder.build();
   }

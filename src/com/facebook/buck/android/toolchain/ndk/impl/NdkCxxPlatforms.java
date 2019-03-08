@@ -27,6 +27,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -195,7 +196,8 @@ public class NdkCxxPlatforms {
     return !(cxxRuntime == NdkCxxRuntime.LIBCXX && getNdkMajorVersion(ndkVersion) >= 12);
   }
 
-  public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+  /** Gets all the unresolved {@link NdkCxxPlatform} based on the buckconfig. */
+  public static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
@@ -245,7 +247,7 @@ public class NdkCxxPlatforms {
   }
 
   @VisibleForTesting
-  public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+  public static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
@@ -270,7 +272,7 @@ public class NdkCxxPlatforms {
   }
 
   /** @return the map holding the available {@link NdkCxxPlatform}s. */
-  public static ImmutableMap<TargetCpuType, NdkCxxPlatform> getPlatforms(
+  public static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
@@ -282,7 +284,7 @@ public class NdkCxxPlatforms {
       Platform platform,
       ExecutableFinder executableFinder,
       boolean strictToolchainPaths) {
-    ImmutableMap.Builder<TargetCpuType, NdkCxxPlatform> ndkCxxPlatformBuilder =
+    ImmutableMap.Builder<TargetCpuType, UnresolvedNdkCxxPlatform> ndkCxxPlatformBuilder =
         ImmutableMap.builder();
 
     // ARM Platform
@@ -388,7 +390,7 @@ public class NdkCxxPlatforms {
     return ndkCxxPlatformBuilder.build();
   }
 
-  private static NdkCxxPlatform getNdkCxxPlatform(
+  private static UnresolvedNdkCxxPlatform getNdkCxxPlatform(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
@@ -437,7 +439,7 @@ public class NdkCxxPlatforms {
   }
 
   @VisibleForTesting
-  static NdkCxxPlatform build(
+  static UnresolvedNdkCxxPlatform build(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
@@ -622,7 +624,7 @@ public class NdkCxxPlatforms {
               filesystem,
               toolchainPaths.getCxxRuntimeLibsDirectory().resolve(cxxRuntime.getSoname())));
     }
-    return builder.build();
+    return StaticUnresolvedNdkCxxPlatform.of(builder.build());
   }
 
   @VisibleForTesting

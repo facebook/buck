@@ -65,6 +65,7 @@ java_library(
         "//src/com/facebook/buck/android/toolchain/ndk/impl:impl",
         "//src/com/facebook/buck/util/environment:environment",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",

@@ -28,6 +28,8 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
+import com.facebook.buck.android.toolchain.ndk.impl.StaticUnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -128,16 +130,17 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   @SuppressWarnings("unchecked")
   public void testCxxLibrary() {
 
-    NdkCxxPlatform ndkCxxPlatform =
-        NdkCxxPlatform.builder()
-            .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
-            .setCxxRuntime(NdkCxxRuntime.GNUSTL)
-            .setCxxSharedRuntimePath(FakeSourcePath.of("runtime"))
-            .setObjdump(new CommandTool.Builder().addArg("objdump").build())
-            .build();
+    UnresolvedNdkCxxPlatform ndkCxxPlatform =
+        StaticUnresolvedNdkCxxPlatform.of(
+            NdkCxxPlatform.builder()
+                .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+                .setCxxRuntime(NdkCxxRuntime.GNUSTL)
+                .setCxxSharedRuntimePath(FakeSourcePath.of("runtime"))
+                .setObjdump(new CommandTool.Builder().addArg("objdump").build())
+                .build());
 
-    ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms =
-        ImmutableMap.<TargetCpuType, NdkCxxPlatform>builder()
+    ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> nativePlatforms =
+        ImmutableMap.<TargetCpuType, UnresolvedNdkCxxPlatform>builder()
             .put(TargetCpuType.ARMV7, ndkCxxPlatform)
             .put(TargetCpuType.X86, ndkCxxPlatform)
             .build();
@@ -320,16 +323,17 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   @Test
   public void testDuplicateCxxLibrary() {
 
-    NdkCxxPlatform ndkCxxPlatform =
-        NdkCxxPlatform.builder()
-            .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
-            .setCxxRuntime(NdkCxxRuntime.GNUSTL)
-            .setCxxSharedRuntimePath(FakeSourcePath.of("runtime"))
-            .setObjdump(new CommandTool.Builder().addArg("objdump").build())
-            .build();
+    UnresolvedNdkCxxPlatform ndkCxxPlatform =
+        StaticUnresolvedNdkCxxPlatform.of(
+            NdkCxxPlatform.builder()
+                .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
+                .setCxxRuntime(NdkCxxRuntime.GNUSTL)
+                .setCxxSharedRuntimePath(FakeSourcePath.of("runtime"))
+                .setObjdump(new CommandTool.Builder().addArg("objdump").build())
+                .build());
 
-    ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms =
-        ImmutableMap.<TargetCpuType, NdkCxxPlatform>builder()
+    ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> nativePlatforms =
+        ImmutableMap.<TargetCpuType, UnresolvedNdkCxxPlatform>builder()
             .put(TargetCpuType.ARMV7, ndkCxxPlatform)
             .put(TargetCpuType.X86, ndkCxxPlatform)
             .build();

@@ -17,9 +17,9 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdkConstants;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
@@ -177,9 +177,9 @@ public class NdkLibraryDescription implements DescriptionWithTargetGraph<NdkLibr
             NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
     AndroidNdk androidNdk = toolchainProvider.getByName(AndroidNdk.DEFAULT_NAME, AndroidNdk.class);
 
-    for (Map.Entry<TargetCpuType, NdkCxxPlatform> entry :
+    for (Map.Entry<TargetCpuType, UnresolvedNdkCxxPlatform> entry :
         ndkCxxPlatformsProvider.getNdkCxxPlatforms().entrySet()) {
-      CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform();
+      CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform().resolve(graphBuilder);
 
       // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
       // NDK library rules.

@@ -189,7 +189,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           toolchainProvider.getByName(
               NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
 
-      nativePlatforms = ndkCxxPlatformsProvider.getNdkCxxPlatforms();
+      nativePlatforms = ndkCxxPlatformsProvider.getResolvedNdkCxxPlatforms(graphBuilder);
 
       if (nativePlatforms.isEmpty()) {
         throw new HumanReadableException(
@@ -398,8 +398,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   }
 
   private static Iterable<TargetCpuType> getFilteredPlatforms(
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      ImmutableSet<TargetCpuType> cpuFilters) {
+      ImmutableMap<TargetCpuType, ?> nativePlatforms, ImmutableSet<TargetCpuType> cpuFilters) {
     // TODO(agallagher): We currently treat an empty set of filters to mean to allow everything.
     // We should fix this by assigning a default list of CPU filters in the descriptions, but
     // until we do, if the set of filters is empty, just build for all available platforms.

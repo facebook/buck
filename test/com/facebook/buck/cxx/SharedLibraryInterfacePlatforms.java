@@ -19,13 +19,14 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
-import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -56,7 +57,7 @@ public class SharedLibraryInterfacePlatforms {
             .setVersion(compilerVersion)
             .setGccVersion(gccVersion)
             .build();
-    ImmutableMap<TargetCpuType, NdkCxxPlatform> ndkPlatforms =
+    ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> ndkPlatforms =
         NdkCxxPlatforms.getPlatforms(
             cxxBuckConfig,
             new AndroidBuckConfig(buckConfig, Platform.detect()),
@@ -69,6 +70,12 @@ public class SharedLibraryInterfacePlatforms {
             Platform.detect());
     // Just return one of the NDK platforms, which should be enough to test shared library interface
     // functionality.
-    return Optional.of(ndkPlatforms.values().iterator().next().getCxxPlatform());
+    return Optional.of(
+        ndkPlatforms
+            .values()
+            .iterator()
+            .next()
+            .getCxxPlatform()
+            .resolve(new TestActionGraphBuilder()));
   }
 }
