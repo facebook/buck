@@ -25,12 +25,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
 public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements LeafEvent {
-  private static final String TARGET_KEY = "TARGET";
 
   public enum Operation {
     FETCH,
@@ -126,12 +124,6 @@ public abstract class ArtifactCacheEvent extends AbstractBuckEvent implements Le
 
   @Override
   public abstract String getEventName();
-
-  public static final Optional<String> getTarget(ImmutableMap<String, String> metadata) {
-    return metadata.containsKey(TARGET_KEY)
-        ? Optional.of(metadata.get(TARGET_KEY))
-        : Optional.empty();
-  }
 
   public abstract static class Started extends ArtifactCacheEvent {
 
