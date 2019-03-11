@@ -404,8 +404,7 @@ public class AabBuilderStep implements Step {
       while (zipEntryEnumeration.hasMoreElements()) {
         ZipEntry entry = zipEntryEnumeration.nextElement();
 
-        if ((entry.isDirectory() && ApkBuilder.checkFolderForPackaging(entry.getName()))
-            || ApkBuilder.checkFileForPackaging(entry.getName())) {
+        if (isEntryPackageable(entry)) {
 
           String location = resolveFileInModule(entry);
           addFile(
@@ -417,6 +416,41 @@ public class AabBuilderStep implements Step {
         }
       }
     }
+  }
+
+  /**
+   * Defines if a zip entry should be packaged in the final bundle.
+   *
+   * @param entry
+   * @return true if entry should be packaged
+   */
+  private boolean isEntryPackageable(ZipEntry entry) {
+    return isDirectoryEntryPackageable(entry) || isFileEntryPackageable(entry);
+  }
+
+  private boolean isDirectoryEntryPackageable(ZipEntry entry) {
+    return entry.isDirectory() && ApkBuilder.checkFolderForPackaging(entry.getName());
+  }
+
+  private boolean isFileEntryPackageable(ZipEntry entry) {
+    return ApkBuilder.checkFileForPackaging(entry.getName())
+        && isValidMetaInfEntry(entry.getName());
+  }
+
+  // We should filter out anything from META-INF (except for the ones responsible for the
+  // apk validation itself). As described on:
+  // https://android.googlesource.com/platform/sdk/+/e162064a7b5db1eecec34271bc7e2a4296181ea6/sdkmanager/libs/sdklib/src/com/android/sdklib/build/ApkBuilder.java#105
+  // and https://source.android.com/security/apksigning/v2#v1-verification
+  private boolean isValidMetaInfEntry(String entryName) {
+    String metaInfDir = "META-INF";
+    if (!entryName.startsWith(metaInfDir)) {
+      // Not a meta inf file, so it's valid concerning this check
+      return true;
+    }
+
+    return entryName.equals(metaInfDir + File.separator + "CERT.SF")
+        || entryName.equals(metaInfDir + File.separator + "MANIFEST.MF")
+        || entryName.equals(metaInfDir + File.separator + "CERT.RSA");
   }
 
   private String resolveFileInModule(ZipEntry entry) {
