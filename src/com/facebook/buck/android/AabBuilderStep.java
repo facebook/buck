@@ -433,8 +433,7 @@ public class AabBuilderStep implements Step {
   }
 
   private boolean isFileEntryPackageable(ZipEntry entry) {
-    String entryName = entry.getName();
-    return ApkBuilder.checkFileForPackaging(entry.getName()) && isValidMetaInfEntry(entryName);
+    return ApkBuilder.checkFileForPackaging(entry.getName()) && isValidMetaInfEntry(entry.getName());
   }
 
   // We should filter out anything from META-INF (except for the ones responsible for the
