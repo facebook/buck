@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.CompositeArg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
@@ -82,6 +83,10 @@ class CxxWriteArgsToFileStep implements Step {
                 builder::add, currentCellPath, pathResolver, useUnixPathSeparator);
       } else if (arg instanceof SourcePathArg) {
         ((SourcePathArg) arg)
+            .appendToCommandLineRel(
+                builder::add, currentCellPath, pathResolver, useUnixPathSeparator);
+      } else if (arg instanceof CompositeArg) {
+        ((CompositeArg) arg)
             .appendToCommandLineRel(
                 builder::add, currentCellPath, pathResolver, useUnixPathSeparator);
       } else {
