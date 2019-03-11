@@ -124,7 +124,8 @@ public class MainIntegrationTest {
             GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG);
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "output_path", tmp);
     workspace.setUp();
 
     // the first execution with specific configuration params for ui.json_attribute_format
