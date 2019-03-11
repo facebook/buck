@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.clang;
 
+import com.facebook.buck.io.file.MorePaths;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Ascii;
 import com.google.common.base.Preconditions;
@@ -364,7 +365,7 @@ public class HeaderMap {
         result[0] = "";
         result[1] = path.toString();
       } else {
-        result[0] = path.getParent() + "/";
+        result[0] = MorePaths.pathWithUnixSeparators(path.getParent()) + "/";
         result[1] = path.getFileName().toString();
       }
       return result;
