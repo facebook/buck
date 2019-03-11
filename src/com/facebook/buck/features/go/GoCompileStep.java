@@ -21,6 +21,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.shell.ShellStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Map;
@@ -33,12 +34,14 @@ public class GoCompileStep extends ShellStep {
   private final Path packageName;
   private final ImmutableList<String> flags;
   private final Iterable<Path> srcs;
+  private final Iterable<Path> asmSrcs;
   private final ImmutableMap<Path, Path> importPathMap;
   private final ImmutableList<Path> includeDirectories;
   private final Optional<Path> asmHeaderPath;
   private final boolean allowExternalReferences;
   private final GoPlatform platform;
   private final Path output;
+  private final Optional<Path> asmSymabisPath;
   private static final Logger LOG = Logger.get(GoCompileStep.class);
 
   public GoCompileStep(
@@ -48,11 +51,13 @@ public class GoCompileStep extends ShellStep {
       ImmutableList<String> flags,
       Path packageName,
       Iterable<Path> srcs,
+      Iterable<Path> asmSrcs,
       ImmutableMap<Path, Path> importPathMap,
       ImmutableList<Path> includeDirectories,
       Optional<Path> asmHeaderPath,
       boolean allowExternalReferences,
       GoPlatform platform,
+      Optional<Path> asmSymabisPath,
       Path output) {
     super(workingDirectory);
     this.environment = environment;
@@ -60,11 +65,13 @@ public class GoCompileStep extends ShellStep {
     this.flags = flags;
     this.packageName = packageName;
     this.srcs = srcs;
+    this.asmSrcs = asmSrcs;
     this.importPathMap = importPathMap;
     this.includeDirectories = includeDirectories;
     this.asmHeaderPath = asmHeaderPath;
     this.allowExternalReferences = allowExternalReferences;
     this.platform = platform;
+    this.asmSymabisPath = asmSymabisPath;
     this.output = output;
   }
 
@@ -84,6 +91,10 @@ public class GoCompileStep extends ShellStep {
               .add("-nolocalimports")
               .addAll(flags)
               .add("-o", output.toString());
+
+      if (asmSymabisPath.isPresent() && !Iterables.isEmpty(asmSrcs)) {
+        commandBuilder.add("-symabis", asmSymabisPath.get().toString());
+      }
 
       for (Path dir : includeDirectories) {
         commandBuilder.add("-I", dir.toString());

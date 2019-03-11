@@ -182,6 +182,7 @@ abstract class GoDescriptors {
         ImmutableList.copyOf(compilerFlags),
         ImmutableList.copyOf(assemblerFlags),
         platform,
+        goBuckConfig.getGensymabis(),
         extraAsmOutputsBuilder.build(),
         goListTypes);
   }

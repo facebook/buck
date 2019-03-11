@@ -32,6 +32,7 @@ public class GoBuckConfig {
   private static final String PROJECT_PATH = "project_path";
   private static final String DEFAULT_PLATFORM = "default_platform";
   private static final String PREFIX = "prefix";
+  private static final String GENSYMABIS = "gensymabis";
 
   public GoBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
@@ -86,5 +87,20 @@ public class GoBuckConfig {
   Optional<Path> getProjectPath() {
     Optional<String> path = delegate.getValue(SECTION, PROJECT_PATH);
     return path.map(pathStr -> Paths.get(pathStr));
+  }
+
+  /**
+   * Get "gensymabis" flag. Since go 1.12 we need to generate symabi file that is passed to compile
+   * step:
+   * https://github.com/golang/proposal/blob/master/design/27539-internal-abi.md#implementation
+   *
+   * <p>This is only for migration purposes and should be removed with next release
+   */
+  boolean getGensymabis() {
+    Optional<String> gensymabis = delegate.getValue(SECTION, GENSYMABIS);
+    if (gensymabis.isPresent()) {
+      return Boolean.valueOf(gensymabis.get());
+    }
+    return false;
   }
 }
