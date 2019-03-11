@@ -258,7 +258,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         graphBuilder,
                         ruleFinder,
                         target,
-                        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s/_all"),
+                        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s/_all.o"),
                         ImmutableMap.of(),
                         cxxArgs, // collection of selected object files
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
