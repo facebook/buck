@@ -16,9 +16,13 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.testutil.MoreAsserts.assertJsonMatches;
+import static com.facebook.buck.testutil.MoreAsserts.assertJsonNotMatches;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -33,6 +37,7 @@ public class MainIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
+  @Rule public TestWithBuckd testWithBuckd = new TestWithBuckd(tmp);
 
   @Test
   public void testBuckNoArgs() throws IOException {
@@ -109,5 +114,56 @@ public class MainIntegrationTest {
         " --version (-V)  : Show version number.",
         "",
         "");
+  }
+
+  @Test
+  public void handleReusingCurrentConfigProperty() throws IOException {
+    String warningMessage =
+        String.format(
+            "`%s` parameter provided. Reusing previously defined config.",
+            GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
+    workspace.setUp();
+
+    // the first execution with specific configuration params for ui.json_attribute_format
+    ProcessResult result =
+        workspace.runBuckdCommand(
+            "targets",
+            "--json",
+            "-c",
+            "ui.json_attribute_format=snake_case",
+            "--show-output",
+            "...");
+    result.assertSuccess();
+    String expectedJson = workspace.getFileContents("output_path_json_all_snake_case.js");
+    assertJsonMatches(expectedJson, result.getStdout());
+    assertThat(
+        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " not provided",
+        result.getStderr(),
+        not(containsString(warningMessage)));
+
+    // the second execution without specific configuration params for ui.json_attribute_format but
+    // with --reuse-current-config" param
+    result =
+        workspace.runBuckdCommand(
+            "targets", "--json", GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG, "--show-output", "...");
+    result.assertSuccess();
+    assertJsonMatches(expectedJson, result.getStdout());
+    assertThat(
+        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " provided",
+        result.getStderr(),
+        containsString(warningMessage));
+
+    // the third execution without specific configuration params for ui.json_attribute_format and
+    // without --reuse-current-config param
+    result = workspace.runBuckdCommand("targets", "--json", "--show-output", "...");
+    result.assertSuccess();
+    assertJsonNotMatches(expectedJson, result.getStdout());
+    assertThat(
+        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " not provided",
+        result.getStderr(),
+        not(containsString(warningMessage)));
   }
 }

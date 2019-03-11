@@ -37,6 +37,7 @@ public class GlobalCliOptions {
   public static final String TARGET_PLATFORMS_LONG_ARG = "--target-platforms";
   public static final String EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG =
       "--exclude-incompatible-targets";
+  public static final String REUSE_CURRENT_CONFIG_ARG = "--reuse-current-config";
 
   /**
    * Contains all options defined in this class. These options are considered global since they are
@@ -56,7 +57,8 @@ public class GlobalCliOptions {
           VERBOSE_LONG_ARG,
           SKYLARK_PROFILE_LONG_ARG,
           TARGET_PLATFORMS_LONG_ARG,
-          EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG);
+          EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG,
+          REUSE_CURRENT_CONFIG_ARG);
 
   public static boolean isGlobalOption(OptionHandler<?> optionHandler) {
     OptionDef option = optionHandler.option;

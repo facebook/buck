@@ -142,6 +142,7 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
@@ -653,28 +654,51 @@ public final class Main {
       // files
       setupLogging(commandMode, command, args);
 
-      Config config = setupDefaultConfig(rootCellMapping, command);
-
       ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
-      ProjectFilesystem filesystem =
-          projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
-
-      DefaultCellPathResolver cellPathResolver =
-          DefaultCellPathResolver.of(filesystem.getRootPath(), config);
       UnconfiguredBuildTargetFactory buildTargetFactory =
           new ParsingUnconfiguredBuildTargetFactory();
-      BuckConfig buckConfig =
-          new BuckConfig(
-              config,
-              filesystem,
-              architecture,
-              platform,
-              clientEnvironment,
-              buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
+
+      Config config;
+      ProjectFilesystem filesystem;
+      DefaultCellPathResolver cellPathResolver;
+      BuckConfig buckConfig;
+
+      boolean reusePreviousConfig =
+          isReuseCurrentConfigPropertySet(command) && daemonLifecycleManager.hasDaemon();
+      if (reusePreviousConfig) {
+        printWarnMessage(
+            String.format(
+                "`%s` parameter provided. Reusing previously defined config.",
+                GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG));
+        buckConfig =
+            daemonLifecycleManager
+                .getBuckConfig()
+                .orElseThrow(
+                    () -> new IllegalStateException("Deamon is present but config is missing."));
+        config = buckConfig.getConfig();
+        filesystem = buckConfig.getFilesystem();
+        cellPathResolver = DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+      } else {
+        config = setupDefaultConfig(rootCellMapping, command);
+        filesystem = projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
+        cellPathResolver = DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+        buckConfig =
+            new BuckConfig(
+                config,
+                filesystem,
+                architecture,
+                platform,
+                clientEnvironment,
+                buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
+      }
+
       // Set so that we can use some settings when we print out messages to users
       parsedRootConfig = Optional.of(buckConfig);
       CliConfig cliConfig = buckConfig.getView(CliConfig.class);
-      warnAboutConfigFileOverrides(filesystem.getRootPath(), cliConfig, console);
+      // if we are reusing previous configuration then no need to warn about config override
+      if (!reusePreviousConfig) {
+        warnAboutConfigFileOverrides(filesystem.getRootPath(), cliConfig);
+      }
 
       ImmutableSet<Path> projectWatchList =
           getProjectWatchList(canonicalRootPath, buckConfig, cellPathResolver);
@@ -1362,8 +1386,15 @@ public final class Main {
     return exitCode;
   }
 
-  private void warnAboutConfigFileOverrides(Path root, CliConfig cliConfig, Console console)
-      throws IOException {
+  private boolean isReuseCurrentConfigPropertySet(BuckCommand command) {
+    if (command.subcommand instanceof AbstractCommand) {
+      AbstractCommand subcommand = (AbstractCommand) command.subcommand;
+      return subcommand.isReuseCurrentConfig();
+    }
+    return false;
+  }
+
+  private void warnAboutConfigFileOverrides(Path root, CliConfig cliConfig) throws IOException {
     if (!cliConfig.getWarnOnConfigFileOverrides()) {
       return;
     }
@@ -1392,16 +1423,14 @@ public final class Main {
     }
 
     // Use the raw stream because otherwise this will stop superconsole from ever printing again
-    console
-        .getStdErr()
-        .getRawStream()
-        .println(
-            console
-                .getAnsi()
-                .asWarningText(
-                    String.format(
-                        "Using additional configuration options from %s",
-                        Joiner.on(", ").join(userSpecifiedOverrides))));
+    printWarnMessage(
+        String.format(
+            "Using additional configuration options from %s",
+            Joiner.on(", ").join(userSpecifiedOverrides)));
+  }
+
+  private void printWarnMessage(String message) {
+    console.getStdErr().getRawStream().println(console.getAnsi().asWarningText(message));
   }
 
   private ListeningExecutorService getDirCacheStoreExecutor(

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.testutil.MoreAsserts.assertJsonMatches;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.allOf;
@@ -45,7 +46,6 @@ import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -718,7 +718,7 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("targets", "--json", "--show-output", "//:test");
 
-    assertJsonMatches(workspace, result.getStdout(), "output_path_json.js");
+    assertJsonMatches(workspace.getFileContents("output_path_json.js"), result.getStdout());
   }
 
   @Test
@@ -732,7 +732,7 @@ public class TargetsCommandIntegrationTest {
             "targets", "-c", "parser.enable_configurable_attributes=true", "--json", "//:");
     result.assertSuccess();
 
-    assertJsonMatches(workspace, result.getStdout(), "output_path_json.js");
+    assertJsonMatches(workspace.getFileContents("output_path_json.js"), result.getStdout());
   }
 
   @Test
@@ -878,7 +878,7 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("targets", "--json", "--show-output", "...");
     result.assertSuccess();
 
-    assertJsonMatches(workspace, result.getStdout(), "output_path_json_all.js");
+    assertJsonMatches(workspace.getFileContents("output_path_json_all.js"), result.getStdout());
   }
 
   @Test
@@ -897,14 +897,15 @@ public class TargetsCommandIntegrationTest {
             "...");
     result.assertSuccess();
 
-    assertJsonMatches(workspace, result.getStdout(), "output_path_json_all_snake_case.js");
+    assertJsonMatches(
+        workspace.getFileContents("output_path_json_all_snake_case.js"), result.getStdout());
 
     result =
         workspace.runBuckCommand(
             "targets", "--json", "-c", "ui.json_attribute_format=legacy", "--show-output", "...");
     result.assertSuccess();
 
-    assertJsonMatches(workspace, result.getStdout(), "output_path_json_all.js");
+    assertJsonMatches(workspace.getFileContents("output_path_json_all.js"), result.getStdout());
   }
 
   @Test
@@ -924,7 +925,8 @@ public class TargetsCommandIntegrationTest {
             "name");
     result.assertSuccess();
 
-    assertJsonMatches(workspace, result.getStdout(), "output_path_json_all_filtered.js");
+    assertJsonMatches(
+        workspace.getFileContents("output_path_json_all_filtered.js"), result.getStdout());
   }
 
   @Test
@@ -1197,19 +1199,5 @@ public class TargetsCommandIntegrationTest {
         .collect(
             ImmutableMap.toImmutableMap(
                 line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
-  }
-
-  private void assertJsonMatches(
-      ProjectWorkspace workspace, String actualJson, String expectedJsonFileName)
-      throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    Object observedValue = mapper.readValue(actualJson, Object.class);
-    String observed = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(observedValue);
-
-    String expectedJson = workspace.getFileContents(expectedJsonFileName);
-    Object expectedValue = mapper.readValue(expectedJson, Object.class);
-    String expected = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(expectedValue);
-
-    assertEquals("Output from targets command should match expected JSON.", expected, observed);
   }
 }

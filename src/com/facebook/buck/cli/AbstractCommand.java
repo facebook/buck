@@ -170,9 +170,19 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   @Option(name = GlobalCliOptions.HELP_LONG_ARG, usage = "Prints the available options and exits.")
   private boolean help = false;
 
+  @Option(
+      name = GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG,
+      usage = "Whether to re-use configuration of the currently running Buck daemon process.",
+      forbids = {GlobalCliOptions.CONFIG_LONG_ARG, GlobalCliOptions.CONFIG_FILE_LONG_ARG})
+  private boolean reuseCurrentConfig = false;
+
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
   public boolean isNoCache() {
     return noCache;
+  }
+
+  public boolean isReuseCurrentConfig() {
+    return reuseCurrentConfig;
   }
 
   public Optional<Path> getEventsOutputPath() {

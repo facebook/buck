@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.DaemonCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
@@ -44,8 +45,12 @@ class DaemonLifecycleManager {
 
   @Nullable private volatile Daemon daemon;
 
-  boolean hasDaemon() {
+  synchronized boolean hasDaemon() {
     return daemon != null;
+  }
+
+  synchronized Optional<BuckConfig> getBuckConfig() {
+    return Optional.ofNullable(daemon).map(Daemon::getRootCell).map(Cell::getBuckConfig);
   }
 
   /** Get or create Daemon. */
@@ -144,7 +149,7 @@ class DaemonLifecycleManager {
       return false;
     }
     OptionalInt portFromOldConfig =
-        Daemon.getValidWebServerPort(daemon.getRootCell().getBuckConfig());
+        getBuckConfig().map(Daemon::getValidWebServerPort).orElse(OptionalInt.empty());
     OptionalInt portFromUpdatedConfig = Daemon.getValidWebServerPort(newCell.getBuckConfig());
 
     return portFromOldConfig.equals(portFromUpdatedConfig);
