@@ -33,7 +33,6 @@ import com.google.common.util.concurrent.Futures;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.LongAdder;
 import org.hamcrest.Matchers;
@@ -56,7 +55,7 @@ public class DefaultGraphTransformationEngineTest {
 
   @Before
   public void setUp() {
-    executor = DefaultDepsAwareExecutor.from(new ForkJoinPool(4));
+    executor = DefaultDepsAwareExecutor.of(4);
 
     graph = GraphBuilder.directed().build();
 

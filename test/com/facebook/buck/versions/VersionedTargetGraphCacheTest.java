@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.concurrent.ForkJoinPool;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +51,7 @@ public class VersionedTargetGraphCacheTest {
 
   private static final BuckEventBus BUS =
       new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId());
-  private static final ForkJoinPool POOL = new ForkJoinPool(1);
+  private static final int NUMBER_OF_THREADS = 1;
 
   private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
 
@@ -78,7 +77,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            POOL);
+            NUMBER_OF_THREADS);
     assertEmpty(result);
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -100,7 +99,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            POOL);
+            NUMBER_OF_THREADS);
     assertEmpty(firstResult);
     VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
@@ -109,7 +108,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            POOL);
+            NUMBER_OF_THREADS);
     assertHit(secondResult, firstResult.getTargetGraphAndBuildTargets());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());
@@ -131,7 +130,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            POOL);
+            NUMBER_OF_THREADS);
     assertEmpty(firstResult);
     VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
@@ -140,7 +139,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            new ForkJoinPool(2));
+            2);
     assertHit(secondResult, firstResult.getTargetGraphAndBuildTargets());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());
@@ -161,7 +160,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             firstGraph,
             ImmutableMap.of(),
-            POOL);
+            NUMBER_OF_THREADS);
     assertEmpty(firstResult);
     TargetGraphAndBuildTargets secondGraph = createSimpleGraph("bar");
     VersionedTargetGraphCacheResult secondResult =
@@ -171,7 +170,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             secondGraph,
             ImmutableMap.of(),
-            POOL);
+            NUMBER_OF_THREADS);
     assertMismatch(secondResult, firstResult.getTargetGraphAndBuildTargets());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -195,7 +194,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             firstVersionUniverses,
-            POOL);
+            NUMBER_OF_THREADS);
     assertEmpty(firstResult);
     ImmutableMap<String, VersionUniverse> secondVersionUniverses =
         ImmutableMap.of("foo", VersionUniverse.of(ImmutableMap.of(versionedAlias, version2)));
@@ -206,7 +205,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             secondVersionUniverses,
-            POOL);
+            NUMBER_OF_THREADS);
     assertMismatch(secondResult, firstResult.getTargetGraphAndBuildTargets());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -229,7 +228,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            POOL);
+            NUMBER_OF_THREADS);
 
     CacheStats stats = cache1.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -246,7 +245,7 @@ public class VersionedTargetGraphCacheTest {
             unconfiguredBuildTargetFactory,
             graph,
             ImmutableMap.of(),
-            POOL);
+            NUMBER_OF_THREADS);
     assertHit(secondResult, firstResult.getTargetGraphAndBuildTargets());
     stats = cache2.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());

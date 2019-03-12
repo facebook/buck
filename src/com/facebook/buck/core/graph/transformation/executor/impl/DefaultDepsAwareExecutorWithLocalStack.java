@@ -19,7 +19,7 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -33,33 +33,19 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class DefaultDepsAwareExecutorWithLocalStack<T> extends AbstractDefaultDepsAwareExecutor<T> {
 
   private DefaultDepsAwareExecutorWithLocalStack(
-      Future<?>[] workers, BlockingDeque<DefaultDepsAwareTask<T>> workQueue) {
-    super(workQueue, workers);
+      BlockingDeque<DefaultDepsAwareTask<T>> workQueue,
+      Future<?>[] workers,
+      ExecutorService ownThreadPool) {
+    super(workQueue, workers, ownThreadPool);
   }
 
-  /**
-   * Creates a {@link DefaultDepsAwareExecutorWithLocalStack} from the given {@link ForkJoinPool}.
-   * The executor will have the same parallelism as the backing {@link ForkJoinPool}.
-   */
-  public static <U> DefaultDepsAwareExecutorWithLocalStack<U> from(ForkJoinPool executorService) {
-    return from(executorService, executorService.getParallelism());
-  }
-
-  /**
-   * Creates a {@link DefaultDepsAwareExecutorWithLocalStack} from the given {@link
-   * ExecutorService}, maintaining up to the specified parallelism. It is up to the user to ensure
-   * that the backing {@link ExecutorService} can support the specified parallelism.
-   */
-  public static <U> DefaultDepsAwareExecutorWithLocalStack<U> from(
-      ExecutorService executorService, int parallelism) {
-
+  /** Creates a {@link DefaultDepsAwareExecutor} with given {@code numberOfThreads}. */
+  public static <U> DefaultDepsAwareExecutorWithLocalStack<U> of(int numberOfThreads) {
+    ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
     LinkedBlockingDeque<DefaultDepsAwareTask<U>> workQueue = new LinkedBlockingDeque<>();
     Future<?>[] workers =
         startWorkers(
-            executorService, parallelism, workQueue, DefaultDepsAwareWorkerWithLocalStack::new);
-    DefaultDepsAwareExecutorWithLocalStack<U> executor =
-        new DefaultDepsAwareExecutorWithLocalStack<>(workers, workQueue);
-
-    return executor;
+            executorService, numberOfThreads, workQueue, DefaultDepsAwareWorkerWithLocalStack::new);
+    return new DefaultDepsAwareExecutorWithLocalStack<>(workQueue, workers, executorService);
   }
 }

@@ -37,7 +37,7 @@ class DefaultDepsAwareTask<T> extends AbstractDepsAwareTask<T, DefaultDepsAwareT
 
   /** @return a new Task to be ran without any dependencies */
   static <U> DefaultDepsAwareTask<U> of(Callable<U> callable) {
-    return of(callable, DepsAwareTask.DepsSupplier.of(() -> ImmutableSet.of()));
+    return of(callable, DepsAwareTask.DepsSupplier.of(ImmutableSet::of));
   }
 
   /** @return a new Task to be ran */

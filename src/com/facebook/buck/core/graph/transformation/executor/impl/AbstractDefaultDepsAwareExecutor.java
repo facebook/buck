@@ -31,8 +31,10 @@ abstract class AbstractDefaultDepsAwareExecutor<T>
     extends AbstractDepsAwareExecutor<T, DefaultDepsAwareTask<T>> {
 
   protected AbstractDefaultDepsAwareExecutor(
-      BlockingDeque<DefaultDepsAwareTask<T>> workQueue, Future<?>[] workers) {
-    super(workQueue, workers);
+      BlockingDeque<DefaultDepsAwareTask<T>> workQueue,
+      Future<?>[] workers,
+      ExecutorService executorService) {
+    super(workQueue, workers, executorService);
   }
 
   @Override

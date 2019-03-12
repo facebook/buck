@@ -23,7 +23,6 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.google.common.collect.ImmutableList;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
-import java.util.concurrent.ForkJoinPool;
 import org.junit.Test;
 
 public class DefaultGraphTransformationEngineStackUseTest {
@@ -46,7 +45,7 @@ public class DefaultGraphTransformationEngineStackUseTest {
         new DefaultGraphTransformationEngine(
                 ImmutableList.of(new GraphTransformationStage<>(transformer)),
                 graph.nodes().size(),
-                DefaultDepsAwareExecutor.from(new ForkJoinPool(1)))
+                DefaultDepsAwareExecutor.of(1))
             .computeUnchecked(ImmutableLongNode.of(1)));
   }
 }

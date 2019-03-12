@@ -78,6 +78,8 @@ import org.junit.Test;
 
 public class CxxBinaryDescriptionTest {
 
+  private static final int NUMBER_OF_THREADS = ForkJoinPool.commonPool().getParallelism();
+
   @Test
   public void createBuildRule() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -427,7 +429,7 @@ public class CxxBinaryDescriptionTest {
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 TargetGraphAndBuildTargets.of(
                     unversionedTargetGraph, ImmutableSet.of(builder.getTarget())),
-                new ForkJoinPool(),
+                NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetFactory(),
                 20)

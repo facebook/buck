@@ -115,6 +115,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class IncrementalActionGraphScenarioTest {
+
+  private static final int NUMBER_OF_THREADS = ForkJoinPool.commonPool().getParallelism();
+
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private static final PythonPlatform PY2 = createPy2Platform(Optional.empty());
@@ -378,7 +381,7 @@ public class IncrementalActionGraphScenarioTest {
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 TargetGraphAndBuildTargets.of(
                     unversionedTargetGraph, ImmutableSet.of(binaryTarget, binaryTarget2)),
-                new ForkJoinPool(),
+                NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetFactory(),
                 20)
@@ -553,7 +556,7 @@ public class IncrementalActionGraphScenarioTest {
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 TargetGraphAndBuildTargets.of(
                     unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
-                new ForkJoinPool(),
+                NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetFactory(),
                 20)
@@ -579,7 +582,7 @@ public class IncrementalActionGraphScenarioTest {
                     newUnversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
                 TargetGraphAndBuildTargets.of(
                     newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
-                new ForkJoinPool(),
+                NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetFactory(),
                 20)

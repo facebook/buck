@@ -16,7 +16,6 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
@@ -25,7 +24,6 @@ import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.collect.ImmutableMap;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeoutException;
 
 /**
@@ -53,7 +51,7 @@ public class InstrumentedVersionedTargetGraphCache {
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
       ImmutableMap<String, VersionUniverse> versionUniverses,
-      ForkJoinPool pool)
+      int numberOfThreads)
       throws VersionException, InterruptedException, TimeoutException {
     return cache.toVersionedTargetGraph(
         eventBus,
@@ -61,7 +59,7 @@ public class InstrumentedVersionedTargetGraphCache {
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
         targetGraphAndBuildTargets,
-        pool,
+        numberOfThreads,
         statsTracker);
   }
 
@@ -79,12 +77,10 @@ public class InstrumentedVersionedTargetGraphCache {
     return cache
         .getVersionedTargetGraph(
             eventBus,
+            buckConfig,
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
             targetGraphAndBuildTargets,
-            new VersionBuckConfig(buckConfig).getVersionUniverses(),
-            new ForkJoinPool(buckConfig.getView(BuildBuckConfig.class).getNumThreads()),
-            new VersionBuckConfig(buckConfig),
             statsTracker)
         .getTargetGraphAndBuildTargets();
   }

@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Supplier;
@@ -51,18 +52,18 @@ public class JavaExecutorBackedDefaultDepsAwareExecutor<T>
   }
 
   /**
-   * Creates a {@link JavaExecutorBackedDefaultDepsAwareExecutor} from the given {@link
-   * ExecutorService}, maintaining up to the specified parallelism. It is up to the user to ensure
-   * that the backing {@link ExecutorService} can support the specified parallelism.
+   * Creates a {@link JavaExecutorBackedDefaultDepsAwareExecutor} with given {@code
+   * numberOfThreads}.
    */
-  public static <U> JavaExecutorBackedDefaultDepsAwareExecutor<U> from(
-      ExecutorService executorService) {
+  public static <U> JavaExecutorBackedDefaultDepsAwareExecutor<U> of(int numberOfThreads) {
+    ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
     return new JavaExecutorBackedDefaultDepsAwareExecutor<>(executorService);
   }
 
   @Override
   public void close() {
     isShutdown = true;
+    executorService.shutdownNow();
   }
 
   @Override

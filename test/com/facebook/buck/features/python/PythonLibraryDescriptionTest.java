@@ -62,6 +62,8 @@ import org.junit.Test;
 
 public class PythonLibraryDescriptionTest {
 
+  private static final int NUMBER_OF_THREADS = ForkJoinPool.commonPool().getParallelism();
+
   @Test
   public void baseModule() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -207,7 +209,7 @@ public class PythonLibraryDescriptionTest {
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
-                new ForkJoinPool(),
+                NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetFactory(),
                 20)
@@ -257,7 +259,7 @@ public class PythonLibraryDescriptionTest {
                     TargetGraphFactory.newInstance(
                         transitiveDepBuilder.build(), depBuilder.build(), builder.build()),
                     ImmutableSet.of(builder.getTarget())),
-                new ForkJoinPool(),
+                NUMBER_OF_THREADS,
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetFactory(),
                 20)

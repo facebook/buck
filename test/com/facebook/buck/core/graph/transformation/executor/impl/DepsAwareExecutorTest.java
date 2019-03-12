@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
@@ -52,19 +51,15 @@ public class DepsAwareExecutorTest {
     return Arrays.asList(
         new Object[][] {
           {
-            (Supplier<DepsAwareExecutor<?, ?>>)
-                () -> DefaultDepsAwareExecutor.from(new ForkJoinPool(NUMBER_OF_THREADS))
+            (Supplier<DepsAwareExecutor<?, ?>>) () -> DefaultDepsAwareExecutor.of(NUMBER_OF_THREADS)
           },
           {
             (Supplier<DepsAwareExecutor<?, ?>>)
-                () ->
-                    DefaultDepsAwareExecutorWithLocalStack.from(new ForkJoinPool(NUMBER_OF_THREADS))
+                () -> DefaultDepsAwareExecutorWithLocalStack.of(NUMBER_OF_THREADS)
           },
           {
             (Supplier<DepsAwareExecutor<?, ?>>)
-                () ->
-                    JavaExecutorBackedDefaultDepsAwareExecutor.from(
-                        new ForkJoinPool(NUMBER_OF_THREADS))
+                () -> JavaExecutorBackedDefaultDepsAwareExecutor.of(NUMBER_OF_THREADS)
           },
         });
   }

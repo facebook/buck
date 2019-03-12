@@ -49,7 +49,6 @@ import java.util.HashMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -71,7 +70,6 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   private final GraphTransformationEngine asyncTransformationEngine;
 
   private final GraphTransformationEngine versionInfoAsyncTransformationEngine;
-  private final ForkJoinPool versionInfoExecutor;
 
   AsyncVersionedTargetGraphBuilder(
       DepsAwareExecutor<? super ComputeResult, ?> executor,
@@ -96,7 +94,6 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
             ImmutableList.of(new GraphTransformationStage<>(versionedTargetGraphTransformer)),
             unversionedTargetGraphAndBuildTargets.getTargetGraph().getSize() * 4,
             executor);
-    versionInfoExecutor = new ForkJoinPool(2);
     this.versionInfoAsyncTransformationEngine =
         new DefaultGraphTransformationEngine(
             ImmutableList.of(
@@ -104,7 +101,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                     new TargetNodeToVersionInfoTransformer(
                         unversionedTargetGraphAndBuildTargets.getTargetGraph()))),
             2 * unversionedTargetGraphAndBuildTargets.getTargetGraph().getSize(),
-            DefaultDepsAwareExecutor.from(versionInfoExecutor));
+            DefaultDepsAwareExecutor.of(2));
   }
 
   @Override
@@ -148,7 +145,6 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
     asyncTransformationEngine.close();
     versionInfoAsyncTransformationEngine.close();
-    versionInfoExecutor.shutdownNow();
 
     long end = System.currentTimeMillis();
 

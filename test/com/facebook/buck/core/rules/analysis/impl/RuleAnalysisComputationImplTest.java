@@ -44,13 +44,11 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.util.concurrent.ForkJoinPool;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class RuleAnalysisComputationImplTest {
-  private ForkJoinPool forkJoinPool;
   private DepsAwareExecutor<? super ComputeResult, ?> depsAwareExecutor;
   private RuleAnalysisCache cache;
 
@@ -61,15 +59,13 @@ public class RuleAnalysisComputationImplTest {
 
   @Before
   public void setUp() {
-    forkJoinPool = new ForkJoinPool(4);
-    depsAwareExecutor = DefaultDepsAwareExecutor.from(forkJoinPool);
+    depsAwareExecutor = DefaultDepsAwareExecutor.of(4);
     cache = new RuleAnalysisCacheImpl();
   }
 
   @After
   public void cleanUp() {
     depsAwareExecutor.close();
-    forkJoinPool.shutdownNow();
   }
 
   @Test

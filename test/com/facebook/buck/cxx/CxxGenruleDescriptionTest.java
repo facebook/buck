@@ -66,7 +66,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -75,7 +74,7 @@ import org.junit.Test;
 
 public class CxxGenruleDescriptionTest {
 
-  private static final ForkJoinPool POOL = new ForkJoinPool(1);
+  private static final int NUMBER_OF_THREADS = 1;
 
   @Test
   public void toolPlatformParseTimeDeps() {
@@ -211,7 +210,7 @@ public class CxxGenruleDescriptionTest {
         ParallelVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
-            POOL,
+            NUMBER_OF_THREADS,
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetFactory(),
             20);
@@ -248,7 +247,7 @@ public class CxxGenruleDescriptionTest {
         ParallelVersionedTargetGraphBuilder.transform(
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(genruleBuilder.getTarget())),
-            POOL,
+            NUMBER_OF_THREADS,
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetFactory(),
             20);

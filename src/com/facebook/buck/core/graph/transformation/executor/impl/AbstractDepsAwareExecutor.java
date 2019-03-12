@@ -22,6 +22,7 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -29,13 +30,17 @@ abstract class AbstractDepsAwareExecutor<T, TaskType extends AbstractDepsAwareTa
     implements DepsAwareExecutor<T, TaskType> {
 
   private static final Logger LOG = Logger.get(AbstractDepsAwareExecutor.class);
+
   protected final BlockingDeque<TaskType> workQueue;
   protected final Future<?>[] workers;
+  private final ExecutorService executorService;
   private volatile boolean isShutdown = false;
 
-  protected AbstractDepsAwareExecutor(BlockingDeque<TaskType> workQueue, Future<?>[] workers) {
+  protected AbstractDepsAwareExecutor(
+      BlockingDeque<TaskType> workQueue, Future<?>[] workers, ExecutorService executorService) {
     this.workQueue = workQueue;
     this.workers = workers;
+    this.executorService = executorService;
   }
 
   protected static void runWorker(AbstractDepsAwareWorker<?> worker) {
@@ -52,6 +57,7 @@ abstract class AbstractDepsAwareExecutor<T, TaskType extends AbstractDepsAwareTa
     for (Future<?> worker : workers) {
       worker.cancel(true);
     }
+    executorService.shutdownNow();
   }
 
   @Override

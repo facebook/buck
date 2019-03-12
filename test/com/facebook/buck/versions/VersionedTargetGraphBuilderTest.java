@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.lang.reflect.Field;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.hamcrest.Matchers;
@@ -49,23 +48,18 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class VersionedTargetGraphBuilderTest {
 
-  private ForkJoinPool pool;
-  private ForkJoinPool executorPool;
   private DepsAwareExecutor executor;
   private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
 
   @Before
   public void setUp() {
-    pool = new ForkJoinPool(2);
-    executorPool = new ForkJoinPool(2);
-    executor = DefaultDepsAwareExecutor.from(executorPool);
+    executor = DefaultDepsAwareExecutor.of(2);
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
   }
 
   @After
   public void tearDown() {
     executor.close();
-    executorPool.shutdownNow();
   }
 
   private static String getVersionedTarget(
@@ -126,7 +120,6 @@ public class VersionedTargetGraphBuilderTest {
     TargetGraph graph = TargetGraphFactory.newInstanceExact(root);
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(graph, ImmutableSet.of(root.getBuildTarget())),
@@ -145,7 +138,6 @@ public class VersionedTargetGraphBuilderTest {
             new VersionRootBuilder("//:root1").setDeps("//:root2").build());
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -169,7 +161,6 @@ public class VersionedTargetGraphBuilderTest {
             new VersionRootBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -196,7 +187,6 @@ public class VersionedTargetGraphBuilderTest {
             new VersionRootBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -226,7 +216,6 @@ public class VersionedTargetGraphBuilderTest {
             new VersionRootBuilder("//:root1").setDeps("//:versioned1").build());
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -255,7 +244,6 @@ public class VersionedTargetGraphBuilderTest {
             new VersionRootBuilder("//:root").setDeps("//:a").build());
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -298,7 +286,6 @@ public class VersionedTargetGraphBuilderTest {
     BuildTarget dep = BuildTargetFactory.newInstance("//:dep");
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new FixedVersionSelector(
                 ImmutableMap.of(
@@ -344,7 +331,6 @@ public class VersionedTargetGraphBuilderTest {
             new VersionPropagatorBuilder("//:root").setDeps("//:versioned").build());
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -371,7 +357,6 @@ public class VersionedTargetGraphBuilderTest {
             new VersionRootBuilder("//:root1").setDeps("//:root2").build());
     VersionedTargetGraphBuilder builder =
         factory.create(
-            pool,
             executor,
             new NaiveVersionSelector(),
             TargetGraphAndBuildTargets.of(
@@ -393,14 +378,13 @@ public class VersionedTargetGraphBuilderTest {
 
           @Override
           public VersionedTargetGraphBuilder create(
-              ForkJoinPool pool,
               DepsAwareExecutor executor,
               VersionSelector versionSelector,
               TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
               TypeCoercerFactory typeCoercerFactory,
               UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
             return new ParallelVersionedTargetGraphBuilder(
-                pool,
+                2,
                 versionSelector,
                 unversionedTargetGraphAndBuildTargets,
                 typeCoercerFactory,
@@ -419,7 +403,6 @@ public class VersionedTargetGraphBuilderTest {
 
           @Override
           public VersionedTargetGraphBuilder create(
-              ForkJoinPool pool,
               DepsAwareExecutor executor,
               VersionSelector versionSelector,
               TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
@@ -445,7 +428,6 @@ public class VersionedTargetGraphBuilderTest {
 
   private interface VersionedTargetGraphBuilderFactory {
     VersionedTargetGraphBuilder create(
-        ForkJoinPool pool,
         DepsAwareExecutor executor,
         VersionSelector versionSelector,
         TargetGraphAndBuildTargets unversionedTargetGraphAndBuildTargets,
