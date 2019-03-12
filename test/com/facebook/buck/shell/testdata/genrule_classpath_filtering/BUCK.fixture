@@ -17,6 +17,12 @@ genrule(
 )
 
 genrule(
+    name = "echo_classpath_binary",
+    out = "out",
+    cmd = "echo $(query_targets \"classpath(:app)\") > $OUT",
+)
+
+genrule(
     name = "echo_with_ap_dep_is_proc",
     out = "out",
     bash = "echo $(query_targets \"attrfilter(annotation_processor_deps, //annotations:proc-lib, classpath(:lib_a))\") > $OUT",

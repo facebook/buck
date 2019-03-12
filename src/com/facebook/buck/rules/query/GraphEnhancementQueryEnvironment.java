@@ -26,6 +26,7 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFa
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
+import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.FilterFunction;
@@ -211,6 +212,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
             })
         .filter(rule -> rule instanceof HasClasspathDeps)
         .flatMap(rule -> ((HasClasspathDeps) rule).getDepsForTransitiveClasspathEntries().stream())
+        .filter(dep -> dep instanceof HasClasspathEntries)
         .map(dep -> QueryBuildTarget.of(dep.getBuildTarget()));
   }
 

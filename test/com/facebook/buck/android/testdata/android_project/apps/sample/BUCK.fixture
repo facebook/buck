@@ -1097,6 +1097,12 @@ genrule(
     bash = "`dirname $DX`/aapt dump xmltree $(location :app_with_invalid_merged_manifest) AndroidManifest.xml > $OUT",
 )
 
+genrule(
+    name = "dump_classpath",
+    out = "classpath",
+    bash = "echo $(query_targets 'classpath(:app)') > $OUT",
+)
+
 android_binary(
     name = "native_merge_lib_with_pch",
     keystore = "//keystores:debug",
