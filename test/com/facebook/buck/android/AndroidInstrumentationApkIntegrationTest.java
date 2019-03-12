@@ -59,8 +59,13 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
       zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     }
     zipInspector.assertFileExists("lib/armeabi-v7a/libcxx.so");
-    zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
     zipInspector.assertFileExists("lib/x86/libcxx.so");
-    zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
+    if (AssumeAndroidPlatform.isGnuStlAvailable()) {
+      zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
+      zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
+    } else {
+      zipInspector.assertFileExists("lib/armeabi-v7a/libc++_shared.so");
+      zipInspector.assertFileExists("lib/x86/libc++_shared.so");
+    }
   }
 }

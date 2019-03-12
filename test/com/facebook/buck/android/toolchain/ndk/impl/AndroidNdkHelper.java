@@ -21,8 +21,10 @@ import static org.junit.Assert.assertFalse;
 import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.relinker.Symbols;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
+import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -95,6 +97,10 @@ public class AndroidNdkHelper {
     Path ndkPath = androidNdk.get().getNdkRootPath();
     String ndkVersion = AndroidNdkResolver.findNdkVersionFromDirectory(ndkPath).get();
     String gccVersion = NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion);
+    String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
+    NdkCompilerType compilerType = NdkCxxPlatforms.getDefaultCompilerTypeForNdk(ndkVersion);
+    NdkCxxRuntime cxxRuntime = NdkCxxPlatforms.getDefaultCxxRuntimeForNdk(ndkVersion);
+    String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
 
     ImmutableCollection<UnresolvedNdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
@@ -103,11 +109,11 @@ public class AndroidNdkHelper {
                 filesystem,
                 ndkPath,
                 NdkCxxPlatformCompiler.builder()
-                    .setType(NdkCxxPlatforms.DEFAULT_COMPILER_TYPE)
-                    .setVersion(gccVersion)
+                    .setType(compilerType)
+                    .setVersion(compilerVersion)
                     .setGccVersion(gccVersion)
                     .build(),
-                NdkCxxPlatforms.DEFAULT_CXX_RUNTIME,
+                cxxRuntime,
                 NdkCxxRuntimeType.DYNAMIC,
                 getDefaultCpuAbis(ndkVersion),
                 Platform.detect())
