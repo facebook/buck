@@ -28,6 +28,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -58,22 +59,23 @@ public class NdkCxxPlatformIntegrationTest {
 
   @Parameterized.Parameters(name = "{0},{1},{2}")
   public static Collection<Object[]> data() {
-    ImmutableList.Builder<String> architectures = ImmutableList.builder();
+    ImmutableList.Builder<TargetCpuType> targetCpuTypes = ImmutableList.builder();
     if (AssumeAndroidPlatform.isArmAvailable()) {
-      architectures.add("arm");
+      targetCpuTypes.add(TargetCpuType.ARM);
     }
-    architectures.add("armv7", "arm64", "x86", "x86_64");
+    targetCpuTypes.add(
+        TargetCpuType.ARMV7, TargetCpuType.ARM64, TargetCpuType.X86, TargetCpuType.X86_64);
     List<Object[]> data = new ArrayList<>();
-    for (String arch : architectures.build()) {
+    for (TargetCpuType targetCpuType : targetCpuTypes.build()) {
       if (AssumeAndroidPlatform.isGnuStlAvailable()) {
-        data.add(new Object[] {NdkCompilerType.GCC, NdkCxxRuntime.GNUSTL, arch});
+        data.add(new Object[] {NdkCompilerType.GCC, NdkCxxRuntime.GNUSTL, targetCpuType});
         // We don't support 64-bit clang yet.
-        if (!arch.equals("arm64") && !arch.equals("x86_64")) {
-          data.add(new Object[] {NdkCompilerType.CLANG, NdkCxxRuntime.GNUSTL, arch});
-          data.add(new Object[] {NdkCompilerType.CLANG, NdkCxxRuntime.LIBCXX, arch});
+        if (targetCpuType != TargetCpuType.ARM64 && targetCpuType != TargetCpuType.X86_64) {
+          data.add(new Object[] {NdkCompilerType.CLANG, NdkCxxRuntime.GNUSTL, targetCpuType});
+          data.add(new Object[] {NdkCompilerType.CLANG, NdkCxxRuntime.LIBCXX, targetCpuType});
         }
       } else {
-        data.add(new Object[] {NdkCompilerType.CLANG, NdkCxxRuntime.LIBCXX, arch});
+        data.add(new Object[] {NdkCompilerType.CLANG, NdkCxxRuntime.LIBCXX, targetCpuType});
       }
     }
     return data;
@@ -85,7 +87,7 @@ public class NdkCxxPlatformIntegrationTest {
   public NdkCxxRuntime cxxRuntime;
 
   @Parameterized.Parameter(value = 2)
-  public String arch;
+  public TargetCpuType targetCpuType;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths("ndk-test", true);
   @Rule public TemporaryPaths tmp_long_pwd = new TemporaryPaths("ndk-test-long-pwd", true);
@@ -120,6 +122,10 @@ public class NdkCxxPlatformIntegrationTest {
     return ndkDir;
   }
 
+  private String getTargetCpuType() {
+    return targetCpuType.name().toLowerCase();
+  }
+
   @Before
   public void setUp() {
     AssumeAndroidPlatform.assumeNdkIsAvailable();
@@ -136,7 +142,9 @@ public class NdkCxxPlatformIntegrationTest {
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
     ProjectWorkspace workspace = setupWorkspace("runtime_stl", tmp);
-    workspace.runBuckCommand("build", String.format("//:main#android-%s", arch)).assertSuccess();
+    workspace
+        .runBuckCommand("build", String.format("//:main#android-%s", getTargetCpuType()))
+        .assertSuccess();
   }
 
   @Test
@@ -147,12 +155,13 @@ public class NdkCxxPlatformIntegrationTest {
     // 64-bit only works with platform 21, so we can't change the platform to anything else.
     assumeThat(
         "skip this test for 64-bit, for now",
-        arch,
-        not(anyOf(equalTo("arm64"), equalTo("x86_64"))));
+        targetCpuType,
+        not(anyOf(equalTo(TargetCpuType.ARM64), equalTo(TargetCpuType.X86_64))));
 
     ProjectWorkspace workspace = setupWorkspace("ndk_app_platform", tmp);
 
-    BuildTarget target = BuildTargetFactory.newInstance(String.format("//:main#android-%s", arch));
+    BuildTarget target =
+        BuildTargetFactory.newInstance(String.format("//:main#android-%s", getTargetCpuType()));
     BuildTarget linkTarget = CxxDescriptionEnhancer.createCxxLinkTarget(target, Optional.empty());
 
     workspace.runBuckCommand("build", target.toString()).assertSuccess();
@@ -173,7 +182,8 @@ public class NdkCxxPlatformIntegrationTest {
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildTarget target =
-        BuildTargetFactory.newInstance(String.format("//:lib#android-%s,static", arch));
+        BuildTargetFactory.newInstance(
+            String.format("//:lib#android-%s,static", getTargetCpuType()));
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path lib =
         workspace.getPath(
