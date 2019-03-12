@@ -316,9 +316,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
+      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
     this.ruleFinder = ruleFinder;
   }
 }

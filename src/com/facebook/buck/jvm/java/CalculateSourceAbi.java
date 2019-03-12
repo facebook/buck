@@ -87,9 +87,7 @@ public class CalculateSourceAbi extends AbstractBuildRule
 
   @Override
   public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {
+      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
     buildDepsSupplier.updateRuleFinder(ruleFinder);
   }
 

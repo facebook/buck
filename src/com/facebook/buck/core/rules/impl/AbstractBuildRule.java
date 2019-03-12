@@ -22,7 +22,6 @@ import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.base.CaseFormat;
@@ -105,9 +104,7 @@ public abstract class AbstractBuildRule implements BuildRule {
 
   @Override
   public void updateBuildRuleResolver(
-      BuildRuleResolver ruleResolver,
-      SourcePathRuleFinder ruleFinder,
-      SourcePathResolver pathResolver) {}
+      BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {}
 
   @Override
   public final String toString() {
