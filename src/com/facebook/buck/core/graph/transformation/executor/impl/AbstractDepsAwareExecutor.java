@@ -49,8 +49,8 @@ abstract class AbstractDepsAwareExecutor<T, TaskType extends AbstractDepsAwareTa
   @Override
   public void close() {
     isShutdown = true;
-    for (int i = 0; i < workers.length; i++) {
-      workers[i].cancel(true);
+    for (Future<?> worker : workers) {
+      worker.cancel(true);
     }
   }
 

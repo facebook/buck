@@ -57,11 +57,7 @@ public class JavaExecutorBackedDefaultDepsAwareExecutor<T>
    */
   public static <U> JavaExecutorBackedDefaultDepsAwareExecutor<U> from(
       ExecutorService executorService) {
-
-    JavaExecutorBackedDefaultDepsAwareExecutor<U> executor =
-        new JavaExecutorBackedDefaultDepsAwareExecutor<>(executorService);
-
-    return executor;
+    return new JavaExecutorBackedDefaultDepsAwareExecutor<>(executorService);
   }
 
   @Override
