@@ -165,5 +165,8 @@ interface AbstractCxxPlatform extends FlavorConvertible {
   Optional<HeaderMode> getHeaderMode();
 
   /** @return whether shorter names for intermediate files should be used */
-  boolean getFilepathLengthLimited();
+  @Value.Default
+  default boolean getFilepathLengthLimited() {
+    return false;
+  }
 }

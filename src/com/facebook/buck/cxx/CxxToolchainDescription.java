@@ -346,6 +346,9 @@ public class CxxToolchainDescription
     boolean getUseHeaderMap();
 
     /** Whether to use shorter intermediate files. */
-    boolean getFilepathLengthLimited();
+    @Value.Default
+    default boolean getFilepathLengthLimited() {
+      return false;
+    }
   }
 }

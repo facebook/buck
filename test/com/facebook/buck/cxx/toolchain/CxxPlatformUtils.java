@@ -90,7 +90,6 @@ public class CxxPlatformUtils {
           .setHeaderVerification(DEFAULT_CONFIG.getHeaderVerificationOrIgnore())
           .setPublicHeadersSymlinksEnabled(true)
           .setPrivateHeadersSymlinksEnabled(true)
-          .setFilepathLengthLimited(false)
           .build();
   public static final UnresolvedCxxPlatform DEFAULT_UNRESOLVED_PLATFORM =
       new StaticUnresolvedCxxPlatform(DEFAULT_PLATFORM);
