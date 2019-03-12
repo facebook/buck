@@ -476,4 +476,24 @@ public class CxxLibraryIntegrationTest {
     result.assertSuccess();
     assertThat(result.getStdout(), containsString("//:foo#" + hostFlavor));
   }
+
+  @Test
+  public void testSymlinksOnAndOff() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "symlink_on_off", tmp);
+    workspace.setUp();
+
+    // Build with symlinks on.
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build", "--config", "cxx.exported_headers_symlinks_enabled=true", "//:bar");
+    result.assertSuccess();
+
+    // Build with symlinks off.
+    result =
+        workspace.runBuckCommand(
+            "build", "--config", "cxx.exported_headers_symlinks_enabled=false", "//:bar");
+    result.assertFailure();
+  }
 }

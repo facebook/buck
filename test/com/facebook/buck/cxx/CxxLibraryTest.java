@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -108,6 +109,7 @@ public class CxxLibraryTest {
                     .setIncludeRoot(
                         Either.ofRight(
                             DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)))
+                    .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
                     .build())
             .build();
     assertEquals(
@@ -127,6 +129,7 @@ public class CxxLibraryTest {
                         ImmutableSortedMap.of(
                             Paths.get("header.h"),
                             DefaultBuildTargetSourcePath.of(privateHeaderTarget)))
+                    .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
                     .build())
             .build();
     assertEquals(

@@ -97,6 +97,9 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
     builder.addSymlinkTree(getRoot(), getNameToPathMap());
   }
 
+  @AddToRuleKey
+  public abstract String getSymlinkTreeClass();
+
   /** @return all deps required by this header pack. */
   @Override
   // This has custom getDeps() logic because the way that the name to path map is added to the
@@ -151,6 +154,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
     builder.setIncludeType(includeType);
     builder.setRoot(symlinkTree.getRootSourcePath());
     builder.setNameToPathMap(symlinkTree.getLinks());
+    builder.setSymlinkTreeClass(symlinkTree.getClass().getName());
 
     if (includeType == CxxPreprocessables.IncludeType.LOCAL) {
       builder.setIncludeRoot(Either.ofLeft(symlinkTree.getIncludeSourcePath()));
@@ -179,6 +183,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
       INCLUDE_ROOT_TYPE_INFO.visit(instance.getIncludeRoot(), serializer);
       ImmutableSortedMap<Path, SourcePath> nameToPathMap = instance.getNameToPathMap();
       serializer.visitInteger(nameToPathMap.size());
+      serializer.visitString(instance.getSymlinkTreeClass());
       RichStream.from(nameToPathMap.entrySet())
           .forEachThrowing(
               entry -> {
@@ -197,6 +202,7 @@ abstract class AbstractCxxSymlinkTreeHeaders extends CxxHeaders implements RuleK
       builder.setRoot(deserializer.createSourcePath());
       builder.setIncludeRoot(INCLUDE_ROOT_TYPE_INFO.createNotNull(deserializer));
       int nameToPathMapSize = deserializer.createInteger();
+      builder.setSymlinkTreeClass(deserializer.createString());
 
       ImmutableSortedMap.Builder<Path, SourcePath> nameToPathMapBuilder =
           ImmutableSortedMap.naturalOrder();
