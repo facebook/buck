@@ -21,7 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 @BuckStyleImmutable
-@Value.Immutable
+@Value.Immutable(builder = false, copy = false)
 abstract class AbstractQueryFileTarget implements QueryTarget {
 
   @Value.Parameter
