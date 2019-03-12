@@ -44,7 +44,7 @@ public class DefaultBuckPluginManager extends DefaultPluginManager implements Bu
                   try {
                     return DefaultBuckPluginManager.super.getExtensions(type);
                   } finally {
-                    LOG.warn(
+                    LOG.info(
                         "Time to load instances of %s: %s",
                         type, System.currentTimeMillis() - start);
                   }
