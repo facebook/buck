@@ -103,36 +103,50 @@ relationship to packages and projects, see
 the {call buck.key_concepts_link}{param rendered_text: 'Key Concepts' /}{/call} topic.
 </p>
 
+<p>
+<strong>NOTE:</strong> All target paths are assumed to start from
+the root of the Buck project. Buck does not support specifying a
+target path that starts from a directory below the root. Although the
+double forward slash (<code>//</code>) that prefixes target paths 
+can be ommitted when specifying a target from the command line 
+(see <strong>Pro Tips</strong> below), Buck still assumes that the path 
+is from the root. Buck does support <em>relative</em> build paths, 
+but in Buck, that concept refers to specifying build 
+targets <em>from within</em> a build file. See <strong>Relative build
+targets</strong> below for more details.
+</p>
+
 
 <h4>Relative build targets</h4>
 
 <p>
 A <em>relative</em> build target can be used to reference 
-a {call buck.build_rule /} within the same {call buck.build_file /}. 
+a {call buck.build_rule /} <em>within the same {call buck.build_file /}</em>. 
 A relative build target starts with a colon (<code>:</code>) and is followed by
 only the third component (or <em>short name</em>) of the fully-qualified
 build target. 
 </p>
 
 <p>
-For example, within the build file <code>java/com/facebook/share/BUCK</code>, 
-the relative target <code>:ui</code> can be used
-to reference the rule <code>&#x2F/java/com/facebook/share:ui</code>.
+The following snippet from a build file shows an example of using a
+relative path.
 </p>
 
 <p>
 <pre class="prettyprint lang-py">
 {literal}
 #
-# Assume this rule is in //java/com/facebook/share/BUCK.
+# Assume this rule is in //java/com/facebook/share/BUCK
 #
 java_binary(
   name = 'ui_jar',
   deps = [
     #
-    # This is the same as using:
+    # The following target path
     #
-    # <code>'&#x2F;/java/com/facebook/share:ui'</code>
+    #   &#x2F;/java/com/facebook/share:ui
+    #
+    # is the same as using the following relative path.
     #
     ':ui',
   ],
@@ -140,7 +154,6 @@ java_binary(
 {/literal}
 </pre>
 </p>
-
 
 
 <h2>Command-line Pro Tips</h2>
