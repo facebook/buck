@@ -100,6 +100,7 @@ public class CxxBuckConfig {
       "detailed_untracked_header_messages";
   private static final String USE_ARG_FILE = "use_arg_file";
   private static final String TOOLCHAIN_TARGET = "toolchain_target";
+  private static final String FILEPATH_LENGTH_LIMITED = "filepath_length_limited";
 
   private static final String ASFLAGS = "asflags";
   private static final String ASPPFLAGS = "asppflags";
@@ -584,6 +585,11 @@ public class CxxBuckConfig {
   /** @return whether to generate more detailed untracked header messages. */
   public Boolean getUseDetailedUntrackedHeaderMessages() {
     return delegate.getBooleanValue(cxxSection, DETAILED_UNTRACKED_HEADER_MESSAGES, false);
+  }
+
+  /** @return whether short names for intermediate files should be used */
+  public Boolean getFilepathLengthLimited() {
+    return delegate.getBooleanValue(cxxSection, FILEPATH_LENGTH_LIMITED, false);
   }
 
   public BuckConfig getDelegate() {

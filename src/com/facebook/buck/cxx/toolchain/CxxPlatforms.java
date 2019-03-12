@@ -145,7 +145,8 @@ public class CxxPlatforms {
         .setPicTypeForSharedLinking(picTypeForSharedLinking)
         .setConflictingHeaderBasenameWhitelist(config.getConflictingHeaderBasenameWhitelist())
         .setHeaderMode(config.getHeaderMode())
-        .setUseArgFile(config.getUseArgFile());
+        .setUseArgFile(config.getUseArgFile())
+        .setFilepathLengthLimited(config.getFilepathLengthLimited());
 
     builder.setSymbolNameTool(
         new LazyDelegatingSymbolNameTool(

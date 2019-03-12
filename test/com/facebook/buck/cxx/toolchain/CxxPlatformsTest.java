@@ -92,6 +92,7 @@ public class CxxPlatformsTest {
             .setPublicHeadersSymlinksEnabled(true)
             .setPrivateHeadersSymlinksEnabled(true)
             .setArchiveContents(ArchiveContents.NORMAL)
+            .setFilepathLengthLimited(false)
             .build();
 
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();

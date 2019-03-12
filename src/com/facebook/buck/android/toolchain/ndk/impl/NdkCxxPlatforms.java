@@ -602,7 +602,8 @@ public class NdkCxxPlatforms {
                             == SharedLibraryInterfaceParams.Type.DEFINED_ONLY))
                 : Optional.empty())
         .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
-        .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled());
+        .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled())
+        .setFilepathLengthLimited(config.getFilepathLengthLimited());
 
     // Add the NDK root path to the white-list so that headers from the NDK won't trigger the
     // verification warnings.  Ideally, long-term, we'd model NDK libs/headers via automatically

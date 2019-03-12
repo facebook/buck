@@ -212,6 +212,8 @@ public class CxxToolchainDescription
 
     cxxPlatform.setArchiveContents(ArchiveContents.NORMAL);
 
+    cxxPlatform.setFilepathLengthLimited(args.getFilepathLengthLimited());
+
     return new CxxToolchainBuildRule(buildTarget, context, cxxPlatform);
   }
 
@@ -342,5 +344,8 @@ public class CxxToolchainDescription
 
     /** Whether to use header maps. */
     boolean getUseHeaderMap();
+
+    /** Whether to use shorter intermediate files. */
+    boolean getFilepathLengthLimited();
   }
 }

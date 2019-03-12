@@ -86,7 +86,8 @@ public class CxxToolchainDescriptionTest {
         .setStrip(binaryToolPath)
         .setSharedLibraryInterfaceType(SharedLibraryInterfaceParams.Type.ENABLED)
         .setObjcopyForSharedLibraryInterface(binaryToolPath)
-        .setUseHeaderMap(true);
+        .setUseHeaderMap(true)
+        .setFilepathLengthLimited(false);
     TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Tool binaryTool = new SimpleTool("this", "command");
     graphBuilder.addToIndex(new SimpleToolRule(binaryToolTarget, binaryTool));

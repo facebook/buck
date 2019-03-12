@@ -168,11 +168,6 @@ public class DarwinLinker extends DelegatingTool implements Linker, HasLinkerMap
   }
 
   @Override
-  public boolean hasFilePathSizeLimitations() {
-    return false;
-  }
-
-  @Override
   public SharedLibraryLoadingType getSharedLibraryLoadingType() {
     return SharedLibraryLoadingType.RPATH;
   }

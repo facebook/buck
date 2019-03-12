@@ -117,8 +117,6 @@ public interface Linker extends Tool {
 
   Iterable<String> outputArgs(String path);
 
-  boolean hasFilePathSizeLimitations();
-
   SharedLibraryLoadingType getSharedLibraryLoadingType();
 
   Optional<ExtraOutputsDeriver> getExtraOutputsDeriver();

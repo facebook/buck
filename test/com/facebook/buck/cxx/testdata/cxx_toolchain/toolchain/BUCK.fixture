@@ -11,6 +11,7 @@ def define_toolchain(**kwargs):
     shared_library_versioned_extension_format = "%s.shared",
 
     use_header_map = True,
+    filepath_length_limited = False,
 
     visibility = [ "PUBLIC" ],
 

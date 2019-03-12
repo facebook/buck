@@ -156,11 +156,6 @@ public class GnuLinker extends DelegatingTool implements Linker {
   }
 
   @Override
-  public boolean hasFilePathSizeLimitations() {
-    return false;
-  }
-
-  @Override
   public SharedLibraryLoadingType getSharedLibraryLoadingType() {
     return SharedLibraryLoadingType.RPATH;
   }

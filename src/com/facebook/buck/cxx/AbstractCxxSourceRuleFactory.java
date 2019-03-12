@@ -42,7 +42,6 @@ import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
-import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
@@ -263,8 +262,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
   /** @return the object file name for the given source name. */
   private String getCompileOutputName(String name) {
-    Linker ld = getCxxPlatform().getLd().resolve(getActionGraphBuilder());
-    String outName = ld.hasFilePathSizeLimitations() ? "out" : getOutputName(name);
+    String outName = getCxxPlatform().getFilepathLengthLimited() ? "out" : getOutputName(name);
     return outName + "." + getCxxPlatform().getObjectFileExtension();
   }
 

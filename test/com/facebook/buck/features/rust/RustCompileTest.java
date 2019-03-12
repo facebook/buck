@@ -186,11 +186,6 @@ public class RustCompileTest {
       }
 
       @Override
-      public boolean hasFilePathSizeLimitations() {
-        return false;
-      }
-
-      @Override
       public SharedLibraryLoadingType getSharedLibraryLoadingType() {
         return SharedLibraryLoadingType.RPATH;
       }
