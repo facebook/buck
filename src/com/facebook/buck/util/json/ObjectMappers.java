@@ -127,6 +127,17 @@ public class ObjectMappers {
     return create();
   }
 
+  /**
+   * Creates an {@link ObjectMapper} that allows to use objects without fields.
+   *
+   * @see SerializationFeature#FAIL_ON_EMPTY_BEANS
+   */
+  public static ObjectMapper createWithEmptyBeansPermitted() {
+    ObjectMapper objectMapper = create();
+    objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    return objectMapper;
+  }
+
   // Callers must not modify (i.e. reconfigure) this ObjectMapper.
   private static final ObjectMapper mapper;
 
