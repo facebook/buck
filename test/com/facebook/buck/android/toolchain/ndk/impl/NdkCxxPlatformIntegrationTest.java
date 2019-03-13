@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain.ndk.impl;
 
+import static java.nio.file.attribute.PosixFilePermission.OWNER_READ;
 import static org.hamcrest.Matchers.anyOf;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.not;
@@ -25,10 +26,17 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.android.toolchain.ndk.NdkCompilerType;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
+import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformTargetConfiguration;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms.Host;
+import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms.NdkCxxToolchainPaths;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -37,15 +45,23 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.DefaultProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.Result;
+import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Before;
@@ -118,7 +134,7 @@ public class NdkCxxPlatformIntegrationTest {
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
     Path ndkDir = AndroidNdkHelper.detectAndroidNdk(projectFilesystem).get().getNdkRootPath();
-    assertTrue(java.nio.file.Files.exists(ndkDir));
+    assertTrue(Files.exists(ndkDir));
     return ndkDir;
   }
 
@@ -174,7 +190,7 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Test
-  public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws IOException {
+  public void testWorkingDirectoryAndNdkHeaderPathsAreSanitized() throws Exception {
     // TODO: fix for Clang
     assumeTrue("clang is not supported", compiler != NdkCompilerType.CLANG);
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths", tmp);
@@ -192,7 +208,12 @@ public class NdkCxxPlatformIntegrationTest {
     String contents = MorePaths.asByteSource(lib).asCharSource(Charsets.ISO_8859_1).read();
 
     // Verify that the working directory is sanitized.
-    assertFalse(contents.contains(tmp.getRoot().toString()));
+    assertLibraryArchiveContentDoesNotContain(
+        workspace,
+        filesystem,
+        lib,
+        ImmutableSet.of("test.c.o", "test.cpp.o", "test.s.o"),
+        tmp.getRoot().toString());
 
     // Verify that we don't have any references to the build toolchain in the debug info.
     for (NdkCxxPlatforms.Host host : NdkCxxPlatforms.Host.values()) {
@@ -213,5 +234,105 @@ public class NdkCxxPlatformIntegrationTest {
                 longPwdFilesystem, target, "%s/lib" + target.getShortName() + ".a"));
     String movedContents = MorePaths.asByteSource(lib).asCharSource(Charsets.ISO_8859_1).read();
     assertEquals(contents, movedContents);
+  }
+
+  private void assertLibraryArchiveContentDoesNotContain(
+      ProjectWorkspace workspace,
+      ProjectFilesystem projectFilesystem,
+      Path libPath,
+      ImmutableSet<String> expectedEntries,
+      String content)
+      throws Exception {
+
+    NdkCxxToolchainPaths ndkCxxToolchainPaths =
+        createNdkCxxToolchainPaths(workspace, projectFilesystem);
+    Path arToolPath = ndkCxxToolchainPaths.getToolchainBinPath().resolve("ar");
+    Path extractedLibraryPath = tmp.newFolder("extracted-library");
+
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(ImmutableList.of(arToolPath.toString(), "-x", libPath.toString()))
+            .setDirectory(extractedLibraryPath)
+            .build();
+    Result arExecResult = new DefaultProcessExecutor(new TestConsole()).launchAndExecute(params);
+    assertEquals(
+        String.format(
+            "ar failed.\nstdout:\n%sstderr:\n%s",
+            arExecResult.getStdout(), arExecResult.getStderr()),
+        0,
+        arExecResult.getExitCode());
+
+    ImmutableSet<Path> extractedFiles =
+        Files.list(extractedLibraryPath).collect(ImmutableSet.toImmutableSet());
+
+    assertEquals(expectedEntries, expectedEntries);
+    for (Path extractedFile : extractedFiles) {
+      makeFileReadable(extractedFile);
+      assertFalse(
+          dumpObjectFile(ndkCxxToolchainPaths.getToolchainBinPath(), extractedFile)
+              .contains(content));
+    }
+  }
+
+  private NdkCxxToolchainPaths createNdkCxxToolchainPaths(
+      ProjectWorkspace workspace, ProjectFilesystem projectFilesystem)
+      throws IOException, InterruptedException {
+    Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
+    assumeTrue(androidNdk.isPresent());
+    String ndkVersion = androidNdk.get().getNdkVersion();
+    BuckConfig buckConfig = workspace.asCell().getBuckConfig();
+    AndroidBuckConfig androidConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
+    String androidPlatform =
+        androidConfig
+            .getNdkAppPlatformForCpuAbi(getTargetCpuType())
+            .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
+    String gccVersion =
+        androidConfig
+            .getNdkGccVersion()
+            .orElse(NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
+    NdkCxxPlatformCompiler ndkCxxPlatformCompiler =
+        NdkCxxPlatformCompiler.builder()
+            .setType(NdkCompilerType.GCC)
+            .setVersion(gccVersion)
+            .setGccVersion(gccVersion)
+            .build();
+    NdkCxxPlatformTargetConfiguration targetConfiguration =
+        NdkCxxPlatforms.getTargetConfiguration(
+            targetCpuType, ndkCxxPlatformCompiler, androidPlatform);
+    Host host = NdkCxxPlatforms.getHost(Platform.detect());
+    return new NdkCxxToolchainPaths(
+        projectFilesystem,
+        androidNdk.get().getNdkRootPath(),
+        targetConfiguration,
+        host.toString(),
+        cxxRuntime,
+        false,
+        NdkCxxPlatforms.getUseUnifiedHeaders(androidConfig, ndkVersion));
+  }
+
+  private void makeFileReadable(Path file) throws Exception {
+    if (Platform.detect() == Platform.WINDOWS) {
+      return;
+    }
+    Files.setPosixFilePermissions(file, EnumSet.of(OWNER_READ));
+  }
+
+  private String dumpObjectFile(Path toolchainBinPath, Path file) throws Exception {
+    Path objdumpToolPath = toolchainBinPath.resolve("objdump");
+    ProcessExecutorParams params =
+        ProcessExecutorParams.builder()
+            .setCommand(
+                ImmutableList.of(objdumpToolPath.toString(), "-g", file.getFileName().toString()))
+            .setDirectory(file.getParent())
+            .build();
+    Result objdumpExecResult =
+        new DefaultProcessExecutor(new TestConsole()).launchAndExecute(params);
+    assertEquals(
+        String.format(
+            "objdump failed.\nstdout:\n%sstderr:\n%s",
+            objdumpExecResult.getStdout(), objdumpExecResult.getStderr()),
+        0,
+        objdumpExecResult.getExitCode());
+    return objdumpExecResult.getStdout().get();
   }
 }

@@ -461,6 +461,11 @@ public class NdkCxxPlatforms {
   }
 
   @VisibleForTesting
+  static Host getHost(Platform platform) {
+    return Objects.requireNonNull(BUILD_PLATFORMS.get(platform));
+  }
+
+  @VisibleForTesting
   static UnresolvedNdkCxxPlatform build(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
@@ -500,7 +505,7 @@ public class NdkCxxPlatforms {
                     targetConfiguration.getCompiler().getGccVersion(),
                     cxxRuntime));
 
-    Host host = Objects.requireNonNull(BUILD_PLATFORMS.get(platform));
+    Host host = getHost(platform);
 
     NdkCxxToolchainPaths toolchainPaths =
         new NdkCxxToolchainPaths(
