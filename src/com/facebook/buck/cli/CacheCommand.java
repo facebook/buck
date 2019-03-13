@@ -24,6 +24,7 @@ import com.facebook.buck.artifact_cache.CacheResultType;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -35,6 +36,7 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -62,8 +64,6 @@ import org.kohsuke.args4j.Option;
 /** A command for inspecting the artifact cache. */
 public class CacheCommand extends AbstractCommand {
 
-  @Argument private List<String> arguments = new ArrayList<>();
-
   @Option(name = "--output-dir", usage = "Extract artifacts to this directory.")
   @Nullable
   private String outputDir = null;
@@ -71,16 +71,33 @@ public class CacheCommand extends AbstractCommand {
   @Option(name = "--distributed", usage = "If the request is for our distributed system.")
   private boolean isRequestForDistributed = false;
 
+  @Option(
+      name = "--rule-key-with-target",
+      usage =
+          "A build target and rule key pair which will be sent to the cache together. "
+              + "This is in contrast to specifying a rule key on its own (without this flag), which will "
+              + "be sent to the cache without any target information. This flag can be specified "
+              + "multiple times so each rule key can be sent to the cache with a target.",
+      handler = PairedStringOptionHandler.class)
+  private List<Pair<String, String>> targetsWithRuleKeys = new ArrayList<>();
+
+  @VisibleForTesting
+  void setTargetsWithRuleKeys(ImmutableList<Pair<String, String>> pairs) {
+    this.targetsWithRuleKeys = pairs;
+  }
+
+  @Argument private List<String> arguments = new ArrayList<>();
+
   public List<String> getArguments() {
     return arguments;
   }
-
-  Optional<Path> outputPath = Optional.empty();
 
   @VisibleForTesting
   void setArguments(List<String> arguments) {
     this.arguments = arguments;
   }
+
+  Optional<Path> outputPath = Optional.empty();
 
   public void fakeOutParseEvents(BuckEventBus eventBus) {
     ParseEvent.Started parseStart = ParseEvent.started(ImmutableList.of());
@@ -119,7 +136,7 @@ public class CacheCommand extends AbstractCommand {
       }
     }
 
-    if (arguments.isEmpty()) {
+    if (arguments.isEmpty() && targetsWithRuleKeys.isEmpty()) {
       throw new CommandLineException("no cache keys specified");
     }
 
@@ -128,8 +145,14 @@ public class CacheCommand extends AbstractCommand {
       Files.createDirectories(outputPath.get());
     }
 
-    ImmutableList<RuleKey> ruleKeys =
+    ImmutableList<RuleKey> rawRuleKeys =
         arguments.stream().map(RuleKey::new).collect(ImmutableList.toImmutableList());
+
+    ImmutableList<Pair<BuildTarget, RuleKey>> pairedRuleKeys =
+        targetsWithRuleKeys
+            .stream()
+            .map(pair -> parseTargetRuleKeyPair(params, pair))
+            .collect(ImmutableList.toImmutableList());
 
     Path tmpDir = Files.createTempDirectory("buck-cache-command");
 
@@ -148,10 +171,22 @@ public class CacheCommand extends AbstractCommand {
 
       // Fetch all artifacts
       List<ListenableFuture<ArtifactRunner>> futures = new ArrayList<>();
-      for (RuleKey ruleKey : ruleKeys) {
+      for (RuleKey ruleKey : rawRuleKeys) {
         futures.add(
             executor.submit(
-                new ArtifactRunner(params.getProjectFilesystemFactory(), ruleKey, tmpDir, cache)));
+                new ArtifactRunner(
+                    params.getProjectFilesystemFactory(), null, ruleKey, tmpDir, cache)));
+      }
+
+      for (Pair<BuildTarget, RuleKey> targetRuleKeyPair : pairedRuleKeys) {
+        futures.add(
+            executor.submit(
+                new ArtifactRunner(
+                    params.getProjectFilesystemFactory(),
+                    targetRuleKeyPair.getFirst(),
+                    targetRuleKeyPair.getSecond(),
+                    tmpDir,
+                    cache)));
       }
 
       // Wait for all executions to complete or fail.
@@ -267,6 +302,19 @@ public class CacheCommand extends AbstractCommand {
     return exitCode;
   }
 
+  private Pair<BuildTarget, RuleKey> parseTargetRuleKeyPair(
+      CommandRunnerParams params, Pair<String, String> rawArg) {
+    String targetName = rawArg.getFirst();
+    String ruleKey = rawArg.getSecond();
+
+    BuildTarget buildTarget =
+        params
+            .getUnconfiguredBuildTargetFactory()
+            .create(params.getCell().getCellPathResolver(), targetName)
+            .configure(getTargetConfiguration());
+    return new Pair<>(buildTarget, new RuleKey(ruleKey));
+  }
+
   private String cacheResultToString(CacheResult cacheResult) {
     CacheResultType type = cacheResult.getType();
     String typeString = type.toString().toLowerCase();
@@ -364,6 +412,7 @@ public class CacheCommand extends AbstractCommand {
   class ArtifactRunner implements Callable<ArtifactRunner> {
 
     final ProjectFilesystemFactory projectFilesystemFactory;
+    @Nullable BuildTarget buildTarget;
     RuleKey ruleKey;
     Path tmpDir;
     Path artifact;
@@ -377,10 +426,12 @@ public class CacheCommand extends AbstractCommand {
 
     public ArtifactRunner(
         ProjectFilesystemFactory projectFilesystemFactory,
+        @Nullable BuildTarget buildTarget,
         RuleKey ruleKey,
         Path tmpDir,
         ArtifactCache cache) {
       this.projectFilesystemFactory = projectFilesystemFactory;
+      this.buildTarget = buildTarget;
       this.ruleKey = ruleKey;
       this.tmpDir = tmpDir;
       this.cache = cache;
@@ -404,7 +455,8 @@ public class CacheCommand extends AbstractCommand {
       // TODO(skotch): don't use intermediate files, that just slows us down
       // instead, unzip from the ~/buck-cache/ directly
       CacheResult success =
-          Futures.getUnchecked(cache.fetchAsync(null, ruleKey, LazyPath.ofInstance(artifact)));
+          Futures.getUnchecked(
+              cache.fetchAsync(buildTarget, ruleKey, LazyPath.ofInstance(artifact)));
       cacheResult = cacheResultToString(success);
       cacheResultType = success.getType();
       cacheResultMode = success.cacheMode();
