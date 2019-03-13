@@ -124,9 +124,10 @@ public class AuditDependenciesCommand extends AbstractCommand {
           BuckQueryEnvironment.from(
               params,
               parserState,
-              pool.getListeningExecutorService(),
-              getEnableParserProfiling(),
-              getExcludeIncompatibleTargets());
+              ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
+                  .setProfilingEnabled(getEnableParserProfiling())
+                  .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
+                  .build());
       QueryCommand.runMultipleQuery(
           params,
           env,

@@ -24,7 +24,6 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
 import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -38,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -50,39 +48,32 @@ class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
 
   private final Parser parser;
-  private final boolean enableProfiling;
+  private final ParsingContext parsingContext;
   private final Path projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
   private final BuckConfig buckConfig;
   private final Cell rootCell;
-  private final boolean excludeUnsupportedTargets;
 
   private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
 
   public TargetPatternEvaluator(
-      Cell rootCell,
-      BuckConfig buckConfig,
-      Parser parser,
-      boolean enableProfiling,
-      boolean excludeUnsupportedTargets) {
+      Cell rootCell, BuckConfig buckConfig, Parser parser, ParsingContext parsingContext) {
     this.rootCell = rootCell;
     this.parser = parser;
-    this.enableProfiling = enableProfiling;
+    this.parsingContext = parsingContext;
     this.buckConfig = buckConfig;
     this.projectRoot = rootCell.getFilesystem().getRootPath();
     this.targetNodeSpecParser =
         new CommandLineTargetNodeSpecParser(buckConfig, new BuildTargetPatternTargetNodeParser());
-    this.excludeUnsupportedTargets = excludeUnsupportedTargets;
   }
 
   /** Attempts to parse and load the given collection of patterns. */
-  void preloadTargetPatterns(Iterable<String> patterns, ListeningExecutorService executor)
+  void preloadTargetPatterns(Iterable<String> patterns)
       throws InterruptedException, BuildFileParseException, IOException {
-    resolveTargetPatterns(patterns, executor);
+    resolveTargetPatterns(patterns);
   }
 
-  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveTargetPatterns(
-      Iterable<String> patterns, ListeningExecutorService executor)
+  ImmutableMap<String, ImmutableSet<QueryTarget>> resolveTargetPatterns(Iterable<String> patterns)
       throws InterruptedException, BuildFileParseException, IOException {
     ImmutableMap.Builder<String, ImmutableSet<QueryTarget>> resolved = ImmutableMap.builder();
 
@@ -118,7 +109,7 @@ class TargetPatternEvaluator {
     // Resolve any remaining target patterns using the parser.
     ImmutableMap<String, ImmutableSet<QueryTarget>> results =
         MoreMaps.transformKeys(
-            resolveBuildTargetPatterns(ImmutableList.copyOf(unresolved.keySet()), executor),
+            resolveBuildTargetPatterns(ImmutableList.copyOf(unresolved.keySet())),
             Functions.forMap(unresolved));
     resolved.putAll(results);
     resolvedTargets.putAll(results);
@@ -139,8 +130,7 @@ class TargetPatternEvaluator {
   }
 
   private ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(
-      List<String> patterns, ListeningExecutorService executor)
-      throws InterruptedException, BuildFileParseException, IOException {
+      List<String> patterns) throws InterruptedException, BuildFileParseException, IOException {
 
     // Build up an ordered list of patterns and pass them to the parse to get resolved in one go.
     // The returned list of nodes maintains the spec list ordering.
@@ -149,15 +139,7 @@ class TargetPatternEvaluator {
       specs.addAll(targetNodeSpecParser.parse(rootCell.getCellPathResolver(), pattern));
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
-        parser.resolveTargetSpecs(
-            // We disable mapping //path/to:lib to //path/to:lib#default,static
-            // because the query engine doesn't handle flavors very well.
-            ParsingContext.builder(rootCell, executor)
-                .setProfilingEnabled(enableProfiling)
-                .setApplyDefaultFlavorsMode(ParserConfig.ApplyDefaultFlavorsMode.DISABLED)
-                .setExcludeUnsupportedTargets(excludeUnsupportedTargets)
-                .build(),
-            specs);
+        parser.resolveTargetSpecs(parsingContext, specs);
     LOG.verbose("Resolved target patterns %s -> targets %s", patterns, buildTargets);
 
     // Convert the ordered result into a result map of pattern to set of resolved targets.

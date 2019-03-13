@@ -138,7 +138,10 @@ public class BuckQueryEnvironmentTest {
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
-            cell, FakeBuckConfig.builder().build(), parser, /* enableProfiling */ false, false);
+            cell,
+            FakeBuckConfig.builder().build(),
+            parser,
+            ParsingContext.builder(cell, executor).build());
     OwnersReport.Builder ownersReportBuilder = OwnersReport.builder(cell, parser, parserState);
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
@@ -146,7 +149,6 @@ public class BuckQueryEnvironmentTest {
             ownersReportBuilder,
             parser,
             parserState,
-            executor,
             targetPatternEvaluator,
             eventBus,
             TYPE_COERCER_FACTORY);
