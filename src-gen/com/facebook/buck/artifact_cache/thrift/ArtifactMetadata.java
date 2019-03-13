@@ -23,6 +23,7 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
   private static final org.apache.thrift.protocol.TField BUILD_TIME_MS_FIELD_DESC = new org.apache.thrift.protocol.TField("buildTimeMs", org.apache.thrift.protocol.TType.I64, (short)10);
   private static final org.apache.thrift.protocol.TField PRODUCER_HOSTNAME_FIELD_DESC = new org.apache.thrift.protocol.TField("producerHostname", org.apache.thrift.protocol.TType.STRING, (short)11);
   private static final org.apache.thrift.protocol.TField SIZE_BYTES_FIELD_DESC = new org.apache.thrift.protocol.TField("sizeBytes", org.apache.thrift.protocol.TType.I64, (short)12);
+  private static final org.apache.thrift.protocol.TField CONFIGURATION_FIELD_DESC = new org.apache.thrift.protocol.TField("configuration", org.apache.thrift.protocol.TType.STRING, (short)13);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new ArtifactMetadataStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new ArtifactMetadataTupleSchemeFactory();
@@ -39,6 +40,7 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
   public long buildTimeMs; // optional
   public java.lang.String producerHostname; // optional
   public long sizeBytes; // optional
+  public java.lang.String configuration; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
@@ -53,7 +55,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     PRODUCER_ID((short)9, "producerId"),
     BUILD_TIME_MS((short)10, "buildTimeMs"),
     PRODUCER_HOSTNAME((short)11, "producerHostname"),
-    SIZE_BYTES((short)12, "sizeBytes");
+    SIZE_BYTES((short)12, "sizeBytes"),
+    CONFIGURATION((short)13, "configuration");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -92,6 +95,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
           return PRODUCER_HOSTNAME;
         case 12: // SIZE_BYTES
           return SIZE_BYTES;
+        case 13: // CONFIGURATION
+          return CONFIGURATION;
         default:
           return null;
       }
@@ -136,7 +141,7 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
   private static final int __BUILDTIMEMS_ISSET_ID = 1;
   private static final int __SIZEBYTES_ISSET_ID = 2;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.RULE_KEYS,_Fields.METADATA,_Fields.BUILD_TARGET,_Fields.REPOSITORY,_Fields.ARTIFACT_PAYLOAD_CRC32,_Fields.SCHEDULE_TYPE,_Fields.ARTIFACT_PAYLOAD_MD5,_Fields.DISTRIBUTED_BUILD_MODE_ENABLED,_Fields.PRODUCER_ID,_Fields.BUILD_TIME_MS,_Fields.PRODUCER_HOSTNAME,_Fields.SIZE_BYTES};
+  private static final _Fields optionals[] = {_Fields.RULE_KEYS,_Fields.METADATA,_Fields.BUILD_TARGET,_Fields.REPOSITORY,_Fields.ARTIFACT_PAYLOAD_CRC32,_Fields.SCHEDULE_TYPE,_Fields.ARTIFACT_PAYLOAD_MD5,_Fields.DISTRIBUTED_BUILD_MODE_ENABLED,_Fields.PRODUCER_ID,_Fields.BUILD_TIME_MS,_Fields.PRODUCER_HOSTNAME,_Fields.SIZE_BYTES,_Fields.CONFIGURATION};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -167,6 +172,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.SIZE_BYTES, new org.apache.thrift.meta_data.FieldMetaData("sizeBytes", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I64)));
+    tmpMap.put(_Fields.CONFIGURATION, new org.apache.thrift.meta_data.FieldMetaData("configuration", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(ArtifactMetadata.class, metaDataMap);
   }
@@ -214,6 +221,9 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       this.producerHostname = other.producerHostname;
     }
     this.sizeBytes = other.sizeBytes;
+    if (other.isSetConfiguration()) {
+      this.configuration = other.configuration;
+    }
   }
 
   public ArtifactMetadata deepCopy() {
@@ -237,6 +247,7 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     this.producerHostname = null;
     setSizeBytesIsSet(false);
     this.sizeBytes = 0;
+    this.configuration = null;
   }
 
   public int getRuleKeysSize() {
@@ -550,6 +561,30 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __SIZEBYTES_ISSET_ID, value);
   }
 
+  public java.lang.String getConfiguration() {
+    return this.configuration;
+  }
+
+  public ArtifactMetadata setConfiguration(java.lang.String configuration) {
+    this.configuration = configuration;
+    return this;
+  }
+
+  public void unsetConfiguration() {
+    this.configuration = null;
+  }
+
+  /** Returns true if field configuration is set (has been assigned a value) and false otherwise */
+  public boolean isSetConfiguration() {
+    return this.configuration != null;
+  }
+
+  public void setConfigurationIsSet(boolean value) {
+    if (!value) {
+      this.configuration = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case RULE_KEYS:
@@ -648,6 +683,14 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       }
       break;
 
+    case CONFIGURATION:
+      if (value == null) {
+        unsetConfiguration();
+      } else {
+        setConfiguration((java.lang.String)value);
+      }
+      break;
+
     }
   }
 
@@ -689,6 +732,9 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     case SIZE_BYTES:
       return getSizeBytes();
 
+    case CONFIGURATION:
+      return getConfiguration();
+
     }
     throw new java.lang.IllegalStateException();
   }
@@ -724,6 +770,8 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       return isSetProducerHostname();
     case SIZE_BYTES:
       return isSetSizeBytes();
+    case CONFIGURATION:
+      return isSetConfiguration();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -851,6 +899,15 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         return false;
     }
 
+    boolean this_present_configuration = true && this.isSetConfiguration();
+    boolean that_present_configuration = true && that.isSetConfiguration();
+    if (this_present_configuration || that_present_configuration) {
+      if (!(this_present_configuration && that_present_configuration))
+        return false;
+      if (!this.configuration.equals(that.configuration))
+        return false;
+    }
+
     return true;
   }
 
@@ -905,6 +962,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
     hashCode = hashCode * 8191 + ((isSetSizeBytes()) ? 131071 : 524287);
     if (isSetSizeBytes())
       hashCode = hashCode * 8191 + org.apache.thrift.TBaseHelper.hashCode(sizeBytes);
+
+    hashCode = hashCode * 8191 + ((isSetConfiguration()) ? 131071 : 524287);
+    if (isSetConfiguration())
+      hashCode = hashCode * 8191 + configuration.hashCode();
 
     return hashCode;
   }
@@ -1037,6 +1098,16 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         return lastComparison;
       }
     }
+    lastComparison = java.lang.Boolean.valueOf(isSetConfiguration()).compareTo(other.isSetConfiguration());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetConfiguration()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.configuration, other.configuration);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -1162,6 +1233,16 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (!first) sb.append(", ");
       sb.append("sizeBytes:");
       sb.append(this.sizeBytes);
+      first = false;
+    }
+    if (isSetConfiguration()) {
+      if (!first) sb.append(", ");
+      sb.append("configuration:");
+      if (this.configuration == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.configuration);
+      }
       first = false;
     }
     sb.append(")");
@@ -1328,6 +1409,14 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 13: // CONFIGURATION
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRING) {
+              struct.configuration = iprot.readString();
+              struct.setConfigurationIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -1436,6 +1525,13 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
         oprot.writeI64(struct.sizeBytes);
         oprot.writeFieldEnd();
       }
+      if (struct.configuration != null) {
+        if (struct.isSetConfiguration()) {
+          oprot.writeFieldBegin(CONFIGURATION_FIELD_DESC);
+          oprot.writeString(struct.configuration);
+          oprot.writeFieldEnd();
+        }
+      }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
     }
@@ -1490,7 +1586,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (struct.isSetSizeBytes()) {
         optionals.set(11);
       }
-      oprot.writeBitSet(optionals, 12);
+      if (struct.isSetConfiguration()) {
+        optionals.set(12);
+      }
+      oprot.writeBitSet(optionals, 13);
       if (struct.isSetRuleKeys()) {
         {
           oprot.writeI32(struct.ruleKeys.size());
@@ -1540,12 +1639,15 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (struct.isSetSizeBytes()) {
         oprot.writeI64(struct.sizeBytes);
       }
+      if (struct.isSetConfiguration()) {
+        oprot.writeString(struct.configuration);
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, ArtifactMetadata struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(12);
+      java.util.BitSet incoming = iprot.readBitSet(13);
       if (incoming.get(0)) {
         {
           org.apache.thrift.protocol.TList _list11 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
@@ -1614,6 +1716,10 @@ public class ArtifactMetadata implements org.apache.thrift.TBase<ArtifactMetadat
       if (incoming.get(11)) {
         struct.sizeBytes = iprot.readI64();
         struct.setSizeBytesIsSet(true);
+      }
+      if (incoming.get(12)) {
+        struct.configuration = iprot.readString();
+        struct.setConfigurationIsSet(true);
       }
     }
   }

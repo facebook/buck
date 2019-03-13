@@ -47,6 +47,7 @@ struct ArtifactMetadata {
   11: optional string producerHostname;
   // Size of the content in bytes
   12: optional i64 sizeBytes;
+  13: optional string configuration;
 }
 
 enum ContainsResultType {
