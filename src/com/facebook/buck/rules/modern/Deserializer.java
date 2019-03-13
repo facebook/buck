@@ -17,6 +17,8 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
@@ -405,6 +407,14 @@ public class Deserializer {
         builder.put(keyType.createNotNull(this), valueType.createNotNull(this));
       }
       return builder.build();
+    }
+
+    @Override
+    public TargetConfiguration createTargetConfiguration() throws IOException {
+      if (stream.readBoolean()) {
+        return EmptyTargetConfiguration.INSTANCE;
+      }
+      throw new IllegalStateException();
     }
   }
 }

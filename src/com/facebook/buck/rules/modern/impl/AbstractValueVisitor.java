@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.rules.modern.ClassInfo;
@@ -151,5 +153,14 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
   @Override
   public void visitDouble(Double value) throws E {
     visitSimple(value);
+  }
+
+  @Override
+  public void visitTargetConfiguration(TargetConfiguration value) throws E {
+    if (value instanceof EmptyTargetConfiguration) {
+      visitSimple(Boolean.TRUE);
+    } else {
+      throw new UnsupportedOperationException();
+    }
   }
 }

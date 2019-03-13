@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -83,4 +84,6 @@ public interface ValueVisitor<E extends Exception> {
   void visitFloat(Float value) throws E;
 
   void visitDouble(Double value) throws E;
+
+  void visitTargetConfiguration(TargetConfiguration value) throws E;
 }

@@ -18,6 +18,8 @@ package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
@@ -385,6 +387,15 @@ public class Serializer {
       this.stream.writeBoolean(value != null);
       if (value != null) {
         inner.visit(value, this);
+      }
+    }
+
+    @Override
+    public void visitTargetConfiguration(TargetConfiguration value) throws IOException {
+      if (value instanceof EmptyTargetConfiguration) {
+        stream.writeBoolean(true);
+      } else {
+        throw new UnsupportedOperationException();
       }
     }
   }

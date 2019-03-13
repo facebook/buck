@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.google.common.collect.ImmutableList;
@@ -74,6 +75,8 @@ public interface ValueCreator<E extends Exception> {
   Float createFloat() throws E;
 
   Double createDouble() throws E;
+
+  TargetConfiguration createTargetConfiguration() throws E;
 
   <T> T createSpecial(Class<T> valueClass, Object... args) throws E;
 }
