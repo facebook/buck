@@ -17,6 +17,8 @@
 package com.facebook.buck.jvm.java;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasKey;
+import static org.hamcrest.Matchers.iterableWithSize;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
@@ -30,7 +32,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
@@ -335,5 +341,39 @@ public class JavaTestIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "env_macros", temp);
     workspace.setUp();
     workspace.runBuckCommand("test", "//:env").assertSuccess();
+  }
+
+  @Test
+  public void testExternalTestRunnerSpec() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_rule_classpath", temp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("test", "external_runner", "false");
+    workspace.runBuckCommand("test", "//:top");
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    ImmutableList<ImmutableMap<String, Object>> specs =
+        ObjectMappers.readValue(
+            specOutput, new TypeReference<ImmutableList<ImmutableMap<String, Object>>>() {});
+    assertThat(specs, iterableWithSize(1));
+    ImmutableMap<String, Object> spec = specs.get(0);
+    assertThat(spec, hasKey("required_paths"));
+    //noinspection unchecked
+    ImmutableSortedSet<String> requiredPaths =
+        ImmutableSortedSet.<String>naturalOrder()
+            .addAll((Iterable<String>) spec.get("required_paths"))
+            .build();
+    // The runtime classpath of the test should all be present in the required paths
+    assertEquals(
+        requiredPaths,
+        ImmutableSortedSet.of(
+            workspace
+                .getPath(Paths.get("buck-out/gen/lib__transitive_lib__output/transitive_lib.jar"))
+                .toString(),
+            workspace
+                .getPath(
+                    Paths.get("buck-out/gen/lib__mid_test#testsjar__output/mid_test#testsjar.jar"))
+                .toString()));
   }
 }

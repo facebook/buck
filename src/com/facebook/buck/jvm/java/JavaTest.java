@@ -660,6 +660,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setEnv(jUnitStep.getEnvironmentVariables(executionContext))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .setRequiredPaths(getRuntimeClasspath(buildContext))
         .build();
   }
 
@@ -676,30 +677,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             new AbstractExecutionStep("write classpath file") {
               @Override
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
-                ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-                if (unbundledResourcesRoot.isPresent()) {
-                  builder.add(
-                      buildContext
-                          .getSourcePathResolver()
-                          .getAbsolutePath(unbundledResourcesRoot.get()));
-                }
-                ImmutableSet<Path> classpathEntries =
-                    builder
-                        .addAll(
-                            compiledTestsLibrary
-                                .getTransitiveClasspaths()
-                                .stream()
-                                .map(buildContext.getSourcePathResolver()::getAbsolutePath)
-                                .collect(ImmutableSet.toImmutableSet()))
-                        .addAll(
-                            additionalClasspathEntriesProvider
-                                .map(
-                                    e ->
-                                        e.getAdditionalClasspathEntries(
-                                            buildContext.getSourcePathResolver()))
-                                .orElse(ImmutableList.of()))
-                        .addAll(getBootClasspathEntries())
-                        .build();
+                ImmutableSet<Path> classpathEntries = getRuntimeClasspath(buildContext);
                 getProjectFilesystem()
                     .writeLinesToPath(
                         Iterables.transform(classpathEntries, Object::toString),
@@ -707,6 +685,30 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 return StepExecutionResults.SUCCESS;
               }
             })
+        .build();
+  }
+
+  /**
+   * @return a set of paths to the files which must be passed as the classpath to the java process
+   *     when this test is executed
+   */
+  protected ImmutableSet<Path> getRuntimeClasspath(BuildContext buildContext) {
+    ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
+    unbundledResourcesRoot.ifPresent(
+        sourcePath ->
+            builder.add(buildContext.getSourcePathResolver().getAbsolutePath(sourcePath)));
+    return builder
+        .addAll(
+            compiledTestsLibrary
+                .getTransitiveClasspaths()
+                .stream()
+                .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+                .collect(ImmutableSet.toImmutableSet()))
+        .addAll(
+            additionalClasspathEntriesProvider
+                .map(e -> e.getAdditionalClasspathEntries(buildContext.getSourcePathResolver()))
+                .orElse(ImmutableList.of()))
+        .addAll(getBootClasspathEntries())
         .build();
   }
 
