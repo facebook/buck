@@ -715,15 +715,4 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     assertTrue(result.isVerifiedUsingV1Scheme());
     assertTrue(result.isVerifiedUsingV2Scheme());
   }
-
-  @Test
-  public void testClasspathQueryFunctionWorksOnAndroidBinary() throws IOException {
-    Path output = workspace.buildAndReturnOutput("//apps/sample:dump_classpath");
-    String[] actualClasspath = workspace.getFileContents(output).split("\\s+");
-    assertThat(
-        actualClasspath,
-        Matchers.array(
-            Matchers.containsString("//apps/sample:app"),
-            Matchers.containsString("//java/com/sample/lib:lib")));
-  }
 }
