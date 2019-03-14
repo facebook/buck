@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -35,11 +36,12 @@ public class ExternalTestRunnerTestSpecTest {
                 .setTarget(BuildTargetFactory.newInstance("//:target"))
                 .setType("custom")
                 .setLabels(ImmutableList.of("label"))
+                .setRequiredPaths(ImmutableList.of(Paths.get("foo")))
                 .build());
     assertThat(
         result,
         Matchers.equalTo(
-            "{\"target\":\"//:target\",\"type\":\"custom\",\"command\":[],"
-                + "\"env\":{},\"labels\":[\"label\"],\"contacts\":[]}"));
+            "{\"target\":\"//:target\",\"type\":\"custom\",\"command\":[],\"env\":{},"
+                + "\"required_paths\":[\"foo\"],\"labels\":[\"label\"],\"contacts\":[]}"));
   }
 }
