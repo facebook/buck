@@ -1373,6 +1373,24 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void ownerShouldExcludeIncompatibleTargets() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_incompatible_targets", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "owner(lib/A.java)",
+            "--target-platforms",
+            "//:linux_platform",
+            "--exclude-incompatible-targets");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("//lib:libA\n")));
+  }
+
+  @Test
   public void testOutputFileParameter() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);

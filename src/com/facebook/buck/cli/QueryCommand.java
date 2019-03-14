@@ -240,6 +240,7 @@ public class QueryCommand extends AbstractCommand {
                     ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
                         .setProfilingEnabled(getEnableParserProfiling())
                         .setSpeculativeParsing(SpeculativeParsing.ENABLED)
+                        .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
                         .build(),
                     params.getParser().getPermState(),
                     getTargetPlatforms())) {
