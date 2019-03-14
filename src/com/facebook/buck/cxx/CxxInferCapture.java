@@ -189,7 +189,8 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
               getDepFilePath(),
               context.getSourcePathResolver().getRelativePath(input),
               output,
-              DependencyTrackingMode.MAKEFILE);
+              DependencyTrackingMode.MAKEFILE,
+              false);
     } catch (Depfiles.HeaderVerificationException e) {
       throw new HumanReadableException(e);
     }

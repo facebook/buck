@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -189,7 +190,8 @@ class Depfiles {
       ProjectFilesystem filesystem,
       Path sourceDepFile,
       Path inputPath,
-      DependencyTrackingMode dependencyTrackingMode)
+      DependencyTrackingMode dependencyTrackingMode,
+      boolean useUnixPathSeparator)
       throws IOException {
     switch (dependencyTrackingMode) {
       case MAKEFILE:
@@ -204,7 +206,11 @@ class Depfiles {
           // the rule key. The correct way to handle this is likely to support macros in
           // preprocessor/compiler flags at which point we can use the entries for these files in
           // the depfile to verify that the user properly references these files via the macros.
-          int inputIndex = prereqs.indexOf(inputPath.toString());
+          int inputIndex =
+              prereqs.indexOf(
+                  useUnixPathSeparator
+                      ? MorePaths.pathWithUnixSeparators(inputPath)
+                      : inputPath.toString());
           Preconditions.checkState(
               inputIndex != -1,
               "Could not find input source (%s) in dep file prereqs (%s)",
@@ -258,7 +264,8 @@ class Depfiles {
       Path sourceDepFile,
       Path inputPath,
       Path outputPath,
-      DependencyTrackingMode dependencyTrackingMode)
+      DependencyTrackingMode dependencyTrackingMode,
+      boolean useUnixPathSeparator)
       throws IOException, HeaderVerificationException {
     // Process the dependency file, fixing up the paths, and write it out to it's final location.
     // The paths of the headers written out to the depfile are the paths to the symlinks from the
@@ -275,7 +282,7 @@ class Depfiles {
 
       List<String> headers =
           getRawUsedHeadersFromDepfile(
-              filesystem, sourceDepFile, inputPath, dependencyTrackingMode);
+              filesystem, sourceDepFile, inputPath, dependencyTrackingMode, useUnixPathSeparator);
 
       return normalizeAndVerifyHeaders(
           eventBus,

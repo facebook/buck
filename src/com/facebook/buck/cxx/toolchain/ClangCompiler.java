@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -55,7 +56,7 @@ public class ClangCompiler extends DefaultCompiler {
     if (useDependencyTree) {
       return ImmutableList.of("-H");
     } else {
-      return ImmutableList.of("-MD", "-MF", outputPath);
+      return ImmutableList.of("-MD", "-MF", MorePaths.pathWithUnixSeparators(outputPath));
     }
   }
 

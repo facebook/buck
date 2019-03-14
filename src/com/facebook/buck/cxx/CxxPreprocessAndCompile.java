@@ -238,7 +238,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                 getDepFilePath(),
                 getRelativeInputPath(context.getSourcePathResolver()),
                 output,
-                compilerDelegate.getDependencyTrackingMode());
+                compilerDelegate.getDependencyTrackingMode(),
+                compilerDelegate.getCompiler().getUseUnixPathSeparator());
       } catch (Depfiles.HeaderVerificationException e) {
         throw new HumanReadableException(e);
       }

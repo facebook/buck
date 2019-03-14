@@ -263,7 +263,8 @@ class CxxPrecompiledHeader extends AbstractBuildRule
                   // file
                   getRelativeInputPath(context.getSourcePathResolver()),
                   output,
-                  compilerDelegate.getDependencyTrackingMode()));
+                  compilerDelegate.getDependencyTrackingMode(),
+                  compilerDelegate.getCompiler().getUseUnixPathSeparator()));
     } catch (ExecutionException e) {
       // Unwrap and re-throw the loader's Exception.
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
