@@ -105,7 +105,8 @@ public class AndroidInstrumentationTestTest {
 
     String outputPath =
         MorePaths.pathWithPlatformSeparators(
-            Paths.get("buck-out", "bin", "__instrumentation_test__exopackage_dir__"));
+            Paths.get("buck-out", "bin", "__instrumentation_test__exopackage_dir__")
+                .toAbsolutePath());
     String jsonEncodedValue = ObjectMappers.WRITER.writeValueAsString(outputPath);
     assertEquals(
         "{\"target\":\"//:instrumentation_test\","

@@ -170,9 +170,6 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       TestReportingCallback testReportingCallback) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    steps.add(
-        new ExopackageSymlinkTreeStep(apk, Optional.empty(), buildContext, getProjectFilesystem()));
-
     Path pathToTestOutput = getPathToTestOutputDirectory();
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -356,13 +353,11 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   /**
    * Called in order to perform setup for external tests. We use this opportunity to lay down a
-   * symlink tree for the exopackage directory
+   * symlink tree for the exopackage directory.
    */
   @Override
-  public void onPreTest(BuildContext buildContext) throws IOException {
-    // The getTestSteps method above is not invoked during an external test run
-    new ExopackageSymlinkTreeStep(apk, Optional.empty(), buildContext, getProjectFilesystem())
-        .executeStep();
+  public void onPreTest(BuildContext buildContext) {
+    new ExopackageSymlinkTreeStep(apk, getApkUnderTest(apk), buildContext).executeStep();
   }
 
   @Override
@@ -458,10 +453,14 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private static Optional<Path> getExopackageSymlinkTreePathIfNeeded(HasInstallableApk apk) {
     Optional<Path> exopackageSymlinkTreePath = Optional.empty();
     if (ExopackageInstaller.exopackageEnabled(apk.getApkInfo())) {
+      ProjectFilesystem filesystem = apk.getProjectFilesystem();
       exopackageSymlinkTreePath =
           Optional.of(
-              ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
-                  apk.getBuildTarget(), apk.getProjectFilesystem()));
+              filesystem
+                  .getRootPath()
+                  .resolve(
+                      ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
+                          apk.getBuildTarget(), filesystem)));
     }
     return exopackageSymlinkTreePath;
   }

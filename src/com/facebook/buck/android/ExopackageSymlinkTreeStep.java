@@ -23,7 +23,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -41,17 +40,14 @@ class ExopackageSymlinkTreeStep implements Step {
   private final HasInstallableApk apk;
   private final Optional<HasInstallableApk> maybeApkUnderTest;
   private final BuildContext buildContext;
-  private ProjectFilesystem filesystem;
 
   public ExopackageSymlinkTreeStep(
       HasInstallableApk apk,
       Optional<HasInstallableApk> maybeApkUnderTest,
-      BuildContext buildContext,
-      ProjectFilesystem filesystem) {
+      BuildContext buildContext) {
     this.apk = apk;
     this.maybeApkUnderTest = maybeApkUnderTest;
     this.buildContext = buildContext;
-    this.filesystem = filesystem;
   }
 
   @Override
@@ -103,12 +99,13 @@ class ExopackageSymlinkTreeStep implements Step {
         .ifPresent(
             exoInfo -> {
               // Set up a scratch path where we can lay out a symlink tree
+              ProjectFilesystem filesystem = installable.getProjectFilesystem();
               Path exopackageSymlinkTreePath =
                   getExopackageSymlinkTreePath(installable.getBuildTarget(), filesystem);
               String packageName =
                   AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
               try {
-                MostFiles.deleteRecursivelyIfExists(exopackageSymlinkTreePath);
+                filesystem.deleteRecursivelyIfExists(exopackageSymlinkTreePath);
                 filesystem.mkdirs(exopackageSymlinkTreePath);
                 // Create a symlink tree which lays out files exactly how they should be pushed to
                 // the device
