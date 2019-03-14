@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -158,7 +159,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    return null;
+    return PathSourcePath.of(getProjectFilesystem(), outputDir);
   }
 
   public Path getOutputDir() {

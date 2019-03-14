@@ -29,6 +29,7 @@ import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -37,7 +38,11 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -126,6 +131,9 @@ public class AppleBundleDescription
     }
     ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
     for (Flavor flavor : flavors) {
+      if (AppleAssetCatalog.FLAVOR.equals(flavor)) {
+        continue;
+      }
       if (AppleDebugFormat.FLAVOR_DOMAIN.getFlavors().contains(flavor)) {
         continue;
       }
@@ -138,62 +146,95 @@ public class AppleBundleDescription
   }
 
   @Override
-  public AppleBundle createBuildRule(
+  public BuildRule createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       AppleBundleDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    AppleDebugFormat flavoredDebugFormat =
-        AppleDebugFormat.FLAVOR_DOMAIN
-            .getValue(buildTarget)
-            .orElse(appleConfig.getDefaultDebugInfoFormatForBinaries());
-    if (!buildTarget.getFlavors().contains(flavoredDebugFormat.getFlavor())) {
-      return (AppleBundle)
-          graphBuilder.requireRule(
-              buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
-    }
-    if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
-      return (AppleBundle)
-          graphBuilder.requireRule(
-              buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
-    }
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    if (buildTarget.getFlavors().contains(AppleAssetCatalog.FLAVOR)) {
+      BuildTarget buildTargetWithoutBundleSpecificFlavors =
+          AppleDescriptions.stripBundleSpecificAndDebugFlavors(buildTarget);
+      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+      SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      FlavorDomain<AppleCxxPlatform> appleCxxPlatforms = getAppleCxxPlatformFlavorDomain();
+      AppleCxxPlatform appleCxxPlatform =
+          ApplePlatforms.getAppleCxxPlatformForBuildTarget(
+              graphBuilder,
+              cxxPlatformsProvider,
+              appleCxxPlatforms,
+              buildTarget,
+              MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
 
-    return AppleDescriptions.createAppleBundle(
-        xcodeDescriptions,
-        cxxPlatformsProvider,
-        getAppleCxxPlatformFlavorDomain(),
-        context.getTargetGraph(),
-        buildTarget,
-        context.getProjectFilesystem(),
-        params,
-        graphBuilder,
-        toolchainProvider.getByName(
-            CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
-        toolchainProvider.getByName(
-            ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
-        args.getBinary(),
-        args.getPlatformBinary(),
-        args.getExtension(),
-        args.getProductName(),
-        args.getInfoPlist(),
-        args.getInfoPlistSubstitutions(),
-        args.getDeps(),
-        args.getTests(),
-        flavoredDebugFormat,
-        appleConfig.useDryRunCodeSigning(),
-        appleConfig.cacheBundlesAndPackages(),
-        appleConfig.shouldVerifyBundleResources(),
-        appleConfig.assetCatalogValidation(),
-        args.getAssetCatalogsCompilationOptions(),
-        args.getCodesignFlags(),
-        args.getCodesignIdentity(),
-        args.getIbtoolModuleFlag(),
-        args.getIbtoolFlags(),
-        appleConfig.getCodesignTimeout(),
-        swiftBuckConfig.getCopyStdlibToFrameworks(),
-        cxxBuckConfig.shouldCacheStrip());
+      Optional<AppleAssetCatalog> assetCatalog =
+          AppleDescriptions.createBuildRuleForTransitiveAssetCatalogDependencies(
+              xcodeDescriptions,
+              context.getTargetGraph(),
+              buildTargetWithoutBundleSpecificFlavors,
+              context.getProjectFilesystem(),
+              sourcePathResolver,
+              ruleFinder,
+              appleCxxPlatform.getAppleSdk().getApplePlatform(),
+              appleCxxPlatform.getMinVersion(),
+              appleCxxPlatform.getActool(),
+              appleConfig.assetCatalogValidation(),
+              args.getAssetCatalogsCompilationOptions());
+
+      if (!assetCatalog.isPresent()) {
+        throw new HumanReadableException("No asset catalog needs to be built.");
+      }
+      return assetCatalog.get();
+    } else {
+      AppleDebugFormat flavoredDebugFormat =
+          AppleDebugFormat.FLAVOR_DOMAIN
+              .getValue(buildTarget)
+              .orElse(appleConfig.getDefaultDebugInfoFormatForBinaries());
+
+      if (!buildTarget.getFlavors().contains(flavoredDebugFormat.getFlavor())) {
+        return graphBuilder.requireRule(
+            buildTarget.withAppendedFlavors(flavoredDebugFormat.getFlavor()));
+      }
+      if (!AppleDescriptions.INCLUDE_FRAMEWORKS.getValue(buildTarget).isPresent()) {
+        return graphBuilder.requireRule(
+            buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
+      }
+
+      return AppleDescriptions.createAppleBundle(
+          xcodeDescriptions,
+          cxxPlatformsProvider,
+          getAppleCxxPlatformFlavorDomain(),
+          context.getTargetGraph(),
+          buildTarget,
+          context.getProjectFilesystem(),
+          params,
+          graphBuilder,
+          toolchainProvider.getByName(
+              CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
+          toolchainProvider.getByName(
+              ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
+          args.getBinary(),
+          args.getPlatformBinary(),
+          args.getExtension(),
+          args.getProductName(),
+          args.getInfoPlist(),
+          args.getInfoPlistSubstitutions(),
+          args.getDeps(),
+          args.getTests(),
+          flavoredDebugFormat,
+          appleConfig.useDryRunCodeSigning(),
+          appleConfig.cacheBundlesAndPackages(),
+          appleConfig.shouldVerifyBundleResources(),
+          appleConfig.assetCatalogValidation(),
+          args.getAssetCatalogsCompilationOptions(),
+          args.getCodesignFlags(),
+          args.getCodesignIdentity(),
+          args.getIbtoolModuleFlag(),
+          args.getIbtoolFlags(),
+          appleConfig.getCodesignTimeout(),
+          swiftBuckConfig.getCopyStdlibToFrameworks(),
+          cxxBuckConfig.shouldCacheStrip());
+    }
   }
 
   /**

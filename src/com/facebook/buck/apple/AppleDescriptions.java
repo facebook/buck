@@ -713,12 +713,14 @@ public class AppleDescriptions {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget buildTargetWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(buildTarget);
+    BuildTarget buildTargetWithoutBundleAndDebugFlavors =
+        stripBundleSpecificAndDebugFlavors(buildTarget);
 
     Optional<AppleAssetCatalog> assetCatalog =
         createBuildRuleForTransitiveAssetCatalogDependencies(
             xcodeDescriptions,
             targetGraph,
-            buildTargetWithoutBundleSpecificFlavors,
+            buildTargetWithoutBundleAndDebugFlavors,
             projectFilesystem,
             sourcePathResolver,
             ruleFinder,
@@ -733,7 +735,7 @@ public class AppleDescriptions {
         createBuildRulesForCoreDataDependencies(
             xcodeDescriptions,
             targetGraph,
-            buildTargetWithoutBundleSpecificFlavors,
+            buildTargetWithoutBundleAndDebugFlavors,
             projectFilesystem,
             params,
             AppleBundle.getBinaryName(buildTarget, productName),
@@ -744,7 +746,7 @@ public class AppleDescriptions {
         createBuildRulesForSceneKitAssetsDependencies(
             xcodeDescriptions,
             targetGraph,
-            buildTargetWithoutBundleSpecificFlavors,
+            buildTargetWithoutBundleAndDebugFlavors,
             projectFilesystem,
             params,
             appleCxxPlatform);
@@ -1127,6 +1129,12 @@ public class AppleDescriptions {
    */
   private static BuildTarget stripBundleSpecificFlavors(BuildTarget buildTarget) {
     return buildTarget.withoutFlavors(BUNDLE_SPECIFIC_FLAVORS);
+  }
+
+  /** Strip bundle specific flavors & debug flavors from a target. */
+  public static BuildTarget stripBundleSpecificAndDebugFlavors(BuildTarget buildTarget) {
+    return stripBundleSpecificFlavors(buildTarget)
+        .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors());
   }
 
   public static boolean flavorsDoNotAllowLinkerMapMode(BuildTarget buildTarget) {
