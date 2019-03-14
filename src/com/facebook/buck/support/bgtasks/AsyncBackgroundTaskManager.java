@@ -278,7 +278,10 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
           }
         }
         availableThreads.acquire();
-        ManagedBackgroundTask task = scheduledTasks.remove();
+        ManagedBackgroundTask task;
+        synchronized (scheduledTasks) {
+          task = scheduledTasks.remove();
+        }
         if (taskCancelled(task)) {
           availableThreads.release();
           continue;
