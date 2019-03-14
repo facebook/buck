@@ -179,7 +179,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             BuildCellRelativePath.fromCellRelativePath(
                 buildContext.getBuildCellRootPath(), getProjectFilesystem(), pathToTestOutput)));
     steps.add(new ApkInstallStep(buildContext.getSourcePathResolver(), apk));
-    getApkUnderTest()
+    getApkUnderTest(apk)
         .ifPresent(
             apkUnderTest -> {
               steps.add(
@@ -248,22 +248,10 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     String guava = getPathForResourceJar(guavaJar);
     String toolsCommon = getPathForResourceJar(toolsCommonJar);
 
-    Optional<Path> exopackageSymlinkTreePath = Optional.empty();
-    if (ExopackageInstaller.exopackageEnabled(apk.getApkInfo())) {
-      exopackageSymlinkTreePath =
-          Optional.of(
-              ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
-                  apk.getBuildTarget(), getProjectFilesystem()));
-    }
+    Optional<Path> exopackageSymlinkTreePath = getExopackageSymlinkTreePathIfNeeded(apk);
     Optional<Path> apkUnderTestSymlinkTreePath =
-        getApkUnderTest()
-            .flatMap(
-                hasInstallableApk ->
-                    ExopackageInstaller.exopackageEnabled(hasInstallableApk.getApkInfo())
-                        ? Optional.of(
-                            ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
-                                hasInstallableApk.getBuildTarget(), getProjectFilesystem()))
-                        : Optional.empty());
+        getApkUnderTest(apk)
+            .flatMap(AndroidInstrumentationTest::getExopackageSymlinkTreePathIfNeeded);
 
     AndroidInstrumentationTestJVMArgs jvmArgs =
         AndroidInstrumentationTestJVMArgs.builder()
@@ -383,26 +371,29 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     Optional<Path> apkUnderTestPath =
-        getApkUnderTest()
+        getApkUnderTest(apk)
             .map(
                 apkUnderTest ->
                     buildContext
                         .getSourcePathResolver()
                         .getAbsolutePath(apkUnderTest.getApkInfo().getApkPath()));
+    Optional<Path> instrumentationApkPath =
+        Optional.of(
+            buildContext.getSourcePathResolver().getAbsolutePath(apk.getApkInfo().getApkPath()));
     InstrumentationStep step =
         getInstrumentationStep(
             buildContext.getSourcePathResolver(),
             androidPlatformTarget.getAdbExecutable().toString(),
             Optional.empty(),
             Optional.empty(),
-            Optional.of(
-                buildContext
-                    .getSourcePathResolver()
-                    .getAbsolutePath(apk.getApkInfo().getApkPath())),
+            instrumentationApkPath,
             Optional.empty(),
             apkUnderTestPath,
             executionContext.isDebugEnabled(),
             executionContext.isCodeCoverageEnabled());
+
+    ImmutableList<Path> requiredPaths =
+        getRequiredPaths(apk, instrumentationApkPath, apkUnderTestPath);
 
     return ExternalTestRunnerTestSpec.builder()
         .setTarget(getBuildTarget())
@@ -410,13 +401,39 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         .setCommand(step.getShellCommandInternal(executionContext))
         .setLabels(getLabels())
         .setContacts(getContacts())
+        .setRequiredPaths(requiredPaths)
         .build();
+  }
+
+  /**
+   * @return a list of paths which must be materialized on disk before an external testrunner can
+   *     execute the test.
+   */
+  protected static ImmutableList<Path> getRequiredPaths(
+      HasInstallableApk apkInstance,
+      Optional<Path> instrumentationApkPath,
+      Optional<Path> apkUnderTestPath) {
+    Optional<Path> exopackageSymlinkTreePath = getExopackageSymlinkTreePathIfNeeded(apkInstance);
+    Optional<Path> apkUnderTestSymlinkTreePath =
+        getApkUnderTest(apkInstance)
+            .flatMap(AndroidInstrumentationTest::getExopackageSymlinkTreePathIfNeeded);
+    return ImmutableList.<Optional<Path>>builder()
+        .add(apkUnderTestPath)
+        .add(instrumentationApkPath)
+        .add(exopackageSymlinkTreePath)
+        .add(apkUnderTestSymlinkTreePath)
+        .build()
+        .stream()
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     Stream.Builder<BuildTarget> builder = Stream.builder();
     builder.add(apk.getBuildTarget());
+    getApkUnderTest(apk).map(HasInstallableApk::getBuildTarget).ifPresent(builder::add);
     return builder.build();
   }
 
@@ -426,11 +443,26 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   /** @return the apk under test, if any */
-  private Optional<HasInstallableApk> getApkUnderTest() {
-    if (apk instanceof AndroidInstrumentationApk) {
-      return Optional.of(((AndroidInstrumentationApk) apk).getApkUnderTest());
+  private static Optional<HasInstallableApk> getApkUnderTest(HasInstallableApk apkInstance) {
+    if (apkInstance instanceof AndroidInstrumentationApk) {
+      return Optional.of(((AndroidInstrumentationApk) apkInstance).getApkUnderTest());
     } else {
       return Optional.empty();
     }
+  }
+
+  /**
+   * @param apk the apk to install
+   * @return A Path pointing to the apk's exopackage layout dir if the apk supports exopackage
+   */
+  private static Optional<Path> getExopackageSymlinkTreePathIfNeeded(HasInstallableApk apk) {
+    Optional<Path> exopackageSymlinkTreePath = Optional.empty();
+    if (ExopackageInstaller.exopackageEnabled(apk.getApkInfo())) {
+      exopackageSymlinkTreePath =
+          Optional.of(
+              ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
+                  apk.getBuildTarget(), apk.getProjectFilesystem()));
+    }
+    return exopackageSymlinkTreePath;
   }
 }
