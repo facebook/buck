@@ -80,7 +80,7 @@ public class DefaultRawTargetNodeFactoryTest {
             (id) -> SimplePerfEvent.scope(Optional.empty(), null, null));
 
     assertEquals(RuleType.of("java_library", RuleType.Kind.BUILD), rawTargetNode.getRuleType());
-    assertEquals(buildTarget, rawTargetNode.getBuildTarget());
+    assertEquals(buildTarget.getUnconfiguredBuildTarget(), rawTargetNode.getBuildTarget());
 
     assertEquals(attributes, rawTargetNode.getAttributes().getAll());
 

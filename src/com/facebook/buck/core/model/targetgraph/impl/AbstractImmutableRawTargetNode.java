@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -31,7 +31,7 @@ import org.immutables.value.Value;
 public abstract class AbstractImmutableRawTargetNode implements RawTargetNode {
   @Override
   @Value.Parameter
-  public abstract BuildTarget getBuildTarget();
+  public abstract UnconfiguredBuildTarget getBuildTarget();
 
   @Override
   @Value.Parameter

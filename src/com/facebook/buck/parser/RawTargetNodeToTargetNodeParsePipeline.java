@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
@@ -70,7 +71,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
   @Override
   protected BuildTarget getBuildTarget(
       Path root, Optional<String> cellName, Path buildFile, RawTargetNode from) {
-    return from.getBuildTarget();
+    return from.getBuildTarget().configure(EmptyTargetConfiguration.INSTANCE);
   }
 
   @Override

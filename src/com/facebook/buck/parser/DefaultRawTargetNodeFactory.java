@@ -77,7 +77,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
             cell.getCellPathResolver(), "within_view", rawAttributes.get("within_view"), target);
 
     return ImmutableRawTargetNode.of(
-        target,
+        target.getUnconfiguredBuildTarget(),
         ruleType,
         new RawAttributes(ImmutableMap.copyOf(rawAttributes)),
         visibilityPatterns,
