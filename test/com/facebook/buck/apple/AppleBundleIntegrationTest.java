@@ -831,10 +831,7 @@ public class AppleBundleIntegrationTest {
     workspace.setUp();
     BuildTarget appTarget = BuildTargetFactory.newInstance("//:CombinedAssetsApp#no-debug");
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:MakeCombinedAssets");
-    BuildTarget assetTarget =
-        appTarget
-            .withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors())
-            .withAppendedFlavors(AppleAssetCatalog.FLAVOR);
+    BuildTarget assetTarget = appTarget.withAppendedFlavors(AppleAssetCatalog.FLAVOR);
     workspace.runBuckCommand("build", appTarget.getFullyQualifiedName()).assertSuccess();
 
     // Check that the genrule was invoked
@@ -1476,20 +1473,5 @@ public class AppleBundleIntegrationTest {
 
     // Non-Swift target shouldn't include Frameworks/
     assertFalse(Files.exists(appPath.resolve("Frameworks")));
-  }
-
-  @Test
-  public void buildAppleAssetCatalogsFlavor() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "apple_asset_catalogs_are_included_in_bundle", tmp);
-    workspace.setUp();
-    ProcessResult result =
-        workspace.runBuckCommand("build", "--show-output", "//:DemoApp#apple-asset-catalog");
-    result.assertSuccess();
-    BuildTarget target = BuildTargetFactory.newInstance("//:DemoApp#apple-asset-catalog");
-    Path appPath = BuildTargetPaths.getGenPath(filesystem, target, "%s").resolve("Merged.bundle");
-    assertEquals(
-        String.format("%s %s", target.getFullyQualifiedName(), appPath), result.getStdout().trim());
   }
 }
