@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -134,6 +135,11 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
+  public Cell getCell(UnconfiguredBuildTarget target) {
+    return getCell(target.getCellPath());
+  }
+
+  @Override
   public Cell getCell(BuildTarget target) {
     return getCell(target.getCellPath());
   }
@@ -162,13 +168,19 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public Path getAbsolutePathToBuildFileUnsafe(BuildTarget target) {
+    return getAbsolutePathToBuildFileUnsafe(target.getUnconfiguredBuildTarget());
+  }
+
+  @Override
+  public Path getAbsolutePathToBuildFileUnsafe(UnconfiguredBuildTarget target) {
     Cell targetCell = getCell(target);
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
     return targetFilesystem.resolve(target.getBasePath()).resolve(targetCell.getBuildFileName());
   }
 
   @Override
-  public Path getAbsolutePathToBuildFile(BuildTarget target) throws MissingBuildFileException {
+  public Path getAbsolutePathToBuildFile(UnconfiguredBuildTarget target)
+      throws MissingBuildFileException {
     Path buildFile = getAbsolutePathToBuildFileUnsafe(target);
     Cell cell = getCell(target);
     if (!cell.getFilesystem().isFile(buildFile)) {
@@ -180,6 +192,11 @@ abstract class AbstractImmutableCell implements Cell {
               .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
     }
     return buildFile;
+  }
+
+  @Override
+  public Path getAbsolutePathToBuildFile(BuildTarget target) throws MissingBuildFileException {
+    return getAbsolutePathToBuildFile(target.getUnconfiguredBuildTarget());
   }
 
   @Override

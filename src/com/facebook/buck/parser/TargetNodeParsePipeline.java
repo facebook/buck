@@ -149,6 +149,7 @@ public class TargetNodeParsePipeline
   @Override
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
       Cell cell, BuildTarget buildTarget) throws BuildTargetException {
-    return buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget);
+    return buildTargetRawNodeParsePipeline.getNodeJob(
+        cell, buildTarget.getUnconfiguredBuildTarget());
   }
 }

@@ -18,6 +18,7 @@ package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -73,6 +74,8 @@ public interface Cell {
 
   Cell getCell(Path cellPath);
 
+  Cell getCell(UnconfiguredBuildTarget target);
+
   Cell getCell(BuildTarget target);
 
   Optional<Cell> getCellIfKnown(BuildTarget target);
@@ -87,6 +90,8 @@ public interface Cell {
   /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
   ImmutableMap<Path, Cell> getLoadedCells();
 
+  Path getAbsolutePathToBuildFileUnsafe(UnconfiguredBuildTarget target);
+
   /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
    * otherwise prefer {@link #getAbsolutePathToBuildFile(BuildTarget)}.
@@ -95,6 +100,8 @@ public interface Cell {
    * @return path which may or may not exist.
    */
   Path getAbsolutePathToBuildFileUnsafe(BuildTarget target);
+
+  Path getAbsolutePathToBuildFile(UnconfiguredBuildTarget target) throws MissingBuildFileException;
 
   Path getAbsolutePathToBuildFile(BuildTarget target) throws MissingBuildFileException;
 
