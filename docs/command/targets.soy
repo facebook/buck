@@ -90,21 +90,6 @@ buck targets --show-output &#x2F;/java/com/myproject:binary
 </p>
 
 
-<p>
-This command can be handy in programmatic tasks, such as running all of
-the Java tests under <code>&#x2F;/java/com/myproject</code>:
-</p>
-
-<p>
-<pre>
-{literal}
-buck targets --type java_test | \
-  grep '&#x2F;/java/com/myproject' | \
-  xargs buck test
-{/literal}
-</pre>
-</p>
-
 {/param}
 
 
@@ -113,16 +98,35 @@ buck targets --type java_test | \
   {param name: 'type' /}
   {param desc}
   <p>
-    The types of target to filter by.  For example:
+    The types of target by which to filter.  For example:
   </p>
 
 <p>
 <pre>
 {literal}
-buck targets --type java_test java_binary
+buck targets &#x2F;/java/com/myproject/... --type java_test java_binary
 {/literal}
 </pre>
 </p>
+
+<p>
+Note that the <code>--type</code> parameter comes <em>after</em> the
+specified targets.
+</p>
+
+<p>
+This parameter can be handy in programmatic tasks, such as running all of
+the Java tests under <code>&#x2F;/java/com/myproject</code>:
+</p>
+
+<p>
+<pre>
+{literal}
+buck targets &#x2F;/java/com/myproject/... --type java_test | xargs buck test
+{/literal}
+</pre>
+</p>
+
 
   {/param}
 {/call}
@@ -133,19 +137,19 @@ buck targets --type java_test java_binary
   {param desc}
 
   <p>
-  Filters targets by the list of rules that include
-  {sp}<code>referenced-file</code> in their transitive closure.
+  Filters targets by the list of rules that include the specified file
+  in their transitive closure.
   </p>
 
   <p>
-  For example, if you to run all tests that could be affected by a
-  particular file, they would run:
+  For example, to run all tests that could be affected by a particular
+  file, you could use:
   </p>
 
 <p>
 <pre>
 {literal}
-buck targets --type java_test \
+buck targets &#x2F;/java/com/myproject/... --type java_test \
   --referenced-file java/com/example/Foo.java |
   xargs buck test
 {/literal}
