@@ -372,28 +372,23 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                   BuildCellRelativePath.fromCellRelativePath(
                       context.getBuildCellRootPath(), filesystem, resolvedOutput.getParent())))
           .add(
+              makeMainStep(
+                  context, filesystem, outputPathResolver, compilerDelegate.isArgFileSupported()))
+          .add(
               new AbstractExecutionStep("verify_cxx_outputs") {
                 @Override
                 public StepExecutionResult execute(ExecutionContext executionContext)
                     throws IOException, InterruptedException {
-                  StepExecutionResult result =
-                      makeMainStep(
-                              context,
-                              filesystem,
-                              outputPathResolver,
-                              compilerDelegate.isArgFileSupported())
-                          .execute(executionContext);
-
                   Path outputPath =
                       filesystem.getRootPath().toAbsolutePath().resolve(resolvedOutput);
-                  if (result.isSuccess() && !Files.exists(outputPath)) {
+                  if (!Files.exists(outputPath)) {
                     LOG.warn(
                         new NoSuchFileException(outputPath.toString()),
                         "Compile step was successful but output file: "
                             + outputPath.toString()
                             + " does not exist.");
                   }
-                  return result;
+                  return StepExecutionResult.of(0, Optional.empty());
                 }
               })
           .build();
