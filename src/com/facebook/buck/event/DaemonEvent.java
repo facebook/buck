@@ -34,13 +34,13 @@ public abstract class DaemonEvent extends AbstractBuckEvent {
     return eventName;
   }
 
-  public static NewDaemonInstance newDaemonInstance() {
-    return new NewDaemonInstance();
+  public static NewDaemonInstance newDaemonInstance(String eventName) {
+    return new NewDaemonInstance(eventName);
   }
 
   public static class NewDaemonInstance extends DaemonEvent {
-    public NewDaemonInstance() {
-      super(EventKey.unique(), "newDaemonInstance");
+    public NewDaemonInstance(String eventName) {
+      super(EventKey.unique(), eventName);
     }
   }
 }

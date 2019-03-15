@@ -26,6 +26,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig.Executor;
+import com.facebook.buck.cli.DaemonLifecycleManager.DaemonStatus;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
@@ -194,6 +195,7 @@ import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.NanosAdjustedClock;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
@@ -829,7 +831,7 @@ public final class Main {
         telemetryPlugins = Lists.newArrayList();
       }
 
-      Daemon daemon =
+      Pair<Daemon, DaemonStatus> daemonRequest =
           daemonLifecycleManager.getDaemon(
               rootCell,
               knownRuleTypesProvider,
@@ -845,6 +847,9 @@ public final class Main {
                           .newBuildListenerFactoryForDaemon(
                               rootCell.getFilesystem(), System.getProperties()),
               context);
+
+      Daemon daemon = daemonRequest.getFirst();
+      DaemonStatus daemonStatus = daemonRequest.getSecond();
 
       if (!context.isPresent()) {
         // Clean up the trash on a background thread if this was a
@@ -1206,10 +1211,11 @@ public final class Main {
           }
 
           // This needs to be after the registration of the event listener so they can pick it up.
-          if (watchmanFreshInstanceAction == WatchmanWatcher.FreshInstanceAction.NONE) {
-            LOG.debug("new Buck daemon");
-            buildEventBus.post(DaemonEvent.newDaemonInstance());
-          }
+          Optional<String> newDaemonEvent = daemonStatus.newDaemonEvent();
+          newDaemonEvent.ifPresent(
+              event -> {
+                buildEventBus.post(DaemonEvent.newDaemonInstance(event));
+              });
 
 
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);

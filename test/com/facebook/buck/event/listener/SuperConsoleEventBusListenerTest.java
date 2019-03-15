@@ -2787,7 +2787,7 @@ public class SuperConsoleEventBusListenerTest {
         createSuperConsole(fakeClock, eventBus, renderingConsole);
 
     // new daemon instance & action graph cache miss
-    eventBus.post(DaemonEvent.newDaemonInstance());
+    eventBus.post(DaemonEvent.newDaemonInstance("DaemonInitialized"));
     assertEquals("daemonNewInstance", listener.getParsingStatus().get());
     eventBus.post(ActionGraphEvent.Cache.miss(/* cacheWasEmpty */ true));
     assertEquals("daemonNewInstance", listener.getParsingStatus().get());

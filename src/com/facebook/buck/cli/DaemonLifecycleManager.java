@@ -28,6 +28,7 @@ import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.timing.Clock;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.nailgun.NGContext;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -45,6 +46,70 @@ class DaemonLifecycleManager {
 
   @Nullable private volatile Daemon daemon;
 
+  /** Indicates whether a daemon is reused, or why it can't be reused */
+  enum DaemonStatus {
+    REUSED,
+    NEW_DAEMON,
+    INVALIDATED_NO_WATCHMAN,
+    INVALIDATED_FILESYSTEM_CHANGED,
+    INVALIDATED_BUCK_CONFIG_CHANGED,
+    INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
+
+    private String toHumanReadableError() {
+      switch (this) {
+        case REUSED:
+          return "Reusing existing daemon";
+        case NEW_DAEMON:
+          return "Initializing daemon for the first time";
+        case INVALIDATED_NO_WATCHMAN:
+          return "Watchman failed to start";
+        case INVALIDATED_FILESYSTEM_CHANGED:
+          return "The project directory changed between invocations";
+        case INVALIDATED_BUCK_CONFIG_CHANGED:
+          return "Buck configuration options changed between invocations";
+        case INVALIDATED_TOOLCHAINS_INCOMPATIBLE:
+          return "Available / configured toolchains changed between invocations";
+        default:
+          throw new AssertionError(String.format("Unknown value: %s", this));
+      }
+    }
+
+    private static DaemonStatus fromCellInvalidation(IsCompatibleForCaching compatible) {
+      switch (compatible) {
+        case FILESYSTEM_CHANGED:
+          return DaemonStatus.INVALIDATED_FILESYSTEM_CHANGED;
+        case BUCK_CONFIG_CHANGED:
+          return DaemonStatus.INVALIDATED_BUCK_CONFIG_CHANGED;
+        case TOOLCHAINS_INCOMPATIBLE:
+          return DaemonStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
+        case IS_COMPATIBLE:
+          return DaemonStatus.REUSED;
+        default:
+          throw new AssertionError(String.format("Unknown value: %s", compatible));
+      }
+    }
+
+    /** Get the string to be logged as an event, if an event should be logged. */
+    protected Optional<String> newDaemonEvent() {
+      switch (this) {
+        case REUSED:
+          return Optional.empty();
+        case NEW_DAEMON:
+          return Optional.of("DaemonInitialized");
+        case INVALIDATED_NO_WATCHMAN:
+          return Optional.of("DaemonWatchmanInvalidated");
+        case INVALIDATED_FILESYSTEM_CHANGED:
+          return Optional.of("DaemonFilesystemInvalidated");
+        case INVALIDATED_BUCK_CONFIG_CHANGED:
+          return Optional.of("DaemonBuckConfigInvalidated");
+        case INVALIDATED_TOOLCHAINS_INCOMPATIBLE:
+          return Optional.of("DaemonToolchainsInvalidated");
+        default:
+          throw new AssertionError(String.format("Unknown value: %s", this));
+      }
+    }
+  }
+
   synchronized boolean hasDaemon() {
     return daemon != null;
   }
@@ -54,7 +119,7 @@ class DaemonLifecycleManager {
   }
 
   /** Get or create Daemon. */
-  synchronized Daemon getDaemon(
+  synchronized Pair<Daemon, DaemonStatus> getDaemon(
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
@@ -65,13 +130,13 @@ class DaemonLifecycleManager {
       Optional<NGContext> context) {
 
     Daemon currentState = daemon;
-    @Nullable String daemonRestartReason = null;
+    DaemonStatus daemonStatus = daemon == null ? DaemonStatus.NEW_DAEMON : DaemonStatus.REUSED;
 
     // If Watchman failed to start, drop all caches
     if (daemon != null && watchman == WatchmanFactory.NULL_WATCHMAN) {
       // TODO(buck_team): make Watchman a requirement
       LOG.info("Restarting daemon because watchman failed to start");
-      daemonRestartReason = "Watchman failed to start";
+      daemonStatus = DaemonStatus.INVALIDATED_NO_WATCHMAN;
       daemon = null;
     }
 
@@ -83,7 +148,7 @@ class DaemonLifecycleManager {
         LOG.info(
             "Shutting down and restarting daemon on config or directory graphBuilder change (%s != %s)",
             daemon.getRootCell(), rootCell);
-        daemonRestartReason = cacheCompat.toHumanReasonableError();
+        daemonStatus = DaemonStatus.fromCellInvalidation(cacheCompat);
         daemon = null;
       }
     }
@@ -102,7 +167,7 @@ class DaemonLifecycleManager {
                   .asWarningText(
                       String.format(
                           "Invalidating internal cached state: %s. This may cause slower builds.",
-                          daemonRestartReason)));
+                          daemonStatus.toHumanReadableError())));
     }
 
     // start new daemon, clean old one if needed
@@ -132,7 +197,7 @@ class DaemonLifecycleManager {
               context);
     }
 
-    return daemon;
+    return new Pair<>(daemon, daemonStatus);
   }
 
   /** Manually kill the daemon instance, used for testing. */

@@ -38,25 +38,7 @@ class DaemonCellChecker {
     IS_COMPATIBLE,
     FILESYSTEM_CHANGED,
     BUCK_CONFIG_CHANGED,
-    TOOLCHAINS_INCOMPATIBLE;
-
-    /**
-     * Returns a human readable reason for why the cache needs invalidated (or "" if the cache does
-     * not need invalidated)
-     */
-    public String toHumanReasonableError() {
-      switch (this) {
-        case IS_COMPATIBLE:
-          return "";
-        case FILESYSTEM_CHANGED:
-          return "The project directory changed between invocations";
-        case BUCK_CONFIG_CHANGED:
-          return "Buck configuration options changed between invocations";
-        case TOOLCHAINS_INCOMPATIBLE:
-          return "Available / configured toolchains changed between invocations";
-      }
-      return "";
-    }
+    TOOLCHAINS_INCOMPATIBLE,
   }
 
   private DaemonCellChecker() {}
