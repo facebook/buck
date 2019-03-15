@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
@@ -29,7 +29,7 @@ interface RawTargetNodeFactory<T> {
   RawTargetNode create(
       Cell cell,
       Path buildFile,
-      BuildTarget buildTarget,
+      UnconfiguredBuildTarget buildTarget,
       T rawNode,
       Function<PerfEventId, Scope> perfEventScope);
 }

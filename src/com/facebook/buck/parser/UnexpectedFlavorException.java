@@ -17,9 +17,9 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.util.PatternAndMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +61,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   public static UnexpectedFlavorException createWithSuggestions(
-      Flavored flavored, BuildTarget target) {
+      Flavored flavored, UnconfiguredBuildTarget target) {
     ImmutableSet<Flavor> invalidFlavors = getInvalidFlavors(flavored, target);
     ImmutableSet<Flavor> validFlavors = getValidFlavors(flavored, target);
     // Get the specific message
@@ -88,7 +88,8 @@ public class UnexpectedFlavorException extends HumanReadableException {
     return new UnexpectedFlavorException(exceptionMessage);
   }
 
-  private static ImmutableSet<Flavor> getInvalidFlavors(Flavored flavored, BuildTarget target) {
+  private static ImmutableSet<Flavor> getInvalidFlavors(
+      Flavored flavored, UnconfiguredBuildTarget target) {
     return target
         .getFlavors()
         .stream()
@@ -96,7 +97,8 @@ public class UnexpectedFlavorException extends HumanReadableException {
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private static ImmutableSet<Flavor> getValidFlavors(Flavored flavored, BuildTarget target) {
+  private static ImmutableSet<Flavor> getValidFlavors(
+      Flavored flavored, UnconfiguredBuildTarget target) {
     return target
         .getFlavors()
         .stream()
@@ -105,7 +107,9 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   private static String createDefaultMessage(
-      BuildTarget target, ImmutableSet<Flavor> invalidFlavors, ImmutableSet<Flavor> validFlavors) {
+      UnconfiguredBuildTarget target,
+      ImmutableSet<Flavor> invalidFlavors,
+      ImmutableSet<Flavor> validFlavors) {
     String invalidFlavorsStr =
         invalidFlavors
             .stream()

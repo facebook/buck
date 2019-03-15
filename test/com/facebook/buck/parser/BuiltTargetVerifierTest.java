@@ -20,11 +20,11 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
@@ -65,7 +65,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("a"), "b"))),
         ImmutableMap.of());
@@ -84,7 +84,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new NonFlavoredDescription(),
         ImmutableMap.of());
   }
@@ -103,7 +103,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("attribute", "value"));
   }
@@ -122,7 +122,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRoot().resolve("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "target_name", "buck.base_path", "z/y/z"));
   }
@@ -140,7 +140,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRoot().resolve("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "target_name", "buck.base_path", "a/b"));
   }
@@ -153,7 +153,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRoot().resolve("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c#d"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("d"), "b"))),
         ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
@@ -167,7 +167,7 @@ public class BuiltTargetVerifierTest {
         cell,
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRoot().resolve("a/b/BUCK"),
-        BuildTargetFactory.newInstance("//a/b:c"),
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
         ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
   }

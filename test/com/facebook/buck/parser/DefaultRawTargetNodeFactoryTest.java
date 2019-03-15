@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -48,7 +48,8 @@ public class DefaultRawTargetNodeFactoryTest {
 
     Cell cell = new TestCellBuilder().build();
 
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//a/b:c");
+    UnconfiguredBuildTarget buildTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
 
     ImmutableMap<String, Object> attributes =
         ImmutableMap.<String, Object>builder()
@@ -80,7 +81,7 @@ public class DefaultRawTargetNodeFactoryTest {
             (id) -> SimplePerfEvent.scope(Optional.empty(), null, null));
 
     assertEquals(RuleType.of("java_library", RuleType.Kind.BUILD), rawTargetNode.getRuleType());
-    assertEquals(buildTarget.getUnconfiguredBuildTarget(), rawTargetNode.getBuildTarget());
+    assertEquals(buildTarget, rawTargetNode.getBuildTarget());
 
     assertEquals(attributes, rawTargetNode.getAttributes().getAll());
 

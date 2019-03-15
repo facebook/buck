@@ -18,8 +18,8 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
@@ -57,7 +57,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
   public RawTargetNode create(
       Cell cell,
       Path buildFile,
-      BuildTarget target,
+      UnconfiguredBuildTarget target,
       Map<String, Object> rawAttributes,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
@@ -77,7 +77,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
             cell.getCellPathResolver(), "within_view", rawAttributes.get("within_view"), target);
 
     return ImmutableRawTargetNode.of(
-        target.getUnconfiguredBuildTarget(),
+        target,
         ruleType,
         new RawAttributes(ImmutableMap.copyOf(rawAttributes)),
         visibilityPatterns,

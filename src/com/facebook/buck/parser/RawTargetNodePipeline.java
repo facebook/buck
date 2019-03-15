@@ -80,7 +80,7 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
     return rawTargetNodeFactory.create(
         cell,
         cell.getAbsolutePathToBuildFile(buildTarget),
-        buildTarget,
+        buildTarget.getUnconfiguredBuildTarget(),
         rawNode,
         perfEventScopeFunction);
   }

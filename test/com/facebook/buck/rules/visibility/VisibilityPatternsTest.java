@@ -19,7 +19,7 @@ package com.facebook.buck.rules.visibility;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
@@ -31,6 +31,6 @@ public class VisibilityPatternsTest {
         createCellRoots(new FakeProjectFilesystem()),
         "visibility",
         ImmutableList.of(":marmosets"),
-        BuildTargetFactory.newInstance("//example/path:three"));
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//example/path:three"));
   }
 }

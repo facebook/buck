@@ -18,7 +18,7 @@ package com.facebook.buck.rules.visibility;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -31,7 +31,10 @@ public class VisibilityPatterns {
 
   @SuppressWarnings("unchecked")
   public static ImmutableSet<VisibilityPattern> createFromStringList(
-      CellPathResolver cellNames, String paramName, @Nullable Object value, BuildTarget target) {
+      CellPathResolver cellNames,
+      String paramName,
+      @Nullable Object value,
+      UnconfiguredBuildTarget target) {
     if (value == null) {
       return ImmutableSet.of();
     }
