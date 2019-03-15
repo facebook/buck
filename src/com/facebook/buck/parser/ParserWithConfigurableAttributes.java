@@ -59,9 +59,10 @@ import javax.annotation.Nullable;
  * <p>This implementation also supports notion of configuration rules which are used to resolve
  * conditions in {@code select} statements.
  */
-class ParserWithConfigurableAttributes extends DefaultParser {
+class ParserWithConfigurableAttributes extends AbstractParser {
 
   private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private final TargetSpecResolver targetSpecResolver;
 
   ParserWithConfigurableAttributes(
       DaemonicParserState daemonicParserState,
@@ -70,7 +71,8 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       BuckEventBus eventBus,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Supplier<ImmutableList<String>> targetPlatforms) {
-    super(daemonicParserState, perBuildStateFactory, targetSpecResolver, eventBus, targetPlatforms);
+    super(daemonicParserState, perBuildStateFactory, eventBus, targetPlatforms);
+    this.targetSpecResolver = targetSpecResolver;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 
@@ -221,12 +223,12 @@ class ParserWithConfigurableAttributes extends DefaultParser {
       }
 
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
-          createTargetNodeProviderForSpecResolver(state);
+          DefaultParser.createTargetNodeProviderForSpecResolver(state);
       return targetSpecResolver.resolveTargetSpecs(
           parsingContext.getCell(),
           specs,
           (buildTarget, targetNode, targetType) ->
-              applyDefaultFlavors(
+              DefaultParser.applyDefaultFlavors(
                   buildTarget, targetNode, targetType, parsingContext.getApplyDefaultFlavorsMode()),
           targetNodeProvider,
           targetNodeFilter);
@@ -244,7 +246,7 @@ class ParserWithConfigurableAttributes extends DefaultParser {
         (PerBuildStateWithConfigurableAttributes) state;
 
     TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
-        createTargetNodeProviderForSpecResolver(state);
+        DefaultParser.createTargetNodeProviderForSpecResolver(state);
 
     TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
         (spec, nodes) -> spec.filter(nodes);
@@ -273,7 +275,7 @@ class ParserWithConfigurableAttributes extends DefaultParser {
                 parsingContext.getCell(),
                 targetNodeSpecs,
                 (buildTarget, targetNode, targetType) ->
-                    applyDefaultFlavors(
+                    DefaultParser.applyDefaultFlavors(
                         buildTarget,
                         targetNode,
                         targetType,

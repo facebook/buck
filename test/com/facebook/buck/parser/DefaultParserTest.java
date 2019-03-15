@@ -219,7 +219,7 @@ public class DefaultParserTest {
                 ParsingContext.builder(cell, executor).setProfilingEnabled(enableProfiling).build(),
                 parser.getPermState(),
                 ImmutableList.of())) {
-      DefaultParser.getTargetNodeRawAttributes(state, cell, buildFile).getTargets();
+      AbstractParser.getTargetNodeRawAttributes(state, cell, buildFile).getTargets();
     }
   }
 
