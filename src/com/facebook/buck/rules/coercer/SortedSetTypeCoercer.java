@@ -29,6 +29,7 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
     extends CollectionTypeCoercer<ImmutableSortedSet<T>, T> {
 
   private final TypeCoercer<T> elementTypeCoercer;
+  private final SortedSetConcatable<T> concatable = new SortedSetConcatable<>();
 
   SortedSetTypeCoercer(TypeCoercer<T> elementTypeCoercer) {
     super(elementTypeCoercer);
@@ -79,5 +80,10 @@ public class SortedSetTypeCoercer<T extends Comparable<? super T>>
     fillSortedSet(
         cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, builder, object);
     return ImmutableSortedSet.copyOf(builder);
+  }
+
+  @Override
+  public ImmutableSortedSet<T> concat(Iterable<ImmutableSortedSet<T>> elements) {
+    return concatable.concat(elements);
   }
 }
