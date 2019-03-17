@@ -54,7 +54,8 @@ public class QueryCoercer implements TypeCoercer<Query> {
             cellPathResolver,
             unconfiguredBuildTargetFactory,
             query.getBaseName().orElse(""),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            query.getTargetConfiguration());
     QueryExpression parsedExp;
     try {
       parsedExp = QueryExpression.parse(query.getQuery(), env);
@@ -100,7 +101,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
-      return Query.of((String) object, "//" + pathRelativeToProjectRoot);
+      return Query.of((String) object, targetConfiguration, "//" + pathRelativeToProjectRoot);
     }
     throw CoerceFailedException.simple(object, getOutputClass());
   }

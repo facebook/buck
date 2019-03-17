@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
@@ -29,17 +30,19 @@ abstract class AbstractQuery {
 
   abstract String getQuery();
 
+  abstract TargetConfiguration getTargetConfiguration();
+
   abstract Optional<String> getBaseName();
 
   @Nullable
   @Value.NaturalOrder
   abstract ImmutableSortedSet<BuildTarget> getResolvedQuery();
 
-  public static Query of(String query, String baseName) {
-    return Query.of(query, Optional.of(baseName), null);
+  public static Query of(String query, TargetConfiguration targetConfiguration, String baseName) {
+    return Query.of(query, targetConfiguration, Optional.of(baseName), null);
   }
 
-  public static Query of(String query) {
-    return Query.of(query, Optional.empty(), null);
+  public static Query of(String query, TargetConfiguration targetConfiguration) {
+    return Query.of(query, targetConfiguration, Optional.empty(), null);
   }
 }

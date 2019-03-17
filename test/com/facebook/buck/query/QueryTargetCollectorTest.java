@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
@@ -44,7 +45,8 @@ public class QueryTargetCollectorTest {
           DefaultCellPathResolver.of(ROOT, ImmutableMap.of()),
           new ParsingUnconfiguredBuildTargetFactory(),
           baseName,
-          ImmutableSet.of());
+          ImmutableSet.of(),
+          EmptyTargetConfiguration.INSTANCE);
   private QueryTargetCollector collector;
 
   @Before

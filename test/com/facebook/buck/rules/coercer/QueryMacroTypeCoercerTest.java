@@ -51,6 +51,9 @@ public class QueryMacroTypeCoercerTest {
             basePath,
             EmptyTargetConfiguration.INSTANCE,
             ImmutableList.of("some query"));
-    assertThat(queryMacro.getQuery(), Matchers.equalTo(Query.of("some query", "//" + basePath)));
+    assertThat(
+        queryMacro.getQuery(),
+        Matchers.equalTo(
+            Query.of("some query", EmptyTargetConfiguration.INSTANCE, "//" + basePath)));
   }
 }

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -387,7 +388,8 @@ public class CxxBinaryDescriptionTest {
             .setDeps(ImmutableSortedSet.of(transitiveDepBuilder.getTarget()));
     CxxBinaryBuilder builder =
         new CxxBinaryBuilder(BuildTargetFactory.newInstance("//:rule"))
-            .setDepQuery(Query.of("filter(transitive, deps(//:dep))"));
+            .setDepQuery(
+                Query.of("filter(transitive, deps(//:dep))", EmptyTargetConfiguration.INSTANCE));
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(
             transitiveDepBuilder.build(), depBuilder.build(), builder.build());

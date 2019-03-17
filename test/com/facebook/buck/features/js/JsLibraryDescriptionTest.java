@@ -29,6 +29,7 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -365,7 +366,7 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x)),
+                Query.of(String.format("deps(%s)", x), EmptyTargetConfiguration.INSTANCE),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -409,7 +410,7 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x)),
+                Query.of(String.format("deps(%s)", x), EmptyTargetConfiguration.INSTANCE),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -438,7 +439,11 @@ public class JsLibraryDescriptionTest {
     BuildTarget b = BuildTargetFactory.newInstance("//direct:dep");
 
     JsTestScenario scenario =
-        scenarioBuilder.library(a).library(b).library(target, Query.of(a.toString()), b).build();
+        scenarioBuilder
+            .library(a)
+            .library(b)
+            .library(target, Query.of(a.toString(), EmptyTargetConfiguration.INSTANCE), b)
+            .build();
 
     JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);
     ImmutableSortedSet<BuildRule> deps = scenario.graphBuilder.getAllRules(ImmutableList.of(a, b));

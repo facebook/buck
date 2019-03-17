@@ -64,7 +64,8 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             cellNames,
             UNCONFIGURED_BUILD_TARGET_FACTORY,
             target.getBaseName(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            target.getTargetConfiguration());
     try {
       QueryExpression parsedExp = QueryExpression.parse(queryExpression, env);
       Set<QueryTarget> queryTargets = new NoopQueryEvaluator().eval(parsedExp, env);

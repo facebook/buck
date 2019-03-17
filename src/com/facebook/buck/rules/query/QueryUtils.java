@@ -113,7 +113,8 @@ public final class QueryUtils {
             cellRoots,
             UNCONFIGURED_BUILD_TARGET_FACTORY,
             target.getBaseName(),
-            declaredDeps);
+            declaredDeps,
+            target.getTargetConfiguration());
     try {
       QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
       Set<QueryTarget> queryTargets = cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
@@ -143,7 +144,8 @@ public final class QueryUtils {
             cellPathResolver,
             UNCONFIGURED_BUILD_TARGET_FACTORY,
             targetBaseName,
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            query.getTargetConfiguration());
     QueryExpression parsedExp = QueryExpression.parse(query.getQuery(), env);
     return parsedExp
         .getTargets(env)

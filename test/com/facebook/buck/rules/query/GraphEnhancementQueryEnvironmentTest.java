@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -71,7 +72,8 @@ public class GraphEnhancementQueryEnvironmentTest {
             cellRoots,
             new ParsingUnconfiguredBuildTargetFactory(),
             target.getBaseName(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            EmptyTargetConfiguration.INSTANCE);
     try {
       envWithoutDeps.getTargetsMatchingPattern("::");
       fail("Expected a QueryException to be thrown!");
@@ -91,7 +93,8 @@ public class GraphEnhancementQueryEnvironmentTest {
             cellRoots,
             new ParsingUnconfiguredBuildTargetFactory(),
             target.getBaseName(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            EmptyTargetConfiguration.INSTANCE);
 
     // No deps in == no deps out
     assertTrue(envWithoutDeps.getTargetsMatchingPattern("$declared_deps").isEmpty());
@@ -121,7 +124,8 @@ public class GraphEnhancementQueryEnvironmentTest {
             cellRoots,
             new ParsingUnconfiguredBuildTargetFactory(),
             target.getBaseName(),
-            ImmutableSet.of(dep1, dep2));
+            ImmutableSet.of(dep1, dep2),
+            EmptyTargetConfiguration.INSTANCE);
 
     // Check that the macro resolves
     assertThat(
@@ -163,7 +167,8 @@ public class GraphEnhancementQueryEnvironmentTest {
         cellRoots,
         new ParsingUnconfiguredBuildTargetFactory(),
         libNode.getBuildTarget().getBaseName(),
-        ImmutableSet.of(sublibNode.getBuildTarget()));
+        ImmutableSet.of(sublibNode.getBuildTarget()),
+        EmptyTargetConfiguration.INSTANCE);
   }
 
   private static QueryTarget getQueryTarget(String target) {
