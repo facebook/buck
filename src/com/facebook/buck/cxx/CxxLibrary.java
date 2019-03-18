@@ -45,7 +45,6 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.function.QuadFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
@@ -117,7 +116,6 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      Parallelizer preprocessorInputCacheParallelizer,
       CxxDeps deps,
       CxxDeps exportedDeps,
       Predicate<CxxPlatform> headerOnly,
@@ -163,8 +161,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.reexportAllHeaderDependencies = reexportAllHeaderDependencies;
     this.supportsOmnibusLinking = supportsOmnibusLinking;
     this.delegate = delegate;
-    this.transitiveCxxPreprocessorInputCache =
-        new TransitiveCxxPreprocessorInputCache(this, preprocessorInputCacheParallelizer);
+    this.transitiveCxxPreprocessorInputCache = new TransitiveCxxPreprocessorInputCache(this);
   }
 
   private boolean isPlatformSupported(CxxPlatform cxxPlatform) {

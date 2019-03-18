@@ -37,16 +37,9 @@ public class TransitiveCxxPreprocessorInputCache {
   private final Cache<CxxPlatform, ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>> cache =
       CacheBuilder.newBuilder().build();
   private final CxxPreprocessorDep preprocessorDep;
-  private final Parallelizer parallelizer;
 
   public TransitiveCxxPreprocessorInputCache(CxxPreprocessorDep preprocessorDep) {
-    this(preprocessorDep, Parallelizer.SERIAL);
-  }
-
-  public TransitiveCxxPreprocessorInputCache(
-      CxxPreprocessorDep preprocessorDep, Parallelizer parallelizer) {
     this.preprocessorDep = preprocessorDep;
-    this.parallelizer = parallelizer;
   }
 
   /** Get a value from the cache */
@@ -57,7 +50,7 @@ public class TransitiveCxxPreprocessorInputCache {
           key,
           () ->
               computeTransitiveCxxToPreprocessorInputMap(
-                  key, preprocessorDep, true, graphBuilder, parallelizer));
+                  key, preprocessorDep, true, graphBuilder, graphBuilder.getParallelizer()));
     } catch (ExecutionException e) {
       throw new UncheckedExecutionException(e.getCause());
     }
@@ -70,7 +63,7 @@ public class TransitiveCxxPreprocessorInputCache {
           boolean includeDep,
           ActionGraphBuilder graphBuilder) {
     return computeTransitiveCxxToPreprocessorInputMap(
-        key, preprocessorDep, includeDep, graphBuilder, Parallelizer.SERIAL);
+        key, preprocessorDep, includeDep, graphBuilder, graphBuilder.getParallelizer());
   }
 
   private static ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>

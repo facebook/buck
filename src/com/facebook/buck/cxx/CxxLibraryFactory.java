@@ -267,7 +267,6 @@ public class CxxLibraryFactory {
         buildTarget,
         projectFilesystem,
         metadataRuleParams,
-        graphBuilder.getParallelizer(),
         args.getPrivateCxxDeps(),
         args.getExportedCxxDeps(),
         hasObjects.negate(),
