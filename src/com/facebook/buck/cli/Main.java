@@ -1251,8 +1251,18 @@ public final class Main {
                   getBuckPID());
           buildEventBus.post(startedEvent);
 
+          ResourcesConfig resourceConfig = buckConfig.getView(ResourcesConfig.class);
+
           CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier =
-              getForkJoinPoolSupplier(buckConfig);
+              getForkJoinPoolSupplier(resourceConfig);
+
+          TargetSpecResolver targetSpecResolver =
+              new TargetSpecResolver(
+                  buildEventBus,
+                  resourceConfig.getMaximumResourceAmounts().getCpu(),
+                  rootCell.getCellProvider(),
+                  daemon.getDirectoryListCaches(),
+                  daemon.getFileTreeCaches());
 
           ParserAndCaches parserAndCaches =
               getParserAndCaches(
@@ -1271,7 +1281,8 @@ public final class Main {
                   executableFinder,
                   manifestServiceSupplier,
                   fileHashCache,
-                  buildTargetFactory);
+                  buildTargetFactory,
+                  targetSpecResolver);
 
           // Because the Parser is potentially constructed before the CounterRegistry,
           // we need to manually register its counters after it's created.
@@ -1514,7 +1525,8 @@ public final class Main {
       ExecutableFinder executableFinder,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashCache fileHashCache,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory)
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      TargetSpecResolver targetSpecResolver)
       throws IOException, InterruptedException {
     Optional<WatchmanWatcher> watchmanWatcher = Optional.empty();
     if (watchman.getTransportPath().isPresent()) {
@@ -1563,7 +1575,7 @@ public final class Main {
               new ParserPythonInterpreterProvider(parserConfig, executableFinder),
               rootCell.getBuckConfig(),
               daemon.getDaemonicParserState(),
-              new TargetSpecResolver(buildEventBus, watchman),
+              targetSpecResolver,
               watchman,
               buildEventBus,
               targetPlatforms,
@@ -1597,7 +1609,7 @@ public final class Main {
                   new ParserPythonInterpreterProvider(parserConfig, executableFinder),
                   rootCell.getBuckConfig(),
                   new DaemonicParserState(parserConfig.getNumParsingThreads()),
-                  new TargetSpecResolver(buildEventBus, watchman),
+                  targetSpecResolver,
                   watchman,
                   buildEventBus,
                   targetPlatforms,
@@ -2086,16 +2098,20 @@ public final class Main {
   }
 
   /**
-   * @param buckConfig the configuration for resources
+   * @param config the configuration for resources
    * @return a memoized supplier for a ForkJoinPool that will be closed properly if initialized
    */
   @VisibleForTesting
-  static CloseableMemoizedSupplier<ForkJoinPool> getForkJoinPoolSupplier(BuckConfig buckConfig) {
-    ResourcesConfig resource = buckConfig.getView(ResourcesConfig.class);
+  static CloseableMemoizedSupplier<ForkJoinPool> getForkJoinPoolSupplier(BuckConfig config) {
+    return getForkJoinPoolSupplier(config.getView(ResourcesConfig.class));
+  }
+
+  private static CloseableMemoizedSupplier<ForkJoinPool> getForkJoinPoolSupplier(
+      ResourcesConfig config) {
     return CloseableMemoizedSupplier.of(
         () ->
             MostExecutors.forkJoinPoolWithThreadLimit(
-                resource.getMaximumResourceAmounts().getCpu(), 16),
+                config.getMaximumResourceAmounts().getCpu(), 16),
         ForkJoinPool::shutdownNow);
   }
 

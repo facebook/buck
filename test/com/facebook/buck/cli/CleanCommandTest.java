@@ -311,7 +311,7 @@ public class CleanCommandTest {
         new SingletonArtifactCacheFactory(new NoopArtifactCache()),
         typeCoercerFactory,
         new ParsingUnconfiguredBuildTargetFactory(),
-        TestParserFactory.create(buckConfig, knownRuleTypesProvider),
+        TestParserFactory.create(cell, knownRuleTypesProvider),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),
         EnvVariablesProvider.getSystemEnv(),

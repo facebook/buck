@@ -372,7 +372,7 @@ public class InterCellIntegrationTest {
     registerCell(secondary, "primary", primary);
 
     // We could just do a build, but that's a little extreme since all we need is the target graph
-    Parser parser = TestParserFactory.create(primary.asCell().getBuckConfig());
+    Parser parser = TestParserFactory.create(primary.asCell());
 
     Cell primaryCell = primary.asCell();
     BuildTarget namedTarget =

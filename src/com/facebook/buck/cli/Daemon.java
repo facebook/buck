@@ -22,6 +22,8 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.files.DirectoryListCache;
+import com.facebook.buck.core.files.FileTreeCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -52,6 +54,9 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.nailgun.NGContext;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.EventBus;
@@ -76,6 +81,8 @@ final class Daemon implements Closeable {
   private final TypeCoercerFactory typeCoercerFactory;
   private final DaemonicParserState daemonicParserState;
   private final ImmutableList<ProjectFileHashCache> hashCaches;
+  private final LoadingCache<Path, DirectoryListCache> directoryListCachePerRoot;
+  private final LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot;
   private final EventBus fileEventBus;
   private final Optional<WebServer> webServer;
   private final ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools;
@@ -121,6 +128,9 @@ final class Daemon implements Closeable {
             rootCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
     this.hashCaches = hashCachesBuilder.build();
 
+    // Setup file list cache and file tree cache from all cells
+    directoryListCachePerRoot = createDirectoryListCachePerCellMap(fileEventBus);
+    fileTreeCachePerRoot = createFileTreeCachePerCellMap(fileEventBus);
     this.actionGraphCache = new ActionGraphCache(buildBuckConfig.getMaxActionGraphCacheEntries());
     this.versionedTargetGraphCache = new VersionedTargetGraphCache();
     this.knownRuleTypesProvider = knownRuleTypesProvider;
@@ -167,6 +177,36 @@ final class Daemon implements Closeable {
 
     // Create this last so that it won't leak if something else throws in the constructor
     this.devspeedBuildListenerFactory = devspeedBuildListenerFactorySupplier.get();
+  }
+
+  /** Create a number of instances of {@link DirectoryListCache}, one per each cell */
+  private static LoadingCache<Path, DirectoryListCache> createDirectoryListCachePerCellMap(
+      EventBus fileEventBus) {
+    return CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<Path, DirectoryListCache>() {
+              @Override
+              public DirectoryListCache load(Path path) {
+                DirectoryListCache cache = DirectoryListCache.of(path);
+                fileEventBus.register(cache.getInvalidator());
+                return cache;
+              }
+            });
+  }
+
+  /** Create a number of instances of {@link DirectoryListCache}, one per each cell */
+  private static LoadingCache<Path, FileTreeCache> createFileTreeCachePerCellMap(
+      EventBus fileEventBus) {
+    return CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<Path, FileTreeCache>() {
+              @Override
+              public FileTreeCache load(Path path) {
+                FileTreeCache cache = FileTreeCache.of(path);
+                fileEventBus.register(cache.getInvalidator());
+                return cache;
+              }
+            });
   }
 
   Cell getRootCell() {
@@ -236,6 +276,23 @@ final class Daemon implements Closeable {
 
   ImmutableList<ProjectFileHashCache> getFileHashCaches() {
     return hashCaches;
+  }
+
+  /**
+   * Return a map of all directory list caches for each cell which is a key. For every cell, we
+   * cache directory structure (i.e. list of files and folders) for all subfolders that exist under
+   * that cell root folder
+   */
+  LoadingCache<Path, DirectoryListCache> getDirectoryListCaches() {
+    return directoryListCachePerRoot;
+  }
+
+  /**
+   * Return a map of file tree caches for each cell which is a key. For every cell and each
+   * subfolder under cell root path, we cache the whole subtree of folders and files recursively
+   */
+  LoadingCache<Path, FileTreeCache> getFileTreeCaches() {
+    return fileTreeCachePerRoot;
   }
 
   public KnownRuleTypesProvider getKnownRuleTypesProvider() {

@@ -254,12 +254,10 @@ public class OwnersReportTest {
     String input = "java/some_file";
 
     Cell cell = new TestCellBuilder().setFilesystem(filesystem).build();
-    Parser parser = TestParserFactory.create(cell.getBuckConfig());
+    Parser parser = TestParserFactory.create(cell);
     OwnersReport report =
         OwnersReport.builder(
-                cell,
-                TestParserFactory.create(cell.getBuckConfig()),
-                TestPerBuildStateFactory.create(parser, cell))
+                cell, TestParserFactory.create(cell), TestPerBuildStateFactory.create(parser, cell))
             .build(getBuildFileTrees(cell), ImmutableSet.of(input));
 
     assertEquals(1, report.nonExistentInputs.size());

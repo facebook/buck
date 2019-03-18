@@ -110,8 +110,7 @@ public class PerBuildStateTest {
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
     Parser parser =
-        TestParserFactory.create(
-            cell.getBuckConfig(), knownRuleTypesProvider, BuckEventBusForTests.newInstance());
+        TestParserFactory.create(cell, knownRuleTypesProvider, BuckEventBusForTests.newInstance());
 
     perBuildState = TestPerBuildStateFactory.create(parser, cell);
   }

@@ -90,7 +90,7 @@ public class DistBuildFileHashesIntegrationTest {
     Cell rootCell =
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
 
-    Parser parser = TestParserFactory.create(rootCellConfig);
+    Parser parser = TestParserFactory.create(rootCell);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             ParsingContext.builder(
@@ -149,7 +149,7 @@ public class DistBuildFileHashesIntegrationTest {
     Cell rootCell =
         new TestCellBuilder().setBuckConfig(rootCellConfig).setFilesystem(rootFs).build();
 
-    Parser parser = TestParserFactory.create(rootCellConfig);
+    Parser parser = TestParserFactory.create(rootCell);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             ParsingContext.builder(

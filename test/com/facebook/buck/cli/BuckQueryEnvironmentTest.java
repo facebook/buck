@@ -127,7 +127,7 @@ public class BuckQueryEnvironmentTest {
             getManifestSupplier(),
             new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetFactory());
-    Parser parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory, eventBus);
+    Parser parser = TestParserFactory.create(cell, perBuildStateFactory, eventBus);
     parserState =
         perBuildStateFactory.create(
             ParsingContext.builder(cell, executor)

@@ -65,7 +65,7 @@ public class IntraCellIntegrationTest {
     // We don't need to do a build. It's enough to just parse these things.
     Cell cell = workspace.asCell();
 
-    Parser parser = TestParserFactory.create(cell.getBuckConfig());
+    Parser parser = TestParserFactory.create(cell);
 
     // This parses cleanly
     parser.buildTargetGraph(

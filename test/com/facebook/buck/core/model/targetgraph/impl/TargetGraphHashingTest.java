@@ -99,8 +99,7 @@ public class TargetGraphHashingTest {
     projectFilesystem = cell.getFilesystem();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
-    Parser parser =
-        TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider, eventBus);
+    Parser parser = TestParserFactory.create(cell, knownRuleTypesProvider, eventBus);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState parserState =
         PerBuildStateFactory.createFactory(

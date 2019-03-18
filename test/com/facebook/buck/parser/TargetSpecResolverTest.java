@@ -123,8 +123,9 @@ public class TargetSpecResolverTest {
             new FakeFileHashCache(ImmutableMap.of()),
             new ParsingUnconfiguredBuildTargetFactory());
 
-    targetNodeTargetSpecResolver = new TargetSpecResolver(eventBus, WatchmanFactory.NULL_WATCHMAN);
-    parser = TestParserFactory.create(cell.getBuckConfig(), perBuildStateFactory);
+    targetNodeTargetSpecResolver =
+        TestTargetSpecResolverFactory.create(cell.getCellProvider(), eventBus);
+    parser = TestParserFactory.create(cell, perBuildStateFactory);
     flavorEnhancer = (target, targetNode, targetType) -> target;
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
   }

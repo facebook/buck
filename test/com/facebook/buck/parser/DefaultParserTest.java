@@ -323,7 +323,7 @@ public class DefaultParserTest {
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider, eventBus);
+    parser = TestParserFactory.create(cell, knownRuleTypesProvider, eventBus);
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -1533,10 +1533,11 @@ public class DefaultParserTest {
 
     assertEquals("Should have parsed once.", 1, counter.calls);
 
-    Path newTempDir = Files.createTempDirectory("junit-temp-path").toRealPath();
+    // create subcell
+    Path newTempDir = tempDir.newFolder("subcell");
     Files.createFile(newTempDir.resolve("bar.py"));
     ProjectFilesystem newFilesystem = TestProjectFilesystems.createProjectFilesystem(newTempDir);
-    BuckConfig config =
+    BuckConfig newConfig =
         FakeBuckConfig.builder()
             .setFilesystem(newFilesystem)
             .setSections(
@@ -1544,9 +1545,12 @@ public class DefaultParserTest {
                     ParserConfig.BUILDFILE_SECTION_NAME,
                     ImmutableMap.of(ParserConfig.INCLUDES_PROPERTY_NAME, "//bar.py")))
             .build();
-    Cell cell = new TestCellBuilder().setFilesystem(newFilesystem).setBuckConfig(config).build();
+    Cell newCell =
+        new TestCellBuilder().setFilesystem(newFilesystem).setBuckConfig(newConfig).build();
 
-    filterAllTargetsInProject(parser, parsingContext.withCell(cell));
+    Parser newParser = TestParserFactory.create(newCell, knownRuleTypesProvider, eventBus);
+
+    filterAllTargetsInProject(newParser, parsingContext.withCell(newCell));
 
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
   }
@@ -1647,7 +1651,7 @@ public class DefaultParserTest {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib");
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider);
+    parser = TestParserFactory.create(cell, knownRuleTypesProvider);
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1758,7 +1762,7 @@ public class DefaultParserTest {
     HashCode libKey = hashes.get(fooLibTarget);
     HashCode lib2Key = hashes.get(fooLib2Target);
 
-    parser = TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider);
+    parser = TestParserFactory.create(cell, knownRuleTypesProvider);
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library("

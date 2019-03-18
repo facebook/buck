@@ -241,9 +241,8 @@ public class DistBuildStateTest {
     Cell cell = projectWorkspace.asCell();
     ProjectFilesystem projectFilesystem = cell.getFilesystem();
     projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getBuckOut());
-    BuckConfig buckConfig = cell.getBuckConfig();
     setUp();
-    Parser parser = TestParserFactory.create(buckConfig);
+    Parser parser = TestParserFactory.create(cell);
     TargetGraph targetGraph =
         parser.buildTargetGraph(
             ParsingContext.builder(

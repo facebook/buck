@@ -123,7 +123,7 @@ public class CommandRunnerParamsForTesting {
         new SingletonArtifactCacheFactory(artifactCache),
         typeCoercerFactory,
         new ParsingUnconfiguredBuildTargetFactory(),
-        TestParserFactory.create(cell.getBuckConfig(), knownRuleTypesProvider),
+        TestParserFactory.create(cell, knownRuleTypesProvider),
         eventBus,
         platform,
         environment,
