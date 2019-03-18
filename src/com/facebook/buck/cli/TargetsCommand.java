@@ -53,13 +53,13 @@ import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.BuildFileSpec;
+import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -535,7 +535,7 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithConfigurationTargets(
                   parsingContext,
                   ImmutableList.of(
-                      TargetNodePredicateSpec.of(
+                      ImmutableTargetNodePredicateSpec.of(
                           BuildFileSpec.fromRecursivePath(
                               Paths.get(""), params.getCell().getRoot()))));
       SortedMap<String, TargetNode<?>> matchingNodes =
@@ -662,7 +662,7 @@ public class TargetsCommand extends AbstractCommand {
                   .buildTargetGraphWithConfigurationTargets(
                       parsingContext,
                       ImmutableList.of(
-                          TargetNodePredicateSpec.of(
+                          ImmutableTargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
                                   Paths.get(""), params.getCell().getRoot()))))
                   .getTargetGraph(),

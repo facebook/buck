@@ -2501,8 +2501,8 @@ public class DefaultParserTest {
                 .buildTargetGraphWithConfigurationTargets(
                     parsingContext,
                     ImmutableList.of(
-                        TargetNodePredicateSpec.of(
-                            ImmutableBuildFileSpec.fromRecursivePath(
+                        ImmutableTargetNodePredicateSpec.of(
+                            BuildFileSpec.fromRecursivePath(
                                 Paths.get(""), parsingContext.getCell().getRoot()))))
                 .getTargetGraph()
                 .getNodes())

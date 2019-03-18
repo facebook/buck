@@ -51,11 +51,11 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.parser.BuildFileSpec;
+import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -685,7 +685,7 @@ public class XCodeProjectCommandHelper {
           .buildTargetGraphWithConfigurationTargets(
               parsingContext,
               ImmutableList.of(
-                  TargetNodePredicateSpec.of(
+                  ImmutableTargetNodePredicateSpec.of(
                       BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
           .getTargetGraph();
     }

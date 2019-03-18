@@ -18,14 +18,12 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
 /** Matches all {@link TargetNode} objects in a repository that match the specification. */
 @Value.Immutable(builder = false)
-@BuckStyleImmutable
-abstract class AbstractTargetNodePredicateSpec implements TargetNodeSpec {
+public abstract class TargetNodePredicateSpec implements TargetNodeSpec {
 
   @Override
   @Value.Parameter

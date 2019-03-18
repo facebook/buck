@@ -41,11 +41,11 @@ import com.facebook.buck.features.go.CgoLibraryDescription.AbstractCgoLibraryDes
 import com.facebook.buck.features.go.GoLibraryDescription.AbstractGoLibraryDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.BuildFileSpec;
+import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.Console;
@@ -180,7 +180,7 @@ public class GoProjectCommandHelper {
           .buildTargetGraphWithConfigurationTargets(
               parsingContext,
               ImmutableList.of(
-                  TargetNodePredicateSpec.of(
+                  ImmutableTargetNodePredicateSpec.of(
                       BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
           .getTargetGraph();
     }

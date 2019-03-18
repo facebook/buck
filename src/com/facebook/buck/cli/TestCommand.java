@@ -50,10 +50,10 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.BuildFileSpec;
+import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodePredicateSpec;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -494,7 +494,7 @@ public class TestCommand extends BuildCommand {
                   .buildTargetGraphWithoutConfigurationTargets(
                       parsingContext,
                       ImmutableList.of(
-                          TargetNodePredicateSpec.of(
+                          ImmutableTargetNodePredicateSpec.of(
                                   BuildFileSpec.fromRecursivePath(
                                       Paths.get(""), params.getCell().getRoot()))
                               .withOnlyTests(true)));

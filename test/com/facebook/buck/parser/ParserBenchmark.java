@@ -125,7 +125,7 @@ public class ParserBenchmark {
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .build(),
         ImmutableList.of(
-            TargetNodePredicateSpec.of(
+            ImmutableTargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))));
   }
 }

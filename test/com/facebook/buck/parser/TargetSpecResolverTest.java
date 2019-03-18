@@ -141,7 +141,7 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                TargetNodePredicateSpec.of(
+                ImmutableTargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))));
 
     ImmutableSet<BuildTarget> expectedTargets =
@@ -168,9 +168,9 @@ public class TargetSpecResolverTest {
 
     resolve(
         ImmutableList.of(
-            TargetNodePredicateSpec.of(
+            ImmutableTargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
-            TargetNodePredicateSpec.of(
+            ImmutableTargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))));
   }
 
@@ -189,18 +189,18 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                TargetNodePredicateSpec.of(
+                ImmutableTargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
-                TargetNodePredicateSpec.of(
+                ImmutableTargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
 
     targets =
         resolve(
             ImmutableList.of(
-                TargetNodePredicateSpec.of(
+                ImmutableTargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
-                TargetNodePredicateSpec.of(
+                ImmutableTargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }
@@ -215,7 +215,7 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                TargetNodePredicateSpec.of(
+                ImmutableTargetNodePredicateSpec.of(
                     BuildFileSpec.fromRecursivePath(buckout, cell.getRoot()))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of())));
   }
