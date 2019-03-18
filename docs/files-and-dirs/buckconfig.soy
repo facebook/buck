@@ -1279,10 +1279,13 @@ artifact_cache_size_limit = 52428800
 {call buckconfig.section}
   {param name: 'cache' /}
   {param description}
-    This section configures build artifact caching, which can be disabled (default), on the
-    filesystem, or in a distributed cache that can be shared among developers.  Note that the{sp}
-    {call buckconfig.cache_mode /} setting determines which other properties, if any, are relevant
-    to the caching configuration; the irrelevant properties are ignored.
+    This section configures build artifact caching. Caching can be
+    configured to use the local filesystem, an SQLite database, or a
+    remote distributed cache that can be shared among developers.
+    Caching is disabled by default. 
+    The{sp} {call buckconfig.cache_mode /} setting&mdash;described below&mdash;determines 
+    which properties are relevant to the caching configuration; other
+    properties are ignored by Buck.
   {/param}
 {/call}
 
@@ -1291,7 +1294,7 @@ artifact_cache_size_limit = 52428800
   {param name: 'mode' /}
   {param example_value: 'dir, http, sqlite' /}
   {param description}
-    A comma-separated set of caching policies to use.  The valid values are:
+    A comma-separated list of caching policies to use. Valid values are:
     <ul>
       <li>
         <code>dir</code> (default): Use a directory-based cache on the local filesystem.
@@ -1315,9 +1318,13 @@ artifact_cache_size_limit = 52428800
   {param name: 'dir' /}
   {param example_value: 'buck-cache' /}
   {param description}
-    The directory path relative to the project root that is used for directory-based caching (
-    {call buckconfig.cache_mode /} must contain <code>dir</code>).  This defaults to{sp}
-    <code>buck-out/cache</code>.
+    <p>
+      The directory path relative to the project root that is used for directory-based caching.
+      This defaults to{sp} <code>buck-out/cache</code>.
+    </p>
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1326,8 +1333,10 @@ artifact_cache_size_limit = 52428800
   {param name: 'dir_max_size' /}
   {param example_value: '10GB' /}
   {param description}
-    The maximum cache size for directory-based caching ({call buckconfig.cache_mode /} must contain
-    {sp}<code>dir</code>).  The default size is unlimited.
+    The maximum cache size for directory-based caching.  The default size is unlimited.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1336,9 +1345,11 @@ artifact_cache_size_limit = 52428800
   {param name: 'dir_mode' /}
   {param example_value: 'readwrite' /}
   {param description}
-    Dictates if the cache is <code>readonly</code>, <code>passthrough</code> or
-    {sp}<code>readwrite</code> (default) when using directory-based caching
-    {sp}({call buckconfig.cache_mode /} must contain <code>dir</code>).
+    Dictates if the cache is <code>readonly</code>, <code>passthrough</code>, or
+    {sp}<code>readwrite</code> (default) when using directory-based caching.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1353,6 +1364,9 @@ artifact_cache_size_limit = 52428800
     will not be stored in the <code>local</code> cache. Note: if <code>[cache] dir</code> or <code>[cache] dir_mode</code>{sp}
     are found, then Buck will fall back to single dir cache more and <code>[cache] dir_cache_names</code>{sp}
     will be completely ignored.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
   {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
@@ -1376,10 +1390,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_url' /}
   {param example_value: 'http://localhost:8080' /}
   {param description}
-    The URL to use to contact the cache when using http-based caching{sp}
-    ({call buckconfig.cache_mode /} must contain <code>http</code>).  Buck communicates with the
-    server using a <a href="{ROOT}concept/http_cache_api.html">simple API</a>.
-
+    The URL to use to contact the cache when using http-based caching.  
+    Buck communicates with the server using 
+    a <a href="{ROOT}concept/http_cache_api.html">simple API</a>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1389,7 +1405,10 @@ artifact_cache_size_limit = 52428800
   {param example_value: 'readwrite' /}
   {param description}
     Dictates if the cache is <code>readonly</code> or <code>readwrite</code> (default) when using
-    http-based caching ({call buckconfig.cache_mode /} must contain <code>http</code>).
+    http-based caching.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1399,9 +1418,11 @@ artifact_cache_size_limit = 52428800
   {param example_value: 'User-Agent: buck' /}
   {param description}
     A semicolon-separated set of HTTP headers to use when reading from the cache when using
-    http-based caching ({call buckconfig.cache_mode /} must contain <code>http</code>).  The default
-    is no headers.
-  {/param}
+    http-based caching. The default is no headers.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
+  {/param}             
 {/call}
 
 {call buckconfig.entry}
@@ -1410,8 +1431,10 @@ artifact_cache_size_limit = 52428800
   {param example_value: 'Authorization: XXXXXXX; User-Agent: buck' /}
   {param description}
     A semicolon-separated set of HTTP headers to use when writing to the cache when using http-based
-    caching ({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is no
-    headers.
+    caching. The default is no headers.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1420,10 +1443,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_timeout_seconds' /}
   {param example_value: '3' /}
   {param description}
-    Dictates the timeout per connection when using http-based caching{sp}
-    ({call buckconfig.cache_mode /} must contain <code>http</code>).
+    Dictates the timeout per connection when using http-based caching.
     It will be the default value for http_connect_timeout_seconds, http_read_timeout_seconds,
     http_write_timeout_seconds if they're not set.  The default is <code>3</code>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1432,9 +1457,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_connect_timeout_seconds' /}
   {param example_value: '3' /}
   {param description}
-    Dictates the timeout on http connect when using http-based caching{sp}
+    Dictates the timeout on http connect when using http-based caching.
     If the value is not set, it will try to use the value set for http_timeout_seconds
-    then use the default value 3</code>.
+    then use the default value <code>3</code>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1443,9 +1471,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_read_timeout_seconds' /}
   {param example_value: '3' /}
   {param description}
-    Dictates the timeout on http writes when using http-based caching{sp}
+    Dictates the timeout on http writes when using http-based caching.
     If the value is not set, it will try to use the value set for http_timeout_seconds
-    then use the default value 3</code>.
+    then use the default value <code>3</code>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1454,9 +1485,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_write_timeout_seconds' /}
   {param example_value: '3' /}
   {param description}
-    Dictates the timeout on http reads when using http-based caching{sp}
+    Dictates the timeout on http reads when using http-based caching.
     If the value is not set, it will try to use the value set for http_timeout_seconds
-    then use the default value 3</code>.
+    then use the default value <code>3</code>.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1465,10 +1499,12 @@ artifact_cache_size_limit = 52428800
   {param name: 'http_max_concurrent_writes' /}
   {param example_value: '1' /}
   {param description}
-    The number of writer threads to use to upload to the http cache when using http-based caching
-    {sp}({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is{sp}
-    <code>1</code>.  Note that when using multiple http caches (see below), the writer thread pool
-    is shared between them all.
+    The number of writer threads to use to upload to the http cache when using http-based caching.  
+    The default is{sp} <code>1</code>.  Note that when using multiple http caches (see below), 
+    the writer thread pool is shared between them all.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1478,9 +1514,11 @@ artifact_cache_size_limit = 52428800
   {param example_value: '1800' /}
   {param description}
     The length of time to wait after the build completes for any remaining http cache uploads to
-    complete before forcefully shutting down the writer thread pool when using http-based caching
-    {sp}({call buckconfig.cache_mode /} must contain <code>http</code>).  The default is{sp}
-    <code>1800</code> (30 minutes).
+    complete before forcefully shutting down the writer thread pool when using http-based caching.  
+    The default is{sp} <code>1800</code> (30 minutes).
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1494,6 +1532,9 @@ artifact_cache_size_limit = 52428800
     This setting allows for the customization of how http cache errors appear to the user.  If the
     text <code>{lb}cache_name{rb}</code> is present, it will be replaced with the name of the cache.
     If the text {sp}<code>{lb}error_message{rb}</code>, it will be replaced with the error message.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1507,6 +1548,9 @@ artifact_cache_size_limit = 52428800
     This setting allows to set after how many errors Buck
     will print the <code>http_error_message_format</code>. Every time it prints it the counter
     resets to 0 to avoid spamming the console.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1516,6 +1560,9 @@ artifact_cache_size_limit = 52428800
   {param example_value: '1' /}
   {param description}
     Maximum number of times to attempt to store item to the cache before giving up.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1525,6 +1572,9 @@ artifact_cache_size_limit = 52428800
   {param example_value: '1000' /}
   {param description}
     Interval to wait if previous cache store request failed.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1534,6 +1584,9 @@ artifact_cache_size_limit = 52428800
   {param example_value: '5000000' /}
   {param description}
     The max size in bytes that an artifact can be to get pushed to an http cache.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1544,7 +1597,7 @@ artifact_cache_size_limit = 52428800
   {param description}
     <p>
     The path to a PEM encoded client X.509 TLS certificate that should be used for any HTTP requests to a remote cache.
-    This is used when {call buckconfig.http_mode /} settings are one of <code>http</code> or <code>thrift_over_http</code>, and operates on both read and write connections.
+    This operates on both read and write connections.
   </p>
 
     <p>
@@ -1552,6 +1605,10 @@ artifact_cache_size_limit = 52428800
     </p>
 
     <p><strong>Note:</strong> <code>http_client_tls_key</code> must be set for this setting to be used.</p>
+
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1562,7 +1619,7 @@ artifact_cache_size_limit = 52428800
   {param description}
     <p>
     The path to a PEM encoded PKCS#8 key that should be used for any HTTP requests to a remote cache.
-    This is used when {call buckconfig.http_mode /} settings are one of <code>http</code> or <code>thrift_over_http</code>, and operates on both read and write connections.
+    This operates on both read and write connections.
     </p>
 
     <p>
@@ -1570,6 +1627,10 @@ artifact_cache_size_limit = 52428800
     </p>
 
     <p><strong>Note:</strong> <code>http_client_tls_cert</code> must be set for this setting to be used.</p>
+
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1578,7 +1639,10 @@ artifact_cache_size_limit = 52428800
   {param name: 'hybrid_thrift_endpoint' /}
   {param example_value: '/hybrid_endpoint' /}
   {param description}
-  The HTTP endpoint to call if using {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}. Note that {call buckconfig.cache_mode /} must be set to thrift_over_http.
+  The HTTP endpoint to call if using {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}. 
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>thrift_over_http</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1587,9 +1651,11 @@ artifact_cache_size_limit = 52428800
   {param name: 'serve_local_cache' /}
   {param example_value: 'false' /}
   {param description}
-    Make the directory-based cache ({call buckconfig.cache_mode /} must contain <code>dir</code>)
-    available to other hosts on the network via Buck's HTTP server (enabled under{sp}
-    {call buckconfig.httpserver /}).
+    Make the directory-based cache available to other hosts on the network 
+    via Buck's HTTP server (enabled under{sp} {call buckconfig.httpserver /}).
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1600,6 +1666,9 @@ artifact_cache_size_limit = 52428800
   {param description}
     Dictates if the cache is <code>readonly</code> (default) or <code>readwrite</code> when{sp}
     {call buckconfig.cache_serve_local_cache /} is enabled.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1608,8 +1677,11 @@ artifact_cache_size_limit = 52428800
   {param name: 'sqlite_inlined_size' /}
   {param example_value: '10kB' /}
   {param description}
-    The maximum size for artifacts to be inlined ({call buckconfig.cache_mode /} must contain
-    {sp}<code>sqlite</code>).  The default size is 40B.
+    The maximum size for artifacts to be inlined.  
+    The default size is 40B.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1618,8 +1690,10 @@ artifact_cache_size_limit = 52428800
   {param name: 'sqlite_max_size' /}
   {param example_value: '10GB' /}
   {param description}
-    The maximum cache size for SQLite-based caching ({call buckconfig.cache_mode /} must contain
-    {sp}<code>sqlite</code>).  The default size is unlimited.
+    The maximum cache size for SQLite-based caching. The default size is unlimited.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1630,7 +1704,9 @@ artifact_cache_size_limit = 52428800
   {param description}
     Dictates if the cache is <code>readonly</code>, <code>passthrough</code> or
     {sp}<code>readwrite</code> (default) when using SQLite-based caching
-    {sp}({call buckconfig.cache_mode /} must contain <code>sqlite</code>).
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1643,6 +1719,9 @@ artifact_cache_size_limit = 52428800
     further along in the list, an attempt to store it in the caches earlier in the list will be
     made.  In the following example, if the artifact is found in the <code>warm</code> cache, it
     will not be stored in the <code>local</code> cache.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>sqlite</code>.
+    </p>
   {/param}
   {param raw_example}
 {literal}<pre class="prettyprint lang-ini">
