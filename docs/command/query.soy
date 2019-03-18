@@ -368,34 +368,41 @@ expr ::= set(expr *)
 </p>
 
 <p>
-The <code>set(<em>a</em> <em>b</em> <em>c</em> ...)</code> operator computes the union of a set of zero
-or more targets, separated by white space (no commas).
-Quote the targets to ensure that they are parsed correctly.
+The <code>set(<em>a</em> <em>b</em> <em>c</em> ...)</code> operator
+computes the union of a set of zero or more targets. Separate the
+targets with white space (not commas).  Quote the targets to ensure that
+they are parsed correctly.
+</p>
+
+<p>
+If you want to invoke <code>buck query</code> on a list of targets, 
+then <code>set()</code> is a way to group this list in the query. 
 </p>
 
 <p>
 <b>Example:</b>
 </p>
 
+{call buckquery.example_multiple_targets /}
+
 <p>
-The following expression returns the merged set (union) of dependencies for 
-the targets: <code>:main</code> and <code>:myclass</code>.
+<b>Example:</b>
+</p>
+
+<p>
+The following command line returns the merged set (union) of
+dependencies for the targets: <code>main</code> and <code>subs</code> in
+the build file in the root of the Buck project.
 </p>
 
 <p>
 <pre>
 {literal}
-buck query "deps( set( ':main' ':myclass' ) )"
+buck query "deps( set( '//:main' '//:subs' ) )"
 {/literal}
 </pre>
 </p>
 
-
-<p>
-If you invoke <code>buck query</code> programmatically, such as 
-to run a query on a list of targets, then <code>set()</code> is 
-a way to group this list in the query. 
-</p>
 
 
 {call .section}

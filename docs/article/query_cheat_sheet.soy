@@ -60,6 +60,11 @@ many additional examples, see the {call buck.cmd_query /} reference page.
     </a>
   </li>
   <li>
+    <a href="#query-multiple-targets">
+      How do I specify more than one target to <code>buck query</code>?
+    </a>
+  </li>
+  <li>
     <a href="#output-target-attributes">
       How do I get the attribute names and values for targets that
       result from a query?
@@ -110,6 +115,20 @@ buck query //path/to/dir/...
   {/param}
 {/call}
 
+{call .faq}
+  {param id: 'query-multiple-targets' /}
+  {param question}
+    <p>                              
+      How do I specify more than one target to <code>buck query</code>?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+  Use the {call buckquery.set /} operator.
+  {call buckquery.example_multiple_targets /}
+  {/param}
+
+{/call}
 
 {call .faq}
   {param id: 'output-target-attributes' /}

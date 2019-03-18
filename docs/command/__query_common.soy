@@ -19,7 +19,7 @@
  * @param section The section the entry is in.
  */
 {template .section_link}
-<a href="{ROOT}command/query.html#{$section}"><code>buck query {$section}</code></a>
+<a href="{ROOT}command/query.html#{$section}"><code>buck query {$section}()</code></a>
 {/template}
 
 /***/
@@ -29,6 +29,32 @@
 {/call}
 {/template}
 
+/***/
+{template .set}
+{call .section_link}
+  {param section: 'set' /}
+{/call}
+{/template}
+
+/***/
+{template .example_multiple_targets}
+
+<p>
+The following command line returns the target <code>main</code> in the build file in
+the root of the Buck project and all the targets from the build file in
+the <code>myclass</code> subdirectory of the root.
+</p>
+
+<p>
+<pre>
+{literal}
+buck query "set( '//:main' '//myclass:' )"
+{/literal}
+</pre>
+</p>
+
+
+{/template}
 
 /***/
 {template .example_buildfile_owner}
