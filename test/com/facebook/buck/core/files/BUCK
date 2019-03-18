@@ -1,0 +1,16 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_test(
+    name = "files",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/files:files",
+        "//test/com/facebook/buck/core/graph/transformation:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
