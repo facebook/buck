@@ -68,6 +68,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
    */
   public MungingDebugPathSanitizer(
       int pathSize, char separator, Path compilationDirectory, ImmutableBiMap<Path, String> other) {
+    super(separator == '/');
     Preconditions.checkState(!compilationDirectory.isAbsolute());
     this.compilationDirectory = compilationDirectory;
     this.pathSize = pathSize;
@@ -77,11 +78,6 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
 
   @Override
   public String getCompilationDirectory() {
-    return getCompilationDirectory(false);
-  }
-
-  @Override
-  public String getCompilationDirectory(boolean useUnixPathSeparator) {
     if (useUnixPathSeparator) {
       return MorePaths.pathWithUnixSeparators(getExpandedPath(compilationDirectory));
     }
@@ -90,18 +86,15 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   private String getExpandedPath(Path path) {
-    return getPaddedDir(path.toString(), pathSize, separator);
+    return getPaddedDir(
+        useUnixPathSeparator ? MorePaths.pathWithUnixSeparators(path) : path.toString(),
+        pathSize,
+        separator);
   }
 
   @Override
   public ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir, boolean shouldSanitize) {
-    return getCompilationEnvironment(workingDir, shouldSanitize, false);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getCompilationEnvironment(
-      Path workingDir, boolean shouldSanitize, boolean useUnixPathSeparator) {
     // A forced compilation directory is set in the constructor.  Now, we can't actually force
     // the compiler to embed this into the binary -- all we can do set the PWD environment to
     // variations of the actual current working directory (e.g. /actual/dir or
@@ -113,9 +106,12 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
     //
     //   2) in the case where we're using post-linkd debug path replacement, we reserve room
     //      to expand the path later.
-    String pwdPath = shouldSanitize ? getExpandedPath(workingDir) : workingDir.toString();
-    return ImmutableMap.of(
-        "PWD", useUnixPathSeparator ? MorePaths.pathWithUnixSeparators(pwdPath) : pwdPath);
+    String pwdPath =
+        useUnixPathSeparator ? MorePaths.pathWithUnixSeparators(workingDir) : workingDir.toString();
+    if (shouldSanitize) {
+      pwdPath = getExpandedPath(workingDir);
+    }
+    return ImmutableMap.of("PWD", pwdPath);
   }
 
   // Construct the replacer, giving the expanded current directory and the desired directory.
@@ -168,12 +164,6 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
 
   @Override
   protected Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir) {
-    return getAllPaths(workingDir, false);
-  }
-
-  @Override
-  protected Iterable<Map.Entry<Path, String>> getAllPaths(
-      Optional<Path> workingDir, boolean useUnixPathSeparator) {
     if (!workingDir.isPresent()) {
       return other.entrySet();
     }
@@ -183,7 +173,7 @@ public class MungingDebugPathSanitizer extends DebugPathSanitizer {
             new AbstractMap.SimpleEntry<>(
                 workingDir.get(),
                 useUnixPathSeparator
-                    ? MorePaths.pathWithUnixSeparators(compilationDirectory.toString())
+                    ? MorePaths.pathWithUnixSeparators(compilationDirectory)
                     : compilationDirectory.toString())));
   }
 }

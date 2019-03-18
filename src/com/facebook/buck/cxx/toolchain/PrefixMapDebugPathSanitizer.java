@@ -41,18 +41,21 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   private final ImmutableBiMap<Path, String> other;
 
   public PrefixMapDebugPathSanitizer(
-      String fakeCompilationDirectory, ImmutableBiMap<Path, String> other) {
+      String fakeCompilationDirectory,
+      ImmutableBiMap<Path, String> other,
+      boolean useUnixPathSeparator) {
+    super(useUnixPathSeparator);
     this.fakeCompilationDirectory = fakeCompilationDirectory;
     this.other = other;
   }
 
-  @Override
-  public String getCompilationDirectory() {
-    return getCompilationDirectory(false);
+  public PrefixMapDebugPathSanitizer(
+      String fakeCompilationDirectory, ImmutableBiMap<Path, String> other) {
+    this(fakeCompilationDirectory, other, false);
   }
 
   @Override
-  public String getCompilationDirectory(boolean useUnixPathSeparator) {
+  public String getCompilationDirectory() {
     return useUnixPathSeparator
         ? MorePaths.pathWithUnixSeparators(fakeCompilationDirectory)
         : fakeCompilationDirectory;
@@ -61,12 +64,6 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   @Override
   public ImmutableMap<String, String> getCompilationEnvironment(
       Path workingDir, boolean shouldSanitize) {
-    return getCompilationEnvironment(workingDir, shouldSanitize, false);
-  }
-
-  @Override
-  public ImmutableMap<String, String> getCompilationEnvironment(
-      Path workingDir, boolean shouldSanitize, boolean useUnixPathSeparator) {
     return ImmutableMap.of(
         "PWD",
         useUnixPathSeparator
@@ -88,7 +85,6 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
     }
 
     ImmutableList.Builder<String> flags = ImmutableList.builder();
-    boolean useUnixPathSeparator = compiler.getUseUnixPathSeparator();
 
     // As these replacements are processed one at a time, if one is a prefix (or actually is just
     // contained in) another, it must be processed after that other one. To ensure that we can
@@ -130,7 +126,8 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   private String getDebugPrefixMapFlag(Path realPath, String fakePath) {
-    String realPathStr = realPath.toString();
+    String realPathStr =
+        useUnixPathSeparator ? MorePaths.pathWithUnixSeparators(realPath) : realPath.toString();
     // If we're replacing the real path with an empty fake path, then also remove the trailing `/`
     // to prevent forming an absolute path.
     if (fakePath.isEmpty()) {
@@ -141,12 +138,6 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
 
   @Override
   protected Iterable<Map.Entry<Path, String>> getAllPaths(Optional<Path> workingDir) {
-    return getAllPaths(workingDir, false);
-  }
-
-  @Override
-  protected Iterable<Map.Entry<Path, String>> getAllPaths(
-      Optional<Path> workingDir, boolean useUnixPathSeparator) {
     if (!workingDir.isPresent()) {
       return other.entrySet();
     }

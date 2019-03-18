@@ -38,12 +38,6 @@ public class NoopDebugPathSanitizer extends DebugPathSanitizer {
   }
 
   @Override
-  public ImmutableMap<String, String> getCompilationEnvironment(
-      Path workingDir, boolean shouldSanitize, boolean useUnixPathSeparator) {
-    return getCompilationEnvironment(workingDir, shouldSanitize);
-  }
-
-  @Override
   protected Iterable<Entry<Path, String>> getAllPaths(Optional<Path> workingDir) {
     return ImmutableList.of();
   }
@@ -51,17 +45,6 @@ public class NoopDebugPathSanitizer extends DebugPathSanitizer {
   @Override
   public String getCompilationDirectory() {
     return ".";
-  }
-
-  @Override
-  protected Iterable<Entry<Path, String>> getAllPaths(
-      Optional<Path> workingDir, boolean useUnixPathSeparator) {
-    return getAllPaths(workingDir);
-  }
-
-  @Override
-  public String getCompilationDirectory(boolean useUnixPathSeparator) {
-    return getCompilationDirectory();
   }
 
   @Override
