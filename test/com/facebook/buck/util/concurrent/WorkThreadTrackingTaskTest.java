@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.LongAdder;
 import org.junit.Test;
 
 public class WorkThreadTrackingTaskTest {
@@ -61,5 +62,22 @@ public class WorkThreadTrackingTaskTest {
     workThreadTrackingTask.complete(completed);
     assertTrue(workThreadTrackingTask.isDone());
     assertSame(completed, workThreadTrackingTask.get());
+  }
+
+  @Test
+  public void completeOnlyOnceWithMultipleThread() throws InterruptedException {
+    LongAdder invocationCount = new LongAdder();
+    WorkThreadTrackingTask<Object> workThreadTrackingTask =
+        new WorkThreadTrackingTask<>(
+            () -> {
+              invocationCount.increment();
+              return null;
+            });
+
+    Thread t = new Thread(() -> workThreadTrackingTask.externalCompute());
+    workThreadTrackingTask.externalCompute();
+    t.join();
+
+    assertEquals(1, invocationCount.intValue());
   }
 }
