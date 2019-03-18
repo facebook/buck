@@ -60,6 +60,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -87,6 +88,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final JobLimiter executionLimiter;
   private final JobLimiter handleResultLimiter;
 
+  private final OptionalInt maxInputSizeBytes;
+
   RemoteExecutionStrategy(
       BuckEventBus eventBus,
       RemoteExecutionStrategyConfig strategyConfig,
@@ -103,6 +106,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.pendingUploadsLimiter = new JobLimiter(strategyConfig.getMaxConcurrentPendingUploads());
     this.executionLimiter = new JobLimiter(strategyConfig.getMaxConcurrentExecutions());
     this.handleResultLimiter = new JobLimiter(strategyConfig.getMaxConcurrentResultHandling());
+    this.maxInputSizeBytes = strategyConfig.maxInputSizeBytes();
     this.eventBus = eventBus;
 
     ImmutableSet<Optional<String>> cellNames =
@@ -234,10 +238,21 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   }
 
   private ListenableFuture<RemoteExecutionActionInfo> uploadInputs(
-      BuildTarget buildTarget, RemoteExecutionActionInfo actionInfo) throws IOException {
+      BuildTarget buildTarget, RemoteExecutionActionInfo actionInfo) throws Exception {
     Objects.requireNonNull(actionInfo);
-    Digest actionDigest = actionInfo.getActionDigest();
     ImmutableMap<Digest, UploadDataSupplier> requiredData = actionInfo.getRequiredData();
+    long totalInputSizeBytes = 0;
+    for (Digest digest : requiredData.keySet()) {
+      totalInputSizeBytes += digest.getSize();
+    }
+    if (maxInputSizeBytes.isPresent() && maxInputSizeBytes.getAsInt() < totalInputSizeBytes) {
+      throw new RuntimeException(
+          "Max file size exceeded for Remote Execution, action contains: "
+              + totalInputSizeBytes
+              + " bytes, max allowed: "
+              + maxInputSizeBytes.getAsInt());
+    }
+    Digest actionDigest = actionInfo.getActionDigest();
     Scope uploadingInputsScope =
         RemoteExecutionActionEvent.sendEvent(
             eventBus, State.UPLOADING_INPUTS, buildTarget, Optional.of(actionDigest));

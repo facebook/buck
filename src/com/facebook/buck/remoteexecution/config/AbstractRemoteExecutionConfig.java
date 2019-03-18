@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 /** Config object for the [remoteexecution] section of .buckconfig. */
@@ -73,6 +74,8 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   public static final String CONCURRENT_RESULT_HANDLING_KEY = "concurrent_result_handling";
   /** Whether failed remote executions are retried locally. */
   public static final String IS_LOCAL_FALLBACK_ENABLED_KEY = "is_local_fallback_enabled";
+  /** The maximum size of inputs allowed on remote execution, if unset, no maximum. */
+  public static final String MAX_INPUT_SIZE_BYTES = "max_input_size_bytes";
   /**
    * Number of threads for the strategy to do its work. This doesn't need to be a lot, but should
    * probably be greater than concurrent_result_handling below.
@@ -179,6 +182,7 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
         getDelegate()
             .getBooleanValue(
                 SECTION, IS_LOCAL_FALLBACK_ENABLED_KEY, DEFAULT_IS_LOCAL_FALLBACK_ENABLED);
+    OptionalInt maxInputSizeBytes = getDelegate().getInteger(SECTION, MAX_INPUT_SIZE_BYTES);
 
     // Some of these values are also limited by other ones (e.g. synchronous work is limited by the
     // number of threads). We detect some of these cases and log an error to the user to help them
@@ -245,6 +249,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public boolean isLocalFallbackEnabled() {
         return isLocalFallbackEnabled;
+      }
+
+      @Override
+      public OptionalInt maxInputSizeBytes() {
+        return maxInputSizeBytes;
       }
     };
   }
