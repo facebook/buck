@@ -22,21 +22,16 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.Parallelizer;
-import com.facebook.buck.util.concurrent.WorkThreadTrackingFuture;
+import com.facebook.buck.util.concurrent.WorkThreadTrackingTask;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
-import java.util.concurrent.RecursiveTask;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import javax.annotation.Nullable;
 
 /**
  * Implementation of BuildRuleResolver that supports build rules being created in parallel.
@@ -59,7 +54,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   private final Function<BuildTarget, ToolchainProvider> toolchainProviderResolver;
 
   private final ActionGraphBuilderMetadataCache metadataCache;
-  private final ConcurrentHashMap<BuildTarget, Task<BuildRule>> buildRuleIndex;
+  private final ConcurrentHashMap<BuildTarget, WorkThreadTrackingTask<BuildRule>> buildRuleIndex;
 
   public MultiThreadedActionGraphBuilder(
       ForkJoinPool forkJoinPool,
@@ -106,7 +101,8 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
     Preconditions.checkState(
         isInForkJoinPool(), "Should only be called while executing in the pool");
 
-    Task<BuildRule> future = buildRuleIndex.computeIfAbsent(target, wrap(mappingFunction));
+    WorkThreadTrackingTask<BuildRule> future =
+        buildRuleIndex.computeIfAbsent(target, wrap(mappingFunction));
 
     if (future.isBeingWorkedOnByCurrentThread()) {
 
@@ -158,7 +154,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
             }
             return existing;
           } else {
-            return Task.completed(buildRule);
+            return WorkThreadTrackingTask.completed(buildRule);
           }
         });
     return buildRule;
@@ -192,10 +188,11 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
    * Convert a function returning a value to a function that returns a forked, work-thread-tracked
    * ForkJoinTask that runs the function.
    */
-  private Function<BuildTarget, Task<BuildRule>> wrap(Function<BuildTarget, BuildRule> function) {
+  private Function<BuildTarget, WorkThreadTrackingTask<BuildRule>> wrap(
+      Function<BuildTarget, BuildRule> function) {
     return arg ->
         forkOrSubmit(
-            new Task<>(
+            new WorkThreadTrackingTask<>(
                 () -> {
                   BuildRule rule = function.apply(arg);
                   checkRuleIsBuiltForCorrectTarget(arg, rule);
@@ -203,75 +200,12 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
                 }));
   }
 
-  private <T> Task<T> forkOrSubmit(Task<T> task) {
+  private <T> WorkThreadTrackingTask<T> forkOrSubmit(WorkThreadTrackingTask<T> task) {
     if (isInForkJoinPool()) {
       task.fork();
     } else {
       forkJoinPool.submit(task);
     }
     return task;
-  }
-
-  private static final class Task<V> extends RecursiveTask<V>
-      implements WorkThreadTrackingFuture<V> {
-    @Nullable private Thread workThread;
-
-    // The work to be performed. This field should be set to null when the work no longer need to
-    // be performed in order to avoid any lambda captures from being retained.
-    //
-    // Synchronization is not required, the ForkJoin framework should prevent any races, and the
-    // timing of the value being set to null is unimportant.
-    @Nullable private Supplier<V> work;
-
-    public Task(Supplier<V> work) {
-      this.work = work;
-    }
-
-    @Override
-    protected final V compute() {
-      try (Scope ignored = () -> workThread = null) {
-        workThread = Thread.currentThread();
-        // The work function should only be invoked while the task is not complete.
-        // This condition should be guaranteed by the ForkJoin framework.
-        V result = Objects.requireNonNull(work).get();
-        Preconditions.checkState(
-            getRawResult() == null || getRawResult() == result,
-            "A value for this task has already been created: %s",
-            getRawResult());
-        return result;
-      } catch (RuntimeException e) {
-        throw e;
-      } catch (Exception e) {
-        throw new RuntimeException(e);
-      } finally {
-        work = null;
-      }
-    }
-
-    @Override
-    public final boolean isBeingWorkedOnByCurrentThread() {
-      return Thread.currentThread() == workThread;
-    }
-
-    @Override
-    public void complete(V value) {
-      Preconditions.checkState(
-          getRawResult() == null || getRawResult() == value,
-          "A value for this task has already been created: %s",
-          getRawResult());
-      super.complete(value);
-      workThread = null;
-      work = null;
-    }
-
-    static <V> Task<V> completed(V value) {
-      Task<V> task =
-          new Task<>(
-              () -> {
-                throw new AssertionError("This task should be directly completed.");
-              });
-      task.complete(value);
-      return task;
-    }
   }
 }
