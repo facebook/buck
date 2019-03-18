@@ -16,28 +16,12 @@
 
 package com.facebook.buck.util.concurrent;
 
-import java.util.stream.Stream;
+import com.google.common.base.Function;
+import java.util.Collection;
 
 /** Interface to transform high level constructs to potentially parallel ones. */
 public interface Parallelizer {
   /** Potentially transform a stream into a parallel stream. */
-  <T> Stream<T> maybeParallelize(Stream<T> stream);
-
-  /** A parallelizer which never parallelizes. */
-  Parallelizer SERIAL =
-      new Parallelizer() {
-        @Override
-        public <T> Stream<T> maybeParallelize(Stream<T> stream) {
-          return stream;
-        }
-      };
-
-  /** A parallelizer which always parallelizes. */
-  Parallelizer PARALLEL =
-      new Parallelizer() {
-        @Override
-        public <T> Stream<T> maybeParallelize(Stream<T> stream) {
-          return stream.parallel();
-        }
-      };
+  <T, U> Collection<U> maybeParallelizeTransform(
+      Collection<T> items, Function<? super T, U> transformer);
 }

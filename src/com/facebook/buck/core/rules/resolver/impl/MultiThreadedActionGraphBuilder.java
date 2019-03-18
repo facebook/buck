@@ -25,8 +25,10 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.concurrent.WorkThreadTrackingTask;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.Futures;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
@@ -55,6 +57,31 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
 
   private final ActionGraphBuilderMetadataCache metadataCache;
   private final ConcurrentHashMap<BuildTarget, WorkThreadTrackingTask<BuildRule>> buildRuleIndex;
+
+  private final Parallelizer parallelizer =
+      new Parallelizer() {
+        @Override
+        public <T, U> Collection<U> maybeParallelizeTransform(
+            Collection<T> items, com.google.common.base.Function<? super T, U> transformer) {
+          Preconditions.checkState(isInForkJoinPool());
+          Collection<WorkThreadTrackingTask<U>> tasks =
+              Collections2.transform(
+                  items,
+                  item -> {
+                    WorkThreadTrackingTask<U> task =
+                        new WorkThreadTrackingTask<>(() -> transformer.apply(item));
+                    task.fork();
+                    return task;
+                  });
+          /**
+           * This parallelizer submits tasks to the fork join pool. However, rather than using the
+           * standard fork join pool blocking gets, which only correctly work steal from under
+           * specific conditions, we use the new {@link WorkThreadTrackingTask#externalCompute()} to
+           * await, which can work steal a task across fork join thread's queues.
+           */
+          return Collections2.transform(tasks, task -> task.externalCompute());
+        }
+      };
 
   public MultiThreadedActionGraphBuilder(
       ForkJoinPool forkJoinPool,
@@ -169,7 +196,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   @Override
   public Parallelizer getParallelizer() {
     Preconditions.checkState(isValid);
-    return Parallelizer.PARALLEL;
+    return parallelizer;
   }
 
   @Override

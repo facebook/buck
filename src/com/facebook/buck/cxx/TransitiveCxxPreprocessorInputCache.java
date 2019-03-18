@@ -19,17 +19,17 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.concurrent.Parallelizer;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 /** Transitive C++ preprocessor input cache */
@@ -80,19 +80,11 @@ public class TransitiveCxxPreprocessorInputCache {
           preprocessorDep.getCxxPreprocessorInput(key, graphBuilder));
     }
 
-    Stream<CxxPreprocessorDep> transitiveDepInputs =
-        parallelizer.maybeParallelize(
-            RichStream.from(preprocessorDep.getCxxPreprocessorDeps(key, graphBuilder)));
-
-    // We get CxxProcessorInput in parallel for each dep.
-    // We have one cache per CxxPreprocessable. Cache miss may trigger the creation of more
-    // BuildRules, acyclically.
-    // The creation of new BuildRules will be through forked tasks, and because we wait on the
-    // Futures of the tasks directly, FJP will have current thread steal the work for those tasks
-    // and no deadlock will occur {@link BuildRuleResolverTest.deadLockOnDependencyTest() }.
-    transitiveDepInputs
-        .map(dep -> dep.getTransitiveCxxPreprocessorInput(key, graphBuilder))
-        .forEachOrdered(builder::putAll);
+    Collection<ImmutableMap<BuildTarget, CxxPreprocessorInput>> transitiveDepInputs =
+        parallelizer.maybeParallelizeTransform(
+            ImmutableList.copyOf(preprocessorDep.getCxxPreprocessorDeps(key, graphBuilder)),
+            dep -> dep.getTransitiveCxxPreprocessorInput(key, graphBuilder));
+    transitiveDepInputs.forEach(builder::putAll);
 
     // Using an ImmutableSortedMap here:
     //

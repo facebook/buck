@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.ExtraOutputsDeriver;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.file.MorePaths;
@@ -48,19 +49,20 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Streams;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CxxLinkableEnhancer {
   private static final Logger LOG = Logger.get(CxxLinkableEnhancer.class);
@@ -192,18 +194,16 @@ public class CxxLinkableEnhancer {
         !bundleLoader.isPresent() || linkType == Linker.LinkType.MACH_O_BUNDLE);
 
     // Collect and topologically sort our deps that contribute to the link.
-    Stream<NativeLinkableInput> nativeLinkableInputs =
+    Collection<NativeLinkableInput> nativeLinkableInputs =
         graphBuilder
             .getParallelizer()
-            .maybeParallelize(
-                NativeLinkables.getNativeLinkables(
-                        cxxPlatform, graphBuilder, nativeLinkableDeps, depType)
-                    .stream())
-            .filter(linkable -> !blacklist.contains(linkable.getBuildTarget()))
-            .map(
+            .maybeParallelizeTransform(
+                Collections2.filter(
+                    NativeLinkables.getNativeLinkables(
+                        cxxPlatform, graphBuilder, nativeLinkableDeps, depType),
+                    linkable -> !blacklist.contains(linkable.getBuildTarget())),
                 nativeLinkable -> {
-                  NativeLinkable.Linkage link =
-                      nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
+                  Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
                   NativeLinkableInput input =
                       nativeLinkable.getNativeLinkableInput(
                           cxxPlatform,
@@ -213,11 +213,11 @@ public class CxxLinkableEnhancer {
                   LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
                   return input;
                 });
-    nativeLinkableInputs = Stream.concat(Stream.of(immediateLinkableInput), nativeLinkableInputs);
     // Construct a list out of the stream rather than passing in an iterable via ::iterator as
     // the latter will never evaluate stream elements in parallel.
     NativeLinkableInput linkableInput =
-        NativeLinkableInput.concat(nativeLinkableInputs.collect(Collectors.toList()));
+        NativeLinkableInput.concat(
+            Iterables.concat(ImmutableList.of(immediateLinkableInput), nativeLinkableInputs));
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();

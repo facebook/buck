@@ -27,6 +27,7 @@ import com.facebook.buck.util.concurrent.Parallelizer;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -150,7 +151,7 @@ public class SingleThreadedActionGraphBuilder extends AbstractActionGraphBuilder
   @Override
   public Parallelizer getParallelizer() {
     Preconditions.checkState(isValid);
-    return Parallelizer.SERIAL;
+    return Collections2::transform;
   }
 
   @Override

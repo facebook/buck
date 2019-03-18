@@ -105,8 +105,9 @@ public class WorkThreadTrackingTask<T> extends ForkJoinTask<T> {
   public void complete(T value) {
     Preconditions.checkState(
         getRawResult() == null || getRawResult() == value,
-        "A value for this task has already been created: %s",
-        getRawResult());
+        "A value for this task has already been created: %s, but got %s",
+        getRawResult(),
+        value);
     super.complete(value);
     workThread = null;
     work = null;
