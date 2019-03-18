@@ -22,6 +22,7 @@ import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.DirectoryListTransformer;
 import com.facebook.buck.core.files.FileTree;
 import com.facebook.buck.core.files.FileTreeCache;
+import com.facebook.buck.core.files.FileTreeFileNameIterator;
 import com.facebook.buck.core.files.FileTreeTransformer;
 import com.facebook.buck.core.files.ImmutableFileTreeKey;
 import com.facebook.buck.core.graph.transformation.ComputeResult;
@@ -228,43 +229,13 @@ public class TargetSpecResolver implements AutoCloseable {
                   .getUnchecked(cellPath)
                   .computeUnchecked(ImmutableFileTreeKey.of(basePath));
 
-          // recursively traverse fileTree and add all build files paths to perBuildFileSpecs
-          // perBuildFileSpecs is mutable and updated in place for performance reasons
-          // TODO(sergeyb): extract traversal logic into standalone iterator over file tree
-          addAllBuildFiles(
-              perBuildFileSpecs,
-              projectFilesystemView,
-              fileTree,
-              basePath,
-              cell.getBuildFileName(),
-              index);
+          for (Path path : FileTreeFileNameIterator.ofIterable(fileTree, cell.getBuildFileName())) {
+            perBuildFileSpecs.put(projectFilesystemView.resolve(path), index);
+          }
         }
       }
     }
     return perBuildFileSpecs;
-  }
-
-  /** Recursively add all build file paths into {@code perBuildFileSpecs} */
-  private void addAllBuildFiles(
-      Multimap<Path, Integer> perBuildFileSpecs,
-      ProjectFilesystemView filesystemView,
-      FileTree fileTree,
-      Path basePath,
-      String buildFileName,
-      int index) {
-    Path buildFilePath = basePath.resolve(buildFileName);
-    if (fileTree.getDirectoryList().getFiles().contains(buildFilePath)) {
-      perBuildFileSpecs.put(filesystemView.resolve(buildFilePath), index);
-    }
-    for (Map.Entry<Path, FileTree> child : fileTree.getChildren().entrySet()) {
-      addAllBuildFiles(
-          perBuildFileSpecs,
-          filesystemView,
-          child.getValue(),
-          child.getKey(),
-          buildFileName,
-          index);
-    }
   }
 
   private <T extends HasBuildTarget> void handleTargetNodeSpec(

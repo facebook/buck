@@ -50,6 +50,17 @@ public class FileTreeFileNameIterator implements Iterator<Path> {
     return new FileTreeFileNameIterator(fileTree, fileName);
   }
 
+  /**
+   * Create new instance of {@link FileTreeFileNameIterator} and return it as {@link Iterable} which
+   * can be used in for loop
+   *
+   * @param fileTree File tree to recursively iterate
+   * @param fileName File name to search for, for example "BUCK"
+   */
+  public static Iterable<Path> ofIterable(FileTree fileTree, String fileName) {
+    return () -> of(fileTree, fileName);
+  }
+
   @Override
   public boolean hasNext() {
     if (nextPath == null) {
