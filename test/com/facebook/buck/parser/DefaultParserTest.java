@@ -2061,7 +2061,7 @@ public class DefaultParserTest {
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
                 ImmutableList.of(
-                    AbstractBuildTargetSpec.from(
+                    ImmutableBuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))))
             .getBuildTargets();
@@ -2107,7 +2107,7 @@ public class DefaultParserTest {
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
                 ImmutableList.of(
-                    AbstractBuildTargetSpec.from(
+                    BuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))))
             .getBuildTargets();
@@ -2157,7 +2157,7 @@ public class DefaultParserTest {
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
                 ImmutableList.of(
-                    AbstractBuildTargetSpec.from(
+                    BuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
                             cellRoot, "//lib", "lib"))))
             .getBuildTargets();
@@ -2198,7 +2198,7 @@ public class DefaultParserTest {
     parser.buildTargetGraphWithConfigurationTargets(
         parsingContext,
         ImmutableList.of(
-            AbstractBuildTargetSpec.from(
+            BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))));
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
@@ -2213,7 +2213,7 @@ public class DefaultParserTest {
     parser.buildTargetGraphWithConfigurationTargets(
         parsingContext,
         ImmutableList.of(
-            AbstractBuildTargetSpec.from(
+            BuildTargetSpec.from(
                 UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))));
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
@@ -2502,7 +2502,7 @@ public class DefaultParserTest {
                     parsingContext,
                     ImmutableList.of(
                         TargetNodePredicateSpec.of(
-                            BuildFileSpec.fromRecursivePath(
+                            ImmutableBuildFileSpec.fromRecursivePath(
                                 Paths.get(""), parsingContext.getCell().getRoot()))))
                 .getTargetGraph()
                 .getNodes())

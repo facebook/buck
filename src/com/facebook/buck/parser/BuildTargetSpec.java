@@ -19,15 +19,13 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableMap;
 import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
 /** Matches a {@link TargetNode} name by a specific {@link BuildTarget}. */
 @Value.Immutable(builder = false)
-@BuckStyleImmutable
-abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
+public abstract class BuildTargetSpec implements TargetNodeSpec {
 
   @Value.Parameter
   public abstract UnconfiguredBuildTarget getUnconfiguredBuildTarget();
@@ -37,7 +35,7 @@ abstract class AbstractBuildTargetSpec implements TargetNodeSpec {
   public abstract BuildFileSpec getBuildFileSpec();
 
   public static BuildTargetSpec from(UnconfiguredBuildTarget target) {
-    return BuildTargetSpec.of(target, BuildFileSpec.fromUnconfiguredBuildTarget(target));
+    return ImmutableBuildTargetSpec.of(target, BuildFileSpec.fromUnconfiguredBuildTarget(target));
   }
 
   @Override

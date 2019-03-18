@@ -29,6 +29,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
 import com.facebook.buck.parser.BuildTargetSpec;
+import com.facebook.buck.parser.ImmutableBuildTargetSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
@@ -218,7 +219,8 @@ public class PublishCommand extends BuildCommand {
             "Need to specify build targets explicitly when publishing. " + "Cannot modify " + spec);
       }
 
-      BuildTargetSpec targetSpec = (BuildTargetSpec) spec;
+      // TODO(buck_team): remove upcast, use abstract BuildTargetSpec
+      ImmutableBuildTargetSpec targetSpec = (ImmutableBuildTargetSpec) spec;
       Objects.requireNonNull(targetSpec.getUnconfiguredBuildTarget());
 
       UnconfiguredBuildTarget mavenTarget =
