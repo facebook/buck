@@ -57,9 +57,16 @@ public class MoreMaps {
     return map;
   }
 
+  /**
+   * Transform a map to another immutable map by changing keys and keeping values
+   *
+   * @param map Source map to transform
+   * @param transformer Function to apply to source map key to infer resulting map key
+   * @return New immutable map with new keys and corresponding values
+   */
   public static <K1, K2, V> ImmutableMap<K2, V> transformKeys(
       Map<K1, V> map, Function<? super K1, K2> transformer) {
-    ImmutableMap.Builder<K2, V> transformedMap = ImmutableMap.builder();
+    ImmutableMap.Builder<K2, V> transformedMap = ImmutableMap.builderWithExpectedSize(map.size());
     for (Map.Entry<K1, V> ent : map.entrySet()) {
       transformedMap.put(Objects.requireNonNull(transformer.apply(ent.getKey())), ent.getValue());
     }
