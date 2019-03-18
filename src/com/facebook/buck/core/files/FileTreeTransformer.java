@@ -60,7 +60,7 @@ public class FileTreeTransformer implements GraphTransformer<FileTreeKey, FileTr
       deps = MoreMaps.transformKeys(children, k -> k.getPath());
     }
 
-    return ImmutableFileTree.of(currentDir, deps);
+    return ImmutableFileTree.of(key.getPath(), currentDir, deps);
   }
 
   @Override

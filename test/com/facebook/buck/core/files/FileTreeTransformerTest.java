@@ -59,8 +59,8 @@ public class FileTreeTransformerTest {
             ImmutableSortedSet.of());
     DirectoryListKey dkey1 = ImmutableDirectoryListKey.of(Paths.get("dir/dir1"));
 
-    FileTree ftree = ImmutableFileTree.of(dlist1, ImmutableMap.of());
     FileTreeKey fkey = ImmutableFileTreeKey.of(Paths.get("dir/dir1"));
+    FileTree ftree = ImmutableFileTree.of(fkey.getPath(), dlist1, ImmutableMap.of());
 
     FakeTransformationEnvironment env =
         new FakeTransformationEnvironment(ImmutableMap.of(dkey, dlist, dkey1, dlist1, fkey, ftree));

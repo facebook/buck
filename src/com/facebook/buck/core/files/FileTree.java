@@ -26,6 +26,10 @@ import org.immutables.value.Value;
 public abstract class FileTree implements ComputeResult {
 
   @Value.Parameter
+  /** Relative path to this instance from some root, usually cell root */
+  public abstract Path getPath();
+
+  @Value.Parameter
   /** List of files, folders and symlinks in the desired directory */
   public abstract DirectoryList getDirectoryList();
 
