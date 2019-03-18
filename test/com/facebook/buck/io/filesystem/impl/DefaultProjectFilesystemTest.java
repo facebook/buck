@@ -757,4 +757,13 @@ public class DefaultProjectFilesystemTest {
     assertFalse(Files.exists(srcDir.resolve("subdir1")));
     assertFalse(Files.exists(srcDir.resolve("file1")));
   }
+
+  @Test
+  public void testComputeShaExceptionMsg() throws IOException {
+    expected.expectMessage("Error computing Sha1");
+    expected.expectMessage("afakefile.txt");
+    expected.expect(IOException.class);
+
+    filesystem.computeSha1(Paths.get("afakefile.txt"));
+  }
 }

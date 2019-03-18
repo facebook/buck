@@ -39,6 +39,7 @@ java_test(
         "//src/com/facebook/buck/io/filesystem/impl:impl",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/sha1:sha1",
         "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",

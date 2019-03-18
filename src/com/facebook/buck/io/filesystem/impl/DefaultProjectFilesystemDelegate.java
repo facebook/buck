@@ -48,21 +48,29 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
     Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
+    try {
+      // Normally, we would just use `Files.hash(fileToHash.toFile(), Hashing.sha1())`, but if
+      // fileToHash is backed by Jimfs, its toFile() method throws an UnsupportedOperationException.
+      // Creating the input stream via java.nio.file.Files.newInputStream() avoids this issue.
+      ByteSource source =
+          new ByteSource() {
+            @Override
+            public InputStream openStream() throws IOException {
+              // No need to wrap with BufferedInputStream because ByteSource uses
+              // ByteStreams.copy(), which already buffers.
+              return Files.newInputStream(fileToHash);
+            }
+          };
+      HashCode hashCode = source.hash(Hashing.sha1());
 
-    // Normally, we would just use `Files.hash(fileToHash.toFile(), Hashing.sha1())`, but if
-    // fileToHash is backed by Jimfs, its toFile() method throws an UnsupportedOperationException.
-    // Creating the input stream via java.nio.file.Files.newInputStream() avoids this issue.
-    ByteSource source =
-        new ByteSource() {
-          @Override
-          public InputStream openStream() throws IOException {
-            // No need to wrap with BufferedInputStream because ByteSource uses ByteStreams.copy(),
-            // which already buffers.
-            return Files.newInputStream(fileToHash);
-          }
-        };
-    HashCode hashCode = source.hash(Hashing.sha1());
-    return Sha1HashCode.fromHashCode(hashCode);
+      return Sha1HashCode.fromHashCode(hashCode);
+
+    } catch (IOException e) {
+      String msg =
+          String.format("Error computing Sha1 for %s: %s", fileToHash.toString(), e.getMessage());
+
+      throw new IOException(msg, e);
+    }
   }
 
   @Override
