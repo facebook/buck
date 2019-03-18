@@ -38,7 +38,7 @@
 /***/
 {template .soyweb}
   {call buck.page}
-    {param title: 'Buck query - Cheat Sheet' /}
+    {param title: 'Buck Cheat Sheet' /}
     {param navid: 'article_query_cheat_sheet' /}
     {param prettify: true /}
     {param description}
@@ -46,10 +46,18 @@
     {/param}
     {param content}
 
-<p>
-<strong>Note</strong>: For a complete description of the <code>buck query</code> language with
-many additional examples, see the {call buck.cmd_query /} reference page.
-</p>
+    <p>
+    This section provides example command lines that you can use to
+    obtain information about Buck and about your build. These techniques
+    can help you to understand how your build works and to troubleshoot
+    issues with your build.
+    </p>
+
+    <p>
+    Most of these examples use the {call buck.cmd_query /}, {call buck.cmd_targets /}, 
+    and {call buck.cmd_audit /} commands.  For more information and examples, 
+    see the reference pages for those commands.
+    </p>
 
 <hr/>
 
@@ -77,7 +85,7 @@ many additional examples, see the {call buck.cmd_query /} reference page.
   </li>
   <li>
     <a href="#find-buildfile-owner">
-      How do I find buildfile that contains the target that owns a
+      How do I find the buildfile that contains the target that owns a
       source file?
     </a>
   </li>
