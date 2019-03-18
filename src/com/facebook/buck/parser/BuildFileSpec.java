@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -47,31 +46,30 @@ import org.immutables.value.Value;
 
 /** A specification used by the parser, via {@link TargetNodeSpec}, to match build files. */
 @Value.Immutable(builder = false)
-@BuckStyleImmutable
-abstract class AbstractBuildFileSpec {
+public abstract class BuildFileSpec {
 
-  private static final Logger LOG = Logger.get(AbstractBuildFileSpec.class);
+  private static final Logger LOG = Logger.get(BuildFileSpec.class);
   private static final long WATCHMAN_QUERY_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(5);
 
   // Base path where to find either a single build file or to recursively for many build files.
   @Value.Parameter
-  abstract Path getBasePath();
+  public abstract Path getBasePath();
 
   // If present, this indicates that the above path should be recursively searched for build files,
   // and that the paths enumerated here should be ignored.
   @Value.Parameter
-  abstract boolean isRecursive();
+  public abstract boolean isRecursive();
 
   // The absolute cell path in which the build spec exists
   @Value.Parameter
-  abstract Path getCellPath();
+  public abstract Path getCellPath();
 
   public static BuildFileSpec fromRecursivePath(Path basePath, Path cellPath) {
-    return BuildFileSpec.of(basePath, /* recursive */ true, cellPath);
+    return ImmutableBuildFileSpec.of(basePath, /* recursive */ true, cellPath);
   }
 
   public static BuildFileSpec fromPath(Path basePath, Path cellPath) {
-    return BuildFileSpec.of(basePath, /* recursive */ false, cellPath);
+    return ImmutableBuildFileSpec.of(basePath, /* recursive */ false, cellPath);
   }
 
   public static BuildFileSpec fromUnconfiguredBuildTarget(UnconfiguredBuildTarget target) {
