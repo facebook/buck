@@ -70,12 +70,19 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 
 /**
- * Daemon used to monitor the file system and cache build rules between Main() method invocations is
- * static so that it can outlive Main() objects and survive for the lifetime of the potentially long
- * running Buck process.
+ * {@link BuckGlobalState} contains all the global state of Buck which is kept between invocations
+ * of Buck commands, like caches, global per-process objects, etc. Individual caches here can be
+ * hooked to {@link Watchman} for proper invalidation.
+ *
+ * <p>This state is uniformly invalidated on major changes, like configuration changes, so it is
+ * essential all in-proc caches to contain in this class for proper invalidation. If caches need to
+ * be kept between configuration changes, a custom logic should reside in {@link
+ * DaemonLifecycleManager}
+ *
+ * <p>All Graph Engine caches are required to be kept here.
  */
-final class Daemon implements Closeable {
-  private static final Logger LOG = Logger.get(Daemon.class);
+final class BuckGlobalState implements Closeable {
+  private static final Logger LOG = Logger.get(BuckGlobalState.class);
 
   private final Cell rootCell;
   private final TypeCoercerFactory typeCoercerFactory;
@@ -98,7 +105,7 @@ final class Daemon implements Closeable {
 
   private final BackgroundTaskManager bgTaskManager;
 
-  Daemon(
+  BuckGlobalState(
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,

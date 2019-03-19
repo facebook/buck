@@ -44,7 +44,7 @@ import javax.annotation.concurrent.ThreadSafe;
 class DaemonLifecycleManager {
   private static final Logger LOG = Logger.get(DaemonLifecycleManager.class);
 
-  @Nullable private volatile Daemon daemon;
+  @Nullable private volatile BuckGlobalState buckGlobalState;
 
   /** Indicates whether a daemon is reused, or why it can't be reused */
   enum DaemonStatus {
@@ -111,15 +111,17 @@ class DaemonLifecycleManager {
   }
 
   synchronized boolean hasDaemon() {
-    return daemon != null;
+    return buckGlobalState != null;
   }
 
   synchronized Optional<BuckConfig> getBuckConfig() {
-    return Optional.ofNullable(daemon).map(Daemon::getRootCell).map(Cell::getBuckConfig);
+    return Optional.ofNullable(buckGlobalState)
+        .map(BuckGlobalState::getRootCell)
+        .map(Cell::getBuckConfig);
   }
 
   /** Get or create Daemon. */
-  synchronized Pair<Daemon, DaemonStatus> getDaemon(
+  synchronized Pair<BuckGlobalState, DaemonStatus> getDaemon(
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
@@ -129,32 +131,33 @@ class DaemonLifecycleManager {
       Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
       Optional<NGContext> context) {
 
-    Daemon currentState = daemon;
-    DaemonStatus daemonStatus = daemon == null ? DaemonStatus.NEW_DAEMON : DaemonStatus.REUSED;
+    BuckGlobalState currentState = buckGlobalState;
+    DaemonStatus daemonStatus =
+        buckGlobalState == null ? DaemonStatus.NEW_DAEMON : DaemonStatus.REUSED;
 
     // If Watchman failed to start, drop all caches
-    if (daemon != null && watchman == WatchmanFactory.NULL_WATCHMAN) {
+    if (buckGlobalState != null && watchman == WatchmanFactory.NULL_WATCHMAN) {
       // TODO(buck_team): make Watchman a requirement
       LOG.info("Restarting daemon because watchman failed to start");
       daemonStatus = DaemonStatus.INVALIDATED_NO_WATCHMAN;
-      daemon = null;
+      buckGlobalState = null;
     }
 
     // If Buck config has changed or SDKs have changed, drop all caches
-    if (daemon != null) {
+    if (buckGlobalState != null) {
       IsCompatibleForCaching cacheCompat =
-          DaemonCellChecker.areCellsCompatibleForCaching(daemon.getRootCell(), rootCell);
+          DaemonCellChecker.areCellsCompatibleForCaching(buckGlobalState.getRootCell(), rootCell);
       if (cacheCompat != IsCompatibleForCaching.IS_COMPATIBLE) {
         LOG.info(
             "Shutting down and restarting daemon on config or directory graphBuilder change (%s != %s)",
-            daemon.getRootCell(), rootCell);
+            buckGlobalState.getRootCell(), rootCell);
         daemonStatus = DaemonStatus.fromCellInvalidation(cacheCompat);
-        daemon = null;
+        buckGlobalState = null;
       }
     }
 
     // if we restart daemon, notify user that caches are screwed
-    if (daemon == null
+    if (buckGlobalState == null
         && currentState != null
         && console.getVerbosity().shouldPrintStandardInformation()) {
       // Use the raw stream because otherwise this will stop superconsole from ever printing again
@@ -171,7 +174,7 @@ class DaemonLifecycleManager {
     }
 
     // start new daemon, clean old one if needed
-    if (daemon == null) {
+    if (buckGlobalState == null) {
       LOG.debug("Starting up daemon for project root [%s]", rootCell.getFilesystem().getRootPath());
 
       // try to reuse webserver from previous state
@@ -185,8 +188,8 @@ class DaemonLifecycleManager {
         currentState.close();
       }
 
-      daemon =
-          new Daemon(
+      buckGlobalState =
+          new BuckGlobalState(
               rootCell,
               knownRuleTypesProvider,
               watchman,
@@ -197,25 +200,26 @@ class DaemonLifecycleManager {
               context);
     }
 
-    return new Pair<>(daemon, daemonStatus);
+    return new Pair<>(buckGlobalState, daemonStatus);
   }
 
   /** Manually kill the daemon instance, used for testing. */
   synchronized void resetDaemon() {
-    if (daemon != null) {
+    if (buckGlobalState != null) {
       LOG.info("Closing daemon on reset request.");
-      daemon.close();
+      buckGlobalState.close();
     }
-    daemon = null;
+    buckGlobalState = null;
   }
 
   private boolean shouldReuseWebServer(Cell newCell) {
-    if (newCell == null || daemon == null) {
+    if (newCell == null || buckGlobalState == null) {
       return false;
     }
     OptionalInt portFromOldConfig =
-        getBuckConfig().map(Daemon::getValidWebServerPort).orElse(OptionalInt.empty());
-    OptionalInt portFromUpdatedConfig = Daemon.getValidWebServerPort(newCell.getBuckConfig());
+        getBuckConfig().map(BuckGlobalState::getValidWebServerPort).orElse(OptionalInt.empty());
+    OptionalInt portFromUpdatedConfig =
+        BuckGlobalState.getValidWebServerPort(newCell.getBuckConfig());
 
     return portFromOldConfig.equals(portFromUpdatedConfig);
   }

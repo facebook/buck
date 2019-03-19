@@ -93,7 +93,7 @@ public class DaemonLifecycleManagerTest {
   @Test
   public void whenBuckConfigChangesParserInvalidated() {
     daemonLifecycleManager.resetDaemon();
-    Pair<Daemon, DaemonStatus> daemonResult1 =
+    Pair<BuckGlobalState, DaemonStatus> daemonResult1 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder()
                 .setBuckConfig(
@@ -112,7 +112,7 @@ public class DaemonLifecycleManagerTest {
             Optional::empty,
             Optional.empty());
 
-    Pair<Daemon, DaemonStatus> daemonResult2 =
+    Pair<BuckGlobalState, DaemonStatus> daemonResult2 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder()
                 .setBuckConfig(
@@ -131,7 +131,7 @@ public class DaemonLifecycleManagerTest {
             Optional::empty,
             Optional.empty());
 
-    Pair<Daemon, DaemonStatus> daemonResult3 =
+    Pair<BuckGlobalState, DaemonStatus> daemonResult3 =
         daemonLifecycleManager.getDaemon(
             new TestCellBuilder()
                 .setBuckConfig(
@@ -476,7 +476,7 @@ public class DaemonLifecycleManagerTest {
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
-    Daemon daemonWithBrokenAndroidSdk =
+    BuckGlobalState buckGlobalStateWithBrokenAndroidSdk =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -492,7 +492,7 @@ public class DaemonLifecycleManagerTest {
     tmp.newFolder("android-sdk");
 
     cell = createCellWithAndroidSdk(androidSdkPath);
-    Daemon daemonWithWorkingAndroidSdk =
+    BuckGlobalState buckGlobalStateWithWorkingAndroidSdk =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -505,7 +505,7 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertNotEquals(daemonWithBrokenAndroidSdk, daemonWithWorkingAndroidSdk);
+    assertNotEquals(buckGlobalStateWithBrokenAndroidSdk, buckGlobalStateWithWorkingAndroidSdk);
   }
 
   @Test
@@ -518,7 +518,7 @@ public class DaemonLifecycleManagerTest {
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
-    Daemon daemonWithWorkingAndroidSdk =
+    BuckGlobalState buckGlobalStateWithWorkingAndroidSdk =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -534,7 +534,7 @@ public class DaemonLifecycleManagerTest {
     Files.deleteIfExists(androidSdkPath);
 
     cell = createCellWithAndroidSdk(androidSdkPath);
-    Daemon daemonWithBrokenAndroidSdk =
+    BuckGlobalState buckGlobalStateWithBrokenAndroidSdk =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -547,7 +547,7 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertNotEquals(daemonWithWorkingAndroidSdk, daemonWithBrokenAndroidSdk);
+    assertNotEquals(buckGlobalStateWithWorkingAndroidSdk, buckGlobalStateWithBrokenAndroidSdk);
   }
 
   @Test
@@ -560,7 +560,7 @@ public class DaemonLifecycleManagerTest {
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
-    Daemon daemonWithBrokenAndroidSdk1 =
+    BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -576,7 +576,7 @@ public class DaemonLifecycleManagerTest {
     cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
-    Daemon daemonWithBrokenAndroidSdk2 =
+    BuckGlobalState buckGlobalStateWithBrokenAndroidSdk2 =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -589,7 +589,7 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
+    assertEquals(buckGlobalStateWithBrokenAndroidSdk1, buckGlobalStateWithBrokenAndroidSdk2);
   }
 
   @Test
@@ -603,7 +603,7 @@ public class DaemonLifecycleManagerTest {
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
-    Daemon daemonWithBrokenAndroidSdk1 =
+    BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -617,7 +617,7 @@ public class DaemonLifecycleManagerTest {
             .getFirst();
 
     cell = createCellWithAndroidSdk(androidSdkPath);
-    Daemon daemonWithBrokenAndroidSdk2 =
+    BuckGlobalState buckGlobalStateWithBrokenAndroidSdk2 =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -630,7 +630,7 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
+    assertEquals(buckGlobalStateWithBrokenAndroidSdk1, buckGlobalStateWithBrokenAndroidSdk2);
   }
 
   @Test
@@ -677,7 +677,7 @@ public class DaemonLifecycleManagerTest {
   public void testDaemonUptime() {
     Cell cell = new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build();
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
-    Daemon daemon =
+    BuckGlobalState buckGlobalState =
         daemonLifecycleManager
             .getDaemon(
                 cell,
@@ -690,8 +690,8 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertEquals(daemon.getUptime(), 0);
+    assertEquals(buckGlobalState.getUptime(), 0);
     clock.setCurrentTimeMillis(2000);
-    assertEquals(daemon.getUptime(), 1000);
+    assertEquals(buckGlobalState.getUptime(), 1000);
   }
 }

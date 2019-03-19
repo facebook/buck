@@ -831,7 +831,7 @@ public final class Main {
         telemetryPlugins = Lists.newArrayList();
       }
 
-      Pair<Daemon, DaemonStatus> daemonRequest =
+      Pair<BuckGlobalState, DaemonStatus> daemonRequest =
           daemonLifecycleManager.getDaemon(
               rootCell,
               knownRuleTypesProvider,
@@ -848,7 +848,7 @@ public final class Main {
                               rootCell.getFilesystem(), System.getProperties()),
               context);
 
-      Daemon daemon = daemonRequest.getFirst();
+      BuckGlobalState buckGlobalState = daemonRequest.getFirst();
       DaemonStatus daemonStatus = daemonRequest.getSecond();
 
       if (!context.isPresent()) {
@@ -874,7 +874,7 @@ public final class Main {
       ProjectFilesystem rootCellProjectFilesystem =
           projectFilesystemFactory.createOrThrow(rootCell.getFilesystem().getRootPath());
       BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
-      allCaches.addAll(daemon.getFileHashCaches());
+      allCaches.addAll(buckGlobalState.getFileHashCaches());
 
       rootCell
           .getAllCells()
@@ -899,9 +899,9 @@ public final class Main {
 
       StackedFileHashCache fileHashCache = new StackedFileHashCache(allCaches.build());
 
-      Optional<WebServer> webServer = daemon.getWebServer();
+      Optional<WebServer> webServer = buckGlobalState.getWebServer();
       ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools =
-          daemon.getPersistentWorkerPools();
+          buckGlobalState.getPersistentWorkerPools();
       TestBuckConfig testConfig = buckConfig.getView(TestBuckConfig.class);
       ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
 
@@ -937,7 +937,7 @@ public final class Main {
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 
-      try (TaskManagerScope managerScope = daemon.getBgTaskManager().getNewScope(buildId);
+      try (TaskManagerScope managerScope = buckGlobalState.getBgTaskManager().getNewScope(buildId);
           GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
                   .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
@@ -1163,9 +1163,9 @@ public final class Main {
 
           eventListeners =
               addEventListeners(
-                  daemon.getDevspeedDaemonListener(),
+                  buckGlobalState.getDevspeedDaemonListener(),
                   buildEventBus,
-                  daemon.getFileEventBus(),
+                  buckGlobalState.getFileEventBus(),
                   rootCell.getFilesystem(),
                   invocationInfo,
                   rootCell.getBuckConfig(),
@@ -1247,7 +1247,9 @@ public final class Main {
               CommandEvent.started(
                   command.getDeclaredSubCommandName(),
                   remainingArgs,
-                  context.isPresent() ? OptionalLong.of(daemon.getUptime()) : OptionalLong.empty(),
+                  context.isPresent()
+                      ? OptionalLong.of(buckGlobalState.getUptime())
+                      : OptionalLong.empty(),
                   getBuckPID());
           buildEventBus.post(startedEvent);
 
@@ -1261,8 +1263,8 @@ public final class Main {
                   buildEventBus,
                   resourceConfig.getMaximumResourceAmounts().getCpu(),
                   rootCell.getCellProvider(),
-                  daemon.getDirectoryListCaches(),
-                  daemon.getFileTreeCaches());
+                  buckGlobalState.getDirectoryListCaches(),
+                  buckGlobalState.getFileTreeCaches());
 
           ParserAndCaches parserAndCaches =
               getParserAndCaches(
@@ -1274,7 +1276,7 @@ public final class Main {
                   knownRuleTypesProvider,
                   rootCell,
                   command::getTargetPlatforms,
-                  daemon,
+                  buckGlobalState,
                   buildEventBus,
                   forkJoinPoolSupplier,
                   ruleKeyConfiguration,
@@ -1518,7 +1520,7 @@ public final class Main {
       KnownRuleTypesProvider knownRuleTypesProvider,
       Cell rootCell,
       Supplier<ImmutableList<String>> targetPlatforms,
-      Daemon daemon,
+      BuckGlobalState buckGlobalState,
       BuckEventBus buildEventBus,
       CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier,
       RuleKeyConfiguration ruleKeyConfiguration,
@@ -1535,12 +1537,12 @@ public final class Main {
             Optional.of(
                 new WatchmanWatcher(
                     watchman,
-                    daemon.getFileEventBus(),
+                    buckGlobalState.getFileEventBus(),
                     ImmutableSet.<PathMatcher>builder()
                         .addAll(filesystem.getIgnorePaths())
                         .addAll(DEFAULT_IGNORE_GLOBS)
                         .build(),
-                    daemon.getWatchmanCursor(),
+                    buckGlobalState.getWatchmanCursor(),
                     buckConfig.getView(BuildBuckConfig.class).getNumThreads()));
       } catch (WatchmanWatcherException e) {
         buildEventBus.post(
@@ -1554,19 +1556,20 @@ public final class Main {
     ParserAndCaches parserAndCaches;
     if (context.isPresent()) {
       // Note that watchmanWatcher is non-null only when daemon.isPresent().
-      registerClientDisconnectedListener(context.get(), daemon);
+      registerClientDisconnectedListener(context.get(), buckGlobalState);
       if (watchmanWatcher.isPresent()) {
-        daemon.watchFileSystem(buildEventBus, watchmanWatcher.get(), watchmanFreshInstanceAction);
+        buckGlobalState.watchFileSystem(
+            buildEventBus, watchmanWatcher.get(), watchmanFreshInstanceAction);
       }
       Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler;
       if (buckConfig.getView(BuildBuckConfig.class).getRuleKeyCaching()) {
         LOG.debug("Using rule key calculation caching");
         defaultRuleKeyFactoryCacheRecycler =
-            Optional.of(daemon.getDefaultRuleKeyFactoryCacheRecycler());
+            Optional.of(buckGlobalState.getDefaultRuleKeyFactoryCacheRecycler());
       } else {
         defaultRuleKeyFactoryCacheRecycler = Optional.empty();
       }
-      TypeCoercerFactory typeCoercerFactory = daemon.getTypeCoercerFactory();
+      TypeCoercerFactory typeCoercerFactory = buckGlobalState.getTypeCoercerFactory();
       Parser parser =
           ParserFactory.create(
               typeCoercerFactory,
@@ -1574,7 +1577,7 @@ public final class Main {
               knownRuleTypesProvider,
               new ParserPythonInterpreterProvider(parserConfig, executableFinder),
               rootCell.getBuckConfig(),
-              daemon.getDaemonicParserState(),
+              buckGlobalState.getDaemonicParserState(),
               targetSpecResolver,
               watchman,
               buildEventBus,
@@ -1582,19 +1585,20 @@ public final class Main {
               manifestServiceSupplier,
               fileHashCache,
               unconfiguredBuildTargetFactory);
-      daemon.getFileEventBus().register(daemon.getDaemonicParserState());
+      buckGlobalState.getFileEventBus().register(buckGlobalState.getDaemonicParserState());
 
       parserAndCaches =
           ParserAndCaches.of(
               parser,
-              daemon.getTypeCoercerFactory(),
+              buckGlobalState.getTypeCoercerFactory(),
               new InstrumentedVersionedTargetGraphCache(
-                  daemon.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
+                  buckGlobalState.getVersionedTargetGraphCache(),
+                  new InstrumentingCacheStatsTracker()),
               new ActionGraphProvider(
                   buildEventBus,
                   ActionGraphFactory.create(
                       buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
-                  daemon.getActionGraphCache(),
+                  buckGlobalState.getActionGraphCache(),
                   ruleKeyConfiguration,
                   buckConfig),
               defaultRuleKeyFactoryCacheRecycler);
@@ -1632,7 +1636,8 @@ public final class Main {
     return parserAndCaches;
   }
 
-  private static void registerClientDisconnectedListener(NGContext context, Daemon daemon) {
+  private static void registerClientDisconnectedListener(
+      NGContext context, BuckGlobalState buckGlobalState) {
     Thread mainThread = Thread.currentThread();
     context.addClientListener(
         reason -> {
@@ -1647,7 +1652,7 @@ public final class Main {
             LOG.debug("Killing all Buck jobs on client disconnect by interrupting the main thread");
             // signal daemon to complete required tasks and interrupt main thread
             // this will hopefully trigger InterruptedException and program shutdown
-            daemon.interruptOnClientExit(mainThread);
+            buckGlobalState.interruptOnClientExit(mainThread);
           }
         });
   }
