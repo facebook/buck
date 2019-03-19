@@ -20,7 +20,8 @@ import static org.junit.Assert.assertSame;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
-import com.facebook.buck.core.rules.actions.ActionAnalysisData.Key;
+import com.facebook.buck.core.rules.actions.ActionAnalysisData.ID;
+import com.facebook.buck.core.rules.actions.ActionAnalysisDataKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
@@ -52,45 +53,40 @@ public class RuleAnalysisContextImplTest {
 
     ActionAnalysisData actionAnalysisData1 =
         new ActionAnalysisData() {
-          private final Key key = new Key() {};
+          private final ActionAnalysisDataKey key =
+              getNewKey(BuildTargetFactory.newInstance("//my:foo"), new ID() {});
 
           @Override
-          public Key getKey() {
+          public ActionAnalysisDataKey getKey() {
             return key;
-          }
-
-          @Override
-          public BuildTarget getOwner() {
-            return BuildTargetFactory.newInstance("//my::foo");
           }
         };
 
     context.registerAction(actionAnalysisData1);
 
     assertSame(
-        actionAnalysisData1, context.getRegisteredActionData().get(actionAnalysisData1.getKey()));
+        actionAnalysisData1,
+        context.getRegisteredActionData().get(actionAnalysisData1.getKey().getID()));
 
     ActionAnalysisData actionAnalysisData2 =
         new ActionAnalysisData() {
-          private final Key key = new Key() {};
+          private final ActionAnalysisDataKey key =
+              getNewKey(BuildTargetFactory.newInstance("//my:foo"), new ID() {});
 
           @Override
-          public Key getKey() {
+          public ActionAnalysisDataKey getKey() {
             return key;
-          }
-
-          @Override
-          public BuildTarget getOwner() {
-            return BuildTargetFactory.newInstance("bar");
           }
         };
 
     context.registerAction(actionAnalysisData2);
 
     assertSame(
-        actionAnalysisData2, context.getRegisteredActionData().get(actionAnalysisData2.getKey()));
+        actionAnalysisData2,
+        context.getRegisteredActionData().get(actionAnalysisData2.getKey().getID()));
     assertSame(
-        actionAnalysisData1, context.getRegisteredActionData().get(actionAnalysisData1.getKey()));
+        actionAnalysisData1,
+        context.getRegisteredActionData().get(actionAnalysisData1.getKey().getID()));
   }
 
   @Test
@@ -99,36 +95,41 @@ public class RuleAnalysisContextImplTest {
 
     RuleAnalysisContextImpl context = new RuleAnalysisContextImpl(ImmutableMap.of());
 
-    Key key = new Key() {};
+    ActionAnalysisDataKey key =
+        new ActionAnalysisDataKey() {
+          private final ID id = new ID() {};
 
-    ActionAnalysisData actionAnalysisData1 =
-        new ActionAnalysisData() {
           @Override
-          public Key getKey() {
-            return key;
+          public BuildTarget getBuildTarget() {
+            return BuildTargetFactory.newInstance("//my:target");
           }
 
           @Override
-          public BuildTarget getOwner() {
-            return BuildTargetFactory.newInstance("foo");
+          public ID getID() {
+            return id;
           }
         };
+
+    ActionAnalysisData actionAnalysisData1 = () -> key;
 
     context.registerAction(actionAnalysisData1);
 
-    ActionAnalysisData actionAnalysisData2 =
-        new ActionAnalysisData() {
-          @Override
-          public Key getKey() {
-            return key;
-          }
-
-          @Override
-          public BuildTarget getOwner() {
-            return BuildTargetFactory.newInstance("bar");
-          }
-        };
+    ActionAnalysisData actionAnalysisData2 = () -> key;
 
     context.registerAction(actionAnalysisData2);
+  }
+
+  private static ActionAnalysisDataKey getNewKey(BuildTarget target, ActionAnalysisData.ID id) {
+    return new ActionAnalysisDataKey() {
+      @Override
+      public BuildTarget getBuildTarget() {
+        return target;
+      }
+
+      @Override
+      public ID getID() {
+        return id;
+      }
+    };
   }
 }

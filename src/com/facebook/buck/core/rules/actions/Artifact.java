@@ -31,7 +31,7 @@ public interface Artifact {
 
     /** @return the key to the {@link ActionAnalysisData} that owns this artifact */
     @Value.Parameter
-    ActionAnalysisData.Key getActionDataKey();
+    ActionAnalysisDataKey getActionDataKey();
 
     /** @return the path to the artifact */
     @Value.Parameter

@@ -21,19 +21,27 @@ public class FakeActionAnalysisData implements ActionAnalysisData {
 
   private final BuildTarget buildTarget;
 
-  private static final Key key = new Key() {};
+  private final ActionAnalysisDataKey key =
+      new ActionAnalysisDataKey() {
+        private final ID id = new ID() {};
+
+        @Override
+        public BuildTarget getBuildTarget() {
+          return buildTarget;
+        }
+
+        @Override
+        public ID getID() {
+          return id;
+        }
+      };
 
   public FakeActionAnalysisData(BuildTarget buildTarget) {
     this.buildTarget = buildTarget;
   }
 
   @Override
-  public Key getKey() {
+  public ActionAnalysisDataKey getKey() {
     return key;
-  }
-
-  @Override
-  public BuildTarget getOwner() {
-    return buildTarget;
   }
 }

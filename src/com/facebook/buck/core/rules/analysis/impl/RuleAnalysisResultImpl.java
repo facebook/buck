@@ -17,7 +17,6 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
-import com.facebook.buck.core.rules.actions.ActionAnalysisData.Key;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.google.common.collect.ImmutableMap;
@@ -40,17 +39,17 @@ abstract class RuleAnalysisResultImpl implements RuleAnalysisResult {
 
   @Override
   @Value.Parameter
-  public abstract ImmutableMap<Key, ActionAnalysisData> getRegisteredActions();
+  public abstract ImmutableMap<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActions();
 
   /** @return if the given key exists in the look up */
   @Override
-  public boolean actionExists(ActionAnalysisData.Key key) {
+  public boolean actionExists(ActionAnalysisData.ID key) {
     return getRegisteredActions().containsKey(key);
   }
 
   /** @return the {@link ActionAnalysisData} if exists, else {@code Optional.empty} */
   @Override
-  public Optional<ActionAnalysisData> getActionOptional(ActionAnalysisData.Key key) {
+  public Optional<ActionAnalysisData> getActionOptional(ActionAnalysisData.ID key) {
     return Optional.ofNullable(getRegisteredActions().get(key));
   }
 }

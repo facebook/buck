@@ -16,7 +16,6 @@
 package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
-import com.facebook.buck.core.rules.actions.ActionAnalysisData.Key;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
@@ -32,7 +31,7 @@ import java.util.Map;
 class RuleAnalysisContextImpl implements RuleAnalysisContext {
 
   private final ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders;
-  private final Map<Key, ActionAnalysisData> actionRegistry = new HashMap<>();
+  private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionRegistry = new HashMap<>();
 
   RuleAnalysisContextImpl(ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders) {
     this.depProviders = depProviders;
@@ -46,7 +45,7 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext {
   @Override
   public void registerAction(ActionAnalysisData actionAnalysisData) {
     ActionAnalysisData prev =
-        actionRegistry.putIfAbsent(actionAnalysisData.getKey(), actionAnalysisData);
+        actionRegistry.putIfAbsent(actionAnalysisData.getKey().getID(), actionAnalysisData);
     Verify.verify(
         prev == null,
         "Action of key %s was already registered with %s",
@@ -54,7 +53,7 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext {
         prev);
   }
 
-  public Map<ActionAnalysisData.Key, ActionAnalysisData> getRegisteredActionData() {
+  public Map<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActionData() {
     return actionRegistry;
   }
 }

@@ -15,19 +15,21 @@
  */
 package com.facebook.buck.core.rules.actions;
 
-import com.facebook.buck.core.rules.actions.ActionAnalysisData.Key;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
-/** Interface for querying for {@link ActionAnalysisData}. */
+/**
+ * Interface for querying for {@link ActionAnalysisData} via their unique {@link
+ * ActionAnalysisData.ID}.
+ */
 public interface ActionAnalysisDataLookUp {
 
   /** @return if the given key exists in the look up */
-  boolean actionExists(ActionAnalysisData.Key key);
+  boolean actionExists(ActionAnalysisData.ID key);
 
   /** @return the {@link ActionAnalysisData} if exists, else {@code Optional.empty} */
-  Optional<ActionAnalysisData> getActionOptional(ActionAnalysisData.Key key);
+  Optional<ActionAnalysisData> getActionOptional(ActionAnalysisData.ID key);
 
   /** @return all the registered {@link ActionAnalysisData} */
-  ImmutableMap<Key, ActionAnalysisData> getRegisteredActions();
+  ImmutableMap<ActionAnalysisData.ID, ActionAnalysisData> getRegisteredActions();
 }

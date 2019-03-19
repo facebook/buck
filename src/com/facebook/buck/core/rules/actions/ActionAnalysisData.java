@@ -15,22 +15,23 @@
  */
 package com.facebook.buck.core.rules.actions;
 
-import com.facebook.buck.core.model.BuildTarget;
-
-/** The action related information generated from the rule analysis phase, such as a deferred. */
+/**
+ * The action related information generated from the rule analysis phase, such as a deferred.
+ *
+ * <p>The look up for actions in the rule analysis framework is such that we request for a specific
+ * {@link ActionAnalysisData} of a rule via the {@link ActionAnalysisDataKey}.
+ */
 public interface ActionAnalysisData {
 
-  /** @return the identifier for this {@link ActionAnalysisData} */
-  Key getKey();
-
-  /** The key used to identify this action. */
-  interface Key {}
+  /**
+   * @return the identifier for this {@link ActionAnalysisData}, which points to the corresponding
+   *     rule analysis
+   */
+  ActionAnalysisDataKey getKey();
 
   /**
-   * TODO(bobyf): we probably need to change this to be some other data structure containing the
-   * configuration as well
-   *
-   * @return the owner, which is the the target of the rule that created this action.
+   * The ID used to identify this action. This should be unique and stable per instance of {@link
+   * ActionAnalysisData}
    */
-  BuildTarget getOwner();
+  interface ID {}
 }

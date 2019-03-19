@@ -29,7 +29,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
-import com.facebook.buck.core.rules.actions.ActionAnalysisData.Key;
+import com.facebook.buck.core.rules.actions.ActionAnalysisData.ID;
 import com.facebook.buck.core.rules.actions.FakeActionAnalysisData;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -210,10 +210,10 @@ public class RuleAnalysisTransformerTest {
     assertSame(buildTarget, ruleAnalysisResult.getBuildTarget());
     assertSame(
         expectedActionAnalysisData,
-        ruleAnalysisResult.getActionOptional(expectedActionAnalysisData.getKey()).get());
+        ruleAnalysisResult.getActionOptional(expectedActionAnalysisData.getKey().getID()).get());
     assertEquals(1, ruleAnalysisResult.getRegisteredActions().size());
 
-    assertFalse(ruleAnalysisResult.actionExists(new Key() {}));
+    assertFalse(ruleAnalysisResult.actionExists(new ID() {}));
   }
 
   @Test
@@ -304,7 +304,7 @@ public class RuleAnalysisTransformerTest {
     assertSame(buildTarget, ruleAnalysisResult.getBuildTarget());
     assertSame(
         expectedActionAnalysisData,
-        ruleAnalysisResult.getActionOptional(expectedActionAnalysisData.getKey()).get());
+        ruleAnalysisResult.getActionOptional(expectedActionAnalysisData.getKey().getID()).get());
     assertEquals(1, ruleAnalysisResult.getRegisteredActions().size());
   }
 }
