@@ -1,0 +1,56 @@
+/*
+ * Copyright 2019-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+package com.facebook.buck.core.rules.actions;
+
+import java.util.Optional;
+import org.immutables.value.Value;
+
+/** Represents the result of executing the {@link Action} */
+public interface ActionExecutionResult {
+
+  /** @return the stdout of the actions ran if any */
+  Optional<String> getStdOut();
+
+  /** @return the stderr of the actions ran if any */
+  Optional<String> getStdErr();
+
+  /** A successful action execution */
+  @Value.Immutable(copy = false, builder = false)
+  interface ActionExecutionSuccess extends ActionExecutionResult {
+    @Value.Parameter
+    @Override
+    Optional<String> getStdOut();
+
+    @Value.Parameter
+    @Override
+    Optional<String> getStdErr();
+  }
+
+  /** execution that failed */
+  @Value.Immutable(copy = false, builder = false)
+  interface ActionExecutionFailure extends ActionExecutionResult {
+    @Value.Parameter
+    @Override
+    Optional<String> getStdOut();
+
+    @Value.Parameter
+    @Override
+    Optional<String> getStdErr();
+
+    @Value.Parameter
+    Optional<Exception> getException();
+  }
+}
