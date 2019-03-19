@@ -13,6 +13,8 @@
 # under the License.
 
 """This is a self-profiling tool."""
+import contextlib
+import functools
 import inspect
 import itertools
 import os
@@ -318,3 +320,201 @@ class Profiler(object):
                     break
             result.append("\n")
         return result
+
+
+class Trace:
+    """ Trace object represents a single trace along with any children.
+        The object keeps track of description, stats key (used for aggregation)
+        along with relevant timing information.
+    """
+
+    def __init__(self, description, key=None):
+        # Trace description
+        self._description = description
+        # Tracer "type/key"
+        self._key = key
+        # This trace start time
+        self._start_time = time.time()
+        # This trace end time.  None implies the trace is still active.
+        self._end_time = None
+        # Child traces.
+        self._children = []
+        # This trace start time relative to the parent trace start.
+        self._relative_start_time = None
+
+    def mark_finished(self):
+        self._end_time = time.time()
+
+    def is_active(self):
+        return self._end_time is None
+
+    def get_key(self):
+        return self._key
+
+    def duration(self):
+        if self.is_active():
+            return time.time() - self._start_time
+        else:
+            return self._end_time - self._start_time
+
+    def add_child_trace(self, trace):
+        self._children.append(trace)
+        trace._relative_start_time = trace._start_time - self._start_time
+
+    def get_children(self):
+        return self._children
+
+    def __repr__(self):
+        return (
+            "{relative_start}{description} "
+            "{start_time:.6f} - {end_time:.6f} ({duration}{active})\n".format(
+                relative_start=" (+{:.6f}s) ".format(self._relative_start_time)
+                if self._relative_start_time
+                else "",
+                description=self._description,
+                start_time=self._start_time,
+                end_time=self._end_time if self._end_time else 0.0,
+                duration="{:.6f}".format(self.duration()),
+                active=" active" if self.is_active() else "",
+            )
+        )
+
+
+class Tracer:
+    """ Tracer object is a static object used to collect and emit traces.
+        Before start/stop tracer methods can be used, Tracer must be enable()d.
+    """
+
+    class _State:
+        traces = []
+        active = []
+
+    _state = None
+
+    @staticmethod
+    def enable():
+        if Tracer._state is None:
+            Tracer._state = Tracer._State()
+
+    @staticmethod
+    def is_enabled():
+        return Tracer._state is not None
+
+    @staticmethod
+    def start_trace(descr, key=None):
+        # type str -> Trace
+        assert Tracer.is_enabled()
+        state = Tracer._state
+        trace = Trace(descr, key)
+        if state.active:
+            state.active[-1].add_child_trace(trace)
+        else:
+            state.traces.append(trace)
+
+        state.active.append(trace)
+        return trace
+
+    @staticmethod
+    def end_trace(trace):
+        # type Trace -> ()
+        assert Tracer.is_enabled()
+        trace.mark_finished()
+        active = Tracer._state.active.pop()
+        assert active == trace
+
+    @staticmethod
+    def get_all_traces_and_reset():
+        # type () -> str
+        traces = Tracer._state.traces
+        stats = {}
+        res = "\n\n### TRACES\n\n"
+        Tracer._state.traces = []
+
+        while traces:
+            # Queue of traces to print: trace, indent prefix, parent trace
+            queue = [(traces.pop(0), [], None)]
+            while queue:
+                (trace, indent, parent) = queue.pop()
+                res += "{}{}".format("".join(indent), trace)
+                if trace.get_key():
+                    stats.setdefault(trace.get_key(), [0, 0.0])
+                    stats[trace.get_key()][0] += 1
+                    stats[trace.get_key()][1] += trace.duration()
+
+                if trace.get_children():
+                    if indent:
+                        if indent[-1] == "-":
+                            indent[-2:] = list(" | \\-")
+                        if len(indent) > 80:
+                            # Arbitrary max depth.  Indicate by "*" to stop nesting.
+                            indent[-1] = "*"
+                    else:
+                        indent = list("| \\-")
+                    queue.extend(
+                        [(t, indent, trace) for t in reversed(trace.get_children())]
+                    )
+
+        if stats:
+            res = (
+                "\n\n### TRACE SUMMARY\n"
+                + "\n".join(
+                    [
+                        "{:10s}: n={} total_duration={:.6f}s".format(
+                            key, stat[0], stat[1]
+                        )
+                        for key, stat in stats.items()
+                    ]
+                )
+                + "\n"
+                + res
+            )
+
+        return res
+
+
+@contextlib.contextmanager
+def scoped_trace(trace_description, stats_key=None):
+    """ Creates scoped trace object with the given description.
+        If stats_key is specified, this key is used to produced aggregate
+        statistics for all traces with the same stats_key (e.g IO, CPU, etc)
+        This decorator is a no-op if the tracer is not enabled.
+    """
+
+    trace = (
+        Tracer.start_trace(trace_description, stats_key)
+        if Tracer.is_enabled()
+        else None
+    )
+    try:
+        yield
+    finally:
+        if trace:
+            Tracer.end_trace(trace)
+
+
+def traced(description=None, stats_key=None):
+    """ Decorator for tracing entire function
+        This decorator is a no-op if the tracer is not enabled.
+    """
+
+    if description is None:
+        description = stats_key or "Traced Function"
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapped(*args, **kwargs):
+            with scoped_trace(description, stats_key):
+                return func(*args, **kwargs)
+
+        return wrapped
+
+    return decorator
+
+
+def emit_trace(message, *args, **kwargs):
+    """ Emits a single trace message
+        args/kwargs are passed to format() call
+        This decorator is a no-op if the tracer is not enabled.
+    """
+    if Tracer.is_enabled():
+        Tracer.end_trace(Tracer.start_trace(message.format(*args, **kwargs)))

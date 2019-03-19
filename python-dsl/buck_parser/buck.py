@@ -58,7 +58,7 @@ from .glob_internal import glob_internal
 from .glob_watchman import SyncCookieState, glob_watchman
 from .json_encoder import BuckJSONEncoder
 from .module_whitelist import ImportWhitelistManager
-from .profiler import Profiler
+from .profiler import Profiler, Tracer, emit_trace, scoped_trace, traced
 from .select_support import SelectorList, SelectorValue
 from .struct import create_struct_class, struct
 from .util import (
@@ -455,6 +455,7 @@ def add_rule(rule, build_env):
     build_env.rules[rule_name] = rule
 
 
+@traced(stats_key="Glob")
 def glob(
     includes, excludes=None, include_dotfiles=False, build_env=None, search_base=None
 ):
@@ -1511,6 +1512,7 @@ class BuildFileProcessor(object):
             with self._import_whitelist_manager.allow_unsafe_import(False):
                 yield
 
+    @traced(stats_key="Process")
     def _process(self, build_env, path, is_implicit_include, package_implicit_load):
         # type: (_GCT, str, bool, Optional[LoadStatement]) -> Tuple[_GCT, types.ModuleType]
         """Process a build file or include at the given path.
@@ -1530,6 +1532,8 @@ class BuildFileProcessor(object):
             if is_implicit_include
             else self._default_globals
         )
+
+        emit_trace(path)
 
         # Install the build context for this input as the current context.
         with self._set_build_env(build_env):
@@ -1554,19 +1558,21 @@ class BuildFileProcessor(object):
 
             # We don't open this file as binary, as we assume it's a textual source
             # file.
-            with self._wrap_file_access(wrap=False):
-                with open(path, "r") as f:
-                    contents = f.read()
+            with scoped_trace("IO", stats_key="IO"):
+                with self._wrap_file_access(wrap=False):
+                    with open(path, "r") as f:
+                        contents = f.read()
 
-            # Enable absolute imports.  This prevents the compiler from trying to
-            # do a relative import first, and warning that this module doesn't
-            # exist in sys.modules.
-            future_features = absolute_import.compiler_flag
-            code = compile(contents, path, "exec", future_features, 1)
+            with scoped_trace("Compile", stats_key="Compile"):
+                # Enable absolute imports.  This prevents the compiler from
+                # trying to do a relative import first, and warning that
+                # this module doesn't exist in sys.modules.
+                future_features = absolute_import.compiler_flag
+                code = compile(contents, path, "exec", future_features, 1)
 
-            # Execute code with build file sandboxing
-            with self._build_file_sandboxing():
-                exec(code, module.__dict__)
+                # Execute code with build file sandboxing
+                with self._build_file_sandboxing():
+                    exec(code, module.__dict__)
 
         return build_env, module
 
@@ -2011,6 +2017,7 @@ def main():
             if options.profile:
                 profiler = Profiler(True)
                 profiler.start()
+                Tracer.enable()
 
             for build_file in args:
                 query = {
@@ -2106,6 +2113,7 @@ def report_profile(options, to_parent, processed_build_file, profiler):
                 )
             extra_result += "\n\n"
             profile_result = extra_result + profile_result
+            profile_result += Tracer.get_all_traces_and_reset()
             java_process_send_result(to_parent, [], [], profile_result)
         except Exception:
             trace = traceback.format_exc()
