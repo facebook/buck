@@ -46,29 +46,21 @@ import com.facebook.buck.core.toolchain.ToolchainWithCapability;
 import com.facebook.buck.cxx.RelativeLinkArg;
 import com.facebook.buck.rules.modern.CustomClassSerialization;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
-import com.facebook.buck.rules.modern.Deserializer;
-import com.facebook.buck.rules.modern.Deserializer.DataProvider;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
-import com.facebook.buck.rules.modern.Serializer;
-import com.facebook.buck.rules.modern.Serializer.Delegate;
+import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.util.Memoizer;
-import com.facebook.buck.util.types.Either;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.hash.HashCode;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -145,21 +137,6 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     }
   }
 
-  static DataProvider getDataProvider(
-      Map<HashCode, byte[]> dataMap, Map<HashCode, List<HashCode>> childMap, HashCode hash) {
-    return new DataProvider() {
-      @Override
-      public InputStream getData() {
-        return new ByteArrayInputStream(Preconditions.checkNotNull(dataMap.get(hash)));
-      }
-
-      @Override
-      public DataProvider getChild(HashCode hash) {
-        return getDataProvider(dataMap, childMap, hash);
-      }
-    };
-  }
-
   <T extends AddsToRuleKey> T test(T instance) throws IOException {
     return test(instance, expected -> expected);
   }
@@ -167,43 +144,15 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   <T extends AddsToRuleKey> T test(T instance, Function<String, String> expectedMapper)
       throws IOException {
     replay(cellResolver, ruleFinder);
-
-    Map<HashCode, byte[]> dataMap = new HashMap<>();
-    Map<HashCode, List<HashCode>> childMap = new HashMap<>();
-
-    Delegate serializerDelegate =
-        (value, data, children) -> {
-          int id = dataMap.size();
-          HashCode hash = HashCode.fromInt(id);
-          dataMap.put(hash, data);
-          childMap.put(hash, children);
-          return hash;
-        };
-
-    Either<HashCode, byte[]> serialized =
-        new Serializer(ruleFinder, cellResolver, serializerDelegate)
-            .serialize(instance, DefaultClassInfoFactory.forInstance(instance));
-
     AddsToRuleKey reconstructed =
-        new Deserializer(
-                s -> s.isPresent() ? otherFilesystem : rootFilesystem,
-                Class::forName,
-                () -> resolver,
-                toolchainProvider)
-            .deserialize(
-                new DataProvider() {
-                  @Override
-                  public InputStream getData() {
-                    return new ByteArrayInputStream(
-                        serialized.transform(left -> dataMap.get(left), right -> right));
-                  }
-
-                  @Override
-                  public DataProvider getChild(HashCode hash) {
-                    return getDataProvider(dataMap, childMap, hash);
-                  }
-                },
-                AddsToRuleKey.class);
+        SerializationTestHelper.serializeAndDeserialize(
+            instance,
+            AddsToRuleKey.class,
+            ruleFinder,
+            cellResolver,
+            resolver,
+            toolchainProvider,
+            s -> s.isPresent() ? otherFilesystem : rootFilesystem);
     Preconditions.checkState(instance.getClass().equals(reconstructed.getClass()));
     verify(cellResolver, ruleFinder);
     assertEquals(expectedMapper.apply(stringify(instance)), stringify(reconstructed));

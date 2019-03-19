@@ -65,7 +65,7 @@ public class LazyPythonPlatform implements PythonPlatform {
               Path pythonPath = pythonInterpreter.getPythonInterpreterPath(configSection);
               PythonVersion pythonVersion =
                   getVersion(pythonBuckConfig, this.processExecutor, configSection, pythonPath);
-              return new PythonEnvironment(pythonPath, pythonVersion);
+              return new PythonEnvironment(pythonPath, pythonVersion, configSection);
             });
   }
 

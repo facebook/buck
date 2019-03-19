@@ -1,0 +1,23 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_test",
+)
+
+java_test(
+    name = "python",
+    srcs = glob(
+        ["*Test.java"],
+    ),
+    deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/features/python/toolchain:toolchain",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/toolchain/impl:testutil",
+        "//test/com/facebook/buck/rules/modern:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

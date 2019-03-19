@@ -86,21 +86,24 @@ public class CxxPythonExtensionDescriptionTest {
   private static PythonPlatform createPyDefaultPlatform() {
     return new TestPythonPlatform(
         InternalFlavor.of("py-default"),
-        new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
+        new PythonEnvironment(
+            Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
         Optional.empty());
   }
 
   private static PythonPlatform createPy2Platform(Optional<BuildTarget> cxxLibrary) {
     return new TestPythonPlatform(
         InternalFlavor.of("py2"),
-        new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
+        new PythonEnvironment(
+            Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
         cxxLibrary);
   }
 
   private static PythonPlatform createPy3Platform(Optional<BuildTarget> cxxLibrary) {
     return new TestPythonPlatform(
         InternalFlavor.of("py3"),
-        new PythonEnvironment(Paths.get("python3"), PythonVersion.of("CPython", "3.5")),
+        new PythonEnvironment(
+            Paths.get("python3"), PythonVersion.of("CPython", "3.5"), PythonBuckConfig.SECTION),
         cxxLibrary);
   }
 

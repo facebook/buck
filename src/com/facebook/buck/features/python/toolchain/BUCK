@@ -6,6 +6,7 @@ java_library_with_plugins(
     exported_provided_deps = [
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/core/toolchain/tool:tool",
     ],

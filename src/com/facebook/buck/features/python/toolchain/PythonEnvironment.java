@@ -17,20 +17,32 @@
 package com.facebook.buck.features.python.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.rules.modern.CustomClassSerialization;
+import com.facebook.buck.rules.modern.ValueCreator;
+import com.facebook.buck.rules.modern.ValueTypeInfo;
+import com.facebook.buck.rules.modern.ValueVisitor;
+import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 
 /** Tool based on a particular python configuration. */
+@CustomClassBehavior(PythonEnvironment.PythonEnvironmentSerialization.class)
 public class PythonEnvironment implements Tool {
+
   private final Path pythonPath;
+  private final String configSection;
   @AddToRuleKey private final PythonVersion pythonVersion;
 
-  public PythonEnvironment(Path pythonPath, PythonVersion pythonVersion) {
+  public PythonEnvironment(Path pythonPath, PythonVersion pythonVersion, String configSection) {
     this.pythonPath = pythonPath;
     this.pythonVersion = pythonVersion;
+    this.configSection = configSection;
   }
 
   public Path getPythonPath() {
@@ -49,5 +61,35 @@ public class PythonEnvironment implements Tool {
   @Override
   public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
     return ImmutableMap.of();
+  }
+
+  /**
+   * Serializes PythonEnvironment such that it is recreated from the .buckconfig in the context that
+   * it's deserialized in.
+   */
+  public static class PythonEnvironmentSerialization
+      implements CustomClassSerialization<PythonEnvironment> {
+    static final ValueTypeInfo<PythonVersion> VERSION_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<PythonVersion>() {});
+
+    @Override
+    public <E extends Exception> void serialize(
+        PythonEnvironment instance, ValueVisitor<E> serializer) throws E {
+      VERSION_TYPE_INFO.visit(instance.pythonVersion, serializer);
+      serializer.visitString(instance.configSection);
+    }
+
+    @Override
+    public <E extends Exception> PythonEnvironment deserialize(ValueCreator<E> deserializer)
+        throws E {
+      PythonVersion version = VERSION_TYPE_INFO.create(deserializer);
+      String configSection = deserializer.createString();
+      Path pythonPath =
+          deserializer
+              .createSpecial(ToolchainProvider.class)
+              .getByName(PythonInterpreter.DEFAULT_NAME, PythonInterpreter.class)
+              .getPythonInterpreterPath(configSection);
+      return new PythonEnvironment(pythonPath, version, configSection);
+    }
   }
 }

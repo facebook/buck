@@ -100,7 +100,8 @@ public class PythonBinaryDescriptionTest {
   private static final PythonPlatform PY2 =
       new TestPythonPlatform(
           InternalFlavor.of("py2"),
-          new PythonEnvironment(Paths.get("python2"), PythonVersion.of("CPython", "2.6")),
+          new PythonEnvironment(
+              Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
           Optional.of(PYTHON2_DEP_TARGET));
 
   @Test
@@ -244,12 +245,18 @@ public class PythonBinaryDescriptionTest {
     PythonPlatform platform1 =
         new TestPythonPlatform(
             InternalFlavor.of("pyPlat1"),
-            new PythonEnvironment(Paths.get("python2.6"), PythonVersion.of("CPython", "2.6.9")),
+            new PythonEnvironment(
+                Paths.get("python2.6"),
+                PythonVersion.of("CPython", "2.6.9"),
+                PythonBuckConfig.SECTION),
             Optional.empty());
     PythonPlatform platform2 =
         new TestPythonPlatform(
             InternalFlavor.of("pyPlat2"),
-            new PythonEnvironment(Paths.get("python2.7"), PythonVersion.of("CPython", "2.7.11")),
+            new PythonEnvironment(
+                Paths.get("python2.7"),
+                PythonVersion.of("CPython", "2.7.11"),
+                PythonBuckConfig.SECTION),
             Optional.empty());
     PythonBinaryBuilder builder =
         PythonBinaryBuilder.create(

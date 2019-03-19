@@ -32,9 +32,9 @@ import java.util.stream.Stream;
 
 public class PythonBuckConfig {
 
+  public static final String SECTION = "python";
   public static final Flavor DEFAULT_PYTHON_PLATFORM = InternalFlavor.of("py-default");
 
-  private static final String SECTION = "python";
   private static final String PYTHON_PLATFORM_SECTION_PREFIX = "python#";
 
   private final BuckConfig delegate;

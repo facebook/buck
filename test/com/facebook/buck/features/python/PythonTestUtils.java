@@ -35,7 +35,8 @@ public class PythonTestUtils {
   public static final PythonPlatform PYTHON_PLATFORM =
       new TestPythonPlatform(
           InternalFlavor.of("default-py-platform"),
-          new PythonEnvironment(Paths.get("python"), PythonVersion.of("CPython", "2.6")),
+          new PythonEnvironment(
+              Paths.get("python"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
           Optional.empty());
 
   public static final FlavorDomain<PythonPlatform> PYTHON_PLATFORMS =
