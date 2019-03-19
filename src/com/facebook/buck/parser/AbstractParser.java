@@ -260,6 +260,8 @@ abstract class AbstractParser implements Parser {
         TargetNode<?> targetNode = state.getTargetNode(target);
 
         Preconditions.checkNotNull(targetNode, "No target node found for %s", target);
+        assertTargetIsCompatible(state, targetNode);
+
         graph.addNode(targetNode);
         MoreMaps.putCheckEquals(index, target, targetNode);
         if (target.isFlavored()) {
@@ -323,6 +325,15 @@ abstract class AbstractParser implements Parser {
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       boolean excludeConfigurationTargets)
       throws IOException, InterruptedException;
+
+  /**
+   * Verifies that the provided target node is compatible with the target platform.
+   *
+   * @throws com.facebook.buck.core.exceptions.HumanReadableException if the target not is not
+   *     compatible with the target platform.
+   */
+  @SuppressWarnings("unused")
+  protected void assertTargetIsCompatible(PerBuildState state, TargetNode<?> targetNode) {}
 
   @Override
   public String toString() {

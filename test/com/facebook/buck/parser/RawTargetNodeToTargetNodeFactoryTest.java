@@ -90,8 +90,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(new TestSelectableResolver()),
             new ThrowingConstraintResolver(),
-            () -> new ConstraintBasedPlatform("", ImmutableSet.of()),
-            false);
+            () -> new ConstraintBasedPlatform("", ImmutableSet.of()));
 
     TargetNode<?> targetNode =
         factory.createTargetNode(

@@ -205,8 +205,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             symlinkCheckers,
             selectorListResolver,
             constraintResolver,
-            targetPlatform,
-            !parsingContext.excludeUnsupportedTargets());
+            targetPlatform);
 
     ListeningExecutorService configuredPipeline =
         MoreExecutors.listeningDecorator(

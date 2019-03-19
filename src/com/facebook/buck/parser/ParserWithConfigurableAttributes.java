@@ -287,4 +287,21 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   private static boolean filterOutNonBuildTargets(TargetNode<?> node) {
     return node.getRuleType().getKind() == RuleType.Kind.BUILD;
   }
+
+  @Override
+  public void assertTargetIsCompatible(PerBuildState state, TargetNode<?> targetNode) {
+    PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
+        (PerBuildStateWithConfigurableAttributes) state;
+
+    Platform targetPlatform = stateWithConfigurableAttributes.getTargetPlatform().get();
+    if (!TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
+        stateWithConfigurableAttributes.getConstraintResolver(),
+        targetNode.getConstructorArg(),
+        targetPlatform)) {
+      throw new HumanReadableException(
+          "Build target %s is restricted to constraints in \"target_compatible_with\" "
+              + "that do not match the target platform %s",
+          targetNode.getBuildTarget(), targetPlatform);
+    }
+  }
 }
