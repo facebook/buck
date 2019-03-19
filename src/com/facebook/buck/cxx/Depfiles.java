@@ -18,6 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
@@ -30,6 +32,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -48,6 +52,23 @@ import java.util.stream.Collectors;
 class Depfiles {
 
   private Depfiles() {}
+
+  public static Predicate<SourcePath> getCoveredByDepFilePredicate(
+      Optional<PreprocessorDelegate> preprocessorDelegate,
+      Optional<CompilerDelegate> compilerDelegate) {
+    ImmutableSet.Builder<SourcePath> nonDepFileInputsBuilder = ImmutableSet.builder();
+    if (preprocessorDelegate.isPresent()) {
+      preprocessorDelegate.get().getNonDepFileInputs(nonDepFileInputsBuilder::add);
+    }
+    if (compilerDelegate.isPresent()) {
+      compilerDelegate.get().getNonDepFileInputs(nonDepFileInputsBuilder::add);
+    }
+    ImmutableSet<SourcePath> nonDepFileInputs = nonDepFileInputsBuilder.build();
+    return path ->
+        !nonDepFileInputs.contains(path)
+            && (!(path instanceof PathSourcePath)
+                || !((PathSourcePath) path).getRelativePath().isAbsolute());
+  }
 
   private enum State {
     LOOKING_FOR_TARGET,

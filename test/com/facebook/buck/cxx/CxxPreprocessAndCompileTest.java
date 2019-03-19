@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
@@ -499,7 +500,8 @@ public class CxxPreprocessAndCompileTest {
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
     assertThat(
         cxxPreprocess.getInputsAfterBuildingLocally(context, cellPathResolver),
-        hasItem(preprocessor));
+        not(hasItem(preprocessor)));
+    assertFalse(cxxPreprocess.getCoveredByDepFilePredicate(pathResolver).test(preprocessor));
 
     CxxPreprocessAndCompile cxxCompile =
         CxxPreprocessAndCompile.compile(
@@ -516,7 +518,9 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT_TYPE,
             CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
     assertThat(
-        cxxCompile.getInputsAfterBuildingLocally(context, cellPathResolver), hasItem(compiler));
+        cxxCompile.getInputsAfterBuildingLocally(context, cellPathResolver),
+        not(hasItem(compiler)));
+    assertFalse(cxxCompile.getCoveredByDepFilePredicate(pathResolver).test(compiler));
   }
 
   @Test

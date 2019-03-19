@@ -216,7 +216,8 @@ class CxxPrecompiledHeader extends AbstractBuildRule
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    return preprocessorDelegate.getCoveredByDepFilePredicate();
+    return Depfiles.getCoveredByDepFilePredicate(
+        Optional.of(preprocessorDelegate), Optional.empty());
   }
 
   @Override
@@ -231,7 +232,6 @@ class CxxPrecompiledHeader extends AbstractBuildRule
       return ImmutableList.<SourcePath>builder()
           .addAll(
               preprocessorDelegate.getInputsAfterBuildingLocally(getDependencies(context), context))
-          .add(input)
           .build();
     } catch (Depfiles.HeaderVerificationException e) {
       throw new HumanReadableException(e);

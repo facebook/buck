@@ -4,6 +4,9 @@ cxx_library(
         "cxx_a.cpp",
         "cxx_b.cpp",
     ],
+    headers = [
+        "cxx.hpp",
+    ],
 )
 
 cxx_binary(

@@ -207,10 +207,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
 
   @Override
   public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
-    if (getPreprocessorDelegate().isPresent()) {
-      return getPreprocessorDelegate().get().getCoveredByDepFilePredicate();
-    }
-    return getCompilerDelegate().getCoveredByDepFilePredicate();
+    return Depfiles.getCoveredByDepFilePredicate(
+        getPreprocessorDelegate(), Optional.of(getCompilerDelegate()));
   }
 
   @Override

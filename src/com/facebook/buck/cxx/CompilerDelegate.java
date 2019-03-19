@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.function.Predicate;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /** Helper class for generating compiler invocations for a cxx compilation rule. */
@@ -81,9 +81,6 @@ class CompilerDelegate implements AddsToRuleKey {
   public ImmutableList<SourcePath> getInputsAfterBuildingLocally() {
     Stream.Builder<SourcePath> inputs = Stream.builder();
 
-    // Add inputs from the compiler object.
-    BuildableSupport.deriveInputs(compiler).sorted().forEach(inputs);
-
     // Args can contain things like location macros, so extract any inputs we find.
     for (Arg arg : compilerFlags.getAllFlags()) {
       BuildableSupport.deriveInputs(arg).forEach(inputs);
@@ -119,10 +116,8 @@ class CompilerDelegate implements AddsToRuleKey {
     return deps.build();
   }
 
-  public Predicate<SourcePath> getCoveredByDepFilePredicate() {
-    // TODO(cjhopman): this should not include tools (an actual compiler)
-    return (SourcePath path) ->
-        !(path instanceof PathSourcePath)
-            || !((PathSourcePath) path).getRelativePath().isAbsolute();
+  public void getNonDepFileInputs(Consumer<SourcePath> inputConsumer) {
+    // Add inputs from the compiler object.
+    BuildableSupport.deriveInputs(compiler).sorted().forEach(inputConsumer);
   }
 }
