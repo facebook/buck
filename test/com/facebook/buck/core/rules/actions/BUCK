@@ -9,12 +9,25 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/actions:actions",
+        "//src/com/facebook/buck/util/function:function",
+        "//third-party/java/guava:guava",
+    ],
     visibility = [
         "//test/...",
     ],
+)
+
+java_test(
+    name = "actions",
+    srcs = glob(["*Test.java"]),
     deps = [
-        "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/rules/actions:actions",
+        ":testutil",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
         "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
     ],
 )

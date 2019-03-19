@@ -18,6 +18,7 @@ package com.facebook.buck.core.rules.actions;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import org.immutables.value.Value;
+import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /**
  * An {@link Artifact} is a file used during the build stage. It can either be a source file for the
@@ -27,6 +28,7 @@ public interface Artifact {
 
   /** An artifact generated from build */
   @Value.Immutable(builder = false, copy = false, prehash = true)
+  @Value.Style(visibility = ImplementationVisibility.PACKAGE)
   interface BuildArtifact extends Artifact {
 
     /** @return the key to the {@link ActionAnalysisData} that owns this artifact */
