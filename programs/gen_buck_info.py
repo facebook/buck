@@ -20,6 +20,7 @@ import sys
 import time
 
 import buck_version
+import java_version
 
 
 def main(argv):
@@ -77,18 +78,12 @@ def main(argv):
                 raise e
         dirty = False
 
-    java_version = (
-        int(args.java_version.split(".")[1])
-        if "." in args.java_version
-        else int(args.java_version)
-    )
-
     json.dump(
         {
             "version": version,
             "timestamp": timestamp,
             "is_dirty": dirty,
-            "java_version": java_version,
+            "java_version": java_version.get_java_major_version(args.java_version),
         },
         sys.stdout,
         sort_keys=True,

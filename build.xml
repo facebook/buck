@@ -985,7 +985,7 @@
     <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
       <arg value="programs/gen_buck_info.py"/>
       <arg value="--java-version"/>
-      <arg value="${ant.java.version}"/>
+      <arg value="${java.version}"/>
     </exec>
   </target>
 

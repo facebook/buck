@@ -29,12 +29,20 @@ python_library(
     ],
 )
 
+python_library(
+    name = "java_version",
+    srcs = [
+        "java_version.py",
+    ],
+)
+
 python_binary(
     name = "gen_buck_info",
     main = "gen_buck_info.py",
     visibility = ["PUBLIC"],
     deps = [
         ":buck_version",
+        ":java_version",
     ],
 )
 
@@ -171,6 +179,7 @@ python_binary(
     ],
     deps = [
         ":bucklib",
+        ":java_version",
         ":subprocutils",
     ],
 )

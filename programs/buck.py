@@ -39,6 +39,7 @@ from buck_tool import (
     get_java_path,
     install_signal_handlers,
 )
+from java_version import get_java_major_version
 from subprocutils import propagate_failure
 from tracing import Tracing
 
@@ -115,12 +116,7 @@ def _get_java_version(java_path):
     match = re.search('(java|openjdk) version "(?P<version>.+)"', java_version)
     if not match:
         return None
-    pieces = match.group("version").split(".")
-    if pieces[0] != "1":
-        # versions starting at 9 look like "9.0.4"
-        return int(pieces[0])
-    # versions <9 look like "1.8.0_144"
-    return int(pieces[1])
+    return get_java_major_version(match.group("version"))
 
 
 def _try_to_verify_java_version(java_version_status_queue, required_java_version):
