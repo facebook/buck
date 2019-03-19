@@ -29,6 +29,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -54,6 +55,7 @@ import org.stringtemplate.v4.ST;
 public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps {
 
   private static final String RUN_INPLACE_RESOURCE = "run_inplace.py.in";
+  private static final String RUN_INPLACE_LITE_RESOURCE = "run_inplace_lite.py.in";
 
   // TODO(agallagher): Task #8098647: This rule has no steps, so it
   // really doesn't need a rule key.
@@ -80,7 +82,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       ImmutableSet<String> preloadLibraries,
       boolean legacyOutputPath,
       SymlinkTree linkTree,
-      Tool python) {
+      Tool python,
+      PackageStyle packageStyle) {
     super(
         buildTarget,
         projectFilesystem,
@@ -104,7 +107,8 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
                 .resolve(getBinPath(buildTarget, projectFilesystem, pexExtension, legacyOutputPath))
                 .getParent()
                 .relativize(linkTree.getRoot()),
-            preloadLibraries);
+            preloadLibraries,
+            packageStyle);
   }
 
   @Override
@@ -113,9 +117,17 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   }
 
   private static String getRunInplaceResource() {
+    return getNamedResource(RUN_INPLACE_RESOURCE);
+  }
+
+  private static String getRunInplaceLiteResource() {
+    return getNamedResource(RUN_INPLACE_LITE_RESOURCE);
+  }
+
+  private static String getNamedResource(String resourceName) {
     try {
       return Resources.toString(
-          Resources.getResource(PythonInPlaceBinary.class, RUN_INPLACE_RESOURCE), Charsets.UTF_8);
+          Resources.getResource(PythonInPlaceBinary.class, resourceName), Charsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -128,12 +140,16 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       String mainModule,
       PythonPackageComponents components,
       Path relativeLinkTreeRoot,
-      ImmutableSet<String> preloadLibraries) {
+      ImmutableSet<String> preloadLibraries,
+      PackageStyle packageStyle) {
     String relativeLinkTreeRootStr = Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
     Linker ld = cxxPlatform.getLd().resolve(resolver);
     return () -> {
       ST st =
-          new ST(getRunInplaceResource())
+          new ST(
+                  packageStyle == PackageStyle.INPLACE
+                      ? getRunInplaceResource()
+                      : getRunInplaceLiteResource())
               .add("PYTHON", pythonPlatform.getEnvironment().getPythonPath())
               .add("MAIN_MODULE", Escaper.escapeAsPythonString(mainModule))
               .add("MODULES_DIR", relativeLinkTreeRootStr);

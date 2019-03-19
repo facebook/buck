@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import static com.sun.org.apache.xerces.internal.util.PropertyState.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
@@ -79,7 +80,7 @@ public class PythonBinaryIntegrationTest {
     ImmutableList.Builder<Object[]> validPermutations = ImmutableList.builder();
     for (PythonBuckConfig.PackageStyle packageStyle : PythonBuckConfig.PackageStyle.values()) {
       for (boolean pexDirectory : new boolean[] {true, false}) {
-        if (packageStyle == PythonBuckConfig.PackageStyle.INPLACE && pexDirectory) {
+        if (packageStyle.isInPlace() && pexDirectory) {
           continue;
         }
 
@@ -176,13 +177,18 @@ public class PythonBinaryIntegrationTest {
     }
   }
 
-  @Test
-  public void nativeLibraries() throws IOException {
-    assumeThat(packageStyle, equalTo(PythonBuckConfig.PackageStyle.INPLACE));
+  public void assumeThatNativeLibsAreSupported() {
+    assumeThat(packageStyle, not(is(PackageStyle.INPLACE_LITE)));
     assumeThat(
         "TODO(8667197): Native libs currently don't work on El Capitan",
         Platform.detect(),
         not(equalTo(Platform.MACOS)));
+  }
+
+  @Test
+  public void nativeLibraries() throws IOException {
+    assumeThat(packageStyle, equalTo(PythonBuckConfig.PackageStyle.INPLACE));
+    assumeThatNativeLibsAreSupported();
     ProcessResult result = workspace.runBuckCommand("run", ":bin-with-native-libs").assertSuccess();
     assertThat(result.getStdout(), containsString("HELLO WORLD"));
   }
@@ -209,10 +215,7 @@ public class PythonBinaryIntegrationTest {
   public void nativeLibsEnvVarIsPreserved() throws IOException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
 
-    assumeThat(
-        "TODO(8667197): Native libs currently don't work on El Capitan",
-        Platform.detect(),
-        not(equalTo(Platform.MACOS)));
+    assumeThatNativeLibsAreSupported();
 
     String nativeLibsEnvVarName =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))

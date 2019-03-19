@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.WindowsLinker;
+import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
@@ -145,7 +146,8 @@ public class PythonBinaryDescription
       String mainModule,
       Optional<String> extension,
       PythonPackageComponents components,
-      ImmutableSet<String> preloadLibraries) {
+      ImmutableSet<String> preloadLibraries,
+      PackageStyle packageStyle) {
 
     // We don't currently support targeting Windows.
     if (cxxPlatform.getLd().resolve(graphBuilder) instanceof WindowsLinker) {
@@ -188,7 +190,8 @@ public class PythonBinaryDescription
         preloadLibraries,
         pythonBuckConfig.legacyOutputPath(),
         linkTree,
-        pythonPlatform.getEnvironment());
+        pythonPlatform.getEnvironment(),
+        packageStyle);
   }
 
   PythonBinary createPackageRule(
@@ -207,6 +210,7 @@ public class PythonBinaryDescription
       ImmutableSet<String> preloadLibraries) {
 
     switch (packageStyle) {
+      case INPLACE_LITE:
       case INPLACE:
         return createInPlaceBinaryRule(
             buildTarget,
@@ -219,7 +223,8 @@ public class PythonBinaryDescription
             mainModule,
             extension,
             components,
-            preloadLibraries);
+            preloadLibraries,
+            packageStyle);
 
       case STANDALONE:
         return new PythonPackagedBinary(

@@ -57,6 +57,7 @@ java_library_with_plugins(
     resources = [
         "__test_main__.py",
         "run_inplace.py.in",
+        "run_inplace_lite.py.in",
     ],
     tests = [
         "//test/com/facebook/buck/features/python:python",

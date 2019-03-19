@@ -132,7 +132,18 @@ public class PythonBuckConfig {
   }
 
   public enum PackageStyle {
-    STANDALONE,
+    STANDALONE {
+      @Override
+      public boolean isInPlace() {
+        return false;
+      }
+    },
     INPLACE,
+    INPLACE_LITE,
+    ;
+
+    public boolean isInPlace() {
+      return true;
+    }
   }
 }
