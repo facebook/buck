@@ -18,8 +18,10 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -28,6 +30,7 @@ import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.ExecutableFinder;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
@@ -171,11 +174,11 @@ public class DefaultCxxPlatforms {
     Supplier<PathSourcePath> cFrontendPath =
         MoreSuppliers.memoize(() -> config.getSourcePath(defaultCFrontend));
     ToolProvider defaultCFrontendSupplier =
-        new ConstantToolProvider(new HashedFileTool(cFrontendPath));
+        new ConstantToolProvider(getToolchainTool(cFrontendPath));
     Supplier<PathSourcePath> cxxFrontendPath =
         MoreSuppliers.memoize(() -> config.getSourcePath(defaultCxxFrontend));
     ToolProvider defaultCxxFrontendSupplier =
-        new ConstantToolProvider(new HashedFileTool(cxxFrontendPath));
+        new ConstantToolProvider(getToolchainTool(cxxFrontendPath));
 
     Optional<Type> finalDefaultToolType = defaultToolType;
     Supplier<Type> cFrontendType =
@@ -223,9 +226,7 @@ public class DefaultCxxPlatforms {
         cxxpp,
         new DefaultLinkerProvider(
             linkerType,
-            new ConstantToolProvider(
-                new HashedFileTool(
-                    (Supplier<? extends SourcePath>) () -> config.getSourcePath(defaultLinker))),
+            new ConstantToolProvider(getToolchainTool(() -> config.getSourcePath(defaultLinker))),
             config.shouldCacheLinks()),
         ImmutableList.of(),
         getHashedFileTool(config, "strip", DEFAULT_STRIP, env),
@@ -260,9 +261,15 @@ public class DefaultCxxPlatforms {
       String executableName,
       Path unresolvedLocation,
       ImmutableMap<String, String> env) {
-    return new HashedFileTool(
-        (Supplier<? extends SourcePath>)
-            () -> config.getSourcePath(getExecutablePath(executableName, unresolvedLocation, env)));
+    return getToolchainTool(
+        () -> config.getSourcePath(getExecutablePath(executableName, unresolvedLocation, env)));
+  }
+
+  private static Tool getToolchainTool(Supplier<? extends SourcePath> path) {
+    // For now, we disable RE for all the tools in the host's cxx toolchain.
+    // TODO(cjhopman): Figure out how to handle this. It'll probably mean mapping tools to RE
+    // capabilities somehow.
+    return new RemoteExecutionDisabledTool(new HashedFileTool(path));
   }
 
   private static Path getExecutablePath(
@@ -270,5 +277,15 @@ public class DefaultCxxPlatforms {
     return new ExecutableFinder()
         .getOptionalExecutable(Paths.get(executableName), env)
         .orElse(unresolvedLocation);
+  }
+
+  private static class RemoteExecutionDisabledTool extends DelegatingTool {
+    @SuppressWarnings("unused")
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean enabled = false;
+
+    public RemoteExecutionDisabledTool(Tool delegate) {
+      super(delegate);
+    }
   }
 }
