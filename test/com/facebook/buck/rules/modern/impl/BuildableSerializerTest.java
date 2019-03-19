@@ -24,6 +24,7 @@ import static org.easymock.EasyMock.expectLastCall;
 import static org.easymock.EasyMock.replay;
 import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
@@ -47,6 +48,7 @@ import com.facebook.buck.cxx.RelativeLinkArg;
 import com.facebook.buck.rules.modern.CustomClassSerialization;
 import com.facebook.buck.rules.modern.CustomFieldSerialization;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
+import com.facebook.buck.rules.modern.RemoteExecutionEnabled;
 import com.facebook.buck.rules.modern.SerializationTestHelper;
 import com.facebook.buck.rules.modern.SourcePathResolverSerialization;
 import com.facebook.buck.rules.modern.ValueCreator;
@@ -452,5 +454,30 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     ObjectWithToolchain object = new ObjectWithToolchain(SomeToolchain.INSTANCE);
     ObjectWithToolchain deserialized = test(object);
     assertEquals(object.toolchain, deserialized.toolchain);
+  }
+
+  @Test
+  public void remoteExecutionEnabled() throws Exception {
+    RemoteExecutionConditional enabled = new RemoteExecutionConditional(true);
+    RemoteExecutionConditional newInstance = test(enabled);
+    assertTrue(newInstance.enabled);
+  }
+
+  @Test
+  public void remoteExecutionDisabled() throws Exception {
+    RemoteExecutionConditional enabled = new RemoteExecutionConditional(false);
+    expectedException.expect(RuntimeException.class);
+    test(enabled);
+  }
+
+  private static class RemoteExecutionConditional implements FakeBuildable {
+    // By default, fields without @AddToRuleKey can't be serialized. DefaultFieldSerialization
+    // serializes them as though they were added to the key.
+    @CustomFieldBehavior(RemoteExecutionEnabled.class)
+    private final boolean enabled;
+
+    private RemoteExecutionConditional(boolean enabled) {
+      this.enabled = enabled;
+    }
   }
 }
