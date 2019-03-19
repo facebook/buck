@@ -1,4 +1,4 @@
-From 0cd1af8d9975f4dcd2765621357aa931d227c890 Mon Sep 17 00:00:00 2001
+From 2f8c8cdf4616d1d761615812e9e52f37f09dca32 Mon Sep 17 00:00:00 2001
 From: Gautam Korlam <gkorlam@uber.com>
 Date: Tue, 19 Feb 2019 08:05:45 -0800
 Subject: [PATCH] Changes to D8 to make it work with facebook's buck build
@@ -10,11 +10,11 @@ Subject: [PATCH] Changes to D8 to make it work with facebook's buck build
  .../com/android/tools/r8/graph/AppInfo.java   | 16 ++++++++++-
  .../tools/r8/graph/DexItemFactory.java        | 14 ++++++++++
  .../tools/r8/ir/conversion/IRConverter.java   |  2 +-
- .../r8/ir/desugar/Java8MethodRewriter.java    | 10 +++----
+ .../r8/ir/desugar/Java8MethodRewriter.java    | 11 ++++----
  .../tools/r8/ir/desugar/LambdaDescriptor.java |  2 +-
  .../tools/r8/utils/AndroidApiLevel.java       |  3 +-
  .../android/tools/r8/utils/AndroidApp.java    | 28 +++++++++++++++++--
- 9 files changed, 77 insertions(+), 14 deletions(-)
+ 9 files changed, 78 insertions(+), 14 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8.java b/src/main/java/com/android/tools/r8/D8.java
 index 2273c4d4b..5397de771 100644
@@ -69,12 +69,12 @@ index 545e1029e..2c769f086 100644
      internal.debug = getMode() == CompilationMode.DEBUG;
      internal.programConsumer = getProgramConsumer();
 diff --git a/src/main/java/com/android/tools/r8/graph/AppInfo.java b/src/main/java/com/android/tools/r8/graph/AppInfo.java
-index db83f6a49..612595667 100644
+index 1754ad91c..266386386 100644
 --- a/src/main/java/com/android/tools/r8/graph/AppInfo.java
 +++ b/src/main/java/com/android/tools/r8/graph/AppInfo.java
-@@ -27,16 +27,23 @@ public class AppInfo {
+@@ -27,10 +27,16 @@ public class AppInfo implements DexDefinitionSupplier {
    // class being optimized.
-   private ConcurrentHashMap<DexType, DexProgramClass> synthesizedClasses =
+   private final ConcurrentHashMap<DexType, DexProgramClass> synthesizedClasses =
        new ConcurrentHashMap<>();
 +  private final String bucketId;
  
@@ -90,14 +90,15 @@ index db83f6a49..612595667 100644
    }
  
    protected AppInfo(AppInfo previous) {
-     this.app = previous.app;
+@@ -38,6 +44,7 @@ public class AppInfo implements DexDefinitionSupplier {
      this.dexItemFactory = app.dexItemFactory;
      this.definitions.putAll(previous.definitions);
+     this.synthesizedClasses.putAll(previous.synthesizedClasses);
 +    this.bucketId = "";
    }
  
    protected AppInfo(DirectMappedDexApplication application, GraphLense lense) {
-@@ -125,6 +132,13 @@ public class AppInfo {
+@@ -135,6 +142,13 @@ public class AppInfo implements DexDefinitionSupplier {
      return existing != null ? existing : typeDefinitions;
    }
  
@@ -112,7 +113,7 @@ index db83f6a49..612595667 100644
     * Lookup static method following the super chain from the holder of {@code method}.
     * <p>
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index 035b47272..fc8ff8467 100644
+index 5ef8072ac..bf3e60ef7 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 @@ -39,6 +39,7 @@ import java.util.ArrayList;
@@ -133,7 +134,7 @@ index 035b47272..fc8ff8467 100644
 +  public Collection<String> computeReferencedResources() {
 +    Set<String> resourceNames = new HashSet<>();
 +    for (DexField item: fields.values()) {
-+      DexType clazz = item.clazz;
++      DexType clazz = item.type;
 +      if (clazz.toDescriptorString().contains("/R$")) {
 +        resourceNames.add(clazz.getPackageDescriptor().replaceAll("/", ".") + "." + item.name.toString());
 +      }
@@ -142,10 +143,10 @@ index 035b47272..fc8ff8467 100644
 +  }
  }
 diff --git a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
-index 8b98f077b..4cbfed38f 100644
+index a66e958c5..bd31ca6ee 100644
 --- a/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
 +++ b/src/main/java/com/android/tools/r8/ir/conversion/IRConverter.java
-@@ -284,7 +284,7 @@ public class IRConverter {
+@@ -259,7 +259,7 @@ public class IRConverter {
    }
  
    private boolean enableTwrCloseResourceDesugaring() {
@@ -155,31 +156,33 @@ index 8b98f077b..4cbfed38f 100644
  
    private boolean enableTryWithResourcesDesugaring() {
 diff --git a/src/main/java/com/android/tools/r8/ir/desugar/Java8MethodRewriter.java b/src/main/java/com/android/tools/r8/ir/desugar/Java8MethodRewriter.java
-index e930bcf28..74595b5da 100644
+index 01c94daf6..60f060cc9 100644
 --- a/src/main/java/com/android/tools/r8/ir/desugar/Java8MethodRewriter.java
 +++ b/src/main/java/com/android/tools/r8/ir/desugar/Java8MethodRewriter.java
-@@ -71,9 +71,9 @@ public final class Java8MethodRewriter {
+@@ -75,10 +75,11 @@ public final class Java8MethodRewriter {
+       if (generator == null) {
          continue;
        }
++      AppInfo appInfo = appView.appInfo();
        iterator.replaceCurrentInstruction(
 -            new InvokeStatic(generator.generateMethod(factory),
-+            new InvokeStatic(generator.generateMethod(factory, converter.appInfo.getBucketId()),
++            new InvokeStatic(generator.generateMethod(factory, appInfo.getBucketId()),
                  invoke.outValue(), invoke.inValues()));
 -      methodGenerators.putIfAbsent(generator.generateMethod(factory), generator);
-+      methodGenerators.putIfAbsent(generator.generateMethod(factory, converter.appInfo.getBucketId()), generator);
++      methodGenerators.putIfAbsent(generator.generateMethod(factory, appInfo.getBucketId()), generator);
        holders.add(code.method.method.holder);
      }
    }
-@@ -114,7 +114,7 @@ public final class Java8MethodRewriter {
+@@ -120,7 +121,7 @@ public final class Java8MethodRewriter {
          ClassAccessFlags.fromSharedAccessFlags(Constants.ACC_PUBLIC | Constants.ACC_SYNTHETIC);
  
      for (MethodGenerator generator : methodGenerators.values()) {
 -      DexMethod method = generator.generateMethod(factory);
-+      DexMethod method = generator.generateMethod(factory, converter.appInfo.getBucketId());
++      DexMethod method = generator.generateMethod(factory, appInfo.getBucketId());
        TemplateMethodCode code = generator.generateTemplateMethod(options, method);
        DexEncodedMethod dexEncodedMethod= new DexEncodedMethod(method,
            flags, DexAnnotationSet.empty(), ParameterAnnotationsList.empty(), code);
-@@ -531,13 +531,13 @@ public final class Java8MethodRewriter {
+@@ -537,13 +538,13 @@ public final class Java8MethodRewriter {
          this.proto = proto;
        }
  
