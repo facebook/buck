@@ -53,14 +53,8 @@ def __run():
     sys.path[0] = {pythonpath!r}
 
 
-    import errno
-    import fcntl
-    import glob
     import os
-    import os.path
     import runpy
-    import shutil
-    import zipfile
 
     def setenv(var, val):
         if val is None:
