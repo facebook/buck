@@ -32,6 +32,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider.LegacyArchiverType;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
@@ -651,7 +652,10 @@ public class CxxBuckConfig {
         return new PreprocessorProvider(
             new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()), getType().get());
       } else {
-        return new PreprocessorProvider(getPath().get(), getType());
+        PathSourcePath path = getPath().get();
+        return new PreprocessorProvider(
+            new ConstantToolProvider(new HashedFileTool(path)),
+            () -> getType().orElseGet(() -> CxxToolTypeInferer.getTypeFromPath(path)));
       }
     }
 
@@ -662,8 +666,11 @@ public class CxxBuckConfig {
             getType().get(),
             false);
       } else {
+        PathSourcePath path = getPath().get();
         return new CompilerProvider(
-            getPath().get(), getType(), getPreferDependencyTree().orElse(false));
+            new ConstantToolProvider(new HashedFileTool(path)),
+            () -> getType().orElseGet(() -> CxxToolTypeInferer.getTypeFromPath(path)),
+            getPreferDependencyTree().orElse(false));
       }
     }
   }

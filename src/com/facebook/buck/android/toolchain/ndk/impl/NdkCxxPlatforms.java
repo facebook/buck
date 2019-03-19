@@ -547,10 +547,12 @@ public class NdkCxxPlatforms {
         new ConstantToolProvider(
             getCTool(toolchainPaths, compilerType.cxx, version, executableFinder));
     CompilerProvider cc =
-        new CompilerProvider(ccTool, type, config.getUseDetailedUntrackedHeaderMessages(), true);
+        new CompilerProvider(
+            ccTool, () -> type, config.getUseDetailedUntrackedHeaderMessages(), true);
     PreprocessorProvider cpp = new PreprocessorProvider(ccTool, type, true);
     CompilerProvider cxx =
-        new CompilerProvider(cxxTool, type, config.getUseDetailedUntrackedHeaderMessages(), true);
+        new CompilerProvider(
+            cxxTool, () -> type, config.getUseDetailedUntrackedHeaderMessages(), true);
     PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type, true);
 
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();

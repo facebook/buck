@@ -22,24 +22,24 @@ import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
-public class CxxToolProviderTest {
+public class CxxToolTypeInfererTest {
 
   @Test
   public void isVersionOfClang() {
     assertThat(
-        CxxToolProvider.getTypeFromVersionOutput(
+        CxxToolTypeInferer.getTypeFromVersionOutput(
             ImmutableList.of(
                 "clang version 3.7.1 ", "Target: x86_64-unknown-linux-gnu", "Thread model: posix")),
         Matchers.is(CxxToolProvider.Type.CLANG));
     assertThat(
-        CxxToolProvider.getTypeFromVersionOutput(
+        CxxToolTypeInferer.getTypeFromVersionOutput(
             ImmutableList.of(
                 "Apple LLVM version 7.0.2 (clang-700.1.81)",
                 "Target: x86_64-apple-darwin15.3.0",
                 "Thread model: posix")),
         Matchers.is(CxxToolProvider.Type.CLANG));
     assertThat(
-        CxxToolProvider.getTypeFromVersionOutput(
+        CxxToolTypeInferer.getTypeFromVersionOutput(
             ImmutableList.of(
                 "gcc (GCC) 4.4.7 20120313 (Red Hat 4.4.7-16)",
                 "Copyright (C) 2010 Free Software Foundation, Inc.",
@@ -47,7 +47,7 @@ public class CxxToolProviderTest {
                 "warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.")),
         Matchers.is(CxxToolProvider.Type.GCC));
     assertThat(
-        CxxToolProvider.getTypeFromVersionOutput(
+        CxxToolTypeInferer.getTypeFromVersionOutput(
             ImmutableList.of("Blah blah blah.", "I am a compiler.", "I am not clang though.")),
         Matchers.is(CxxToolProvider.Type.GCC));
   }

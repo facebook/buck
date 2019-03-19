@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -57,13 +58,23 @@ public class CxxPlatformsTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CompilerProvider compiler =
         new CompilerProvider(
-            Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))),
-            Optional.of(CxxToolProvider.Type.GCC),
+            new ConstantToolProvider(
+                new HashedFileTool(
+                    Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))))),
+            () -> Optional.of(Type.GCC).get(),
             false);
     PreprocessorProvider preprocessor =
         new PreprocessorProvider(
-            Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))),
-            Optional.of(CxxToolProvider.Type.GCC));
+            new ConstantToolProvider(
+                new HashedFileTool(
+                    Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))))),
+            Optional.of(Type.GCC)
+                .orElseGet(
+                    () ->
+                        CxxToolTypeInferer.getTypeFromPath(
+                            Suppliers.ofInstance(
+                                    PathSourcePath.of(filesystem, Paths.get("borland")))
+                                .get())));
     HashedFileTool borland =
         new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("borland")));
     CxxPlatform borlandCxx452Platform =

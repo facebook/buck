@@ -33,6 +33,8 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -441,8 +443,11 @@ public class PrecompiledHeaderFeatureTest {
     return CxxPlatformUtils.build(buildConfig(pchEnabled))
         .withCpp(
             new PreprocessorProvider(
-                PathSourcePath.of(new FakeProjectFilesystem(), Paths.get("/usr/bin/foopp")),
-                Optional.of(type)));
+                new ConstantToolProvider(
+                    new HashedFileTool(
+                        PathSourcePath.of(
+                            new FakeProjectFilesystem(), Paths.get("/usr/bin/foopp")))),
+                type));
   }
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =

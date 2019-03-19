@@ -16,53 +16,29 @@
 
 package com.facebook.buck.cxx.toolchain;
 
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.google.common.base.Suppliers;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 public class CompilerProvider extends CxxToolProvider<Compiler> {
   private final boolean preferDependencyTree;
 
   public CompilerProvider(ToolProvider toolProvider, Type type, boolean preferDependencyTree) {
+    this(toolProvider, Suppliers.ofInstance(type), preferDependencyTree, false);
+  }
+
+  public CompilerProvider(
+      ToolProvider toolProvider, Supplier<Type> type, boolean preferDependencyTree) {
     this(toolProvider, type, preferDependencyTree, false);
   }
 
   public CompilerProvider(
       ToolProvider toolProvider,
-      Type type,
+      Supplier<Type> type,
       boolean preferDependencyTree,
       boolean useUnixPathSeparator) {
     super(toolProvider, type, useUnixPathSeparator);
-    this.preferDependencyTree = preferDependencyTree;
-  }
-
-  public CompilerProvider(
-      Supplier<PathSourcePath> path, Optional<Type> type, boolean preferDependencyTree) {
-    this(path, type, preferDependencyTree, false);
-  }
-
-  public CompilerProvider(
-      Supplier<PathSourcePath> path,
-      Optional<Type> type,
-      boolean preferDependencyTree,
-      boolean useUnixPathSeparator) {
-    super(path, type, useUnixPathSeparator);
-    this.preferDependencyTree = preferDependencyTree;
-  }
-
-  public CompilerProvider(PathSourcePath path, Optional<Type> type, boolean preferDependencyTree) {
-    this(path, type, preferDependencyTree, false);
-  }
-
-  public CompilerProvider(
-      PathSourcePath path,
-      Optional<Type> type,
-      boolean preferDependencyTree,
-      boolean useUnixPathSeparator) {
-    super(Suppliers.ofInstance(path), type, useUnixPathSeparator);
     this.preferDependencyTree = preferDependencyTree;
   }
 

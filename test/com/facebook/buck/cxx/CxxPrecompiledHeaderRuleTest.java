@@ -50,11 +50,13 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
+import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.CxxToolProvider;
+import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -115,8 +117,9 @@ public class CxxPrecompiledHeaderRuleTest {
 
     preprocessorSupportingPch =
         new PreprocessorProvider(
-            PathSourcePath.of(filesystem, Paths.get("foopp")),
-            Optional.of(CxxToolProvider.Type.CLANG));
+            new ConstantToolProvider(
+                new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("foopp")))),
+            Type.CLANG);
 
     platformSupportingPch =
         CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(preprocessorSupportingPch);
