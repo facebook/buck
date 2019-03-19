@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
@@ -51,6 +50,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -215,22 +215,20 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     }
 
     return filterIncompatibleTargetNodes(
-        stateWithConfigurableAttributes, getAllTargetNodes(state, cell, buildFile));
+            stateWithConfigurableAttributes, getAllTargetNodes(state, cell, buildFile).stream())
+        .collect(ImmutableList.toImmutableList());
   }
 
-  private ImmutableList<TargetNode<?>> filterIncompatibleTargetNodes(
+  private Stream<TargetNode<?>> filterIncompatibleTargetNodes(
       PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes,
-      ImmutableList<TargetNode<?>> targetNodes) {
+      Stream<TargetNode<?>> targetNodes) {
     Platform targetPlatform = stateWithConfigurableAttributes.getTargetPlatform().get();
-    return targetNodes
-        .stream()
-        .filter(
-            targetNode ->
-                TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-                    stateWithConfigurableAttributes.getConstraintResolver(),
-                    targetNode.getConstructorArg(),
-                    targetPlatform))
-        .collect(ImmutableList.toImmutableList());
+    return targetNodes.filter(
+        targetNode ->
+            TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
+                stateWithConfigurableAttributes.getConstraintResolver(),
+                targetNode.getConstructorArg(),
+                targetPlatform));
   }
 
   @Override
@@ -243,27 +241,34 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {
       TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
           (spec, nodes) -> spec.filter(nodes);
-      if (parsingContext.excludeUnsupportedTargets()) {
-        Platform targetPlatform = state.getTargetPlatform().get();
-        ConstraintResolver constraintResolver = state.getConstraintResolver();
-        targetNodeFilter =
-            new TargetNodeFilterForSpecResolverWithNodeFiltering<>(
-                targetNodeFilter,
-                node ->
-                    TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-                        constraintResolver, node.getConstructorArg(), targetPlatform));
-      }
 
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
           DefaultParser.createTargetNodeProviderForSpecResolver(state);
-      return targetSpecResolver.resolveTargetSpecs(
-          parsingContext.getCell(),
-          specs,
-          (buildTarget, targetNode, targetType) ->
-              DefaultParser.applyDefaultFlavors(
-                  buildTarget, targetNode, targetType, parsingContext.getApplyDefaultFlavorsMode()),
-          targetNodeProvider,
-          targetNodeFilter);
+
+      ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
+          targetSpecResolver.resolveTargetSpecs(
+              parsingContext.getCell(),
+              specs,
+              (buildTarget, targetNode, targetType) ->
+                  DefaultParser.applyDefaultFlavors(
+                      buildTarget,
+                      targetNode,
+                      targetType,
+                      parsingContext.getApplyDefaultFlavorsMode()),
+              targetNodeProvider,
+              targetNodeFilter);
+
+      if (!state.getParsingContext().excludeUnsupportedTargets()) {
+        return buildTargets;
+      }
+      return buildTargets
+          .stream()
+          .map(
+              targets ->
+                  filterIncompatibleTargetNodes(state, targets.stream().map(state::getTargetNode))
+                      .map(TargetNode::getBuildTarget)
+                      .collect(ImmutableSet.toImmutableSet()))
+          .collect(ImmutableList.toImmutableList());
     }
   }
 
@@ -289,31 +294,27 @@ class ParserWithConfigurableAttributes extends AbstractParser {
               targetNodeFilter, ParserWithConfigurableAttributes::filterOutNonBuildTargets);
     }
 
-    if (parsingContext.excludeUnsupportedTargets()) {
-      Platform targetPlatform = stateWithConfigurableAttributes.getTargetPlatform().get();
-      ConstraintResolver constraintResolver =
-          stateWithConfigurableAttributes.getConstraintResolver();
-      targetNodeFilter =
-          new TargetNodeFilterForSpecResolverWithNodeFiltering<>(
-              targetNodeFilter,
-              node ->
-                  TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
-                      constraintResolver, node.getConstructorArg(), targetPlatform));
-    }
+    ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
+        targetSpecResolver.resolveTargetSpecs(
+            parsingContext.getCell(),
+            targetNodeSpecs,
+            (buildTarget, targetNode, targetType) ->
+                DefaultParser.applyDefaultFlavors(
+                    buildTarget,
+                    targetNode,
+                    targetType,
+                    parsingContext.getApplyDefaultFlavorsMode()),
+            targetNodeProvider,
+            targetNodeFilter);
 
-    return ImmutableSet.copyOf(
-        Iterables.concat(
-            targetSpecResolver.resolveTargetSpecs(
-                parsingContext.getCell(),
-                targetNodeSpecs,
-                (buildTarget, targetNode, targetType) ->
-                    DefaultParser.applyDefaultFlavors(
-                        buildTarget,
-                        targetNode,
-                        targetType,
-                        parsingContext.getApplyDefaultFlavorsMode()),
-                targetNodeProvider,
-                targetNodeFilter)));
+    if (!stateWithConfigurableAttributes.getParsingContext().excludeUnsupportedTargets()) {
+      return ImmutableSet.copyOf(Iterables.concat(buildTargets));
+    }
+    return filterIncompatibleTargetNodes(
+            stateWithConfigurableAttributes,
+            buildTargets.stream().flatMap(ImmutableSet::stream).map(state::getTargetNode))
+        .map(TargetNode::getBuildTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   private static boolean filterOutNonBuildTargets(TargetNode<?> node) {
