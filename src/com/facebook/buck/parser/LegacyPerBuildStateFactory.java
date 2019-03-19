@@ -126,6 +126,7 @@ class LegacyPerBuildStateFactory extends PerBuildStateFactory {
 
     cellManager.register(rootCell);
 
-    return new PerBuildState(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline);
+    return new PerBuildState(
+        cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline, parsingContext);
   }
 }

@@ -104,6 +104,12 @@ class DefaultParser extends AbstractParser {
   }
 
   @Override
+  public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
+      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
+    return getAllTargetNodes(state, cell, buildFile);
+  }
+
+  @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> specs)
       throws BuildFileParseException, InterruptedException, IOException {

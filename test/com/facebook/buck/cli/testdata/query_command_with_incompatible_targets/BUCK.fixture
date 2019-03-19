@@ -43,3 +43,23 @@ genrule(
         ":osx",
     ],
 )
+
+java_library(
+    name = "lib_linux",
+    srcs = [
+        "A.java",
+    ],
+    target_compatible_with = [
+        ":linux",
+    ],
+)
+
+java_library(
+    name = "lib_osx",
+    srcs = [
+        "A.java",
+    ],
+    target_compatible_with = [
+        ":osx",
+    ],
+)

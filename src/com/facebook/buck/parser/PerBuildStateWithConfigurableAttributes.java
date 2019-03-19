@@ -35,10 +35,11 @@ class PerBuildStateWithConfigurableAttributes extends PerBuildState {
       CellManager cellManager,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
       ParsePipeline<TargetNode<?>> targetNodeParsePipeline,
+      ParsingContext parsingContext,
       ConstraintResolver constraintResolver,
       SelectorListResolver selectorListResolver,
       Supplier<Platform> targetPlatform) {
-    super(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline);
+    super(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline, parsingContext);
     this.constraintResolver = constraintResolver;
     this.selectorListResolver = selectorListResolver;
     this.targetPlatform = targetPlatform;

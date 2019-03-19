@@ -46,6 +46,7 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -199,6 +200,37 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     return selectorListResolver.resolveList(
         configurationContext, buildTarget, attributeName, selectorList);
+  }
+
+  @Override
+  public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
+      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
+    ImmutableList<TargetNode<?>> allTargetNodes = getAllTargetNodes(state, cell, buildFile);
+
+    PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
+        (PerBuildStateWithConfigurableAttributes) state;
+
+    if (!stateWithConfigurableAttributes.getParsingContext().excludeUnsupportedTargets()) {
+      return allTargetNodes;
+    }
+
+    return filterIncompatibleTargetNodes(
+        stateWithConfigurableAttributes, getAllTargetNodes(state, cell, buildFile));
+  }
+
+  private ImmutableList<TargetNode<?>> filterIncompatibleTargetNodes(
+      PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes,
+      ImmutableList<TargetNode<?>> targetNodes) {
+    Platform targetPlatform = stateWithConfigurableAttributes.getTargetPlatform().get();
+    return targetNodes
+        .stream()
+        .filter(
+            targetNode ->
+                TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
+                    stateWithConfigurableAttributes.getConstraintResolver(),
+                    targetNode.getConstructorArg(),
+                    targetPlatform))
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override

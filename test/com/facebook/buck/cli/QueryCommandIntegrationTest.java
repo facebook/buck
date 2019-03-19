@@ -41,7 +41,9 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -1388,6 +1390,42 @@ public class QueryCommandIntegrationTest {
             "--exclude-incompatible-targets");
     result.assertSuccess();
     assertThat(result.getStdout(), is(equalToIgnoringPlatformNewlines("//lib:libA\n")));
+  }
+
+  @Test
+  public void ownerShouldNotIncludeIncompatibleTargetsWhenRequested() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_incompatible_targets", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "owner('A.java')",
+            "--target-platforms",
+            "//:linux_platform",
+            "--exclude-incompatible-targets");
+
+    result.assertSuccess();
+    assertEquals("//:lib_linux", result.getStdout().trim());
+  }
+
+  @Test
+  public void ownerShouldIncludeIncompatibleTargets() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_incompatible_targets", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query", "owner('A.java')", "--target-platforms", "//:linux_platform");
+
+    result.assertSuccess();
+    assertEquals(
+        Joiner.on(System.lineSeparator()).join(ImmutableList.of("//:lib_linux", "//:lib_osx")),
+        result.getStdout().trim());
   }
 
   @Test

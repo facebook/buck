@@ -48,6 +48,9 @@ public interface Parser {
   ImmutableList<TargetNode<?>> getAllTargetNodes(
       PerBuildState perBuildState, Cell cell, Path buildFile) throws BuildFileParseException;
 
+  ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
+      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException;
+
   TargetNode<?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
       throws BuildFileParseException;
 

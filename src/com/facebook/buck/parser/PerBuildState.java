@@ -32,14 +32,17 @@ public class PerBuildState implements AutoCloseable {
   private final CellManager cellManager;
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
   private final ParsePipeline<TargetNode<?>> targetNodeParsePipeline;
+  private final ParsingContext parsingContext;
 
   PerBuildState(
       CellManager cellManager,
       BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline,
-      ParsePipeline<TargetNode<?>> targetNodeParsePipeline) {
+      ParsePipeline<TargetNode<?>> targetNodeParsePipeline,
+      ParsingContext parsingContext) {
     this.cellManager = cellManager;
     this.buildFileRawNodeParsePipeline = buildFileRawNodeParsePipeline;
     this.targetNodeParsePipeline = targetNodeParsePipeline;
+    this.parsingContext = parsingContext;
   }
 
   TargetNode<?> getTargetNode(BuildTarget target) throws BuildFileParseException {
@@ -77,6 +80,10 @@ public class PerBuildState implements AutoCloseable {
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
     return buildFileRawNodeParsePipeline.getAllNodesJob(cell, buildFile);
+  }
+
+  ParsingContext getParsingContext() {
+    return parsingContext;
   }
 
   @Override

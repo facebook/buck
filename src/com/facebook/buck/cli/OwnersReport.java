@@ -176,7 +176,8 @@ final class OwnersReport {
               buckFile,
               basePath1 -> {
                 try {
-                  return parser.getAllTargetNodes(parserState, cell, basePath1);
+                  return parser.getAllTargetNodesWithTargetCompatibilityFiltering(
+                      parserState, cell, basePath1);
                 } catch (BuildFileParseException e) {
                   throw new HumanReadableException(e);
                 }
