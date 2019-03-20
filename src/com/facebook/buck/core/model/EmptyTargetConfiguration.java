@@ -19,5 +19,17 @@ package com.facebook.buck.core.model;
 public class EmptyTargetConfiguration implements TargetConfiguration {
   public static final EmptyTargetConfiguration INSTANCE = new EmptyTargetConfiguration();
 
+  private final int hashCode = EmptyTargetConfiguration.class.getName().hashCode();
+
   private EmptyTargetConfiguration() {}
+
+  @Override
+  public int hashCode() {
+    return hashCode;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof EmptyTargetConfiguration;
+  }
 }
