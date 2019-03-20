@@ -43,7 +43,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
-  /** File set via {@code -include}. */
+  /** File set via {@code -include}. This might be a prefix header or a precompiled header. */
   @AddToRuleKey
   @Value.Parameter
   public abstract Optional<SourcePath> getPrefixHeader();

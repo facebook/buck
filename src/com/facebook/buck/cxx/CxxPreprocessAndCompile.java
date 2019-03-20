@@ -248,7 +248,9 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     // If present, include all inputs coming from the compiler tool.
     inputs.addAll(compilerDelegate.getInputsAfterBuildingLocally());
 
-    if (precompiledHeaderRule.isPresent()) {
+    // In the non-precompiled case, the headers are properly reflected in our other inputs.
+    if (precompiledHeaderRule.isPresent()
+        && getBuildable().precompiledHeaderData.get().isPrecompiled()) {
       CxxPrecompiledHeader pch = precompiledHeaderRule.get();
       inputs.addAll(pch.getInputsAfterBuildingLocally(context, cellPathResolver));
     }

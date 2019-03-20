@@ -273,6 +273,13 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       inputsBuilder.add(headerPathNormalizer.getSourcePathForAbsolutePath(absolutePath));
     }
 
+    // Precompiled header is not represented in the dep file, but prefix header is represented. If
+    // we say this is a non-depfile input, building depfile keys crashes, so just always add it to
+    // the depfile (if it's duplicated that's fine).
+    if (preprocessorFlags.getPrefixHeader().isPresent()) {
+      inputsBuilder.add(preprocessorFlags.getPrefixHeader().get());
+    }
+
     return inputsBuilder.build().collect(ImmutableList.toImmutableList());
   }
 
@@ -280,10 +287,6 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
     // TODO(jkeljo): I didn't know how to implement this, and didn't have time to figure it out.
     // Add inputs that we always use.
     BuildableSupport.deriveInputs(preprocessor).forEach(inputConsumer);
-    // Prefix header is not represented in the dep file, so should be added manually.
-    if (preprocessorFlags.getPrefixHeader().isPresent()) {
-      inputConsumer.accept(preprocessorFlags.getPrefixHeader().get());
-    }
 
     // Args can contain things like location macros, so extract any inputs we find.
     for (Arg arg : preprocessorFlags.getOtherFlags().getAllFlags()) {
