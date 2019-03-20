@@ -24,7 +24,9 @@ import java.util.Collection;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.function.Function;
 
 abstract class AbstractDepsAwareExecutor<T, TaskType extends AbstractDepsAwareTask<T, TaskType>>
     implements DepsAwareExecutor<T, TaskType> {
@@ -87,5 +89,21 @@ abstract class AbstractDepsAwareExecutor<T, TaskType extends AbstractDepsAwareTa
       futures.add(submit(w));
     }
     return futures.build();
+  }
+
+  protected static <
+          TaskType extends AbstractDepsAwareTask<?, TaskType>,
+          V extends AbstractDepsAwareWorker<TaskType>>
+      Future<?>[] startWorkers(
+          ExecutorService executorService,
+          int parallelism,
+          LinkedBlockingDeque<TaskType> workQueue,
+          Function<LinkedBlockingDeque<TaskType>, V> workerFunction) {
+    Future<?>[] workers = new Future<?>[parallelism];
+    for (int i = 0; i < workers.length; i++) {
+      V worker = workerFunction.apply(workQueue);
+      workers[i] = executorService.submit(() -> runWorker(worker));
+    }
+    return workers;
   }
 }

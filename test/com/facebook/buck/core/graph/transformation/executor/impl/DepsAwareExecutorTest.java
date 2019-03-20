@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
-import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSupplier;
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.google.common.collect.ImmutableSet;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,7 +41,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class DepsAwareExecutorTest {
+public class DepsAwareExecutorTest<TaskType extends DepsAwareTask<Object, TaskType>> {
 
   private static final int NUMBER_OF_THREADS = 2;
 
@@ -61,15 +61,19 @@ public class DepsAwareExecutorTest {
             (Supplier<DepsAwareExecutor<?, ?>>)
                 () -> JavaExecutorBackedDefaultDepsAwareExecutor.of(NUMBER_OF_THREADS)
           },
+          {
+            (Supplier<DepsAwareExecutor<?, ?>>)
+                () -> ToposortBasedDepsAwareExecutor.of(NUMBER_OF_THREADS)
+          },
         });
   }
 
-  public DepsAwareExecutorTest(
-      Supplier<DepsAwareExecutor<Object, DefaultDepsAwareTask<Object>>> executorSupplier) {
+  public DepsAwareExecutorTest(Supplier<DepsAwareExecutor<Object, TaskType>> executorSupplier) {
     this.executor = executorSupplier.get();
   }
 
-  private DepsAwareExecutor<Object, DefaultDepsAwareTask<Object>> executor;
+  private DepsAwareExecutor<Object, TaskType> executor;
+
   public @Rule ExpectedException expectedException = ExpectedException.none();
 
   @After
@@ -82,7 +86,7 @@ public class DepsAwareExecutorTest {
     AtomicBoolean taskRan = new AtomicBoolean(false);
     executor
         .submit(
-            DefaultDepsAwareTask.of(
+            executor.createTask(
                 () -> {
                   taskRan.set(true);
                   return null;
@@ -97,10 +101,10 @@ public class DepsAwareExecutorTest {
     final int numTask = 5;
 
     LongAdder adder = new LongAdder();
-    List<DefaultDepsAwareTask<Object>> tasks = new ArrayList<>();
+    List<TaskType> tasks = new ArrayList<>();
     for (int i = 0; i < numTask; i++) {
       tasks.add(
-          DefaultDepsAwareTask.of(
+          executor.createTask(
               () -> {
                 adder.increment();
                 return null;
@@ -119,7 +123,7 @@ public class DepsAwareExecutorTest {
 
     executor.close();
     assertTrue(executor.isShutdown());
-    executor.submit(DefaultDepsAwareTask.of(() -> null));
+    executor.submit(executor.createTask(() -> null));
   }
 
   // timeout is set to prevent waiting for a blocking call: Ex. future.get().
@@ -127,27 +131,27 @@ public class DepsAwareExecutorTest {
   public void shutdownNowStopsWorkExecutionImmediately()
       throws InterruptedException, ExecutionException {
     Semaphore task1Sem = new Semaphore(0);
-    DefaultDepsAwareTask<Object> task1 =
-        DefaultDepsAwareTask.of(
+    TaskType task1 =
+        executor.createTask(
             () -> {
               task1Sem.release();
               return null;
             });
 
     Semaphore sem = new Semaphore(0);
-    DefaultDepsAwareTask<Object> task2 =
-        DefaultDepsAwareTask.of(
+    TaskType task2 =
+        executor.createTask(
             () -> {
               sem.acquire();
               return null;
             });
-    DefaultDepsAwareTask<Object> task3 =
-        DefaultDepsAwareTask.of(
+    TaskType task3 =
+        executor.createTask(
             () -> {
               sem.acquire();
               return null;
             });
-    DefaultDepsAwareTask<Object> task4 = DefaultDepsAwareTask.of(() -> null);
+    TaskType task4 = executor.createTask(() -> null);
 
     Future<Object> f1 = executor.submit(task1);
     Future<Object> f2 = executor.submit(task2);
@@ -182,32 +186,31 @@ public class DepsAwareExecutorTest {
   public void runsPrereqAndDepTasksWithCorrectScheduling()
       throws ExecutionException, InterruptedException {
     AtomicBoolean task1Done = new AtomicBoolean();
-    DefaultDepsAwareTask<Object> task1 =
-        DefaultDepsAwareTask.of(
+    TaskType task1 =
+        executor.createTask(
             () -> {
               task1Done.set(true);
               return null;
             });
 
     AtomicBoolean task2Done = new AtomicBoolean();
-    DefaultDepsAwareTask<Object> task2 =
-        DefaultDepsAwareTask.of(
+    TaskType task2 =
+        executor.createTask(
             () -> {
               task2Done.set(true);
               return null;
             });
-    DefaultDepsAwareTask<Object> task3 =
-        DefaultDepsAwareTask.of(
+    TaskType task3 =
+        executor.createThrowingTask(
             () -> {
               assertTrue(task2Done.get());
               return null;
             },
-            DepsSupplier.of(
-                () -> ImmutableSet.of(task1),
-                () -> {
-                  assertTrue(task1Done.get());
-                  return ImmutableSet.of(task2);
-                }));
+            () -> ImmutableSet.of(task1),
+            () -> {
+              assertTrue(task1Done.get());
+              return ImmutableSet.of(task2);
+            });
     executor.submit(task3).get();
   }
 }

@@ -23,8 +23,6 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 abstract class AbstractDefaultDepsAwareExecutor<T>
@@ -55,19 +53,5 @@ abstract class AbstractDefaultDepsAwareExecutor<T>
   @Override
   public DefaultDepsAwareTask<T> createTask(Callable<T> callable) {
     return DefaultDepsAwareTask.of(callable);
-  }
-
-  protected static <U, V extends AbstractDepsAwareWorker<DefaultDepsAwareTask<U>>>
-      Future<?>[] startWorkers(
-          ExecutorService executorService,
-          int parallelism,
-          LinkedBlockingDeque<DefaultDepsAwareTask<U>> workQueue,
-          Function<LinkedBlockingDeque<DefaultDepsAwareTask<U>>, V> workerFunction) {
-    Future<?>[] workers = new Future<?>[parallelism];
-    for (int i = 0; i < workers.length; i++) {
-      V worker = workerFunction.apply(workQueue);
-      workers[i] = executorService.submit(() -> runWorker(worker));
-    }
-    return workers;
   }
 }
