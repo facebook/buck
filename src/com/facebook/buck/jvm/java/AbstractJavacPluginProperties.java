@@ -45,6 +45,7 @@ abstract class AbstractJavacPluginProperties implements AddsToRuleKey {
     ANNOTATION_PROCESSOR
   }
 
+  @AddToRuleKey
   public abstract Type getType();
 
   @Value.NaturalOrder
