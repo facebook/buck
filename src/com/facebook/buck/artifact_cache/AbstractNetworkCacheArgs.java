@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.event.BuckEventBus;
@@ -32,6 +33,8 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 interface AbstractNetworkCacheArgs {
   Function<String, UnconfiguredBuildTarget> getUnconfiguredBuildTargetFactory();
+
+  TargetConfigurationSerializer getTargetConfigurationSerializer();
 
   String getCacheName();
 

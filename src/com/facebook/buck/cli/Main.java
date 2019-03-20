@@ -41,9 +41,11 @@ import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
@@ -937,6 +939,8 @@ public final class Main {
               buildId, executionEnvironment.getUsername());
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
+      TargetConfigurationSerializer targetConfigurationSerializer =
+          new JsonTargetConfigurationSerializer();
 
       try (TaskManagerScope managerScope = buckGlobalState.getBgTaskManager().getNewScope(buildId);
           GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
@@ -1075,6 +1079,7 @@ public final class Main {
                     cacheBuckConfig,
                     buildEventBus,
                     target -> buildTargetFactory.create(cellPathResolver, target),
+                    targetConfigurationSerializer,
                     filesystem,
                     executionEnvironment.getWifiSsid(),
                     httpWriteExecutorService.get(),

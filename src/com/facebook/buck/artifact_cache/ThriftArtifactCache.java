@@ -32,6 +32,7 @@ import com.facebook.buck.artifact_cache.thrift.ContainsResult;
 import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
@@ -76,6 +77,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   public static final ThriftProtocol PROTOCOL = ThriftProtocol.COMPACT;
 
   private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final String hybridThriftEndpoint;
   private final boolean distributedBuildModeEnabled;
   private final BuildId buildId;
@@ -97,6 +99,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       String producerHostname) {
     super(args);
     this.unconfiguredBuildTargetFactory = args.getUnconfiguredBuildTargetFactory();
+    this.targetConfigurationSerializer = args.getTargetConfigurationSerializer();
     this.buildId = buildId;
     this.multiFetchLimit = multiFetchLimit;
     this.concurrencyLevel = concurrencyLevel;
@@ -750,7 +753,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
             getProjectFilesystem().getBuckPaths().getScratchDir(), "buckcache_artifact", ".tmp");
   }
 
-  private static ArtifactMetadata infoToMetadata(
+  private ArtifactMetadata infoToMetadata(
       ArtifactInfo info,
       ByteSource file,
       String repository,
@@ -763,6 +766,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     ArtifactMetadata metadata = new ArtifactMetadata();
     if (info.getBuildTarget().isPresent()) {
       metadata.setBuildTarget(info.getBuildTarget().get().toString());
+      metadata.setConfiguration(
+          targetConfigurationSerializer.serialize(
+              info.getBuildTarget().get().getTargetConfiguration()));
     }
 
     metadata.setRuleKeys(

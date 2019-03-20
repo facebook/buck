@@ -39,6 +39,7 @@ import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.artifact_cache.thrift.RuleKey;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.LazyPath;
@@ -128,6 +129,7 @@ public class ThriftArtifactCacheTest {
             .setCacheReadMode(CacheReadMode.READONLY)
             .setCacheMode(ArtifactCacheMode.thrift_over_http)
             .setScheduleType("default_schedule_type")
+            .setTargetConfigurationSerializer(new JsonTargetConfigurationSerializer())
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetFactory()
@@ -261,6 +263,7 @@ public class ThriftArtifactCacheTest {
             .setCacheReadMode(CacheReadMode.READONLY)
             .setCacheMode(ArtifactCacheMode.thrift_over_http)
             .setScheduleType("default_schedule_type")
+            .setTargetConfigurationSerializer(new JsonTargetConfigurationSerializer())
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetFactory()
@@ -388,6 +391,7 @@ public class ThriftArtifactCacheTest {
             .setCacheReadMode(CacheReadMode.READONLY)
             .setCacheMode(ArtifactCacheMode.thrift_over_http)
             .setScheduleType("default_schedule_type")
+            .setTargetConfigurationSerializer(new JsonTargetConfigurationSerializer())
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetFactory()
@@ -479,6 +483,7 @@ public class ThriftArtifactCacheTest {
             .setCacheReadMode(CacheReadMode.READWRITE)
             .setCacheMode(ArtifactCacheMode.thrift_over_http)
             .setScheduleType("default_schedule_type")
+            .setTargetConfigurationSerializer(new JsonTargetConfigurationSerializer())
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetFactory()

@@ -35,6 +35,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
@@ -553,6 +554,7 @@ public class ServedCacheIntegrationTest {
             buckConfig,
             buckEventBus,
             unconfiguredBuildTargetFactory,
+            new JsonTargetConfigurationSerializer(),
             projectFilesystem,
             Optional.empty(),
             DIRECT_EXECUTOR_SERVICE,
