@@ -63,6 +63,12 @@
 
 <ul style="line-height:0.5em">
   <li>
+    <a href="#list-all-rules">
+      How do I get a list from the command line of all the rules that
+      Buck supports.
+    </a>
+  </li>
+  <li>
     <a href="#find-existing-targets">
       How do I find all the targets for a package?
     </a>
@@ -92,6 +98,28 @@
 </ul>
 
 <hr><br/>
+
+
+{call .faq}
+  {param id: 'a href="#find-existing-targets' /}
+  {param question}
+    <p>
+      How do I get a list <em>from the command line</em> of all the 
+      rules that Buck supports, so that I can process them 
+      with <code>grep</code>, <code>sed</code>, etc?
+    </p>
+  {/param}
+
+  {param shortAnswer}
+    <p>
+      Use {call buck.cmd_audit /} with the <code>ruletypes</code> subcommand, 
+      which returns an alphabetized list of all the rules that Buck supports.
+    </p>
+
+{call buckaudit.example_ruletypes /}
+
+  {/param}
+{/call}
 
 {call .faq}
   {param id: 'find-existing-targets' /}
