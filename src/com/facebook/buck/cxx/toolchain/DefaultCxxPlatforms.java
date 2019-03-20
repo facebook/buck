@@ -36,6 +36,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -229,6 +230,7 @@ public class DefaultCxxPlatforms {
             new ConstantToolProvider(getToolchainTool(() -> config.getSourcePath(defaultLinker))),
             config.shouldCacheLinks()),
         ImmutableList.of(),
+        ImmutableMultimap.of(),
         getHashedFileTool(config, "strip", DEFAULT_STRIP, env),
         ArchiverProvider.from(archiver),
         ArchiveContents.NORMAL,

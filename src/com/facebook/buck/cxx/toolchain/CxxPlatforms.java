@@ -24,10 +24,12 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 
@@ -86,6 +88,7 @@ public class CxxPlatforms {
       PreprocessorProvider cxxpp,
       LinkerProvider ld,
       Iterable<String> ldFlags,
+      ImmutableMultimap<Linker.LinkableDepType, String> runtimeLdflags,
       Tool strip,
       ArchiverProvider ar,
       ArchiveContents archiveContents,
@@ -126,6 +129,7 @@ public class CxxPlatforms {
         .setAsmpp(config.getAsmpp())
         .setLd(config.getLinkerProvider(ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
+        .setRuntimeLdflags(runtimeLdflags)
         .setAr(config.getArchiverProvider(platform).orElse(ar))
         .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
         .setStrip(config.getStrip().orElse(strip))
@@ -191,6 +195,7 @@ public class CxxPlatforms {
         defaultPlatform.getCxxpp(),
         defaultPlatform.getLd(),
         defaultPlatform.getLdflags(),
+        defaultPlatform.getRuntimeLdflags(),
         defaultPlatform.getStrip(),
         defaultPlatform.getAr(),
         defaultPlatform.getArchiveContents(),

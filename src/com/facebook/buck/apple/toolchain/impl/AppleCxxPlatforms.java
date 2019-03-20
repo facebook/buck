@@ -64,6 +64,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -425,6 +426,7 @@ public class AppleCxxPlatforms {
                 new ConstantToolProvider(clangXxPath),
                 config.shouldCacheLinks()),
             ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
+            ImmutableMultimap.of(),
             strip,
             ArchiverProvider.from(new BsdArchiver(ar)),
             ArchiveContents.NORMAL,
