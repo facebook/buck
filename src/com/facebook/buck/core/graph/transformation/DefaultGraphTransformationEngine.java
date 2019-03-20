@@ -16,11 +16,12 @@
 
 package com.facebook.buck.core.graph.transformation;
 
+import static com.google.common.collect.ImmutableMap.toImmutableMap;
+
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -29,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -131,10 +131,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
   @Override
   public final <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
       ImmutableMap<KeyType, Future<ResultType>> computeAll(Set<KeyType> keys) {
-    return RichStream.from(keys)
-        .parallel()
-        .map(key -> Maps.immutableEntry(key, compute(key)))
-        .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue));
+    return keys.parallelStream().collect(toImmutableMap(key -> key, this::compute));
   }
 
   @Override
@@ -253,11 +250,6 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
           stage.getTransformer().discoverPreliminaryDeps(key);
       ImmutableSet.Builder<TaskType> preliminaryDepWorkBuilder =
           ImmutableSet.builderWithExpectedSize(preliminaryDepKeys.size());
-      for (ComputeKey<? extends ComputeResult> preliminaryDepKey : preliminaryDepKeys) {
-        GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>
-            depStage = transformationStageMap.get(preliminaryDepKey);
-        convertKeyToTask(preliminaryDepKey, depStage);
-      }
       preliminaryDepKeys.forEach(
           preliminaryDepKey -> {
             GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>
