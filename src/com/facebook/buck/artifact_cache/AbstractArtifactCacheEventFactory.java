@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -42,20 +43,22 @@ public abstract class AbstractArtifactCacheEventFactory implements ArtifactCache
       Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       ImmutableMap<String, String> metadata) {
     return metadata.containsKey(TARGET_KEY)
-        ? getTarget(unconfiguredBuildTargetFactory, metadata.get(TARGET_KEY))
+        ? getTarget(
+            unconfiguredBuildTargetFactory,
+            metadata.get(TARGET_KEY),
+            EmptyTargetConfiguration.INSTANCE)
         : Optional.empty();
   }
 
   public static Optional<BuildTarget> getTarget(
       Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
-      @Nullable String target) {
+      @Nullable String target,
+      TargetConfiguration targetConfiguration) {
     if (target == null) {
       return Optional.empty();
     } else {
       return Optional.of(
-          unconfiguredBuildTargetFactory
-              .apply(target)
-              .configure(EmptyTargetConfiguration.INSTANCE));
+          unconfiguredBuildTargetFactory.apply(target).configure(targetConfiguration));
     }
   }
 }
