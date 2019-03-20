@@ -1339,6 +1339,7 @@ public final class Main {
                         parserAndCaches.getTypeCoercerFactory(),
                         buildTargetFactory,
                         () -> EmptyTargetConfiguration.INSTANCE,
+                        targetConfigurationSerializer,
                         parserAndCaches.getParser(),
                         buildEventBus,
                         platform,

@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.BuildExecutorArgs;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
@@ -123,6 +124,8 @@ abstract class AbstractDistBuildSlaveExecutorArgs {
   public abstract MetadataProvider getMetadataProvider();
 
   public abstract UnconfiguredBuildTargetFactory getUnconfiguredBuildTargetFactory();
+
+  public abstract TargetConfigurationSerializer getTargetConfigurationSerializer();
 
   public int getBuildThreadCount() {
     return getState()

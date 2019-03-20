@@ -59,6 +59,12 @@ public class BuildInfo {
     /** Key for {@link OnDiskBuildInfo} to store the build target of the owning build rule. */
     public static final String TARGET = "TARGET";
 
+    /**
+     * Key for {@link OnDiskBuildInfo} to store the build target configuration of the owning build
+     * rule.
+     */
+    public static final String CONFIGURATION = "CONFIGURATION";
+
     /** Key for {@link OnDiskBuildInfo} to store the cache key of the manifest. */
     public static final String MANIFEST_KEY = "MANIFEST_KEY";
 
@@ -85,6 +91,7 @@ public class BuildInfo {
           MetadataKey.DEP_FILE_RULE_KEY,
           MetadataKey.DEP_FILE,
           MetadataKey.TARGET,
+          MetadataKey.CONFIGURATION,
           MetadataKey.MANIFEST_KEY,
           MetadataKey.BUILD_ID,
           MetadataKey.ORIGIN_BUILD_ID);

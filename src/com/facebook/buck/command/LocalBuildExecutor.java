@@ -32,6 +32,7 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
@@ -87,6 +88,7 @@ public class LocalBuildExecutor implements BuildExecutor {
   private final MetadataProvider metadataProvider;
   private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   private final TargetConfiguration targetConfiguration;
+  private final TargetConfigurationSerializer targetConfigurationSerializer;
 
   private final CachingBuildEngine cachingBuildEngine;
   private final Build build;
@@ -108,7 +110,8 @@ public class LocalBuildExecutor implements BuildExecutor {
       RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       MetadataProvider metadataProvider,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
-      TargetConfiguration targetConfiguration) {
+      TargetConfiguration targetConfiguration,
+      TargetConfigurationSerializer targetConfigurationSerializer) {
     this.actionGraphAndBuilder = actionGraphAndBuilder;
     this.executorService = executorService;
     this.args = args;
@@ -120,6 +123,7 @@ public class LocalBuildExecutor implements BuildExecutor {
     this.metadataProvider = metadataProvider;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.targetConfiguration = targetConfiguration;
+    this.targetConfigurationSerializer = targetConfigurationSerializer;
 
     // Init resources.
     this.cachingBuildEngine = createCachingBuildEngine();
@@ -247,6 +251,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         actionGraphAndBuilder.getActionGraphBuilder(),
         sourcePathRuleFinder,
         DefaultSourcePathResolver.from(sourcePathRuleFinder),
+        targetConfigurationSerializer,
         args.getBuildInfoStoreManager(),
         engineConfig.getResourceAwareSchedulingInfo(),
         engineConfig.getConsoleLogBuildRuleFailuresInline(),

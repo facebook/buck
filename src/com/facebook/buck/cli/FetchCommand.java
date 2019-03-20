@@ -148,6 +148,7 @@ public class FetchCommand extends BuildCommand {
                   actionGraphAndBuilder.getActionGraphBuilder(),
                   sourcePathRuleFinder,
                   DefaultSourcePathResolver.from(sourcePathRuleFinder),
+                  params.getTargetConfigurationSerializer(),
                   params.getBuildInfoStoreManager(),
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
                   cachingBuildEngineBuckConfig.getConsoleLogBuildRuleFailuresInline(),

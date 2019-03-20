@@ -768,7 +768,8 @@ public class BuildCommand extends AbstractCommand {
             remoteBuildRuleCompletionWaiter,
             params.getMetadataProvider(),
             params.getUnconfiguredBuildTargetFactory(),
-            params.getTargetConfiguration());
+            params.getTargetConfiguration(),
+            params.getTargetConfigurationSerializer());
 
     // TODO(buck_team): use try-with-resources instead
     try {

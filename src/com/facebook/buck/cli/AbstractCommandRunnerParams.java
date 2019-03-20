@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
@@ -96,6 +97,9 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   protected abstract Supplier<TargetConfiguration> getTargetConfigurationSupplier();
+
+  @Value.Parameter
+  public abstract TargetConfigurationSerializer getTargetConfigurationSerializer();
 
   @Value.Parameter
   public abstract Parser getParser();

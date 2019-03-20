@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphConfig;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
@@ -169,7 +170,8 @@ public abstract class DistBuildFactory {
       CoordinatorBuildRuleEventsPublisher coordinatorBuildRuleEventsPublisher,
       MinionBuildProgressTracker minionBuildProgressTracker,
       RuleKeyCacheScope<RuleKey> ruleKeyCacheScope,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      TargetConfigurationSerializer targetConfigurationSerializer) {
     Preconditions.checkArgument(state.getCells().size() > 0);
 
     // Create a cache factory which uses a combination of the distributed build config,
@@ -234,6 +236,7 @@ public abstract class DistBuildFactory {
             .setRemoteCommand(state.getRemoteState().getCommand())
             .setMetadataProvider(params.getMetadataProvider())
             .setUnconfiguredBuildTargetFactory(unconfiguredBuildTargetFactory)
+            .setTargetConfigurationSerializer(targetConfigurationSerializer)
             .build());
   }
 }

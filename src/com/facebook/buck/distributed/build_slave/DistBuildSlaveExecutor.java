@@ -296,7 +296,8 @@ public class DistBuildSlaveExecutor {
                 new NoOpRemoteBuildRuleCompletionWaiter(),
                 args.getMetadataProvider(),
                 args.getUnconfiguredBuildTargetFactory(),
-                EmptyTargetConfiguration.INSTANCE),
+                EmptyTargetConfiguration.INSTANCE,
+                args.getTargetConfigurationSerializer()),
         args.getExecutorService());
   }
 
