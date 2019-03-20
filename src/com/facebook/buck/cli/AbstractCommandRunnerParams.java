@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.CachingBuildEngineBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
@@ -62,6 +63,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 import org.pf4j.PluginManager;
 
@@ -91,6 +93,9 @@ public abstract class AbstractCommandRunnerParams {
 
   @Value.Parameter
   public abstract UnconfiguredBuildTargetFactory getUnconfiguredBuildTargetFactory();
+
+  @Value.Parameter
+  protected abstract Supplier<TargetConfiguration> getTargetConfigurationSupplier();
 
   @Value.Parameter
   public abstract Parser getParser();
@@ -203,5 +208,9 @@ public abstract class AbstractCommandRunnerParams {
         .setRuleKeyConfiguration(getRuleKeyConfiguration())
         .setManifestService(manifestService)
         .build();
+  }
+
+  public TargetConfiguration getTargetConfiguration() {
+    return getTargetConfigurationSupplier().get();
   }
 }

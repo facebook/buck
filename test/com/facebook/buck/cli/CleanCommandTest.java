@@ -31,6 +31,7 @@ import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
@@ -311,6 +312,7 @@ public class CleanCommandTest {
         new SingletonArtifactCacheFactory(new NoopArtifactCache()),
         typeCoercerFactory,
         new ParsingUnconfiguredBuildTargetFactory(),
+        () -> EmptyTargetConfiguration.INSTANCE,
         TestParserFactory.create(cell, knownRuleTypesProvider),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),

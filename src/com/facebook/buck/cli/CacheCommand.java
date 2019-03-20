@@ -311,7 +311,7 @@ public class CacheCommand extends AbstractCommand {
         params
             .getUnconfiguredBuildTargetFactory()
             .create(params.getCell().getCellPathResolver(), targetName)
-            .configure(getTargetConfiguration());
+            .configure(params.getTargetConfiguration());
     return new Pair<>(buildTarget, new RuleKey(ruleKey));
   }
 

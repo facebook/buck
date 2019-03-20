@@ -40,6 +40,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
@@ -1330,6 +1331,7 @@ public final class Main {
                         artifactCacheFactory,
                         parserAndCaches.getTypeCoercerFactory(),
                         buildTargetFactory,
+                        () -> EmptyTargetConfiguration.INSTANCE,
                         parserAndCaches.getParser(),
                         buildEventBus,
                         platform,

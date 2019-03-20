@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.util.ExitCode;
@@ -176,15 +175,5 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
             () ->
                 new IllegalArgumentException("Target platforms are not supported in this command"))
         .getTargetPlatforms();
-  }
-
-  @Override
-  public TargetConfiguration getTargetConfiguration() {
-    return getSubcommand()
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException(
-                    "Target configuration is not supported in this command"))
-        .getTargetConfiguration();
   }
 }

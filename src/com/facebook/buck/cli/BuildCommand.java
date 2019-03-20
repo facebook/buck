@@ -421,7 +421,7 @@ public class BuildCommand extends AbstractCommand {
             params,
             actionGraph,
             targetGraphForLocalBuild,
-            getTargetConfiguration(),
+            params.getTargetConfiguration(),
             justBuildTarget);
 
     ActionAndTargetGraphs actionAndTargetGraphs =
@@ -768,7 +768,7 @@ public class BuildCommand extends AbstractCommand {
             remoteBuildRuleCompletionWaiter,
             params.getMetadataProvider(),
             params.getUnconfiguredBuildTargetFactory(),
-            getTargetConfiguration());
+            params.getTargetConfiguration());
 
     // TODO(buck_team): use try-with-resources instead
     try {

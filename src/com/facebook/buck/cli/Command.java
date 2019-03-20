@@ -18,7 +18,6 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.util.ExitCode;
@@ -77,6 +76,4 @@ public interface Command {
   PluginManager getPluginManager();
 
   ImmutableList<String> getTargetPlatforms();
-
-  TargetConfiguration getTargetConfiguration();
 }
