@@ -23,6 +23,7 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack;
 import com.facebook.buck.core.graph.transformation.executor.impl.JavaExecutorBackedDefaultDepsAwareExecutor;
+import com.facebook.buck.core.graph.transformation.executor.impl.ToposortBasedDepsAwareExecutor;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
@@ -119,6 +120,8 @@ public class VersionedTargetGraphCache {
         return DefaultDepsAwareExecutorWithLocalStack.of(numberOfThreads);
       case ENABLED_JE:
         return JavaExecutorBackedDefaultDepsAwareExecutor.of(numberOfThreads);
+      case ENABLED_TS:
+        return ToposortBasedDepsAwareExecutor.of(numberOfThreads);
       case DISABLED:
         throw new AssertionError("Disabled should be handled already");
       case EXPERIMENT:
