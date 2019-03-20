@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 abstract class AbstractDepsAwareTask<T, TaskType extends AbstractDepsAwareTask<T, TaskType>>
     extends DepsAwareTask<T, TaskType> {
 
-  private final AtomicReference<TaskStatus> status =
+  protected final AtomicReference<TaskStatus> status =
       new AtomicReference<>(TaskStatus.NOT_SCHEDULED);
 
   AbstractDepsAwareTask(Callable<T> callable, DepsSupplier<TaskType> depsSupplier) {
