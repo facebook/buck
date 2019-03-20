@@ -19,15 +19,18 @@ package com.facebook.buck.core.graph.transformation.executor.impl;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask.DepsSupplier;
 import com.facebook.buck.core.graph.transformation.executor.impl.AbstractDepsAwareTask.TaskStatus;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -38,7 +41,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(Parameterized.class)
-public class DepsAwareWorkerTest {
+public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskType>> {
 
   @Parameterized.Parameters
   public static Iterable<Object[]> params() {
@@ -48,29 +51,51 @@ public class DepsAwareWorkerTest {
             (Function<
                     LinkedBlockingDeque<DefaultDepsAwareTask<? super Object>>,
                     AbstractDepsAwareWorker<?>>)
-                defaultDepsAwareTasks -> new DefaultDepsAwareWorker<Object>(defaultDepsAwareTasks)
+                defaultDepsAwareTasks -> new DefaultDepsAwareWorker<Object>(defaultDepsAwareTasks),
+            (BiFunction<
+                    Callable<Object>,
+                    DepsAwareTask.DepsSupplier<DefaultDepsAwareTask<Object>>,
+                    DefaultDepsAwareTask<Object>>)
+                (callable, depsSupplier) -> DefaultDepsAwareTask.of(callable, depsSupplier)
           },
           {
             (Function<
                     LinkedBlockingDeque<DefaultDepsAwareTask<? super Object>>,
                     AbstractDepsAwareWorker<?>>)
                 defaultDepsAwareTasks ->
-                    new DefaultDepsAwareWorkerWithLocalStack<Object>(defaultDepsAwareTasks)
+                    new DefaultDepsAwareWorkerWithLocalStack<Object>(defaultDepsAwareTasks),
+            (BiFunction<
+                    Callable<Object>,
+                    DepsAwareTask.DepsSupplier<DefaultDepsAwareTask<Object>>,
+                    DefaultDepsAwareTask<Object>>)
+                (callable, depsSupplier) -> DefaultDepsAwareTask.of(callable, depsSupplier)
+          },
+          {
+            (Function<
+                    LinkedBlockingDeque<ToposortBasedDepsAwareTask<? super Object>>,
+                    AbstractDepsAwareWorker<?>>)
+                defaultDepsAwareTasks -> new ToposortDepsAwareWorker<Object>(defaultDepsAwareTasks),
+            (BiFunction<
+                    Callable<Object>,
+                    DepsAwareTask.DepsSupplier<ToposortBasedDepsAwareTask<Object>>,
+                    ToposortBasedDepsAwareTask<Object>>)
+                (callable, depsSupplier) -> ToposortBasedDepsAwareTask.of(callable, depsSupplier)
           }
         });
   }
 
-  private final Function<LinkedBlockingDeque<DefaultDepsAwareTask<?>>, AbstractDepsAwareWorker>
-      workerConstructor;
+  private final Function<LinkedBlockingDeque<TaskType>, AbstractDepsAwareWorker> workerConstructor;
+  private final BiFunction<Callable<?>, DepsSupplier<TaskType>, TaskType> taskCreator;
 
   public DepsAwareWorkerTest(
-      Function<LinkedBlockingDeque<DefaultDepsAwareTask<?>>, AbstractDepsAwareWorker>
-          workerConstructor) {
+      Function<LinkedBlockingDeque<TaskType>, AbstractDepsAwareWorker> workerConstructor,
+      BiFunction<Callable<?>, DepsSupplier<TaskType>, TaskType> taskCreator) {
     this.workerConstructor = workerConstructor;
+    this.taskCreator = taskCreator;
   }
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
-  private LinkedBlockingDeque<DefaultDepsAwareTask<?>> workQueue;
+  private LinkedBlockingDeque<TaskType> workQueue;
 
   private AbstractDepsAwareWorker<?> worker1;
   private AbstractDepsAwareWorker<?> worker2;
@@ -85,8 +110,8 @@ public class DepsAwareWorkerTest {
   @Test(timeout = 5000)
   public void workerCanRunSingleIndependentWork() throws InterruptedException {
     Semaphore sem = new Semaphore(0);
-    DefaultDepsAwareTask<?> task =
-        DefaultDepsAwareTask.of(
+    TaskType task =
+        createTask(
             () -> {
               sem.release();
               return null;
@@ -113,8 +138,8 @@ public class DepsAwareWorkerTest {
   @Test(timeout = 5000)
   public void workerCanRunPrereqWorkFirst() throws InterruptedException, ExecutionException {
     AtomicBoolean prereqTaskDone = new AtomicBoolean();
-    DefaultDepsAwareTask<?> depsAwareTask1 =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask1 =
+        createTask(
             () -> {
               prereqTaskDone.set(true);
               return null;
@@ -122,8 +147,8 @@ public class DepsAwareWorkerTest {
 
     Semaphore sem = new Semaphore(0);
 
-    DefaultDepsAwareTask<?> depsAwareTask2 =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask2 =
+        createTask(
             () -> {
               assertTrue(prereqTaskDone.get());
               sem.release();
@@ -152,8 +177,8 @@ public class DepsAwareWorkerTest {
   @Test(timeout = 5000)
   public void workerCanRunDepWorkFirst() throws InterruptedException, ExecutionException {
     AtomicBoolean depTaskDone = new AtomicBoolean();
-    DefaultDepsAwareTask<?> depsAwareTask1 =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask1 =
+        createTask(
             () -> {
               depTaskDone.set(true);
               return null;
@@ -161,8 +186,8 @@ public class DepsAwareWorkerTest {
 
     Semaphore sem = new Semaphore(0);
 
-    DefaultDepsAwareTask<?> depsAwareTask2 =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask2 =
+        createTask(
             () -> {
               assertTrue(depTaskDone.get());
               sem.release();
@@ -191,8 +216,8 @@ public class DepsAwareWorkerTest {
   @Test(timeout = 5000)
   public void workerCanRunPrereqBeforeDep() throws InterruptedException, ExecutionException {
     AtomicBoolean prereqTaskDone = new AtomicBoolean();
-    DefaultDepsAwareTask<?> depsAwareTask1 =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask1 =
+        createTask(
             () -> {
               prereqTaskDone.set(true);
               return null;
@@ -200,8 +225,8 @@ public class DepsAwareWorkerTest {
 
     Semaphore sem = new Semaphore(0);
 
-    DefaultDepsAwareTask<?> depsAwareTask2 =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask2 =
+        createTask(
             () -> {
               assertTrue(prereqTaskDone.get());
               sem.release();
@@ -240,8 +265,8 @@ public class DepsAwareWorkerTest {
 
     expectedException.expectCause(Matchers.sameInstance(ex));
 
-    DefaultDepsAwareTask<?> depsAwareTask =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask =
+        createTask(
             () -> null,
             DepsSupplier.of(
                 () -> {
@@ -273,8 +298,8 @@ public class DepsAwareWorkerTest {
 
     expectedException.expectCause(Matchers.sameInstance(ex));
 
-    DefaultDepsAwareTask<?> depsAwareTask =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask =
+        createTask(
             () -> null,
             DepsSupplier.of(
                 ImmutableSet::of,
@@ -308,8 +333,8 @@ public class DepsAwareWorkerTest {
 
     expectedException.expectCause(Matchers.sameInstance(ex));
 
-    DefaultDepsAwareTask<?> depsAwareTask1 =
-        DefaultDepsAwareTask.of(
+    TaskType depsAwareTask1 =
+        createTask(
             () -> null,
             DepsSupplier.of(
                 () -> {
@@ -331,8 +356,8 @@ public class DepsAwareWorkerTest {
             });
     testThread.start();
 
-    DefaultDepsAwareTask<?> depsAwareTask2 =
-        DefaultDepsAwareTask.of(() -> null, DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
+    TaskType depsAwareTask2 =
+        createTask(() -> null, DepsSupplier.of(() -> ImmutableSet.of(depsAwareTask1)));
 
     Verify.verify(
         depsAwareTask2.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
@@ -371,8 +396,8 @@ public class DepsAwareWorkerTest {
     Semaphore semThread2 = new Semaphore(0);
     Semaphore semStart = new Semaphore(0);
 
-    DefaultDepsAwareTask<?> task1 =
-        DefaultDepsAwareTask.of(
+    TaskType task1 =
+        createTask(
             () -> {
               // purposely block this work until we force something to be ran in the other
               // thread
@@ -381,8 +406,8 @@ public class DepsAwareWorkerTest {
               semDone.release();
               return null;
             });
-    DefaultDepsAwareTask<?> task2 =
-        DefaultDepsAwareTask.of(
+    TaskType task2 =
+        createTask(
             () -> {
               semThread2.release();
               return null;
@@ -408,8 +433,8 @@ public class DepsAwareWorkerTest {
 
     Semaphore workerStarted = new Semaphore(0);
     Object interruptWaiter = new Object();
-    DefaultDepsAwareTask<?> firstTask =
-        DefaultDepsAwareTask.of(
+    TaskType firstTask =
+        createTask(
             () -> {
               workerStarted.release();
               try {
@@ -441,8 +466,8 @@ public class DepsAwareWorkerTest {
     AtomicBoolean taskDone = new AtomicBoolean();
     // create a task that runs in the worker and verifies that it got the interrupted flag.
     // We could race with the interrupt due to implementation of the LinkedBlockingDeque.
-    DefaultDepsAwareTask<?> waitForInterrupt =
-        DefaultDepsAwareTask.of(
+    TaskType waitForInterrupt =
+        createTask(
             () -> {
               try {
                 while (!Thread.currentThread().isInterrupted()) {
@@ -458,8 +483,8 @@ public class DepsAwareWorkerTest {
         waitForInterrupt.compareAndSetStatus(TaskStatus.NOT_SCHEDULED, TaskStatus.SCHEDULED));
     workQueue.put(waitForInterrupt);
 
-    DefaultDepsAwareTask<?> taskAfterInterrupt =
-        DefaultDepsAwareTask.of(
+    TaskType taskAfterInterrupt =
+        createTask(
             () -> {
               taskDone.set(true);
               return null;
@@ -491,9 +516,9 @@ public class DepsAwareWorkerTest {
 
     Semaphore getDepsRan = new Semaphore(0);
 
-    DefaultDepsAwareTask<?> task1 = DefaultDepsAwareTask.of(() -> null);
-    DefaultDepsAwareTask<?> task2 =
-        DefaultDepsAwareTask.of(
+    TaskType task1 = createTask(() -> null);
+    TaskType task2 =
+        createTask(
             () -> {
               while (true) {}
             },
@@ -511,5 +536,13 @@ public class DepsAwareWorkerTest {
     getDepsRan.acquire();
 
     assertFalse(workQueue.contains(task1));
+  }
+
+  TaskType createTask(Callable<?> callable) {
+    return createTask(callable, DepsSupplier.of(ImmutableSet::of));
+  }
+
+  TaskType createTask(Callable<?> callable, DepsSupplier<TaskType> depsSupplier) {
+    return taskCreator.apply(callable, depsSupplier);
   }
 }
