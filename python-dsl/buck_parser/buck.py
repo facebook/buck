@@ -872,8 +872,12 @@ class BuildFileProcessor(object):
 
         self._global_functions = lazy_global_functions
         self._native_functions = lazy_native_functions
-        self._native_module_class = self._create_native_module_class(
+        self._native_module_class_for_extension = self._create_native_module_class(
             self._global_functions, self._native_functions
+        )
+        self._native_module_class_for_build_file = self._create_native_module_class(
+            self._global_functions,
+            [] if self._disable_implicit_native_rules else self._native_functions,
         )
         self._import_whitelist_manager = ImportWhitelistManager(
             import_whitelist=self._create_import_whitelist(project_import_whitelist),
@@ -881,10 +885,13 @@ class BuildFileProcessor(object):
             path_predicate=lambda path: is_in_dir(path, self._project_root),
         )
         # Set of helpers callable from the child environment.
-        self._default_globals = self._create_default_globals(False)
-        self._default_globals_for_implicit_include = self._create_default_globals(True)
+        self._default_globals_for_extension = self._create_default_globals(False, False)
+        self._default_globals_for_implicit_include = self._create_default_globals(
+            False, True
+        )
+        self._default_globals_for_build_file = self._create_default_globals(True, False)
 
-    def _create_default_globals(self, is_implicit_include=False):
+    def _create_default_globals(self, is_build_file, is_implicit_include):
         # type: (bool) -> Dict[str, Callable]
         return {
             "include_defs": functools.partial(self._include_defs, is_implicit_include),
@@ -898,10 +905,10 @@ class BuildFileProcessor(object):
             "struct": struct,
             "provider": self._provider,
             "host_info": self._host_info,
-            "native": self._create_native_module(),
+            "native": self._create_native_module(is_build_file=is_build_file),
         }
 
-    def _create_native_module(self):
+    def _create_native_module(self, is_build_file):
         """
         Creates a native module exposing built-in Buck rules.
 
@@ -912,7 +919,7 @@ class BuildFileProcessor(object):
         :return: 'native' module struct.
         """
         native_globals = {}
-        self._install_builtins(native_globals, force_native_rules=True)
+        self._install_builtins(native_globals, force_native_rules=not is_build_file)
         assert "glob" not in native_globals
         assert "host_info" not in native_globals
         assert "implicit_package_symbol" not in native_globals
@@ -921,7 +928,11 @@ class BuildFileProcessor(object):
         native_globals["host_info"] = self._host_info
         native_globals["implicit_package_symbol"] = self._implicit_package_symbol
         native_globals["read_config"] = self._read_config
-        return self._native_module_class(**native_globals)
+        return (
+            self._native_module_class_for_build_file(**native_globals)
+            if is_build_file
+            else self._native_module_class_for_extension(**native_globals)
+        )
 
     @staticmethod
     def _create_native_module_class(global_functions, native_functions):
@@ -1526,12 +1537,14 @@ class BuildFileProcessor(object):
                                 from that .bzl file.
         :returns: build context (potentially different if retrieved from cache) and loaded module.
         """
-
-        default_globals = (
-            self._default_globals_for_implicit_include
-            if is_implicit_include
-            else self._default_globals
-        )
+        if isinstance(build_env, IncludeContext):
+            default_globals = (
+                self._default_globals_for_implicit_include
+                if is_implicit_include
+                else self._default_globals_for_extension
+            )
+        else:
+            default_globals = self._default_globals_for_build_file
 
         emit_trace(path)
 
@@ -1543,7 +1556,7 @@ class BuildFileProcessor(object):
                 for include in self._implicit_includes:
                     build_include = self._resolve_include(include)
                     inner_env, mod = self._process_include(build_include, True)
-                    self._merge_globals(mod, self._default_globals)
+                    self._merge_globals(mod, default_globals)
                     build_env.includes.add(build_include.path)
                     build_env.merge(inner_env)
 
