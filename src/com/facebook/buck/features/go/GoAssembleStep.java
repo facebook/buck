@@ -64,8 +64,8 @@ public class GoAssembleStep extends ShellStep {
               .addAll(asmCommandPrefix)
               .add("-trimpath", workingDirectory.toString())
               .addAll(flags)
-              .add("-D", "GOOS_" + platform.getGoOs())
-              .add("-D", "GOARCH_" + platform.getGoArch())
+              .add("-D", "GOOS_" + platform.getGoOs().getEnvVarValue())
+              .add("-D", "GOARCH_" + platform.getGoArch().getEnvVarValue())
               .add("-o", output.toString());
 
       for (Path dir : includeDirectories) {
@@ -82,9 +82,9 @@ public class GoAssembleStep extends ShellStep {
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return ImmutableMap.<String, String>builder()
         .putAll(environment)
-        .put("GOOS", platform.getGoOs())
-        .put("GOARCH", platform.getGoArch())
-        .put("GOARM", platform.getGoArm())
+        .put("GOOS", platform.getGoOs().getEnvVarValue())
+        .put("GOARCH", platform.getGoArch().getEnvVarValue())
+        .put("GOARM", platform.getGoArch().getEnvVarValueForArm())
         .build();
   }
 

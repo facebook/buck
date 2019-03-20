@@ -127,9 +127,9 @@ public class GoCompileStep extends ShellStep {
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return ImmutableMap.<String, String>builder()
         .putAll(environment)
-        .put("GOOS", platform.getGoOs())
-        .put("GOARCH", platform.getGoArch())
-        .put("GOARM", platform.getGoArm())
+        .put("GOOS", platform.getGoOs().getEnvVarValue())
+        .put("GOARCH", platform.getGoArch().getEnvVarValue())
+        .put("GOARM", platform.getGoArch().getEnvVarValueForArm())
         .build();
   }
 

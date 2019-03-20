@@ -101,9 +101,9 @@ public class GoListStep extends ShellStep {
         // The go list command relies on these environment variables, so they are set here
         // in case the inherited/default ones are wrong
         .put("GOROOT", platform.getGoRoot().toString())
-        .put("GOOS", platform.getGoOs())
-        .put("GOARCH", platform.getGoArch())
-        .put("GOARM", platform.getGoArm())
+        .put("GOOS", platform.getGoOs().getEnvVarValue())
+        .put("GOARCH", platform.getGoArch().getEnvVarValue())
+        .put("GOARM", platform.getGoArch().getEnvVarValueForArm())
         // without this env variable go tool list tries to download packages from go.mod
         // for source files outside GOROOT that's always true for Buck
         .put("GO111MODULE", "off")

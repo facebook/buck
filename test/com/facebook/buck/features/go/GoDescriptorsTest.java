@@ -130,7 +130,8 @@ public class GoDescriptorsTest {
   public void testBuildRuleAsSrcAddsRuleToDependencies() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
-    GoPlatform goPlatform = GoTestUtils.DEFAULT_PLATFORM.withGoArch("amd64").withGoOs("linux");
+    GoPlatform goPlatform =
+        GoTestUtils.DEFAULT_PLATFORM.withGoArch(GoArch.AMD64).withGoOs(GoOs.LINUX);
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
     BuildTarget target =

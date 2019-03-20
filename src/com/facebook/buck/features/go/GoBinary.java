@@ -81,7 +81,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     this.platform = platform;
 
     String outputFormat = "%s/" + buildTarget.getShortName();
-    if (platform.getGoOs().equals("windows")) {
+    if (platform.getGoOs() == GoOs.WINDOWS) {
       outputFormat = outputFormat + ".exe";
     }
     this.output = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, outputFormat);

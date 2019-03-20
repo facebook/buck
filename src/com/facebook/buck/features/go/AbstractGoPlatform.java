@@ -34,13 +34,10 @@ import org.immutables.value.Value;
 abstract class AbstractGoPlatform implements FlavorConvertible, AddsToRuleKey {
 
   @AddToRuleKey
-  abstract String getGoOs();
+  abstract GoOs getGoOs();
 
   @AddToRuleKey
-  abstract String getGoArch();
-
-  @AddToRuleKey
-  abstract String getGoArm();
+  abstract GoArch getGoArch();
 
   @Override
   public abstract Flavor getFlavor();

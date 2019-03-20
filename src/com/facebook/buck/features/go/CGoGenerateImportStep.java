@@ -61,9 +61,9 @@ public class CGoGenerateImportStep extends ShellStep {
   public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
     return ImmutableMap.<String, String>builder()
         .putAll(context.getEnvironment())
-        .put("GOOS", platform.getGoOs())
-        .put("GOARCH", platform.getGoArch())
-        .put("GOARM", platform.getGoArm())
+        .put("GOOS", platform.getGoOs().getEnvVarValue())
+        .put("GOARCH", platform.getGoArch().getEnvVarValue())
+        .put("GOARM", platform.getGoArch().getEnvVarValueForArm())
         .build();
   }
 
