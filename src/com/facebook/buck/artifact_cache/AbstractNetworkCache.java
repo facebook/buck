@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent.StoreType;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
@@ -54,6 +55,7 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
         args.getHttpFetchExecutorService(),
         new NetworkEventListener(
             args.getUnconfiguredBuildTargetFactory(),
+            args.getTargetConfigurationSerializer(),
             args.getBuckEventBus(),
             args.getCacheName(),
             new ErrorReporter(args)),
@@ -82,16 +84,19 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
 
   private static class NetworkEventListener implements CacheEventListener {
     private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+    private final TargetConfigurationSerializer targetConfigurationSerializer;
     private final EventDispatcher dispatcher;
     private final String name;
     private final ErrorReporter errorReporter;
 
     private NetworkEventListener(
         Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+        TargetConfigurationSerializer targetConfigurationSerializer,
         EventDispatcher dispatcher,
         String name,
         ErrorReporter errorReporter) {
       this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+      this.targetConfigurationSerializer = targetConfigurationSerializer;
       this.dispatcher = dispatcher;
       this.name = name;
       this.errorReporter = errorReporter;
@@ -188,7 +193,9 @@ public abstract class AbstractNetworkCache extends AbstractAsynchronousCache {
       HttpArtifactCacheEvent.Scheduled scheduled =
           HttpArtifactCacheEvent.newStoreScheduledEvent(
               AbstractArtifactCacheEventFactory.getTarget(
-                  unconfiguredBuildTargetFactory, info.getMetadata()),
+                  unconfiguredBuildTargetFactory,
+                  targetConfigurationSerializer,
+                  info.getMetadata()),
               info.getRuleKeys(),
               StoreType.fromArtifactInfo(info));
       dispatcher.post(scheduled);

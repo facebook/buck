@@ -34,6 +34,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
@@ -84,6 +85,7 @@ public class ServedCacheIntegrationTest {
 
   private ProjectFilesystem projectFilesystem;
   private Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private TargetConfigurationSerializer targetConfigurationSerializer;
   private WebServer webServer = null;
   private BuckEventBus buckEventBus;
   private ArtifactCache dirCache;
@@ -115,6 +117,7 @@ public class ServedCacheIntegrationTest {
         new ParsingUnconfiguredBuildTargetFactory();
     unconfiguredBuildTargetFactory =
         target -> parsingUnconfiguredBuildTargetFactory.create(cellPathResolver, target);
+    targetConfigurationSerializer = new JsonTargetConfigurationSerializer();
   }
 
   @After
@@ -388,6 +391,7 @@ public class ServedCacheIntegrationTest {
                 "serve_local_cache = true",
                 "served_local_cache_mode = readwrite"),
             unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -427,6 +431,7 @@ public class ServedCacheIntegrationTest {
                 "serve_local_cache = true",
                 "served_local_cache_mode = readwrite"),
             unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -466,6 +471,7 @@ public class ServedCacheIntegrationTest {
                 "serve_local_cache = true",
                 "served_local_cache_mode = readonly"),
             unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =
@@ -502,6 +508,7 @@ public class ServedCacheIntegrationTest {
                 "serve_local_cache = true",
                 "served_local_cache_mode = readonly"),
             unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer,
             projectFilesystem));
 
     ArtifactCache serverBackedCache =

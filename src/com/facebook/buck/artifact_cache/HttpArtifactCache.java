@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
@@ -50,10 +51,12 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
   private static final Logger LOG = Logger.get(HttpArtifactCache.class);
 
   private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private final TargetConfigurationSerializer targetConfigurationSerializer;
 
   public HttpArtifactCache(NetworkCacheArgs args) {
     super(args);
     this.unconfiguredBuildTargetFactory = args.getUnconfiguredBuildTargetFactory();
+    this.targetConfigurationSerializer = args.getTargetConfigurationSerializer();
   }
 
   @Override
@@ -98,7 +101,9 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         resultBuilder
             .setBuildTarget(
                 AbstractArtifactCacheEventFactory.getTarget(
-                    unconfiguredBuildTargetFactory, fetchedData.getMetadata()))
+                    unconfiguredBuildTargetFactory,
+                    targetConfigurationSerializer,
+                    fetchedData.getMetadata()))
             .setResponseSizeBytes(fetchedData.getResponseSizeBytes())
             .setArtifactContentHash(fetchedData.getArtifactOnlyHashCode().toString());
 

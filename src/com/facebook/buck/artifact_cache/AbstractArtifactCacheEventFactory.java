@@ -19,7 +19,9 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import java.util.function.Function;
@@ -27,27 +29,42 @@ import javax.annotation.Nullable;
 
 public abstract class AbstractArtifactCacheEventFactory implements ArtifactCacheEventFactory {
   private static final String TARGET_KEY = "TARGET";
+  private static final String CONFIGURATION_KEY = "CONFIGURATION";
 
   private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private final TargetConfigurationSerializer targetConfigurationSerializer;
 
   protected AbstractArtifactCacheEventFactory(
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory) {
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      TargetConfigurationSerializer targetConfigurationSerializer) {
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+    this.targetConfigurationSerializer = targetConfigurationSerializer;
   }
 
   protected final Optional<BuildTarget> getTarget(ImmutableMap<String, String> metadata) {
-    return getTarget(unconfiguredBuildTargetFactory, metadata);
+    return getTarget(unconfiguredBuildTargetFactory, targetConfigurationSerializer, metadata);
   }
 
   public static Optional<BuildTarget> getTarget(
       Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      TargetConfigurationSerializer targetConfigurationSerializer,
       ImmutableMap<String, String> metadata) {
     return metadata.containsKey(TARGET_KEY)
         ? getTarget(
             unconfiguredBuildTargetFactory,
             metadata.get(TARGET_KEY),
-            EmptyTargetConfiguration.INSTANCE)
+            getTargetConfigurationFromMetadata(targetConfigurationSerializer, metadata))
         : Optional.empty();
+  }
+
+  private static TargetConfiguration getTargetConfigurationFromMetadata(
+      TargetConfigurationSerializer targetConfigurationSerializer,
+      ImmutableMap<String, String> metadata) {
+    String configuration = metadata.get(CONFIGURATION_KEY);
+    if (Strings.isNullOrEmpty(configuration)) {
+      return EmptyTargetConfiguration.INSTANCE;
+    }
+    return targetConfigurationSerializer.deserialize(configuration);
   }
 
   public static Optional<BuildTarget> getTarget(

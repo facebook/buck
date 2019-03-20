@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.cli.DaemonCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
@@ -128,6 +129,7 @@ class DaemonLifecycleManager {
       Console console,
       Clock clock,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      TargetConfigurationSerializer targetConfigurationSerializer,
       Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
       Optional<NGContext> context) {
 
@@ -195,6 +197,7 @@ class DaemonLifecycleManager {
               watchman,
               webServer,
               unconfiguredBuildTargetFactory,
+              targetConfigurationSerializer,
               clock,
               devspeedBuildListenerFactorySupplier,
               context);

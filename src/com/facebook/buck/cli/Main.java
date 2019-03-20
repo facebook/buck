@@ -827,6 +827,9 @@ public final class Main {
                   buildTargetFactory)
               .getCellByPath(filesystem.getRootPath());
 
+      TargetConfigurationSerializer targetConfigurationSerializer =
+          new JsonTargetConfigurationSerializer();
+
       List<DevspeedTelemetryPlugin> telemetryPlugins;
       if (context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)) {
         telemetryPlugins = pluginManager.getExtensions(DevspeedTelemetryPlugin.class);
@@ -842,6 +845,7 @@ public final class Main {
               console,
               clock,
               buildTargetFactory,
+              targetConfigurationSerializer,
               telemetryPlugins.isEmpty()
                   ? Optional::empty
                   : () ->
@@ -939,8 +943,6 @@ public final class Main {
               buildId, executionEnvironment.getUsername());
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
-      TargetConfigurationSerializer targetConfigurationSerializer =
-          new JsonTargetConfigurationSerializer();
 
       try (TaskManagerScope managerScope = buckGlobalState.getBgTaskManager().getNewScope(buildId);
           GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
