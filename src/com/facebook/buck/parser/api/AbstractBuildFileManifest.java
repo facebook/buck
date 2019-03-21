@@ -31,7 +31,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 @Value.Immutable(builder = false)
 @JsonDeserialize
-abstract class AbstractBuildFileManifest {
+public abstract class AbstractBuildFileManifest {
   /** @return a list of targets defined in the build file. */
   @Value.Parameter
   @JsonProperty("targets")
