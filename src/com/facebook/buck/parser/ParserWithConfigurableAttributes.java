@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
@@ -204,8 +205,10 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
   @Override
   public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
-    ImmutableList<TargetNode<?>> allTargetNodes = getAllTargetNodes(state, cell, buildFile);
+      PerBuildState state, Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+      throws BuildFileParseException {
+    ImmutableList<TargetNode<?>> allTargetNodes =
+        getAllTargetNodes(state, cell, buildFile, targetConfiguration);
 
     PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
         (PerBuildStateWithConfigurableAttributes) state;
@@ -215,7 +218,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     }
 
     return filterIncompatibleTargetNodes(
-            stateWithConfigurableAttributes, getAllTargetNodes(state, cell, buildFile).stream())
+            stateWithConfigurableAttributes,
+            getAllTargetNodes(state, cell, buildFile, targetConfiguration).stream())
         .collect(ImmutableList.toImmutableList());
   }
 
@@ -233,7 +237,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
   @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> specs)
+      ParsingContext parsingContext,
+      Iterable<? extends TargetNodeSpec> specs,
+      TargetConfiguration targetConfiguration)
       throws BuildFileParseException, InterruptedException, IOException {
 
     try (PerBuildStateWithConfigurableAttributes state =
@@ -249,6 +255,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
           targetSpecResolver.resolveTargetSpecs(
               parsingContext.getCell(),
               specs,
+              targetConfiguration,
               (buildTarget, targetNode, targetType) ->
                   DefaultParser.applyDefaultFlavors(
                       buildTarget,
@@ -277,6 +284,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       ParsingContext parsingContext,
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
       throws IOException, InterruptedException {
     PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
@@ -298,6 +306,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         targetSpecResolver.resolveTargetSpecs(
             parsingContext.getCell(),
             targetNodeSpecs,
+            targetConfiguration,
             (buildTarget, targetNode, targetType) ->
                 DefaultParser.applyDefaultFlavors(
                     buildTarget,

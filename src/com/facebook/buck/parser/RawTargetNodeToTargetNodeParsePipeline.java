@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
@@ -70,8 +71,12 @@ public class RawTargetNodeToTargetNodeParsePipeline
 
   @Override
   protected BuildTarget getBuildTarget(
-      Path root, Optional<String> cellName, Path buildFile, RawTargetNode from) {
-    return from.getBuildTarget().configure(EmptyTargetConfiguration.INSTANCE);
+      Path root,
+      Optional<String> cellName,
+      Path buildFile,
+      TargetConfiguration targetConfiguration,
+      RawTargetNode from) {
+    return from.getBuildTarget().configure(targetConfiguration);
   }
 
   @Override
@@ -113,7 +118,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
   @Override
   protected ListenableFuture<ImmutableList<RawTargetNode>> getItemsToConvert(
       Cell cell, Path buildFile) throws BuildTargetException {
-    return rawTargetNodePipeline.getAllNodesJob(cell, buildFile);
+    return rawTargetNodePipeline.getAllNodesJob(cell, buildFile, EmptyTargetConfiguration.INSTANCE);
   }
 
   @Override

@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.event.BuckEventBus;
@@ -64,9 +65,17 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
 
   @Override
   protected BuildTarget getBuildTarget(
-      Path root, Optional<String> cellName, Path buildFile, Map<String, Object> from) {
+      Path root,
+      Optional<String> cellName,
+      Path buildFile,
+      TargetConfiguration targetConfiguration,
+      Map<String, Object> from) {
     return ImmutableUnconfiguredBuildTarget.of(
             UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile))
+        // This pipeline provides access to RawTargetNode which doesn't know about target
+        // configuration. Using empty configuration here to make sure raw target nodes are not
+        // duplicated for different configurations.
+        // TODO: remove this when pipeline cache supports RawTargetNode
         .configure(EmptyTargetConfiguration.INSTANCE);
   }
 

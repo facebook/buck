@@ -26,6 +26,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -134,7 +135,7 @@ public class PerBuildStateTest {
 
     // Now, try to load the entire build file and get all TargetNodes.
     ImmutableList<TargetNode<?>> targetNodes =
-        perBuildState.getAllTargetNodes(cell, testFooBuckFile);
+        perBuildState.getAllTargetNodes(cell, testFooBuckFile, EmptyTargetConfiguration.INSTANCE);
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
         targetNodes

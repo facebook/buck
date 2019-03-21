@@ -26,6 +26,7 @@ import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -257,7 +258,10 @@ public class OwnersReportTest {
     Parser parser = TestParserFactory.create(cell);
     OwnersReport report =
         OwnersReport.builder(
-                cell, TestParserFactory.create(cell), TestPerBuildStateFactory.create(parser, cell))
+                cell,
+                TestParserFactory.create(cell),
+                TestPerBuildStateFactory.create(parser, cell),
+                EmptyTargetConfiguration.INSTANCE)
             .build(getBuildFileTrees(cell), ImmutableSet.of(input));
 
     assertEquals(1, report.nonExistentInputs.size());

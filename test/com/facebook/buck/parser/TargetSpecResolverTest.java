@@ -25,6 +25,8 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -231,6 +233,7 @@ public class TargetSpecResolverTest {
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
         cell,
         specs,
+        EmptyTargetConfiguration.INSTANCE,
         flavorEnhancer,
         new TargetNodeProviderForSpecResolver<TargetNode<?>>() {
           @Override
@@ -241,8 +244,9 @@ public class TargetSpecResolverTest {
 
           @Override
           public ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
-              Cell cell, Path buildFile) throws BuildTargetException {
-            return state.getAllTargetNodesJob(cell, buildFile);
+              Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+              throws BuildTargetException {
+            return state.getAllTargetNodesJob(cell, buildFile, targetConfiguration);
           }
         },
         (spec, nodes) -> spec.filter(nodes));

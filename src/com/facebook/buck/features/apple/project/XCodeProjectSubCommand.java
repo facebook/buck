@@ -111,6 +111,7 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
             params.getUnconfiguredBuildTargetFactory(),
             params.getCell(),
             params.getRuleKeyConfiguration(),
+            params.getTargetConfiguration(),
             params.getConsole(),
             params.getProcessManager(),
             params.getEnvironment(),

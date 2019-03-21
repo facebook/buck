@@ -34,6 +34,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.HasBuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
@@ -149,6 +150,7 @@ public class TargetSpecResolver implements AutoCloseable {
   public <T extends HasBuildTarget> ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       Cell rootCell,
       Iterable<? extends TargetNodeSpec> specs,
+      TargetConfiguration targetConfiguration,
       FlavorEnhancer<T> flavorEnhancer,
       TargetNodeProviderForSpecResolver<T> targetNodeProvider,
       TargetNodeFilterForSpecResolver<T> targetNodeFilter)
@@ -183,6 +185,7 @@ public class TargetSpecResolver implements AutoCloseable {
             targetFutures,
             cell,
             buildFile,
+            targetConfiguration,
             index,
             spec);
       }
@@ -245,6 +248,7 @@ public class TargetSpecResolver implements AutoCloseable {
       List<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures,
       Cell cell,
       Path buildFile,
+      TargetConfiguration targetConfiguration,
       int index,
       TargetNodeSpec spec) {
     if (spec instanceof BuildTargetSpec) {
@@ -270,7 +274,7 @@ public class TargetSpecResolver implements AutoCloseable {
       // Build up a list of all target nodes from the build file.
       targetFutures.add(
           Futures.transform(
-              targetNodeProvider.getAllTargetNodesJob(cell, buildFile),
+              targetNodeProvider.getAllTargetNodesJob(cell, buildFile, targetConfiguration),
               nodes ->
                   new AbstractMap.SimpleEntry<>(
                       index, applySpecFilter(spec, nodes, flavorEnhancer, targetNodeFilter)),
@@ -336,7 +340,8 @@ public class TargetSpecResolver implements AutoCloseable {
   public interface TargetNodeProviderForSpecResolver<T extends HasBuildTarget> {
     ListenableFuture<T> getTargetNodeJob(BuildTarget target) throws BuildTargetException;
 
-    ListenableFuture<ImmutableList<T>> getAllTargetNodesJob(Cell cell, Path buildFile)
+    ListenableFuture<ImmutableList<T>> getAllTargetNodesJob(
+        Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
         throws BuildTargetException;
   }
 

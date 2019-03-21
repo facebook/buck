@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildFileTree;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -150,19 +151,29 @@ final class OwnersReport {
     }
   }
 
-  static Builder builder(Cell rootCell, Parser parser, PerBuildState parserState) {
-    return new Builder(rootCell, parser, parserState);
+  static Builder builder(
+      Cell rootCell,
+      Parser parser,
+      PerBuildState parserState,
+      TargetConfiguration targetConfiguration) {
+    return new Builder(rootCell, parser, parserState, targetConfiguration);
   }
 
   static final class Builder {
     private final Cell rootCell;
     private final Parser parser;
     private final PerBuildState parserState;
+    private final TargetConfiguration targetConfiguration;
 
-    private Builder(Cell rootCell, Parser parser, PerBuildState parserState) {
+    private Builder(
+        Cell rootCell,
+        Parser parser,
+        PerBuildState parserState,
+        TargetConfiguration targetConfiguration) {
       this.rootCell = rootCell;
       this.parser = parser;
       this.parserState = parserState;
+      this.targetConfiguration = targetConfiguration;
     }
 
     private OwnersReport getReportForBasePath(
@@ -177,7 +188,7 @@ final class OwnersReport {
               basePath1 -> {
                 try {
                   return parser.getAllTargetNodesWithTargetCompatibilityFiltering(
-                      parserState, cell, basePath1);
+                      parserState, cell, basePath1, targetConfiguration);
                 } catch (BuildFileParseException e) {
                   throw new HumanReadableException(e);
                 }

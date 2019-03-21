@@ -497,7 +497,8 @@ public class TestCommand extends BuildCommand {
                           ImmutableTargetNodePredicateSpec.of(
                                   BuildFileSpec.fromRecursivePath(
                                       Paths.get(""), params.getCell().getRoot()))
-                              .withOnlyTests(true)));
+                              .withOnlyTests(true)),
+                      params.getTargetConfiguration());
           targetGraphAndBuildTargets =
               targetGraphAndBuildTargets.withBuildTargets(ImmutableSet.of());
 
@@ -513,7 +514,8 @@ public class TestCommand extends BuildCommand {
                       parseArgumentsAsTargetNodeSpecs(
                           params.getCell().getCellPathResolver(),
                           params.getBuckConfig(),
-                          getArguments()));
+                          getArguments()),
+                      params.getTargetConfiguration());
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());
           ImmutableSet.Builder<BuildTarget> testTargetsBuilder = ImmutableSet.builder();

@@ -21,6 +21,7 @@ import static com.google.common.base.Throwables.throwIfInstanceOf;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -51,15 +52,17 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    *
    * @param cell the {@link Cell} that the build file belongs to.
    * @param buildFile absolute path to the file to process.
+   * @param targetConfiguration the configuration of targets.
    * @return all targets from the file
    * @throws BuildFileParseException for syntax errors.
    */
-  public final ImmutableList<T> getAllNodes(Cell cell, Path buildFile)
+  public final ImmutableList<T> getAllNodes(
+      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
       throws BuildFileParseException {
     Preconditions.checkState(!shuttingDown.get());
 
     try {
-      return getAllNodesJob(cell, buildFile).get();
+      return getAllNodesJob(cell, buildFile, targetConfiguration).get();
     } catch (Exception e) {
       propagateCauseIfInstanceOf(e, BuildFileParseException.class);
       propagateCauseIfInstanceOf(e, ExecutionException.class);
@@ -106,9 +109,10 @@ public abstract class ParsePipeline<T> implements AutoCloseable {
    *
    * @param cell the {@link Cell} that the build file belongs to.
    * @param buildFile absolute path to the file to process.
-   * @return future.
+   * @param targetConfiguration the configuration of targets.
    */
-  public abstract ListenableFuture<ImmutableList<T>> getAllNodesJob(Cell cell, Path buildFile)
+  public abstract ListenableFuture<ImmutableList<T>> getAllNodesJob(
+      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
       throws BuildTargetException;
 
   /**

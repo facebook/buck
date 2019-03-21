@@ -198,6 +198,7 @@ public class IjProjectSubCommand extends ProjectSubCommand {
             params.getTypeCoercerFactory(),
             params.getUnconfiguredBuildTargetFactory(),
             params.getCell(),
+            params.getTargetConfiguration(),
             projectConfig,
             projectGeneratorParameters.getEnableParserProfiling(),
             processAnnotations,

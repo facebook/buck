@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -46,10 +47,15 @@ public interface Parser {
       throws BuildFileParseException;
 
   ImmutableList<TargetNode<?>> getAllTargetNodes(
-      PerBuildState perBuildState, Cell cell, Path buildFile) throws BuildFileParseException;
+      PerBuildState perBuildState,
+      Cell cell,
+      Path buildFile,
+      TargetConfiguration targetConfiguration)
+      throws BuildFileParseException;
 
   ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException;
+      PerBuildState state, Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+      throws BuildFileParseException;
 
   TargetNode<?> getTargetNode(PerBuildState perBuildState, BuildTarget target)
       throws BuildFileParseException;
@@ -81,7 +87,9 @@ public interface Parser {
    * @return the target graph containing the build targets and their related targets.
    */
   TargetGraphAndBuildTargets buildTargetGraphWithoutConfigurationTargets(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
+      ParsingContext parsingContext,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      TargetConfiguration targetConfiguration)
       throws BuildFileParseException, IOException, InterruptedException;
 
   /**
@@ -89,10 +97,14 @@ public interface Parser {
    * @return the target graph containing the build targets and their related targets.
    */
   TargetGraphAndBuildTargets buildTargetGraphWithConfigurationTargets(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
+      ParsingContext parsingContext,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      TargetConfiguration targetConfiguration)
       throws BuildFileParseException, IOException, InterruptedException;
 
   ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> specs)
+      ParsingContext parsingContext,
+      Iterable<? extends TargetNodeSpec> specs,
+      TargetConfiguration targetConfiguration)
       throws BuildFileParseException, InterruptedException, IOException;
 }

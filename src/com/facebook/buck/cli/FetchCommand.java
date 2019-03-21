@@ -92,7 +92,8 @@ public class FetchCommand extends BuildCommand {
                     parseArgumentsAsTargetNodeSpecs(
                         params.getCell().getCellPathResolver(),
                         params.getBuckConfig(),
-                        getArguments()));
+                        getArguments()),
+                    params.getTargetConfiguration());
         if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
           result = toVersionedTargetGraph(params, result);
         }

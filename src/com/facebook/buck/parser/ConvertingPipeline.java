@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -75,7 +76,8 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   }
 
   @Override
-  public ListenableFuture<ImmutableList<T>> getAllNodesJob(Cell cell, Path buildFile) {
+  public ListenableFuture<ImmutableList<T>> getAllNodesJob(
+      Cell cell, Path buildFile, TargetConfiguration targetConfiguration) {
     SettableFuture<ImmutableList<T>> future = SettableFuture.create();
     ListenableFuture<ImmutableList<T>> cachedFuture = allNodeCache.putIfAbsent(buildFile, future);
 
@@ -97,7 +99,12 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
 
                 for (F from : allToConvert) {
                   BuildTarget target =
-                      getBuildTarget(cell.getRoot(), cell.getCanonicalName(), buildFile, from);
+                      getBuildTarget(
+                          cell.getRoot(),
+                          cell.getCanonicalName(),
+                          buildFile,
+                          targetConfiguration,
+                          from);
                   allNodeJobs.add(
                       cache.getJobWithCacheLookup(
                           cell, target, () -> dispatchComputeNode(cell, target, from), eventBus));
@@ -128,7 +135,11 @@ public abstract class ConvertingPipeline<F, T> extends ParsePipeline<T> {
   }
 
   protected abstract BuildTarget getBuildTarget(
-      Path root, Optional<String> cellName, Path buildFile, F from);
+      Path root,
+      Optional<String> cellName,
+      Path buildFile,
+      TargetConfiguration targetConfiguration,
+      F from);
 
   protected abstract T computeNodeInScope(
       Cell cell,

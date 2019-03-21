@@ -357,7 +357,10 @@ public class InstallCommand extends BuildCommand {
 
       BuildTarget target =
           FluentIterable.from(
-                  params.getParser().resolveTargetSpecs(parsingContext, ImmutableList.of(spec)))
+                  params
+                      .getParser()
+                      .resolveTargetSpecs(
+                          parsingContext, ImmutableList.of(spec), params.getTargetConfiguration()))
               .transformAndConcat(Functions.identity())
               .first()
               .get();

@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -82,6 +83,7 @@ public class GoProjectCommandHelper {
   private final GoBuckConfig goBuckConfig;
   private final BuckConfig buckConfig;
   private final Cell cell;
+  private final TargetConfiguration targetConfiguration;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final ParsingContext parsingContext;
 
@@ -92,7 +94,8 @@ public class GoProjectCommandHelper {
       ListeningExecutorService executor,
       boolean enableParserProfiling,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      ProjectGeneratorParameters projectGeneratorParameters) {
+      ProjectGeneratorParameters projectGeneratorParameters,
+      TargetConfiguration targetConfiguration) {
     this.params = params;
     this.buckEventBus = params.getBuckEventBus();
     this.console = projectGeneratorParameters.getConsole();
@@ -102,6 +105,7 @@ public class GoProjectCommandHelper {
     this.cell = params.getCell();
     this.argsParser = argsParser;
     this.projectGeneratorParameters = projectGeneratorParameters;
+    this.targetConfiguration = targetConfiguration;
     this.parsingContext =
         ParsingContext.builder(cell, executor)
             .setProfilingEnabled(enableParserProfiling)
@@ -124,7 +128,8 @@ public class GoProjectCommandHelper {
       passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
-                  parser.resolveTargetSpecs(parsingContext, argsParser.apply(targets))));
+                  parser.resolveTargetSpecs(
+                      parsingContext, argsParser.apply(targets), targetConfiguration)));
       projectGraph = getProjectGraphForIde(passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -181,7 +186,8 @@ public class GoProjectCommandHelper {
               parsingContext,
               ImmutableList.of(
                   ImmutableTargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
+              targetConfiguration)
           .getTargetGraph();
     }
     return parser.buildTargetGraph(parsingContext, passedInTargets);

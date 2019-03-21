@@ -31,6 +31,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
@@ -117,6 +118,7 @@ public class XCodeProjectCommandHelper {
   private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   private final Cell cell;
+  private final TargetConfiguration targetConfiguration;
   private final ImmutableSet<Flavor> appleCxxFlavors;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final Console console;
@@ -150,6 +152,7 @@ public class XCodeProjectCommandHelper {
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Cell cell,
       RuleKeyConfiguration ruleKeyConfiguration,
+      TargetConfiguration targetConfiguration,
       Console console,
       Optional<ProcessManager> processManager,
       ImmutableMap<String, String> environment,
@@ -179,6 +182,7 @@ public class XCodeProjectCommandHelper {
     this.typeCoercerFactory = typeCoercerFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.cell = cell;
+    this.targetConfiguration = targetConfiguration;
     this.appleCxxFlavors = appleCxxFlavors;
     this.ruleKeyConfiguration = ruleKeyConfiguration;
     this.console = console;
@@ -218,7 +222,8 @@ public class XCodeProjectCommandHelper {
       passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
-                  parser.resolveTargetSpecs(parsingContext, argsParser.apply(arguments))));
+                  parser.resolveTargetSpecs(
+                      parsingContext, argsParser.apply(arguments), targetConfiguration)));
       projectGraph = getProjectGraphForIde(passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -542,7 +547,9 @@ public class XCodeProjectCommandHelper {
       passedInTargetsSet =
           parser
               .resolveTargetSpecs(
-                  parsingContext.withSpeculativeParsing(SpeculativeParsing.DISABLED), specs)
+                  parsingContext.withSpeculativeParsing(SpeculativeParsing.DISABLED),
+                  specs,
+                  targetConfiguration)
               .stream()
               .flatMap(Collection::stream)
               .collect(ImmutableSet.toImmutableSet());
@@ -686,7 +693,8 @@ public class XCodeProjectCommandHelper {
               parsingContext,
               ImmutableList.of(
                   ImmutableTargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
+              targetConfiguration)
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());

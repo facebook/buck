@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
@@ -91,6 +92,7 @@ public class IjProjectCommandHelper {
   private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   private final Cell cell;
   private final IjProjectConfig projectConfig;
+  private final TargetConfiguration targetConfiguration;
   private final boolean processAnnotations;
   private final boolean updateOnly;
   private final @Nullable String outputDir;
@@ -108,6 +110,7 @@ public class IjProjectCommandHelper {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Cell cell,
+      TargetConfiguration targetConfiguration,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
       boolean processAnnotations,
@@ -117,6 +120,7 @@ public class IjProjectCommandHelper {
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
       ProjectGeneratorParameters projectGeneratorParameters) {
     this.buckEventBus = buckEventBus;
+    this.targetConfiguration = targetConfiguration;
     this.console = projectGeneratorParameters.getConsole();
     this.parser = projectGeneratorParameters.getParser();
     this.buckConfig = buckConfig;
@@ -161,7 +165,8 @@ public class IjProjectCommandHelper {
       passedInTargetsSet =
           ImmutableSet.copyOf(
               Iterables.concat(
-                  parser.resolveTargetSpecs(parsingContext, argsParser.apply(targets))));
+                  parser.resolveTargetSpecs(
+                      parsingContext, argsParser.apply(targets), targetConfiguration)));
       projectGraph = getProjectGraphForIde(passedInTargetsSet);
     } catch (BuildFileParseException e) {
       buckEventBus.post(ConsoleEvent.severe(MoreExceptions.getHumanReadableOrLocalizedMessage(e)));
@@ -220,7 +225,8 @@ public class IjProjectCommandHelper {
               parsingContext,
               ImmutableList.of(
                   ImmutableTargetNodePredicateSpec.of(
-                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))))
+                      BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))),
+              targetConfiguration)
           .getTargetGraph();
     }
     Preconditions.checkState(!passedInTargets.isEmpty());

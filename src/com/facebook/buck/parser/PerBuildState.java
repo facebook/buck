@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -57,18 +58,20 @@ public class PerBuildState implements AutoCloseable {
     return targetNodeParsePipeline.getNodeJob(owningCell, target);
   }
 
-  ImmutableList<TargetNode<?>> getAllTargetNodes(Cell cell, Path buildFile)
+  ImmutableList<TargetNode<?>> getAllTargetNodes(
+      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
       throws BuildFileParseException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return targetNodeParsePipeline.getAllNodes(cell, buildFile);
+    return targetNodeParsePipeline.getAllNodes(cell, buildFile, targetConfiguration);
   }
 
-  ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(Cell cell, Path buildFile)
+  ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
+      Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
       throws BuildTargetException {
     Preconditions.checkState(buildFile.startsWith(cell.getRoot()));
 
-    return targetNodeParsePipeline.getAllNodesJob(cell, buildFile);
+    return targetNodeParsePipeline.getAllNodesJob(cell, buildFile, targetConfiguration);
   }
 
   BuildFileManifest getBuildFileManifest(Cell cell, Path buildFile) throws BuildFileParseException {

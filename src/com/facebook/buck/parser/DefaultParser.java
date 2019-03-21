@@ -19,8 +19,10 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.HasDefaultFlavors;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -66,6 +68,7 @@ class DefaultParser extends AbstractParser {
       ParsingContext parsingContext,
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
       throws IOException, InterruptedException {
     TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
@@ -76,6 +79,9 @@ class DefaultParser extends AbstractParser {
             targetSpecResolver.resolveTargetSpecs(
                 parsingContext.getCell(),
                 targetNodeSpecs,
+                // This parser doesn't support configured targets, explicitly erase information
+                // about target configuration
+                EmptyTargetConfiguration.INSTANCE,
                 (buildTarget, targetNode, targetType) ->
                     applyDefaultFlavors(
                         buildTarget,
@@ -97,21 +103,25 @@ class DefaultParser extends AbstractParser {
 
       @Override
       public ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
-          Cell cell, Path buildFile) throws BuildTargetException {
-        return state.getAllTargetNodesJob(cell, buildFile);
+          Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+          throws BuildTargetException {
+        return state.getAllTargetNodesJob(cell, buildFile, targetConfiguration);
       }
     };
   }
 
   @Override
   public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
-      PerBuildState state, Cell cell, Path buildFile) throws BuildFileParseException {
-    return getAllTargetNodes(state, cell, buildFile);
+      PerBuildState state, Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+      throws BuildFileParseException {
+    return getAllTargetNodes(state, cell, buildFile, targetConfiguration);
   }
 
   @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> specs)
+      ParsingContext parsingContext,
+      Iterable<? extends TargetNodeSpec> specs,
+      TargetConfiguration targetConfiguration)
       throws BuildFileParseException, InterruptedException, IOException {
 
     try (PerBuildState state =
@@ -121,6 +131,9 @@ class DefaultParser extends AbstractParser {
       return targetSpecResolver.resolveTargetSpecs(
           parsingContext.getCell(),
           specs,
+          // This parser doesn't support configured targets, explicitly erase information
+          // about target configuration
+          EmptyTargetConfiguration.INSTANCE,
           (buildTarget, targetNode, targetType) ->
               applyDefaultFlavors(
                   buildTarget, targetNode, targetType, parsingContext.getApplyDefaultFlavorsMode()),

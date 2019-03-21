@@ -186,7 +186,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       CommandRunnerParams params, PerBuildState parserState, ParsingContext parsingContext) {
     return from(
         params.getCell(),
-        OwnersReport.builder(params.getCell(), params.getParser(), parserState),
+        OwnersReport.builder(
+            params.getCell(), params.getParser(), parserState, params.getTargetConfiguration()),
         params.getParser(),
         parserState,
         new TargetPatternEvaluator(
@@ -196,7 +197,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
             // We disable mapping //path/to:lib to //path/to:lib#default,static
             // because the query engine doesn't handle flavors very well.
             parsingContext.withApplyDefaultFlavorsMode(
-                ParserConfig.ApplyDefaultFlavorsMode.DISABLED)),
+                ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
+            params.getTargetConfiguration()),
         params.getBuckEventBus(),
         params.getTypeCoercerFactory());
   }

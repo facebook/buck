@@ -48,6 +48,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
@@ -2067,7 +2068,8 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     ImmutableBuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))))
+                            cellRoot, "//lib", "lib"))),
+                EmptyTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
     assertThat(
@@ -2113,7 +2115,8 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     BuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))))
+                            cellRoot, "//lib", "lib"))),
+                EmptyTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
     assertThat(
@@ -2163,7 +2166,8 @@ public class DefaultParserTest {
                 ImmutableList.of(
                     BuildTargetSpec.from(
                         UnconfiguredBuildTargetFactoryForTests.newInstance(
-                            cellRoot, "//lib", "lib"))))
+                            cellRoot, "//lib", "lib"))),
+                EmptyTargetConfiguration.INSTANCE)
             .getBuildTargets();
 
     assertThat(
@@ -2203,7 +2207,8 @@ public class DefaultParserTest {
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))));
+                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
+        EmptyTargetConfiguration.INSTANCE);
 
     // The read bytes are dependent on the serialization format of the parser, and the absolute path
     // of the temporary BUCK file we wrote, so let's just assert that there are a reasonable
@@ -2218,7 +2223,8 @@ public class DefaultParserTest {
         parsingContext,
         ImmutableList.of(
             BuildTargetSpec.from(
-                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))));
+                UnconfiguredBuildTargetFactoryForTests.newInstance(cellRoot, "//lib", "gen"))),
+        EmptyTargetConfiguration.INSTANCE);
     assertEquals(0L, Iterables.getOnlyElement(events).getProcessedBytes());
   }
 
@@ -2507,7 +2513,8 @@ public class DefaultParserTest {
                     ImmutableList.of(
                         ImmutableTargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(
-                                Paths.get(""), parsingContext.getCell().getRoot()))))
+                                Paths.get(""), parsingContext.getCell().getRoot()))),
+                    EmptyTargetConfiguration.INSTANCE)
                 .getTargetGraph()
                 .getNodes())
         .transform(TargetNode::getBuildTarget)

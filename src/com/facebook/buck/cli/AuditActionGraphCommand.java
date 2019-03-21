@@ -97,7 +97,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
                               .getDefaultFlavorsMode())
                       .build(),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell().getCellPathResolver(), params.getBuckConfig(), targetSpecs));
+                      params.getCell().getCellPathResolver(), params.getBuckConfig(), targetSpecs),
+                  params.getTargetConfiguration());
       TargetGraphAndBuildTargets targetGraphAndBuildTargets =
           params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
               ? toVersionedTargetGraph(params, unversionedTargetGraphAndBuildTargets)

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
@@ -53,11 +54,16 @@ class TargetPatternEvaluator {
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
   private final BuckConfig buckConfig;
   private final Cell rootCell;
+  private final TargetConfiguration targetConfiguration;
 
   private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
 
   public TargetPatternEvaluator(
-      Cell rootCell, BuckConfig buckConfig, Parser parser, ParsingContext parsingContext) {
+      Cell rootCell,
+      BuckConfig buckConfig,
+      Parser parser,
+      ParsingContext parsingContext,
+      TargetConfiguration targetConfiguration) {
     this.rootCell = rootCell;
     this.parser = parser;
     this.parsingContext = parsingContext;
@@ -65,6 +71,7 @@ class TargetPatternEvaluator {
     this.projectRoot = rootCell.getFilesystem().getRootPath();
     this.targetNodeSpecParser =
         new CommandLineTargetNodeSpecParser(buckConfig, new BuildTargetPatternTargetNodeParser());
+    this.targetConfiguration = targetConfiguration;
   }
 
   /** Attempts to parse and load the given collection of patterns. */
@@ -139,7 +146,7 @@ class TargetPatternEvaluator {
       specs.addAll(targetNodeSpecParser.parse(rootCell.getCellPathResolver(), pattern));
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
-        parser.resolveTargetSpecs(parsingContext, specs);
+        parser.resolveTargetSpecs(parsingContext, specs, targetConfiguration);
     LOG.verbose("Resolved target patterns %s -> targets %s", patterns, buildTargets);
 
     // Convert the ordered result into a result map of pattern to set of resolved targets.

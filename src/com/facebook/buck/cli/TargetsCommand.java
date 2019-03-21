@@ -537,7 +537,8 @@ public class TargetsCommand extends AbstractCommand {
                   ImmutableList.of(
                       ImmutableTargetNodePredicateSpec.of(
                           BuildFileSpec.fromRecursivePath(
-                              Paths.get(""), params.getCell().getRoot()))));
+                              Paths.get(""), params.getCell().getRoot()))),
+                  params.getTargetConfiguration());
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
 
@@ -556,7 +557,8 @@ public class TargetsCommand extends AbstractCommand {
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),
-                      getArguments())),
+                      getArguments()),
+                  params.getTargetConfiguration()),
           descriptionClasses);
     }
   }
@@ -664,7 +666,8 @@ public class TargetsCommand extends AbstractCommand {
                       ImmutableList.of(
                           ImmutableTargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
-                                  Paths.get(""), params.getCell().getRoot()))))
+                                  Paths.get(""), params.getCell().getRoot()))),
+                      params.getTargetConfiguration())
                   .getTargetGraph(),
               ImmutableSet.of());
     } else {
@@ -676,7 +679,8 @@ public class TargetsCommand extends AbstractCommand {
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),
-                      getArguments()));
+                      getArguments()),
+                  params.getTargetConfiguration());
     }
     return params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions()
         ? toVersionedTargetGraph(params, targetGraphAndBuildTargets)

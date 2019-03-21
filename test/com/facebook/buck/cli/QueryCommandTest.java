@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -133,14 +134,19 @@ public class QueryCommandTest {
     env =
         new FakeBuckQueryEnvironment(
             cell,
-            OwnersReport.builder(params.getCell(), params.getParser(), perBuildState),
+            OwnersReport.builder(
+                params.getCell(),
+                params.getParser(),
+                perBuildState,
+                EmptyTargetConfiguration.INSTANCE),
             params.getParser(),
             perBuildState,
             new TargetPatternEvaluator(
                 params.getCell(),
                 params.getBuckConfig(),
                 params.getParser(),
-                ParsingContext.builder(params.getCell(), executorService).build()),
+                ParsingContext.builder(params.getCell(), executorService).build(),
+                EmptyTargetConfiguration.INSTANCE),
             eventBus,
             typeCoercerFactory);
   }

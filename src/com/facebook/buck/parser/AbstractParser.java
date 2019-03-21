@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -95,8 +96,12 @@ abstract class AbstractParser implements Parser {
 
   @Override
   public ImmutableList<TargetNode<?>> getAllTargetNodes(
-      PerBuildState perBuildState, Cell cell, Path buildFile) throws BuildFileParseException {
-    return perBuildState.getAllTargetNodes(cell, buildFile);
+      PerBuildState perBuildState,
+      Cell cell,
+      Path buildFile,
+      TargetConfiguration targetConfiguration)
+      throws BuildFileParseException {
+    return perBuildState.getAllTargetNodes(cell, buildFile, targetConfiguration);
   }
 
   @Override
@@ -287,21 +292,28 @@ abstract class AbstractParser implements Parser {
 
   @Override
   public synchronized TargetGraphAndBuildTargets buildTargetGraphWithoutConfigurationTargets(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
+      ParsingContext parsingContext,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      TargetConfiguration targetConfiguration)
       throws BuildFileParseException, IOException, InterruptedException {
-    return buildTargetGraphForTargetNodeSpecs(parsingContext, targetNodeSpecs, true);
+    return buildTargetGraphForTargetNodeSpecs(
+        parsingContext, targetNodeSpecs, targetConfiguration, true);
   }
 
   @Override
   public synchronized TargetGraphAndBuildTargets buildTargetGraphWithConfigurationTargets(
-      ParsingContext parsingContext, Iterable<? extends TargetNodeSpec> targetNodeSpecs)
+      ParsingContext parsingContext,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      TargetConfiguration targetConfiguration)
       throws BuildFileParseException, IOException, InterruptedException {
-    return buildTargetGraphForTargetNodeSpecs(parsingContext, targetNodeSpecs, false);
+    return buildTargetGraphForTargetNodeSpecs(
+        parsingContext, targetNodeSpecs, targetConfiguration, false);
   }
 
   private synchronized TargetGraphAndBuildTargets buildTargetGraphForTargetNodeSpecs(
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
       throws BuildFileParseException, IOException, InterruptedException {
 
@@ -312,7 +324,11 @@ abstract class AbstractParser implements Parser {
 
       ImmutableSet<BuildTarget> buildTargets =
           collectBuildTargetsFromTargetNodeSpecs(
-              parsingContext, state, targetNodeSpecs, excludeConfigurationTargets);
+              parsingContext,
+              state,
+              targetNodeSpecs,
+              targetConfiguration,
+              excludeConfigurationTargets);
       TargetGraph graph = buildTargetGraph(state, buildTargets, processedBytes);
 
       return TargetGraphAndBuildTargets.of(graph, buildTargets);
@@ -323,6 +339,7 @@ abstract class AbstractParser implements Parser {
       ParsingContext parsingContext,
       PerBuildState state,
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
+      TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
       throws IOException, InterruptedException;
 

@@ -41,7 +41,8 @@ public class GoProjectSubCommand extends ProjectSubCommand {
             executor,
             projectGeneratorParameters.getEnableParserProfiling(),
             projectGeneratorParameters.getArgsParser(),
-            projectGeneratorParameters);
+            projectGeneratorParameters,
+            params.getTargetConfiguration());
     return projectCommandHelper.parseTargetsAndRunProjectGenerator(projectCommandArguments);
   }
 
