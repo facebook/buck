@@ -1316,12 +1316,37 @@ artifact_cache_size_limit = 52428800
 {call buckconfig.entry}
   {param section: 'cache' /}
   {param name: 'dir' /}
-  {param example_value: 'buck-cache' /}
+  {param example_value: 'buck-out/cache' /}
   {param description}
     <p>
-      The directory path relative to the project root that is used for directory-based caching.
-      This defaults to{sp} <code>buck-out/cache</code>.
+      The path to use for directory-based caching. The path can be:
     </p>
+
+    <ul>
+    <li>
+      <p>
+        An absolute path in your local file system, such 
+        as <code>/Volumes/mySSD/cache</code>.
+      </p>
+    </li>
+
+    <li>
+      <p>
+        A path relative to your home directory, that 
+        uses <a href="https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html">tilde (<code>~</code>) expansion</a>.
+        such as <code>~/local/cache</code>.
+      </p>
+    </li>
+
+    <li>
+      <p>
+        A path that is relative to the root of your Buck project, such 
+        as <strong><code>{call buck.buck_out_link /}/cache</code></strong>, 
+        which is the <strong>default</strong>.
+      </p>
+    </li>
+    </ul>
+
     <p>
       {call buckconfig.cache_mode /} must contain <code>dir</code>.
     </p>
