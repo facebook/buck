@@ -106,5 +106,5 @@ public interface Parser {
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> specs,
       TargetConfiguration targetConfiguration)
-      throws BuildFileParseException, InterruptedException, IOException;
+      throws BuildFileParseException, InterruptedException;
 }

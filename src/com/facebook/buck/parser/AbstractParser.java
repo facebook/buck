@@ -341,7 +341,7 @@ abstract class AbstractParser implements Parser {
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
-      throws IOException, InterruptedException;
+      throws InterruptedException;
 
   /**
    * Verifies that the provided target node is compatible with the target platform.

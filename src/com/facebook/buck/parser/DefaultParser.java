@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListenableFuture;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 
@@ -70,7 +69,7 @@ class DefaultParser extends AbstractParser {
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
-      throws IOException, InterruptedException {
+      throws InterruptedException {
     TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
         createTargetNodeProviderForSpecResolver(state);
 
@@ -122,7 +121,7 @@ class DefaultParser extends AbstractParser {
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> specs,
       TargetConfiguration targetConfiguration)
-      throws BuildFileParseException, InterruptedException, IOException {
+      throws BuildFileParseException, InterruptedException {
 
     try (PerBuildState state =
         perBuildStateFactory.create(parsingContext, permState, targetPlatforms.get())) {

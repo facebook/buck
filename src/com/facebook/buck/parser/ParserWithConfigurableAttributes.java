@@ -45,7 +45,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.SortedMap;
@@ -240,7 +239,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       ParsingContext parsingContext,
       Iterable<? extends TargetNodeSpec> specs,
       TargetConfiguration targetConfiguration)
-      throws BuildFileParseException, InterruptedException, IOException {
+      throws BuildFileParseException, InterruptedException {
 
     try (PerBuildStateWithConfigurableAttributes state =
         (PerBuildStateWithConfigurableAttributes)
@@ -286,7 +285,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       TargetConfiguration targetConfiguration,
       boolean excludeConfigurationTargets)
-      throws IOException, InterruptedException {
+      throws InterruptedException {
     PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
         (PerBuildStateWithConfigurableAttributes) state;
 
