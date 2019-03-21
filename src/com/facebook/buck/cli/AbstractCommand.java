@@ -59,7 +59,7 @@ import com.google.devtools.build.lib.clock.Clock;
 import com.google.devtools.build.lib.clock.JavaClock;
 import com.google.devtools.build.lib.profiler.Profiler;
 import com.google.devtools.build.lib.profiler.Profiler.Format;
-import com.google.devtools.build.lib.profiler.Profiler.ProfiledTaskKinds;
+import com.google.devtools.build.lib.profiler.ProfilerTask;
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
@@ -263,7 +263,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             new BufferedOutputStream(Files.newOutputStream(Paths.get(skylarkProfile)));
         Profiler.instance()
             .start(
-                ProfiledTaskKinds.ALL,
+                ImmutableSet.copyOf(ProfilerTask.values()),
                 outputStream,
                 Format.JSON_TRACE_FILE_FORMAT,
                 "Buck profile for " + skylarkProfile + " at " + LocalDate.now(),

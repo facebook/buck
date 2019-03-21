@@ -1,17 +1,8 @@
-diff --git a/.bazelrc b/.bazelrc
-new file mode 100644
-index 0000000000..a1ffc9999d
---- /dev/null
-+++ b/.bazelrc
-@@ -0,0 +1,3 @@
-+build --distinct_host_configuration=false
-+build --java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
-+build --host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 943dee6176..70a9030f92 100644
+index 4666aa4dae..53f8829b52 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -348,16 +348,56 @@ java_library(
+@@ -359,16 +359,58 @@ java_library(
  #
  # IMPORTANT:  NOT A PUBLIC INTERFACE. TARGETS SHOULDN'T DEPEND ON THIS.
  #
@@ -19,9 +10,6 @@ index 943dee6176..70a9030f92 100644
 -    name = "skylark-lang",
 -    visibility = ["//visibility:public"],
 -    exports = [
--        ":events",
--        ":skylarkinterface",
--        ":syntax",
 +java_binary(
 +    name = "bazel-jar",
 +    srcs = glob([
@@ -47,7 +35,23 @@ index 943dee6176..70a9030f92 100644
 +        "packages/StructProvider.java",
 +    ],
 +    deps = [
+         ":events",
++        ":io",
++        ":os_util",
++        ":out-err",
+         ":skylarkinterface",
+-        ":syntax",
++        ":unix",
++        ":util",
++        "//src/main/java/com/google/devtools/build/lib/clock",
 +        "//src/main/java/com/google/devtools/build/lib/cmdline",
++        "//src/main/java/com/google/devtools/build/lib/collect",
++        "//src/main/java/com/google/devtools/build/lib/collect/nestedset",
++        "//src/main/java/com/google/devtools/build/lib/concurrent",
++        "//src/main/java/com/google/devtools/build/lib/profiler",
++        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization",
++        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec:autocodec-annotation",
++        "//src/main/java/com/google/devtools/build/lib/skylarkbuildapi",
          "//src/main/java/com/google/devtools/build/lib/vfs",
          "//src/main/java/com/google/devtools/build/lib/vfs:pathfragment",
          "//src/main/java/com/google/devtools/build/lib/vfs/inmemoryfs",
@@ -58,28 +62,67 @@ index 943dee6176..70a9030f92 100644
 +        "//third_party:auto_value",
 +        "//third_party:guava",
 +        "//third_party:jsr305",
-+        "//src/main/java/com/google/devtools/build/lib/clock",
-+        "//src/main/java/com/google/devtools/build/lib/collect",
-+        "//src/main/java/com/google/devtools/build/lib/concurrent",
-+        ":events",
-+        ":io",
-+        ":os_util",
-+        ":skylarkinterface",
-+        ":unix",
-+        ":util",
-+        "//src/main/java/com/google/devtools/build/lib/profiler",
-+        "//src/main/java/com/google/devtools/build/lib/collect/nestedset",
-+        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec:autocodec-annotation",
-+        "//src/main/java/com/google/devtools/build/lib/skylarkbuildapi",
 +        "//third_party/protobuf:protobuf_java",
      ],
  )
  
+@@ -1390,6 +1432,10 @@ java_library(
+         ":runtime/commands/LICENSE",
+     ],
+     exports = [":runtime"],
++    deps = [
++        ":out-err",
++        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization",
++    ],
+ )
+ 
+ java_library(
+diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD b/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD
+index d15b0bd817..7b0f971036 100644
+--- a/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD
++++ b/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD
+@@ -27,7 +27,6 @@ java_library(
+         "//src/main/java/com/google/devtools/build/lib/skyframe/serialization:constants",
+         "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec",
+         "//third_party:auto_value",
+-        "//third_party:flogger",
+         "//third_party:guava",
+         "//third_party:jsr305",
+         "//third_party/protobuf:protobuf_java",
+diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
+index b2a64b8021..50d79522bc 100644
+--- a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
++++ b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
+@@ -19,7 +19,6 @@ import com.google.common.base.Function;
+ import com.google.common.base.Preconditions;
+ import com.google.common.collect.ImmutableList;
+ import com.google.common.collect.ImmutableSet;
+-import com.google.common.flogger.GoogleLogger;
+ import com.google.common.util.concurrent.Futures;
+ import com.google.common.util.concurrent.ListenableFuture;
+ import com.google.devtools.build.lib.bugreport.BugReport;
+@@ -47,8 +46,6 @@ import javax.annotation.Nullable;
+ @SuppressWarnings("unchecked")
+ @AutoCodec
+ public final class NestedSet<E> implements Iterable<E> {
+-  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+-
+   /**
+    * Order and size of set packed into one int.
+    *
+@@ -338,7 +335,6 @@ public final class NestedSet<E> implements Iterable<E> {
+         try {
+           return Arrays.toString(Futures.getDone(future));
+         } catch (ExecutionException e) {
+-          logger.atSevere().withCause(e).log("Error getting %s", future);
+           // Don't rethrow, since we may be in the process of trying to construct an error message.
+           return "Future " + future + " with error: " + e.getCause().getMessage();
+         }
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index 2f89d968f6..321c106326 100644
+index 87dd882d59..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,2360 +14,13 @@
+@@ -14,2391 +14,13 @@
  
  package com.google.devtools.build.lib.packages;
  
@@ -95,6 +138,8 @@ index 2f89d968f6..321c106326 100644
 -import com.google.common.collect.ImmutableMap;
 -import com.google.common.collect.ImmutableSet;
 -import com.google.common.collect.Iterables;
+-import com.google.common.collect.Lists;
+-import com.google.common.collect.Maps;
 -import com.google.common.collect.Ordering;
 -import com.google.common.collect.Sets;
 -import com.google.devtools.build.lib.analysis.TransitiveInfoProvider;
@@ -109,6 +154,7 @@ index 2f89d968f6..321c106326 100644
 -import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 -import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
 -import com.google.devtools.build.lib.skylarkbuildapi.SplitTransitionProviderApi;
+-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 -import com.google.devtools.build.lib.syntax.ClassObject;
 -import com.google.devtools.build.lib.syntax.EvalException;
 -import com.google.devtools.build.lib.syntax.EvalUtils;
@@ -384,6 +430,11 @@ index 2f89d968f6..321c106326 100644
 -    public SplitTransition apply(AttributeMap attributeMap) {
 -      return splitTransition;
 -    }
+-
+-    @Override
+-    public void repr(SkylarkPrinter printer) {
+-      printer.append("<transition object>");
+-    }
 -  }
 -
 -  /** A predicate class to check if the value of the attribute comes from a predefined set. */
@@ -392,7 +443,7 @@ index 2f89d968f6..321c106326 100644
 -
 -    private final Set<Object> allowedValues;
 -
--    public <T> AllowedValueSet(T... values) {
+-    public AllowedValueSet(Object... values) {
 -      this(Arrays.asList(values));
 -    }
 -
@@ -450,6 +501,7 @@ index 2f89d968f6..321c106326 100644
 -  @AutoCodec
 -  public static class ImmutableAttributeFactory {
 -    private final Type<?> type;
+-    private final String doc;
 -    private final ConfigurationTransition configTransition;
 -    private final RuleClassNamePredicate allowedRuleClassesForLabels;
 -    private final RuleClassNamePredicate allowedRuleClassesForLabelsWarning;
@@ -468,6 +520,7 @@ index 2f89d968f6..321c106326 100644
 -    @AutoCodec.VisibleForSerialization
 -    ImmutableAttributeFactory(
 -        Type<?> type,
+-        String doc,
 -        ImmutableSet<PropertyFlag> propertyFlags,
 -        Object value,
 -        ConfigurationTransition configTransition,
@@ -483,6 +536,7 @@ index 2f89d968f6..321c106326 100644
 -        RequiredProviders requiredProviders,
 -        ImmutableList<RuleAspect<?>> aspects) {
 -      this.type = type;
+-      this.doc = doc;
 -      this.configTransition = configTransition;
 -      this.allowedRuleClassesForLabels = allowedRuleClassesForLabels;
 -      this.allowedRuleClassesForLabelsWarning = allowedRuleClassesForLabelsWarning;
@@ -511,6 +565,7 @@ index 2f89d968f6..321c106326 100644
 -      Preconditions.checkState(!name.isEmpty(), "name has not been set");
 -      if (valueSource == AttributeValueSource.LATE_BOUND) {
 -        Preconditions.checkState(isLateBound(name));
+-        Preconditions.checkState(splitTransitionProvider == null);
 -      }
 -      // TODO(bazel-team): Set the default to be no file type, then remove this check, and also
 -      // remove all allowedFileTypes() calls without parameters.
@@ -532,6 +587,7 @@ index 2f89d968f6..321c106326 100644
 -
 -      return new Attribute(
 -          name,
+-          doc,
 -          type,
 -          propertyFlags,
 -          value,
@@ -564,6 +620,7 @@ index 2f89d968f6..321c106326 100644
 -    private FileTypeSet allowedFileTypesForLabels;
 -    private ValidityPredicate validityPredicate = ANY_EDGE;
 -    private Object value;
+-    private String doc;
 -    private AttributeValueSource valueSource = AttributeValueSource.DIRECT;
 -    private boolean valueSet;
 -    private Predicate<AttributeMap> condition;
@@ -744,6 +801,16 @@ index 2f89d968f6..321c106326 100644
 -     */
 -    public Builder<TYPE> undocumented(String reason) {
 -      return setPropertyFlag(PropertyFlag.UNDOCUMENTED, "undocumented");
+-    }
+-
+-    /**
+-     * Set the doc string for the attribute.
+-     *
+-     * @param doc The doc string for this attribute.
+-     */
+-    public Builder<TYPE> setDoc(String doc) {
+-      this.doc = doc;
+-      return this;
 -    }
 -
 -    /**
@@ -1239,6 +1306,7 @@ index 2f89d968f6..321c106326 100644
 -
 -      return new ImmutableAttributeFactory(
 -          type,
+-          doc,
 -          Sets.immutableEnumSet(propertyFlags),
 -          valueSet ? value : type.getDefaultValue(),
 -          configTransition,
@@ -1368,13 +1436,13 @@ index 2f89d968f6..321c106326 100644
 -        Rule rule,
 -        ComputationLimiter<TLimitException> limiter)
 -        throws TComputeException, TLimitException {
+-      AggregatingAttributeMapper mapper = AggregatingAttributeMapper.of(rule);
 -      // This will hold every (value1, value2, ..) combination of the declared dependencies.
 -      // Collect those combinations.
--      AggregatingAttributeMapper mapper = AggregatingAttributeMapper.of(rule);
 -      List<Map<String, Object>> depMaps = mapper.visitAttributes(dependencies, limiter);
 -      // For each combination, call compute() on a specialized AttributeMap providing those
 -      // values.
--      Map<List<Object>, T> valueMap = new HashMap<>(depMaps.size());
+-      Map<List<Object>, T> valueMap = Maps.newHashMapWithExpectedSize(depMaps.size());
 -      for (Map<String, Object> depMap : depMaps) {
 -        AttributeMap attrMap = mapper.createMapBackedAttributeMap(depMap);
 -        Object value = compute(attrMap);
@@ -1469,6 +1537,11 @@ index 2f89d968f6..321c106326 100644
 -
 -    <T> Iterable<T> getPossibleValues(Type<T> type, Rule rule) {
 -      final ComputedDefault owner = ComputedDefault.this;
+-      if (dependencies.isEmpty()) {
+-        AggregatingAttributeMapper mapper = AggregatingAttributeMapper.of(rule);
+-        Object value = owner.getDefault(mapper.createMapBackedAttributeMap(ImmutableMap.of()));
+-        return Lists.newArrayList(type.cast(value));
+-      }
 -      ComputationStrategy<RuntimeException> strategy =
 -          new ComputationStrategy<RuntimeException>() {
 -            @Override
@@ -1775,10 +1848,8 @@ index 2f89d968f6..321c106326 100644
 -      return (LateBoundDefault<Void, ValueT>) AlwaysNullLateBoundDefault.INSTANCE;
 -    }
 -
--    protected LateBoundDefault(
--        boolean useHostConfiguration,
--        Class<FragmentT> fragmentClass,
--        ValueT defaultValue) {
+-    LateBoundDefault(
+-        boolean useHostConfiguration, Class<FragmentT> fragmentClass, ValueT defaultValue) {
 -      this.useHostConfiguration = useHostConfiguration;
 -      this.defaultValue = defaultValue;
 -      this.fragmentClass = fragmentClass;
@@ -1849,7 +1920,7 @@ index 2f89d968f6..321c106326 100644
 -  public static class LabelLateBoundDefault<FragmentT>
 -      extends SimpleLateBoundDefault<FragmentT, Label> {
 -    @AutoCodec.VisibleForSerialization
--    LabelLateBoundDefault(
+-    protected LabelLateBoundDefault(
 -        boolean useHostConfiguration,
 -        Class<FragmentT> fragmentClass,
 -        Label defaultValue,
@@ -1972,6 +2043,8 @@ index 2f89d968f6..321c106326 100644
 -
 -  private final String name;
 -
+-  private final String doc;
+-
 -  private final Type<?> type;
 -
 -  private final Set<PropertyFlag> propertyFlags;
@@ -2043,6 +2116,7 @@ index 2f89d968f6..321c106326 100644
 -  @VisibleForSerialization
 -  Attribute(
 -      String name,
+-      String doc,
 -      Type<?> type,
 -      Set<PropertyFlag> propertyFlags,
 -      Object defaultValue,
@@ -2073,20 +2147,8 @@ index 2f89d968f6..321c106326 100644
 -          "a late bound default value using the host configuration must use the host transition");
 -    }
 -
--    if (name.equals(FunctionSplitTransitionWhitelist.WHITELIST_ATTRIBUTE_NAME)) {
--      Preconditions.checkArgument(
--          BuildType.isLabelType(type),
--          "_whitelist_function_transition attribute must be a label");
--      Preconditions.checkArgument(
--          defaultValue != null,
--          "_whitelist_function_transition attribute must have a default value");
--      Preconditions.checkArgument(
--          ((Label) defaultValue).equals(FunctionSplitTransitionWhitelist.WHITELIST_LABEL),
--          "_whitelist_function_transition attribute does not have the expected value "
--          + FunctionSplitTransitionWhitelist.WHITELIST_LABEL);
--    }
--
 -    this.name = name;
+-    this.doc = doc;
 -    this.type = type;
 -    this.propertyFlags = propertyFlags;
 -    this.defaultValue = defaultValue;
@@ -2100,21 +2162,23 @@ index 2f89d968f6..321c106326 100644
 -    this.allowedValues = allowedValues;
 -    this.requiredProviders = requiredProviders;
 -    this.aspects = aspects;
--    this.hashCode = Objects.hash(
--        name,
--        type,
--        propertyFlags,
--        defaultValue,
--        configTransition,
--        splitTransitionProvider,
--        allowedRuleClassesForLabels,
--        allowedRuleClassesForLabelsWarning,
--        allowedFileTypesForLabels,
--        validityPredicate,
--        condition,
--        allowedValues,
--        requiredProviders,
--        aspects);
+-    this.hashCode =
+-        Objects.hash(
+-            name,
+-            doc,
+-            type,
+-            propertyFlags,
+-            defaultValue,
+-            configTransition,
+-            splitTransitionProvider,
+-            allowedRuleClassesForLabels,
+-            allowedRuleClassesForLabelsWarning,
+-            allowedFileTypesForLabels,
+-            validityPredicate,
+-            condition,
+-            allowedValues,
+-            requiredProviders,
+-            aspects);
 -  }
 -
 -  /**
@@ -2122,6 +2186,11 @@ index 2f89d968f6..321c106326 100644
 -   */
 -  public String getName() {
 -    return name;
+-  }
+-
+-  /** Returns the doc string for that attribute, if any. */
+-  public String getDoc() {
+-    return doc;
 -  }
 -
 -  /**
@@ -2231,6 +2300,11 @@ index 2f89d968f6..321c106326 100644
 -  public SplitTransition getSplitTransition(AttributeMap attributeMapper) {
 -    Preconditions.checkState(hasSplitConfigurationTransition());
 -    return splitTransitionProvider.apply(attributeMapper);
+-  }
+-
+-  @VisibleForTesting
+-  public SplitTransitionProvider getSplitTransitionProviderForTesting() {
+-    return splitTransitionProvider;
 -  }
 -
 -  /**
@@ -2410,7 +2484,7 @@ index 2f89d968f6..321c106326 100644
 -   * or a late-bound default.
 -   */
 -  @VisibleForTesting
--  public Object getDefaultValueForTesting() {
+-  public Object getDefaultValueUnchecked() {
 -    return defaultValue;
 -  }
 -
@@ -2447,7 +2521,7 @@ index 2f89d968f6..321c106326 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2378,14 +31,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2409,14 +31,6 @@ public final class Attribute implements Comparable<Attribute> {
    }
  
    /**
@@ -2462,7 +2536,7 @@ index 2f89d968f6..321c106326 100644
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
     */
-@@ -2409,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2440,78 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }
@@ -2488,6 +2562,7 @@ index 2f89d968f6..321c106326 100644
 -    Attribute attribute = (Attribute) o;
 -    return Objects.equals(hashCode, attribute.hashCode)
 -        && Objects.equals(name, attribute.name)
+-        && Objects.equals(doc, attribute.doc)
 -        && Objects.equals(type, attribute.type)
 -        && Objects.equals(propertyFlags, attribute.propertyFlags)
 -        && Objects.equals(defaultValue, attribute.defaultValue)
@@ -2515,6 +2590,7 @@ index 2f89d968f6..321c106326 100644
 -  public <TYPE> Attribute.Builder<TYPE> cloneBuilder(Type<TYPE> tp) {
 -    Preconditions.checkArgument(tp == this.type);
 -    Builder<TYPE> builder = new Builder<>(name, tp);
+-    builder.doc = doc;
 -    builder.allowedFileTypesForLabels = allowedFileTypesForLabels;
 -    builder.allowedRuleClassesForLabels = allowedRuleClassesForLabels;
 -    builder.allowedRuleClassesForLabelsWarning = allowedRuleClassesForLabelsWarning;

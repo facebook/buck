@@ -58,9 +58,9 @@ import com.google.devtools.build.lib.syntax.Environment.Extension;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.SkylarkImport;
-import com.google.devtools.build.lib.syntax.SkylarkSemantics;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
+import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -350,7 +350,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         Environment.builder(mutability)
             .setImportedExtensions(importMap)
             .setGlobals(buckGlobals.getBuckBuildFileContextGlobals())
-            .setSemantics(SkylarkSemantics.DEFAULT_SEMANTICS)
+            .setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS)
             .setEventHandler(eventHandler)
             .build();
     SkylarkUtils.setPhase(env, Phase.LOADING);
@@ -589,7 +589,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         envBuilder.setImportedExtensions(toImportMap(dependencies, null));
       }
       Environment extensionEnv =
-          envBuilder.setSemantics(SkylarkSemantics.DEFAULT_SEMANTICS).build();
+          envBuilder.setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS).build();
       boolean success = extensionAst.exec(extensionEnv, eventHandler);
       if (!success) {
         throw BuildFileParseException.createForUnknownParseError(

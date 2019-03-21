@@ -24,6 +24,7 @@ import com.google.devtools.build.lib.packages.Provider;
 import com.google.devtools.build.lib.packages.Provider.Key;
 import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.packages.SkylarkProvider;
+import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import java.util.Optional;
@@ -49,14 +50,15 @@ public class ProviderInfoCollectionImpl implements ProviderInfoCollection {
   }
 
   @Override
-  public Object getIndex(Object key, Location loc) throws EvalException {
+  public Object getIndex(Object key, Location loc, StarlarkContext context) throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports indexing by object constructors, got %s instead");
     return get(((Provider) key).getKey());
   }
 
   @Override
-  public boolean containsKey(Object key, Location loc) throws EvalException {
+  public boolean containsKey(Object key, Location loc, StarlarkContext context)
+      throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports querying by object constructors, got %s instead");
     return get(((Provider) key).getKey()) != null;

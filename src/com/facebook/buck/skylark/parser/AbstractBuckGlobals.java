@@ -31,7 +31,7 @@ import com.google.devtools.build.lib.syntax.Environment.GlobalFrame;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodLibrary;
 import com.google.devtools.build.lib.syntax.Runtime;
-import com.google.devtools.build.lib.syntax.SkylarkSemantics;
+import com.google.devtools.build.lib.syntax.StarlarkSemantics;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Lazy;
 
@@ -45,6 +45,16 @@ import org.immutables.value.Value.Lazy;
 @Value.Immutable
 @BuckStyleImmutable
 abstract class AbstractBuckGlobals {
+
+  static {
+    /**
+     * Ensure that we make a reference to the default builtins so that they are registered with
+     * {@link Runtime#getBuiltinRegistry()} before we freeze that BuiltinRegistry This also
+     * indirectly initializes {@link MethodLibrary} properly before freezing.
+     */
+    @SuppressWarnings("unused")
+    GlobalFrame globals = Environment.DEFAULT_GLOBALS;
+  }
 
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   @Lazy
@@ -110,7 +120,7 @@ abstract class AbstractBuckGlobals {
   private void addNativeModuleFunctions(ImmutableMap.Builder<String, Object> builder) {
     for (String nativeFunction :
         FuncallExpression.getMethodNames(
-            SkylarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
+            StarlarkSemantics.DEFAULT_SEMANTICS, SkylarkNativeModule.class)) {
       builder.put(
           nativeFunction,
           FuncallExpression.getBuiltinCallable(SkylarkNativeModule.NATIVE_MODULE, nativeFunction));

@@ -28,6 +28,7 @@ import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -162,7 +163,9 @@ public class GlobTest {
       throws IOException, InterruptedException {
     Pair<Boolean, Environment> result = evaluate(buildFile, mutability, eventHandler);
     if (!result.getFirst()) {
-      Assert.fail("Build file evaluation must have succeeded");
+      String message =
+          "Build file evaluation failed:\n" + Joiner.on("\n").join(eventHandler.iterator());
+      Assert.fail(message);
     }
     return result.getSecond();
   }

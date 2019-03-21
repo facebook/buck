@@ -30,6 +30,7 @@ import com.google.devtools.build.lib.packages.Provider;
 import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.packages.SkylarkProvider;
 import com.google.devtools.build.lib.packages.SkylarkProvider.SkylarkKey;
+import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import java.util.Optional;
 import org.junit.Rule;
@@ -40,18 +41,20 @@ public class ProviderInfoCollectionImplTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
+  StarlarkContext ctx = new StarlarkContext() {};
+
   @Test
   public void getIndexThrowsWhenKeyNotProvider() throws EvalException {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection = ProviderInfoCollectionImpl.builder().build();
-    providerInfoCollection.getIndex(new Object(), Location.BUILTIN);
+    providerInfoCollection.getIndex(new Object(), Location.BUILTIN, ctx);
   }
 
   @Test
   public void containsKeyThrowsWhenKeyNotProvider() throws EvalException {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection = ProviderInfoCollectionImpl.builder().build();
-    providerInfoCollection.containsKey(new Object(), Location.BUILTIN);
+    providerInfoCollection.containsKey(new Object(), Location.BUILTIN, ctx);
   }
 
   @Test
@@ -61,9 +64,9 @@ public class ProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().put(info).build();
 
-    assertTrue(providerInfoCollection.containsKey(provider, Location.BUILTIN));
+    assertTrue(providerInfoCollection.containsKey(provider, Location.BUILTIN, ctx));
     assertEquals(Optional.of(info), providerInfoCollection.get(provider));
-    assertSame(info, providerInfoCollection.getIndex(provider, Location.BUILTIN));
+    assertSame(info, providerInfoCollection.getIndex(provider, Location.BUILTIN, ctx));
   }
 
   @Test
@@ -76,9 +79,9 @@ public class ProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection =
         ProviderInfoCollectionImpl.builder().put(info).build();
 
-    assertTrue(providerInfoCollection.containsKey(provider, Location.BUILTIN));
+    assertTrue(providerInfoCollection.containsKey(provider, Location.BUILTIN, ctx));
     assertEquals(Optional.of(info), providerInfoCollection.get(provider));
-    assertSame(info, providerInfoCollection.getIndex(provider, Location.BUILTIN));
+    assertSame(info, providerInfoCollection.getIndex(provider, Location.BUILTIN, ctx));
   }
 
   @Test
@@ -88,12 +91,12 @@ public class ProviderInfoCollectionImplTest {
         new BuiltinProvider<MyTestInfo>("myprovider", MyTestInfo.class) {};
     ProviderInfoCollection providerInfoCollection = ProviderInfoCollectionImpl.builder().build();
 
-    assertFalse(providerInfoCollection.containsKey(skylarkProvider, Location.BUILTIN));
-    assertFalse(providerInfoCollection.containsKey(builtinProvider, Location.BUILTIN));
+    assertFalse(providerInfoCollection.containsKey(skylarkProvider, Location.BUILTIN, ctx));
+    assertFalse(providerInfoCollection.containsKey(builtinProvider, Location.BUILTIN, ctx));
     assertEquals(Optional.empty(), providerInfoCollection.get(skylarkProvider));
     assertEquals(Optional.empty(), providerInfoCollection.get(builtinProvider));
-    assertEquals(null, providerInfoCollection.getIndex(skylarkProvider, Location.BUILTIN));
-    assertEquals(null, providerInfoCollection.getIndex(builtinProvider, Location.BUILTIN));
+    assertEquals(null, providerInfoCollection.getIndex(skylarkProvider, Location.BUILTIN, ctx));
+    assertEquals(null, providerInfoCollection.getIndex(builtinProvider, Location.BUILTIN, ctx));
   }
 
   @Test
@@ -127,10 +130,14 @@ public class ProviderInfoCollectionImplTest {
     assertEquals(Optional.of(builtinInfo1), providerInfoCollection.get(builtinProvider1));
     assertEquals(Optional.of(builtinInfo2), providerInfoCollection.get(builtinProvider2));
 
-    assertSame(skylarkInfo1, providerInfoCollection.getIndex(skylarkProvider1, Location.BUILTIN));
-    assertSame(skylarkInfo2, providerInfoCollection.getIndex(skylarkProvider2, Location.BUILTIN));
-    assertSame(builtinInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN));
-    assertSame(builtinInfo2, providerInfoCollection.getIndex(builtinProvider2, Location.BUILTIN));
+    assertSame(
+        skylarkInfo1, providerInfoCollection.getIndex(skylarkProvider1, Location.BUILTIN, ctx));
+    assertSame(
+        skylarkInfo2, providerInfoCollection.getIndex(skylarkProvider2, Location.BUILTIN, ctx));
+    assertSame(
+        builtinInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN, ctx));
+    assertSame(
+        builtinInfo2, providerInfoCollection.getIndex(builtinProvider2, Location.BUILTIN, ctx));
   }
 
   private SkylarkProvider createSkylarkProvider(String keyname) {
