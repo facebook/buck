@@ -38,7 +38,9 @@ import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.CachingGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -95,6 +97,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private final EventHandler eventHandler;
   private final BuckGlobals buckGlobals;
   private final GlobberFactory globberFactory;
+  private final Cache<com.google.devtools.build.lib.vfs.Path, BuildFileAST> astCache;
   private final LoadingCache<LoadImport, ExtensionData> extensionDataCache;
   private final LoadingCache<LoadImport, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
@@ -112,6 +115,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     this.eventHandler = eventHandler;
     this.buckGlobals = buckGlobals;
     this.globberFactory = globberFactory;
+
+    this.astCache = CacheBuilder.newBuilder().build();
 
     this.extensionDataCache =
         CacheBuilder.newBuilder()
@@ -135,6 +140,17 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
     this.packageImplicitIncludeFinder =
         PackageImplicitIncludesFinder.fromConfiguration(options.getPackageImplicitIncludes());
+  }
+
+  @VisibleForTesting
+  protected SkylarkProjectBuildFileParser(SkylarkProjectBuildFileParser other) {
+    this(
+        other.options,
+        other.buckEventBus,
+        other.fileSystem,
+        other.buckGlobals,
+        other.eventHandler,
+        other.globberFactory);
   }
 
   /** Create an instance of Skylark project build file parser using provided options. */
@@ -269,7 +285,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
 
-    BuildFileAST buildFileAst = parseBuildFile(buildFile, buildFilePath);
+    BuildFileAST buildFileAst = parseBuildFile(buildFilePath, containingLabel);
     CachingGlobber globber = newGlobber(buildFile);
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
@@ -306,12 +322,14 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   private BuildFileAST parseBuildFile(
-      Path buildFile, com.google.devtools.build.lib.vfs.Path buildFilePath) throws IOException {
+      com.google.devtools.build.lib.vfs.Path buildFilePath, Label containingLabel)
+      throws IOException {
     BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(createInputSource(buildFilePath), eventHandler);
+        parseSkylarkFile(buildFilePath, containingLabel).validateBuildFile(eventHandler);
+
     if (buildFileAst.containsErrors()) {
       throw BuildFileParseException.createForUnknownParseError(
-          "Cannot parse build file " + buildFile);
+          "Cannot parse build file %s", buildFilePath);
     }
     return buildFileAst;
   }
@@ -320,14 +338,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   private CachingGlobber newGlobber(Path buildFile) {
     return CachingGlobber.of(
         globberFactory.create(fileSystem.getPath(buildFile.getParent().toString())));
-  }
-
-  /** Creates an instance of {@link ParserInputSource} for a file at {@code buildFilePath}. */
-  private ParserInputSource createInputSource(com.google.devtools.build.lib.vfs.Path buildFilePath)
-      throws IOException {
-    return ParserInputSource.create(
-        FileSystemUtils.readContent(buildFilePath, StandardCharsets.UTF_8),
-        buildFilePath.asFragment());
   }
 
   /**
@@ -414,6 +424,42 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /**
+   * Reads file and returns abstract syntax tree for that file.
+   *
+   * @param path file path to read the data from.
+   * @return abstract syntax tree; does not handle any errors.
+   */
+  @VisibleForTesting
+  protected BuildFileAST readSkylarkAST(com.google.devtools.build.lib.vfs.Path path)
+      throws IOException {
+    return BuildFileAST.parseSkylarkFile(
+        ParserInputSource.create(
+            FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.asFragment()),
+        eventHandler);
+  }
+
+  private BuildFileAST parseSkylarkFile(
+      com.google.devtools.build.lib.vfs.Path path, Label containingLabel)
+      throws BuildFileParseException, IOException {
+    BuildFileAST result = astCache.getIfPresent(path);
+    if (result == null) {
+      try {
+        result = readSkylarkAST(path);
+      } catch (FileNotFoundException e) {
+        throw BuildFileParseException.createForUnknownParseError(
+            "%s cannot be loaded because it does not exist. It was referenced from %s",
+            path, containingLabel);
+      }
+      if (result.containsErrors()) {
+        throw BuildFileParseException.createForUnknownParseError(
+            "Cannot parse %s.  It was referenced form %s", path, containingLabel);
+      }
+      astCache.put(path, result);
+    }
+    return result;
+  }
+
+  /**
    * Creates an {@code IncludesData} object from a {@code path}.
    *
    * @param loadImport an import label representing an extension to load.
@@ -423,19 +469,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     Label label = loadImport.getLabel();
     com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
 
-    BuildFileAST fileAst;
-    try {
-      fileAst = BuildFileAST.parseSkylarkFile(createInputSource(filePath), eventHandler);
-    } catch (FileNotFoundException e) {
-      throw BuildFileParseException.createForUnknownParseError(
-          String.format(
-              "%s cannot be loaded because it does not exist. It was referenced from %s",
-              filePath, loadImport.getContainingLabel()));
-    }
-    if (fileAst.containsErrors()) {
-      throw BuildFileParseException.createForUnknownParseError(
-          "Cannot parse included file " + loadImport.getImport().getImportString());
-    }
+    BuildFileAST fileAst = parseSkylarkFile(filePath, loadImport.getContainingLabel());
 
     ImmutableList<IncludesData> dependencies =
         fileAst.getImports().isEmpty()
@@ -566,20 +600,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<ExtensionData> dependencies = ImmutableList.of();
     Extension extension;
     try (Mutability mutability = Mutability.create("importing extension")) {
-      BuildFileAST extensionAst;
-      try {
-        extensionAst =
-            BuildFileAST.parseSkylarkFile(createInputSource(extensionPath), eventHandler);
-      } catch (FileNotFoundException e) {
-        throw BuildFileParseException.createForUnknownParseError(
-            String.format(
-                "%s cannot be loaded because it does not exist. It was referenced from %s",
-                extensionPath, loadImport.getContainingLabel()));
-      }
-      if (extensionAst.containsErrors()) {
-        throw BuildFileParseException.createForUnknownParseError(
-            "Cannot parse extension file " + loadImport.getImport().getImportString());
-      }
+      BuildFileAST extensionAst = parseSkylarkFile(extensionPath, loadImport.getContainingLabel());
       Environment.Builder envBuilder =
           Environment.builder(mutability)
               .setEventHandler(eventHandler)
@@ -666,7 +687,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     String basePath = getBasePath(buildFile);
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
-    BuildFileAST buildFileAst = parseBuildFile(buildFile, buildFilePath);
+    BuildFileAST buildFileAst = parseBuildFile(buildFilePath, containingLabel);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, buildFileAst.getImports());
 

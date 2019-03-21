@@ -19,6 +19,7 @@ package com.facebook.buck.parser.exceptions;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import java.io.IOException;
 import java.nio.file.Path;
+import javax.annotation.Nullable;
 
 /**
  * Thrown if we encounter an unexpected, fatal condition while interacting with the build file
@@ -26,26 +27,19 @@ import java.nio.file.Path;
  */
 public class BuildFileParseException extends HumanReadableException {
 
-  protected BuildFileParseException(String message) {
-    super(message);
+  protected BuildFileParseException(String message, Object... args) {
+    super(message, args);
   }
 
-  public static BuildFileParseException createForUnknownParseError(String message) {
-    return new BuildFileParseException(message);
-  }
-
-  private static String formatMessageWithCause(String message, IOException cause) {
-    if (cause != null && cause.getMessage() != null) {
-      return message + ":\n" + cause.getMessage();
-    } else {
-      return message;
-    }
+  public static BuildFileParseException createForUnknownParseError(String message, Object... args) {
+    return new BuildFileParseException(message, args);
   }
 
   public static BuildFileParseException createForBuildFileParseError(
-      Path buildFile, IOException cause) {
-    String message = String.format("Buck wasn't able to parse %s", buildFile);
-    return new BuildFileParseException(formatMessageWithCause(message, cause));
+      Path buildFile, @Nullable IOException cause) {
+    String causeMessage =
+        cause != null && cause.getMessage() != null ? ":\n" + cause.getMessage() : "";
+    return new BuildFileParseException("Buck wasn't able to parse %s%s", buildFile, causeMessage);
   }
 
   @Override

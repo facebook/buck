@@ -9,5 +9,6 @@ java_library(
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/util:exceptions",
+        "//third-party/java/jsr:jsr305",
     ],
 )
