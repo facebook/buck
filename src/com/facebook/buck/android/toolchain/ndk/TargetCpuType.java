@@ -303,7 +303,7 @@ public enum TargetCpuType {
         case GCC:
           return ImmutableList.of();
         case CLANG:
-          return ImmutableList.of();
+          return ImmutableList.of("-target", "x86_64-none-linux-android");
       }
       throw new AssertionError();
     }
