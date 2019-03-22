@@ -44,7 +44,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
   private final boolean speculativeDepsTraversal;
   private final RawTargetNodePipeline rawTargetNodePipeline;
   private final ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory;
-  private final SimplePerfEvent.Scope targetNodePipelineLifetimeEventScope;
 
   /** Create new pipeline for parsing Buck files. */
   public RawTargetNodeToTargetNodeParsePipeline(
@@ -63,9 +62,6 @@ public class RawTargetNodeToTargetNodeParsePipeline
         PerfEventId.of("GetTargetNode"));
     this.rawTargetNodePipeline = rawTargetNodePipeline;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
-    this.targetNodePipelineLifetimeEventScope =
-        SimplePerfEvent.scope(
-            eventBus, PerfEventId.of("configured_raw_target_node_parse_pipeline"));
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
   }
 
@@ -125,11 +121,5 @@ public class RawTargetNodeToTargetNodeParsePipeline
   protected ListenableFuture<RawTargetNode> getItemToConvert(Cell cell, BuildTarget buildTarget)
       throws BuildTargetException {
     return rawTargetNodePipeline.getNodeJob(cell, buildTarget);
-  }
-
-  @Override
-  public void close() {
-    targetNodePipelineLifetimeEventScope.close();
-    super.close();
   }
 }
