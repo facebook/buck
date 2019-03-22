@@ -37,6 +37,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * This factory creates {@link PerBuildStateFactory} that uses simple pipeline that doesn't support
  * configurable attributes.
  */
+// TODO: remove after migration to configurable attributes
 class LegacyPerBuildStateFactory extends PerBuildStateFactory {
   private final TypeCoercerFactory typeCoercerFactory;
   private final ConstructorArgMarshaller marshaller;

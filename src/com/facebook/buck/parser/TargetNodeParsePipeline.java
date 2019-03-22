@@ -52,6 +52,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * duplicated (the **JobsCache variables) are used to make sure we don't schedule the same work more
  * than once), however it's possible for multiple read-only commands to duplicate work.
  */
+// TODO: remove after migration to configurable attributes
 @ThreadSafe
 public class TargetNodeParsePipeline
     extends ConvertingPipeline<Map<String, Object>, TargetNode<?>> {

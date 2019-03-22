@@ -45,6 +45,7 @@ import java.util.function.Supplier;
  * <p>Computed targets are cached but are automatically invalidated if Watchman reports any
  * filesystem changes that may affect computed results.
  */
+// TODO: remove after migration to configurable attributes
 class DefaultParser extends AbstractParser {
 
   private static final Logger LOG = Logger.get(Parser.class);
