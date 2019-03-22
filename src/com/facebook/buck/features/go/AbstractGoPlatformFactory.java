@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -111,7 +112,7 @@ abstract class AbstractGoPlatformFactory {
               try {
                 return GoOs.fromString(os);
               } catch (IllegalArgumentException e) {
-                throw new HumanReadableException("%s.go: unknown GOOS '%s'", section, os);
+                throw new HumanReadableException("%s.os: unknown GOOS '%s'", section, os);
               }
             })
         .orElse(AbstractGoPlatformFactory.getDefaultOs());
@@ -124,8 +125,8 @@ abstract class AbstractGoPlatformFactory {
             arch -> {
               try {
                 return GoArch.fromString(arch);
-              } catch (IllegalArgumentException e) {
-                throw new HumanReadableException("%s.arch: unknown GOARCH '%s'", section, arch);
+              } catch (NoSuchElementException e) {
+                throw new HumanReadableException("%s.arch unknown GOARCH '%s'", section, arch);
               }
             })
         .orElse(AbstractGoPlatformFactory.getDefaultArch());

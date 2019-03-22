@@ -19,6 +19,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.environment.Architecture;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * Represents the GOARCH values in Go found at:
@@ -55,10 +56,13 @@ public enum GoArch {
   private String name;
   private Architecture arch;
 
+  private static final Map<String, GoArch> map = new HashMap<String, GoArch>();
   private static final Map<Architecture, GoArch> archMap = new HashMap<Architecture, GoArch>();
 
   static {
     for (GoArch goarch : GoArch.values()) {
+      map.put(goarch.name, goarch);
+
       if (goarch.arch != Architecture.UNKNOWN) {
         archMap.put(goarch.arch, goarch);
       }
@@ -85,9 +89,13 @@ public enum GoArch {
    *
    * @param name name of the GoArch as defined from Go itself
    * @return GoArch for the matching name
+   * @throws NoSuchElementException when a GoArch is not found for the name
    */
   public static GoArch fromString(String name) {
-    return GoArch.valueOf(name.toUpperCase());
+    if (map.containsKey(name)) {
+      return map.get(name);
+    }
+    throw new NoSuchElementException("No GOARCH found for name '" + name + "'");
   }
 
   /**
