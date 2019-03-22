@@ -175,6 +175,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             MoreExecutors.newDirectExecutorService(),
             rawTargetNodePipeline,
             eventBus,
+            "nonresolving_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             nonResolvingRawTargetNodeToTargetNodeFactory);
 
@@ -217,6 +218,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             configuredPipeline,
             rawTargetNodePipeline,
             eventBus,
+            "configured_raw_target_node_parse_pipeline",
             enableSpeculativeParsing,
             rawTargetNodeToTargetNodeFactory) {
           @Override

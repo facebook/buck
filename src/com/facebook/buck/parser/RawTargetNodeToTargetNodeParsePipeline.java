@@ -51,14 +51,14 @@ public class RawTargetNodeToTargetNodeParsePipeline
       ListeningExecutorService executorService,
       RawTargetNodePipeline rawTargetNodePipeline,
       BuckEventBus eventBus,
+      String pipelineName,
       boolean speculativeDepsTraversal,
       ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory) {
     super(
         executorService,
         cache,
         eventBus,
-        SimplePerfEvent.scope(
-            eventBus, PerfEventId.of("configured_raw_target_node_parse_pipeline")),
+        SimplePerfEvent.scope(eventBus, PerfEventId.of(pipelineName)),
         PerfEventId.of("GetTargetNode"));
     this.rawTargetNodePipeline = rawTargetNodePipeline;
     this.speculativeDepsTraversal = speculativeDepsTraversal;
