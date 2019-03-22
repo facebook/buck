@@ -225,6 +225,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
           public void close() {
             super.close();
             nonResolvingTargetNodeParsePipeline.close();
+            rawTargetNodePipeline.close();
             try {
               MostExecutors.shutdown(configuredPipelineExecutor, 1, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
