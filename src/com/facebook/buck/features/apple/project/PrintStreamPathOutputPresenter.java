@@ -39,7 +39,7 @@ class PrintStreamPathOutputPresenter implements PathOutputPresenter {
   public void present(String prefix, Path path) {
     Path prettyPath;
     if (outputMode == Mode.FULL) {
-      prettyPath = repoRoot.resolve(path);
+      prettyPath = repoRoot.resolve(path).normalize();
     } else if (outputMode == Mode.SIMPLE) {
       prettyPath = path;
     } else {

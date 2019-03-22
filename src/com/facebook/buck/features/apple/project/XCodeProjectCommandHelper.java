@@ -491,10 +491,11 @@ public class XCodeProjectCommandHelper {
 
       CxxPlatform defaultCxxPlatform =
           cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getLegacyTotallyUnsafe();
+      Cell workspaceCell = cell.getCell(inputTarget);
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
               xcodeDescriptions,
-              cell,
+              workspaceCell,
               targetGraphAndTargets.getTargetGraph(),
               workspaceArgs,
               inputTarget,
@@ -525,7 +526,9 @@ public class XCodeProjectCommandHelper {
           inputTarget, requiredBuildTargetsForWorkspace);
       requiredBuildTargetsBuilder.addAll(requiredBuildTargetsForWorkspace);
 
-      presenter.present(inputTarget.getFullyQualifiedName(), outputPath);
+      Path absolutePath = workspaceCell.getFilesystem().resolve(outputPath);
+      Path relativePath = cell.getFilesystem().relativize(absolutePath);
+      presenter.present(inputTarget.getFullyQualifiedName(), relativePath);
     }
 
     return requiredBuildTargetsBuilder.build();

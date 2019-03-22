@@ -533,6 +533,33 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectOtherCell() throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "project_with_cell", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "project",
+            "--config",
+            "project.embedded_cell_buck_out_enabled=true",
+            "--config",
+            "apple.merge_header_maps_in_xcode=true",
+            "--show-output",
+            "bar//Dep2:Dep2");
+    result.assertSuccess();
+
+    assertEquals(
+        "bar//Dep2:Dep2#default,static "
+            + Paths.get("bar", "Dep2", "Dep2.xcworkspace")
+            + System.lineSeparator(),
+        result.getStdout());
+  }
+
+  @Test
   public void testBuckProjectWithSwiftDependencyOnModularObjectiveCLibrary()
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);
