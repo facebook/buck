@@ -34,7 +34,6 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.versions.VersionedAliasBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -48,7 +47,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.SortedSet;
-import java.util.concurrent.ForkJoinPool;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,7 +55,6 @@ public class AuditClasspathCommandTest {
   private TestConsole console;
   private AuditClasspathCommand auditClasspathCommand;
   private CommandRunnerParams params;
-  private CloseableMemoizedSupplier<ForkJoinPool> poolSupplier;
 
   @Before
   public void setUp() throws IOException, InterruptedException {
@@ -68,13 +65,6 @@ public class AuditClasspathCommandTest {
             .setConsole(console)
             .setToolchainProvider(AndroidBinaryBuilder.createToolchainProviderForAndroidBinary())
             .build();
-    poolSupplier =
-        CloseableMemoizedSupplier.of(
-            () -> {
-              throw new IllegalStateException(
-                  "should not use parallel executor for action graph construction in distributed slave build");
-            },
-            ignored -> {});
   }
 
   @Test
