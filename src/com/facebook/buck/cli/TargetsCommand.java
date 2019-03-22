@@ -326,10 +326,9 @@ public class TargetsCommand extends AbstractCommand {
                 .getParser()
                 .getPerBuildStateFactory()
                 .create(
-                    ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                        .setProfilingEnabled(getEnableParserProfiling())
-                        .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                        .build(),
+                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                        .withExcludeUnsupportedTargets(false)
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState(),
                     getTargetPlatforms())) {
           ResolveAliasHelper.resolveAlias(params, parserState, getArguments());
@@ -522,12 +521,9 @@ public class TargetsCommand extends AbstractCommand {
       throws InterruptedException, BuildFileParseException, IOException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        ParsingContext.builder(params.getCell(), executor)
-            .setProfilingEnabled(getEnableParserProfiling())
-            .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
-            .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
-            .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-            .build();
+        createParsingContext(params.getCell(), executor)
+            .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
+            .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     if (getArguments().isEmpty()) {
       TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets =
           params
@@ -646,12 +642,9 @@ public class TargetsCommand extends AbstractCommand {
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        ParsingContext.builder(params.getCell(), executor)
-            .setProfilingEnabled(getEnableParserProfiling())
-            .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
-            .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
-            .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-            .build();
+        createParsingContext(params.getCell(), executor)
+            .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
+            .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     // Parse the entire action graph, or (if targets are specified), only the specified targets and
     // their dependencies. If we're detecting test changes we need the whole graph as tests are not
     // dependencies.
@@ -865,9 +858,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getFileHashCache(),
                 params.getUnconfiguredBuildTargetFactory())
             .create(
-                ParsingContext.builder(params.getCell(), executor)
-                    .setProfilingEnabled(getEnableParserProfiling())
-                    .build(),
+                createParsingContext(params.getCell(), executor)
+                    .withExcludeUnsupportedTargets(false),
                 params.getParser().getPermState(),
                 getTargetPlatforms())) {
 
@@ -1172,10 +1164,9 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  ParsingContext.builder(params.getCell(), executor)
-                      .setProfilingEnabled(getEnableParserProfiling())
-                      .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                      .build(),
+                  createParsingContext(params.getCell(), executor)
+                      .withSpeculativeParsing(SpeculativeParsing.ENABLED)
+                      .withExcludeUnsupportedTargets(false),
                   matchingBuildTargetsWithTests);
 
       return new Pair<>(
@@ -1261,9 +1252,8 @@ public class TargetsCommand extends AbstractCommand {
                 params.getFileHashCache(),
                 params.getUnconfiguredBuildTargetFactory())
             .create(
-                ParsingContext.builder(params.getCell(), executor)
-                    .setProfilingEnabled(getEnableParserProfiling())
-                    .build(),
+                createParsingContext(params.getCell(), executor)
+                    .withExcludeUnsupportedTargets(false),
                 params.getParser().getPermState(),
                 getTargetPlatforms())) {
       buildTargetHashes =

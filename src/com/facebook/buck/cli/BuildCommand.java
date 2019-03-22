@@ -50,7 +50,6 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -681,12 +680,9 @@ public class BuildCommand extends AbstractCommand {
       return params
           .getParser()
           .buildTargetGraphWithoutConfigurationTargets(
-              ParsingContext.builder(params.getCell(), executor)
-                  .setProfilingEnabled(getEnableParserProfiling())
-                  .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
-                  .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
-                  .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                  .build(),
+              createParsingContext(params.getCell(), executor)
+                  .withSpeculativeParsing(SpeculativeParsing.ENABLED)
+                  .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),
               targetNodeSpecEnhancer.apply(
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),

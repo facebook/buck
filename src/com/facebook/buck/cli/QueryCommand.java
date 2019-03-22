@@ -22,7 +22,6 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -46,7 +45,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -237,22 +235,15 @@ public class QueryCommand extends AbstractCommand {
                     params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory())
                 .create(
-                    ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                        .setProfilingEnabled(getEnableParserProfiling())
-                        .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                        .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
-                        .build(),
+                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState(),
                     getTargetPlatforms())) {
-      ListeningExecutorService executor = pool.getListeningExecutorService();
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,
               parserState,
-              ParsingContext.builder(params.getCell(), executor)
-                  .setProfilingEnabled(getEnableParserProfiling())
-                  .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
-                  .build());
+              createParsingContext(params.getCell(), pool.getListeningExecutorService()));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

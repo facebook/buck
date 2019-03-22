@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.CommandLineException;
@@ -83,10 +82,9 @@ public class AuditInputCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                      .setProfilingEnabled(getEnableParserProfiling())
-                      .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                      .build(),
+                  createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                      .withSpeculativeParsing(SpeculativeParsing.ENABLED)
+                      .withExcludeUnsupportedTargets(false),
                   targets);
     } catch (BuildFileParseException e) {
       params

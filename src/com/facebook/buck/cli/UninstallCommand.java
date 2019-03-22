@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.step.AdbOptions;
@@ -102,10 +101,9 @@ public class UninstallCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithConfigurationTargets(
-                  ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                      .setProfilingEnabled(getEnableParserProfiling())
-                      .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                      .build(),
+                  createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                      .withExcludeUnsupportedTargets(false)
+                      .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(
                       params.getCell().getCellPathResolver(),
                       params.getBuckConfig(),

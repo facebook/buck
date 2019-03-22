@@ -16,10 +16,12 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.google.common.collect.ImmutableList;
@@ -76,4 +78,9 @@ public interface Command {
   PluginManager getPluginManager();
 
   ImmutableList<String> getTargetPlatforms();
+
+  /**
+   * Creates a basic {@link ParsingContext} with some options populated from command's arguments.
+   */
+  ParsingContext createParsingContext(Cell cell, ListeningExecutorService executor);
 }

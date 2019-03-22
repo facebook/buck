@@ -339,10 +339,9 @@ public class InstallCommand extends BuildCommand {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        ParsingContext.builder(params.getCell(), executor)
-            .setProfilingEnabled(getEnableParserProfiling())
-            .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
-            .build();
+        createParsingContext(params.getCell(), executor)
+            .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
+            .withExcludeUnsupportedTargets(false);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
     // TODO(cjhopman): This shouldn't be doing parsing outside of the normal parse stage.
     // The first step to that would be to move the Apple install helpers to be deps available from

@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -83,10 +82,9 @@ public class AuditFlavorsCommand extends AbstractCommand {
                 .getParser()
                 .getPerBuildStateFactory()
                 .create(
-                    ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                        .setProfilingEnabled(getEnableParserProfiling())
-                        .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                        .build(),
+                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED)
+                        .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState(),
                     getTargetPlatforms())) {
 

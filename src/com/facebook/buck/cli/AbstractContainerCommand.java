@@ -16,10 +16,12 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.google.common.base.Strings;
@@ -175,5 +177,12 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
             () ->
                 new IllegalArgumentException("Target platforms are not supported in this command"))
         .getTargetPlatforms();
+  }
+
+  @Override
+  public ParsingContext createParsingContext(Cell cell, ListeningExecutorService executor) {
+    return getSubcommand()
+        .orElseThrow(() -> new IllegalArgumentException("Cannot create parsing context."))
+        .createParsingContext(cell, executor);
   }
 }

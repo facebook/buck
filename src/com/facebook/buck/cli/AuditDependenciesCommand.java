@@ -19,7 +19,6 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
-import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -114,20 +113,16 @@ public class AuditDependenciesCommand extends AbstractCommand {
                     params.getFileHashCache(),
                     params.getUnconfiguredBuildTargetFactory())
                 .create(
-                    ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                        .setProfilingEnabled(getEnableParserProfiling())
-                        .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-                        .build(),
+                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                        .withSpeculativeParsing(SpeculativeParsing.ENABLED)
+                        .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState(),
                     getTargetPlatforms())) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,
               parserState,
-              ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-                  .setProfilingEnabled(getEnableParserProfiling())
-                  .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
-                  .build());
+              createParsingContext(params.getCell(), pool.getListeningExecutorService()));
       QueryCommand.runMultipleQuery(
           params,
           env,

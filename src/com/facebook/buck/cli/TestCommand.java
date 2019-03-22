@@ -476,12 +476,9 @@ public class TestCommand extends BuildCommand {
       TargetGraphAndBuildTargets targetGraphAndBuildTargets;
       ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
       ParsingContext parsingContext =
-          ParsingContext.builder(params.getCell(), pool.getListeningExecutorService())
-              .setProfilingEnabled(getEnableParserProfiling())
-              .setSpeculativeParsing(SpeculativeParsing.ENABLED)
-              .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
-              .setApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
-              .build();
+          createParsingContext(params.getCell(), pool.getListeningExecutorService())
+              .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
+              .withSpeculativeParsing(SpeculativeParsing.ENABLED);
 
       try {
 
