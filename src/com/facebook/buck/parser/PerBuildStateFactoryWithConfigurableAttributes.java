@@ -208,14 +208,14 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             constraintResolver,
             targetPlatform);
 
-    ListeningExecutorService configuredPipeline =
+    ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(
             createExecutorService(rootCell.getBuckConfig(), "configured-pipeline"));
 
     ParsePipeline<TargetNode<?>> targetNodeParsePipeline =
         new RawTargetNodeToTargetNodeParsePipeline(
             daemonicParserState.getOrCreateNodeCache(TargetNode.class),
-            configuredPipeline,
+            configuredPipelineExecutor,
             rawTargetNodePipeline,
             eventBus,
             "configured_raw_target_node_parse_pipeline",
@@ -226,7 +226,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             super.close();
             nonResolvingTargetNodeParsePipeline.close();
             try {
-              MostExecutors.shutdown(configuredPipeline, 1, TimeUnit.MINUTES);
+              MostExecutors.shutdown(configuredPipelineExecutor, 1, TimeUnit.MINUTES);
             } catch (InterruptedException e) {
             }
           }
