@@ -120,12 +120,9 @@
 
 buckFile ::= statement*
 
-string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_DOC_STRING | SINGLE_QUOTED_DOC_STRING) (PERCENT primary) ?
-
 function_definition ::= 'def' IDENTIFIER '(' parameter_list? ')' ':' suite
 
 parameter_list ::= parameter (',' parameter)* ','?
-
 parameter ::= '**' IDENTIFIER | '*' IDENTIFIER | IDENTIFIER ['=' single_expression]
 
 statement ::= simple_statement | compound_statement
@@ -168,6 +165,7 @@ compound_statement ::= if_statement | for_statement | function_definition
 if_statement ::= 'if' single_expression ':' suite ('elif' single_expression ':' suite)* ['else' ':' suite]
 
 for_statement ::= 'for' loop_variable 'in' expression ':' suite
+loop_variable ::= primary_with_suffix (',' primary_with_suffix)*
 
 suite ::= simple_statement | INDENT statement+ DEDENT
 
@@ -177,39 +175,32 @@ single_expression ::= unary_op single_expression
                       | (primary_with_suffix [binary_op single_expression]
                       | 'lambda' [parameter_list] ':' single_expression)
                       ['if' single_expression 'else' single_expression]
-
-primary_with_suffix ::= primary (dot_suffix | slice_suffix)*
-
-primary ::= NONE | BOOLEAN | NUMBER | function_call | IDENTIFIER | string | list | dict | '(' expression ','? ')' | unary_op primary_with_suffix
-
-function_call ::=  function_name function_call_suffix
-
-function_name ::= ('glob' | IDENTIFIER)
-
-dot_suffix ::= '.' (function_call | IDENTIFIER)
-
-function_call_suffix ::= '(' argument_list? ')'
-
-argument_list ::= argument (',' argument)* ','?
-
-argument ::= '**' single_expression | '*' single_expression | [property_lvalue '='] single_expression
-
-property_lvalue ::= IDENTIFIER
-
-slice_suffix ::= '[' single_expression? (':' single_expression? (':' single_expression?)?)? ']'
-
-list ::= '[' (list_elements ']' | expression comprehension_suffix ']' | ']')
-list_elements ::= single_expression (',' single_expression)* ','?
-
-comprehension_suffix ::= 'for' loop_variable 'in' single_expression ['if' single_expression] comprehension_suffix*
-loop_variable ::= primary_with_suffix (',' primary_with_suffix)*
-
-dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_suffix '}') | '}')
-
-dict_entry ::= single_expression ':' single_expression
-
 unary_op ::= 'not' | '+' | '-' | '~'
 binary_op ::=  'or' | 'and' | '==' | '!=' | '<' | '>' | '<=' | '>='
                     | 'in' | 'not' 'in' | 'is' | 'not' 'is'
                     | '|' | '^' | '&' | '-' | '+' | '*' | '%' | '/' | '//'
 
+
+primary_with_suffix ::= primary (dot_suffix | slice_suffix)*
+
+primary ::= NONE | BOOLEAN | NUMBER | function_call | IDENTIFIER | string | list | dict | '(' expression ','? ')' | unary_op primary_with_suffix
+function_call ::=  function_name function_call_suffix
+function_name ::= ('glob' | IDENTIFIER)
+
+list ::= '[' (list_elements ']' | expression comprehension_suffix ']' | ']')
+list_elements ::= single_expression (',' single_expression)* ','?
+
+function_call_suffix ::= '(' argument_list? ')'
+slice_suffix ::= '[' single_expression? (':' single_expression? (':' single_expression?)?)? ']'
+dot_suffix ::= '.' (function_call | IDENTIFIER)
+
+dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_suffix '}') | '}')
+dict_entry ::= single_expression ':' single_expression
+
+argument_list ::= argument (',' argument)* ','?
+argument ::= '**' single_expression | '*' single_expression | [property_lvalue '='] single_expression
+property_lvalue ::= IDENTIFIER
+
+comprehension_suffix ::= 'for' loop_variable 'in' single_expression ['if' single_expression] comprehension_suffix*
+
+string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_DOC_STRING | SINGLE_QUOTED_DOC_STRING) (PERCENT primary) ?
