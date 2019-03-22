@@ -1646,7 +1646,7 @@ public final class Main {
     context.addClientListener(
         reason -> {
           LOG.info("Nailgun client disconnected with " + reason);
-          if (Main.isSessionLeader && Main.commandSemaphoreNgClient.orElse(null) == context) {
+          if (Main.commandSemaphoreNgClient.orElse(null) == context) {
             // Process no longer wants work done on its behalf.
             LOG.debug("Killing background processes on client disconnect");
             BgProcessKiller.interruptBgProcesses();
