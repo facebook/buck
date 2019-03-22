@@ -427,16 +427,19 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       // shareable (like just using the app's containing directory, or even the repo root),
       // but stripping the C++ runtime is pretty fast, so just keep the safe old behavior for now.
       BuildTarget baseBuildTarget = originalBuildTarget;
+      ProjectFilesystem filesystem = this.projectFilesystem;
       // But if we're stripping a cxx_library, use that library as the base of the target
       // to allow sharing the rule between all apps that depend on it.
       if (sourcePath instanceof BuildTargetSourcePath) {
-        baseBuildTarget = ((BuildTargetSourcePath) sourcePath).getTarget();
+        BuildTargetSourcePath targetSourcePath = (BuildTargetSourcePath) sourcePath;
+        baseBuildTarget = targetSourcePath.getTarget();
+        filesystem = ruleFinder.getRule(targetSourcePath).getProjectFilesystem();
       }
 
       String sharedLibrarySoName = entry.getKey().getSoName();
       StripLinkable stripLinkable =
           requireStripLinkable(
-              projectFilesystem,
+              filesystem,
               ruleFinder,
               graphBuilder,
               sourcePath,
