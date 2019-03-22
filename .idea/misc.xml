@@ -14,7 +14,7 @@
       <entry_point TYPE="method" FQNAME="com.facebook.buck.apple.AbstractProvisioningProfileMetadata com.facebook.buck.rules.RuleKeyBuilder appendToRuleKey(com.facebook.buck.rules.RuleKeyBuilder builder)" />
       <entry_point TYPE="method" FQNAME="com.facebook.buck.cli.bootstrapper.LogConfig LogConfig()" />
       <entry_point TYPE="field" FQNAME="com.facebook.buck.util.environment.MacWifiSsidFinder CORE_WLAN_INSTANCE" />
-      <entry_point TYPE="method" FQNAME="com.facebook.buck.cli.Main void nailMain(com.martiansoftware.nailgun.NGContext context)" />
+      <entry_point TYPE="method" FQNAME="com.facebook.buck.cli.MainWithNailgun void nailMain(com.facebook.nailgun.NGContext context)" />
     </entry_points>
     <list size="12">
       <item index="0" class="java.lang.String" itemvalue="com.facebook.buck.cli.AdditionalOptions" />

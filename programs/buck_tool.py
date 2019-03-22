@@ -337,7 +337,7 @@ class BuckTool(object):
                     now = int(round(time.time() * 1000))
                     env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
                     exit_code = c.send_command(
-                        "com.facebook.buck.cli.Main",
+                        "com.facebook.buck.cli.MainWithNailgun",
                         self._add_args_from_env(argv),
                         env=env,
                         cwd=self._buck_project.root,
