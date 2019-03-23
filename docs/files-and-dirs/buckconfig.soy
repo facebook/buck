@@ -1432,7 +1432,7 @@ artifact_cache_size_limit = 52428800
     Dictates if the cache is <code>readonly</code> or <code>readwrite</code> (default) when using
     http-based caching.
     <p>
-      {call buckconfig.cache_mode /} must contain <code>http</code>.
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
     </p>
   {/param}
 {/call}
@@ -1558,7 +1558,7 @@ artifact_cache_size_limit = 52428800
     text <code>{lb}cache_name{rb}</code> is present, it will be replaced with the name of the cache.
     If the text {sp}<code>{lb}error_message{rb}</code>, it will be replaced with the error message.
     <p>
-      {call buckconfig.cache_mode /} must contain <code>http</code>.
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
     </p>
   {/param}
 {/call}
@@ -1574,7 +1574,7 @@ artifact_cache_size_limit = 52428800
     will print the <code>http_error_message_format</code>. Every time it prints it the counter
     resets to 0 to avoid spamming the console.
     <p>
-      {call buckconfig.cache_mode /} must contain <code>http</code>.
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
     </p>
   {/param}
 {/call}
@@ -1586,7 +1586,7 @@ artifact_cache_size_limit = 52428800
   {param description}
     Maximum number of times to attempt to store item to the cache before giving up.
     <p>
-      {call buckconfig.cache_mode /} must contain <code>http</code>.
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
     </p>
   {/param}
 {/call}
@@ -1598,7 +1598,7 @@ artifact_cache_size_limit = 52428800
   {param description}
     Interval to wait if previous cache store request failed.
     <p>
-      {call buckconfig.cache_mode /} must contain <code>http</code>.
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
     </p>
   {/param}
 {/call}
@@ -1610,7 +1610,7 @@ artifact_cache_size_limit = 52428800
   {param description}
     The max size in bytes that an artifact can be to get pushed to an http cache.
     <p>
-      {call buckconfig.cache_mode /} must contain <code>http</code>.
+      {call buckconfig.cache_mode /} must contain <code>http</code> or <code>thrift_over_http</code>.
     </p>
   {/param}
 {/call}
