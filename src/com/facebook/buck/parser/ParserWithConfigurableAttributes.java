@@ -23,11 +23,9 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
-import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -36,7 +34,6 @@ import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecReso
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.syntax.ListWithSelects;
-import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +59,6 @@ import javax.annotation.Nullable;
  */
 class ParserWithConfigurableAttributes extends AbstractParser {
 
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   private final TargetSpecResolver targetSpecResolver;
 
   ParserWithConfigurableAttributes(
@@ -70,11 +66,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       PerBuildStateFactory perBuildStateFactory,
       TargetSpecResolver targetSpecResolver,
       BuckEventBus eventBus,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Supplier<ImmutableList<String>> targetPlatforms) {
     super(daemonicParserState, perBuildStateFactory, eventBus, targetPlatforms);
     this.targetSpecResolver = targetSpecResolver;
-    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
   }
 
   /**
@@ -144,11 +138,6 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             stateWithConfigurableAttributes.getConstraintResolver(),
             stateWithConfigurableAttributes.getTargetPlatform().get());
 
-    SelectorListFactory selectorListFactory =
-        new SelectorListFactory(
-            new SelectorFactory(
-                new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)::coerce));
-
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
 
     for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
@@ -162,7 +151,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                 cell.getCellPathResolver(),
                 cell.getFilesystem(),
                 buildTarget,
-                selectorListFactory,
+                stateWithConfigurableAttributes.getSelectorListFactory(),
                 attributeName,
                 attribute.getValue()));
       } catch (CoerceFailedException e) {

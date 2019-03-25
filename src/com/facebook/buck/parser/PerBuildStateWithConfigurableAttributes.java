@@ -19,6 +19,7 @@ import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.select.SelectorListResolver;
+import com.facebook.buck.core.select.impl.SelectorListFactory;
 import java.util.function.Supplier;
 
 /**
@@ -30,6 +31,7 @@ class PerBuildStateWithConfigurableAttributes extends PerBuildState {
   private final ConstraintResolver constraintResolver;
   private final SelectorListResolver selectorListResolver;
   private final Supplier<Platform> targetPlatform;
+  private final SelectorListFactory selectorListFactory;
 
   PerBuildStateWithConfigurableAttributes(
       CellManager cellManager,
@@ -38,10 +40,12 @@ class PerBuildStateWithConfigurableAttributes extends PerBuildState {
       ParsingContext parsingContext,
       ConstraintResolver constraintResolver,
       SelectorListResolver selectorListResolver,
+      SelectorListFactory selectorListFactory,
       Supplier<Platform> targetPlatform) {
     super(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline, parsingContext);
     this.constraintResolver = constraintResolver;
     this.selectorListResolver = selectorListResolver;
+    this.selectorListFactory = selectorListFactory;
     this.targetPlatform = targetPlatform;
   }
 
@@ -51,6 +55,10 @@ class PerBuildStateWithConfigurableAttributes extends PerBuildState {
 
   public SelectorListResolver getSelectorListResolver() {
     return selectorListResolver;
+  }
+
+  public SelectorListFactory getSelectorListFactory() {
+    return selectorListFactory;
   }
 
   public Supplier<Platform> getTargetPlatform() {

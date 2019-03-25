@@ -62,7 +62,6 @@ public class ParserFactory {
               unconfiguredBuildTargetFactory),
           targetSpecResolver,
           eventBus,
-          unconfiguredBuildTargetFactory,
           targetPlatforms);
     } else {
       return new DefaultParser(
