@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,7 +32,7 @@ import org.immutables.value.Value;
 @BuckStyleImmutable
 @Value.Immutable(builder = false)
 @JsonDeserialize
-public abstract class AbstractBuildFileManifest {
+public abstract class AbstractBuildFileManifest implements ComputeResult {
   /** @return a list of targets defined in the build file. */
   @Value.Parameter
   @JsonProperty("targets")
