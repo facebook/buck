@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
+import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
@@ -31,7 +32,7 @@ import com.google.common.collect.ImmutableSet;
  * <p>The main purpose of having such nodes is to perform additional processing before storing them
  * in a structured constructor arguments.
  */
-public interface RawTargetNode {
+public interface RawTargetNode extends ComputeResult {
 
   /** Build target of this node. */
   UnconfiguredBuildTarget getBuildTarget();
