@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
@@ -90,9 +91,9 @@ public class CxxToolchainIntegrationTest {
 
     Map<BuildRuleSuccessType, AtomicInteger> successTypeCounter = new HashMap<>();
 
-    for (BuildTarget allTarget : workspace.getBuildLog().getAllTargets()) {
-      BuildRuleSuccessType successType =
-          workspace.getBuildLog().getLogEntry(allTarget).getSuccessType().get();
+    BuckBuildLog buildLog = workspace.getBuildLog();
+    for (BuildTarget allTarget : buildLog.getAllTargets()) {
+      BuildRuleSuccessType successType = buildLog.getLogEntry(allTarget).getSuccessType().get();
       successTypeCounter
           .computeIfAbsent(successType, ignored -> new AtomicInteger())
           .incrementAndGet();
