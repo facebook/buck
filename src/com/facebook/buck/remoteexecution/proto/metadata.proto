@@ -71,6 +71,17 @@ message CasClientInfo {
   string name = 1;
 }
 
+// minimal worker requirements which should be satisfied to execute a given action
+message WorkerRequirements {
+  enum WorkerHardwareType {
+    SMALL = 0;
+    MEDIUM = 1;
+    LARGE = 2;
+  }
+
+  WorkerHardwareType hardware_type = 1;
+}
+
 // This is propagated in GRPC header "re-metadata-bin".
 message RemoteExecutionMetadata {
   RESessionID re_session_id = 1;
@@ -80,4 +91,5 @@ message RemoteExecutionMetadata {
   ExecutionEngineInfo engine_info = 5;
   WorkerInfo worker_info = 6;
   CasClientInfo cas_client_info = 7;
+  WorkerRequirements worker_requirements = 8;
 }
