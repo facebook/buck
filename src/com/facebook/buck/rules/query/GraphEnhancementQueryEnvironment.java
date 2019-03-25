@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.query.AttrFilterFunction;
@@ -201,6 +202,26 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     Preconditions.checkArgument(targetGraph.isPresent());
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
     return targetGraph.get().get(buildTarget);
+  }
+
+  /**
+   * @return a filtered stream of targets where the rules they refer to are instances of the given
+   *     clazz
+   */
+  protected Stream<QueryTarget> restrictToInstancesOf(Set<QueryTarget> targets, Class<?> clazz) {
+    Preconditions.checkArgument(graphBuilder.isPresent());
+    return targets
+        .stream()
+        .map(
+            queryTarget -> {
+              Preconditions.checkArgument(queryTarget instanceof QueryBuildTarget);
+              return graphBuilder
+                  .get()
+                  .requireRule(((QueryBuildTarget) queryTarget).getBuildTarget());
+            })
+        .filter(rule -> clazz.isAssignableFrom(rule.getClass()))
+        .map(BuildRule::getBuildTarget)
+        .map(QueryBuildTarget::of);
   }
 
   public Stream<QueryTarget> getFirstOrderClasspath(Set<QueryTarget> targets) {

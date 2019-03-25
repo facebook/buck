@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -31,6 +32,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.HasClasspathDeps;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -46,6 +48,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -53,7 +56,7 @@ import javax.annotation.Nullable;
 
 @BuildsAnnotationProcessor
 public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements BinaryBuildRule, HasClasspathEntries {
+    implements BinaryBuildRule, HasClasspathDeps, HasClasspathEntries {
 
   // We're just propagating the runtime launcher through `getExecutable`, so don't add it to the
   // rule key.
@@ -229,5 +232,10 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public boolean isCacheable() {
     return cache;
+  }
+
+  @Override
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return ImmutableSortedSet.copyOf(getTransitiveClasspathDeps());
   }
 }
