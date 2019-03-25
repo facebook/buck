@@ -62,7 +62,6 @@ class DefaultParser extends AbstractParser {
     this.targetSpecResolver = targetSpecResolver;
   }
 
-  @SuppressWarnings("unused")
   @Override
   protected ImmutableSet<BuildTarget> collectBuildTargetsFromTargetNodeSpecs(
       ParsingContext parsingContext,
