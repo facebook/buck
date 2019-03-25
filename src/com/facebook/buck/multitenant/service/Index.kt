@@ -18,6 +18,7 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.BuildTarget
 import com.facebook.buck.multitenant.collect.GenerationMap
+import java.io.Closeable
 import java.nio.file.Path
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
@@ -44,7 +45,7 @@ data class Changes(val addedBuildPackages: List<BuildPackage>,
  * @param readLock caller is responsible for ensuring the specified readLock is locked when it is
  * passed in.
  */
-class IndexReadLock internal constructor(internal val readLock: ReentrantReadWriteLock.ReadLock) : AutoCloseable {
+class IndexReadLock internal constructor(internal val readLock: ReentrantReadWriteLock.ReadLock) : AutoCloseable, Closeable {
     /**
      * Warning: this method is NOT idempotent!!!
      */

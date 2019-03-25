@@ -20,13 +20,13 @@ import com.facebook.buck.core.cell.impl.ImmutableDefaultCellPathResolver
 import com.facebook.buck.core.model.BuildTarget
 import com.facebook.buck.core.model.EmptyTargetConfiguration
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.test.assertEquals
 
 class IndexTest {
     @get:Rule

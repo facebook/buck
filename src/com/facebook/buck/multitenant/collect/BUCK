@@ -1,0 +1,7 @@
+kotlin_library(
+    name = "collect",
+    srcs = glob(["*.kt"]),
+    visibility = [
+        "//src/com/facebook/buck/multitenant/...",
+    ],
+)

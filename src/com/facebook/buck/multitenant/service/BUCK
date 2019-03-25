@@ -1,0 +1,14 @@
+kotlin_library(
+    name = "service",
+    srcs = glob(["*.kt"]),
+    tests = [
+        "//test/com/facebook/buck/multitenant/service:service",
+    ],
+    visibility = [
+        "//test/com/facebook/buck/multitenant/service:service",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/multitenant/collect:collect",
+    ],
+)

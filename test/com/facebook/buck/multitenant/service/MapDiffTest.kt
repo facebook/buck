@@ -16,12 +16,12 @@
 
 package com.facebook.buck.multitenant.service
 
+import junit.framework.Assert.assertEquals
+import junit.framework.Assert.assertTrue
+import org.junit.Assert.assertNotEquals
 import org.junit.Test
 import java.nio.file.Path
 import java.nio.file.Paths
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
 
 val BUILD_FILE_DIRECTORY: Path = Paths.get("foo")
 
@@ -115,8 +115,8 @@ class MapDiffTest {
     fun deltasWithSameContentsAreNotDotEqualsToOneAnother() {
         val buildRules1 = mapOf("one" to intArrayOf(1), "two" to intArrayOf(2))
         val buildRules2 = mapOf("one" to intArrayOf(1), "two" to intArrayOf(2))
-        assertNotEquals(buildRules1, buildRules2, "Because IntArray.equals() uses reference " +
+        assertNotEquals("Because IntArray.equals() uses reference " +
                 "equality, these two maps are not .equals() to one another even though they are " +
-                "'contentEquals' to one another.")
+                "'contentEquals' to one another.", buildRules1, buildRules2)
     }
 }
