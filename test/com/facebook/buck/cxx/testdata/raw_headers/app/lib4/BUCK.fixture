@@ -1,0 +1,11 @@
+cxx_library(
+    name = "lib4-include",
+    public_include_directories = [".."],
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
+    name = "lib4-header",
+    raw_headers = ["lib4.h"],
+    visibility = ["PUBLIC"],
+)

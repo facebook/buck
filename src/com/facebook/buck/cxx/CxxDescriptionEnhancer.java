@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -489,7 +490,9 @@ public class CxxDescriptionEnhancer {
       ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
       ImmutableSet<FrameworkPath> frameworks,
       Iterable<CxxPreprocessorInput> cxxPreprocessorInputFromDeps,
-      ImmutableSortedSet<SourcePath> rawHeaders) {
+      ImmutableSortedSet<SourcePath> rawHeaders,
+      ImmutableSortedSet<String> includeDirectories,
+      ProjectFilesystem projectFilesystem) {
 
     // Add the private includes of any rules which this rule depends on, and which list this rule as
     // a test.
@@ -531,6 +534,14 @@ public class CxxDescriptionEnhancer {
 
     if (!rawHeaders.isEmpty()) {
       builder.addIncludes(CxxRawHeaders.of(rawHeaders));
+    }
+
+    for (String privateInclude : includeDirectories) {
+      builder.addIncludes(
+          CxxIncludes.of(
+              CxxPreprocessables.IncludeType.LOCAL,
+              PathSourcePath.of(
+                  projectFilesystem, target.getBasePath().resolve(privateInclude).normalize())));
     }
 
     builder.addAllIncludes(allIncludes.build()).addAllFrameworks(frameworks);
@@ -811,6 +822,7 @@ public class CxxDescriptionEnhancer {
         args.getPlatformLinkerFlags(),
         args.getCxxRuntimeType(),
         args.getRawHeaders(),
+        args.getIncludeDirectories(),
         args.getExecutableName());
   }
 
@@ -848,6 +860,7 @@ public class CxxDescriptionEnhancer {
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
       Optional<CxxRuntimeType> cxxRuntimeType,
       ImmutableSortedSet<SourcePath> rawHeaders,
+      ImmutableSortedSet<String> includeDirectories,
       Optional<String> outputRootName) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -904,7 +917,9 @@ public class CxxDescriptionEnhancer {
                 RichStream.from(deps)
                     .filter(CxxPreprocessorDep.class::isInstance)
                     .toImmutableList()),
-            rawHeaders);
+            rawHeaders,
+            includeDirectories,
+            projectFilesystem);
 
     ImmutableListMultimap.Builder<CxxSource.Type, Arg> allCompilerFlagsBuilder =
         ImmutableListMultimap.builder();

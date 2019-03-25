@@ -71,6 +71,8 @@ it as part of {call buck.cmd_test /}.
 
 {call cxx_common.raw_headers_arg /}
 
+{call cxx_common.include_directories_arg /}
+
 {call buck.arg}
   {param name: 'framework' /}
   {param default : '"gtest"' /}

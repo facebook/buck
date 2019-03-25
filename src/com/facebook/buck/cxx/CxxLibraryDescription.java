@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -161,7 +162,8 @@ public class CxxLibraryDescription
       CxxPlatform cxxPlatform,
       ImmutableSet<BuildRule> deps,
       TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
-      ImmutableList<HeaderSymlinkTree> headerSymlinkTrees) {
+      ImmutableList<HeaderSymlinkTree> headerSymlinkTrees,
+      ProjectFilesystem projectFilesystem) {
     return CxxDescriptionEnhancer.collectCxxPreprocessorInput(
         target,
         cxxPlatform,
@@ -192,7 +194,9 @@ public class CxxLibraryDescription
                         ? CxxDeps.of()
                         : args.getPrivateCxxDeps()))
             .toOnceIterable(),
-        args.getRawHeaders());
+        args.getRawHeaders(),
+        args.getIncludeDirectories(),
+        projectFilesystem);
   }
 
   @Override
@@ -478,6 +482,17 @@ public class CxxLibraryDescription
     Optional<SourcePath> getBridgingHeader();
 
     Optional<String> getModuleName();
+
+    /**
+     * A list of include directories to be added to the compile command for compiling this cxx
+     * target and every target that depends on it.
+     *
+     * @return a list of public (exported) include paths for this cxx target.
+     */
+    @Value.Default
+    default ImmutableSortedSet<String> getPublicIncludeDirectories() {
+      return ImmutableSortedSet.of();
+    }
 
     /** @return C/C++ deps which are propagated to dependents. */
     @Value.Derived

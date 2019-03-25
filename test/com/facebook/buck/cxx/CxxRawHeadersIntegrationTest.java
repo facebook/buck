@@ -229,6 +229,14 @@ public class CxxRawHeadersIntegrationTest {
         containsString("Cannot use `headers` and `raw_headers` in the same rule"));
   }
 
+  @Test
+  public void includeDirectories() throws IOException {
+    runCommand("build", "//app:app1").assertSuccess();
+    runCommand("build", "//app:app2").assertSuccess();
+    runCommand("build", "//app:app3").assertSuccess();
+    runCommand("build", "//app:app4").assertSuccess();
+  }
+
   private ProcessResult runCommand(String... args) throws IOException {
     if (useBuckd) {
       return workspace.runBuckdCommand(args);

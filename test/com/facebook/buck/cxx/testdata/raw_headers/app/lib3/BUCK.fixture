@@ -1,0 +1,6 @@
+cxx_library(
+    name = "lib3",
+    public_include_directories = [".."],
+    raw_headers = ["lib3.h"],
+    visibility = ["PUBLIC"],
+)

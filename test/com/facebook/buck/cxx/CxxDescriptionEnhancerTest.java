@@ -83,7 +83,9 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            new FakeProjectFilesystem());
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
@@ -152,7 +154,9 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            new FakeProjectFilesystem());
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(combinedInput).getIncludes()) {
@@ -207,7 +211,9 @@ public class CxxDescriptionEnhancerTest {
             ImmutableSet.of(),
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
                 CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, deps),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(),
+            new FakeProjectFilesystem());
 
     Set<SourcePath> roots = new HashSet<>();
     for (CxxHeaders headers : CxxPreprocessorInput.concat(otherInput).getIncludes()) {

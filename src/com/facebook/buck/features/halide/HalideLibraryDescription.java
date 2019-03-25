@@ -136,7 +136,8 @@ public class HalideLibraryDescription
       ImmutableMap<CxxSource.Type, ImmutableList<StringWithMacros>> langCompilerFlags,
       ImmutableList<StringWithMacros> linkerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
-      ImmutableSortedSet<SourcePath> rawHeaders) {
+      ImmutableSortedSet<SourcePath> rawHeaders,
+      ImmutableSortedSet<String> includeDirectories) {
 
     Optional<StripStyle> flavoredStripStyle = StripStyle.FLAVOR_DOMAIN.getValue(buildTarget);
     Optional<LinkerMapMode> flavoredLinkerMapMode =
@@ -188,6 +189,7 @@ public class HalideLibraryDescription
             platformLinkerFlags,
             Optional.empty(),
             rawHeaders,
+            includeDirectories,
             Optional.empty());
 
     buildTarget = CxxStrip.restoreStripStyleFlavorInTarget(buildTarget, flavoredStripStyle);
@@ -348,7 +350,8 @@ public class HalideLibraryDescription
           args.getLangCompilerFlags(),
           args.getLinkerFlags(),
           args.getPlatformLinkerFlags(),
-          args.getRawHeaders());
+          args.getRawHeaders(),
+          args.getIncludeDirectories());
     } else if (flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)) {
       // Halide always output PIC, so it's output can be used for both cases.

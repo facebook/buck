@@ -20,8 +20,10 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
+import com.facebook.buck.cxx.CxxPreprocessables.IncludeType;
 import com.facebook.buck.cxx.CxxPreprocessorInput.Builder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -29,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.google.common.base.Function;
@@ -38,9 +41,12 @@ import java.util.Optional;
 
 public class CxxLibraryMetadataFactory {
   private final ToolchainProvider toolchainProvider;
+  private final ProjectFilesystem projectFilesystem;
 
-  public CxxLibraryMetadataFactory(ToolchainProvider toolchainProvider) {
+  public CxxLibraryMetadataFactory(
+      ToolchainProvider toolchainProvider, ProjectFilesystem projectFilesystem) {
     this.toolchainProvider = toolchainProvider;
+    this.projectFilesystem = projectFilesystem;
   }
 
   public <U> Optional<U> createMetadata(
@@ -118,14 +124,25 @@ public class CxxLibraryMetadataFactory {
                   CxxDescriptionEnhancer.toStringWithMacrosArgs(
                       buildTarget, cellRoots, graphBuilder, cxxPlatform, f));
 
-          if (visibility.getValue() == HeaderVisibility.PRIVATE && !args.getHeaders().isEmpty()) {
-            HeaderSymlinkTree symlinkTree =
-                (HeaderSymlinkTree)
-                    graphBuilder.requireRule(
-                        baseTarget.withAppendedFlavors(
-                            platform.getKey(), CxxLibraryDescription.Type.HEADERS.getFlavor()));
-            cxxPreprocessorInputBuilder.addIncludes(
-                CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+          if (visibility.getValue() == HeaderVisibility.PRIVATE) {
+            if (!args.getHeaders().isEmpty()) {
+              HeaderSymlinkTree symlinkTree =
+                  (HeaderSymlinkTree)
+                      graphBuilder.requireRule(
+                          baseTarget.withAppendedFlavors(
+                              platform.getKey(), CxxLibraryDescription.Type.HEADERS.getFlavor()));
+              cxxPreprocessorInputBuilder.addIncludes(
+                  CxxSymlinkTreeHeaders.from(symlinkTree, CxxPreprocessables.IncludeType.LOCAL));
+            }
+
+            for (String privateInclude : args.getIncludeDirectories()) {
+              cxxPreprocessorInputBuilder.addIncludes(
+                  CxxIncludes.of(
+                      IncludeType.LOCAL,
+                      PathSourcePath.of(
+                          projectFilesystem,
+                          buildTarget.getBasePath().resolve(privateInclude).normalize())));
+            }
           }
 
           if (visibility.getValue() == HeaderVisibility.PUBLIC) {
@@ -159,6 +176,15 @@ public class CxxLibraryMetadataFactory {
 
             if (!args.getRawHeaders().isEmpty()) {
               cxxPreprocessorInputBuilder.addIncludes(CxxRawHeaders.of(args.getRawHeaders()));
+            }
+
+            for (String publicInclude : args.getPublicIncludeDirectories()) {
+              cxxPreprocessorInputBuilder.addIncludes(
+                  CxxIncludes.of(
+                      IncludeType.LOCAL,
+                      PathSourcePath.of(
+                          projectFilesystem,
+                          buildTarget.getBasePath().resolve(publicInclude).normalize())));
             }
           }
 
