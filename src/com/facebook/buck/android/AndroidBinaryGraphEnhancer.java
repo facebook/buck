@@ -247,7 +247,6 @@ public class AndroidBinaryGraphEnhancer {
             graphBuilder,
             originalBuildTarget,
             projectFilesystem,
-            originalParams,
             cpuFilters,
             cxxBuckConfig,
             nativeLibraryMergeMap,

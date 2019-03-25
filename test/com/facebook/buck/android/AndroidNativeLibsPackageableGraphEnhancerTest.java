@@ -39,9 +39,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -79,8 +77,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
         new NdkLibraryBuilder(BuildTargetFactory.newInstance("//:ndklib")).build(graphBuilder);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams originalParams =
-        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(ndkLibrary));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
@@ -96,7 +92,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             graphBuilder,
             target,
             projectFilesystem,
-            originalParams,
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -159,8 +154,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     graphBuilder.addToIndex(cxxLibrary);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams originalParams =
-        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
@@ -176,7 +169,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             graphBuilder,
             target,
             projectFilesystem,
-            originalParams,
             ImmutableSet.of(TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -232,8 +224,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
                 .build(graphBuilder);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams originalParams =
-        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
@@ -249,7 +239,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             graphBuilder,
             target,
             projectFilesystem,
-            originalParams,
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -278,8 +267,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
                 .build(graphBuilder);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams originalParams =
-        TestBuildRuleParams.create().withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
@@ -295,7 +282,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             graphBuilder,
             target,
             projectFilesystem,
-            originalParams,
             ImmutableSet.of(),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),
@@ -362,9 +348,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     graphBuilder.addToIndex(cxxLibrary2);
 
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    BuildRuleParams originalParams =
-        TestBuildRuleParams.create()
-            .withDeclaredDeps(ImmutableSortedSet.of(cxxLibrary1, cxxLibrary2));
 
     APKModuleGraph apkModuleGraph = new APKModuleGraph(TargetGraph.EMPTY, target, Optional.empty());
 
@@ -380,7 +363,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
             graphBuilder,
             target,
             projectFilesystem,
-            originalParams,
             ImmutableSet.of(TargetCpuType.ARMV7),
             CxxPlatformUtils.DEFAULT_CONFIG,
             /* nativeLibraryMergeMap */ Optional.empty(),

@@ -24,11 +24,12 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport.DepsSupplier;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -55,7 +56,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,11 +64,12 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
-class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements OverrideScheduleRule {
+/** Relinks a native library. See {@link NativeRelinker}. */
+class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> symbolsNeededPaths;
   @AddToRuleKey private final TargetCpuType cpuType;
@@ -86,10 +87,11 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private SourcePathRuleFinder ruleFinder;
 
+  private final DepsSupplier depsSupplier;
+
   public RelinkerRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       SourcePathResolver resolver,
       CellPathResolver cellPathResolver,
       SourcePathRuleFinder ruleFinder,
@@ -101,8 +103,7 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       @Nullable Linker linker,
       ImmutableList<Arg> linkerArgs,
       ImmutableList<Pattern> symbolWhitelist) {
-    super(
-        buildTarget, projectFilesystem, withDepsFromArgs(buildRuleParams, ruleFinder, linkerArgs));
+    super(buildTarget, projectFilesystem);
     this.pathResolver = resolver;
     this.cellPathResolver = cellPathResolver;
     this.cpuType = cpuType;
@@ -114,13 +115,13 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.baseLibSourcePath = baseLibSourcePath;
     this.linker = linker;
     this.symbolWhitelist = symbolWhitelist;
+
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
   }
 
-  private static BuildRuleParams withDepsFromArgs(
-      BuildRuleParams params, SourcePathRuleFinder ruleFinder, ImmutableList<Arg> args) {
-    return params.copyAppendingExtraDeps(
-        Iterables.concat(
-            Iterables.transform(args, arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))));
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return depsSupplier.get();
   }
 
   private static String getVersionScript(
@@ -318,5 +319,6 @@ class RelinkerRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public void updateBuildRuleResolver(
       BuildRuleResolver ruleResolver, SourcePathRuleFinder ruleFinder) {
     this.ruleFinder = ruleFinder;
+    this.depsSupplier.updateRuleFinder(ruleFinder);
   }
 }

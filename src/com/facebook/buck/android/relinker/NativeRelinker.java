@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRuleDependencyVisitors;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -67,7 +66,6 @@ import java.util.regex.Pattern;
  * linker to only export those symbols that are referenced by a higher library.
  */
 public class NativeRelinker {
-  private final BuildRuleParams buildRuleParams;
   private final BuildTarget buildTarget;
   private final SourcePathResolver resolver;
   private final CxxBuckConfig cxxBuckConfig;
@@ -83,7 +81,6 @@ public class NativeRelinker {
   public NativeRelinker(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams buildRuleParams,
       CellPathResolver cellPathResolver,
       SourcePathResolver resolver,
       SourcePathRuleFinder ruleFinder,
@@ -100,7 +97,6 @@ public class NativeRelinker {
         !linkableLibs.isEmpty() || !linkableLibsAssets.isEmpty(),
         "There should be at least one native library to relink.");
 
-    this.buildRuleParams = buildRuleParams;
     this.resolver = resolver;
     this.cxxBuckConfig = cxxBuckConfig;
     this.nativePlatforms = nativePlatforms;
@@ -236,7 +232,6 @@ public class NativeRelinker {
   private RelinkerRule makeRelinkerRule(
       TargetCpuType cpuType, SourcePath source, ImmutableList<RelinkerRule> relinkerDeps) {
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
-    BuildRuleParams relinkerParams = buildRuleParams.copyAppendingExtraDeps(relinkerDeps);
     BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
     Linker linker = null;
@@ -252,7 +247,6 @@ public class NativeRelinker {
             InternalFlavor.of(Flavor.replaceInvalidCharacters(cpuType.toString())),
             InternalFlavor.of(Flavor.replaceInvalidCharacters(libname))),
         projectFilesystem,
-        relinkerParams,
         resolver,
         cellPathResolver,
         ruleFinder,

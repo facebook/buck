@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -71,7 +70,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final ToolchainProvider toolchainProvider;
   private final ProjectFilesystem projectFilesystem;
   private final BuildTarget originalBuildTarget;
-  private final BuildRuleParams buildRuleParams;
   private final ActionGraphBuilder graphBuilder;
   private final SourcePathResolver pathResolver;
   private final SourcePathRuleFinder ruleFinder;
@@ -92,7 +90,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ActionGraphBuilder graphBuilder,
       BuildTarget originalBuildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams originalParams,
       ImmutableSet<TargetCpuType> cpuFilters,
       CxxBuckConfig cxxBuckConfig,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
@@ -108,7 +105,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.ruleFinder = new SourcePathRuleFinder(graphBuilder);
     this.nativeLibraryMergeLocalizedSymbols = nativeLibraryMergeLocalizedSymbols;
     this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    this.buildRuleParams = originalParams;
     this.graphBuilder = graphBuilder;
     this.cpuFilters = cpuFilters;
     this.cxxBuckConfig = cxxBuckConfig;
@@ -278,11 +274,6 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           new NativeRelinker(
               originalBuildTarget,
               projectFilesystem,
-              buildRuleParams.withExtraDeps(
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibs.values()))
-                      .addAll(ruleFinder.filterBuildRuleInputs(nativeLinkableLibsAssets.values()))
-                      .build()),
               cellPathResolver,
               pathResolver,
               ruleFinder,

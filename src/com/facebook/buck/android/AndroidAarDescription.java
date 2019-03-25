@@ -238,7 +238,6 @@ public class AndroidAarDescription
             graphBuilder,
             buildTarget,
             projectFilesystem,
-            originalBuildRuleParams,
             ImmutableSet.of(),
             cxxBuckConfig,
             /* nativeLibraryMergeMap */ Optional.empty(),
