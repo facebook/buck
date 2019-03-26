@@ -95,6 +95,9 @@ public class MainIntegrationTest {
         "  install        builds and installs an application",
         "  kill           kill buckd for the current project",
         "  killall        kill all buckd processes",
+        "  perf           various utilities for testing performance of Buck against real codebases "
+            + "and configurations. NOTE: This command's interface is unstable and will change "
+            + "without warning.",
         "  project        generates project configuration files for an IDE",
         "  publish        builds and publishes a library to a central repository",
         "  query          "

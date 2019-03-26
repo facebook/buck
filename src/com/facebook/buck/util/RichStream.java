@@ -93,7 +93,7 @@ public interface RichStream<T> extends Stream<T> {
    * @return Stream containing the elements of the current stream followed by that of the given
    *     stream.
    */
-  default RichStream<T> concat(Stream<T> other) {
+  default RichStream<T> concat(Stream<? extends T> other) {
     return new RichStreamImpl<>(Stream.concat(this, other));
   }
 

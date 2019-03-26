@@ -164,6 +164,7 @@ java_test(
         "//third-party/java/args4j:args4j",
         "//third-party/java/asm:asm",
         "//third-party/java/bazel:bazel",
+        "//third-party/java/commons-math3:commons-math3",
         "//third-party/java/dd-plist:dd-plist",
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
