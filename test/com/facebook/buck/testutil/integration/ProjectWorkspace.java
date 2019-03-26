@@ -201,6 +201,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     Path bucklibRoot = createBucklibRoot();
     createSymlinkToBuckTestRepository(bucklibRoot);
     saveBucklibConfig(bucklibRoot);
+    createWatchmanConfig(bucklibRoot);
     return bucklibRoot;
   }
 

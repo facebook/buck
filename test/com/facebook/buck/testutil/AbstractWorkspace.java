@@ -240,11 +240,16 @@ public abstract class AbstractWorkspace {
     addBuckConfigLocalOption("build", "threads", "2");
   }
 
-  private void ensureWatchmanConfig() throws IOException {
+  private void createWatchmanConfig() throws IOException {
+    createWatchmanConfig(destPath);
+  }
+
+  protected void createWatchmanConfig(Path root) throws IOException {
+    Path watchmanConfigPath = root.resolve(".watchmanconfig");
     // We have to have .watchmanconfig on windows, otherwise we have problems with deleting stuff
     // from buck-out while watchman indexes/touches files.
-    if (!Files.exists(getPath(".watchmanconfig"))) {
-      writeContentsToPath("{\"ignore_dirs\":[\"buck-out\",\".buckd\"]}", ".watchmanconfig");
+    if (!Files.exists(watchmanConfigPath)) {
+      writeContentsToPath("{\"ignore_dirs\":[\"buck-out\",\".buckd\"]}", watchmanConfigPath);
     }
   }
 
@@ -333,7 +338,7 @@ public abstract class AbstractWorkspace {
       firstTemplateAdded = true;
       stampBuckVersion();
       addDefaultLocalBuckConfigs();
-      ensureWatchmanConfig();
+      createWatchmanConfig();
     }
   }
 
@@ -614,6 +619,18 @@ public abstract class AbstractWorkspace {
       String contents, String pathRelativeToWorkspaceRoot, OpenOption... options)
       throws IOException {
     Files.write(getPath(pathRelativeToWorkspaceRoot), contents.getBytes(UTF_8), options);
+  }
+
+  /**
+   * Create file (or overwrite existing file) with given contents at
+   *
+   * @param contents contents to write to the file
+   * @param path destination path of file
+   * @param options options (the same ones that Files.write takes)
+   */
+  public void writeContentsToPath(String contents, Path path, OpenOption... options)
+      throws IOException {
+    Files.write(path, contents.getBytes(UTF_8), options);
   }
 
   /** @return the specified path resolved against the root of this workspace. */
