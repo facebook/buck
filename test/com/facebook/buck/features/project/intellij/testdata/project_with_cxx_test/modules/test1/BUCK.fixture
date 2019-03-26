@@ -1,0 +1,7 @@
+cxx_test(
+    name = "test1",
+    srcs = glob(["src/**/*.cpp"]),
+    visibility = [
+        "PUBLIC",
+    ],
+)

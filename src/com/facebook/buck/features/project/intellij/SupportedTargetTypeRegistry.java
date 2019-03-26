@@ -21,11 +21,13 @@ import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.cxx.CxxLibraryDescription;
+import com.facebook.buck.cxx.CxxTestDescription;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidBinaryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidResourceModuleRule;
 import com.facebook.buck.features.project.intellij.lang.android.RobolectricTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.cxx.CxxLibraryModuleRule;
+import com.facebook.buck.features.project.intellij.lang.cxx.CxxTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.groovy.GroovyLibraryModuleRule;
 import com.facebook.buck.features.project.intellij.lang.groovy.GroovyTestModuleRule;
 import com.facebook.buck.features.project.intellij.lang.java.JavaBinaryModuleRule;
@@ -68,6 +70,7 @@ public class SupportedTargetTypeRegistry {
               AndroidLibraryDescription.class,
               AndroidResourceDescription.class,
               CxxLibraryDescription.class,
+              CxxTestDescription.class,
               JavaBinaryDescription.class,
               JavaLibraryDescription.class,
               JavaTestDescription.class,
@@ -105,6 +108,7 @@ public class SupportedTargetTypeRegistry {
     addToIndex(
         new AndroidResourceModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new CxxLibraryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
+    addToIndex(new CxxTestModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(new JavaBinaryModuleRule(projectFilesystem, moduleFactoryResolver, projectConfig));
     addToIndex(
         new JavaLibraryModuleRule(

@@ -215,6 +215,16 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testCxxTest() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("project_with_cxx_test");
+  }
+
+  @Test
+  public void testAggregatingCxxTest() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("aggregation_with_cxx_test");
+  }
+
+  @Test
   public void testSavingGeneratedFilesList() throws InterruptedException, IOException {
     runBuckProjectAndVerify(
         "save_generated_files_list",
