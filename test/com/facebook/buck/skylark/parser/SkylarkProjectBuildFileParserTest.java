@@ -81,7 +81,6 @@ import org.junit.rules.ExpectedException;
 import org.pf4j.PluginManager;
 
 public class SkylarkProjectBuildFileParserTest {
-
   class RecordingParser extends SkylarkProjectBuildFileParser {
     private Map<com.google.devtools.build.lib.vfs.Path, Integer> readCounts;
 
@@ -868,7 +867,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(extensionFile, Collections.singletonList("error"));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate extension file //src/test:build_rules.bzl");
+    thrown.expectMessage("Cannot evaluate extension //src/test:build_rules.bzl");
 
     parser.getBuildFileManifest(buildFile);
   }

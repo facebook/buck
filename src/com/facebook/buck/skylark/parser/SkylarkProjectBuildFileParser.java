@@ -39,6 +39,7 @@ import com.facebook.buck.skylark.io.impl.CachingGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -71,7 +72,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -530,9 +534,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       SkylarkImport skylarkImport = skylarkImports.get(i);
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport)) continue;
-      LoadImport loadImport = LoadImport.of(containingLabel, skylarkImport);
       try {
-        extensions.add(extensionDataCache.getUnchecked(loadImport));
+        extensions.add(loadExtension(LoadImport.of(containingLabel, skylarkImport)));
       } catch (UncheckedExecutionException e) {
         propagateRootCause(e);
       }
@@ -588,43 +591,216 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   /**
+   * A struct like class to help loadExtension implementation to represent the state needed for load
+   * of a single extension/file.
+   */
+  private class ExtensionLoadState {
+    // Extension key being loaded.
+    private final LoadImport key;
+    // List of dependencies this extension uses.
+    private final List<LoadImport> dependencies;
+    // This extension AST.
+    private @Nullable BuildFileAST ast;
+
+    private ExtensionLoadState(LoadImport key) {
+      this.key = key;
+      this.dependencies = new ArrayList<LoadImport>();
+      this.ast = null;
+    }
+
+    public LoadImport getKey() {
+      return key;
+    }
+
+    // Methods to get/set/test AST for this extension.
+    public boolean haveAST() {
+      return ast != null;
+    }
+
+    public void setAST(BuildFileAST ast) {
+      Preconditions.checkArgument(!haveAST(), "AST can be set only once");
+      this.ast = ast;
+    }
+
+    public BuildFileAST getAST() {
+      Preconditions.checkNotNull(ast);
+      return ast;
+    }
+
+    // Adds a single dependency key for this extension.
+    public void addDependency(LoadImport dependency) {
+      dependencies.add(dependency);
+    }
+
+    // Returns the label of the file including this extension.
+    public Label getParentLabel() {
+      return key.getContainingLabel();
+    }
+
+    // Returns this extensions label.
+    public Label getLabel() {
+      return key.getLabel();
+    }
+
+    // Returns SkylarkImport object for this extension load
+    public SkylarkImport getSkylarkImport() {
+      return key.getImport();
+    }
+
+    /**
+     * Returns a list of ExtensionData for all of the dependencies of this extension. Requires all
+     * dependencies are available in the extensions_cache.
+     *
+     * @param cache extension data cache which should have all dependencies available
+     * @return an immutable list of {@link ExtensionData} for the dependencies.
+     */
+    public ImmutableList<ExtensionData> getDependenciesExtensionData(
+        Cache<LoadImport, ExtensionData> cache) throws BuildFileParseException {
+      ImmutableList.Builder<ExtensionData> depBuilder =
+          ImmutableList.builderWithExpectedSize(dependencies.size());
+
+      for (int i = 0; i < dependencies.size(); ++i) {
+        LoadImport dependency = dependencies.get(i);
+        ExtensionData extension = cache.getIfPresent(dependency);
+
+        if (extension == null) {
+          throw BuildFileParseException.createForUnknownParseError(
+              "Cannot evaluate extension file %s; missing dependency is %s",
+              key.getLabel(), dependency.getLabel());
+        }
+
+        depBuilder.add(extension);
+      }
+
+      return depBuilder.build();
+    }
+  }
+
+  /**
+   * Loads extensions abstract syntax tree if needed.
+   *
+   * @param load {@link ExtensionLoadState} representing the extension being loaded.
+   * @returns true if AST was loaded, false otherwise.
+   */
+  private boolean maybeLoadAST(ExtensionLoadState load) throws IOException {
+    if (load.haveAST()) {
+      return false;
+    }
+
+    com.google.devtools.build.lib.vfs.Path extensionPath =
+        getImportPath(load.getLabel(), load.getSkylarkImport());
+    load.setAST(parseSkylarkFile(extensionPath, load.getParentLabel()));
+    return true;
+  }
+
+  /**
+   * Updates extension load state with the list of its dependencies, and schedules any unsatisfied
+   * dependencies to be loaded by adding those dependencies to the work queue.
+   *
+   * @param load {@link ExtensionLoadState} representing extension currently loaded
+   * @param queue a work queue of extensions that still need to be loaded.
+   * @return true if this extension has any unsatisfied dependencies
+   */
+  private boolean processExtensionDependencies(
+      ExtensionLoadState load, ArrayDeque<ExtensionLoadState> queue) {
+    // Update this load state with the list of its dependencies.
+    // Schedule missing dependencies to be loaded.
+    boolean haveUnsatisfiedDeps = false;
+    for (int i = 0; i < load.getAST().getImports().size(); ++i) {
+      LoadImport dependency = LoadImport.of(load.getLabel(), load.getAST().getImports().get(i));
+
+      // Record dependency for this load.
+      load.addDependency(dependency);
+
+      if (extensionDataCache.getIfPresent(dependency) == null) {
+        // Schedule dependency to be loaded if needed.
+        haveUnsatisfiedDeps = true;
+        queue.push(new ExtensionLoadState(dependency));
+      }
+    }
+    return haveUnsatisfiedDeps;
+  }
+
+  /**
+   * Given fully loaded extension represented by {@link ExtensionLoadState}, evaluates extension and
+   * returns {@link ExtensionData}
+   *
+   * @param load {@link ExtensionLoadState} representing loaded extension
+   * @returns {@link ExtensionData} for this extions.
+   */
+  private ExtensionData buildExtensionData(ExtensionLoadState load) throws InterruptedException {
+    ImmutableList<ExtensionData> dependencies =
+        load.getDependenciesExtensionData(extensionDataCache);
+    @Nullable Extension loadedExtension = null;
+    try (Mutability mutability = Mutability.create("importing extension")) {
+      Environment.Builder envBuilder =
+          Environment.builder(mutability)
+              .setEventHandler(eventHandler)
+              .setGlobals(buckGlobals.getBuckLoadContextGlobals());
+      envBuilder.setImportedExtensions(toImportMap(dependencies, null));
+
+      // Create this extension.
+      Environment extensionEnv =
+          envBuilder.setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS).build();
+      boolean success = load.getAST().exec(extensionEnv, eventHandler);
+      if (!success) {
+        throw BuildFileParseException.createForUnknownParseError(
+            "Cannot evaluate extension %s referenced from %s",
+            load.getLabel(), load.getParentLabel());
+      }
+      loadedExtension = new Extension(extensionEnv);
+    }
+
+    com.google.devtools.build.lib.vfs.Path extensionPath =
+        getImportPath(load.getLabel(), load.getSkylarkImport());
+    return ExtensionData.of(
+        loadedExtension,
+        extensionPath,
+        dependencies,
+        load.getSkylarkImport().getImportString(),
+        toLoadedPaths(extensionPath, dependencies, null));
+  }
+
+  /**
    * Creates an extension from a {@code path}.
    *
    * @param loadImport an import label representing an extension to load.
    */
   private ExtensionData loadExtension(LoadImport loadImport)
       throws IOException, BuildFileParseException, InterruptedException {
-    Label label = loadImport.getLabel();
-    com.google.devtools.build.lib.vfs.Path extensionPath =
-        getImportPath(label, loadImport.getImport());
-    ImmutableList<ExtensionData> dependencies = ImmutableList.of();
-    Extension extension;
-    try (Mutability mutability = Mutability.create("importing extension")) {
-      BuildFileAST extensionAst = parseSkylarkFile(extensionPath, loadImport.getContainingLabel());
-      Environment.Builder envBuilder =
-          Environment.builder(mutability)
-              .setEventHandler(eventHandler)
-              .setGlobals(buckGlobals.getBuckLoadContextGlobals());
-      if (!extensionAst.getImports().isEmpty()) {
-        dependencies = loadExtensions(label, extensionAst.getImports());
-        envBuilder.setImportedExtensions(toImportMap(dependencies, null));
+    ExtensionData extension = null;
+    ArrayDeque<ExtensionLoadState> work = new ArrayDeque<>();
+    work.push(new ExtensionLoadState(loadImport));
+
+    while (!work.isEmpty()) {
+      ExtensionLoadState load = work.peek();
+      extension = extensionDataCache.getIfPresent(load.getKey());
+
+      if (extension != null) {
+        // It's possible that some lower level dependencies already loaded
+        // this work item.  We're done with it, so pop the queue.
+        work.pop();
+        continue;
       }
-      Environment extensionEnv =
-          envBuilder.setSemantics(StarlarkSemantics.DEFAULT_SEMANTICS).build();
-      boolean success = extensionAst.exec(extensionEnv, eventHandler);
-      if (!success) {
-        throw BuildFileParseException.createForUnknownParseError(
-            "Cannot evaluate extension file " + loadImport.getImport().getImportString());
+
+      // Load BuildFileAST if needed.
+      boolean astLoaded = maybeLoadAST(load);
+      boolean haveUnsatisfiedDeps = astLoaded && processExtensionDependencies(load, work);
+
+      // NB: If we have unsatisfied dependencies, we don't do anything;
+      // more importantly we do not pop the work queue in this case.
+      // This load is kept on the queue until all of its dependencies are satisfied.
+
+      if (!haveUnsatisfiedDeps) {
+        // We are done with this load; build it and cache it.
+        work.removeFirst();
+        extension = buildExtensionData(load);
+        extensionDataCache.put(load.getKey(), extension);
       }
-      extension = new Extension(extensionEnv);
     }
 
-    return ExtensionData.of(
-        extension,
-        extensionPath,
-        dependencies,
-        loadImport.getImport().getImportString(),
-        toLoadedPaths(extensionPath, dependencies, null));
+    Preconditions.checkNotNull(extension);
+    return extension;
   }
 
   /**
