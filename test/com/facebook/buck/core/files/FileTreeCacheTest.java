@@ -112,6 +112,26 @@ public class FileTreeCacheTest {
   }
 
   @Test
+  @Parameters(method = "getInvalidateParameters")
+  public void whenFileListChangeAtRootThenInvalidate(WatchmanPathEvent.Kind kind) {
+    FileTreeCache cache = FileTreeCache.of(tmp.getRoot());
+    cache.put(
+        ImmutableFileTreeKey.of(Paths.get("")),
+        ImmutableFileTree.of(
+            Paths.get(""),
+            ImmutableDirectoryList.of(
+                ImmutableSortedSet.of(Paths.get("file")),
+                ImmutableSortedSet.of(),
+                ImmutableSortedSet.of()),
+            ImmutableMap.of()));
+
+    WatchmanPathEvent event = WatchmanPathEvent.of(tmp.getRoot(), kind, Paths.get("file1"));
+    cache.getInvalidator().onFileSystemChange(event);
+    Optional<FileTree> ftree = cache.get(ImmutableFileTreeKey.of(Paths.get("")));
+    assertFalse(ftree.isPresent());
+  }
+
+  @Test
   public void whenFileListNotChangeThenNotInvalidate() {
     FileTreeCache cache = FileTreeCache.of(tmp.getRoot());
     cache.put(

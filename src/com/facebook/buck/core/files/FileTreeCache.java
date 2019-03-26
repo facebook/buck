@@ -22,7 +22,6 @@ import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -91,18 +90,18 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
       // for CREATE and DELETE, invalidate all folders up the tree
       // TODO(sergeyb): be smarter - modify data in-place instead of full invalidation of the tree
       // this might require to unify FileTreeCache and DirectoryListCache
-      Path folderPath = event.getPath().getParent();
+      Path folderPath = MorePaths.getParentOrEmpty(event.getPath());
 
-      // getParent() usually returns null for first level files and folders, but it depends on
-      // implementation, so consider both null and empty path cases
-      while (folderPath != null && !folderPath.equals(MorePaths.EMPTY_PATH)) {
-        FileTreeKey key = ImmutableFileTreeKey.of(folderPath);
-        fileTreeCache.cache.remove(key);
-        folderPath = folderPath.getParent();
+      while (true) {
+        fileTreeCache.cache.remove(ImmutableFileTreeKey.of(folderPath));
+
+        if (folderPath.equals(MorePaths.EMPTY_PATH)) {
+          // empty path means root, it has no parent so return
+          break;
+        }
+
+        folderPath = MorePaths.getParentOrEmpty(folderPath);
       }
-
-      // invalidate root explicitly, because getParent() for first level dir returns null
-      fileTreeCache.cache.remove(ImmutableFileTreeKey.of(Paths.get("")));
     }
 
     /**

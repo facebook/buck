@@ -17,6 +17,7 @@
 package com.facebook.buck.core.files;
 
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.google.common.eventbus.Subscribe;
@@ -86,7 +87,7 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
       }
 
       // for CREATE and DELETE, invalidate containing folder
-      Path folderPath = event.getPath().getParent();
+      Path folderPath = MorePaths.getParentOrEmpty(event.getPath());
       DirectoryListKey key = ImmutableDirectoryListKey.of(folderPath);
       dirListCache.cache.remove(key);
     }

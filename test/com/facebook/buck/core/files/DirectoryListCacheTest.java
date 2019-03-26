@@ -86,6 +86,23 @@ public class DirectoryListCacheTest {
   }
 
   @Test
+  @Parameters(method = "getInvalidateParameters")
+  public void whenFileListChangeAtRootThenInvalidate(WatchmanPathEvent.Kind kind) {
+    DirectoryListCache cache = DirectoryListCache.of(tmp.getRoot());
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("")),
+        ImmutableDirectoryList.of(
+            ImmutableSortedSet.of(Paths.get("file")),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of()));
+
+    WatchmanPathEvent event = WatchmanPathEvent.of(tmp.getRoot(), kind, Paths.get("file1"));
+    cache.getInvalidator().onFileSystemChange(event);
+    Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("")));
+    assertFalse(dlist.isPresent());
+  }
+
+  @Test
   public void whenFileListNotChangeThenNotInvalidate() {
     DirectoryListCache cache = DirectoryListCache.of(tmp.getRoot());
     cache.put(
