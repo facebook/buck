@@ -161,11 +161,16 @@ public class AndroidPlatformTargetProducer {
     Path buildToolsBinDir = androidBuildToolsLocation.getBuildToolsBinPath();
     String version = buildToolsDir.getFileName().toString();
 
-    Path zipAlignExecutable = androidSdkDir.resolve("tools/zipalign").toAbsolutePath();
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
+    Path zipAlignExecutable =
+        androidSdkDir.resolve("tools/zipalign" + binaryExtension).toAbsolutePath();
     if (!zipAlignExecutable.toFile().exists()) {
       // Android SDK Build-tools >= 19.1.0 have zipalign under the build-tools directory.
       zipAlignExecutable =
-          androidSdkDir.resolve(buildToolsBinDir).resolve("zipalign").toAbsolutePath();
+          androidSdkDir
+              .resolve(buildToolsBinDir)
+              .resolve("zipalign" + binaryExtension)
+              .toAbsolutePath();
     }
 
     Path androidFrameworkIdlFile = platformDirectory.resolve("framework.aidl");
@@ -186,7 +191,7 @@ public class AndroidPlatformTargetProducer {
                         androidSdkDir
                             .resolve(androidBuildToolsLocation.getAaptPath())
                             .toAbsolutePath()),
-                    "aapt",
+                    "aapt" + binaryExtension,
                     version)),
         aapt2Override.orElse(
             () ->
@@ -196,10 +201,10 @@ public class AndroidPlatformTargetProducer {
                         androidSdkDir
                             .resolve(androidBuildToolsLocation.getAapt2Path())
                             .toAbsolutePath()),
-                    "aapt2",
+                    "aapt2" + binaryExtension,
                     version)),
-        androidSdkDir.resolve("platform-tools/adb").toAbsolutePath(),
-        androidSdkDir.resolve(buildToolsBinDir).resolve("aidl").toAbsolutePath(),
+        androidSdkDir.resolve("platform-tools/adb" + binaryExtension).toAbsolutePath(),
+        androidSdkDir.resolve(buildToolsBinDir).resolve("aidl" + binaryExtension).toAbsolutePath(),
         zipAlignExecutable,
         buildToolsDir
             .resolve(Platform.detect() == Platform.WINDOWS ? "dx.bat" : "dx")

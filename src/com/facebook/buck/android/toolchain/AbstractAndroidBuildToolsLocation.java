@@ -18,6 +18,7 @@ package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.util.environment.Platform;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -48,12 +49,14 @@ public interface AbstractAndroidBuildToolsLocation extends Toolchain {
   /** @return {@code Path} pointing to Android SDK aapt binary */
   @Value.Derived
   default Path getAaptPath() {
-    return getBuildToolsBinPath().resolve("aapt");
+    return getBuildToolsBinPath()
+        .resolve(Platform.detect() == Platform.WINDOWS ? "aapt.exe" : "aapt");
   }
   /** @return {@code Path} pointing to Android SDK aapt2 binary */
   @Value.Derived
   default Path getAapt2Path() {
-    return getBuildToolsBinPath().resolve("aapt2");
+    return getBuildToolsBinPath()
+        .resolve(Platform.detect() == Platform.WINDOWS ? "aapt2.exe" : "aapt2");
   }
 
   @Override

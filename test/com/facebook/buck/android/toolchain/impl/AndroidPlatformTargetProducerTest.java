@@ -93,11 +93,13 @@ public class AndroidPlatformTargetProducerTest {
         MorePathsForTests.rootRelativePath(
             "home/android/tools/proguard/proguard-android-optimize.txt"),
         androidPlatformTarget.getOptimizedProguardConfig());
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
     assertEquals(
-        androidSdkDir.resolve("platform-tools/aapt").toAbsolutePath(),
+        androidSdkDir.resolve("platform-tools/aapt" + binaryExtension).toAbsolutePath(),
         androidSdkDir.resolve(buildToolsLocation.getAaptPath()));
     assertEquals(
-        androidSdkDir.resolve("platform-tools/aidl"), androidPlatformTarget.getAidlExecutable());
+        androidSdkDir.resolve("platform-tools/aidl" + binaryExtension),
+        androidPlatformTarget.getAidlExecutable());
     assertEquals(
         androidSdkDir.resolve(
             Platform.detect() == Platform.WINDOWS ? "platform-tools/dx.bat" : "platform-tools/dx"),
@@ -279,13 +281,14 @@ public class AndroidPlatformTargetProducerTest {
             /* aapt2Override */ Optional.empty());
 
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
+    String binaryExtension = Platform.detect() == Platform.WINDOWS ? ".exe" : "";
     assertEquals(
-        pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign"),
+        pathToAndroidSdkDir.resolve("build-tools/17.0.0/zipalign" + binaryExtension),
         androidPlatformTarget.getZipalignExecutable());
 
     File toolsDir = new File(androidSdkDir, "tools");
     toolsDir.mkdirs();
-    Files.touch(new File(toolsDir, "zipalign"));
+    Files.touch(new File(toolsDir, "zipalign" + binaryExtension));
     androidPlatformTarget =
         AndroidPlatformTargetProducer.getTargetForId(
             filesystem,
@@ -296,7 +299,7 @@ public class AndroidPlatformTargetProducerTest {
             /* aapt2Override */ Optional.empty());
     assertEquals(platformId, androidPlatformTarget.getPlatformName());
     assertEquals(
-        pathToAndroidSdkDir.resolve("tools/zipalign"),
+        pathToAndroidSdkDir.resolve("tools/zipalign" + binaryExtension),
         androidPlatformTarget.getZipalignExecutable());
   }
 
