@@ -151,7 +151,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         .addAllFrameworks(frameworks)
         .addAllLibraries(libraries);
     boolean isDynamic;
-    Linkage preferredLinkage = getPreferredLinkage(cxxPlatform, graphBuilder);
+    Linkage preferredLinkage = getPreferredLinkage(cxxPlatform);
     switch (preferredLinkage) {
       case STATIC:
         isDynamic = false;
@@ -231,8 +231,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public NativeLinkable.Linkage getPreferredLinkage(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     // don't create dylib for swift companion target.
     if (getBuildTarget().getFlavors().contains(SWIFT_COMPANION_FLAVOR)) {
       return Linkage.STATIC;

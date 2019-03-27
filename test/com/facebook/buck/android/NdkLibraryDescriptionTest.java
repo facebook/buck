@@ -67,8 +67,7 @@ public class NdkLibraryDescriptionTest {
     }
 
     @Override
-    public NativeLinkable.Linkage getPreferredLinkage(
-        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
       return Linkage.ANY;
     }
 

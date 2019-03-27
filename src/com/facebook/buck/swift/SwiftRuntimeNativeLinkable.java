@@ -85,7 +85,7 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
   }
 
   @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     ApplePlatformType type = ApplePlatformType.of(cxxPlatform.getFlavor().getName());
     if (type == ApplePlatformType.MAC) {
       return Linkage.ANY;

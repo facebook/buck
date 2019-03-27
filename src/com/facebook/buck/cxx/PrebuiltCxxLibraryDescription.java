@@ -703,8 +703,7 @@ public class PrebuiltCxxLibraryDescription
 
         if (!args.isHeaderOnly()) {
           if (type == Linker.LinkableDepType.SHARED) {
-            Preconditions.checkState(
-                getPreferredLinkage(cxxPlatform, graphBuilder) != Linkage.STATIC);
+            Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.STATIC);
             SourcePath sharedLibrary = requireSharedLibrary(cxxPlatform, true, graphBuilder);
             if (args.getLinkWithoutSoname()) {
               if (!(sharedLibrary instanceof PathSourcePath)) {
@@ -717,8 +716,7 @@ public class PrebuiltCxxLibraryDescription
                   SourcePathArg.of(requireSharedLibrary(cxxPlatform, true, graphBuilder)));
             }
           } else {
-            Preconditions.checkState(
-                getPreferredLinkage(cxxPlatform, graphBuilder) != Linkage.SHARED);
+            Preconditions.checkState(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
             Optional<SourcePath> staticLibraryPath =
                 type == Linker.LinkableDepType.STATIC_PIC
                     ? getStaticPicLibrary(cxxPlatform, graphBuilder)
@@ -766,8 +764,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public NativeLinkable.Linkage getPreferredLinkage(
-          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
         if (args.isHeaderOnly()) {
           return Linkage.ANY;
         }
@@ -781,7 +778,7 @@ public class PrebuiltCxxLibraryDescription
           return Linkage.SHARED;
         }
         Optional<Linkage> inferredLinkage =
-            paths.getLinkage(projectFilesystem, graphBuilder, cellRoots, cxxPlatform);
+            paths.getLinkage(projectFilesystem, cellRoots, cxxPlatform);
         return inferredLinkage.orElse(Linkage.ANY);
       }
 
@@ -789,7 +786,7 @@ public class PrebuiltCxxLibraryDescription
       public boolean supportsOmnibusLinking(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         return args.getSupportsMergedLinking()
-            .orElse(getPreferredLinkage(cxxPlatform, graphBuilder) != Linkage.SHARED);
+            .orElse(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
       }
 
       @Override
@@ -825,7 +822,7 @@ public class PrebuiltCxxLibraryDescription
       @Override
       public Optional<NativeLinkTarget> getNativeLinkTarget(
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        if (getPreferredLinkage(cxxPlatform, graphBuilder) == Linkage.SHARED) {
+        if (getPreferredLinkage(cxxPlatform) == Linkage.SHARED) {
           return Optional.empty();
         }
         return Optional.of(

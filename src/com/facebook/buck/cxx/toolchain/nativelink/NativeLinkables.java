@@ -141,7 +141,7 @@ public class NativeLinkables {
         nativeLinkable.getNativeLinkableExportedDepsForPlatform(cxxPlatform, graphBuilder);
 
     boolean shouldTraverse;
-    switch (nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder)) {
+    switch (nativeLinkable.getPreferredLinkage(cxxPlatform)) {
       case ANY:
         shouldTraverse = linkStyle != Linker.LinkableDepType.SHARED;
         break;
@@ -222,7 +222,7 @@ public class NativeLinkables {
       Linker.LinkableDepType linkStyle,
       NativeLinkable nativeLinkable,
       ActionGraphBuilder graphBuilder) {
-    NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
+    NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
     return nativeLinkable.getNativeLinkableInput(
         cxxPlatform, getLinkStyle(link, linkStyle), graphBuilder);
   }
@@ -310,8 +310,7 @@ public class NativeLinkables {
         .stream()
         .filter(
             e ->
-                e.getValue().getPreferredLinkage(cxxPlatform, graphBuilder)
-                        != NativeLinkable.Linkage.STATIC
+                e.getValue().getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC
                     || (alwaysIncludeRoots && roots.containsKey(e.getKey())))
         .forEach(e -> builder.add(cxxPlatform, e.getValue(), graphBuilder));
     return builder.build();

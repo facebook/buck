@@ -170,7 +170,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibrary defaultLib =
         new HaskellLibraryBuilder(BuildTargetFactory.newInstance("//:default")).build(graphBuilder);
     assertThat(
-        defaultLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        defaultLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.is(NativeLinkable.Linkage.ANY));
 
     // Test `ANY` value.
@@ -179,7 +179,7 @@ public class HaskellLibraryDescriptionTest {
             .setPreferredLinkage(NativeLinkable.Linkage.ANY)
             .build(graphBuilder);
     assertThat(
-        anyLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        anyLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.is(NativeLinkable.Linkage.ANY));
 
     // Test `STATIC` value.
@@ -188,7 +188,7 @@ public class HaskellLibraryDescriptionTest {
             .setPreferredLinkage(NativeLinkable.Linkage.STATIC)
             .build(graphBuilder);
     assertThat(
-        staticLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        staticLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.is(NativeLinkable.Linkage.STATIC));
 
     // Test `SHARED` value.
@@ -197,7 +197,7 @@ public class HaskellLibraryDescriptionTest {
             .setPreferredLinkage(NativeLinkable.Linkage.SHARED)
             .build(graphBuilder);
     assertThat(
-        sharedLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        sharedLib.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.is(NativeLinkable.Linkage.SHARED));
   }
 

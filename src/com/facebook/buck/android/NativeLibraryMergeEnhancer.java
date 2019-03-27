@@ -946,7 +946,7 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
-    public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
       // If we have any non-static constituents, our preferred linkage is shared
       // (because stuff in Android is shared by default).  That's the common case.
       // If *all* of our constituents are force_static=True, we will also be preferred static.
@@ -954,7 +954,7 @@ class NativeLibraryMergeEnhancer {
       // It's also possible that multiple force_static libs could be merged,
       // but that has no effect.
       for (NativeLinkable linkable : constituents.getLinkables()) {
-        if (linkable.getPreferredLinkage(cxxPlatform, graphBuilder) != Linkage.STATIC) {
+        if (linkable.getPreferredLinkage(cxxPlatform) != Linkage.STATIC) {
           return Linkage.SHARED;
         }
       }
@@ -965,7 +965,7 @@ class NativeLibraryMergeEnhancer {
     @Override
     public ImmutableMap<String, SourcePath> getSharedLibraries(
         CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-      if (getPreferredLinkage(cxxPlatform, graphBuilder) == Linkage.STATIC) {
+      if (getPreferredLinkage(cxxPlatform) == Linkage.STATIC) {
         return ImmutableMap.of();
       }
 

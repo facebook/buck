@@ -216,7 +216,7 @@ public class HaskellGhciDescription
 
       // We link C/C++ libraries whole...
       if (nativeLinkable instanceof CxxLibrary) {
-        NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
+        NativeLinkable.Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
         nativeLinkableInputs.add(
             nativeLinkable.getNativeLinkableInput(
                 cxxPlatform,

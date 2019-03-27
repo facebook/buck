@@ -430,7 +430,7 @@ public class RustLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
         return args.getPreferredLinkage();
       }
 

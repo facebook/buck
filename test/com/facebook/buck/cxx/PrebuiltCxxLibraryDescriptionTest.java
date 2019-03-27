@@ -566,7 +566,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary prebuiltCxxLibrary =
         (PrebuiltCxxLibrary) builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        prebuiltCxxLibrary.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        prebuiltCxxLibrary.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.equalTo(NativeLinkable.Linkage.STATIC));
   }
 
@@ -828,8 +828,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     PrebuiltCxxLibrary rule =
         (PrebuiltCxxLibrary) prebuiltCxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
-        rule.getPreferredLinkage(CXX_PLATFORM, graphBuilder),
-        Matchers.equalTo(NativeLinkable.Linkage.ANY));
+        rule.getPreferredLinkage(CXX_PLATFORM), Matchers.equalTo(NativeLinkable.Linkage.ANY));
   }
 
   @Test

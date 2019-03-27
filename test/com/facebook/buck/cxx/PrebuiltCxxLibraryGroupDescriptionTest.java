@@ -202,7 +202,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        any.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        any.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.equalTo(NativeLinkable.Linkage.ANY));
 
     NativeLinkable staticOnly =
@@ -211,7 +211,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setStaticLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        staticOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        staticOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.equalTo(NativeLinkable.Linkage.STATIC));
 
     NativeLinkable sharedOnly =
@@ -220,7 +220,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
                 .setSharedLink(ImmutableList.of("-something"))
                 .build(graphBuilder);
     assertThat(
-        sharedOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        sharedOnly.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         Matchers.equalTo(NativeLinkable.Linkage.SHARED));
   }
 

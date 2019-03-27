@@ -320,8 +320,7 @@ public class PythonUtil {
               graphBuilder,
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
       for (NativeLinkable nativeLinkable : nativeLinkables.values()) {
-        NativeLinkable.Linkage linkage =
-            nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
+        NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
         if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
             || linkage != NativeLinkable.Linkage.STATIC) {
           ImmutableMap<String, SourcePath> libs =

@@ -89,8 +89,7 @@ public class NativeLinkablesTest {
     }
 
     @Override
-    public NativeLinkable.Linkage getPreferredLinkage(
-        CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    public NativeLinkable.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
       return preferredLinkage;
     }
 

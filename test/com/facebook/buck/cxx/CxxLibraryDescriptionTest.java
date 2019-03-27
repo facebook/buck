@@ -1224,7 +1224,7 @@ public class CxxLibraryDescriptionTest {
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxLibraryBuilder.build()));
     CxxLibrary rule = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem);
     assertThat(
-        rule.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder),
+        rule.getPreferredLinkage(CxxPlatformUtils.DEFAULT_PLATFORM),
         equalTo(NativeLinkable.Linkage.STATIC));
   }
 

@@ -156,7 +156,7 @@ public class HaskellPrebuiltLibraryDescription
       }
 
       @Override
-      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
         return Linkage.ANY;
       }
 

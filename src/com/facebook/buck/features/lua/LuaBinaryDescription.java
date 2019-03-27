@@ -502,8 +502,7 @@ public class LuaBinaryDescription
           NativeLinkables.getTransitiveNativeLinkables(
                   cxxPlatform, graphBuilder, nativeLinkableRoots.values())
               .values()) {
-        NativeLinkable.Linkage linkage =
-            nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
+        NativeLinkable.Linkage linkage = nativeLinkable.getPreferredLinkage(cxxPlatform);
         if (linkage != NativeLinkable.Linkage.STATIC) {
           builder.putAllNativeLibraries(
               nativeLinkable.getSharedLibraries(cxxPlatform, graphBuilder));

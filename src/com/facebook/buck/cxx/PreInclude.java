@@ -139,7 +139,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
    * rules' preferred linkage.
    */
   @Override
-  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  public Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return Linkage.ANY;
   }
 

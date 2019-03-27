@@ -141,8 +141,7 @@ public class Omnibus {
               Linker.LinkableDepType.SHARED)) {
         Linker.LinkableDepType linkStyle =
             NativeLinkables.getLinkStyle(
-                dep.getPreferredLinkage(cxxPlatform, actionGraphBuilder),
-                Linker.LinkableDepType.SHARED);
+                dep.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
         Preconditions.checkState(linkStyle != Linker.LinkableDepType.STATIC);
 
         // We only consider deps which aren't *only* statically linked.
@@ -324,8 +323,7 @@ public class Omnibus {
       BuildTarget linkableTarget = nativeLinkable.getBuildTarget();
       Linker.LinkableDepType linkStyle =
           NativeLinkables.getLinkStyle(
-              nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder),
-              Linker.LinkableDepType.SHARED);
+              nativeLinkable.getPreferredLinkage(cxxPlatform), Linker.LinkableDepType.SHARED);
 
       // If this dep needs to be linked statically, then we always link it directly.
       if (linkStyle != Linker.LinkableDepType.SHARED) {
@@ -745,8 +743,7 @@ public class Omnibus {
     // static libraries.
     for (NativeLinkable nativeLinkable : spec.getExcluded().values()) {
       if (spec.getExcludedRoots().contains(nativeLinkable.getBuildTarget())
-          || nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder)
-              != NativeLinkable.Linkage.STATIC) {
+          || nativeLinkable.getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC) {
         for (Map.Entry<String, SourcePath> ent :
             nativeLinkable.getSharedLibraries(cxxPlatform, graphBuilder).entrySet()) {
           libs.addLibraries(OmnibusLibrary.of(ent.getKey(), ent.getValue()));

@@ -203,7 +203,7 @@ public class CxxLinkableEnhancer {
                         cxxPlatform, graphBuilder, nativeLinkableDeps, depType),
                     linkable -> !blacklist.contains(linkable.getBuildTarget())),
                 nativeLinkable -> {
-                  Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform, graphBuilder);
+                  Linkage link = nativeLinkable.getPreferredLinkage(cxxPlatform);
                   NativeLinkableInput input =
                       nativeLinkable.getNativeLinkableInput(
                           cxxPlatform,

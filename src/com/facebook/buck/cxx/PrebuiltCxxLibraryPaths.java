@@ -62,10 +62,7 @@ interface PrebuiltCxxLibraryPaths {
 
   @SuppressWarnings("unused")
   default Optional<NativeLinkable.Linkage> getLinkage(
-      ProjectFilesystem filesystem,
-      ActionGraphBuilder graphBuilder,
-      CellPathResolver cellRoots,
-      CxxPlatform cxxPlatform) {
+      ProjectFilesystem filesystem, CellPathResolver cellRoots, CxxPlatform cxxPlatform) {
     return Optional.empty();
   }
 
