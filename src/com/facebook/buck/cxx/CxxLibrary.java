@@ -489,7 +489,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
     return supportsOmnibusLinking;
   }
 

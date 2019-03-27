@@ -783,8 +783,7 @@ public class PrebuiltCxxLibraryDescription
       }
 
       @Override
-      public boolean supportsOmnibusLinking(
-          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
         return args.getSupportsMergedLinking()
             .orElse(getPreferredLinkage(cxxPlatform) != Linkage.SHARED);
       }

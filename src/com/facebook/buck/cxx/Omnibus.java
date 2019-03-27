@@ -172,7 +172,7 @@ public class Omnibus {
                 getDeps(nativeLinkable, cxxPlatform, actionGraphBuilder),
                 NativeLinkable::getBuildTarget);
         nativeLinkables.putAll(deps);
-        if (!nativeLinkable.supportsOmnibusLinking(cxxPlatform, actionGraphBuilder)) {
+        if (!nativeLinkable.supportsOmnibusLinking(cxxPlatform)) {
           excluded.add(target);
         }
         return deps.keySet();

@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 
@@ -31,7 +30,7 @@ class OmnibusExcludedNode extends OmnibusNode {
   }
 
   @Override
-  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
     return false;
   }
 }

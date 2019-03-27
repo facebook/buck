@@ -95,7 +95,7 @@ public interface NativeLinkable {
 
   /** @return whether this {@link NativeLinkable} supports omnibus linking. */
   @SuppressWarnings("unused")
-  default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+  default boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
     return true;
   }
 

@@ -56,8 +56,7 @@ public class OmnibusRootsTest {
     OmnibusRootNode root =
         new OmnibusRootNode("//:transitive_root") {
           @Override
-          public boolean supportsOmnibusLinking(
-              CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+          public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
             return false;
           }
         };

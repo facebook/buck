@@ -298,8 +298,7 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
       }
 
       @Override
-      public boolean supportsOmnibusLinking(
-          CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+      public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {
         return getPreferredLinkage(cxxPlatform) != Linkage.SHARED;
       }
 
