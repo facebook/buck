@@ -139,6 +139,7 @@ java_test(
         "//test/com/facebook/buck/cli:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/config:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/support/bgtasks:testutil",

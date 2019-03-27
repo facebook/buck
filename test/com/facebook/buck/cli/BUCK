@@ -114,6 +114,7 @@ java_library(
         "//test/com/facebook/buck/android/toolchain:testutil",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/actiongraph/computation:testutil",
         "//test/com/facebook/buck/core/module:testutil",
         "//test/com/facebook/buck/core/rules/knowntypes:testutil",

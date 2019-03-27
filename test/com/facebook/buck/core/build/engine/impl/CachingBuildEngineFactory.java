@@ -25,7 +25,7 @@ import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
+import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
@@ -140,7 +140,7 @@ public class CachingBuildEngineFactory {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     TargetConfigurationSerializer targetConfigurationSerializer =
-        new JsonTargetConfigurationSerializer();
+        TargetConfigurationSerializerForTests.create();
     if (ruleKeyFactories.isPresent()) {
       return new CachingBuildEngine(
           cachingBuildEngineDelegate,

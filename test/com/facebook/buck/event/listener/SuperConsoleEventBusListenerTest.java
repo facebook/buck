@@ -40,7 +40,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
+import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
@@ -362,7 +362,7 @@ public class SuperConsoleEventBusListenerTest {
     DirArtifactCacheEvent.DirArtifactCacheEventFactory dirArtifactCacheEventFactory =
         new DirArtifactCacheEvent.DirArtifactCacheEventFactory(
             target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target),
-            new JsonTargetConfigurationSerializer());
+            TargetConfigurationSerializerForTests.create());
 
     ArtifactCacheEvent.Started dirFetchStarted =
         dirArtifactCacheEventFactory.newFetchStartedEvent(ImmutableSet.of());

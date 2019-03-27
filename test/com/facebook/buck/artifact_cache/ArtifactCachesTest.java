@@ -23,7 +23,7 @@ import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
+import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.event.BuckEventBus;
@@ -281,7 +281,7 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target),
-        new JsonTargetConfigurationSerializer(),
+        TargetConfigurationSerializerForTests.create(),
         projectFilesystem,
         wifiSsid,
         MoreExecutors.newDirectExecutorService(),

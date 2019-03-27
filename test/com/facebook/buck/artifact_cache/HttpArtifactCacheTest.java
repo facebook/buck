@@ -25,7 +25,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
+import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEvent;
@@ -141,7 +141,7 @@ public class HttpArtifactCacheTest {
             .setFetchClient(withMakeRequest((a, b) -> null))
             .setStoreClient(withMakeRequest((a, b) -> null))
             .setCacheReadMode(CacheReadMode.READWRITE)
-            .setTargetConfigurationSerializer(new JsonTargetConfigurationSerializer())
+            .setTargetConfigurationSerializer(TargetConfigurationSerializerForTests.create())
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetFactory()
