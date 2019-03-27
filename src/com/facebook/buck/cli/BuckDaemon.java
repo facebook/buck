@@ -58,8 +58,6 @@ public final class BuckDaemon {
   private static @Nullable DaemonKillers daemonKillers;
   private static AtomicInteger activeTasks = new AtomicInteger(0);
 
-  private static boolean isSessionLeader;
-
   private static final Logger LOG = Logger.get(BuckDaemon.class);
 
   /** Single thread for running short-lived tasks outside the command context. */
@@ -76,8 +74,7 @@ public final class BuckDaemon {
   /** The command ran when starting a new long living buckd session. */
   public static void main(String[] args) {
     try {
-      daemonizeIfPossible();
-      if (isSessionLeader) {
+      if (daemonizeIfPossible()) {
         BgProcessKiller.init();
         LOG.info("initialized bg session killer");
       }
@@ -158,7 +155,7 @@ public final class BuckDaemon {
     }
   }
 
-  private static void daemonizeIfPossible() {
+  private static boolean daemonizeIfPossible() {
     String osName = System.getProperty("os.name");
     Libc.OpenPtyLibrary openPtyLibrary;
     Platform platform = Platform.detect();
@@ -177,14 +174,14 @@ public final class BuckDaemon {
           Native.loadLibrary(com.sun.jna.Platform.C_LIBRARY_NAME, Libc.OpenPtyLibrary.class);
     } else {
       LOG.info("not enabling process killing on nailgun exit: unknown OS %s", osName);
-      return;
+      return false;
     }
 
     // Making ourselves a session leader with setsid disconnects us from our controlling terminal
     int ret = Libc.INSTANCE.setsid();
     if (ret < 0) {
       LOG.warn("cannot enable background process killing: %s", Native.getLastError());
-      return;
+      return false;
     }
 
     LOG.info("enabling background process killing for buckd");
@@ -208,7 +205,7 @@ public final class BuckDaemon {
     }
 
     LOG.info("enabled background process killing for buckd");
-    isSessionLeader = true;
+    return true;
   }
 
   private static void markFdCloseOnExec(int fd) {
