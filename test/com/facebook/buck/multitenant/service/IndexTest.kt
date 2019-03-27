@@ -16,38 +16,15 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.core.cell.impl.ImmutableDefaultCellPathResolver
-import com.facebook.buck.core.model.BuildTarget
-import com.facebook.buck.core.model.EmptyTargetConfiguration
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory
 import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import java.nio.file.Path
 import java.nio.file.Paths
 
 class IndexTest {
-    @get:Rule
-    val temporaryFolder = TemporaryFolder()
-
-    var buildTargetParser: ((target: String) -> BuildTarget)? = null
-
-    @Before
-    fun setUp() {
-        val factory = ParsingUnconfiguredBuildTargetFactory()
-        val cellPathResolver = ImmutableDefaultCellPathResolver.of(temporaryFolder.root.toPath(),
-                emptyMap<String, Path>())
-        buildTargetParser = {
-            val unconfiguredBuildTarget = factory.create(cellPathResolver, it)
-            unconfiguredBuildTarget.configure(EmptyTargetConfiguration.INSTANCE)
-        }
-    }
 
     @Test
     fun getTargetsAndDeps() {
-        val bt = requireNotNull(buildTargetParser)
+        val bt = BUILD_TARGET_PARSER
         val index = Index(bt)
         /*
          * //java/com/facebook/buck/base:base has no deps.
@@ -55,8 +32,8 @@ class IndexTest {
         val changes1 = Changes(
                 addedBuildPackages = listOf(
                         BuildPackage(Paths.get("java/com/facebook/buck/base"),
-                                mapOf(
-                                        "base" to setOf()
+                                setOf(
+                                        createRawRule("//java/com/facebook/buck/base:base", setOf())
                                 ))
                 ),
                 modifiedBuildPackages = listOf(),
@@ -70,12 +47,11 @@ class IndexTest {
         val changes2 = Changes(
                 addedBuildPackages = listOf(
                         BuildPackage(Paths.get("java/com/facebook/buck/model"),
-                                mapOf(
-                                        "model" to setOf(
-                                                bt("//java/com/facebook/buck/base:base")
-                                        )
-                                ))
-                ),
+                                setOf(
+                                        createRawRule("//java/com/facebook/buck/model:model", setOf(
+                                                "//java/com/facebook/buck/base:base"
+                                        )))
+                        )),
                 modifiedBuildPackages = listOf(),
                 removedBuildPackages = listOf())
         val commit2 = "9efba3bca1"
@@ -88,19 +64,19 @@ class IndexTest {
         val changes3 = Changes(
                 addedBuildPackages = listOf(
                         BuildPackage(Paths.get("java/com/facebook/buck/util"),
-                                mapOf(
-                                        "util" to setOf(
-                                                bt("//java/com/facebook/buck/base:base")
-                                        )
+                                setOf(
+                                        createRawRule("//java/com/facebook/buck/util:util", setOf(
+                                                "//java/com/facebook/buck/base:base"
+                                        ))
                                 ))
                 ),
                 modifiedBuildPackages = listOf(
                         BuildPackage(Paths.get("java/com/facebook/buck/model"),
-                                mapOf(
-                                        "model" to setOf(
-                                                bt("//java/com/facebook/buck/base:base"),
-                                                bt("//java/com/facebook/buck/util:util")
-                                        )
+                                setOf(
+                                        createRawRule("//java/com/facebook/buck/model:model", setOf(
+                                                "//java/com/facebook/buck/base:base",
+                                                "//java/com/facebook/buck/util:util"
+                                        ))
                                 ))
                 ),
                 removedBuildPackages = listOf())

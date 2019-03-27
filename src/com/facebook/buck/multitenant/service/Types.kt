@@ -16,75 +16,73 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.core.model.BuildTarget
+import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.model.targetgraph.RawTargetNode
 import java.nio.file.Path
+import java.util.*
 
 typealias Commit = String
 
-typealias BuildRules = Map<String, Set<BuildTarget>>
-
-/**
- * For the purpose of this prototype, we currently define the contents of a build package by the
- * names of the rules it contains and the deps of those rules.
- */
-data class BuildPackage(val buildFileDirectory: Path, val rules: BuildRules)
-
 internal typealias BuildTargetId = Int
 
-/** The values in the array must be sorted. */
+/**
+ * The values in the array must be sorted in ascending order or else [equals_BuildTargetSet] and
+ * [hashCode_BuildTargetSet] will not work properly.
+ */
 internal typealias BuildTargetSet = IntArray
 
-/*
- * Note that for the following "Internal" types, we aspire to use more memory-efficient data
- * structures (e.g., `int[]` rather than List<Integer>`) because we expect to store many instances
- * of them in memory as part of the Index.
+/**
+ * This is a RawTargetNode paired with its deps as determined by configuring the RawTargetNode with
+ * the empty configuration.
  */
+data class RawBuildRule(val targetNode: RawTargetNode, val deps: Set<UnconfiguredBuildTarget>)
 
-internal typealias InternalBuildRules = Map<String, BuildTargetSet>
+/**
+ * @param[deps] must be sorted in ascending order!!!
+ */
+internal data class InternalRawBuildRule(val targetNode: RawTargetNode, val deps: BuildTargetSet) {
+    /*
+     * Because RawTargetNodeAndDeps contains an IntArray field, which does not play well with
+     * `.equals()` (or `hashCode()`, for that matter), we have to do a bit of work to implement
+     * these methods properly when the default implementations for a data class are not appropriate.
+     */
 
-internal data class InternalBuildPackage(val buildFileDirectory: Path,
-                                         val rules: InternalBuildRules) {
     override fun equals(other: Any?): Boolean {
-        if (other !is InternalBuildPackage) {
+        if (other !is InternalRawBuildRule) {
             return false
         }
-        return buildFileDirectory == other.buildFileDirectory && equals_InternalBuildRules(rules,
-                other.rules)
+        return targetNode == other.targetNode && equals_BuildTargetSet(deps, other.deps)
     }
 
     override fun hashCode(): Int {
-        return 31 * buildFileDirectory.hashCode() + hashCode_InternalBuildRules(rules)
+        return 31 * Objects.hash(targetNode) + hashCode_BuildTargetSet(deps)
     }
 }
 
-internal fun equals_InternalBuildRules(rules1: InternalBuildRules, rules2: InternalBuildRules):
-        Boolean {
-    if (rules1.size != rules2.size) {
-        return false
-    }
-
-    for (entry in rules1.entries) {
-        val value = rules2[entry.key]
-        if (value == null || !equals_BuildTargetSet(value, entry.value)) {
-            return false
-        }
-    }
-
-    return true
-}
-
-internal fun hashCode_InternalBuildRules(rules: InternalBuildRules): Int {
-    var result = 17
-    for (entry in rules.entries) {
-        result += 31 * entry.key.hashCode() + hashCode_BuildTargetSet(entry.value)
-    }
-    return result
-}
-
-internal fun equals_BuildTargetSet(set1: BuildTargetSet, set2: BuildTargetSet): Boolean {
+private fun equals_BuildTargetSet(set1: BuildTargetSet, set2: BuildTargetSet): Boolean {
     return set1.contentEquals(set2)
 }
 
-internal fun hashCode_BuildTargetSet(set: BuildTargetSet): Int {
+private fun hashCode_BuildTargetSet(set: BuildTargetSet): Int {
     return set.contentHashCode()
 }
+
+/**
+ * By construction, the name for each rule in rules should be distinct across all of the rules in
+ * the set.
+ */
+data class BuildPackage(val buildFileDirectory: Path, val rules: Set<RawBuildRule>)
+
+internal data class InternalBuildPackage(val buildFileDirectory: Path, val rules: Set<InternalRawBuildRule>)
+
+/**
+ * By construction, the Path for each BuildPackage should be distinct across all of the
+ * collections of build packages.
+ */
+data class Changes(val addedBuildPackages: List<BuildPackage>,
+                   val modifiedBuildPackages: List<BuildPackage>,
+                   val removedBuildPackages: List<Path>)
+
+internal data class InternalChanges(val addedBuildPackages: List<InternalBuildPackage>,
+                                    val modifiedBuildPackages: List<InternalBuildPackage>,
+                                    val removedBuildPackages: List<Path>)

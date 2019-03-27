@@ -16,20 +16,12 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.core.model.BuildTarget
+import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.collect.GenerationMap
 import java.io.Closeable
 import java.nio.file.Path
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.withLock
-
-/**
- * By construction, the Path for each BuildPackage should be distinct across all of the
- * collections of build packages.
- */
-data class Changes(val addedBuildPackages: List<BuildPackage>,
-                   val modifiedBuildPackages: List<BuildPackage>,
-                   val removedBuildPackages: List<Path>)
 
 /**
  * Object that represents the client has acquired the read lock for Index. All public methods of
@@ -54,13 +46,13 @@ class IndexReadLock internal constructor(internal val readLock: ReentrantReadWri
     }
 }
 
-class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
+class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) {
     /**
      * To save space, we pass around ints instead of references to BuildTargets.
      * AppendOnlyBidirectionalCache does its own synchronization, so it does not need to be guarded
      * by rwLock.
      */
-    private val buildTargetCache = AppendOnlyBidirectionalCache<BuildTarget>()
+    private val buildTargetCache = AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>()
 
     /**
      * Access to all of the fields after this one must be guarded by the rwLock.
@@ -77,10 +69,12 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
     private val buildPackageMap = GenerationMap<Path, Set<String>, Unit>({})
 
     /**
+     * Map that captures the value of a build rule at a specific generation, indexed by BuildTarget.
+     *
      * We also specify the key as the keyInfo so that we get it back when we use
      * `getAllInfoValuePairsForGeneration()`.
      */
-    private val depsMap = GenerationMap<BuildTargetId, BuildTargetSet, BuildTargetId>({ it })
+    private val ruleMap = GenerationMap<BuildTargetId, InternalRawBuildRule, BuildTargetId>({ it })
 
     /**
      * This should always be used with try-with-resources.
@@ -101,7 +95,7 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
      * @param indexReadLock caller is responsible for ensuring this lock is still held, i.e., that
      * `close()` has not been invoked.
      */
-    fun getTransitiveDeps(indexReadLock: IndexReadLock, commit: Commit, target: BuildTarget): Set<BuildTarget> {
+    fun getTransitiveDeps(indexReadLock: IndexReadLock, commit: Commit, target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
         checkReadLock(indexReadLock)
         val generation = commitToGeneration.getValue(commit)
         val rootBuildTargetId = buildTargetCache.get(target)
@@ -111,14 +105,14 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
 
         while (toVisit.isNotEmpty()) {
             val targetId = getFirst(toVisit)
-            val deps = depsMap.getVersion(targetId, generation)
+            val node = ruleMap.getVersion(targetId, generation)
             visited.add(targetId)
 
-            if (deps == null) {
+            if (node == null) {
                 continue
             }
 
-            for (dep in deps) {
+            for (dep in node.deps) {
                 if (!toVisit.contains(dep) && !visited.contains(dep)) {
                     toVisit.add(dep)
                 }
@@ -134,7 +128,7 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
      * `close()` has not been invoked.
      * @param commit at which to enumerate all build targets
      */
-    fun getTargets(indexReadLock: IndexReadLock, commit: Commit): List<BuildTarget> {
+    fun getTargets(indexReadLock: IndexReadLock, commit: Commit): List<UnconfiguredBuildTarget> {
         checkReadLock(indexReadLock)
         val targetIds: MutableList<BuildTargetId> = mutableListOf()
 
@@ -142,7 +136,7 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
             val generation = requireNotNull(commitToGeneration[commit]) {
                 "No generation found for $commit"
             }
-            depsMap.getAllInfoValuePairsForGeneration(generation).mapTo(targetIds) { it.first }
+            ruleMap.getAllInfoValuePairsForGeneration(generation).mapTo(targetIds) { it.first }
         }
 
         // Note that we release the read lock before making a bunch of requests to the
@@ -154,6 +148,9 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
      * Currently, the caller is responsible for ensuring that addCommitData() is invoked
      * serially (never concurrently) for each commit in a chain of version control history.
      *
+     * Note this method handles its own synchronization internally, so callers should not invoke
+     * [acquireReadLock] or anything like that.
+     *
      * The expectation is that the caller will use something like `buck audit rules` based on the
      * changes in the commit to produce the Changes object to pass to this method.
      */
@@ -164,7 +161,7 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
 
         // First, determine if any of the changes from the commits require new values to be added
         // to the generation map.
-        val deltas = determineDeltas(changes)
+        val deltas = determineDeltas(toInternalChanges(changes))
 
         // If there are no updates to any of the generation maps, add a new entry for the current
         // commit using the existing generation in the commitToGeneration map.
@@ -193,19 +190,19 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
             }
 
             for (delta in deltas.ruleDeltas) {
-                val buildTarget: BuildTarget
-                val newDeps: BuildTargetSet?
+                val buildTarget: UnconfiguredBuildTarget
+                val newNodeAndDeps: InternalRawBuildRule?
                 when (delta) {
                     is RuleDelta.Updated -> {
-                        buildTarget = createBuildTarget(delta.buildPackageDirectory, delta.name)
-                        newDeps = delta.deps
+                        buildTarget = delta.rule.targetNode.buildTarget
+                        newNodeAndDeps = delta.rule
                     }
                     is RuleDelta.Removed -> {
-                        buildTarget = createBuildTarget(delta.buildPackageDirectory, delta.name)
-                        newDeps = null
+                        buildTarget = delta.buildTarget
+                        newNodeAndDeps = null
                     }
                 }
-                depsMap.addVersion(buildTargetCache.get(buildTarget), newDeps, nextGeneration)
+                ruleMap.addVersion(buildTargetCache.get(buildTarget), newNodeAndDeps, nextGeneration)
             }
 
             commitToGeneration[commit] = nextGeneration;
@@ -213,11 +210,11 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
         }
     }
 
-    private fun createBuildTarget(buildFileDirectory: Path, name: String): BuildTarget {
+    private fun createBuildTarget(buildFileDirectory: Path, name: String): UnconfiguredBuildTarget {
         return buildTargetParser(String.format("//%s:%s", buildFileDirectory, name))
     }
 
-    private fun determineDeltas(changes: Changes): Deltas {
+    private fun determineDeltas(changes: InternalChanges): Deltas {
         val buildPackageDeltas = mutableListOf<BuildPackageDelta>()
         val ruleDeltas = mutableListOf<RuleDelta>()
 
@@ -229,12 +226,10 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
                             .buildFileDirectory} for generation $generation")
                 }
 
-                buildPackageDeltas.add(BuildPackageDelta.Updated(added.buildFileDirectory, added
-                        .rules.keys))
-                for (entry in added.rules.entries) {
-                    ruleDeltas.add(RuleDelta.Updated(added.buildFileDirectory, entry.key,
-                            toBuildTargetSet(entry
-                                    .value)))
+                val ruleNames = getRuleNames(added.rules)
+                buildPackageDeltas.add(BuildPackageDelta.Updated(added.buildFileDirectory, ruleNames))
+                for (rule in added.rules) {
+                    ruleDeltas.add(RuleDelta.Updated(rule))
                 }
             }
 
@@ -245,7 +240,8 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
 
                 buildPackageDeltas.add(BuildPackageDelta.Removed(removed))
                 for (ruleName in oldRules) {
-                    ruleDeltas.add(RuleDelta.Removed(removed, ruleName))
+                    val buildTarget = createBuildTarget(removed, ruleName)
+                    ruleDeltas.add(RuleDelta.Removed(buildTarget))
                 }
             }
 
@@ -257,22 +253,21 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
                             "generation $generation"
                 }
 
-                val oldRules = oldRuleNames.associateWith { oldRuleName: String ->
+                val oldRules = oldRuleNames.map { oldRuleName: String ->
                     val buildTarget = createBuildTarget(modified.buildFileDirectory, oldRuleName)
-                    requireNotNull(depsMap.getVersion(buildTargetCache.get(buildTarget),
+                    requireNotNull(ruleMap.getVersion(buildTargetCache.get(buildTarget),
                             generation)) {
                         "Missing deps for $buildTarget at generation $generation"
                     }
-                }
+                }.toSet()
 
-                val newPackageVersion = toInternalBuildPackage(modified)
-                val newRules = newPackageVersion.rules
+                val newRules = modified.rules
                 // Compare oldRules and newRules to see whether the build package actually changed.
                 // Keep track of the individual rule changes so we need not recompute them later.
-                val ruleChanges = diffRules(oldRules, newRules, modified.buildFileDirectory)
+                val ruleChanges = diffRules(oldRules, newRules)
                 if (!ruleChanges.isEmpty()) {
                     buildPackageDeltas.add(BuildPackageDelta.Updated(modified
-                            .buildFileDirectory, newRules.keys))
+                            .buildFileDirectory, getRuleNames(newRules)))
                     ruleDeltas.addAll(ruleChanges)
                 }
             }
@@ -281,17 +276,25 @@ class Index(private val buildTargetParser: (target: String) -> BuildTarget) {
         return Deltas(buildPackageDeltas, ruleDeltas)
     }
 
+    private fun toInternalChanges(changes: Changes): InternalChanges {
+        return InternalChanges(changes.addedBuildPackages.map { toInternalBuildPackage(it) }.toList(),
+                changes.modifiedBuildPackages.map { toInternalBuildPackage(it) }.toList(),
+                changes.removedBuildPackages
+        )
+    }
+
     private fun toInternalBuildPackage(buildPackage: BuildPackage): InternalBuildPackage {
-        return InternalBuildPackage(buildPackage.buildFileDirectory,
-                toInternalBuildRules(buildPackage.rules))
+        return InternalBuildPackage(buildPackage.buildFileDirectory, buildPackage.rules.map { toInternalRawBuildRule(it) }.toSet())
     }
 
-    private fun toInternalBuildRules(buildRules: BuildRules): InternalBuildRules {
-        return buildRules.mapValues { toBuildTargetSet(it.value) }
+    private fun toInternalRawBuildRule(rawBuildRule: RawBuildRule): InternalRawBuildRule {
+        return InternalRawBuildRule(rawBuildRule.targetNode, toBuildTargetSet(rawBuildRule.deps))
     }
 
-    private fun toBuildTargetSet(targets: Set<BuildTarget>): BuildTargetSet {
-        return targets.map({ buildTargetCache.get(it) }).toIntArray()
+    private fun toBuildTargetSet(targets: Set<UnconfiguredBuildTarget>): BuildTargetSet {
+        val ids = targets.map { buildTargetCache.get(it) }.toIntArray()
+        ids.sort()
+        return ids
     }
 }
 
@@ -302,10 +305,14 @@ internal data class Deltas(val buildPackageDeltas: List<BuildPackageDelta>,
     }
 }
 
+private fun getRuleNames(rules: Set<InternalRawBuildRule>): Set<String> {
+    return rules.map { it.targetNode.buildTarget.shortName }.toSet()
+}
+
 /**
  * @param set a non-empty set
  */
-internal fun <T> getFirst(set: LinkedHashSet<T>): T {
+private fun <T> getFirst(set: LinkedHashSet<T>): T {
     // There are other ways to do this that seem like they might be cheaper:
     // https://stackoverflow.com/questions/5792596/removing-the-first-object-from-a-set.
     val iterator = set.iterator()

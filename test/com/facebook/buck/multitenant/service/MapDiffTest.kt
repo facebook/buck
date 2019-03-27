@@ -20,94 +20,91 @@ import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertTrue
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
-import java.nio.file.Path
-import java.nio.file.Paths
-
-val BUILD_FILE_DIRECTORY: Path = Paths.get("foo")
 
 class MapDiffTest {
+
     @Test
     fun emptyRulesShouldHaveNoDeltas() {
-        val oldRules = mapOf<String, BuildTargetSet>()
-        val newRules = mapOf<String, BuildTargetSet>()
-        val deltas = diffRules(oldRules, newRules, BUILD_FILE_DIRECTORY)
+        val oldRules = setOf<InternalRawBuildRule>()
+        val newRules = setOf<InternalRawBuildRule>()
+        val deltas = diffRules(oldRules, newRules)
         assertTrue(deltas.isEmpty())
     }
 
     @Test
     fun emptyOldRulesWithNewRules() {
-        val oldRules = mapOf<String, BuildTargetSet>()
-        val newRules = mapOf("one" to intArrayOf(1), "two" to intArrayOf(2, 3))
-        val deltas = diffRules(oldRules, newRules, BUILD_FILE_DIRECTORY)
+        val oldRules = setOf<InternalRawBuildRule>()
+        val newRules = setOf(createRule("one", intArrayOf(1)), createRule("two", intArrayOf(2, 3)))
+        val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "one", intArrayOf(1)),
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "two", intArrayOf(2, 3))
+                RuleDelta.Updated(createRule("one", intArrayOf(1))),
+                RuleDelta.Updated(createRule("two", intArrayOf(2, 3)))
         ), deltas.toSet())
     }
 
     @Test
     fun nonEmptyOldRulesWithEmptyNewRules() {
-        val oldRules = mapOf("one" to intArrayOf(1), "two" to intArrayOf(2, 3))
-        val newRules = mapOf<String, BuildTargetSet>()
-        val deltas = diffRules(oldRules, newRules, BUILD_FILE_DIRECTORY)
+        val oldRules = setOf(createRule("one" , intArrayOf(1)), createRule("two", intArrayOf(2, 3)))
+        val newRules = setOf<InternalRawBuildRule>()
+        val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Removed(BUILD_FILE_DIRECTORY, "one"),
-                RuleDelta.Removed(BUILD_FILE_DIRECTORY, "two")
+                RuleDelta.Removed(createBuildTarget("one")),
+                RuleDelta.Removed(createBuildTarget("two"))
         ), deltas.toSet())
     }
 
     @Test
     fun detectModifiedRulesWithSameSizeMaps() {
-        val oldRules = mapOf(
-                "foo" to intArrayOf(1),
-                "bar" to intArrayOf(2),
-                "baz" to intArrayOf(4, 5))
-        val newRules = mapOf(
-                "foo" to intArrayOf(1),
-                "bar" to intArrayOf(2, 3),
-                "baz" to intArrayOf(5))
-        val deltas = diffRules(oldRules, newRules, BUILD_FILE_DIRECTORY)
+        val oldRules = setOf(
+                createRule("foo", intArrayOf(1)),
+                createRule("bar", intArrayOf(2)),
+                createRule("baz", intArrayOf(4, 5)))
+        val newRules = setOf(
+                createRule("foo", intArrayOf(1)),
+                createRule("bar", intArrayOf(2, 3)),
+                createRule("baz", intArrayOf(5)))
+        val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "bar", intArrayOf(2, 3)),
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "baz", intArrayOf(5))
+                RuleDelta.Updated(createRule("bar", intArrayOf(2, 3))),
+                RuleDelta.Updated(createRule("baz", intArrayOf(5)))
         ), deltas.toSet())
     }
 
     @Test
     fun detectModifiedRulesWithMoreOldRules() {
-        val oldRules = mapOf(
-                "foo" to intArrayOf(1),
-                "bar" to intArrayOf(2),
-                "baz" to intArrayOf(4, 5),
-                "foobazbar" to intArrayOf(0))
-        val newRules = mapOf(
-                "foo" to intArrayOf(1),
-                "bar" to intArrayOf(2, 3),
-                "baz" to intArrayOf(5))
-        val deltas = diffRules(oldRules, newRules, BUILD_FILE_DIRECTORY)
+        val oldRules = setOf(
+                createRule("foo", intArrayOf(1)),
+                createRule("bar", intArrayOf(2)),
+                createRule("baz", intArrayOf(4, 5)),
+                createRule("foobazbar", intArrayOf(0)))
+        val newRules = setOf(
+                createRule("foo", intArrayOf(1)),
+                createRule("bar", intArrayOf(2, 3)),
+                createRule("baz", intArrayOf(5)))
+        val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "bar", intArrayOf(2, 3)),
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "baz", intArrayOf(5)),
-                RuleDelta.Removed(BUILD_FILE_DIRECTORY, "foobazbar")
+                RuleDelta.Updated(createRule("bar", intArrayOf(2, 3))),
+                RuleDelta.Updated(createRule("baz", intArrayOf(5))),
+                RuleDelta.Removed(createBuildTarget("foobazbar"))
         ), deltas.toSet())
     }
 
     @Test
     fun detectModifiedRulesWithMoreNewRules() {
-        val oldRules = mapOf(
-                "foo" to intArrayOf(1),
-                "bar" to intArrayOf(2),
-                "baz" to intArrayOf(4, 5))
-        val newRules = mapOf(
-                "foo" to intArrayOf(1),
-                "bar" to intArrayOf(2, 3),
-                "baz" to intArrayOf(5),
-                "foobazbar" to intArrayOf(0))
-        val deltas = diffRules(oldRules, newRules, BUILD_FILE_DIRECTORY)
+        val oldRules = setOf(
+                createRule("foo", intArrayOf(1)),
+                        createRule("bar", intArrayOf(2)),
+                createRule("baz", intArrayOf(4, 5)))
+        val newRules = setOf(
+                createRule("foo", intArrayOf(1)),
+                createRule("bar", intArrayOf(2, 3)),
+                createRule("baz", intArrayOf(5)),
+                createRule("foobazbar", intArrayOf(0)))
+        val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "bar", intArrayOf(2, 3)),
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "baz", intArrayOf(5)),
-                RuleDelta.Updated(BUILD_FILE_DIRECTORY, "foobazbar", intArrayOf(0))
+                RuleDelta.Updated(createRule("bar", intArrayOf(2, 3))),
+                RuleDelta.Updated(createRule("baz", intArrayOf(5))),
+                RuleDelta.Updated(createRule("foobazbar", intArrayOf(0)))
         ), deltas.toSet())
     }
 

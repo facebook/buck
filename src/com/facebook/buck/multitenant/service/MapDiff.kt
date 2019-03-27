@@ -16,49 +16,51 @@
 
 package com.facebook.buck.multitenant.service
 
-import java.nio.file.Path
-
-internal fun diffRules(oldRules: InternalBuildRules, newRules: InternalBuildRules,
-                       buildFileDirectory: Path): List<RuleDelta> {
+/** oldRules and newRules must come from the same build package. */
+internal fun diffRules(oldRules: Set<InternalRawBuildRule>, newRules: Set<InternalRawBuildRule>): List<RuleDelta> {
     val deltas: MutableList<RuleDelta> = mutableListOf()
-    val smallMap: MutableMap<String, BuildTargetSet>
-    val largeMap: InternalBuildRules
+    val smallMap: MutableMap<String, InternalRawBuildRule>
+    val largeMap: Map<String, InternalRawBuildRule>
     val smallMapHasTheOldRules = oldRules.size < newRules.size
     if (smallMapHasTheOldRules) {
-        smallMap = oldRules.toMutableMap()
-        largeMap = newRules
+        smallMap = oldRules.associate { toPair(it) } .toMutableMap()
+        largeMap = newRules.associate { toPair(it) } .toMap()
     } else {
-        smallMap = newRules.toMutableMap()
-        largeMap = oldRules
+        smallMap = newRules.associate { toPair(it) } .toMutableMap()
+        largeMap = oldRules.associate { toPair(it) } .toMap()
     }
 
     for (entry in largeMap.entries) {
-        val value = smallMap.remove(entry.key)
-        if (value == null) {
+        val rule = smallMap.remove(entry.key)
+        if (rule == null) {
             // Entry exists in large map but not small map.
             if (smallMapHasTheOldRules) {
-                deltas.add(RuleDelta.Updated(buildFileDirectory, entry.key, entry.value))
+                deltas.add(RuleDelta.Updated(entry.value))
             } else {
-                deltas.add(RuleDelta.Removed(buildFileDirectory, entry.key))
+                deltas.add(RuleDelta.Removed(entry.value.targetNode.buildTarget))
             }
-        } else if (!value.contentEquals(entry.value)) {
+        } else if (rule != entry.value) {
             // Entry exists in both maps, but it has been modified.
             if (smallMapHasTheOldRules) {
-                deltas.add(RuleDelta.Updated(buildFileDirectory, entry.key, entry.value))
+                deltas.add(RuleDelta.Updated(entry.value))
             } else {
-                deltas.add(RuleDelta.Updated(buildFileDirectory, entry.key, value))
+                deltas.add(RuleDelta.Updated(rule))
             }
         }
     }
 
     // Remaining entries are ones that are unique to small map.
-    for (entry in smallMap.entries) {
+    for (rule in smallMap.values) {
         if (smallMapHasTheOldRules) {
-            deltas.add(RuleDelta.Removed(buildFileDirectory, entry.key))
+            deltas.add(RuleDelta.Removed(rule.targetNode.buildTarget))
         } else {
-            deltas.add(RuleDelta.Updated(buildFileDirectory, entry.key, entry.value))
+            deltas.add(RuleDelta.Updated(rule))
         }
     }
 
     return deltas
+}
+
+private fun toPair(rule: InternalRawBuildRule) : Pair<String, InternalRawBuildRule> {
+    return Pair(rule.targetNode.buildTarget.shortName, rule)
 }

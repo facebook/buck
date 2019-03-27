@@ -16,8 +16,8 @@
 
 package com.facebook.buck.multitenant.service
 
+import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import java.nio.file.Path
-import java.util.*
 
 /**
  * Represents a change between versions of a build package.
@@ -25,6 +25,7 @@ import java.util.*
 internal sealed class BuildPackageDelta {
     /** Note that this is an "added" or "modified" package. */
     data class Updated(val directory: Path, val rules: Set<String>) : BuildPackageDelta()
+
     data class Removed(val directory: Path) : BuildPackageDelta()
 }
 
@@ -35,27 +36,7 @@ internal sealed class BuildPackageDelta {
  */
 internal sealed class RuleDelta {
     /** Note that this is an "added" or "modified" rule. */
-    data class Updated(val buildPackageDirectory: Path, val name: String,
-                       val deps: BuildTargetSet) : RuleDelta() {
-        /*
-         * Because Updated contains an IntArray field, which does not play well with `.equals()`
-         * (or `hashCode()`, for that matter), we have to do a bit of work to implement these
-         * methods properly when the default implementations for a data class are not appropriate.
-         */
+    data class Updated(val rule: InternalRawBuildRule) : RuleDelta()
 
-        override fun equals(other: Any?): Boolean {
-            if (other !is Updated) {
-                return false
-            }
-            return buildPackageDirectory == other.buildPackageDirectory && name == other.name &&
-                    equals_BuildTargetSet(deps, other.deps)
-        }
-
-        override fun hashCode(): Int {
-            return 31 * Objects.hash(buildPackageDirectory, name) + hashCode_BuildTargetSet(deps)
-        }
-    }
-
-    data class Removed(val buildPackageDirectory: Path,
-                       val name: String) : RuleDelta()
+    data class Removed(val buildTarget: UnconfiguredBuildTarget) : RuleDelta()
 }
