@@ -140,7 +140,7 @@ public final class BuckDaemon {
     return new DaemonCommandExecutionScope();
   }
 
-  private void collectGarbage(int nTimes) {
+  private void performCleanup(int nTimes) {
     int tasks = activeTasks.decrementAndGet();
     if (tasks > 0) {
       return;
@@ -154,8 +154,27 @@ public final class BuckDaemon {
     if (nTimes > 1) {
       activeTasks.incrementAndGet();
       housekeepingExecutorService.schedule(
-          () -> collectGarbage(nTimes - 1), SUBSEQUENT_GC_DELAY_MS, TimeUnit.MILLISECONDS);
+          () -> performCleanup(nTimes - 1), SUBSEQUENT_GC_DELAY_MS, TimeUnit.MILLISECONDS);
+      return;
     }
+    // we are now idle with no more GC, so we schedule the idle killer if no commands are currently
+    // running.
+    activeTasks.getAndUpdate(
+        taskCount -> {
+          /**
+           * the function here may be retried multiple times as supposed to be side effect free, so
+           * we code it such that it acts as if its an atomic operation.
+           *
+           * <p>Therefore, in the 0 case, we always reset the task, and in the non 0 case, we always
+           * clear the task.
+           */
+          if (taskCount == 0) {
+            idleKiller.setIdleKillTask();
+            return 0;
+          }
+          idleKiller.clearIdleKillTask();
+          return taskCount;
+        });
   }
 
   private void killServer() {
@@ -163,7 +182,6 @@ public final class BuckDaemon {
   }
 
   class DaemonCommandExecutionScope implements AutoCloseable {
-    private final IdleKiller.CommandExecutionScope idleKillerScope;
 
     DaemonCommandExecutionScope() {
       if (unixDomainSocketLossKiller != null) {
@@ -171,7 +189,7 @@ public final class BuckDaemon {
       }
 
       activeTasks.incrementAndGet();
-      idleKillerScope = idleKiller.newCommandExecutionScope();
+      idleKiller.clearIdleKillTask();
     }
 
     @Override
@@ -181,12 +199,11 @@ public final class BuckDaemon {
       // collector is used we call System.gc() up to 4 times with some interval, and call it
       // just once for any other major collector.
       // With Java 9 we could just use -XX:-ShrinkHeapInSteps flag.
-      idleKillerScope.close();
 
       int nTimes = isCMS ? 4 : 1;
 
       housekeepingExecutorService.schedule(
-          () -> collectGarbage(nTimes), AFTER_COMMAND_AUTO_GC_DELAY_MS, TimeUnit.MILLISECONDS);
+          () -> performCleanup(nTimes), AFTER_COMMAND_AUTO_GC_DELAY_MS, TimeUnit.MILLISECONDS);
     }
   }
 
