@@ -44,7 +44,7 @@ public class BaseAndroidToolchainResolver {
       ImmutableList<Pair<String, Optional<String>>> possiblePaths) {
     for (Pair<String, Optional<String>> possiblePath : possiblePaths) {
       if (possiblePath.getSecond().isPresent()) {
-        Path dirPath = fileSystem.getPath(possiblePath.getSecond().get());
+        Path dirPath = fileSystem.getPath(possiblePath.getSecond().get()).toAbsolutePath();
         if (!Files.isDirectory(dirPath)) {
           throw new RuntimeException(
               String.format(INVALID_DIRECTORY_MESSAGE_TEMPLATE, possiblePath.getFirst(), dirPath));
