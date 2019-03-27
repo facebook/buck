@@ -82,7 +82,11 @@ public class CxxToolchainDescription
     cxxPlatform.setAsmflags(ImmutableList.of());
 
     if (args.getUseHeaderMap()) {
-      cxxPlatform.setHeaderMode(HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);
+      if (args.getPrivateHeadersSymlinksEnabled() || args.getPublicHeadersSymlinksEnabled()) {
+        cxxPlatform.setHeaderMode(HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);
+      } else {
+        cxxPlatform.setHeaderMode(HeaderMode.HEADER_MAP_ONLY);
+      }
     } else {
       cxxPlatform.setHeaderMode(HeaderMode.SYMLINK_TREE_ONLY);
     }
