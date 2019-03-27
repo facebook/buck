@@ -46,14 +46,14 @@ public class MainWithNailgun {
   @SuppressWarnings("unused")
   public static void nailMain(NGContext context) {
     obtainResourceFileLock();
-    try (IdleKiller.CommandExecutionScope ignored =
-        BuckDaemon.getDaemonKillers().newCommandExecutionScope()) {
-      BuckDaemon.commandStarted();
+    BuckDaemon daemon = BuckDaemon.getInstance();
+    try (IdleKiller.CommandExecutionScope ignored = daemon.newCommandExecutionScope()) {
+      daemon.commandStarted();
       new Main(context.out, context.err, context.in, Optional.of(context))
           .runMainThenExit(context.getArgs(), System.nanoTime());
     } finally {
       // Reclaim memory after a command finishes.
-      BuckDaemon.commandFinished();
+      daemon.commandFinished();
     }
   }
 

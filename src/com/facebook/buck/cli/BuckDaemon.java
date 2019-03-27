@@ -55,13 +55,17 @@ public final class BuckDaemon {
 
   private static final Duration DAEMON_SLAYER_TIMEOUT = Duration.ofDays(1);
 
-  private static @Nullable DaemonKillers daemonKillers;
-  private static AtomicInteger activeTasks = new AtomicInteger(0);
+  private static @Nullable BuckDaemon instance;
 
   private static final Logger LOG = Logger.get(BuckDaemon.class);
 
+  private final NGServer server;
+  private final IdleKiller idleKiller;
+  private final @Nullable SocketLossKiller unixDomainSocketLossKiller;
+  private final AtomicInteger activeTasks = new AtomicInteger(0);
+
   /** Single thread for running short-lived tasks outside the command context. */
-  private static final ScheduledExecutorService housekeepingExecutorService =
+  private final ScheduledExecutorService housekeepingExecutorService =
       Executors.newSingleThreadScheduledExecutor();
 
   private static final boolean isCMS =
@@ -100,7 +104,7 @@ public final class BuckDaemon {
             new NGListeningAddress(socketPath),
             1, // store only 1 NGSession in a pool to avoid excessive memory usage
             heartbeatTimeout);
-    daemonKillers = new DaemonKillers(housekeepingExecutorService, server, Paths.get(socketPath));
+    instance = new BuckDaemon(server, Paths.get(socketPath));
     try {
       server.run();
     } catch (RuntimeException e) {
@@ -117,15 +121,26 @@ public final class BuckDaemon {
     System.exit(0);
   }
 
-  static DaemonKillers getDaemonKillers() {
-    return Objects.requireNonNull(daemonKillers, "Daemon killers should be initialized.");
+  static BuckDaemon getInstance() {
+    return Objects.requireNonNull(instance, "BuckDaemon should be initialized.");
   }
 
-  static void commandStarted() {
+  private BuckDaemon(NGServer server, Path socketPath) {
+    this.server = server;
+    this.idleKiller =
+        new IdleKiller(housekeepingExecutorService, DAEMON_SLAYER_TIMEOUT, this::killServer);
+    this.unixDomainSocketLossKiller =
+        Platform.detect() == Platform.WINDOWS
+            ? null
+            : new SocketLossKiller(
+                housekeepingExecutorService, socketPath.toAbsolutePath(), this::killServer);
+  }
+
+  void commandStarted() {
     activeTasks.incrementAndGet();
   }
 
-  static void commandFinished() {
+  void commandFinished() {
     // Concurrent Mark and Sweep (CMS) garbage collector releases memory to operating system
     // in multiple steps, even given that full collection is performed at each step. So if CMS
     // collector is used we call System.gc() up to 4 times with some interval, and call it
@@ -137,7 +152,7 @@ public final class BuckDaemon {
         () -> collectGarbage(nTimes), AFTER_COMMAND_AUTO_GC_DELAY_MS, TimeUnit.MILLISECONDS);
   }
 
-  private static void collectGarbage(int nTimes) {
+  private void collectGarbage(int nTimes) {
     int tasks = activeTasks.decrementAndGet();
     if (tasks > 0) {
       return;
@@ -152,6 +167,29 @@ public final class BuckDaemon {
       activeTasks.incrementAndGet();
       housekeepingExecutorService.schedule(
           () -> collectGarbage(nTimes - 1), SUBSEQUENT_GC_DELAY_MS, TimeUnit.MILLISECONDS);
+    }
+  }
+
+  IdleKiller.CommandExecutionScope newCommandExecutionScope() {
+    if (unixDomainSocketLossKiller != null) {
+      unixDomainSocketLossKiller.arm(); // Arm the socket loss killer also.
+    }
+    return idleKiller.newCommandExecutionScope();
+  }
+
+  private void killServer() {
+    server.shutdown();
+  }
+
+  private static void markFdCloseOnExec(int fd) {
+    int fdFlags;
+    fdFlags = Libc.INSTANCE.fcntl(fd, Libc.Constants.rFGETFD);
+    if (fdFlags == -1) {
+      throw new LastErrorException(Native.getLastError());
+    }
+    fdFlags |= Libc.Constants.rFDCLOEXEC;
+    if (Libc.INSTANCE.fcntl(fd, Libc.Constants.rFSETFD, fdFlags) == -1) {
+      throw new LastErrorException(Native.getLastError());
     }
   }
 
@@ -206,45 +244,5 @@ public final class BuckDaemon {
 
     LOG.info("enabled background process killing for buckd");
     return true;
-  }
-
-  private static void markFdCloseOnExec(int fd) {
-    int fdFlags;
-    fdFlags = Libc.INSTANCE.fcntl(fd, Libc.Constants.rFGETFD);
-    if (fdFlags == -1) {
-      throw new LastErrorException(Native.getLastError());
-    }
-    fdFlags |= Libc.Constants.rFDCLOEXEC;
-    if (Libc.INSTANCE.fcntl(fd, Libc.Constants.rFSETFD, fdFlags) == -1) {
-      throw new LastErrorException(Native.getLastError());
-    }
-  }
-
-  static class DaemonKillers {
-
-    private final NGServer server;
-    private final IdleKiller idleKiller;
-    private final @Nullable SocketLossKiller unixDomainSocketLossKiller;
-
-    DaemonKillers(ScheduledExecutorService executorService, NGServer server, Path socketPath) {
-      this.server = server;
-      this.idleKiller = new IdleKiller(executorService, DAEMON_SLAYER_TIMEOUT, this::killServer);
-      this.unixDomainSocketLossKiller =
-          Platform.detect() == Platform.WINDOWS
-              ? null
-              : new SocketLossKiller(
-                  executorService, socketPath.toAbsolutePath(), this::killServer);
-    }
-
-    IdleKiller.CommandExecutionScope newCommandExecutionScope() {
-      if (unixDomainSocketLossKiller != null) {
-        unixDomainSocketLossKiller.arm(); // Arm the socket loss killer also.
-      }
-      return idleKiller.newCommandExecutionScope();
-    }
-
-    private void killServer() {
-      server.shutdown();
-    }
   }
 }
