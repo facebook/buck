@@ -631,6 +631,39 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
+  public void canHandleSameExtensionLoadedMultipleTimesFromAnotherExtension() throws Exception {
+    // Verifies we can handle the case when the same extension is loaded multiple times from another
+    // extension.
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(buildFile, Arrays.asList("load('//:ext_1.bzl', 'ext_1')"));
+
+    Path ext1 = projectFilesystem.resolve("ext_1.bzl");
+    Files.write(
+        ext1,
+        Arrays.asList(
+            "load('//:ext_2.bzl', 'ext_2')", "load('//:ext_2.bzl', 'ext_2')", "ext_1 = ext_2"));
+
+    Path ext2 = projectFilesystem.resolve("ext_2.bzl");
+    Files.write(ext2, Arrays.asList("ext_2 = 'hello'"));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
+  public void canHandleSameExtensionLoadedMultipleTimesFromBuildFile() throws Exception {
+    // Verifies we can handle the case when the same extension is loaded multiple times from a BUILD
+    // file.
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(
+        buildFile, Arrays.asList("load('//:ext_1.bzl', 'ext_1')", "load('//:ext_1.bzl', 'ext_1')"));
+
+    Path ext1 = projectFilesystem.resolve("ext_1.bzl");
+    Files.write(ext1, Arrays.asList("ext_1 = 'hello'"));
+
+    parser.getBuildFileManifest(buildFile);
+  }
+
+  @Test
   public void packageNameFunctionInExtensionUsesBuildFilePackage() throws Exception {
     Path buildFileDirectory = projectFilesystem.resolve("test");
     Files.createDirectories(buildFileDirectory);

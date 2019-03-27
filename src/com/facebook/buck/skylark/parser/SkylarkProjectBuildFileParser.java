@@ -73,9 +73,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -598,13 +596,13 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     // Extension key being loaded.
     private final LoadImport key;
     // List of dependencies this extension uses.
-    private final List<LoadImport> dependencies;
+    private final Set<LoadImport> dependencies;
     // This extension AST.
     private @Nullable BuildFileAST ast;
 
     private ExtensionLoadState(LoadImport key) {
       this.key = key;
-      this.dependencies = new ArrayList<LoadImport>();
+      this.dependencies = new HashSet<LoadImport>();
       this.ast = null;
     }
 
@@ -659,8 +657,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableList.Builder<ExtensionData> depBuilder =
           ImmutableList.builderWithExpectedSize(dependencies.size());
 
-      for (int i = 0; i < dependencies.size(); ++i) {
-        LoadImport dependency = dependencies.get(i);
+      for (LoadImport dependency : dependencies) {
         ExtensionData extension = cache.getIfPresent(dependency);
 
         if (extension == null) {
@@ -668,7 +665,6 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
               "Cannot evaluate extension file %s; missing dependency is %s",
               key.getLabel(), dependency.getLabel());
         }
-
         depBuilder.add(extension);
       }
 
@@ -732,6 +728,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<ExtensionData> dependencies =
         load.getDependenciesExtensionData(extensionDataCache);
     @Nullable Extension loadedExtension = null;
+
     try (Mutability mutability = Mutability.create("importing extension")) {
       Environment.Builder envBuilder =
           Environment.builder(mutability)
