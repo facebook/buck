@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
@@ -48,9 +49,9 @@ public class TargetCompatibilityCheckerTest {
   private final ConstraintSetting cs1 =
       ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs1"));
   private final ConstraintValue cs1v1 =
-      ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs1v1"), cs1);
+      ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1v1"), cs1);
   private final ConstraintValue cs1v2 =
-      ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs1v2"), cs1);
+      ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1v2"), cs1);
 
   private Platform platform;
   private ConstraintResolver constraintResolver;
