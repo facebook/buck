@@ -194,8 +194,21 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"
             + "  string(flavor2)\n"
-            + ">configuration()",
+            + ">configuration<targetPlatform(//platform:platform)>",
         stringify(new WithBuildTarget()));
+  }
+
+  @Test
+  @Override
+  public void buildTargetWithEmptyConfiguration() {
+    assertEquals(
+        "target:path(/project/other)Optional<\n"
+            + "  string(other)\n"
+            + ">string(//some)string(target)SortedSet<\n"
+            + "  string(flavor1)\n"
+            + "  string(flavor2)\n"
+            + ">configuration<>",
+        stringify(new WithBuildTargetWithEmptyConfiguration()));
   }
 
   private String stringify(Buildable value) {

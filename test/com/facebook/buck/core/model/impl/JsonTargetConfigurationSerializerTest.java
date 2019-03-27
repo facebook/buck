@@ -17,21 +17,63 @@ package com.facebook.buck.core.model.impl;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import java.util.function.Function;
+import org.junit.Before;
 import org.junit.Test;
 
 public class JsonTargetConfigurationSerializerTest {
 
+  private Function<String, UnconfiguredBuildTarget> buildTargetProvider;
+
+  @Before
+  public void setUp() throws Exception {
+    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(new FakeProjectFilesystem());
+    buildTargetProvider =
+        buildTarget -> unconfiguredBuildTargetFactory.create(cellPathResolver, buildTarget);
+  }
+
   @Test
   public void emptyTargetConfigurationSerializesToString() {
     assertEquals(
-        "{}", new JsonTargetConfigurationSerializer().serialize(EmptyTargetConfiguration.INSTANCE));
+        "{}",
+        new JsonTargetConfigurationSerializer(buildTargetProvider)
+            .serialize(EmptyTargetConfiguration.INSTANCE));
+  }
+
+  @Test
+  public void defaultTargetConfigurationSerializesToString() {
+    assertEquals(
+        "{\"targetPlatform\":\"//platform:platform\"}",
+        new JsonTargetConfigurationSerializer(buildTargetProvider)
+            .serialize(
+                ImmutableDefaultTargetConfiguration.of(
+                    UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform"))));
   }
 
   @Test
   public void emptyTargetConfigurationDeserializesFromString() {
     assertEquals(
         EmptyTargetConfiguration.INSTANCE,
-        new JsonTargetConfigurationSerializer().deserialize("{}"));
+        new JsonTargetConfigurationSerializer(buildTargetProvider).deserialize("{}"));
+  }
+
+  @Test
+  public void defaultTargetConfigurationDeserializedFromString() {
+    DefaultTargetConfiguration targetConfiguration =
+        (DefaultTargetConfiguration)
+            new JsonTargetConfigurationSerializer(buildTargetProvider)
+                .deserialize("{\"targetPlatform\":\"//platform:platform\"}");
+
+    assertEquals("//platform:platform", targetConfiguration.getTargetPlatform().toString());
   }
 }

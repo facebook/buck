@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.rules.modern.ClassInfo;
@@ -159,8 +160,11 @@ public abstract class AbstractValueVisitor<E extends Exception> implements Value
   public void visitTargetConfiguration(TargetConfiguration value) throws E {
     if (value instanceof EmptyTargetConfiguration) {
       visitSimple(Boolean.TRUE);
+    } else if (value instanceof DefaultTargetConfiguration) {
+      visitSimple(Boolean.FALSE);
+      visitSimple(((DefaultTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
     } else {
-      throw new UnsupportedOperationException();
+      throw new IllegalArgumentException("Cannot visit target configuration: " + value);
     }
   }
 }

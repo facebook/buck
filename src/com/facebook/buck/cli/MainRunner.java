@@ -814,7 +814,8 @@ public final class MainRunner {
               .getCellByPath(filesystem.getRootPath());
 
       TargetConfigurationSerializer targetConfigurationSerializer =
-          new JsonTargetConfigurationSerializer();
+          new JsonTargetConfigurationSerializer(
+              targetName -> buildTargetFactory.create(rootCell.getCellPathResolver(), targetName));
 
       List<DevspeedTelemetryPlugin> telemetryPlugins;
       if (context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)) {

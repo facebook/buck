@@ -19,6 +19,10 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -62,9 +66,14 @@ public abstract class AbstractValueVisitorTest {
 
   protected static final ProjectFilesystem otherFilesystem =
       new FakeProjectFilesystem(Paths.get("/project/other"));
+  private static final TargetConfiguration TARGET_CONFIGURATION =
+      ImmutableDefaultTargetConfiguration.of(
+          UnconfiguredBuildTargetFactoryForTests.newInstance(
+              otherFilesystem.getRootPath(), "//platform:platform"));
   protected static final BuildTarget someBuildTarget =
-      BuildTargetFactory.newInstance(
-          otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2");
+      UnconfiguredBuildTargetFactoryForTests.newInstance(
+              otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2")
+          .configure(TARGET_CONFIGURATION);
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
@@ -106,6 +115,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void buildTarget() throws Exception;
+
+  @Test
+  public abstract void buildTargetWithEmptyConfiguration() throws Exception;
 
   @Test
   public abstract void pattern() throws Exception;
@@ -214,6 +226,12 @@ public abstract class AbstractValueVisitorTest {
 
   public static class WithBuildTarget implements FakeBuildable {
     @AddToRuleKey final BuildTarget target = someBuildTarget;
+  }
+
+  public static class WithBuildTargetWithEmptyConfiguration implements FakeBuildable {
+    @AddToRuleKey
+    final BuildTarget target =
+        someBuildTarget.getUnconfiguredBuildTarget().configure(EmptyTargetConfiguration.INSTANCE);
   }
 
   public static class WithOutputPath implements FakeBuildable {

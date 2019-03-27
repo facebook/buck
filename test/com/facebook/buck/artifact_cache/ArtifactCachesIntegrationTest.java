@@ -428,7 +428,7 @@ public class ArtifactCachesIntegrationTest {
         cacheConfig,
         buckEventBus,
         target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target),
-        TargetConfigurationSerializerForTests.create(),
+        TargetConfigurationSerializerForTests.create(cellPathResolver),
         projectFilesystem,
         Optional.empty(),
         MoreExecutors.newDirectExecutorService(),

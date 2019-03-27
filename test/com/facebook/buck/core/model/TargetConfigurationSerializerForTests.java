@@ -15,13 +15,26 @@
  */
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
+import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 
 public class TargetConfigurationSerializerForTests implements TargetConfigurationSerializer {
 
+  private final CellPathResolver cellPathResolver;
+
+  public TargetConfigurationSerializerForTests(CellPathResolver cellPathResolver) {
+    this.cellPathResolver = cellPathResolver;
+  }
+
   @Override
   public String serialize(TargetConfiguration targetConfiguration) {
-    return new JsonTargetConfigurationSerializer().serialize(targetConfiguration);
+    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory();
+    return new JsonTargetConfigurationSerializer(
+            targetName -> unconfiguredBuildTargetFactory.create(cellPathResolver, targetName))
+        .serialize(targetConfiguration);
   }
 
   @Override
@@ -29,7 +42,7 @@ public class TargetConfigurationSerializerForTests implements TargetConfiguratio
     return EmptyTargetConfiguration.INSTANCE;
   }
 
-  public static TargetConfigurationSerializer create() {
-    return new TargetConfigurationSerializerForTests();
+  public static TargetConfigurationSerializer create(CellPathResolver cellPathResolver) {
+    return new TargetConfigurationSerializerForTests(cellPathResolver);
   }
 }

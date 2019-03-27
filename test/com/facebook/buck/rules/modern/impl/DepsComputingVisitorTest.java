@@ -243,6 +243,12 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
     apply(new WithBuildTarget());
   }
 
+  @Test
+  @Override
+  public void buildTargetWithEmptyConfiguration() {
+    apply(new WithBuildTargetWithEmptyConfiguration());
+  }
+
   private static final BuildRule otherRule =
       new FakeBuildRule(someBuildTarget.withFlavors(InternalFlavor.of("other")));
 

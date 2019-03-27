@@ -281,7 +281,7 @@ public class ArtifactCachesTest {
         cacheConfig,
         buckEventBus,
         target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target),
-        TargetConfigurationSerializerForTests.create(),
+        TargetConfigurationSerializerForTests.create(cellPathResolver),
         projectFilesystem,
         wifiSsid,
         MoreExecutors.newDirectExecutorService(),

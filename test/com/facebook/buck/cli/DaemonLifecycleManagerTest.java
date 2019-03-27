@@ -28,7 +28,9 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cli.DaemonLifecycleManager.DaemonStatus;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -94,7 +96,10 @@ public class DaemonLifecycleManagerTest {
         FakeWatchmanFactory.createWatchman(
             watchmanClient, filesystem.getRootPath(), filesystem.getPath(""), "watch");
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
-    targetConfigurationSerializer = new JsonTargetConfigurationSerializer();
+    CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
+    targetConfigurationSerializer =
+        new JsonTargetConfigurationSerializer(
+            buildTarget -> unconfiguredBuildTargetFactory.create(cellPathResolver, buildTarget));
   }
 
   @Test

@@ -126,7 +126,7 @@ public class CommandRunnerParamsForTesting {
         typeCoercerFactory,
         new ParsingUnconfiguredBuildTargetFactory(),
         () -> EmptyTargetConfiguration.INSTANCE,
-        TargetConfigurationSerializerForTests.create(),
+        TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
         TestParserFactory.create(cell, knownRuleTypesProvider),
         eventBus,
         platform,

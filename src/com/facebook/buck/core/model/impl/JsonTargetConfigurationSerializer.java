@@ -19,37 +19,47 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
+import java.util.function.Function;
 
 /** Serializer that uses JSON to represent {@link TargetConfiguration} in a text form. */
 public class JsonTargetConfigurationSerializer implements TargetConfigurationSerializer {
 
   private final ObjectWriter objectWriter;
   private final ObjectReader objectReader;
+  private final Function<String, UnconfiguredBuildTarget> buildTargetProvider;
 
-  public JsonTargetConfigurationSerializer() {
+  public JsonTargetConfigurationSerializer(
+      Function<String, UnconfiguredBuildTarget> buildTargetProvider) {
+    this.buildTargetProvider = buildTargetProvider;
     ObjectMapper objectMapper = ObjectMappers.createWithEmptyBeansPermitted();
+    SimpleModule targetConfigurationModule = new SimpleModule();
+    targetConfigurationModule.addSerializer(
+        UnconfiguredBuildTarget.class,
+        new UnconfiguredBuildTargetSimpleSerializer(UnconfiguredBuildTarget.class));
+    objectMapper.registerModule(targetConfigurationModule);
+
     objectReader = objectMapper.reader();
     objectWriter = objectMapper.writer();
   }
 
   @Override
   public String serialize(TargetConfiguration targetConfiguration) {
-    if (targetConfiguration instanceof EmptyTargetConfiguration) {
-      try {
-        return objectWriter.writeValueAsString(targetConfiguration);
-      } catch (JsonProcessingException e) {
-        throw new HumanReadableException(
-            e, "Cannot serialize target configuration %s", targetConfiguration);
-      }
+    try {
+      return objectWriter.writeValueAsString(targetConfiguration);
+    } catch (JsonProcessingException e) {
+      throw new HumanReadableException(
+          e, "Cannot serialize target configuration %s", targetConfiguration);
     }
-    throw new IllegalArgumentException("Serialization not supported for: " + targetConfiguration);
   }
 
   @Override
@@ -63,6 +73,10 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     if (node.size() == 0) {
       return EmptyTargetConfiguration.INSTANCE;
     }
-    throw new IllegalArgumentException("Deserialization not supported for: " + rawValue);
+    JsonNode targetPlatformNode =
+        Preconditions.checkNotNull(
+            node.get("targetPlatform"), "Cannot find targetPlatform in %s", rawValue);
+    UnconfiguredBuildTarget platform = buildTargetProvider.apply(targetPlatformNode.textValue());
+    return ImmutableDefaultTargetConfiguration.of(platform);
   }
 }

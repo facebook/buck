@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
@@ -32,6 +33,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
+import com.facebook.buck.rules.modern.impl.UnconfiguredBuildTargetTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
 import com.facebook.buck.util.RichStream;
@@ -394,8 +396,12 @@ public class Serializer {
     public void visitTargetConfiguration(TargetConfiguration value) throws IOException {
       if (value instanceof EmptyTargetConfiguration) {
         stream.writeBoolean(true);
+      } else if (value instanceof DefaultTargetConfiguration) {
+        stream.writeBoolean(false);
+        UnconfiguredBuildTargetTypeInfo.INSTANCE.visit(
+            ((DefaultTargetConfiguration) value).getTargetPlatform(), this);
       } else {
-        throw new UnsupportedOperationException();
+        throw new IllegalArgumentException("Cannot serialize target configuration: " + value);
       }
     }
   }

@@ -5,6 +5,7 @@ standard_java_test(
     deps = [
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/io/file:file",
+        "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",

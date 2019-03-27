@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -202,9 +203,13 @@ public class StringifyingValueVisitor implements ValueVisitor<RuntimeException> 
   @Override
   public void visitTargetConfiguration(TargetConfiguration value) throws RuntimeException {
     if (value instanceof EmptyTargetConfiguration) {
-      append("configuration()");
+      append("configuration<>");
+    } else if (value instanceof DefaultTargetConfiguration) {
+      append(
+          "configuration<targetPlatform(%s)>",
+          ((DefaultTargetConfiguration) value).getTargetPlatform().getFullyQualifiedName());
     } else {
-      throw new IllegalStateException();
+      throw new IllegalArgumentException("Cannot visit target configuration: " + value);
     }
   }
 

@@ -314,7 +314,7 @@ public class CleanCommandTest {
         typeCoercerFactory,
         new ParsingUnconfiguredBuildTargetFactory(),
         () -> EmptyTargetConfiguration.INSTANCE,
-        TargetConfigurationSerializerForTests.create(),
+        TargetConfigurationSerializerForTests.create(cell.getCellPathResolver()),
         TestParserFactory.create(cell, knownRuleTypesProvider),
         BuckEventBusForTests.newInstance(),
         Platform.detect(),

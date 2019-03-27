@@ -19,6 +19,8 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
@@ -30,6 +32,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
+import com.facebook.buck.rules.modern.impl.UnconfiguredBuildTargetTypeInfo;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.base.Preconditions;
@@ -414,7 +417,9 @@ public class Deserializer {
       if (stream.readBoolean()) {
         return EmptyTargetConfiguration.INSTANCE;
       }
-      throw new IllegalStateException();
+      UnconfiguredBuildTarget targetPlatform =
+          UnconfiguredBuildTargetTypeInfo.INSTANCE.createNotNull(this);
+      return ImmutableDefaultTargetConfiguration.of(targetPlatform);
     }
   }
 }

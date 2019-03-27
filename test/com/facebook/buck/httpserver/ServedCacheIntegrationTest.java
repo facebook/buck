@@ -85,6 +85,7 @@ public class ServedCacheIntegrationTest {
 
   private ProjectFilesystem projectFilesystem;
   private Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private CellPathResolver cellPathResolver;
   private TargetConfigurationSerializer targetConfigurationSerializer;
   private WebServer webServer = null;
   private BuckEventBus buckEventBus;
@@ -112,12 +113,12 @@ public class ServedCacheIntegrationTest {
     bgTaskManager = new TestBackgroundTaskManager();
     managerScope = bgTaskManager.getNewScope(BUILD_ID);
 
-    CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
+    cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     ParsingUnconfiguredBuildTargetFactory parsingUnconfiguredBuildTargetFactory =
         new ParsingUnconfiguredBuildTargetFactory();
     unconfiguredBuildTargetFactory =
         target -> parsingUnconfiguredBuildTargetFactory.create(cellPathResolver, target);
-    targetConfigurationSerializer = TargetConfigurationSerializerForTests.create();
+    targetConfigurationSerializer = TargetConfigurationSerializerForTests.create(cellPathResolver);
   }
 
   @After
@@ -561,7 +562,7 @@ public class ServedCacheIntegrationTest {
             buckConfig,
             buckEventBus,
             unconfiguredBuildTargetFactory,
-            TargetConfigurationSerializerForTests.create(),
+            TargetConfigurationSerializerForTests.create(cellPathResolver),
             projectFilesystem,
             Optional.empty(),
             DIRECT_EXECUTOR_SERVICE,
