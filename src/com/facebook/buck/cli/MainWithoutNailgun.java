@@ -33,7 +33,7 @@ public class MainWithoutNailgun {
    */
   public static void main(String[] args) {
     // TODO(bobyf): add shutdown handling
-    new Main(System.out, System.err, System.in, Optional.empty())
+    new MainRunner(System.out, System.err, System.in, Optional.empty())
         .runMainThenExit(args, System.nanoTime());
   }
 }

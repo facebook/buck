@@ -144,7 +144,7 @@ public class CommandRunnerParamsForTesting {
         BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphProviderBuilder()
             .withMaxEntries(config.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
-            .withPoolSupplier(Main.getForkJoinPoolSupplier(config))
+            .withPoolSupplier(MainRunner.getForkJoinPoolSupplier(config))
             .build(),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),
@@ -156,7 +156,7 @@ public class CommandRunnerParamsForTesting {
         new ExecutableFinder(),
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
-        Main.getForkJoinPoolSupplier(config),
+        MainRunner.getForkJoinPoolSupplier(config),
         MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier());
   }

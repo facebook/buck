@@ -30,8 +30,8 @@ import java.util.Optional;
 public final class EdenClientPool {
   /**
    * We share one {@link Clock} instance across all {@link ReconnectingEdenClient}s created by this
-   * pool. Ideally, we would use the one created by {@link com.facebook.buck.cli.Main}, but it is a
-   * bit of a pain to thread it all the way through to here.
+   * pool. Ideally, we would use the one created by {@link com.facebook.buck.cli.MainRunner}, but it
+   * is a bit of a pain to thread it all the way through to here.
    */
   private static final Clock clock = new DefaultClock();
 

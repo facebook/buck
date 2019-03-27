@@ -164,8 +164,8 @@ public class DaemonIntegrationTest {
   private Runnable createRunnableCommand(ExitCode expectedExitCode, String... args) {
     return () -> {
       try {
-        Main main =
-            new Main(
+        MainRunner main =
+            new MainRunner(
                 new CapturingPrintStream(),
                 new CapturingPrintStream(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),

@@ -333,7 +333,7 @@ public class CleanCommandTest {
         new ActionGraphProviderBuilder()
             .withMaxEntries(
                 buckConfig.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
-            .withPoolSupplier(Main.getForkJoinPoolSupplier(buckConfig))
+            .withPoolSupplier(MainRunner.getForkJoinPoolSupplier(buckConfig))
             .build(),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),
@@ -345,7 +345,7 @@ public class CleanCommandTest {
         executableFinder,
         pluginManager,
         TestBuckModuleManagerFactory.create(pluginManager),
-        Main.getForkJoinPoolSupplier(buckConfig),
+        MainRunner.getForkJoinPoolSupplier(buckConfig),
         MetadataProviderFactory.emptyMetadataProvider(),
         getManifestSupplier());
   }

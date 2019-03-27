@@ -257,7 +257,11 @@ import org.immutables.value.Value;
 import org.kohsuke.args4j.CmdLineException;
 import org.pf4j.PluginManager;
 
-public final class Main {
+/**
+ * Responsible for running the commands logic of buck after {@link MainWithNailgun} and {@link
+ * MainWithoutNailgun} have completed the initial bootstrapping of resources and state.
+ */
+public final class MainRunner {
   /**
    * Force JNA to be initialized early to avoid deadlock race condition.
    *
@@ -351,7 +355,7 @@ public final class Main {
           // Sublime
           FileExtensionMatcher.of("sublime-workspace"));
 
-  private static final Logger LOG = Logger.get(Main.class);
+  private static final Logger LOG = Logger.get(MainRunner.class);
 
   private static PluginManager pluginManager;
   private static BuckModuleManager moduleManager;
@@ -389,7 +393,7 @@ public final class Main {
    * descriptions).
    */
   @VisibleForTesting
-  public Main(
+  public MainRunner(
       PrintStream stdOut,
       PrintStream stdErr,
       InputStream stdIn,
@@ -417,7 +421,7 @@ public final class Main {
   }
 
   @VisibleForTesting
-  public Main(
+  public MainRunner(
       PrintStream stdOut, PrintStream stdErr, InputStream stdIn, Optional<NGContext> context) {
     this(stdOut, stdErr, stdIn, DefaultKnownRuleTypesFactory::new, context);
   }

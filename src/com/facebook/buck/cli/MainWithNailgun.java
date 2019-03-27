@@ -41,15 +41,15 @@ public class MainWithNailgun {
 
   /**
    * When running as a daemon in the NailGun server, {@link #nailMain(NGContext)} is called instead
-   * of {@link Main} so that the given context can be used to listen for client disconnections and
-   * interrupt command processing when they occur.
+   * of {@link MainRunner} so that the given context can be used to listen for client disconnections
+   * and interrupt command processing when they occur.
    */
   @SuppressWarnings("unused")
   public static void nailMain(NGContext context) {
     obtainResourceFileLock();
     try (DaemonCommandExecutionScope ignored =
         BuckDaemon.getInstance().getDaemonCommandExecutionScope()) {
-      new Main(context.out, context.err, context.in, Optional.of(context))
+      new MainRunner(context.out, context.err, context.in, Optional.of(context))
           .runMainThenExit(context.getArgs(), System.nanoTime());
     }
   }

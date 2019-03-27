@@ -27,7 +27,7 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
-import com.facebook.buck.cli.Main;
+import com.facebook.buck.cli.MainRunner;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
@@ -145,7 +145,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   private final boolean addBuckRepoCell;
   private final ProcessExecutor processExecutor;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
-  @Nullable private Main.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
+  @Nullable private MainRunner.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
 
   private static class ProjectFilesystemAndConfig {
 
@@ -523,10 +523,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
       envBuilder.putAll(environmentOverrides);
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
 
-      Main main =
+      MainRunner main =
           knownRuleTypesFactoryFactory == null
-              ? new Main(stdout, stderr, stdin, context)
-              : new Main(stdout, stderr, stdin, knownRuleTypesFactoryFactory, context);
+              ? new MainRunner(stdout, stderr, stdin, context)
+              : new MainRunner(stdout, stderr, stdin, knownRuleTypesFactoryFactory, context);
       ExitCode exitCode;
 
       // TODO (buck_team): this code repeats the one in Main and thus wants generalization
@@ -641,7 +641,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public void setKnownRuleTypesFactoryFactory(
-      @Nullable Main.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory) {
+      @Nullable MainRunner.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory) {
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
   }
 
