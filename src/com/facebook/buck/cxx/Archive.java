@@ -40,6 +40,7 @@ import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.FileScrubberStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -157,20 +158,22 @@ public class Archive extends ModernBuildRule<Archive.Impl> implements SupportsIn
 
       ImmutableList.Builder<Step> builder = ImmutableList.builder();
       Path outputPath = outputPathResolver.resolvePath(output);
-      builder.add(
-          new ArchiveStep(
-              filesystem,
-              archiver.getEnvironment(resolver),
-              archiver.getCommandPrefix(resolver),
-              archiverFlags,
-              archiver.getArchiveOptions(contents == ArchiveContents.THIN),
-              outputPath,
-              inputs
-                  .stream()
-                  .map(resolver::getRelativePath)
-                  .collect(ImmutableList.toImmutableList()),
-              archiver,
-              outputPathResolver.getTempPath()));
+      builder
+          .add(MkdirStep.of(buildCellPathFactory.from(outputPath.getParent())))
+          .add(
+              new ArchiveStep(
+                  filesystem,
+                  archiver.getEnvironment(resolver),
+                  archiver.getCommandPrefix(resolver),
+                  archiverFlags,
+                  archiver.getArchiveOptions(contents == ArchiveContents.THIN),
+                  outputPath,
+                  inputs
+                      .stream()
+                      .map(resolver::getRelativePath)
+                      .collect(ImmutableList.toImmutableList()),
+                  archiver,
+                  outputPathResolver.getTempPath()));
 
       if (archiver.isRanLibStepRequired()) {
         Tool tool = ranlib.get();
