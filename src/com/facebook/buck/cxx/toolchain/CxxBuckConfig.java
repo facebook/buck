@@ -676,17 +676,18 @@ public class CxxBuckConfig {
     }
 
     public CompilerProvider getCompilerProvider() {
+      boolean preferDependencyTree = getPreferDependencyTree().orElse(false);
       if (getBuildTarget().isPresent()) {
         return new CompilerProvider(
             new BinaryBuildRuleToolProvider(getBuildTarget().get(), getSource()),
             getType().get(),
-            false);
+            preferDependencyTree);
       } else {
         PathSourcePath path = getPath().get();
         return new CompilerProvider(
             new ConstantToolProvider(new HashedFileTool(path)),
             () -> getType().orElseGet(() -> CxxToolTypeInferer.getTypeFromPath(path)),
-            getPreferDependencyTree().orElse(false));
+            preferDependencyTree);
       }
     }
   }
