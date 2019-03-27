@@ -136,20 +136,8 @@ public final class BuckDaemon {
                 housekeepingExecutorService, socketPath.toAbsolutePath(), this::killServer);
   }
 
-  void commandStarted() {
-    activeTasks.incrementAndGet();
-  }
-
-  void commandFinished() {
-    // Concurrent Mark and Sweep (CMS) garbage collector releases memory to operating system
-    // in multiple steps, even given that full collection is performed at each step. So if CMS
-    // collector is used we call System.gc() up to 4 times with some interval, and call it
-    // just once for any other major collector.
-    // With Java 9 we could just use -XX:-ShrinkHeapInSteps flag.
-    int nTimes = isCMS ? 4 : 1;
-
-    housekeepingExecutorService.schedule(
-        () -> collectGarbage(nTimes), AFTER_COMMAND_AUTO_GC_DELAY_MS, TimeUnit.MILLISECONDS);
+  DaemonCommandExecutionScope getDaemonCommandExecutionScope() {
+    return new DaemonCommandExecutionScope();
   }
 
   private void collectGarbage(int nTimes) {
@@ -170,15 +158,36 @@ public final class BuckDaemon {
     }
   }
 
-  IdleKiller.CommandExecutionScope newCommandExecutionScope() {
-    if (unixDomainSocketLossKiller != null) {
-      unixDomainSocketLossKiller.arm(); // Arm the socket loss killer also.
-    }
-    return idleKiller.newCommandExecutionScope();
-  }
-
   private void killServer() {
     server.shutdown();
+  }
+
+  class DaemonCommandExecutionScope implements AutoCloseable {
+    private final IdleKiller.CommandExecutionScope idleKillerScope;
+
+    DaemonCommandExecutionScope() {
+      if (unixDomainSocketLossKiller != null) {
+        unixDomainSocketLossKiller.arm(); // Arm the socket loss killer also.
+      }
+
+      activeTasks.incrementAndGet();
+      idleKillerScope = idleKiller.newCommandExecutionScope();
+    }
+
+    @Override
+    public void close() {
+      // Concurrent Mark and Sweep (CMS) garbage collector releases memory to operating system
+      // in multiple steps, even given that full collection is performed at each step. So if CMS
+      // collector is used we call System.gc() up to 4 times with some interval, and call it
+      // just once for any other major collector.
+      // With Java 9 we could just use -XX:-ShrinkHeapInSteps flag.
+      idleKillerScope.close();
+
+      int nTimes = isCMS ? 4 : 1;
+
+      housekeepingExecutorService.schedule(
+          () -> collectGarbage(nTimes), AFTER_COMMAND_AUTO_GC_DELAY_MS, TimeUnit.MILLISECONDS);
+    }
   }
 
   private static void markFdCloseOnExec(int fd) {

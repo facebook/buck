@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.cli.BuckDaemon.DaemonCommandExecutionScope;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.nailgun.NGContext;
 import java.io.IOException;
@@ -46,14 +47,10 @@ public class MainWithNailgun {
   @SuppressWarnings("unused")
   public static void nailMain(NGContext context) {
     obtainResourceFileLock();
-    BuckDaemon daemon = BuckDaemon.getInstance();
-    try (IdleKiller.CommandExecutionScope ignored = daemon.newCommandExecutionScope()) {
-      daemon.commandStarted();
+    try (DaemonCommandExecutionScope ignored =
+        BuckDaemon.getInstance().getDaemonCommandExecutionScope()) {
       new Main(context.out, context.err, context.in, Optional.of(context))
           .runMainThenExit(context.getArgs(), System.nanoTime());
-    } finally {
-      // Reclaim memory after a command finishes.
-      daemon.commandFinished();
     }
   }
 
