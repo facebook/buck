@@ -18,9 +18,10 @@ package com.facebook.buck.intellij.ideabuck.util;
 
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckAssignmentTarget;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckAssignmentTargetList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckCompoundStatement;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionList;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCallSuffix;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionDefinition;
@@ -302,18 +303,23 @@ public final class BuckPsiUtils {
       recurse.accept(((BuckCompoundStatement) psiElement).getIfStatement());
       recurse.accept(((BuckCompoundStatement) psiElement).getFunctionDefinition());
     } else if (psiElement instanceof BuckSmallStatement) {
-      recurse.accept(((BuckSmallStatement) psiElement).getAssignmentTarget());
-      ((BuckSmallStatement) psiElement).getAssignmentTargetListList().forEach(recurse);
+      recurse.accept(((BuckSmallStatement) psiElement).getExpressionStatement());
+      recurse.accept(((BuckSmallStatement) psiElement).getLoadCall());
     } else if (psiElement instanceof BuckSuite) {
       recurse.accept(((BuckSuite) psiElement).getSimpleStatement());
       ((BuckSuite) psiElement).getStatementList().forEach(recurse);
-    } else if (psiElement instanceof BuckAssignmentTarget) {
-      if (((BuckAssignmentTarget) psiElement).getPrimary() == null) {
-        recurse.accept(((BuckAssignmentTarget) psiElement).getIdentifier());
-        recurse.accept(((BuckAssignmentTarget) psiElement).getAssignmentTargetList());
-      }
-    } else if (psiElement instanceof BuckAssignmentTargetList) {
-      ((BuckAssignmentTargetList) psiElement).getAssignmentTargetList().forEach(recurse);
+    } else if (psiElement instanceof BuckExpressionStatement) {
+      ((BuckExpressionStatement) psiElement)
+          .getExpressionListList()
+          .stream()
+          .findFirst()
+          .ifPresent(recurse);
+    } else if (psiElement instanceof BuckExpressionList) {
+      ((BuckExpressionList) psiElement).getExpressionList().forEach(recurse);
+    } else if (psiElement instanceof BuckExpression) {
+      ((BuckExpression) psiElement).getSimpleExpressionList().forEach(recurse);
+    } else if (psiElement instanceof BuckSimpleExpression) {
+      recurse.accept(((BuckSimpleExpression) psiElement).getPrimaryWithSuffix());
     } else {
       LOG.info("Unparsed: " + psiElement.getNode().getElementType());
     }

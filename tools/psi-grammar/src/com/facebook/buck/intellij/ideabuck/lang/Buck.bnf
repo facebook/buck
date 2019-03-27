@@ -129,24 +129,19 @@ statement ::= simple_statement | compound_statement
 
 simple_statement ::= small_statement (';' small_statement)* ';'?
 
-small_statement ::= load_call
-                    | assignment_target UPDATE_OPS expression
-                    | (assignment_target_list ('='))* expression
-                    | pass_statement
-                    | flow_statement
-                    | expression
+small_statement ::= (load_call
+                     | expression_statement
+                     | pass_statement
+                     | flow_statement
+                     | assert_statement)
 
 load_call ::= 'load' '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
 load_target_argument ::= string
 load_argument ::= [IDENTIFIER '='] string
 
-assignment_target_list ::= assignment_target (',' assignment_target)*
+expression_statement ::= expression_list (augment_assignment expression_list | ('=' expression_list)*)
 
-assignment_target ::= primary '.' IDENTIFIER
-                      | primary slice_suffix
-                      | '(' assignment_target_list ')'
-                      | '[' assignment_target_list ']'
-                      | IDENTIFIER
+augment_assignment ::= '+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' | '<<=' | '>>=' | '**=' | '//='
 
 pass_statement ::= 'pass'
 
@@ -187,12 +182,17 @@ primary ::= NONE | BOOLEAN | NUMBER | function_call | IDENTIFIER | string | list
 function_call ::=  function_name function_call_suffix
 function_name ::= ('glob' | IDENTIFIER)
 
-list ::= '[' (list_elements ']' | expression comprehension_suffix ']' | ']')
-list_elements ::= simple_expression (',' simple_expression)* ','?
+list ::= '[' (simple_expression_list ']' | expression comprehension_suffix ']' | ']')
 
 function_call_suffix ::= '(' argument_list? ')'
 slice_suffix ::= '[' simple_expression? (':' simple_expression? (':' simple_expression?)?)? ']'
 dot_suffix ::= '.' (function_call | IDENTIFIER)
+
+// [Python2]: exprlist: expr (',' expr)* [',']
+simple_expression_list ::= simple_expression (',' simple_expression)* [',']
+
+// [Python2]: testlist: test (',' test)* [',']
+expression_list ::= expression (',' expression)* [',']
 
 dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_suffix '}') | '}')
 dict_entry ::= simple_expression ':' simple_expression

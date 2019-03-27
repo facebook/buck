@@ -19,7 +19,8 @@ package com.facebook.buck.intellij.ideabuck.format;
 import static com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils.hasElementType;
 
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgumentList;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListElements;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionList;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpressionList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.intellij.formatting.ASTBlock;
 import com.intellij.formatting.Alignment;
@@ -48,7 +49,8 @@ import org.jetbrains.annotations.Nullable;
 public class BuckBlock implements ASTBlock {
 
   private static final TokenSet BUCK_CONTAINERS =
-      TokenSet.create(BuckTypes.LIST_ELEMENTS, BuckTypes.ARGUMENT_LIST);
+      TokenSet.create(
+          BuckTypes.EXPRESSION_LIST, BuckTypes.SIMPLE_EXPRESSION_LIST, BuckTypes.ARGUMENT_LIST);
   private static final TokenSet BUCK_OPEN_BRACES =
       TokenSet.create(BuckTypes.L_BRACKET, BuckTypes.L_PARENTHESES);
   private static final TokenSet BUCK_CLOSE_BRACES =
@@ -82,7 +84,9 @@ public class BuckBlock implements ASTBlock {
 
     mySpacingBuilder = BuckFormattingModelBuilder.createSpacingBuilder(settings);
 
-    if (myPsiElement instanceof BuckListElements || myPsiElement instanceof BuckArgumentList) {
+    if (myPsiElement instanceof BuckExpressionList
+        || myPsiElement instanceof BuckSimpleExpressionList
+        || myPsiElement instanceof BuckArgumentList) {
       myChildWrap = Wrap.createWrap(CommonCodeStyleSettings.WRAP_ALWAYS, true);
     } else {
       myChildWrap = null;
@@ -187,8 +191,12 @@ public class BuckBlock implements ASTBlock {
     final ASTNode lastChildNode = myNode.getLastChildNode();
 
     boolean ret = false;
-    if (hasElementType(myNode, TokenSet.create(BuckTypes.LIST_ELEMENTS))) {
+    if (hasElementType(myNode, TokenSet.create(BuckTypes.LIST))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_BRACKET;
+    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.SLICE_SUFFIX))) {
+      ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_BRACKET;
+    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.DICT))) {
+      ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_CURLY;
     } else if (hasElementType(myNode, TokenSet.create(BuckTypes.FUNCTION_CALL_SUFFIX))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_PARENTHESES;
     } else if (hasElementType(myNode, TokenSet.create(BuckTypes.ARGUMENT_LIST))) {

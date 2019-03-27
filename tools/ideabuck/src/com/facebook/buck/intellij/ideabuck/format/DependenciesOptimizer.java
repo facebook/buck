@@ -18,11 +18,11 @@ package com.facebook.buck.intellij.ideabuck.format;
 
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckList;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListElements;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimaryWithSuffix;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpressionList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckVisitor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Ordering;
@@ -120,12 +120,12 @@ public class DependenciesOptimizer {
             .map(BuckSimpleExpression::getPrimaryWithSuffix)
             .map(BuckPrimaryWithSuffix::getPrimary)
             .map(BuckPrimary::getList)
-            .map(BuckList::getListElements)
+            .map(BuckList::getSimpleExpressionList)
             .ifPresent(OptimizerInstance.this::uniqueSort);
       }
     }
 
-    private void uniqueSort(BuckListElements buckListElements) {
+    private void uniqueSort(BuckSimpleExpressionList buckListElements) {
       List<BuckSimpleExpression> expressionList = buckListElements.getSimpleExpressionList();
       TreeMap<String, PsiElement> treeMap =
           new TreeMap<>(DependenciesOptimizer::compareDependencyStrings);
