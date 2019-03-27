@@ -17,21 +17,19 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
-import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 
 public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
 
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private final TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
 
-  public BuildTargetTypeCoercer(UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
-    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
+  public BuildTargetTypeCoercer(
+      TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer) {
+    this.unconfiguredBuildTargetTypeCoercer = unconfiguredBuildTargetTypeCoercer;
   }
 
   @Override
@@ -50,21 +48,9 @@ public class BuildTargetTypeCoercer extends LeafTypeCoercer<BuildTarget> {
     if (!(object instanceof String)) {
       throw CoerceFailedException.simple(object, getOutputClass());
     }
-    String param = (String) object;
 
-    try {
-      String baseName =
-          UnflavoredBuildTarget.BUILD_TARGET_PREFIX
-              + MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
-
-      return unconfiguredBuildTargetFactory
-          .createForBaseName(cellRoots, baseName, param)
-          .configure(targetConfiguration);
-    } catch (BuildTargetParseException e) {
-      throw new CoerceFailedException(
-          String.format(
-              "Unable to find the target %s.\n%s", object, e.getHumanReadableErrorMessage()),
-          e);
-    }
+    return unconfiguredBuildTargetTypeCoercer
+        .coerce(cellRoots, alsoUnused, pathRelativeToProjectRoot, targetConfiguration, object)
+        .configure(targetConfiguration);
   }
 }

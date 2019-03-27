@@ -32,7 +32,8 @@ import org.junit.Test;
 public class FrameworkPathTypeCoercerTest {
 
   private final TypeCoercer<BuildTarget> buildTargetTypeCoercer =
-      new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory());
+      new BuildTargetTypeCoercer(
+          new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory()));
   private final TypeCoercer<Path> pathTypeCoercer = new PathTypeCoercer();
   private final TypeCoercer<SourcePath> sourcePathTypeCoercer =
       new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);

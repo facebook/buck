@@ -48,6 +48,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
@@ -239,7 +240,9 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     SelectorListFactory selectorListFactory =
         new SelectorListFactory(
             new SelectorFactory(
-                new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)::coerce));
+                new BuildTargetTypeCoercer(
+                        new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory))
+                    ::coerce));
 
     cellManager.register(rootCell);
 

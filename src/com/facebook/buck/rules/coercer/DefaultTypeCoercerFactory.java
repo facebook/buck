@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
@@ -83,8 +84,7 @@ import java.util.regex.Pattern;
  */
 public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
-      new ParsingUnconfiguredBuildTargetFactory();
+  private final TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
   private final PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode;
 
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();
@@ -121,8 +121,12 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                 .parse(cellRoots, (String) object);
           }
         };
+    UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
+        new ParsingUnconfiguredBuildTargetFactory();
+    unconfiguredBuildTargetTypeCoercer =
+        new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
     TypeCoercer<BuildTarget> buildTargetTypeCoercer =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
     PathTypeCoercer pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetTypeCoercer, pathTypeCoercer);
@@ -142,6 +146,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
           pathTypeCoercer,
           flavorTypeCoercer,
           sourcePathTypeCoercer,
+          unconfiguredBuildTargetTypeCoercer,
           buildTargetTypeCoercer,
           buildTargetPatternTypeCoercer,
 
@@ -384,18 +389,19 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     } else if (rawClass.isAssignableFrom(VersionMatchedCollection.class)) {
       return new VersionMatchedCollectionTypeCoercer<>(
           new MapTypeCoercer<>(
-              new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory), new VersionTypeCoercer()),
+              new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer),
+              new VersionTypeCoercer()),
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else if (rawClass.isAssignableFrom(Optional.class)) {
       return new OptionalTypeCoercer<>(
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)));
     } else if (rawClass.isAssignableFrom(SelectorList.class)) {
       return new SelectorListCoercer<>(
-          new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory),
+          new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer),
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)),
           new SelectorListFactory(
               new SelectorFactory(
-                  new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)::coerce)));
+                  new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)::coerce)));
     } else {
       throw new IllegalArgumentException("Unhandled type: " + typeName);
     }

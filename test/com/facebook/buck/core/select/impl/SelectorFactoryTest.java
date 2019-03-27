@@ -31,6 +31,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
+import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -48,7 +49,10 @@ public class SelectorFactoryTest {
     projectFilesystem = new FakeProjectFilesystem();
     selectorFactory =
         new SelectorFactory(
-            new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())::coerce);
+            new BuildTargetTypeCoercer(
+                    new UnconfiguredBuildTargetTypeCoercer(
+                        new ParsingUnconfiguredBuildTargetFactory()))
+                ::coerce);
   }
 
   @Test

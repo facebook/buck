@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.lang.reflect.Proxy;
@@ -42,17 +41,18 @@ public class BuildTargetTypeCoercerTest {
   private ProjectFilesystem filesystem = new FakeProjectFilesystem();
   private Path basePath = Paths.get("java/com/facebook/buck/example");
 
-  private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
+  private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetTypeCoercer;
 
   @Before
   public void setUp() throws Exception {
-    unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
+    unconfiguredBuildTargetTypeCoercer =
+        new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory());
   }
 
   @Test
   public void canCoerceAnUnflavoredFullyQualifiedTarget() throws CoerceFailedException {
     BuildTarget seen =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
                 createCellRoots(filesystem),
                 filesystem,
@@ -67,7 +67,7 @@ public class BuildTargetTypeCoercerTest {
   public void failedCoerce() throws CoerceFailedException {
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage(containsString("Unable to find the target //foo::bar."));
-    new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)
+    new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
         .coerce(
             createCellRoots(filesystem),
             filesystem,
@@ -79,7 +79,7 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void shouldCoerceAShortTarget() throws CoerceFailedException {
     BuildTarget seen =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
                 createCellRoots(filesystem),
                 filesystem,
@@ -93,7 +93,7 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void shouldCoerceATargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
                 createCellRoots(filesystem),
                 filesystem,
@@ -107,7 +107,7 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void shouldCoerceMultipleFlavors() throws CoerceFailedException {
     BuildTarget seen =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
                 createCellRoots(filesystem),
                 filesystem,
@@ -121,7 +121,7 @@ public class BuildTargetTypeCoercerTest {
   @Test
   public void shouldCoerceAShortTargetWithASingleFlavor() throws CoerceFailedException {
     BuildTarget seen =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
                 createCellRoots(filesystem),
                 filesystem,
@@ -155,7 +155,7 @@ public class BuildTargetTypeCoercerTest {
                 });
 
     BuildTarget seen =
-        new BuildTargetTypeCoercer(unconfiguredBuildTargetFactory)
+        new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)
             .coerce(
                 createCellRoots(filesystem),
                 filesystem,

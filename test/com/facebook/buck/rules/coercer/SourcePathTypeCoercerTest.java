@@ -44,7 +44,8 @@ public class SourcePathTypeCoercerTest {
   private final Path pathRelativeToProjectRoot = Paths.get("");
   private final SourcePathTypeCoercer sourcePathTypeCoercer =
       new SourcePathTypeCoercer(
-          new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory()),
+          new BuildTargetTypeCoercer(
+              new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())),
           new PathTypeCoercer());
 
   @Before

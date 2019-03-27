@@ -54,7 +54,10 @@ public class SelectorListCoercerTest {
     selectorListFactory =
         new SelectorListFactory(
             new SelectorFactory(
-                new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory())::coerce));
+                new BuildTargetTypeCoercer(
+                        new UnconfiguredBuildTargetTypeCoercer(
+                            new ParsingUnconfiguredBuildTargetFactory()))
+                    ::coerce));
   }
 
   @Test
@@ -78,7 +81,9 @@ public class SelectorListCoercerTest {
     ListTypeCoercer<Flavor> elementTypeCoercer = new ListTypeCoercer<>(new FlavorTypeCoercer());
     SelectorListCoercer<ImmutableList<Flavor>> coercer =
         new SelectorListCoercer<>(
-            new BuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory()),
+            new BuildTargetTypeCoercer(
+                new UnconfiguredBuildTargetTypeCoercer(
+                    new ParsingUnconfiguredBuildTargetFactory())),
             elementTypeCoercer,
             null);
     ImmutableSelectorValue selectorValue =
