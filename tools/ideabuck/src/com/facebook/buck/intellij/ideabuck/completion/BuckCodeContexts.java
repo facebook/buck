@@ -20,7 +20,7 @@ import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckParameter;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSuite;
@@ -92,9 +92,9 @@ public abstract class BuckCodeContexts {
    * Returns true if the element is at the start of an expression, i.e., in a context where a return
    * value is expected.
    */
-  private static boolean isAtSingleExpression(PsiElement element) {
-    BuckSingleExpression expression =
-        PsiTreeUtil.getParentOfType(element, BuckSingleExpression.class);
+  private static boolean isAtSimpleExpression(PsiElement element) {
+    BuckSimpleExpression expression =
+        PsiTreeUtil.getParentOfType(element, BuckSimpleExpression.class);
     return expression != null
         && expression.getTextRange().getStartOffset() == element.getTextRange().getStartOffset();
   }
@@ -217,14 +217,14 @@ public abstract class BuckCodeContexts {
   }
 
   /** Any buck expression. */
-  public static class SingleExpression extends BaseTemplateContext {
-    public SingleExpression() {
+  public static class SimpleExpression extends BaseTemplateContext {
+    public SimpleExpression() {
       super("BUCK_EXPRESSION", "Expression", Generic.class);
     }
 
     @Override
     boolean appliesTo(PsiElement element, int offset) {
-      return isAtSingleExpression(element);
+      return isAtSimpleExpression(element);
     }
   }
 

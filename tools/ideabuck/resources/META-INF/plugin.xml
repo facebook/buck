@@ -316,7 +316,7 @@
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Declaration"/>
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$InString"/>
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$NamedArgument"/>
-    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$SingleExpression"/>
+    <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$SimpleExpression"/>
     <liveTemplateContext implementation="com.facebook.buck.intellij.ideabuck.completion.BuckCodeContexts$Statement"/>
   </extensions>
 

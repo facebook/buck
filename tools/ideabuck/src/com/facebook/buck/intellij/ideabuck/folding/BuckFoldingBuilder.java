@@ -21,7 +21,7 @@ import static com.google.common.base.Strings.isNullOrEmpty;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilderEx;
@@ -42,7 +42,7 @@ import org.jetbrains.annotations.Nullable;
 /** Folds rules and arrays */
 public class BuckFoldingBuilder extends FoldingBuilderEx {
 
-  private final TokenSet arrayElements = TokenSet.create(BuckTypes.SINGLE_EXPRESSION);
+  private final TokenSet arrayElements = TokenSet.create(BuckTypes.SIMPLE_EXPRESSION);
   private final TokenSet values = TokenSet.create(BuckTypes.PRIMARY);
 
   @NotNull
@@ -103,7 +103,7 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
         PsiElement element = lvalue;
         do {
           element = element.getNextSibling();
-        } while (!(element instanceof BuckSingleExpression));
+        } while (!(element instanceof BuckSimpleExpression));
         name = element.getText();
         break;
       }

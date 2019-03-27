@@ -22,7 +22,7 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgumentList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.openapi.project.Project;
@@ -136,7 +136,7 @@ public final class BuckBuildUtil {
       if (lvalue != null) {
         PsiElement propertyName = lvalue.getFirstChild();
         if (propertyName != null && propertyName.getText().equals(name)) {
-          BuckSingleExpression expression = arg.getSingleExpression();
+          BuckSimpleExpression expression = arg.getSimpleExpression();
           return BuckPsiUtils.getStringValueFromExpression(expression);
         }
       }

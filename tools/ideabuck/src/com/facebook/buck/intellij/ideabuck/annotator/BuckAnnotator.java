@@ -27,7 +27,7 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.lang.annotation.Annotation;
@@ -53,8 +53,8 @@ public class BuckAnnotator implements Annotator {
       annotateBuckPropertyLvalue((BuckPropertyLvalue) psiElement, annotationHolder);
     } else if (psiElement instanceof BuckLoadCall) {
       annotateLoadCall((BuckLoadCall) psiElement, annotationHolder);
-    } else if (psiElement instanceof BuckSingleExpression) {
-      annotateSingleExpression((BuckSingleExpression) psiElement, annotationHolder);
+    } else if (psiElement instanceof BuckSimpleExpression) {
+      annotateSimpleExpression((BuckSimpleExpression) psiElement, annotationHolder);
     }
   }
 
@@ -145,19 +145,19 @@ public class BuckAnnotator implements Annotator {
     }
   }
 
-  private void annotateSingleExpression(
-      BuckSingleExpression singleExpression, AnnotationHolder annotationHolder) {
-    Optional.of(singleExpression)
+  private void annotateSimpleExpression(
+      BuckSimpleExpression simpleExpression, AnnotationHolder annotationHolder) {
+    Optional.of(simpleExpression)
         .map(BuckPsiUtils::getStringValueFromExpression)
         .filter(
             s ->
-                annotateStringAsTargetPattern(singleExpression, s, annotationHolder)
-                    || annotateStringAsLocalFile(singleExpression, s, annotationHolder));
+                annotateStringAsTargetPattern(simpleExpression, s, annotationHolder)
+                    || annotateStringAsLocalFile(simpleExpression, s, annotationHolder));
   }
 
   /** Annotates targets that refer to this file, as in ":other-target" */
   private boolean annotateStringAsTargetPattern(
-      BuckSingleExpression expression, String stringValue, AnnotationHolder annotationHolder) {
+      BuckSimpleExpression expression, String stringValue, AnnotationHolder annotationHolder) {
     BuckTargetPattern buckTargetPattern = BuckTargetPattern.parse(stringValue).orElse(null);
     if (buckTargetPattern == null) {
       return false;
@@ -238,7 +238,7 @@ public class BuckAnnotator implements Annotator {
 
   /** Annotates targets that refer to files relative to this file. */
   private boolean annotateStringAsLocalFile(
-      BuckSingleExpression targetExpression,
+      BuckSimpleExpression targetExpression,
       String targetValue,
       AnnotationHolder annotationHolder) {
     Optional<VirtualFile> targetFile =

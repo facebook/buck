@@ -123,7 +123,7 @@ buckFile ::= statement*
 function_definition ::= 'def' IDENTIFIER '(' parameter_list? ')' ':' suite
 
 parameter_list ::= parameter (',' parameter)* ','?
-parameter ::= '**' IDENTIFIER | '*' IDENTIFIER | IDENTIFIER ['=' single_expression]
+parameter ::= '**' IDENTIFIER | '*' IDENTIFIER | IDENTIFIER ['=' simple_expression]
 
 statement ::= simple_statement | compound_statement
 
@@ -162,19 +162,19 @@ assert_statement ::= 'assert' expression [',' expression]
 
 compound_statement ::= if_statement | for_statement | function_definition
 
-if_statement ::= 'if' single_expression ':' suite ('elif' single_expression ':' suite)* ['else' ':' suite]
+if_statement ::= 'if' simple_expression ':' suite ('elif' simple_expression ':' suite)* ['else' ':' suite]
 
 for_statement ::= 'for' loop_variable 'in' expression ':' suite
 loop_variable ::= primary_with_suffix (',' primary_with_suffix)*
 
 suite ::= simple_statement | INDENT statement+ DEDENT
 
-expression ::= single_expression (',' single_expression)*
+expression ::= simple_expression (',' simple_expression)*
 
-single_expression ::= unary_op single_expression
-                      | (primary_with_suffix [binary_op single_expression]
-                      | 'lambda' [parameter_list] ':' single_expression)
-                      ['if' single_expression 'else' single_expression]
+simple_expression ::= unary_op simple_expression
+                      | (primary_with_suffix [binary_op simple_expression]
+                      | 'lambda' [parameter_list] ':' simple_expression)
+                      ['if' simple_expression 'else' simple_expression]
 unary_op ::= 'not' | '+' | '-' | '~'
 binary_op ::=  'or' | 'and' | '==' | '!=' | '<' | '>' | '<=' | '>='
                     | 'in' | 'not' 'in' | 'is' | 'not' 'is'
@@ -188,19 +188,19 @@ function_call ::=  function_name function_call_suffix
 function_name ::= ('glob' | IDENTIFIER)
 
 list ::= '[' (list_elements ']' | expression comprehension_suffix ']' | ']')
-list_elements ::= single_expression (',' single_expression)* ','?
+list_elements ::= simple_expression (',' simple_expression)* ','?
 
 function_call_suffix ::= '(' argument_list? ')'
-slice_suffix ::= '[' single_expression? (':' single_expression? (':' single_expression?)?)? ']'
+slice_suffix ::= '[' simple_expression? (':' simple_expression? (':' simple_expression?)?)? ']'
 dot_suffix ::= '.' (function_call | IDENTIFIER)
 
 dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_suffix '}') | '}')
-dict_entry ::= single_expression ':' single_expression
+dict_entry ::= simple_expression ':' simple_expression
 
 argument_list ::= argument (',' argument)* ','?
-argument ::= '**' single_expression | '*' single_expression | [property_lvalue '='] single_expression
+argument ::= '**' simple_expression | '*' simple_expression | [property_lvalue '='] simple_expression
 property_lvalue ::= IDENTIFIER
 
-comprehension_suffix ::= 'for' loop_variable 'in' single_expression ['if' single_expression] comprehension_suffix*
+comprehension_suffix ::= 'for' loop_variable 'in' simple_expression ['if' simple_expression] comprehension_suffix*
 
 string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_DOC_STRING | SINGLE_QUOTED_DOC_STRING) (PERCENT primary) ?

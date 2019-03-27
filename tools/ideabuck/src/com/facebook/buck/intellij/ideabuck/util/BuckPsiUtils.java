@@ -30,8 +30,8 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimaryWithSuffix;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleStatement;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSingleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSmallStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
@@ -138,10 +138,10 @@ public final class BuckPsiUtils {
    * this expression has multiple values, for example: "a" + "b"
    */
   @Nullable
-  public static String getStringValueFromExpression(BuckSingleExpression expression) {
+  public static String getStringValueFromExpression(BuckSimpleExpression expression) {
     return Optional.of(expression)
-        .filter(e -> e.getSingleExpressionList().isEmpty())
-        .map(BuckSingleExpression::getPrimaryWithSuffix)
+        .filter(e -> e.getSimpleExpressionList().isEmpty())
+        .map(BuckSimpleExpression::getPrimaryWithSuffix)
         .filter(e -> e.getDotSuffixList().isEmpty()) // "stri{}".format("ng") unsupported
         .filter(e -> e.getSliceSuffixList().isEmpty()) // "<<slices>>"[2:-2] unsupported
         .map(BuckPrimaryWithSuffix::getPrimary)
@@ -218,7 +218,7 @@ public final class BuckPsiUtils {
             .isPresent()) {
           continue;
         }
-        if (name.equals(getStringValueFromExpression(buckProperty.getSingleExpression()))) {
+        if (name.equals(getStringValueFromExpression(buckProperty.getSimpleExpression()))) {
           return buckRuleBlock;
         }
       }
@@ -240,7 +240,7 @@ public final class BuckPsiUtils {
         if (propertyLvalue == null || !"name".equals(propertyLvalue.getText())) {
           continue;
         }
-        String name = BuckPsiUtils.getStringValueFromExpression(buckArgument.getSingleExpression());
+        String name = BuckPsiUtils.getStringValueFromExpression(buckArgument.getSimpleExpression());
         if (name != null) {
           if (name.startsWith(namePrefix)) {
             targetsByName.put(name, buckRuleBlock);
@@ -293,7 +293,7 @@ public final class BuckPsiUtils {
       recurse.accept(((BuckStatement) psiElement).getSimpleStatement());
       recurse.accept(((BuckStatement) psiElement).getCompoundStatement());
     } else if (psiElement instanceof BuckIfStatement) {
-      ((BuckIfStatement) psiElement).getSingleExpressionList().forEach(recurse);
+      ((BuckIfStatement) psiElement).getSimpleExpressionList().forEach(recurse);
       ((BuckIfStatement) psiElement).getSuiteList().forEach(recurse);
     } else if (psiElement instanceof BuckSimpleStatement) {
       ((BuckSimpleStatement) psiElement).getSmallStatementList().forEach(recurse);
