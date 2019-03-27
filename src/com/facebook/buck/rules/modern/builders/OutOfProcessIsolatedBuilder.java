@@ -31,6 +31,8 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
 
 /** This implements out of process rule execution. */
 public class OutOfProcessIsolatedBuilder {
@@ -45,6 +47,8 @@ public class OutOfProcessIsolatedBuilder {
    */
   public static void main(String[] args)
       throws IOException, StepFailedException, InterruptedException {
+    LogManager.getLogManager().getLogger("").setLevel(Level.WARNING);
+
     LOG.info(String.format("Started buck at time [%s].", new java.util.Date()));
     Thread.setDefaultUncaughtExceptionHandler(
         (thread, error) -> {
