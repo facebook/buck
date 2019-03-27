@@ -67,7 +67,8 @@ public class ShallowTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
     T arg = targetNode.getConstructorArg();
 
     if (UNUSED_BUILD_RULE_DESCRIPTION_CLASSES.contains(description.getClass())
-        || description.getClass().getSuperclass().equals(AbstractGenruleDescription.class)) {
+        || description.getClass().getSuperclass().equals(AbstractGenruleDescription.class)
+            && !((GenruleDescriptionArg) arg).getExecutable().orElse(false)) {
       String outputPath;
       if (description.getClass().equals(GenruleDescription.class)) {
         outputPath = ((GenruleDescriptionArg) arg).getOut();
