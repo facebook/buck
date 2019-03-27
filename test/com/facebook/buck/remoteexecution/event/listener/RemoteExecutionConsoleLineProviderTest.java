@@ -41,7 +41,7 @@ public class RemoteExecutionConsoleLineProviderTest {
     statsProvider.casDownloads = 21;
     statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
     RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO);
+        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO, true);
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(4, lines.size());
     Assert.assertEquals(
@@ -66,11 +66,33 @@ public class RemoteExecutionConsoleLineProviderTest {
             .setLocallyExecutedRules(0)
             .build();
     RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO);
+        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO, true);
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(3, lines.size());
     for (String line : lines) {
       Assert.assertFalse(line.contains("LocalFallback"));
+    }
+  }
+
+  @Test
+  public void testNoDebug() {
+    statsProvider.casDownladedBytes = 42;
+    statsProvider.casDownloads = 21;
+    statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
+    statsProvider.localFallbackStats =
+        LocalFallbackStats.builder()
+            .from(statsProvider.localFallbackStats)
+            .setLocallyExecutedRules(0)
+            .build();
+    RemoteExecutionConsoleLineProvider provider =
+        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO, false);
+    List<String> lines = provider.createConsoleLinesAtTime(0);
+    Assert.assertEquals(1, lines.size());
+    Assert.assertEquals(
+        lines.get(0), "Building with Remote Execution: 1:05 minutes spent building remotely");
+    for (String line : lines) {
+      Assert.assertFalse(line.contains("LocalFallback"));
+      Assert.assertFalse(line.contains("[RE]"));
     }
   }
 
@@ -81,7 +103,7 @@ public class RemoteExecutionConsoleLineProviderTest {
     statsProvider.actionsPerState.put(State.ACTION_SUCCEEDED, 84);
 
     RemoteExecutionConsoleLineProvider provider =
-        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO);
+        new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO, true);
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(4, lines.size());
     Assert.assertEquals(
@@ -145,6 +167,11 @@ public class RemoteExecutionConsoleLineProviderTest {
     @Override
     public LocalFallbackStats getLocalFallbackStats() {
       return localFallbackStats;
+    }
+
+    @Override
+    public long getRemoteCpuTime() {
+      return 65;
     }
   }
 }

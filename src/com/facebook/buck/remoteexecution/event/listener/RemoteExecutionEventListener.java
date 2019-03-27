@@ -45,6 +45,8 @@ public class RemoteExecutionEventListener
   private final AtomicInteger uploads;
   private final AtomicLong uploadBytes;
 
+  private final AtomicLong remoteCpuTime;
+
   private final AtomicBoolean hasFirstRemoteActionStarted;
 
   private final AtomicInteger localFallbackTotalExecutions;
@@ -56,6 +58,7 @@ public class RemoteExecutionEventListener
     this.donwloadBytes = new AtomicLong(0);
     this.uploads = new AtomicInteger(0);
     this.uploadBytes = new AtomicLong(0);
+    this.remoteCpuTime = new AtomicLong(0);
     this.totalBuildRules = new AtomicInteger(0);
     this.hasFirstRemoteActionStarted = new AtomicBoolean(false);
 
@@ -105,6 +108,11 @@ public class RemoteExecutionEventListener
     hasFirstRemoteActionStarted.set(true);
     getStateCount(State.WAITING).decrementAndGet();
     getStateCount(event.getState()).incrementAndGet();
+    if (event.getExecutedActionMetadata().isPresent()) {
+      remoteCpuTime.addAndGet(
+          event.getExecutedActionMetadata().get().getExecutionCompletedTimestamp().getSeconds()
+              - event.getExecutedActionMetadata().get().getExecutionStartTimestamp().getSeconds());
+    }
   }
 
   /** Event specific subscriber method. */
@@ -182,5 +190,10 @@ public class RemoteExecutionEventListener
         .setLocallySuccessfulRules(localFallbackSuccessfulLocalExecutions.get())
         .setTotalExecutedRules(localFallbackTotalExecutions.get())
         .build();
+  }
+
+  @Override
+  public long getRemoteCpuTime() {
+    return remoteCpuTime.get();
   }
 }

@@ -42,4 +42,7 @@ public interface RemoteExecutionStatsProvider {
 
   /** Fetches stats regarding the local fallback. */
   LocalFallbackStats getLocalFallbackStats();
+
+  /** Metadata for total time spent executing actions remotely. */
+  long getRemoteCpuTime();
 }

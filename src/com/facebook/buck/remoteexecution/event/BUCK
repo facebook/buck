@@ -17,7 +17,9 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/remoteexecution/interfaces:interfaces",
         "//src/com/facebook/buck/util:util",
+        "//third-party/java/remote-apis:remote-apis",
     ],
 )

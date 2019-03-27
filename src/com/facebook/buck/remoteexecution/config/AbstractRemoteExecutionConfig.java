@@ -151,6 +151,10 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
         FORMAT_SESSION_ID_VARIABLE_STRING, reSessionID.getId());
   }
 
+  public boolean isDebug() {
+    return getDelegate().getBooleanValue(SECTION, "debug", false);
+  }
+
   @Value.Derived
   public RemoteExecutionStrategyConfig getStrategyConfig() {
     int workerThreads =

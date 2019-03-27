@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.event;
 
+import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -74,8 +75,12 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
   /** Sends the terminal event of an action [FAIL|SUCCESS]. */
   public static void sendTerminalEvent(
-      BuckEventBus eventBus, State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
-    final Terminal event = new Terminal(state, buildTarget, actionDigest);
+      BuckEventBus eventBus,
+      State state,
+      BuildTarget buildTarget,
+      Optional<Digest> actionDigest,
+      Optional<ExecutedActionMetadata> executedActionMetadata) {
+    final Terminal event = new Terminal(state, buildTarget, actionDigest, executedActionMetadata);
     eventBus.post(event);
   }
 
@@ -94,9 +99,14 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
     private final State state;
     private final BuildTarget buildTarget;
     private final Optional<Digest> actionDigest;
+    private final Optional<ExecutedActionMetadata> executedActionMetadata;
 
     @VisibleForTesting
-    Terminal(State state, BuildTarget buildTarget, Optional<Digest> actionDigest) {
+    Terminal(
+        State state,
+        BuildTarget buildTarget,
+        Optional<Digest> actionDigest,
+        Optional<ExecutedActionMetadata> executedActionMetadata) {
       super(EventKey.unique());
       Preconditions.checkArgument(
           RemoteExecutionActionEvent.isTerminalState(state),
@@ -105,6 +115,7 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
       this.state = state;
       this.buildTarget = buildTarget;
       this.actionDigest = actionDigest;
+      this.executedActionMetadata = executedActionMetadata;
     }
 
     public State getState() {
@@ -117,6 +128,10 @@ public abstract class RemoteExecutionActionEvent extends AbstractBuckEvent
 
     public Optional<Digest> getActionDigest() {
       return actionDigest;
+    }
+
+    public Optional<ExecutedActionMetadata> getExecutedActionMetadata() {
+      return executedActionMetadata;
     }
 
     @Override

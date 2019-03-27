@@ -17,5 +17,6 @@ java_library(
         "//src/com/facebook/buck/util/function:function",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+        "//third-party/java/remote-apis:remote-apis",
     ],
 )

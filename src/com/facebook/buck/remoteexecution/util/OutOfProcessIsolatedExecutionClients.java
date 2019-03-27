@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.util;
 
+import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
 import com.facebook.buck.io.file.MostFiles;
@@ -129,6 +130,11 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
                   @Override
                   public Digest getActionResultDigest() {
                     return protocol.newDigest("", 0);
+                  }
+
+                  @Override
+                  public ExecutedActionMetadata getActionMetadata() {
+                    return ExecutedActionMetadata.getDefaultInstance();
                   }
                 });
           }

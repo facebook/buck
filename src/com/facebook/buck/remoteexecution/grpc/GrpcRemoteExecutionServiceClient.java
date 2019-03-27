@@ -19,6 +19,7 @@ package com.facebook.buck.remoteexecution.grpc;
 import build.bazel.remote.execution.v2.ActionResult;
 import build.bazel.remote.execution.v2.ExecuteRequest;
 import build.bazel.remote.execution.v2.ExecuteResponse;
+import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient;
@@ -235,6 +236,11 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
       @Override
       public Digest getActionResultDigest() {
         return protocol.computeDigest(actionResult.toByteArray());
+      }
+
+      @Override
+      public ExecutedActionMetadata getActionMetadata() {
+        return actionResult.getExecutionMetadata();
       }
     };
   }

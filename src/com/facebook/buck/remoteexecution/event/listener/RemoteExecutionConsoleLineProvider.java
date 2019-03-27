@@ -32,11 +32,13 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
 
   private final RemoteExecutionStatsProvider statsProvider;
   private final String sessionIdInfo;
+  private final boolean isDebug;
 
   public RemoteExecutionConsoleLineProvider(
-      RemoteExecutionStatsProvider statsProvider, String sessionIdInfo) {
+      RemoteExecutionStatsProvider statsProvider, String sessionIdInfo, boolean isDebug) {
     this.statsProvider = statsProvider;
     this.sessionIdInfo = sessionIdInfo;
+    this.isDebug = isDebug;
   }
 
   @Override
@@ -47,40 +49,45 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
     if (!hasFirstRemoteActionStarted(actionsPerState)) {
       return lines.build();
     }
+    if (isDebug) {
+      String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdInfo);
+      lines.add(metadataLine);
 
-    String metadataLine = String.format("[RE] Metadata: Session ID=[%s]", sessionIdInfo);
-    lines.add(metadataLine);
+      String actionsLine =
+          String.format(
+              "[RE] Actions: Local=%d Remote=[%s]",
+              getLocallyBuiltRules(statsProvider.getTotalRulesBuilt(), actionsPerState),
+              getStatesString(actionsPerState));
+      lines.add(actionsLine);
 
-    String actionsLine =
-        String.format(
-            "[RE] Actions: Local=%d Remote=[%s]",
-            getLocallyBuiltRules(statsProvider.getTotalRulesBuilt(), actionsPerState),
-            getStatesString(actionsPerState));
-    lines.add(actionsLine);
+      String casLine =
+          String.format(
+              "[RE] CAS: Upl=[Count:%d Size=%s] Dwl=[Count:%d Size=%s]",
+              statsProvider.getCasUploads(),
+              prettyPrintSize(statsProvider.getCasUploadSizeBytes()),
+              statsProvider.getCasDownloads(),
+              prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
+      lines.add(casLine);
 
-    String casLine =
-        String.format(
-            "[RE] CAS: Upl=[Count:%d Size=%s] Dwl=[Count:%d Size=%s]",
-            statsProvider.getCasUploads(),
-            prettyPrintSize(statsProvider.getCasUploadSizeBytes()),
-            statsProvider.getCasDownloads(),
-            prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
-    lines.add(casLine);
-
-    LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
-    if (localFallbackStats.getLocallyExecutedRules() > 0) {
-      float percentageRetry =
-          (100f * localFallbackStats.getLocallyExecutedRules())
-              / localFallbackStats.getTotalExecutedRules();
+      LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
+      if (localFallbackStats.getLocallyExecutedRules() > 0) {
+        float percentageRetry =
+            (100f * localFallbackStats.getLocallyExecutedRules())
+                / localFallbackStats.getTotalExecutedRules();
+        lines.add(
+            String.format(
+                "[RE] LocalFallback: [fallback_rate=%.2f%% remote=%d local=%d]",
+                percentageRetry,
+                localFallbackStats.getTotalExecutedRules()
+                    - localFallbackStats.getLocallyExecutedRules(),
+                localFallbackStats.getLocallySuccessfulRules()));
+      }
+    } else if (statsProvider.getRemoteCpuTime() > 0) {
       lines.add(
           String.format(
-              "[RE] LocalFallback: [fallback_rate=%.2f%% remote=%d local=%d]",
-              percentageRetry,
-              localFallbackStats.getTotalExecutedRules()
-                  - localFallbackStats.getLocallyExecutedRules(),
-              localFallbackStats.getLocallySuccessfulRules()));
+              "Building with Remote Execution: %d:%02d minutes spent building remotely",
+              statsProvider.getRemoteCpuTime() / 60, statsProvider.getRemoteCpuTime() % 60));
     }
-
     return lines.build();
   }
 

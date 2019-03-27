@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution;
 
+import build.bazel.remote.execution.v2.ExecutedActionMetadata;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
@@ -44,6 +45,8 @@ public interface RemoteExecutionServiceClient {
     RemoteExecutionMetadata getMetadata();
 
     Digest getActionResultDigest();
+
+    ExecutedActionMetadata getActionMetadata();
   }
 
   /**

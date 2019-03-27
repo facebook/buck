@@ -338,7 +338,11 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               boolean isCancelled = cancelled.get() != null;
               if (isCancelled) {
                 RemoteExecutionActionEvent.sendTerminalEvent(
-                    eventBus, State.ACTION_CANCELLED, buildTarget, Optional.of(actionDigest));
+                    eventBus,
+                    State.ACTION_CANCELLED,
+                    buildTarget,
+                    Optional.of(actionDigest),
+                    Optional.empty());
                 return Futures.immediateFuture(null);
               }
               Scope executingScope =
@@ -399,7 +403,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                     ? State.ACTION_CANCELLED
                     : State.ACTION_FAILED,
                 buildTarget,
-                Optional.of(actionDigest));
+                Optional.of(actionDigest),
+                Optional.empty());
           }
         },
         MoreExecutors.directExecutor());
@@ -432,7 +437,11 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           result.getMetadata().toString(),
           actionDigest);
       RemoteExecutionActionEvent.sendTerminalEvent(
-          eventBus, State.ACTION_FAILED, buildTarget, Optional.of(actionDigest));
+          eventBus,
+          State.ACTION_FAILED,
+          buildTarget,
+          Optional.of(actionDigest),
+          Optional.of(result.getActionMetadata()));
       throw StepFailedException.createForFailingStepWithExitCode(
           new AbstractExecutionStep("remote_execution") {
             @Override
@@ -467,7 +476,11 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         ignored -> {
           materializationScope.close();
           RemoteExecutionActionEvent.sendTerminalEvent(
-              eventBus, State.ACTION_SUCCEEDED, buildTarget, Optional.of(actionDigest));
+              eventBus,
+              State.ACTION_SUCCEEDED,
+              buildTarget,
+              Optional.of(actionDigest),
+              Optional.of(result.getActionMetadata()));
           actionOutputs.forEach(
               output ->
                   strategyContext
