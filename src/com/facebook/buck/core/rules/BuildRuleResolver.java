@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
@@ -55,6 +54,4 @@ public interface BuildRuleResolver {
   <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls);
 
   ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets);
-
-  RichStream<BuildRule> getAllRulesStream(Iterable<BuildTarget> targets);
 }

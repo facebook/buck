@@ -18,8 +18,8 @@ package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Streams;
 import java.util.Comparator;
 import java.util.Optional;
 
@@ -57,11 +57,8 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
 
   @Override
   public ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets) {
-    return getAllRulesStream(targets).toImmutableSortedSet(Comparator.naturalOrder());
-  }
-
-  @Override
-  public RichStream<BuildRule> getAllRulesStream(Iterable<BuildTarget> targets) {
-    return RichStream.from(targets).map(this::getRule);
+    return Streams.stream(targets)
+        .map(this::getRule)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
   }
 }
