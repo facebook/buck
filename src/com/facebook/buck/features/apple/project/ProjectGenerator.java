@@ -280,6 +280,7 @@ public class ProjectGenerator {
   private final ImmutableSet<Flavor> appleCxxFlavors;
   private final HalideBuckConfig halideBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final ImmutableMap<Flavor, CxxBuckConfig> platformCxxBuckConfigs;
   private final SwiftBuckConfig swiftBuckConfig;
   private final AppleConfig appleConfig;
   private final FocusedModuleTargetMatcher focusModules;
@@ -377,6 +378,7 @@ public class ProjectGenerator {
     targetConfigNamesBuilder = ImmutableSet.builder();
     this.halideBuckConfig = halideBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.platformCxxBuckConfigs = cxxBuckConfig.getFlavoredConfigs();
     this.appleConfig = appleConfig;
     this.swiftBuckConfig = swiftBuckConfig;
     this.focusModules = focusModules;
@@ -1787,10 +1789,8 @@ public class ProjectGenerator {
                 swiftBuckConfig.getCompilerFlags().orElse(DEFAULT_SWIFTFLAGS),
                 targetSpecificSwiftFlags.build());
 
-        Iterable<String> otherCFlags =
+        Iterable<String> targetCFlags =
             ImmutableList.<String>builder()
-                .addAll(cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS))
-                .addAll(cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS))
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
@@ -1805,10 +1805,8 @@ public class ProjectGenerator {
                         targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
                 .addAll(testingOverlay)
                 .build();
-        Iterable<String> otherCxxFlags =
+        Iterable<String> targetCxxFlags =
             ImmutableList.<String>builder()
-                .addAll(cxxBuckConfig.getCxxflags().orElse(DEFAULT_CXXFLAGS))
-                .addAll(cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS))
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveExportedPreprocessorFlags(targetNode)))
@@ -1832,12 +1830,20 @@ public class ProjectGenerator {
                     .collect(Collectors.joining(" ")))
             .put(
                 "OTHER_CFLAGS",
-                Streams.stream(otherCFlags)
+                Streams.stream(
+                        Iterables.concat(
+                            cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
+                            cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
+                            targetCFlags))
                     .map(Escaper.BASH_ESCAPER)
                     .collect(Collectors.joining(" ")))
             .put(
                 "OTHER_CPLUSPLUSFLAGS",
-                Streams.stream(otherCxxFlags)
+                Streams.stream(
+                        Iterables.concat(
+                            cxxBuckConfig.getCxxflags().orElse(DEFAULT_CXXFLAGS),
+                            cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
+                            targetCxxFlags))
                     .map(Escaper.BASH_ESCAPER)
                     .collect(Collectors.joining(" ")));
 
@@ -1864,14 +1870,29 @@ public class ProjectGenerator {
                     ImmutableList.of(targetNode.getConstructorArg().getPlatformCompilerFlags()),
                     ImmutableList.of(targetNode.getConstructorArg().getPlatformPreprocessorFlags()),
                     collectRecursiveExportedPlatformPreprocessorFlags(targetNode)));
-        for (String platform : platformFlags.keySet()) {
+        for (Flavor platformFlavor : appleCxxFlavors) {
+          Optional<CxxBuckConfig> platformConfig =
+              Optional.ofNullable(platformCxxBuckConfigs.get(platformFlavor));
+          String platform = platformFlavor.getName();
+
+          // The behavior below matches the CxxPlatform behavior where it adds the cxx flags,
+          // then the cxx#platform flags, then the flags for the target
           appendConfigsBuilder
               .put(
                   generateConfigKey("OTHER_CFLAGS", platform),
                   Streams.stream(
                           Iterables.transform(
                               Iterables.concat(
-                                  otherCFlags, Iterables.concat(platformFlags.get(platform))),
+                                  cxxBuckConfig.getCflags().orElse(DEFAULT_CFLAGS),
+                                  platformConfig
+                                      .flatMap(CxxBuckConfig::getCflags)
+                                      .orElse(DEFAULT_CFLAGS),
+                                  cxxBuckConfig.getCppflags().orElse(DEFAULT_CPPFLAGS),
+                                  platformConfig
+                                      .flatMap(CxxBuckConfig::getCppflags)
+                                      .orElse(DEFAULT_CPPFLAGS),
+                                  targetCFlags,
+                                  Iterables.concat(platformFlags.get(platform))),
                               Escaper.BASH_ESCAPER::apply))
                       .collect(Collectors.joining(" ")))
               .put(
@@ -1879,7 +1900,16 @@ public class ProjectGenerator {
                   Streams.stream(
                           Iterables.transform(
                               Iterables.concat(
-                                  otherCxxFlags, Iterables.concat(platformFlags.get(platform))),
+                                  cxxBuckConfig.getCxxflags().orElse(DEFAULT_CPPFLAGS),
+                                  platformConfig
+                                      .flatMap(CxxBuckConfig::getCxxflags)
+                                      .orElse(DEFAULT_CXXFLAGS),
+                                  cxxBuckConfig.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS),
+                                  platformConfig
+                                      .flatMap(CxxBuckConfig::getCxxppflags)
+                                      .orElse(DEFAULT_CXXPPFLAGS),
+                                  targetCxxFlags,
+                                  Iterables.concat(platformFlags.get(platform))),
                               Escaper.BASH_ESCAPER::apply))
                       .collect(Collectors.joining(" ")));
         }

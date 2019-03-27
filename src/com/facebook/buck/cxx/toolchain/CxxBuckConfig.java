@@ -174,6 +174,14 @@ public class CxxBuckConfig {
     this.cxxSection = FLAVORED_CXX_SECTION_PREFIX + flavor.getName();
   }
 
+  public ImmutableMap<Flavor, CxxBuckConfig> getFlavoredConfigs() {
+    ImmutableMap.Builder<Flavor, CxxBuckConfig> builder = ImmutableMap.builder();
+    for (Flavor flav : CxxBuckConfig.getCxxFlavors(this.delegate)) {
+      builder.put(flav, new CxxBuckConfig(this.delegate, flav));
+    }
+    return builder.build();
+  }
+
   /** @return the environment in which {@link BuckConfig} was created. */
   public ImmutableMap<String, String> getEnvironment() {
     return delegate.getEnvironment();

@@ -217,6 +217,8 @@ public class ProjectGeneratorTest {
                 "cxxppflags", "-DDEBUG=1",
                 "cxxflags", "-Wundeclared-selector -Wno-objc-designated-initializers",
                 "ldflags", "-fatal_warnings"),
+            "cxx#appletvos-armv7",
+            ImmutableMap.of("cflags", "-Wno-nullability-completeness"),
             "apple",
             ImmutableMap.of("force_dsym_mode_in_build_with_buck", "false"),
             "swift",
@@ -2462,6 +2464,30 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testAppleLibraryPlatformSpecificCxxFlags() throws IOException {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
+    TargetNode<?> node =
+        AppleLibraryBuilder.createBuilder(buildTarget)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .build();
+
+    ImmutableSet<Flavor> appleFlavors =
+        ImmutableSet.of(
+            InternalFlavor.of("appletvos-armv7"), InternalFlavor.of("iphonesimulator-x86_64"));
+    ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), appleFlavors);
+
+    projectGenerator.createXcodeProjects();
+
+    PBXTarget target =
+        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:lib");
+
+    ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
+    assertEquals(
+        "$(inherited) -Wno-deprecated -Wno-conversion -Wno-nullability-completeness '-DDEBUG=1'",
+        settings.get("OTHER_CFLAGS[sdk=appletvos*][arch=armv7]"));
+  }
+
+  @Test
   public void testAppleLibraryCompilerAndPreprocessorFlags() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(rootPath, "//foo", "lib");
     TargetNode<?> node =
@@ -3277,11 +3303,8 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(
             ImmutableSet.of(node),
-            ImmutableSet.of(node),
-            ProjectGeneratorOptions.builder().build(),
             ImmutableSet.of(
-                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")),
-            Optional.empty());
+                InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("macosx-x86_64")));
 
     projectGenerator.createXcodeProjects();
 
@@ -6698,6 +6721,17 @@ public class ProjectGeneratorTest {
         Optional.empty(),
         ProjectGeneratorOptions.builder().build(),
         ImmutableSet.of(),
+        Optional.empty());
+  }
+
+  private ProjectGenerator createProjectGenerator(
+      Collection<TargetNode<?>> allNodes, ImmutableSet<Flavor> appleCxxFlavors) {
+    return createProjectGenerator(
+        allNodes,
+        allNodes,
+        Optional.empty(),
+        ProjectGeneratorOptions.builder().build(),
+        appleCxxFlavors,
         Optional.empty());
   }
 
