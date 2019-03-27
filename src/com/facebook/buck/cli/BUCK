@@ -221,7 +221,7 @@ java_immutables_library(
 
 java_binary(
     name = "main",
-    main_class = "com.facebook.buck.cli.Main",
+    main_class = "com.facebook.buck.cli.MainWithoutNailgun",
     visibility = [
         "PUBLIC",
     ],

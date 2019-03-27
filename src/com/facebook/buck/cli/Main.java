@@ -2146,11 +2146,6 @@ public final class Main {
         });
   }
 
-  public static void main(String[] args) {
-    new Main(System.out, System.err, System.in, Optional.empty())
-        .runMainThenExit(args, System.nanoTime());
-  }
-
   /** Used to clean up the daemon after running integration tests that exercise it. */
   @VisibleForTesting
   static void resetDaemon() {

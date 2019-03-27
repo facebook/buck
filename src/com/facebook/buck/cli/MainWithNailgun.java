@@ -41,8 +41,8 @@ public class MainWithNailgun {
 
   /**
    * When running as a daemon in the NailGun server, {@link #nailMain(NGContext)} is called instead
-   * of {@link Main#main(String[])} so that the given context can be used to listen for client
-   * disconnections and interrupt command processing when they occur.
+   * of {@link Main} so that the given context can be used to listen for client disconnections and
+   * interrupt command processing when they occur.
    */
   @SuppressWarnings("unused")
   public static void nailMain(NGContext context) {

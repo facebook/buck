@@ -548,8 +548,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
    * LoadingCache#getUnchecked(Object)} in when using stream transformations :(
    *
    * <p>TODO(ttsugrii): the logic of extracting root causes to make them user-friendly should be
-   * happening somewhere in {@link com.facebook.buck.cli.Main#main(String[])}, since this behavior
-   * is not unique to parsing.
+   * happening somewhere in {@link com.facebook.buck.cli.Main}, since this behavior is not unique to
+   * parsing.
    */
   private void propagateRootCause(UncheckedExecutionException e)
       throws IOException, InterruptedException {

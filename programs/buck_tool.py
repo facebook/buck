@@ -398,7 +398,7 @@ class BuckTool(object):
             self._get_java_args(self._get_buck_version_uid(), extra_default_options)
         )
         command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-        command.append("com.facebook.buck.cli.Main")
+        command.append("com.facebook.buck.cli.MainWithoutNailgun")
         command.extend(self._add_args_from_env(argv))
         now = int(round(time.time() * 1000))
         env["BUCK_PYTHON_SPACE_INIT_TIME"] = str(now - self._init_timestamp)
