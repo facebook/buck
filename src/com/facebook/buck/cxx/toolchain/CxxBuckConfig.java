@@ -438,12 +438,20 @@ public class CxxBuckConfig {
         .build();
   }
 
+  public Optional<Boolean> getPublicHeadersSymlinksSetting() {
+    return delegate.getBoolean(cxxSection, EXPORTED_HEADERS_SYMLINKS_ENABLED);
+  }
+
   public boolean getPublicHeadersSymlinksEnabled() {
-    return delegate.getBooleanValue(cxxSection, EXPORTED_HEADERS_SYMLINKS_ENABLED, true);
+    return getPublicHeadersSymlinksSetting().orElse(true);
+  }
+
+  public Optional<Boolean> getPrivateHeadersSymlinksSetting() {
+    return delegate.getBoolean(cxxSection, HEADERS_SYMLINKS_ENABLED);
   }
 
   public boolean getPrivateHeadersSymlinksEnabled() {
-    return delegate.getBooleanValue(cxxSection, HEADERS_SYMLINKS_ENABLED, true);
+    return getPrivateHeadersSymlinksSetting().orElse(true);
   }
 
   public Optional<RuleScheduleInfo> getLinkScheduleInfo() {

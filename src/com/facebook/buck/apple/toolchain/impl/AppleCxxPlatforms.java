@@ -447,6 +447,8 @@ public class AppleCxxPlatforms {
             macros,
             Optional.empty(),
             headerVerification,
+            config.getPublicHeadersSymlinksEnabled(),
+            config.getPrivateHeadersSymlinksEnabled(),
             PicType.PIC);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();
