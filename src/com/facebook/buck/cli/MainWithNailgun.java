@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.Main.DaemonBootstrap;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.nailgun.NGContext;
 import java.io.IOException;
@@ -48,13 +47,13 @@ public class MainWithNailgun {
   public static void nailMain(NGContext context) {
     obtainResourceFileLock();
     try (IdleKiller.CommandExecutionScope ignored =
-        DaemonBootstrap.getDaemonKillers().newCommandExecutionScope()) {
-      DaemonBootstrap.commandStarted();
+        BuckDaemon.getDaemonKillers().newCommandExecutionScope()) {
+      BuckDaemon.commandStarted();
       new Main(context.out, context.err, context.in, Optional.of(context))
           .runMainThenExit(context.getArgs(), System.nanoTime());
     } finally {
       // Reclaim memory after a command finishes.
-      DaemonBootstrap.commandFinished();
+      BuckDaemon.commandFinished();
     }
   }
 

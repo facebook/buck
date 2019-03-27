@@ -601,7 +601,7 @@ class BuckTool(object):
             command.extend(extra_default_options)
             command.extend(jvm_args)
             command.append("com.facebook.buck.cli.bootstrapper.ClassLoaderBootstrapper")
-            command.append("com.facebook.buck.cli.Main$DaemonBootstrap")
+            command.append("com.facebook.buck.cli.BuckDaemon")
             command.append(self._buck_project.get_buckd_transport_address())
             command.append("{0}".format(BUCKD_CLIENT_TIMEOUT_MILLIS))
 
