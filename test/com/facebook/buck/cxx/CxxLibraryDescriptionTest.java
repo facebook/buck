@@ -1211,7 +1211,7 @@ public class CxxLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     Archive lib = (Archive) libBuilder.build(graphBuilder, filesystem, targetGraph);
-    assertThat(lib.getContents(), equalTo(ArchiveContents.THIN));
+    assertThat(lib.getBuildable().getContents(), equalTo(ArchiveContents.THIN));
   }
 
   @Test

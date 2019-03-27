@@ -55,7 +55,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
-import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -233,11 +232,8 @@ public class HalideLibraryDescription
         graphBuilder,
         ruleFinder,
         platform,
-        CxxDescriptionEnhancer.getStaticLibraryPath(
-            projectFilesystem,
+        CxxDescriptionEnhancer.getStaticLibraryName(
             buildTarget,
-            platform.getFlavor(),
-            PicType.PIC,
             Optional.empty(),
             platform.getStaticLibraryExtension(),
             cxxBuckConfig.isUniqueLibraryNameEnabled()),

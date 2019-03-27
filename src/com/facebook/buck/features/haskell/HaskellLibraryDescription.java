@@ -56,7 +56,6 @@ import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
@@ -184,21 +183,20 @@ public class HaskellLibraryDescription
             deps,
             depType,
             hsProfile);
+    String staticLibraryName =
+        CxxDescriptionEnhancer.getStaticLibraryName(
+            target.withoutFlavors(HaskellDescriptionUtils.PROF),
+            Optional.empty(),
+            platform.getCxxPlatform().getStaticLibraryExtension(),
+            hsProfile ? "_p" : "",
+            cxxBuckConfig.isUniqueLibraryNameEnabled());
     return Archive.from(
         target,
         projectFilesystem,
         graphBuilder,
         ruleFinder,
         platform.getCxxPlatform(),
-        CxxDescriptionEnhancer.getStaticLibraryPath(
-            projectFilesystem,
-            target.withoutFlavors(HaskellDescriptionUtils.PROF),
-            platform.getFlavor(),
-            depType == Linker.LinkableDepType.STATIC ? PicType.PDC : PicType.PIC,
-            Optional.empty(),
-            platform.getCxxPlatform().getStaticLibraryExtension(),
-            hsProfile ? "_p" : "",
-            cxxBuckConfig.isUniqueLibraryNameEnabled()),
+        staticLibraryName,
         compileRule.getObjects(),
         // TODO(#20466393): Currently, GHC produces nono-deterministically sized object files.
         // This means that it's possible to get a thin archive fetched from cache originating from

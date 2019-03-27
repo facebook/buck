@@ -43,7 +43,6 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -145,12 +144,9 @@ public class DLibraryDescription
         CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
             buildTarget, cxxPlatform.getFlavor(), pic);
 
-    Path staticLibraryPath =
-        CxxDescriptionEnhancer.getStaticLibraryPath(
-            projectFilesystem,
+    String staticLibraryName =
+        CxxDescriptionEnhancer.getStaticLibraryName(
             buildTarget,
-            cxxPlatform.getFlavor(),
-            pic,
             Optional.empty(),
             cxxPlatform.getStaticLibraryExtension(),
             cxxBuckConfig.isUniqueLibraryNameEnabled());
@@ -161,7 +157,7 @@ public class DLibraryDescription
         graphBuilder,
         ruleFinder,
         cxxPlatform,
-        staticLibraryPath,
+        staticLibraryName,
         compiledSources,
         /* cacheable */ true);
   }

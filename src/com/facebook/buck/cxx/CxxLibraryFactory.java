@@ -311,35 +311,34 @@ public class CxxLibraryFactory {
               .concat(RichStream.from(delegatePostExportedLinkerFlags))
               .toImmutableList();
         },
-        (cxxPlatform, ruleResolverInner, pathResolverInner, ruleFinderInner) -> {
-          return getSharedLibraryNativeLinkTargetInput(
-              buildTarget,
-              projectFilesystem,
-              ruleResolverInner,
-              pathResolverInner,
-              ruleFinderInner,
-              cellRoots,
-              cxxBuckConfig,
-              cxxPlatform,
-              args,
-              cxxDeps.get(ruleResolverInner, cxxPlatform),
-              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                  args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform),
-              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                  args.getExportedLinkerFlags(),
-                  args.getExportedPlatformLinkerFlags(),
-                  cxxPlatform),
-              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                  args.getPostLinkerFlags(), args.getPostPlatformLinkerFlags(), cxxPlatform),
-              CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-                  args.getExportedPostLinkerFlags(),
-                  args.getExportedPostPlatformLinkerFlags(),
-                  cxxPlatform),
-              args.getFrameworks(),
-              args.getLibraries(),
-              transitiveCxxPreprocessorInputFunction,
-              delegate);
-        },
+        (cxxPlatform, ruleResolverInner, pathResolverInner, ruleFinderInner) ->
+            getSharedLibraryNativeLinkTargetInput(
+                buildTarget,
+                projectFilesystem,
+                ruleResolverInner,
+                pathResolverInner,
+                ruleFinderInner,
+                cellRoots,
+                cxxBuckConfig,
+                cxxPlatform,
+                args,
+                cxxDeps.get(ruleResolverInner, cxxPlatform),
+                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                    args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform),
+                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                    args.getExportedLinkerFlags(),
+                    args.getExportedPlatformLinkerFlags(),
+                    cxxPlatform),
+                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                    args.getPostLinkerFlags(), args.getPostPlatformLinkerFlags(), cxxPlatform),
+                CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+                    args.getExportedPostLinkerFlags(),
+                    args.getExportedPostPlatformLinkerFlags(),
+                    cxxPlatform),
+                args.getFrameworks(),
+                args.getLibraries(),
+                transitiveCxxPreprocessorInputFunction,
+                delegate),
         args.getSupportedPlatformsRegex(),
         args.getFrameworks(),
         args.getLibraries(),
@@ -411,7 +410,7 @@ public class CxxLibraryFactory {
 
     Optional<ImmutableList<SourcePath>> pluginObjectPaths =
         delegate.flatMap(p -> p.getObjectFilePaths(buildTarget, graphBuilder, cxxPlatform));
-    pluginObjectPaths.ifPresent(paths -> builder.addAll(paths));
+    pluginObjectPaths.ifPresent(builder::addAll);
 
     return builder.build();
   }
@@ -457,7 +456,7 @@ public class CxxLibraryFactory {
     delegate.ifPresent(
         d ->
             d.getPrivateHeaderSymlinkTree(buildTarget, graphBuilder, cxxPlatform)
-                .ifPresent(h -> privateHeaderSymlinkTrees.add(h)));
+                .ifPresent(privateHeaderSymlinkTrees::add));
 
     // Create rule to build the object files.
     ImmutableMultimap<CxxSource.Type, Arg> compilerFlags =
@@ -802,12 +801,9 @@ public class CxxLibraryFactory {
       return new NoopBuildRule(staticTarget, projectFilesystem);
     }
 
-    Path staticLibraryPath =
-        CxxDescriptionEnhancer.getStaticLibraryPath(
-            projectFilesystem,
+    String staticLibraryName =
+        CxxDescriptionEnhancer.getStaticLibraryName(
             buildTarget,
-            cxxPlatform.getFlavor(),
-            pic,
             args.getStaticLibraryBasename(),
             cxxPlatform.getStaticLibraryExtension(),
             cxxBuckConfig.isUniqueLibraryNameEnabled());
@@ -817,7 +813,7 @@ public class CxxLibraryFactory {
         graphBuilder,
         ruleFinder,
         cxxPlatform,
-        staticLibraryPath,
+        staticLibraryName,
         ImmutableList.copyOf(objects),
         /* cacheable */ true);
   }

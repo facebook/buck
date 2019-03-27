@@ -355,7 +355,7 @@ public class HaskellDescriptionUtils {
                 graphBuilder,
                 ruleFinder,
                 platform.getCxxPlatform(),
-                BuildTargetPaths.getGenPath(projectFilesystem, emptyArchiveTarget, "%s/libempty.a"),
+                "libempty.a",
                 emptyCompiledModule.getObjects(),
                 /* cacheable */ true));
     argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
