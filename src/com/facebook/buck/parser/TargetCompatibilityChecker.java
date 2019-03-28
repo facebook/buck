@@ -16,6 +16,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ class TargetCompatibilityChecker {
         argWithTargetCompatible
             .getTargetCompatibleWith()
             .stream()
+            .map(BuildTarget::getUnconfiguredBuildTarget)
             .map(constraintResolver::getConstraintValue)
             .collect(Collectors.toList()));
   }

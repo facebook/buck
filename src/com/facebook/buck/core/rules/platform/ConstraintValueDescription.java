@@ -53,7 +53,8 @@ public class ConstraintValueDescription
       Cell cell,
       UnconfiguredBuildTarget buildTarget,
       ConstraintValueArg arg) {
-    return new ConstraintValueRule(buildTarget, arg.getName(), arg.getConstraintSetting());
+    return new ConstraintValueRule(
+        buildTarget, arg.getName(), arg.getConstraintSetting().getUnconfiguredBuildTarget());
   }
 
   @BuckStyleImmutable

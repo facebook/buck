@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 
@@ -25,10 +24,10 @@ public class ConstraintValueRule implements ConfigurationRule {
 
   private final UnconfiguredBuildTarget buildTarget;
   private final String name;
-  private final BuildTarget constraintSetting;
+  private final UnconfiguredBuildTarget constraintSetting;
 
   public ConstraintValueRule(
-      UnconfiguredBuildTarget buildTarget, String name, BuildTarget constraintSetting) {
+      UnconfiguredBuildTarget buildTarget, String name, UnconfiguredBuildTarget constraintSetting) {
     this.buildTarget = buildTarget;
     this.name = name;
     this.constraintSetting = constraintSetting;
@@ -43,7 +42,7 @@ public class ConstraintValueRule implements ConfigurationRule {
     return name;
   }
 
-  public BuildTarget getConstraintSetting() {
+  public UnconfiguredBuildTarget getConstraintSetting() {
     return constraintSetting;
   }
 }

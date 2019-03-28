@@ -17,8 +17,8 @@ package com.facebook.buck.core.rules.platform;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import org.junit.Rule;
@@ -38,7 +38,7 @@ public class RuleBasedConstraintResolverTest {
     thrown.expectMessage("//dummy:target is used as constraint_setting, but has wrong type");
 
     ruleBasedConstraintResolver.getConstraintSetting(
-        BuildTargetFactory.newInstance("//dummy:target"));
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//dummy:target"));
   }
 
   @Test
@@ -50,13 +50,15 @@ public class RuleBasedConstraintResolverTest {
     thrown.expectMessage("//dummy:target is used as constraint_value, but has wrong type");
 
     ruleBasedConstraintResolver.getConstraintValue(
-        BuildTargetFactory.newInstance("//dummy:target"));
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//dummy:target"));
   }
 
   @Test
   public void testGettingConstraintValueThrowsWithWrongConstraintSettingRuleType() {
-    BuildTarget constraintSettingTarget = BuildTargetFactory.newInstance("//:setting");
-    BuildTarget constraintValueTarget = BuildTargetFactory.newInstance("//:value");
+    UnconfiguredBuildTarget constraintSettingTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//:setting");
+    UnconfiguredBuildTarget constraintValueTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//:value");
 
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(
@@ -77,13 +79,15 @@ public class RuleBasedConstraintResolverTest {
 
   @Test
   public void testGettingConstraintsReturnCorrectObject() {
-    BuildTarget constraintSettingTarget = BuildTargetFactory.newInstance("//:setting");
-    BuildTarget constraintValueTarget = BuildTargetFactory.newInstance("//:value");
+    UnconfiguredBuildTarget constraintSettingTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//:setting");
+    UnconfiguredBuildTarget constraintValueTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//:value");
 
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {
-              if (buildTarget.equals(constraintSettingTarget.getUnconfiguredBuildTarget())) {
+              if (buildTarget.equals(constraintSettingTarget)) {
                 return new ConstraintSettingRule(buildTarget, buildTarget.getShortName());
               } else {
                 return new ConstraintValueRule(
@@ -97,9 +101,7 @@ public class RuleBasedConstraintResolverTest {
         ruleBasedConstraintResolver.getConstraintSetting(constraintSettingTarget);
 
     assertEquals(constraintSetting, constraintValue.getConstraintSetting());
-    assertEquals(
-        constraintSettingTarget.getUnconfiguredBuildTarget(), constraintSetting.getBuildTarget());
-    assertEquals(
-        constraintValueTarget.getUnconfiguredBuildTarget(), constraintValue.getBuildTarget());
+    assertEquals(constraintSettingTarget, constraintSetting.getBuildTarget());
+    assertEquals(constraintValueTarget, constraintValue.getBuildTarget());
   }
 }

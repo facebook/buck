@@ -67,9 +67,7 @@ public class TargetCompatibilityCheckerTest {
                 return new ConstraintSettingRule(buildTarget, buildTarget.getShortName());
               } else {
                 return new ConstraintValueRule(
-                    buildTarget,
-                    buildTarget.getShortName(),
-                    cs1.getBuildTarget().configure(EmptyTargetConfiguration.INSTANCE));
+                    buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());
               }
             });
   }

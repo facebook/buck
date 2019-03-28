@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
@@ -82,9 +81,9 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
   }
 
   @Override
-  public ConstraintSetting getConstraintSetting(BuildTarget buildTarget) {
+  public ConstraintSetting getConstraintSetting(UnconfiguredBuildTarget buildTarget) {
     try {
-      return constraintSettingCache.getUnchecked(buildTarget.getUnconfiguredBuildTarget());
+      return constraintSettingCache.getUnchecked(buildTarget);
     } catch (UncheckedExecutionException e) {
       Throwables.throwIfUnchecked(e.getCause());
       throw new RuntimeException(e.getCause());
@@ -92,9 +91,9 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
   }
 
   @Override
-  public ConstraintValue getConstraintValue(BuildTarget buildTarget) {
+  public ConstraintValue getConstraintValue(UnconfiguredBuildTarget buildTarget) {
     try {
-      return constraintValueCache.getUnchecked(buildTarget.getUnconfiguredBuildTarget());
+      return constraintValueCache.getUnchecked(buildTarget);
     } catch (UncheckedExecutionException e) {
       Throwables.throwIfUnchecked(e.getCause());
       throw new RuntimeException(e.getCause());
