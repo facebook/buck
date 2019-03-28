@@ -13,6 +13,7 @@ java_library(
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/select/impl:impl",
         "//test/com/facebook/buck/core/cell:testutil",
         "//third-party/java/guava:guava",

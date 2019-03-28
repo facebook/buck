@@ -95,6 +95,11 @@ public class SelectorListCoercer<T> implements TypeCoercer<SelectorList<T>> {
       throws CoerceFailedException {
     ListWithSelects list = (ListWithSelects) object;
     return selectorListFactory.create(
-        cellRoots, filesystem, pathRelativeToProjectRoot, list.getElements(), elementTypeCoercer);
+        cellRoots,
+        filesystem,
+        pathRelativeToProjectRoot,
+        targetConfiguration,
+        list.getElements(),
+        elementTypeCoercer);
   }
 }

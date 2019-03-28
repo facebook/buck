@@ -16,6 +16,7 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -41,6 +42,7 @@ public class TestSelectorListFactory {
               TestCellPathResolver.get(projectFilesystem),
               projectFilesystem,
               projectFilesystem.getRootPath(),
+              EmptyTargetConfiguration.INSTANCE,
               selectorAttributes,
               elementTypeCoercer);
       selectorBuilder.add(selector);

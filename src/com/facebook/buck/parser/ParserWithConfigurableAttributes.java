@@ -184,6 +184,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             cellPathResolver,
             projectFilesystem,
             buildTarget.getBasePath(),
+            buildTarget.getTargetConfiguration(),
             list.getElements(),
             JsonTypeConcatenatingCoercerFactory.createForType(list.getType()));
 

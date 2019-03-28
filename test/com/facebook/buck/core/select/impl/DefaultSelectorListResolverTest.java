@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
@@ -276,6 +277,7 @@ public class DefaultSelectorListResolverTest {
             TestCellPathResolver.get(projectFilesystem),
             projectFilesystem,
             projectFilesystem.getRootPath(),
+            EmptyTargetConfiguration.INSTANCE,
             ImmutableMap.of("//x:y", Lists.newArrayList("flavor11", "flavor12")),
             flavorListTypeCoercer,
             "Custom message");

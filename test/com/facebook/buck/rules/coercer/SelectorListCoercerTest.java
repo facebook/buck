@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -95,6 +96,7 @@ public class SelectorListCoercerTest {
             cellPathResolver,
             projectFilesystem,
             projectFilesystem.getRootPath(),
+            EmptyTargetConfiguration.INSTANCE,
             Lists.newArrayList(selectorValue, Lists.newArrayList("test3")),
             elementTypeCoercer);
 
