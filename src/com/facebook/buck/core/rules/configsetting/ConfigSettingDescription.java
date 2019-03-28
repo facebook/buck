@@ -17,7 +17,6 @@
 package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -69,6 +68,6 @@ public class ConfigSettingDescription implements ConfigurationRuleDescription<Co
 
     ImmutableMap<String, String> getValues();
 
-    ImmutableSet<BuildTarget> getConstraintValues();
+    ImmutableSet<UnconfiguredBuildTarget> getConstraintValues();
   }
 }

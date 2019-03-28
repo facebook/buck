@@ -17,7 +17,6 @@
 package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -40,12 +39,12 @@ public class ConfigSettingSelectable implements Selectable {
 
   private final UnconfiguredBuildTarget buildTarget;
   private final ImmutableMap<String, String> values;
-  private final ImmutableSet<BuildTarget> constraintValues;
+  private final ImmutableSet<UnconfiguredBuildTarget> constraintValues;
 
   public ConfigSettingSelectable(
       UnconfiguredBuildTarget buildTarget,
       ImmutableMap<String, String> values,
-      ImmutableSet<BuildTarget> constraintValues) {
+      ImmutableSet<UnconfiguredBuildTarget> constraintValues) {
     this.buildTarget = buildTarget;
     this.values = values;
     this.constraintValues = constraintValues;
@@ -107,7 +106,7 @@ public class ConfigSettingSelectable implements Selectable {
       BuckConfig buckConfig,
       ConstraintResolver constraintResolver,
       Platform targetPlatform,
-      Collection<BuildTarget> constraintValuesTargets,
+      Collection<UnconfiguredBuildTarget> constraintValuesTargets,
       ImmutableMap<String, String> values) {
     for (Map.Entry<String, String> entry : values.entrySet()) {
       if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
@@ -117,7 +116,6 @@ public class ConfigSettingSelectable implements Selectable {
     ImmutableList<ConstraintValue> constraintValues =
         constraintValuesTargets
             .stream()
-            .map(BuildTarget::getUnconfiguredBuildTarget)
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableList.toImmutableList());
     return targetPlatform.matchesAll(constraintValues);

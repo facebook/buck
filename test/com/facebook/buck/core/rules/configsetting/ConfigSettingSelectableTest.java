@@ -18,8 +18,6 @@ package com.facebook.buck.core.rules.configsetting;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.google.common.collect.ImmutableMap;
@@ -31,8 +29,10 @@ public class ConfigSettingSelectableTest {
       UnconfiguredBuildTargetFactoryForTests.newInstance("//a:b");
   private final UnconfiguredBuildTarget selectable2 =
       UnconfiguredBuildTargetFactoryForTests.newInstance("//a:c");
-  private final BuildTarget constraintTarget1 = BuildTargetFactory.newInstance("//a:x");
-  private final BuildTarget constraintTarget2 = BuildTargetFactory.newInstance("//a:y");
+  private final UnconfiguredBuildTarget constraintTarget1 =
+      UnconfiguredBuildTargetFactoryForTests.newInstance("//a:x");
+  private final UnconfiguredBuildTarget constraintTarget2 =
+      UnconfiguredBuildTargetFactoryForTests.newInstance("//a:y");
 
   @Test
   public void refinesReturnsTrueWithEmptyValues() {

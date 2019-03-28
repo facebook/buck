@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.rules.configsetting;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.select.ProvidesSelectable;
@@ -34,7 +33,7 @@ public class ConfigSettingRule implements ConfigurationRule, ProvidesSelectable 
   public ConfigSettingRule(
       UnconfiguredBuildTarget buildTarget,
       ImmutableMap<String, String> values,
-      ImmutableSet<BuildTarget> constraintValues) {
+      ImmutableSet<UnconfiguredBuildTarget> constraintValues) {
     this.buildTarget = buildTarget;
     configSettingSelectable = new ConfigSettingSelectable(buildTarget, values, constraintValues);
   }
