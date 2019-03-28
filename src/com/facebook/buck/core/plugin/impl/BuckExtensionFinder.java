@@ -32,9 +32,6 @@ import org.pf4j.PluginWrapper;
 /**
  * This {@link ExtensionFinder} tries to load extensions using {@link ServiceLoader}.
  *
- * <p>Right now it doesn't support loading extensions from plugins, it only loads extensions from
- * classpath.
- *
  * <p>The extensions are the classes annotated with the {@link Extension} annotation.
  */
 class BuckExtensionFinder implements ExtensionFinder {
