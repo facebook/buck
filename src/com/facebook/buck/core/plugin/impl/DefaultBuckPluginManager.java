@@ -21,13 +21,20 @@ import com.facebook.buck.core.util.log.Logger;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.pf4j.CompoundPluginDescriptorFinder;
+import org.pf4j.CompoundPluginRepository;
 import org.pf4j.DefaultPluginManager;
+import org.pf4j.DefaultPluginRepository;
 import org.pf4j.ExtensionFinder;
 import org.pf4j.JarPluginLoader;
+import org.pf4j.JarPluginRepository;
 import org.pf4j.ManifestPluginDescriptorFinder;
 import org.pf4j.PluginLoader;
+import org.pf4j.PluginRepository;
 import org.pf4j.VersionManager;
 
 public class DefaultBuckPluginManager extends DefaultPluginManager implements BuckPluginManager {
@@ -59,6 +66,25 @@ public class DefaultBuckPluginManager extends DefaultPluginManager implements Bu
   @Override
   protected CompoundPluginDescriptorFinder createPluginDescriptorFinder() {
     return new CompoundPluginDescriptorFinder().add(new ManifestPluginDescriptorFinder());
+  }
+
+  @Override
+  protected PluginRepository createPluginRepository() {
+    CompoundPluginRepository repository =
+        new CompoundPluginRepository()
+            .add(new DefaultPluginRepository(getPluginsRoot(), isDevelopment()))
+            .add(new JarPluginRepository(getPluginsRoot()));
+
+    @Nullable String externalPluginsRoot = System.getProperty("buck.externalPluginsDir");
+
+    if (externalPluginsRoot != null) {
+      Path externalPluginsRootPath = Paths.get(externalPluginsRoot).toAbsolutePath();
+      repository
+          .add(new DefaultPluginRepository(externalPluginsRootPath, isDevelopment()))
+          .add(new JarPluginRepository(externalPluginsRootPath));
+    }
+
+    return repository;
   }
 
   @Override

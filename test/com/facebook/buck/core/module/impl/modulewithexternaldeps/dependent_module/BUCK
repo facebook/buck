@@ -1,0 +1,11 @@
+load("//tools/build_rules:module_rules.bzl", "buck_module")
+
+buck_module(
+    name = "dependent_module",
+    srcs = glob(["*.java"]),
+    provided_deps = [
+        "//test/com/facebook/buck/core/module/impl:test_extension",
+        "//test/com/facebook/buck/core/module/impl/modulewithexternaldeps/test_module:test_module",
+    ],
+    visibility = ["PUBLIC"],
+)

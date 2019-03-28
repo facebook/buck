@@ -1,0 +1,88 @@
+java_library(
+    name = "modulewithexternaldeps",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/module/impl:impl",
+        "//src/com/facebook/buck/core/plugin/impl:impl",
+        "//test/com/facebook/buck/core/module/impl:test_extension",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+        "//third-party/java/slf4j:slf4j-api",
+    ],
+)
+
+java_binary(
+    name = "modulewithexternaldeps-jar",
+    main_class = "com.facebook.buck.core.module.impl.modulewithexternaldeps.ModuleWithExternalDependenciesTest",
+    deps = [
+        ":modulewithexternaldeps",
+        "//third-party/java/slf4j:slf4j",
+    ],
+)
+
+export_file(
+    name = "known-hash.txt",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+# Replace real hash in the module jar with a known value
+genrule(
+    name = "test_module-jar-with-known-hash",
+    out = "test_module.jar",
+    cmd = " ".join(
+        [
+            "$(exe //py/buck/zip:append_with_copy)",
+            "$(location {}) $OUT".format(
+                "//test/com/facebook/buck/core/module/impl/modulewithexternaldeps/test_module:test_module-module",
+            ),
+            "META-INF/module-binary-hash.txt $(location :{})".format(
+                "known-hash.txt",
+            ),
+        ],
+    ),
+)
+
+# Replace real hash in the module jar with a known value
+genrule(
+    name = "dependent_module-jar-with-known-hash",
+    out = "dependent_module.jar",
+    cmd = " ".join(
+        [
+            "$(exe //py/buck/zip:append_with_copy)",
+            "$(location {}) $OUT".format(
+                "//test/com/facebook/buck/core/module/impl/modulewithexternaldeps/dependent_module:dependent_module-module",
+            ),
+            "META-INF/module-binary-hash.txt $(location :{})".format(
+                "known-hash.txt",
+            ),
+        ],
+    ),
+)
+
+# Copy modules to a place where they can be loaded by plugin manager
+genrule(
+    name = "copy-test-module",
+    out = "modules",
+    cmd = "mkdir -p $OUT; cp $(location :test_module-jar-with-known-hash) $OUT",
+    cmd_exe = "mkdir $OUT && copy $(location :test_module-jar-with-known-hash) $OUT",
+)
+
+genrule(
+    name = "copy-dependent-module",
+    out = "modules",
+    cmd = "mkdir -p $OUT; cp $(location :dependent_module-jar-with-known-hash) $OUT",
+    cmd_exe = "mkdir $OUT && copy $(location :dependent_module-jar-with-known-hash) $OUT",
+)
+
+# Running tests as a shell script to reconstruct the layout of modules and how they are loaded
+python_test(
+    name = "modulewithexternaldeps-test",
+    srcs = [
+        "//test/com/facebook/buck/core/module/impl:test_app.py",
+    ],
+    env = {
+        "CMD": "java -Dpf4j.pluginsDir=$(location :copy-test-module) -Dbuck.externalPluginsDir=$(location :copy-dependent-module) -jar $(location :modulewithexternaldeps-jar)",
+    },
+)
