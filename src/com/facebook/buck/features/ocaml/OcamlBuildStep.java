@@ -18,6 +18,7 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
@@ -43,6 +44,7 @@ public class OcamlBuildStep implements Step {
   private final BuildContext buildContext;
   private final ProjectFilesystem filesystem;
   private final OcamlBuildContext ocamlContext;
+  private final BuildTarget buildTarget;
   private final ImmutableMap<String, String> cCompilerEnvironment;
   private final ImmutableList<String> cCompiler;
   private final ImmutableMap<String, String> cxxCompilerEnvironment;
@@ -56,6 +58,7 @@ public class OcamlBuildStep implements Step {
       BuildContext buildContext,
       ProjectFilesystem filesystem,
       OcamlBuildContext ocamlContext,
+      BuildTarget buildTarget,
       ImmutableMap<String, String> cCompilerEnvironment,
       ImmutableList<String> cCompiler,
       ImmutableMap<String, String> cxxCompilerEnvironment,
@@ -64,6 +67,7 @@ public class OcamlBuildStep implements Step {
     this.buildContext = buildContext;
     this.filesystem = filesystem;
     this.ocamlContext = ocamlContext;
+    this.buildTarget = buildTarget;
     this.cCompilerEnvironment = cCompilerEnvironment;
     this.cCompiler = cCompiler;
     this.cxxCompilerEnvironment = cxxCompilerEnvironment;
@@ -201,8 +205,9 @@ public class OcamlBuildStep implements Step {
       Step compileStep =
           new OcamlCCompileStep(
               getResolver(),
-              filesystem.getRootPath(),
+              filesystem,
               new OcamlCCompileStep.Args(
+                  buildTarget,
                   cCompilerEnvironment,
                   cCompiler,
                   ocamlContext.getOcamlCompiler().get(),
@@ -229,13 +234,14 @@ public class OcamlBuildStep implements Step {
 
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
-            filesystem.getRootPath(),
+            filesystem,
             cxxCompilerEnvironment,
             cxxCompiler,
             ocamlContext.getOcamlCompiler().get().getCommandPrefix(getResolver()),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
             ocamlContext.getNativeOutput(),
+            OcamlUtil.makeLinkerArgFilePath(filesystem, buildTarget),
             ocamlContext.getNativeLinkableInput().getArgs(),
             ocamlContext.getCLinkableInput().getArgs(),
             linkerInputs,
@@ -255,13 +261,14 @@ public class OcamlBuildStep implements Step {
 
     OcamlLinkStep linkStep =
         OcamlLinkStep.create(
-            filesystem.getRootPath(),
+            filesystem,
             cxxCompilerEnvironment,
             cxxCompiler,
             ocamlContext.getOcamlBytecodeCompiler().get().getCommandPrefix(getResolver()),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
             ocamlContext.getBytecodeOutput(),
+            OcamlUtil.makeLinkerArgFilePath(filesystem, buildTarget),
             ocamlContext.getBytecodeLinkableInput().getArgs(),
             ocamlContext.getCLinkableInput().getArgs(),
             linkerInputs,

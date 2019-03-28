@@ -81,6 +81,7 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context,
                 getProjectFilesystem(),
                 ocamlContext,
+                getBuildTarget(),
                 cCompiler.getEnvironment(context.getSourcePathResolver()),
                 cCompiler.getCommandPrefix(context.getSourcePathResolver()),
                 cxxCompiler.getEnvironment(context.getSourcePathResolver()),

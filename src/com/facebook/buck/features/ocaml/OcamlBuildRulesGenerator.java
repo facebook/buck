@@ -200,10 +200,10 @@ public class OcamlBuildRulesGenerator {
       Path outputPath = ocamlContext.getCOutput(pathResolver.getRelativePath(cSrc));
       OcamlCCompile compileRule =
           new OcamlCCompile(
-              createCCompileBuildTarget(buildTarget, name),
               projectFilesystem,
               cCompileParams,
               new OcamlCCompileStep.Args(
+                  createCCompileBuildTarget(buildTarget, name),
                   cCompiler.getEnvironment(pathResolver),
                   cCompiler.getCommandPrefix(pathResolver),
                   ocamlContext.getOcamlCompiler().get(),

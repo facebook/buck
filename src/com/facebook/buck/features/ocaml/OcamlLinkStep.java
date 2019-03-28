@@ -18,6 +18,7 @@ package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.MoreIterables;
@@ -30,13 +31,14 @@ import java.util.Optional;
 
 /** OCaml linking step. Dependencies and inputs should be topologically ordered */
 public class OcamlLinkStep extends ShellStep {
-
+  public final ProjectFilesystem filesystem;
   public final ImmutableMap<String, String> environment;
   public final ImmutableList<String> cxxCompiler;
   public final ImmutableList<String> ocamlCompilerCommandPrefix;
   public final ImmutableList<String> flags;
   public final Optional<String> stdlib;
   public final Path output;
+  public final Path argFile;
   public final ImmutableList<String> cDepInput;
   public final ImmutableList<Path> input;
   public final boolean isLibrary;
@@ -44,14 +46,16 @@ public class OcamlLinkStep extends ShellStep {
 
   private final ImmutableList<String> ocamlInput;
 
+  /** Factory method for OcamlLinkStep. */
   public static OcamlLinkStep create(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxCompiler,
       ImmutableList<String> ocamlCompilerCommandPrefix,
       ImmutableList<Arg> flags,
       Optional<String> stdlib,
       Path output,
+      Path argFile,
       ImmutableList<Arg> depInput,
       ImmutableList<Arg> cDepInput,
       ImmutableList<Path> input,
@@ -72,13 +76,14 @@ public class OcamlLinkStep extends ShellStep {
     ImmutableList<String> ocamlInput = ocamlInputBuilder.build();
 
     return new OcamlLinkStep(
-        workingDirectory,
+        filesystem,
         environment,
         cxxCompiler,
         ocamlCompilerCommandPrefix,
         Arg.stringify(flags, pathResolver),
         stdlib,
         output,
+        argFile,
         ocamlInput,
         FluentIterable.from(cDepInput)
             .transformAndConcat(a -> Arg.stringifyList(a, pathResolver))
@@ -89,25 +94,28 @@ public class OcamlLinkStep extends ShellStep {
   }
 
   private OcamlLinkStep(
-      Path workingDirectory,
+      ProjectFilesystem filesystem,
       ImmutableMap<String, String> environment,
       ImmutableList<String> cxxCompiler,
       ImmutableList<String> ocamlCompilerCommandPrefix,
       ImmutableList<String> flags,
       Optional<String> stdlib,
       Path output,
+      Path argFile,
       ImmutableList<String> ocamlInput,
       ImmutableList<String> cDepInput,
       ImmutableList<Path> input,
       boolean isLibrary,
       boolean isBytecode) {
-    super(workingDirectory);
+    super(filesystem.getRootPath());
+    this.filesystem = filesystem;
     this.environment = environment;
     this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;
     this.cxxCompiler = cxxCompiler;
     this.flags = flags;
     this.stdlib = stdlib;
     this.output = output;
+    this.argFile = argFile;
     this.cDepInput = cDepInput;
     this.input = input;
     this.isLibrary = isLibrary;
@@ -140,11 +148,15 @@ public class OcamlLinkStep extends ShellStep {
     } else if (isBytecode) {
       cmd.add("-custom");
     }
+
+    ImmutableList<String> linkerArgs =
+        OcamlUtil.makeArgFile(filesystem, argFile, ocamlCompilerCommandPrefix, "cclib", cDepInput);
+
     return cmd.add("-o", output.toString())
         .addAll(flags)
         .addAll(ocamlInput)
         .addAll(input.stream().map(Object::toString).iterator())
-        .addAll(MoreIterables.zipAndConcat(Iterables.cycle("-cclib"), cDepInput))
+        .addAll(linkerArgs)
         .build();
   }
 

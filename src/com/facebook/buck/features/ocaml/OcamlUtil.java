@@ -17,16 +17,25 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
+import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Predicate;
 
 /** Utility functions */
 public class OcamlUtil {
+  private static final Logger LOG = Logger.get(OcamlUtil.class);
+
   private OcamlUtil() {}
 
   /**
@@ -61,6 +70,61 @@ public class OcamlUtil {
           }
           return false;
         };
+  }
+
+  /** Creates a file path for a linker arg file */
+  public static Path makeLinkerArgFilePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
+    return makeArgFilePath(filesystem, buildTarget, "cclib");
+  }
+
+  /** Creates a file path for an arg file */
+  public static Path makeArgFilePath(
+      ProjectFilesystem filesystem, BuildTarget buildTarget, String prefix) {
+    String scratchFileName = String.format("%s.argfile", prefix);
+
+    // NOTE: the single %s format placeholder is required by the getScratchPath method
+    String scratchFileNameFormat = "%s" + scratchFileName;
+    return BuildTargetPaths.getScratchPath(filesystem, buildTarget, scratchFileNameFormat);
+  }
+
+  /** Creates an arg file with a given list of flags */
+  public static ImmutableList<String> makeArgFile(
+      ProjectFilesystem filesystem,
+      Path argFile,
+      ImmutableList<String> toolPrefix,
+      String flag,
+      Iterable<String> flagList) {
+    ImmutableList<String> immutableFlags;
+
+    try {
+      String content = Joiner.on(' ').join(flagList);
+      LOG.verbose("The flags file content is %s", content);
+      LOG.info("The temporary flags file is %s", argFile.toString());
+
+      Path parent = argFile.getParent();
+      LOG.info("The parent path is %s", parent);
+
+      filesystem.mkdirs(parent);
+
+      Path fileName = argFile.getFileName();
+      LOG.info("The file name is %s", fileName.toString());
+
+      argFile = filesystem.createTempFile(parent, fileName.toString(), ".flags");
+
+      filesystem.writeContentsToPath(content, argFile);
+      LOG.info("Wrote the flags to path %s", argFile.toString());
+
+      immutableFlags = ImmutableList.of("-" + flag, "@" + argFile.toString());
+    } catch (IOException ioe) {
+      LOG.error("Couldn't create an arg file.");
+      throw new BuckUncheckedExecutionException(ioe, "When creating arg file at %s", argFile);
+    }
+
+    LOG.info(
+        "The '%s' flags: '%s'",
+        Joiner.on(' ').join(toolPrefix), Joiner.on(' ').join(immutableFlags));
+
+    return immutableFlags;
   }
 
   static ImmutableSet<Path> getExtensionVariants(Path output, String... extensions) {
