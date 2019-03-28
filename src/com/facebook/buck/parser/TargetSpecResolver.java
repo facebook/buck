@@ -32,7 +32,6 @@ import com.facebook.buck.core.graph.transformation.GraphTransformationStage;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.event.BuckEventBus;
@@ -256,9 +255,7 @@ public class TargetSpecResolver implements AutoCloseable {
       targetFutures.add(
           Futures.transform(
               targetNodeProvider.getTargetNodeJob(
-                  buildTargetSpec
-                      .getUnconfiguredBuildTarget()
-                      .configure(EmptyTargetConfiguration.INSTANCE)),
+                  buildTargetSpec.getUnconfiguredBuildTarget().configure(targetConfiguration)),
               node -> {
                 ImmutableSet<BuildTarget> buildTargets =
                     applySpecFilter(spec, ImmutableList.of(node), flavorEnhancer, targetNodeFilter);
