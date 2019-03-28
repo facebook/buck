@@ -1,5 +1,5 @@
 java_library(
-    name = "moduleclass",
+    name = "jarwithouthash",
     srcs = glob(["*.java"]),
     deps = [
         "//src/com/facebook/buck/core/module/impl:impl",
@@ -12,10 +12,10 @@ java_library(
 )
 
 java_binary(
-    name = "moduleclass-jar",
+    name = "jarwithouthash-jar",
     main_class = "com.facebook.buck.core.module.impl.jarwithouthash.ModuleClassTest",
     deps = [
-        ":moduleclass",
+        ":jarwithouthash",
         "//third-party/java/slf4j:slf4j",
     ],
 )
@@ -29,13 +29,12 @@ genrule(
 )
 
 # Running tests as a shell script to reconstruct the layout of modules and how they are loaded
-sh_test(
-    name = "moduleclass-test",
-    args = [
-        "java",
-        "-Dpf4j.pluginsDir=$(location :copy-modules)",
-        "-jar",
-        "$(location :moduleclass-jar)",
+python_test(
+    name = "jarwithouthash-test",
+    srcs = [
+        "//test/com/facebook/buck/core/module/impl:test_app.py",
     ],
-    test = "//test/com/facebook/buck/core/module/impl:run.sh",
+    env = {
+        "CMD": "java -Dpf4j.pluginsDir=$(location :copy-modules) -jar $(location :jarwithouthash-jar)",
+    },
 )

@@ -13,17 +13,17 @@ java_library(
     ],
 )
 
-export_file(
-    name = "run.sh",
-    visibility = [
-        "//test/com/facebook/buck/core/module/impl/...",
-    ],
-)
-
 standard_java_test(
     name = "impl",
     deps = [
         "//src/com/facebook/buck/core/module/impl:impl",
         "//third-party/java/junit:junit",
+    ],
+)
+
+export_file(
+    name = "test_app.py",
+    visibility = [
+        "//test/com/facebook/buck/core/module/impl/...",
     ],
 )

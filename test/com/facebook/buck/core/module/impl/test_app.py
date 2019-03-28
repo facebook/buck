@@ -1,5 +1,4 @@
-#!/bin/bash
-# Copyright 2018-present Facebook, Inc.
+# Copyright 2019-present Facebook, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may
 # not use this file except in compliance with the License. You may obtain
@@ -13,8 +12,20 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import os
+import subprocess
+import unittest
 
-set -e
 
-echo "Running $@"
-$@
+class TestApp(unittest.TestCase):
+    """
+    This is a Python test that allows to do testing of arbitrary applications
+
+    The main purpose of using this approach is to provide an ability to run tests on Windows
+    (which doesn't support sh_test).
+
+    The command is passed to this test using `CMD` environment variable.
+    """
+
+    def test_app(self):
+        self.assertEquals(0, subprocess.call(os.environ["CMD"].split(" ")))
