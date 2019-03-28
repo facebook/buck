@@ -17,6 +17,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -47,6 +48,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -329,10 +331,20 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         stateWithConfigurableAttributes.getConstraintResolver(),
         targetNode.getConstructorArg(),
         targetPlatform)) {
+      HasTargetCompatibleWith argWithTargetCompatible =
+          (HasTargetCompatibleWith) targetNode.getConstructorArg();
+
+      String constraints =
+          argWithTargetCompatible
+              .getTargetCompatibleWith()
+              .stream()
+              .map(BuildTarget::getFullyQualifiedName)
+              .collect(Collectors.joining(System.lineSeparator()));
+
       throw new HumanReadableException(
           "Build target %s is restricted to constraints in \"target_compatible_with\" "
-              + "that do not match the target platform %s",
-          targetNode.getBuildTarget(), targetPlatform);
+              + "that do not match the target platform %s.%nTarget constraints:%n%s",
+          targetNode.getBuildTarget(), targetPlatform, constraints);
     }
   }
 }
