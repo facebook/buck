@@ -79,4 +79,9 @@ public abstract class AbstractParsingContext {
   public ApplyDefaultFlavorsMode getApplyDefaultFlavorsMode() {
     return ApplyDefaultFlavorsMode.DISABLED;
   }
+
+  @Value.Default
+  public boolean enableTargetCompatibilityChecks() {
+    return true;
+  }
 }

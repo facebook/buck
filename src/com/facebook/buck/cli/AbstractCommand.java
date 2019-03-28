@@ -34,6 +34,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
@@ -563,6 +564,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     return ParsingContext.builder(cell, executor)
         .setProfilingEnabled(getEnableParserProfiling())
         .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
+        .setEnableTargetCompatibilityChecks(
+            cell.getBuckConfig().getView(ParserConfig.class).getEnableTargetCompatibilityChecks())
         .build();
   }
 }

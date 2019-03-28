@@ -323,6 +323,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
   @Override
   public void assertTargetIsCompatible(PerBuildState state, TargetNode<?> targetNode) {
+    if (!state.getParsingContext().enableTargetCompatibilityChecks()) {
+      return;
+    }
     PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
         (PerBuildStateWithConfigurableAttributes) state;
 

@@ -373,6 +373,24 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void testBuildDoesNotFailWhenDepDoesNotMatchTargetPlatformAndChecksAreDisables()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:osx_x86-64",
+            "-c",
+            "parser.enable_target_compatibility_checks=false",
+            "//:lib");
+    result.assertSuccess();
+  }
+
+  @Test
   public void testBuildFailsWhenDepDoesNotMatchTargetPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
