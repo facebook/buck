@@ -34,6 +34,7 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileMetadata;
 import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -66,7 +67,7 @@ public class ProvisioningProfileCopyStepTest {
   private Path xcentFile;
   private Path dryRunResultFile;
   private Path entitlementsFile;
-  private FakeProjectFilesystem projectFilesystem;
+  private ProjectFilesystem projectFilesystem;
   private ExecutionContext executionContext;
   private Supplier<ImmutableList<CodeSignIdentity>> codeSignIdentitiesSupplier;
 
@@ -366,30 +367,5 @@ public class ProvisioningProfileCopyStepTest {
         (NSDictionary) PropertyListParser.parse(xcentContents.get().getBytes());
     assertEquals(
         xcentPlist.get("application-identifier"), new NSString("ABCDE12345.com.example.TestApp"));
-  }
-
-  @Test
-  public void testApplicationIdentifierIsInInfoPlist() throws Exception {
-    assumeTrue(Platform.detect() == Platform.MACOS);
-    Path infoPlistPath = testdataDir.resolve("Info.plist");
-    ProvisioningProfileCopyStep step =
-        new ProvisioningProfileCopyStep(
-            projectFilesystem,
-            infoPlistPath,
-            ApplePlatform.IPHONEOS,
-            Optional.empty(),
-            Optional.empty(),
-            ProvisioningProfileStoreFactory.fromSearchPath(
-                new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
-            xcentFile,
-            codeSignIdentitiesSupplier,
-            Optional.empty());
-    step.execute(executionContext);
-
-    byte[] infoPlistContents = projectFilesystem.getFileBytes(infoPlistPath);
-    NSDictionary infoPlist = (NSDictionary) PropertyListParser.parse(infoPlistContents);
-    assertEquals(
-        infoPlist.get("ApplicationIdentifier"), new NSString("ABCDE12345.com.example.TestApp"));
   }
 }

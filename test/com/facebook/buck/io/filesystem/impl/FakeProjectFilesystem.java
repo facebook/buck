@@ -318,7 +318,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     return this;
   }
 
-  public byte[] getFileBytes(Path path) {
+  protected byte[] getFileBytes(Path path) {
     return Objects.requireNonNull(fileContents.get(MorePaths.normalize(path)));
   }
 
