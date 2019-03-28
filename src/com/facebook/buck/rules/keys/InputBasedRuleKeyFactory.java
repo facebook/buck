@@ -21,7 +21,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
-import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -44,7 +43,7 @@ import java.util.function.Function;
 /**
  * A factory for generating input-based {@link RuleKey}s.
  *
- * @see SupportsInputBasedRuleKey
+ * @see com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey
  */
 public class InputBasedRuleKeyFactory implements RuleKeyFactory<RuleKey> {
 

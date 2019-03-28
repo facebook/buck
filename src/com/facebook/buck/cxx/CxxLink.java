@@ -23,7 +23,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
-import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.schedule.OverrideScheduleRule;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -61,10 +60,7 @@ import javax.annotation.Nullable;
 
 /** A BuildRule for linking c++ objects. */
 public class CxxLink extends ModernBuildRule<CxxLink.Impl>
-    implements SupportsInputBasedRuleKey,
-        HasAppleDebugSymbolDeps,
-        OverrideScheduleRule,
-        HasSupplementaryOutputs {
+    implements HasAppleDebugSymbolDeps, OverrideScheduleRule, HasSupplementaryOutputs {
 
   private final Optional<RuleScheduleInfo> ruleScheduleInfo;
   private final boolean cacheable;

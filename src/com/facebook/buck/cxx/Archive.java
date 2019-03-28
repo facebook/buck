@@ -22,7 +22,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -51,7 +50,7 @@ import java.util.Optional;
  * A {@link BuildRule} which builds an "ar" archive from input files represented as {@link
  * SourcePath}.
  */
-public class Archive extends ModernBuildRule<Archive.Impl> implements SupportsInputBasedRuleKey {
+public class Archive extends ModernBuildRule<Archive.Impl> {
 
   private final boolean cacheable;
 

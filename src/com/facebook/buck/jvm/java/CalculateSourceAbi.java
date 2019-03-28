@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
-import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
@@ -55,10 +54,7 @@ import javax.annotation.Nullable;
  */
 public class CalculateSourceAbi
     extends PipelinedModernBuildRule<JavacPipelineState, SourceAbiBuildable>
-    implements CalculateAbi,
-        InitializableFromDisk<Object>,
-        SupportsDependencyFileRuleKey,
-        SupportsInputBasedRuleKey {
+    implements CalculateAbi, InitializableFromDisk<Object>, SupportsDependencyFileRuleKey {
 
   private final BuildOutputInitializer<Object> buildOutputInitializer;
   private final SourcePathRuleFinder ruleFinder;
