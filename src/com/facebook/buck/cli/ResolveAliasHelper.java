@@ -20,8 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
@@ -72,7 +71,8 @@ public class ResolveAliasHelper {
   static String validateBuildTargetForFullyQualifiedTarget(
       CommandRunnerParams params, String target, PerBuildState parserState) {
 
-    BuildTarget buildTarget = getBuildTargetForFullyQualifiedTarget(params.getBuckConfig(), target);
+    UnconfiguredBuildTarget buildTarget =
+        params.getBuckConfig().getUnconfiguredBuildTargetForFullyQualifiedTarget(target);
 
     Cell owningCell = params.getCell().getCell(buildTarget);
     Path buildFile;
@@ -90,7 +90,7 @@ public class ResolveAliasHelper {
 
     // Check that the given target is a valid target.
     for (TargetNode<?> candidate : targetNodes) {
-      if (candidate.getBuildTarget().equals(buildTarget)) {
+      if (candidate.getBuildTarget().getUnconfiguredBuildTarget().equals(buildTarget)) {
         return buildTarget.getFullyQualifiedName();
       }
     }
@@ -100,12 +100,5 @@ public class ResolveAliasHelper {
   /** @return the name of the build target identified by the specified alias or an empty set. */
   private static ImmutableSet<String> getBuildTargetForAlias(BuckConfig buckConfig, String alias) {
     return AliasConfig.from(buckConfig).getBuildTargetForAliasAsString(alias);
-  }
-
-  /** @return the build target identified by the specified full path or {@code null}. */
-  private static BuildTarget getBuildTargetForFullyQualifiedTarget(
-      BuckConfig buckConfig, String target) {
-    return buckConfig.getBuildTargetForFullyQualifiedTarget(
-        target, EmptyTargetConfiguration.INSTANCE);
   }
 }
