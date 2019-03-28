@@ -16,16 +16,14 @@
 
 package com.facebook.buck.core.model.platform;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.HasBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
 /** Represents a group of constraints defined using {@code constraint_setting}. */
 @BuckStyleImmutable
 @Value.Immutable(builder = false, copy = false, prehash = true)
-public abstract class AbstractConstraintSetting implements HasBuildTarget {
-  @Override
+public abstract class AbstractConstraintSetting {
   @Value.Parameter
-  public abstract BuildTarget getBuildTarget();
+  public abstract UnconfiguredBuildTarget getBuildTarget();
 }

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
@@ -47,7 +48,7 @@ import org.junit.Test;
 public class TargetCompatibilityCheckerTest {
 
   private final ConstraintSetting cs1 =
-      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs1"));
+      ConstraintSetting.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1"));
   private final ConstraintValue cs1v1 =
       ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1v1"), cs1);
   private final ConstraintValue cs1v2 =
@@ -62,11 +63,13 @@ public class TargetCompatibilityCheckerTest {
     constraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {
-              if (buildTarget.equals(cs1.getBuildTarget().getUnconfiguredBuildTarget())) {
+              if (buildTarget.equals(cs1.getBuildTarget())) {
                 return new ConstraintSettingRule(buildTarget, buildTarget.getShortName());
               } else {
                 return new ConstraintValueRule(
-                    buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());
+                    buildTarget,
+                    buildTarget.getShortName(),
+                    cs1.getBuildTarget().configure(EmptyTargetConfiguration.INSTANCE));
               }
             });
   }

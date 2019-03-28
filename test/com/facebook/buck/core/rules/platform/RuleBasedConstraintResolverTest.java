@@ -97,7 +97,8 @@ public class RuleBasedConstraintResolverTest {
         ruleBasedConstraintResolver.getConstraintSetting(constraintSettingTarget);
 
     assertEquals(constraintSetting, constraintValue.getConstraintSetting());
-    assertEquals(constraintSettingTarget, constraintSetting.getBuildTarget());
+    assertEquals(
+        constraintSettingTarget.getUnconfiguredBuildTarget(), constraintSetting.getBuildTarget());
     assertEquals(
         constraintValueTarget.getUnconfiguredBuildTarget(), constraintValue.getBuildTarget());
   }
