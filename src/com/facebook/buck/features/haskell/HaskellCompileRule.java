@@ -46,6 +46,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Optionals;
@@ -78,6 +79,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   @AddToRuleKey private final Tool compiler;
 
   private final HaskellVersion haskellVersion;
+
+  private final boolean useArgsfile;
 
   @AddToRuleKey private final ImmutableList<String> flags;
 
@@ -117,6 +120,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       BuildRuleParams buildRuleParams,
       Tool compiler,
       HaskellVersion haskellVersion,
+      boolean useArgsfile,
       ImmutableList<String> flags,
       PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
@@ -132,6 +136,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
     this.haskellVersion = haskellVersion;
+    this.useArgsfile = useArgsfile;
     this.flags = flags;
     this.ppFlags = ppFlags;
     this.cxxPlatform = cxxPlatform;
@@ -155,6 +160,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       SourcePathRuleFinder ruleFinder,
       Tool compiler,
       HaskellVersion haskellVersion,
+      boolean useArgsfile,
       ImmutableList<String> flags,
       PreprocessorFlags ppFlags,
       CxxPlatform cxxPlatform,
@@ -187,6 +193,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         baseParams.withDeclaredDeps(declaredDeps).withoutExtraDeps(),
         compiler,
         haskellVersion,
+        useArgsfile,
         flags,
         ppFlags,
         cxxPlatform,
@@ -215,6 +222,14 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   private Path getStubDir() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
         .resolve("stubs");
+  }
+
+  private Path getScratchDir() {
+    return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
+  }
+
+  private Path getArgsfile() {
+    return getProjectFilesystem().resolve(getScratchDir()).resolve("ghc.argsfile");
   }
 
   private Iterable<String> getPackageNameArgs() {
@@ -272,6 +287,95 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         Iterables.cycle("-optP"), Arg.stringify(cxxToolFlags.getAllFlags(), resolver));
   }
 
+  private Iterable<String> getSourceArguments(SourcePathResolver resolver) {
+    return sources
+        .getSourcePaths()
+        .stream()
+        .map(resolver::getAbsolutePath)
+        .map(Object::toString)
+        .collect(Collectors.toList());
+  }
+
+  private Iterable<String> getCompilerArguments(SourcePathResolver resolver) {
+    ImmutableList.Builder<String> builder = ImmutableList.builder();
+
+    builder.addAll(flags).add("-no-link");
+
+    if (pic) {
+      builder.addAll(HaskellDescriptionUtils.PIC_FLAGS);
+    } else if (hsProfile) {
+      builder.addAll(HaskellDescriptionUtils.PROF_FLAGS);
+    }
+
+    builder
+        .addAll(
+            MoreIterables.zipAndConcat(
+                Iterables.cycle("-main-is"), Optionals.toStream(main).toOnceIterable()))
+        .addAll(getPackageNameArgs())
+        .addAll(getPreprocessorFlags(resolver))
+        .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
+        .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
+        .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
+        .add(
+            "-i"
+                + includes
+                    .stream()
+                    .map(resolver::getAbsolutePath)
+                    .map(Object::toString)
+                    .collect(Collectors.joining(":")))
+        .addAll(getPackageArgs(resolver));
+
+    if (useArgsfile) {
+      builder.add("@" + getArgsfile());
+    } else {
+      builder.addAll(
+          sources
+              .getSourcePaths()
+              .stream()
+              .map(resolver::getAbsolutePath)
+              .map(Object::toString)
+              .iterator());
+    }
+
+    return builder.build();
+  }
+
+  private class WriteArgsfileStep implements Step {
+
+    private BuildContext buildContext;
+
+    public WriteArgsfileStep(BuildContext buildContext) {
+      this.buildContext = buildContext;
+    }
+
+    @Override
+    public StepExecutionResult execute(ExecutionContext context) throws IOException {
+      getProjectFilesystem().createParentDirs(getArgsfile());
+      // we write the source file arguments to @ghc.argsfile as this is the
+      // problematic part when we exceed the argument size limit.
+      // we pass the other flags as they are directly, so that if we have a
+      // wrapper script that preprocess compiler flags, it will get a chance to
+      // mutate those flags while passing @ghc.argsfile as it is.
+      getProjectFilesystem()
+          .writeLinesToPath(
+              Iterables.transform(
+                  getSourceArguments(buildContext.getSourcePathResolver()),
+                  Escaper.ARGFILE_ESCAPER::apply),
+              getArgsfile());
+      return StepExecutionResults.SUCCESS;
+    }
+
+    @Override
+    public String getShortName() {
+      return "write-ghc-argsfile";
+    }
+
+    @Override
+    public String getDescription(ExecutionContext context) {
+      return "Write argsfile for ghc";
+    }
+  }
+
   private class GhcStep extends ShellStep {
 
     private BuildContext buildContext;
@@ -296,49 +400,9 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     @Override
     protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-      ImmutableList<String> extraArgs = null;
-      if (pic) {
-        extraArgs = HaskellDescriptionUtils.PIC_FLAGS;
-      } else if (hsProfile) {
-        extraArgs = HaskellDescriptionUtils.PROF_FLAGS;
-      } else {
-        extraArgs = ImmutableList.of();
-      }
-
-      return getCommandWithExtraArgs(extraArgs);
-    }
-
-    private ImmutableList<String> getCommandWithExtraArgs(ImmutableList<String> extraArgs) {
-      SourcePathResolver resolver = buildContext.getSourcePathResolver();
-
       return ImmutableList.<String>builder()
-          .addAll(compiler.getCommandPrefix(resolver))
-          .addAll(flags)
-          .add("-no-link")
-          .addAll(extraArgs)
-          .addAll(
-              MoreIterables.zipAndConcat(
-                  Iterables.cycle("-main-is"), Optionals.toStream(main).toOnceIterable()))
-          .addAll(getPackageNameArgs())
-          .addAll(getPreprocessorFlags(buildContext.getSourcePathResolver()))
-          .add("-odir", getProjectFilesystem().resolve(getObjectDir()).toString())
-          .add("-hidir", getProjectFilesystem().resolve(getInterfaceDir()).toString())
-          .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
-          .add(
-              "-i"
-                  + includes
-                      .stream()
-                      .map(resolver::getAbsolutePath)
-                      .map(Object::toString)
-                      .collect(Collectors.joining(":")))
-          .addAll(getPackageArgs(buildContext.getSourcePathResolver()))
-          .addAll(
-              sources
-                  .getSourcePaths()
-                  .stream()
-                  .map(resolver::getAbsolutePath)
-                  .map(Object::toString)
-                  .iterator())
+          .addAll(compiler.getCommandPrefix(buildContext.getSourcePathResolver()))
+          .addAll(getCompilerArguments(buildContext.getSourcePathResolver()))
           .build();
     }
 
@@ -361,6 +425,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add(prepareOutputDir("object", getObjectDir(), getObjectSuffix()))
         .add(prepareOutputDir("interface", getInterfaceDir(), getInterfaceSuffix()))
         .add(prepareOutputDir("stub", getStubDir(), "h"))
+        .add(new WriteArgsfileStep(buildContext))
         .add(new GhcStep(getProjectFilesystem().getRootPath(), buildContext));
 
     return steps.build();

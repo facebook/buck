@@ -64,6 +64,9 @@ abstract class AbstractHaskellPlatform implements FlavorConvertible {
   /** @return whether to cache haskell link rules. */
   abstract boolean shouldCacheLinks();
 
+  /** @return whether to use @argsfile to pass arguments to the tools. */
+  abstract boolean shouldUseArgsfile();
+
   /** @return whether to use the deprecated binary output location. */
   abstract Optional<Boolean> shouldUsedOldBinaryOutputLocation();
 

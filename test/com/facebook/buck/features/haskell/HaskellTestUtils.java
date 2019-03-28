@@ -45,6 +45,7 @@ class HaskellTestUtils {
           .setHaddock(new ConstantToolProvider(new CommandTool.Builder().build()))
           .setHaskellVersion(HaskellVersion.of(8))
           .setShouldCacheLinks(true)
+          .setShouldUseArgsfile(false)
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .setGhciScriptTemplate(
               () -> {

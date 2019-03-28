@@ -114,6 +114,10 @@ public class HaskellBuckConfig {
     return delegate.getBooleanValue(section, "cache_links", true);
   }
 
+  public boolean getShouldUseArgsfile(String section) {
+    return delegate.getBooleanValue(section, "use_argsfile", false);
+  }
+
   public Optional<Boolean> getShouldUsedOldBinaryOutputLocation(String section) {
     return delegate.getBoolean(section, "old_binary_output_location");
   }

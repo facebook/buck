@@ -183,6 +183,7 @@ public class HaskellDescriptionUtils {
         ruleFinder,
         platform.getCompiler().resolve(graphBuilder),
         platform.getHaskellVersion(),
+        platform.shouldUseArgsfile(),
         compileFlags,
         ppFlags,
         cxxPlatform,

@@ -52,6 +52,7 @@ public class HaskellPlatformsFactory {
         .setPackager(getPackager(section))
         .setHaddock(getHaddock(section))
         .setShouldCacheLinks(haskellBuckConfig.getShouldCacheLinks(section))
+        .setShouldUseArgsfile(haskellBuckConfig.getShouldUseArgsfile(section))
         .setShouldUsedOldBinaryOutputLocation(
             haskellBuckConfig.getShouldUsedOldBinaryOutputLocation(section))
         .setPackageNamePrefix(haskellBuckConfig.getPackageNamePrefix(section))
