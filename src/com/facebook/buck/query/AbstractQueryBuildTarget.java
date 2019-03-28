@@ -28,15 +28,6 @@ abstract class AbstractQueryBuildTarget implements QueryTarget {
   abstract BuildTarget getBuildTarget();
 
   @Override
-  public int compareTo(QueryTarget other) {
-    if (this == other) {
-      return 0;
-    }
-
-    return toString().compareTo(other.toString());
-  }
-
-  @Override
   public String toString() {
     return getBuildTarget().toString();
   }
