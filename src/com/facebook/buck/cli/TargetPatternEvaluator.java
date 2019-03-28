@@ -21,6 +21,7 @@ import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.BuildTargetPatternTargetNodeParser;
@@ -95,10 +96,10 @@ class TargetPatternEvaluator {
       }
 
       // Check if this is an alias.
-      ImmutableSet<BuildTarget> aliasTargets =
+      ImmutableSet<UnconfiguredBuildTarget> aliasTargets =
           AliasConfig.from(buckConfig).getBuildTargetsForAlias(pattern);
       if (!aliasTargets.isEmpty()) {
-        for (BuildTarget alias : aliasTargets) {
+        for (UnconfiguredBuildTarget alias : aliasTargets) {
           unresolved.put(alias.getFullyQualifiedName(), pattern);
         }
       } else {

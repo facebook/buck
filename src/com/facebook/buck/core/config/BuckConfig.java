@@ -151,6 +151,10 @@ public class BuckConfig {
     return Optional.of(paths.collect(ImmutableList.toImmutableList()));
   }
 
+  public UnconfiguredBuildTarget getUnconfiguredBuildTargetForFullyQualifiedTarget(String target) {
+    return buildTargetParser.apply(target);
+  }
+
   public BuildTarget getBuildTargetForFullyQualifiedTarget(
       String target, TargetConfiguration targetConfiguration) {
     return buildTargetParser.apply(target).configure(targetConfiguration);
