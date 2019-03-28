@@ -25,6 +25,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
@@ -73,7 +75,8 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithSingleElementReturnsSingleElement()
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
     SelectorList<Flavor> selectorList =
         createSelectorListForFlavors(ImmutableMap.of("DEFAULT", "flavor1", "//x:y", "flavor2"));
     DefaultSelectorListResolver resolver =
@@ -91,7 +94,8 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithMultipleElementsNotSupportingConcatReturnsNull()
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
@@ -111,7 +115,8 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithMultipleElementsSupportingConcatReturnsCompleteList()
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
@@ -141,7 +146,8 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithMultipleDefaultMatchesReturnsList()
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
@@ -171,8 +177,10 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithRefinedConditionsPicksMostSpecializedCondition()
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget1 = BuildTargetFactory.newInstance("//x:y");
-    BuildTarget selectableTarget2 = BuildTargetFactory.newInstance("//x:z");
+    UnconfiguredBuildTarget selectableTarget1 =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget2 =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:z");
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
@@ -200,8 +208,10 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithMultipleMatchingConditionsThrowsException()
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget1 = BuildTargetFactory.newInstance("//x:y");
-    BuildTarget selectableTarget2 = BuildTargetFactory.newInstance("//x:z");
+    UnconfiguredBuildTarget selectableTarget1 =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget2 =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:z");
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
@@ -231,7 +241,8 @@ public class DefaultSelectorListResolverTest {
   @Test
   public void testResolvingListWithNoMatchesThrowsException() throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
@@ -255,7 +266,8 @@ public class DefaultSelectorListResolverTest {
       throws CoerceFailedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
     SelectorFactory selectorFactory =
         new SelectorFactory(
             new BuildTargetTypeCoercer(

@@ -16,24 +16,26 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 
 public class TestSelectable implements Selectable {
 
-  private final BuildTarget buildTarget;
+  private final UnconfiguredBuildTarget buildTarget;
   private final boolean matches;
-  private final Map<BuildTarget, Boolean> refinedTargets;
+  private final Map<UnconfiguredBuildTarget, Boolean> refinedTargets;
 
   public TestSelectable(
-      BuildTarget buildTarget, boolean matches, Map<BuildTarget, Boolean> refinedTargets) {
+      UnconfiguredBuildTarget buildTarget,
+      boolean matches,
+      Map<UnconfiguredBuildTarget, Boolean> refinedTargets) {
     this.buildTarget = buildTarget;
     this.matches = matches;
     this.refinedTargets = refinedTargets;
   }
 
-  public TestSelectable(BuildTarget buildTarget, boolean matches) {
+  public TestSelectable(UnconfiguredBuildTarget buildTarget, boolean matches) {
     this(buildTarget, matches, ImmutableMap.of());
   }
 
@@ -51,7 +53,7 @@ public class TestSelectable implements Selectable {
   }
 
   @Override
-  public BuildTarget getBuildTarget() {
+  public UnconfiguredBuildTarget getBuildTarget() {
     return buildTarget;
   }
 

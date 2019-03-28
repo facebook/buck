@@ -35,7 +35,9 @@ public class ConfigSettingRule implements ConfigurationRule, ProvidesSelectable 
       ImmutableMap<String, String> values,
       ImmutableSet<BuildTarget> constraintValues) {
     this.buildTarget = buildTarget;
-    configSettingSelectable = new ConfigSettingSelectable(buildTarget, values, constraintValues);
+    configSettingSelectable =
+        new ConfigSettingSelectable(
+            buildTarget.getUnconfiguredBuildTarget(), values, constraintValues);
   }
 
   @Override

@@ -27,6 +27,8 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
@@ -628,7 +630,8 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void populateWithConfiguringAttributesResolvesConfigurableAttributes() throws Exception {
-    BuildTarget selectableTarget = BuildTargetFactory.newInstance("//x:y");
+    UnconfiguredBuildTarget selectableTarget =
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//x:y");
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
