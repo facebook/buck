@@ -29,7 +29,6 @@ import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.CommandEvent.Finished;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.FlushConsoleEvent;
 import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.LeafEvents;
@@ -126,7 +125,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final boolean shouldAlwaysSortThreadsByTime;
   private final long buildRuleMinimumDurationMillis;
 
-  private Optional<String> parsingStatus = Optional.empty();
   // Save if Watchman reported zero file changes in case we receive an ActionGraphProvider hit. This
   // way the user can know that their changes, if they made any, were not picked up from Watchman.
   private boolean isZeroFileChanges = false;
@@ -870,7 +868,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else {
       LOG.debug("Action graph cache hit");
     }
-    parsingStatus = Optional.of("actionGraphCacheHit");
   }
 
   @Subscribe
@@ -879,7 +876,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         "Action graph will be rebuilt because there was an issue with watchman:"
             + System.lineSeparator()
             + event.getReason());
-    parsingStatus = Optional.of("watchmanOverflow: " + event.getReason());
   }
 
   private void printFileAddedOrRemoved() {
@@ -890,41 +886,30 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   public void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
     LOG.debug("Watchman notified about file addition: " + event.getFilename());
     printFileAddedOrRemoved();
-    parsingStatus = Optional.of("watchmanFileCreation");
   }
 
   @Subscribe
   public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
     LOG.debug("Watchman notified about file deletion: " + event.getFilename());
     printFileAddedOrRemoved();
-    parsingStatus = Optional.of("watchmanFileDeletion");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void watchmanZeroFileChanges(WatchmanStatusEvent.ZeroFileChanges event) {
     isZeroFileChanges = true;
-    parsingStatus = Optional.of("watchmanZeroFileChanges");
-  }
-
-  @Subscribe
-  @SuppressWarnings("unused")
-  public void daemonNewInstance(DaemonEvent.NewDaemonInstance event) {
-    parsingStatus = Optional.of("daemonNewInstance");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
     printInfoDirectlyOnce("Action graph will be rebuilt because symlinks are used.");
-    parsingStatus = Optional.of("symlinkInvalidation");
   }
 
   @Subscribe
   @SuppressWarnings("unused")
   public void envVariableChange(ParsingEvent.EnvVariableChange event) {
     printInfoDirectlyOnce("Action graph will be rebuilt because environment variables changed.");
-    parsingStatus = Optional.of("envVariableChange");
   }
 
   @Override
@@ -937,11 +922,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     } else {
       return String.format("%d.%d sec", seconds, milliseconds / 100);
     }
-  }
-
-  @VisibleForTesting
-  Optional<String> getParsingStatus() {
-    return parsingStatus;
   }
 
   @Override

@@ -19,7 +19,6 @@ package com.facebook.buck.event.listener;
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
@@ -68,9 +67,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.DaemonEvent;
 import com.facebook.buck.event.InstallEvent;
-import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.ProgressEvent;
 import com.facebook.buck.event.ProjectGenerationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
@@ -2778,46 +2775,6 @@ public class SuperConsoleEventBusListenerTest {
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
     validateConsole(listener, renderingConsole, 0L, ImmutableList.of());
-  }
-
-  @Test
-  public void testParsingStatus() {
-    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
-    TestRenderingConsole renderingConsole = new TestRenderingConsole(fakeClock, new TestConsole());
-    SuperConsoleEventBusListener listener =
-        createSuperConsole(fakeClock, eventBus, renderingConsole);
-
-    // new daemon instance & action graph cache miss
-    eventBus.post(DaemonEvent.newDaemonInstance("DaemonInitialized"));
-    assertEquals("daemonNewInstance", listener.getParsingStatus().get());
-    eventBus.post(ActionGraphEvent.Cache.miss(/* cacheWasEmpty */ true));
-    assertEquals("daemonNewInstance", listener.getParsingStatus().get());
-
-    // overflow scenario
-    String overflowMessage = "and if you go chasing rabbits";
-    eventBus.post(WatchmanStatusEvent.overflow(overflowMessage));
-    assertEquals("watchmanOverflow: " + overflowMessage, listener.getParsingStatus().get());
-
-    // file added scenario
-    eventBus.post(WatchmanStatusEvent.fileCreation("and you know you're going to fall"));
-    assertEquals("watchmanFileCreation", listener.getParsingStatus().get());
-
-    // file removed scenario
-    eventBus.post(WatchmanStatusEvent.fileDeletion("Tell 'em a hookah-smoking"));
-    assertEquals("watchmanFileDeletion", listener.getParsingStatus().get());
-
-    // symlink invalidation scenario
-    eventBus.post(ParsingEvent.symlinkInvalidation("caterpillar has given you the call"));
-    assertEquals("symlinkInvalidation", listener.getParsingStatus().get());
-
-    // environmental change scenario
-    eventBus.post(ParsingEvent.environmentalChange("WHITE_RABBIT=1"));
-    assertEquals("envVariableChange", listener.getParsingStatus().get());
-
-    // action graph cache hit scenario
-    eventBus.post(ActionGraphEvent.Cache.hit());
-    assertEquals("actionGraphCacheHit", listener.getParsingStatus().get());
   }
 
   @Test
