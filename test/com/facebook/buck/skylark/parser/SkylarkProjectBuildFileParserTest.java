@@ -31,9 +31,8 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.config.impl.PluginBasedKnownConfigurationDescriptionsFactory;
-import com.facebook.buck.core.rules.knowntypes.DefaultKnownRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
+import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -44,12 +43,9 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.sandbox.TestSandboxExecutionStrategyFactory;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
-import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -132,13 +128,7 @@ public class SkylarkProjectBuildFileParserTest {
     skylarkFilesystem = SkylarkFilesystem.using(projectFilesystem);
     cell = new TestCellBuilder().setFilesystem(projectFilesystem).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
-    knownRuleTypesProvider =
-        new KnownRuleTypesProvider(
-            new DefaultKnownRuleTypesFactory(
-                new DefaultProcessExecutor(new TestConsole()),
-                pluginManager,
-                new TestSandboxExecutionStrategyFactory(),
-                PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager)));
+    knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
   }
 
