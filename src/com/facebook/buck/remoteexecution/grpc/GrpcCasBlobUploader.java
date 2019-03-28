@@ -68,7 +68,6 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
           .collect(ImmutableSet.toImmutableSet());
     } catch (InterruptedException | ExecutionException e) {
       Throwables.throwIfInstanceOf(e.getCause(), IOException.class);
-      e.printStackTrace();
       throw new BuckUncheckedExecutionException(e);
     } catch (RuntimeException e) {
       throw e;
