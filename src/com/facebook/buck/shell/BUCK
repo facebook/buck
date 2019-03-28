@@ -1,5 +1,8 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
-load("//tools/build_rules:export_files.bzl", "export_files")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_immutables_library",
+    "java_library_with_plugins",
+)
 
 java_library_with_plugins(
     name = "rules",
@@ -29,7 +32,9 @@ java_library_with_plugins(
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
-    visibility = ["PUBLIC"],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":steps",
         ":worker",
@@ -127,7 +132,9 @@ java_immutables_library(
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
-    visibility = ["PUBLIC"],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         ":worker_tool",
         "//src/com/facebook/buck/command/config:config",
@@ -171,7 +178,9 @@ java_library(
     tests = [
         "//test/com/facebook/buck/shell:shell",
     ],
-    visibility = ["PUBLIC"],
+    visibility = [
+        "PUBLIC",
+    ],
     deps = [
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/toolchain/tool:tool",
@@ -179,4 +188,9 @@ java_library(
     ],
 )
 
-export_files(["sh_binary_template"])
+export_file(
+    name = "sh_binary_template",
+    visibility = [
+        "PUBLIC",
+    ],
+)

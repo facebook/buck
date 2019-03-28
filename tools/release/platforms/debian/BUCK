@@ -1,9 +1,13 @@
 load("//programs:defs.bzl", "get_release_version")
-load("//tools/build_rules:export_files.bzl", "export_files")
 
 version = get_release_version()
 
-export_files(["buck.equivs"])
+export_file(
+    name = "buck.equivs",
+    visibility = [
+        "PUBLIC",
+    ],
+)
 
 genrule(
     name = "update_version",

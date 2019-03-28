@@ -1,5 +1,3 @@
-load("//tools/build_rules:export_files.bzl", "export_files")
-
 # Includes stripped-down versions of types that Infer recognizes, so that we can use Infer on
 # code that must be very light on dependencies.
 java_library(
@@ -22,6 +20,9 @@ java_library(
     ],
 )
 
-export_files([
-    "Nullable.java",
-])
+export_file(
+    name = "Nullable.java",
+    visibility = [
+        "PUBLIC",
+    ],
+)
