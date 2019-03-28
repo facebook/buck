@@ -81,12 +81,15 @@ import org.junit.rules.ExpectedException;
 import org.pf4j.PluginManager;
 
 public class SkylarkProjectBuildFileParserTest {
+  // A simple wrapper around skylark parser that records interesting events.
   class RecordingParser extends SkylarkProjectBuildFileParser {
     private Map<com.google.devtools.build.lib.vfs.Path, Integer> readCounts;
+    private Map<com.google.devtools.build.lib.vfs.Path, Integer> buildCounts;
 
     public RecordingParser(SkylarkProjectBuildFileParser delegate) {
       super(delegate);
       readCounts = new HashMap<com.google.devtools.build.lib.vfs.Path, Integer>();
+      buildCounts = new HashMap<com.google.devtools.build.lib.vfs.Path, Integer>();
     }
 
     @Override
@@ -94,6 +97,13 @@ public class SkylarkProjectBuildFileParserTest {
         throws IOException {
       readCounts.compute(path, (k, v) -> v == null ? 1 : v + 1);
       return super.readSkylarkAST(path);
+    }
+
+    @Override
+    public ExtensionData buildExtensionData(ExtensionLoadState load) throws InterruptedException {
+      ExtensionData result = super.buildExtensionData(load);
+      buildCounts.compute(result.getPath(), (k, v) -> v == null ? 1 : v + 1);
+      return result;
     }
 
     public ImmutableMap<com.google.devtools.build.lib.vfs.Path, Integer> expectedCounts(
@@ -614,6 +624,28 @@ public class SkylarkProjectBuildFileParserTest {
         equalTo(
             recordingParser.expectedCounts(
                 vfs_path(buildFile), 1, vfs_path(ext1), 1, vfs_path(ext2), 1)));
+  }
+
+  @Test
+  public void doesNotBuildSameExtensionMultipleTimes() throws Exception {
+    // Verifies each extension file is accessed for IO and AST construction only once.
+    Path buildFile = projectFilesystem.resolve("BUCK");
+    Files.write(
+        buildFile, Arrays.asList("load('//:ext_1.bzl', 'ext_1')", "load('//:ext_2.bzl', 'ext_2')"));
+
+    Path ext1 = projectFilesystem.resolve("ext_1.bzl");
+    // Note: using relative path for load.
+    Files.write(ext1, Arrays.asList("load(':ext_2.bzl', 'ext_2')", "ext_1 = ext_2"));
+
+    Path ext2 = projectFilesystem.resolve("ext_2.bzl");
+    Files.write(ext2, Arrays.asList("ext_2 = 'hello'"));
+
+    RecordingParser recordingParser = new RecordingParser(parser);
+    recordingParser.getBuildFileManifest(buildFile);
+
+    assertThat(
+        recordingParser.buildCounts,
+        equalTo(recordingParser.expectedCounts(vfs_path(ext1), 1, vfs_path(ext2), 1)));
   }
 
   @Test
