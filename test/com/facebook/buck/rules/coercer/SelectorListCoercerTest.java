@@ -24,9 +24,10 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
@@ -54,10 +55,8 @@ public class SelectorListCoercerTest {
     selectorListFactory =
         new SelectorListFactory(
             new SelectorFactory(
-                new BuildTargetTypeCoercer(
-                        new UnconfiguredBuildTargetTypeCoercer(
-                            new ParsingUnconfiguredBuildTargetFactory()))
-                    ::coerce));
+                new UnconfiguredBuildTargetTypeCoercer(
+                    new ParsingUnconfiguredBuildTargetFactory())));
   }
 
   @Test
@@ -103,10 +102,12 @@ public class SelectorListCoercerTest {
     coercer.traverse(cellPathResolver, selectors, traversedObjects::add);
 
     assertThat(traversedObjects, hasItem(selectors));
-    assertThat(traversedObjects, hasItem(BuildTargetFactory.newInstance("//a:b")));
+    assertThat(
+        traversedObjects, hasItem(UnconfiguredBuildTargetFactoryForTests.newInstance("//a:b")));
     assertThat(traversedObjects, hasItem(InternalFlavor.of("test1")));
     assertThat(traversedObjects, hasItem(InternalFlavor.of("test2")));
     assertThat(traversedObjects, hasItem(InternalFlavor.of("test3")));
-    assertEquals(1, traversedObjects.stream().filter(BuildTarget.class::isInstance).count());
+    assertEquals(
+        1, traversedObjects.stream().filter(UnconfiguredBuildTarget.class::isInstance).count());
   }
 }

@@ -30,7 +30,6 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
-import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.facebook.buck.rules.coercer.ListTypeCoercer;
@@ -53,10 +52,8 @@ public class SelectorListFactoryTest {
     selectorListFactory =
         new SelectorListFactory(
             new SelectorFactory(
-                new BuildTargetTypeCoercer(
-                        new UnconfiguredBuildTargetTypeCoercer(
-                            new ParsingUnconfiguredBuildTargetFactory()))
-                    ::coerce));
+                new UnconfiguredBuildTargetTypeCoercer(
+                    new ParsingUnconfiguredBuildTargetFactory())));
   }
 
   @Test

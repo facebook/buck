@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -31,9 +31,9 @@ public class SelectorKey {
 
   public static final SelectorKey DEFAULT = new SelectorKey();
 
-  private @Nullable final BuildTarget buildTarget;
+  private @Nullable final UnconfiguredBuildTarget buildTarget;
 
-  public SelectorKey(BuildTarget buildTarget) {
+  public SelectorKey(UnconfiguredBuildTarget buildTarget) {
     this.buildTarget = Objects.requireNonNull(buildTarget);
   }
 
@@ -45,7 +45,7 @@ public class SelectorKey {
     return buildTarget == null;
   }
 
-  public BuildTarget getBuildTarget() {
+  public UnconfiguredBuildTarget getBuildTarget() {
     Objects.requireNonNull(buildTarget, "Default condition has no build target");
     return buildTarget;
   }

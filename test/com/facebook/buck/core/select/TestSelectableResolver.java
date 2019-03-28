@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableMap;
@@ -39,7 +38,7 @@ public class TestSelectableResolver implements SelectableResolver {
   }
 
   @Override
-  public Selectable getSelectable(BuildTarget target) {
-    return selectables.get(target.getUnconfiguredBuildTarget());
+  public Selectable getSelectable(UnconfiguredBuildTarget target) {
+    return selectables.get(target);
   }
 }

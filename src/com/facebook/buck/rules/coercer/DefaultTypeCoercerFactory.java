@@ -399,9 +399,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
       return new SelectorListCoercer<>(
           new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer),
           typeCoercerForType(getSingletonTypeParameter(typeName, actualTypeArguments)),
-          new SelectorListFactory(
-              new SelectorFactory(
-                  new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer)::coerce)));
+          new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetTypeCoercer)));
     } else {
       throw new IllegalArgumentException("Unhandled type: " + typeName);
     }

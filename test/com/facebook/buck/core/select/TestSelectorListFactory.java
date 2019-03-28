@@ -20,7 +20,6 @@ import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildT
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
@@ -34,10 +33,7 @@ public class TestSelectorListFactory {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     SelectorFactory selectorFactory =
         new SelectorFactory(
-            new BuildTargetTypeCoercer(
-                    new UnconfiguredBuildTargetTypeCoercer(
-                        new ParsingUnconfiguredBuildTargetFactory()))
-                ::coerce);
+            new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory()));
     ImmutableList.Builder<Selector<T>> selectorBuilder = ImmutableList.builder();
     for (Map<String, ?> selectorAttributes : selectors) {
       Selector<T> selector =

@@ -28,7 +28,6 @@ import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
@@ -49,10 +48,7 @@ public class SelectorFactoryTest {
     projectFilesystem = new FakeProjectFilesystem();
     selectorFactory =
         new SelectorFactory(
-            new BuildTargetTypeCoercer(
-                    new UnconfiguredBuildTargetTypeCoercer(
-                        new ParsingUnconfiguredBuildTargetFactory()))
-                ::coerce);
+            new UnconfiguredBuildTargetTypeCoercer(new ParsingUnconfiguredBuildTargetFactory()));
   }
 
   @Test
