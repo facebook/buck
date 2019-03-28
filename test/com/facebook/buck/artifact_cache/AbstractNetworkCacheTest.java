@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.annotation.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -99,7 +101,8 @@ public class AbstractNetworkCacheTest {
                 .setMaxStoreSizeBytes(maxArtifactSizeBytes)
                 .build()) {
           @Override
-          protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) {
+          protected FetchResult fetchImpl(
+              @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
             return null;
           }
 

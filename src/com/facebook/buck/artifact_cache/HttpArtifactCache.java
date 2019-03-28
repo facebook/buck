@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -33,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -60,7 +62,8 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
+  protected FetchResult fetchImpl(@Nullable BuildTarget target, RuleKey ruleKey, LazyPath output)
+      throws IOException {
     FetchResult.Builder resultBuilder = FetchResult.builder();
     Request.Builder requestBuilder = new Request.Builder().get();
     try (HttpResponse response =

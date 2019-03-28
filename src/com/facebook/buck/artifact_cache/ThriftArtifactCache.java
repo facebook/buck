@@ -32,6 +32,7 @@ import com.facebook.buck.artifact_cache.thrift.ContainsResult;
 import com.facebook.buck.artifact_cache.thrift.FetchResultType;
 import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -62,6 +63,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -114,7 +116,8 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   }
 
   @Override
-  protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException {
+  protected FetchResult fetchImpl(@Nullable BuildTarget target, RuleKey ruleKey, LazyPath output)
+      throws IOException {
     FetchResult.Builder resultBuilder = FetchResult.builder();
 
     BuckCacheFetchRequest fetchRequest = new BuckCacheFetchRequest();

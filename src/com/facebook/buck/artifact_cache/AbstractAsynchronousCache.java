@@ -108,7 +108,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     return projectFilesystem;
   }
 
-  protected abstract FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) throws IOException;
+  protected abstract FetchResult fetchImpl(
+      @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) throws IOException;
 
   protected abstract MultiContainsResult multiContainsImpl(ImmutableSet<RuleKey> ruleKeys)
       throws IOException;
@@ -264,7 +265,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     CacheEventListener.FetchRequestEvents requestEvents =
         eventListener.fetchStarted(request.getBuildTarget(), request.getRuleKey());
     try {
-      FetchResult fetchResult = fetchImpl(request.getRuleKey(), request.getOutput());
+      FetchResult fetchResult =
+          fetchImpl(request.getBuildTarget(), request.getRuleKey(), request.getOutput());
       result = fetchResult.getCacheResult();
       requestEvents.finished(fetchResult);
     } catch (IOException e) {

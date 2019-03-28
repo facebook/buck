@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
+import javax.annotation.Nullable;
 import org.junit.Test;
 
 public class AbstractAsynchronousCacheTest {
@@ -298,7 +299,8 @@ public class AbstractAsynchronousCacheTest {
     }
 
     @Override
-    protected FetchResult fetchImpl(RuleKey ruleKey, LazyPath output) {
+    protected FetchResult fetchImpl(
+        @Nullable BuildTarget target, RuleKey ruleKey, LazyPath output) {
       requestedRuleKeys.add(ImmutableList.of(ruleKey));
       return hit();
     }
