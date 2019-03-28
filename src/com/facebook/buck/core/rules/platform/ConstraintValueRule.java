@@ -17,23 +17,25 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 
 /** {@code constraint_value} rule. */
 public class ConstraintValueRule implements ConfigurationRule {
 
-  private final BuildTarget buildTarget;
+  private final UnconfiguredBuildTarget buildTarget;
   private final String name;
   private final BuildTarget constraintSetting;
 
-  public ConstraintValueRule(BuildTarget buildTarget, String name, BuildTarget constraintSetting) {
+  public ConstraintValueRule(
+      UnconfiguredBuildTarget buildTarget, String name, BuildTarget constraintSetting) {
     this.buildTarget = buildTarget;
     this.name = name;
     this.constraintSetting = constraintSetting;
   }
 
   @Override
-  public BuildTarget getBuildTarget() {
+  public UnconfiguredBuildTarget getBuildTarget() {
     return buildTarget;
   }
 

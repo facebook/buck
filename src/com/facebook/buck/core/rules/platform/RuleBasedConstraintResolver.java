@@ -46,12 +46,12 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                 @Override
                 public ConstraintSetting load(BuildTarget buildTarget) {
                   ConfigurationRule configurationRule =
-                      configurationRuleResolver.getRule(buildTarget);
+                      configurationRuleResolver.getRule(buildTarget.getUnconfiguredBuildTarget());
                   Preconditions.checkState(
                       configurationRule instanceof ConstraintSettingRule,
                       "%s is used as constraint_setting, but has wrong type",
                       buildTarget);
-                  return ConstraintSetting.of(configurationRule.getBuildTarget());
+                  return ConstraintSetting.of(buildTarget);
                 }
               });
 
@@ -62,7 +62,7 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                 @Override
                 public ConstraintValue load(BuildTarget buildTarget) {
                   ConfigurationRule configurationRule =
-                      configurationRuleResolver.getRule(buildTarget);
+                      configurationRuleResolver.getRule(buildTarget.getUnconfiguredBuildTarget());
                   Preconditions.checkState(
                       configurationRule instanceof ConstraintValueRule,
                       "%s is used as constraint_value, but has wrong type",

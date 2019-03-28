@@ -83,7 +83,7 @@ public class RuleBasedConstraintResolverTest {
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
         new RuleBasedConstraintResolver(
             buildTarget -> {
-              if (buildTarget.equals(constraintSettingTarget)) {
+              if (buildTarget.equals(constraintSettingTarget.getUnconfiguredBuildTarget())) {
                 return new ConstraintSettingRule(buildTarget, buildTarget.getShortName());
               } else {
                 return new ConstraintValueRule(

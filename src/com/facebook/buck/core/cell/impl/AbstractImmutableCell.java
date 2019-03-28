@@ -146,6 +146,11 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public Optional<Cell> getCellIfKnown(BuildTarget target) {
+    return getCellIfKnown(target.getUnconfiguredBuildTarget());
+  }
+
+  @Override
+  public Optional<Cell> getCellIfKnown(UnconfiguredBuildTarget target) {
     if (getKnownRoots().contains(target.getCellPath())) {
       return Optional.of(getCell(target));
     }

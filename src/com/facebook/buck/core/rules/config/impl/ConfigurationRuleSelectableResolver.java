@@ -40,7 +40,8 @@ public class ConfigurationRuleSelectableResolver implements SelectableResolver {
 
   @Override
   public Selectable getSelectable(BuildTarget buildTarget) {
-    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
+    ConfigurationRule configurationRule =
+        configurationRuleResolver.getRule(buildTarget.getUnconfiguredBuildTarget());
     if (!(configurationRule instanceof ProvidesSelectable)) {
       throw new HumanReadableException(
           "%s is used to resolve configurable attributes but it has the wrong type", buildTarget);

@@ -80,6 +80,8 @@ public interface Cell {
 
   Optional<Cell> getCellIfKnown(BuildTarget target);
 
+  Optional<Cell> getCellIfKnown(UnconfiguredBuildTarget target);
+
   /**
    * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will
    * necessarily return all possible cells that this build may interact with, since the root cell is

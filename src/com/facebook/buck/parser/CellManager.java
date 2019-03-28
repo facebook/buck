@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -43,7 +44,7 @@ class CellManager {
     }
   }
 
-  Cell getCell(BuildTarget target) {
+  Cell getCell(UnconfiguredBuildTarget target) {
     Cell cell = cells.get(target.getCellPath());
     if (cell != null) {
       return cell;
@@ -58,6 +59,10 @@ class CellManager {
     }
     throw new HumanReadableException(
         "From %s, unable to find cell rooted at: %s", target, target.getCellPath());
+  }
+
+  Cell getCell(BuildTarget target) {
+    return getCell(target.getUnconfiguredBuildTarget());
   }
 
   void registerInputsUnderSymlinks(Path buildFile, TargetNode<?> node) throws IOException {

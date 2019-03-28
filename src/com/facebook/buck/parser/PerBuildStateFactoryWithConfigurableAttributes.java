@@ -185,7 +185,10 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
 
     ConfigurationRuleResolver configurationRuleResolver =
         new SameThreadConfigurationRuleResolver(
-            cellManager::getCell, nonResolvingTargetNodeParsePipeline::getNode);
+            cellManager::getCell,
+            (cell, target) ->
+                nonResolvingTargetNodeParsePipeline.getNode(
+                    cell, target.configure(EmptyTargetConfiguration.INSTANCE)));
 
     SelectableResolver selectableResolver =
         new ConfigurationRuleSelectableResolver(configurationRuleResolver);
@@ -285,9 +288,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     String targetPlatformName = targetPlatforms.get(0);
     ConfigurationRule configurationRule =
         configurationRuleResolver.getRule(
-            unconfiguredBuildTargetFactory
-                .create(rootCell.getCellPathResolver(), targetPlatformName)
-                .configure(EmptyTargetConfiguration.INSTANCE));
+            unconfiguredBuildTargetFactory.create(
+                rootCell.getCellPathResolver(), targetPlatformName));
 
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(

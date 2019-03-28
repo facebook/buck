@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
@@ -25,5 +25,5 @@ import org.immutables.value.Value;
 abstract class AbstractDummyConfigurationRule implements ConfigurationRule {
   @Override
   @Value.Parameter
-  public abstract BuildTarget getBuildTarget();
+  public abstract UnconfiguredBuildTarget getBuildTarget();
 }
