@@ -452,7 +452,7 @@ public class Omnibus {
         omnibus,
         root,
         root.getBuildTarget(),
-        root.getNativeLinkTargetOutputPath(cxxPlatform));
+        root.getNativeLinkTargetOutputPath());
   }
 
   private static OmnibusRoot createDummyRoot(

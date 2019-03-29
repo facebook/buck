@@ -549,7 +549,7 @@ public class CxxPythonExtensionDescription
           }
 
           @Override
-          public Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform) {
+          public Optional<Path> getNativeLinkTargetOutputPath() {
             return Optional.empty();
           }
         };

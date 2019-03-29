@@ -42,5 +42,5 @@ public interface NativeLinkTarget {
       SourcePathRuleFinder ruleFinder);
 
   /** @return an explicit {@link Path} to use for the output location. */
-  Optional<Path> getNativeLinkTargetOutputPath(CxxPlatform cxxPlatform);
+  Optional<Path> getNativeLinkTargetOutputPath();
 }
