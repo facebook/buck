@@ -17,10 +17,10 @@
 package com.facebook.buck.remoteexecution;
 
 import build.bazel.remote.execution.v2.ExecutedActionMetadata;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
-import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.util.List;
@@ -42,8 +42,6 @@ public interface RemoteExecutionServiceClient {
 
     Optional<String> getStderr();
 
-    RemoteExecutionMetadata getMetadata();
-
     Digest getActionResultDigest();
 
     ExecutedActionMetadata getActionMetadata();
@@ -54,6 +52,7 @@ public interface RemoteExecutionServiceClient {
    *
    * <p>Returns an ActionResult with exit code, outputs, stdout/stderr, etc.
    */
-  ListenableFuture<ExecutionResult> execute(Digest actionDigest, String ruleName)
+  ListenableFuture<ExecutionResult> execute(
+      Digest actionDigest, String ruleName, MetadataProvider metadataProvider)
       throws IOException, InterruptedException;
 }

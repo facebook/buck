@@ -25,7 +25,9 @@ import com.facebook.buck.remoteexecution.proto.CreatorInfo;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.remoteexecution.proto.TraceInfo;
+import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /** Static class providing factory methods for instances of MetadataProviders. */
 public class MetadataProviderFactory {
@@ -119,6 +121,26 @@ public class MetadataProviderFactory {
                 .setEdgeId(traceInfoProvider.getEdgeId(actionDigest))
                 .build();
         return metadataProvider.get().toBuilder().setTraceInfo(traceInfo).build();
+      }
+    };
+  }
+
+  /** Wraps the argument MetadataProvider with worker requirements info */
+  public static MetadataProvider wrapForRuleWithWorkerRequirements(
+      MetadataProvider metadataProvider, Supplier<WorkerRequirements> requirementsSupplier) {
+    return new MetadataProvider() {
+      @Override
+      public RemoteExecutionMetadata get() {
+        return metadataProvider
+            .get()
+            .toBuilder()
+            .setWorkerRequirements(requirementsSupplier.get())
+            .build();
+      }
+
+      @Override
+      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
+        return get();
       }
     };
   }

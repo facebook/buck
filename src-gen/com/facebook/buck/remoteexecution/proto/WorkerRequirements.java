@@ -22,7 +22,8 @@ private static final long serialVersionUID = 0L;
     super(builder);
   }
   private WorkerRequirements() {
-    hardwareType_ = 0;
+    workerSize_ = 0;
+    platformType_ = 0;
   }
 
   @java.lang.Override
@@ -52,7 +53,13 @@ private static final long serialVersionUID = 0L;
           case 8: {
             int rawValue = input.readEnum();
 
-            hardwareType_ = rawValue;
+            workerSize_ = rawValue;
+            break;
+          }
+          case 16: {
+            int rawValue = input.readEnum();
+
+            platformType_ = rawValue;
             break;
           }
           default: {
@@ -88,9 +95,107 @@ private static final long serialVersionUID = 0L;
   }
 
   /**
-   * Protobuf enum {@code facebook.remote_execution.WorkerRequirements.WorkerHardwareType}
+   * Protobuf enum {@code facebook.remote_execution.WorkerRequirements.WorkerPlatformType}
    */
-  public enum WorkerHardwareType
+  public enum WorkerPlatformType
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>LINUX = 0;</code>
+     */
+    LINUX(0),
+    /**
+     * <code>ANDROID_EMULATOR = 1;</code>
+     */
+    ANDROID_EMULATOR(1),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>LINUX = 0;</code>
+     */
+    public static final int LINUX_VALUE = 0;
+    /**
+     * <code>ANDROID_EMULATOR = 1;</code>
+     */
+    public static final int ANDROID_EMULATOR_VALUE = 1;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static WorkerPlatformType valueOf(int value) {
+      return forNumber(value);
+    }
+
+    public static WorkerPlatformType forNumber(int value) {
+      switch (value) {
+        case 0: return LINUX;
+        case 1: return ANDROID_EMULATOR;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<WorkerPlatformType>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        WorkerPlatformType> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<WorkerPlatformType>() {
+            public WorkerPlatformType findValueByNumber(int number) {
+              return WorkerPlatformType.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return com.facebook.buck.remoteexecution.proto.WorkerRequirements.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final WorkerPlatformType[] VALUES = values();
+
+    public static WorkerPlatformType valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private WorkerPlatformType(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:facebook.remote_execution.WorkerRequirements.WorkerPlatformType)
+  }
+
+  /**
+   * Protobuf enum {@code facebook.remote_execution.WorkerRequirements.WorkerSize}
+   */
+  public enum WorkerSize
       implements com.google.protobuf.ProtocolMessageEnum {
     /**
      * <code>SMALL = 0;</code>
@@ -133,11 +238,11 @@ private static final long serialVersionUID = 0L;
      * @deprecated Use {@link #forNumber(int)} instead.
      */
     @java.lang.Deprecated
-    public static WorkerHardwareType valueOf(int value) {
+    public static WorkerSize valueOf(int value) {
       return forNumber(value);
     }
 
-    public static WorkerHardwareType forNumber(int value) {
+    public static WorkerSize forNumber(int value) {
       switch (value) {
         case 0: return SMALL;
         case 1: return MEDIUM;
@@ -146,15 +251,15 @@ private static final long serialVersionUID = 0L;
       }
     }
 
-    public static com.google.protobuf.Internal.EnumLiteMap<WorkerHardwareType>
+    public static com.google.protobuf.Internal.EnumLiteMap<WorkerSize>
         internalGetValueMap() {
       return internalValueMap;
     }
     private static final com.google.protobuf.Internal.EnumLiteMap<
-        WorkerHardwareType> internalValueMap =
-          new com.google.protobuf.Internal.EnumLiteMap<WorkerHardwareType>() {
-            public WorkerHardwareType findValueByNumber(int number) {
-              return WorkerHardwareType.forNumber(number);
+        WorkerSize> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<WorkerSize>() {
+            public WorkerSize findValueByNumber(int number) {
+              return WorkerSize.forNumber(number);
             }
           };
 
@@ -168,12 +273,12 @@ private static final long serialVersionUID = 0L;
     }
     public static final com.google.protobuf.Descriptors.EnumDescriptor
         getDescriptor() {
-      return com.facebook.buck.remoteexecution.proto.WorkerRequirements.getDescriptor().getEnumTypes().get(0);
+      return com.facebook.buck.remoteexecution.proto.WorkerRequirements.getDescriptor().getEnumTypes().get(1);
     }
 
-    private static final WorkerHardwareType[] VALUES = values();
+    private static final WorkerSize[] VALUES = values();
 
-    public static WorkerHardwareType valueOf(
+    public static WorkerSize valueOf(
         com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
       if (desc.getType() != getDescriptor()) {
         throw new java.lang.IllegalArgumentException(
@@ -187,28 +292,45 @@ private static final long serialVersionUID = 0L;
 
     private final int value;
 
-    private WorkerHardwareType(int value) {
+    private WorkerSize(int value) {
       this.value = value;
     }
 
-    // @@protoc_insertion_point(enum_scope:facebook.remote_execution.WorkerRequirements.WorkerHardwareType)
+    // @@protoc_insertion_point(enum_scope:facebook.remote_execution.WorkerRequirements.WorkerSize)
   }
 
-  public static final int HARDWARE_TYPE_FIELD_NUMBER = 1;
-  private int hardwareType_;
+  public static final int WORKER_SIZE_FIELD_NUMBER = 1;
+  private int workerSize_;
   /**
-   * <code>.facebook.remote_execution.WorkerRequirements.WorkerHardwareType hardware_type = 1;</code>
+   * <code>.facebook.remote_execution.WorkerRequirements.WorkerSize worker_size = 1;</code>
    */
-  public int getHardwareTypeValue() {
-    return hardwareType_;
+  public int getWorkerSizeValue() {
+    return workerSize_;
   }
   /**
-   * <code>.facebook.remote_execution.WorkerRequirements.WorkerHardwareType hardware_type = 1;</code>
+   * <code>.facebook.remote_execution.WorkerRequirements.WorkerSize worker_size = 1;</code>
    */
-  public com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType getHardwareType() {
+  public com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize getWorkerSize() {
     @SuppressWarnings("deprecation")
-    com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType result = com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType.valueOf(hardwareType_);
-    return result == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType.UNRECOGNIZED : result;
+    com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize result = com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize.valueOf(workerSize_);
+    return result == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize.UNRECOGNIZED : result;
+  }
+
+  public static final int PLATFORM_TYPE_FIELD_NUMBER = 2;
+  private int platformType_;
+  /**
+   * <code>.facebook.remote_execution.WorkerRequirements.WorkerPlatformType platform_type = 2;</code>
+   */
+  public int getPlatformTypeValue() {
+    return platformType_;
+  }
+  /**
+   * <code>.facebook.remote_execution.WorkerRequirements.WorkerPlatformType platform_type = 2;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType getPlatformType() {
+    @SuppressWarnings("deprecation")
+    com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType result = com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.valueOf(platformType_);
+    return result == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.UNRECOGNIZED : result;
   }
 
   private byte memoizedIsInitialized = -1;
@@ -225,8 +347,11 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (hardwareType_ != com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType.SMALL.getNumber()) {
-      output.writeEnum(1, hardwareType_);
+    if (workerSize_ != com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize.SMALL.getNumber()) {
+      output.writeEnum(1, workerSize_);
+    }
+    if (platformType_ != com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.LINUX.getNumber()) {
+      output.writeEnum(2, platformType_);
     }
     unknownFields.writeTo(output);
   }
@@ -237,9 +362,13 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (hardwareType_ != com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType.SMALL.getNumber()) {
+    if (workerSize_ != com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize.SMALL.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
-        .computeEnumSize(1, hardwareType_);
+        .computeEnumSize(1, workerSize_);
+    }
+    if (platformType_ != com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.LINUX.getNumber()) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeEnumSize(2, platformType_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -257,7 +386,8 @@ private static final long serialVersionUID = 0L;
     com.facebook.buck.remoteexecution.proto.WorkerRequirements other = (com.facebook.buck.remoteexecution.proto.WorkerRequirements) obj;
 
     boolean result = true;
-    result = result && hardwareType_ == other.hardwareType_;
+    result = result && workerSize_ == other.workerSize_;
+    result = result && platformType_ == other.platformType_;
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -269,8 +399,10 @@ private static final long serialVersionUID = 0L;
     }
     int hash = 41;
     hash = (19 * hash) + getDescriptor().hashCode();
-    hash = (37 * hash) + HARDWARE_TYPE_FIELD_NUMBER;
-    hash = (53 * hash) + hardwareType_;
+    hash = (37 * hash) + WORKER_SIZE_FIELD_NUMBER;
+    hash = (53 * hash) + workerSize_;
+    hash = (37 * hash) + PLATFORM_TYPE_FIELD_NUMBER;
+    hash = (53 * hash) + platformType_;
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -408,7 +540,9 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public Builder clear() {
       super.clear();
-      hardwareType_ = 0;
+      workerSize_ = 0;
+
+      platformType_ = 0;
 
       return this;
     }
@@ -436,7 +570,8 @@ private static final long serialVersionUID = 0L;
     @java.lang.Override
     public com.facebook.buck.remoteexecution.proto.WorkerRequirements buildPartial() {
       com.facebook.buck.remoteexecution.proto.WorkerRequirements result = new com.facebook.buck.remoteexecution.proto.WorkerRequirements(this);
-      result.hardwareType_ = hardwareType_;
+      result.workerSize_ = workerSize_;
+      result.platformType_ = platformType_;
       onBuilt();
       return result;
     }
@@ -485,8 +620,11 @@ private static final long serialVersionUID = 0L;
 
     public Builder mergeFrom(com.facebook.buck.remoteexecution.proto.WorkerRequirements other) {
       if (other == com.facebook.buck.remoteexecution.proto.WorkerRequirements.getDefaultInstance()) return this;
-      if (other.hardwareType_ != 0) {
-        setHardwareTypeValue(other.getHardwareTypeValue());
+      if (other.workerSize_ != 0) {
+        setWorkerSizeValue(other.getWorkerSizeValue());
+      }
+      if (other.platformType_ != 0) {
+        setPlatformTypeValue(other.getPlatformTypeValue());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -517,47 +655,92 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private int hardwareType_ = 0;
+    private int workerSize_ = 0;
     /**
-     * <code>.facebook.remote_execution.WorkerRequirements.WorkerHardwareType hardware_type = 1;</code>
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerSize worker_size = 1;</code>
      */
-    public int getHardwareTypeValue() {
-      return hardwareType_;
+    public int getWorkerSizeValue() {
+      return workerSize_;
     }
     /**
-     * <code>.facebook.remote_execution.WorkerRequirements.WorkerHardwareType hardware_type = 1;</code>
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerSize worker_size = 1;</code>
      */
-    public Builder setHardwareTypeValue(int value) {
-      hardwareType_ = value;
+    public Builder setWorkerSizeValue(int value) {
+      workerSize_ = value;
       onChanged();
       return this;
     }
     /**
-     * <code>.facebook.remote_execution.WorkerRequirements.WorkerHardwareType hardware_type = 1;</code>
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerSize worker_size = 1;</code>
      */
-    public com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType getHardwareType() {
+    public com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize getWorkerSize() {
       @SuppressWarnings("deprecation")
-      com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType result = com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType.valueOf(hardwareType_);
-      return result == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType.UNRECOGNIZED : result;
+      com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize result = com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize.valueOf(workerSize_);
+      return result == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize.UNRECOGNIZED : result;
     }
     /**
-     * <code>.facebook.remote_execution.WorkerRequirements.WorkerHardwareType hardware_type = 1;</code>
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerSize worker_size = 1;</code>
      */
-    public Builder setHardwareType(com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerHardwareType value) {
+    public Builder setWorkerSize(com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize value) {
       if (value == null) {
         throw new NullPointerException();
       }
       
-      hardwareType_ = value.getNumber();
+      workerSize_ = value.getNumber();
       onChanged();
       return this;
     }
     /**
-     * <code>.facebook.remote_execution.WorkerRequirements.WorkerHardwareType hardware_type = 1;</code>
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerSize worker_size = 1;</code>
      */
-    public Builder clearHardwareType() {
+    public Builder clearWorkerSize() {
       
-      hardwareType_ = 0;
+      workerSize_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private int platformType_ = 0;
+    /**
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerPlatformType platform_type = 2;</code>
+     */
+    public int getPlatformTypeValue() {
+      return platformType_;
+    }
+    /**
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerPlatformType platform_type = 2;</code>
+     */
+    public Builder setPlatformTypeValue(int value) {
+      platformType_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerPlatformType platform_type = 2;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType getPlatformType() {
+      @SuppressWarnings("deprecation")
+      com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType result = com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.valueOf(platformType_);
+      return result == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.UNRECOGNIZED : result;
+    }
+    /**
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerPlatformType platform_type = 2;</code>
+     */
+    public Builder setPlatformType(com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType value) {
+      if (value == null) {
+        throw new NullPointerException();
+      }
+      
+      platformType_ = value.getNumber();
+      onChanged();
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.WorkerRequirements.WorkerPlatformType platform_type = 2;</code>
+     */
+    public Builder clearPlatformType() {
+      
+      platformType_ = 0;
       onChanged();
       return this;
     }

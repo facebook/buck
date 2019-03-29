@@ -33,7 +33,6 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
-import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.Futures;
@@ -59,24 +58,22 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
   private final ExecutionStub executionStub;
   private final ByteStreamStub byteStreamStub;
   private final String instanceName;
-  private final MetadataProvider metadataProvider;
   private final Protocol protocol;
 
   public GrpcRemoteExecutionServiceClient(
       ExecutionStub executionStub,
       ByteStreamStub byteStreamStub,
       String instanceName,
-      MetadataProvider metadataProvider,
       Protocol protocol) {
     this.executionStub = executionStub;
     this.byteStreamStub = byteStreamStub;
     this.instanceName = instanceName;
-    this.metadataProvider = metadataProvider;
     this.protocol = protocol;
   }
 
   @Override
-  public ListenableFuture<ExecutionResult> execute(Protocol.Digest actionDigest, String ruleName)
+  public ListenableFuture<ExecutionResult> execute(
+      Protocol.Digest actionDigest, String ruleName, MetadataProvider metadataProvider)
       throws IOException, InterruptedException {
     SettableFuture<Operation> future = SettableFuture.create();
 
@@ -138,8 +135,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
           try {
             return getExecutionResult(
-                operation.getResponse().unpack(ExecuteResponse.class).getResult(),
-                stubAndMetadata.getMetadata());
+                operation.getResponse().unpack(ExecuteResponse.class).getResult());
           } catch (InvalidProtocolBufferException e) {
             throw new BuckUncheckedExecutionException(
                 e,
@@ -150,8 +146,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
         MoreExecutors.directExecutor());
   }
 
-  private ExecutionResult getExecutionResult(
-      ActionResult actionResult, RemoteExecutionMetadata metadata) {
+  private ExecutionResult getExecutionResult(ActionResult actionResult) {
     if (actionResult.getExitCode() != 0) {
       LOG.debug(
           "Got failed action from worker %s", actionResult.getExecutionMetadata().getWorker());
@@ -226,11 +221,6 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
           LOG.debug("Got raw stderr: " + stderrRaw.toStringUtf8());
           return Optional.of(stderrRaw.toStringUtf8());
         }
-      }
-
-      @Override
-      public RemoteExecutionMetadata getMetadata() {
-        return metadata;
       }
 
       @Override

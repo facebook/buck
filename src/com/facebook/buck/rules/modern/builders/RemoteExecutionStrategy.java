@@ -31,12 +31,15 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
+import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.step.AbstractExecutionStep;
@@ -75,6 +78,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private static final Logger LOG = Logger.get(RemoteExecutionStrategy.class);
+  private static final int WORKER_REQUIREMENTS_PROVIDER_MAX_CACHE_SIZE = 1000;
 
   private final BuckEventBus eventBus;
   private final RemoteExecutionClients executionClients;
@@ -90,6 +94,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
   private final OptionalInt maxInputSizeBytes;
 
+  private final WorkerRequirementsProvider requirementsProvider;
+  private final MetadataProvider metadataProvider;
+
   RemoteExecutionStrategy(
       BuckEventBus eventBus,
       RemoteExecutionStrategyConfig strategyConfig,
@@ -97,7 +104,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher) {
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      MetadataProvider metadataProvider) {
     this.executionClients = executionClients;
     this.service =
         MoreExecutors.listeningDecorator(
@@ -108,6 +116,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.handleResultLimiter = new JobLimiter(strategyConfig.getMaxConcurrentResultHandling());
     this.maxInputSizeBytes = strategyConfig.maxInputSizeBytes();
     this.eventBus = eventBus;
+    this.metadataProvider = metadataProvider;
 
     ImmutableSet<Optional<String>> cellNames =
         rootCell
@@ -137,6 +146,11 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             cellNames,
             cellPathPrefix,
             fileHasher);
+
+    this.requirementsProvider =
+        new WorkerRequirementsProvider(
+            strategyConfig.getWorkerRequirementsFilename(),
+            WORKER_REQUIREMENTS_PROVIDER_MAX_CACHE_SIZE);
   }
 
   /** Creates a BuildRuleStrategy for a particular */
@@ -147,10 +161,18 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       SourcePathRuleFinder ruleFinder,
       CellPathResolver cellResolver,
       Cell rootCell,
-      ThrowingFunction<Path, HashCode, IOException> fileHasher) {
+      ThrowingFunction<Path, HashCode, IOException> fileHasher,
+      MetadataProvider metadataProvider) {
     BuildRuleStrategy strategy =
         new RemoteExecutionStrategy(
-            eventBus, strategyConfig, clients, ruleFinder, cellResolver, rootCell, fileHasher);
+            eventBus,
+            strategyConfig,
+            clients,
+            ruleFinder,
+            cellResolver,
+            rootCell,
+            fileHasher,
+            metadataProvider);
     if (strategyConfig.isLocalFallbackEnabled()) {
       strategy = new LocalFallbackStrategy(strategy, eventBus);
     }
@@ -298,7 +320,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           return executeNowThatInputsAreReady(
               rule.getProjectFilesystem(),
               strategyContext,
-              buildTarget,
+              rule,
               tryStart,
               actionDigest,
               actionOutputs,
@@ -315,7 +337,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       try (Scope ignored1 =
           RemoteExecutionActionEvent.sendEvent(
               eventBus, State.COMPUTING_ACTION, rule.getBuildTarget(), Optional.empty())) {
-        actionInfo = mbrHelper.prepareRemoteExecution((ModernBuildRule<?>) rule);
+        actionInfo =
+            mbrHelper.prepareRemoteExecution(
+                (ModernBuildRule<?>) rule,
+                requirementsProvider.resolveRequirements(rule.getBuildTarget()));
       }
       return actionInfo;
     }
@@ -324,12 +349,16 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private ListenableFuture<Optional<BuildResult>> executeNowThatInputsAreReady(
       ProjectFilesystem filesystem,
       BuildStrategyContext strategyContext,
-      BuildTarget buildTarget,
+      BuildRule buildRule,
       Callable<Throwable> tryStart,
       Digest actionDigest,
       Iterable<? extends Path> actionOutputs,
       String ruleName) {
     AtomicReference<Throwable> cancelled = new AtomicReference<>(null);
+    MetadataProvider metadataProvider =
+        MetadataProviderFactory.wrapForRuleWithWorkerRequirements(
+            this.metadataProvider,
+            () -> requirementsProvider.resolveRequirements(buildRule.getBuildTarget()));
     ListenableFuture<ExecutionResult> executionResult =
         executionLimiter.schedule(
             service,
@@ -340,16 +369,21 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 RemoteExecutionActionEvent.sendTerminalEvent(
                     eventBus,
                     State.ACTION_CANCELLED,
-                    buildTarget,
+                    buildRule.getBuildTarget(),
                     Optional.of(actionDigest),
                     Optional.empty());
                 return Futures.immediateFuture(null);
               }
               Scope executingScope =
                   RemoteExecutionActionEvent.sendEvent(
-                      eventBus, State.EXECUTING, buildTarget, Optional.of(actionDigest));
+                      eventBus,
+                      State.EXECUTING,
+                      buildRule.getBuildTarget(),
+                      Optional.of(actionDigest));
               return Futures.transform(
-                  executionClients.getRemoteExecutionService().execute(actionDigest, ruleName),
+                  executionClients
+                      .getRemoteExecutionService()
+                      .execute(actionDigest, ruleName, metadataProvider),
                   result -> {
                     executingScope.close();
                     return result;
@@ -371,13 +405,14 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                       handleExecutionResult(
                           filesystem,
                           strategyContext,
-                          buildTarget,
+                          buildRule.getBuildTarget(),
                           result,
                           actionDigest,
-                          actionOutputs));
+                          actionOutputs,
+                          metadataProvider));
             },
             service),
-        buildTarget,
+        buildRule.getBuildTarget(),
         actionDigest);
   }
 
@@ -418,7 +453,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuildTarget buildTarget,
       ExecutionResult result,
       Digest actionDigest,
-      Iterable<? extends Path> actionOutputs)
+      Iterable<? extends Path> actionOutputs,
+      MetadataProvider metadataProvider)
       throws IOException, StepFailedException {
     LOG.debug(
         "[RE] Built target [%s] with exit code [%d]. Action: [%s]. ActionResult: [%s]",
@@ -434,7 +470,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           result.getExitCode(),
           result.getStdout().orElse("<empty>"),
           result.getStderr().orElse("<empty>"),
-          result.getMetadata().toString(),
+          metadataProvider.toString(),
           actionDigest);
       RemoteExecutionActionEvent.sendTerminalEvent(
           eventBus,

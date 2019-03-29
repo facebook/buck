@@ -30,7 +30,6 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Command;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
-import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
 import com.facebook.buck.util.NamedTemporaryDirectory;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
@@ -65,7 +64,7 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
         new LocalContentAddressedStorage(workDir.getPath().resolve("__cache__"), protocol);
     this.protocol = protocol;
     this.executionService =
-        (actionDigest, ruleName) -> {
+        (actionDigest, ruleName, metadataProvider) -> {
           Action action = storage.materializeAction(actionDigest);
 
           Path buildDir = workDir.getPath().resolve(action.getInputRootDigest().getHash());
@@ -120,11 +119,6 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
                   @Override
                   public Optional<String> getStderr() {
                     return Optional.of(actionResult.stderr);
-                  }
-
-                  @Override
-                  public RemoteExecutionMetadata getMetadata() {
-                    return RemoteExecutionMetadata.getDefaultInstance();
                   }
 
                   @Override

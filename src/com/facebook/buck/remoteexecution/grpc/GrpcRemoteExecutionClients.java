@@ -81,7 +81,7 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
     ExecutionStub executionStub = ExecutionGrpc.newStub(executionEngineChannel);
     this.executionService =
         new GrpcRemoteExecutionServiceClient(
-            executionStub, byteStreamStub, instanceName, metadataProvider, getProtocol());
+            executionStub, byteStreamStub, instanceName, getProtocol());
   }
 
   private static String getReadResourceName(String instanceName, Protocol.Digest digest) {

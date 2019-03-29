@@ -32,6 +32,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.FileNode;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
+import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.rules.modern.Buildable;
@@ -322,7 +323,8 @@ public class ModernBuildRuleRemoteExecutionHelper {
    * Gets all the information needed to run the rule via Remote Execution (inputs merkle tree,
    * action and digest, outputs).
    */
-  RemoteExecutionActionInfo prepareRemoteExecution(ModernBuildRule<?> rule) throws IOException {
+  RemoteExecutionActionInfo prepareRemoteExecution(
+      ModernBuildRule<?> rule, WorkerRequirements workerRequirements) throws IOException {
     Set<Path> outputs;
     HashCode hash;
 
@@ -361,7 +363,8 @@ public class ModernBuildRuleRemoteExecutionHelper {
           getBuilderEnvironmentOverrides(
               isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix, outputs);
 
-      Protocol.Command actionCommand = protocol.newCommand(command, commandEnvironment, outputs);
+      Protocol.Command actionCommand =
+          protocol.newCommand(command, commandEnvironment, outputs, workerRequirements);
 
       MerkleTreeNode mergedMerkleTree = nodeCache.mergeNodes(allNodes);
 

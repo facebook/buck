@@ -32,4 +32,6 @@ public interface RemoteExecutionStrategyConfig {
   boolean isLocalFallbackEnabled();
 
   OptionalInt maxInputSizeBytes();
+
+  String getWorkerRequirementsFilename();
 }

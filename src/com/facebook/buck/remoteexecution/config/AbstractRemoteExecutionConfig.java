@@ -101,6 +101,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
    */
   public static final String RE_SESSION_LABEL_KEY = "re_session_label";
 
+  /** Worker requirements filename */
+  public static final String WORKER_REQUIREMENTS_FILENAME = "worker_requirements_filename";
+
   public String getRemoteHost() {
     return getValueWithFallback("remote_host").orElse("localhost");
   }
@@ -188,6 +191,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
                 SECTION, IS_LOCAL_FALLBACK_ENABLED_KEY, DEFAULT_IS_LOCAL_FALLBACK_ENABLED);
     OptionalInt maxInputSizeBytes = getDelegate().getInteger(SECTION, MAX_INPUT_SIZE_BYTES);
 
+    String workerRequirementsFilename =
+        getDelegate()
+            .getValue(SECTION, WORKER_REQUIREMENTS_FILENAME)
+            .orElse("re_worker_requirements");
+
     // Some of these values are also limited by other ones (e.g. synchronous work is limited by the
     // number of threads). We detect some of these cases and log an error to the user to help them
     // understand the behavior.
@@ -258,6 +266,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public OptionalInt maxInputSizeBytes() {
         return maxInputSizeBytes;
+      }
+
+      @Override
+      public String getWorkerRequirementsFilename() {
+        return workerRequirementsFilename;
       }
     };
   }

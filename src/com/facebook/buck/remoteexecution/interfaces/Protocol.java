@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution.interfaces;
 
+import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -119,7 +120,8 @@ public interface Protocol {
   Command newCommand(
       ImmutableList<String> command,
       ImmutableSortedMap<String, String> commandEnvironment,
-      Set<Path> outputs);
+      Set<Path> outputs,
+      WorkerRequirements workerRequirements);
 
   Action newAction(Digest commandDigest, Digest inputRootDigest);
 

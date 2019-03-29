@@ -28,70 +28,70 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
 
 /** Remote execution events sent to the event bus. */
 public class RemoteExecutionEventListener
     implements BuckEventListener, RemoteExecutionStatsProvider {
-  private final Map<State, AtomicInteger> actionStateCount;
-  private final AtomicInteger totalBuildRules;
+  private final Map<State, LongAdder> actionStateCount;
+  private final LongAdder totalBuildRules;
 
-  private final AtomicInteger downloads;
-  private final AtomicLong donwloadBytes;
-  private final AtomicInteger uploads;
-  private final AtomicLong uploadBytes;
+  private final LongAdder downloads;
+  private final LongAdder donwloadBytes;
+  private final LongAdder uploads;
+  private final LongAdder uploadBytes;
 
-  private final AtomicLong remoteCpuTime;
+  private final LongAdder remoteCpuTime;
 
   private final AtomicBoolean hasFirstRemoteActionStarted;
 
-  private final AtomicInteger localFallbackTotalExecutions;
-  private final AtomicInteger localFallbackLocalExecutions;
-  private final AtomicInteger localFallbackSuccessfulLocalExecutions;
+  private final LongAdder localFallbackTotalExecutions;
+  private final LongAdder localFallbackLocalExecutions;
+  private final LongAdder localFallbackSuccessfulLocalExecutions;
 
   public RemoteExecutionEventListener() {
-    this.downloads = new AtomicInteger(0);
-    this.donwloadBytes = new AtomicLong(0);
-    this.uploads = new AtomicInteger(0);
-    this.uploadBytes = new AtomicLong(0);
-    this.remoteCpuTime = new AtomicLong(0);
-    this.totalBuildRules = new AtomicInteger(0);
+    this.downloads = new LongAdder();
+    this.donwloadBytes = new LongAdder();
+    this.uploads = new LongAdder();
+    this.uploadBytes = new LongAdder();
+    this.remoteCpuTime = new LongAdder();
+    this.totalBuildRules = new LongAdder();
     this.hasFirstRemoteActionStarted = new AtomicBoolean(false);
 
-    localFallbackTotalExecutions = new AtomicInteger(0);
-    localFallbackLocalExecutions = new AtomicInteger(0);
-    localFallbackSuccessfulLocalExecutions = new AtomicInteger(0);
+    localFallbackTotalExecutions = new LongAdder();
+    localFallbackLocalExecutions = new LongAdder();
+    localFallbackSuccessfulLocalExecutions = new LongAdder();
 
     this.actionStateCount = Maps.newConcurrentMap();
     for (State state : RemoteExecutionActionEvent.State.values()) {
-      actionStateCount.put(state, new AtomicInteger(0));
+      actionStateCount.put(state, new LongAdder());
     }
   }
 
   /** Event specific subscriber method. */
   @Subscribe
   public void onBuildRuleEvent(@SuppressWarnings("unused") BuildRuleEvent.Finished event) {
-    totalBuildRules.incrementAndGet();
+    totalBuildRules.increment();
   }
 
   /** Event specific subscriber method. */
   @Subscribe
   public void onCasUploadEvent(Finished event) {
     hasFirstRemoteActionStarted.set(true);
-    uploads.addAndGet(event.getStartedEvent().getBlobCount());
-    uploadBytes.addAndGet(event.getStartedEvent().getSizeBytes());
+    uploads.add(event.getStartedEvent().getBlobCount());
+    uploadBytes.add(event.getStartedEvent().getSizeBytes());
   }
 
   /** Event specific subscriber method. */
   @Subscribe
   public void onCasDownloadEvent(CasBlobDownloadEvent.Finished event) {
     hasFirstRemoteActionStarted.set(true);
-    downloads.addAndGet(event.getStartedEvent().getBlobCount());
-    donwloadBytes.addAndGet(event.getStartedEvent().getSizeBytes());
+    downloads.add(event.getStartedEvent().getBlobCount());
+    donwloadBytes.add(event.getStartedEvent().getSizeBytes());
   }
 
   /** Event specific subscriber method. */
@@ -99,17 +99,17 @@ public class RemoteExecutionEventListener
   public void onActionScheduled(
       @SuppressWarnings("unused") RemoteExecutionActionEvent.Scheduled event) {
     hasFirstRemoteActionStarted.set(true);
-    getStateCount(State.WAITING).incrementAndGet();
+    getStateCount(State.WAITING).increment();
   }
 
   /** Event specific subscriber method. */
   @Subscribe
   public void onActionEventTerminal(RemoteExecutionActionEvent.Terminal event) {
     hasFirstRemoteActionStarted.set(true);
-    getStateCount(State.WAITING).decrementAndGet();
-    getStateCount(event.getState()).incrementAndGet();
+    getStateCount(State.WAITING).decrement();
+    getStateCount(event.getState()).increment();
     if (event.getExecutedActionMetadata().isPresent()) {
-      remoteCpuTime.addAndGet(
+      remoteCpuTime.add(
           event.getExecutedActionMetadata().get().getExecutionCompletedTimestamp().getSeconds()
               - event.getExecutedActionMetadata().get().getExecutionStartTimestamp().getSeconds());
     }
@@ -119,11 +119,11 @@ public class RemoteExecutionEventListener
   @Subscribe
   public void onActionEventStarted(RemoteExecutionActionEvent.Started event) {
     hasFirstRemoteActionStarted.set(true);
-    getStateCount(State.WAITING).decrementAndGet();
-    getStateCount(event.getState()).incrementAndGet();
+    getStateCount(State.WAITING).decrement();
+    getStateCount(event.getState()).increment();
   }
 
-  public AtomicInteger getStateCount(State waiting) {
+  public LongAdder getStateCount(State waiting) {
     return Objects.requireNonNull(actionStateCount.get(waiting));
   }
 
@@ -131,21 +131,21 @@ public class RemoteExecutionEventListener
   @Subscribe
   public void onActionEventFinished(RemoteExecutionActionEvent.Finished event) {
     hasFirstRemoteActionStarted.set(true);
-    getStateCount(State.WAITING).incrementAndGet();
-    getStateCount(event.getStartedEvent().getState()).decrementAndGet();
+    getStateCount(State.WAITING).increment();
+    getStateCount(event.getStartedEvent().getState()).decrement();
   }
 
   /** Events from the LocalFallback stats. */
   @Subscribe
   public void onLocalFallbackEventFinished(LocalFallbackEvent.Finished event) {
-    localFallbackTotalExecutions.incrementAndGet();
+    localFallbackTotalExecutions.increment();
 
     if (event.getLocalResult() != Result.NOT_RUN) {
-      localFallbackLocalExecutions.incrementAndGet();
+      localFallbackLocalExecutions.increment();
     }
 
     if (event.getLocalResult() == Result.SUCCESS) {
-      localFallbackSuccessfulLocalExecutions.incrementAndGet();
+      localFallbackSuccessfulLocalExecutions.increment();
     }
   }
 
@@ -155,45 +155,45 @@ public class RemoteExecutionEventListener
         actionStateCount
             .entrySet()
             .stream()
-            .collect(Collectors.toMap(entry -> entry.getKey(), entry -> entry.getValue().get())));
+            .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().intValue())));
   }
 
   @Override
   public int getCasDownloads() {
-    return downloads.get();
+    return downloads.intValue();
   }
 
   @Override
   public long getCasDownloadSizeBytes() {
-    return donwloadBytes.get();
+    return donwloadBytes.sum();
   }
 
   @Override
   public int getCasUploads() {
-    return uploads.get();
+    return uploads.intValue();
   }
 
   @Override
   public long getCasUploadSizeBytes() {
-    return uploadBytes.get();
+    return uploadBytes.intValue();
   }
 
   @Override
   public int getTotalRulesBuilt() {
-    return totalBuildRules.get();
+    return totalBuildRules.intValue();
   }
 
   @Override
   public LocalFallbackStats getLocalFallbackStats() {
     return LocalFallbackStats.builder()
-        .setLocallyExecutedRules(localFallbackLocalExecutions.get())
-        .setLocallySuccessfulRules(localFallbackSuccessfulLocalExecutions.get())
-        .setTotalExecutedRules(localFallbackTotalExecutions.get())
+        .setLocallyExecutedRules(localFallbackLocalExecutions.intValue())
+        .setLocallySuccessfulRules(localFallbackSuccessfulLocalExecutions.intValue())
+        .setTotalExecutedRules(localFallbackTotalExecutions.intValue())
         .build();
   }
 
   @Override
   public long getRemoteCpuTime() {
-    return remoteCpuTime.get();
+    return remoteCpuTime.sum();
   }
 }

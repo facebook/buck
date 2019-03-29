@@ -85,7 +85,8 @@ public class ModernBuildRuleBuilderFactory {
                   new SourcePathRuleFinder(resolver),
                   cellResolver,
                   rootCell,
-                  hashLoader::get));
+                  hashLoader::get,
+                  metadataProvider));
       }
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(e, "When creating MBR build strategy.");

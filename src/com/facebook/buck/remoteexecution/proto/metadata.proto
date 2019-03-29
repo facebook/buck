@@ -73,13 +73,19 @@ message CasClientInfo {
 
 // minimal worker requirements which should be satisfied to execute a given action
 message WorkerRequirements {
-  enum WorkerHardwareType {
+  enum WorkerPlatformType {
+    LINUX = 0;
+    ANDROID_EMULATOR = 1;
+  }
+
+  enum WorkerSize {
     SMALL = 0;
     MEDIUM = 1;
     LARGE = 2;
   }
 
-  WorkerHardwareType hardware_type = 1;
+  WorkerSize worker_size = 1;
+  WorkerPlatformType platform_type = 2;
 }
 
 // This is propagated in GRPC header "re-metadata-bin".
