@@ -40,3 +40,39 @@ Android development, but do not themselves contain the string <code>android</cod
 
 {/template}
 
+
+/***/
+{template .example_ruletype}
+
+<p>
+The following command line uses <code>buck audit ruletype</code> to view 
+the arguments supported by the {call buck.remote_file /} rule.
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit ruletype remote_file
+{/literal}
+</pre>
+</p>
+
+<p>
+<pre>
+{literal}
+def remote_file (
+    name,
+    sha1,
+    url,
+    labels = None,
+    licenses = None,
+    out = None,
+    type = None,
+):
+    ...
+{/literal}
+</pre>
+</p>
+
+{/template}
+

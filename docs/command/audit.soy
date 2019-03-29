@@ -292,30 +292,8 @@ cxx.cxx&#9;/usr/bin/g++
     Print the Python signature for the specified rule.
     </p>
 
-<p>
-<pre>
-{literal}
-buck audit ruletype remote_file
-{/literal}
-</pre>
-</p>
-
-<p>
-<pre>
-{literal}
-def remote_file (
-    name,
-    sha1,
-    url,
-    labels = None,
-    licenses = None,
-    out = None,
-    type = None,
-):
-    ...
-{/literal}
-</pre>
-</p>
+/***/
+{call buckaudit.example_ruletype /}
 
     {/param}
   {/call}
