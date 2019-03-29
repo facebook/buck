@@ -101,6 +101,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
           break;
         case ANDROID_NDK_ENV:
         case NDK_HOME_ENV:
+        case ANDROID_NDK_HOME_ENV:
           ndkDirectoryPaths = ImmutableList.of(getEnvironmentVariable(searchOrderEntry.entryValue));
           break;
         case NDK_REPOSITORY_CONFIG:
