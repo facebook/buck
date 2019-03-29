@@ -382,7 +382,8 @@ public class HaskellDescriptionUtils {
             outputPath,
             args,
             linkerArgs,
-            platform.shouldCacheLinks()));
+            platform.shouldCacheLinks(),
+            platform.shouldUseArgsfile()));
   }
 
   /** Accumulate parse-time deps needed by Haskell descriptions in depsBuilder. */

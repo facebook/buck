@@ -328,13 +328,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     if (useArgsfile) {
       builder.add("@" + getArgsfile());
     } else {
-      builder.addAll(
-          sources
-              .getSourcePaths()
-              .stream()
-              .map(resolver::getAbsolutePath)
-              .map(Object::toString)
-              .iterator());
+      builder.addAll(getSourceArguments(resolver));
     }
 
     return builder.build();
