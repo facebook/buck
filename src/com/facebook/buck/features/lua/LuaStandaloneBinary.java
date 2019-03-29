@@ -47,8 +47,6 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
 
   @AddToRuleKey private final Tool builder;
 
-  @AddToRuleKey private final ImmutableList<String> builderArgs;
-
   @AddToRuleKey(stringify = true)
   private final Path output;
 
@@ -67,7 +65,6 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Tool builder,
-      ImmutableList<String> builderArgs,
       Path output,
       Optional<SourcePath> starter,
       LuaPackageComponents components,
@@ -76,7 +73,6 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
       boolean cache) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.builder = builder;
-    this.builderArgs = builderArgs;
     this.output = output;
     this.starter = starter;
     this.components = components;
@@ -138,7 +134,6 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
           protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
             ImmutableList.Builder<String> command = ImmutableList.builder();
             command.addAll(builder.getCommandPrefix(resolver));
-            command.addAll(builderArgs);
             command.add("--entry-point", mainModule);
             command.add("--interpreter");
             if (starter.isPresent()) {

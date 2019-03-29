@@ -699,7 +699,6 @@ public class LuaBinaryDescription
                             .build())
                     .withoutExtraDeps(),
                 packager,
-                ImmutableList.of(),
                 output,
                 Optional.of(starter),
                 components,
