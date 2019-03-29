@@ -282,7 +282,6 @@ public class Omnibus {
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root,
@@ -290,9 +289,6 @@ public class Omnibus {
       Optional<Path> output) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-
-    // Add any extra flags to the link.
-    argsBuilder.addAll(extraLdflags);
 
     // Since the dummy omnibus library doesn't actually contain any symbols, make sure the linker
     // won't drop its runtime reference to it.
@@ -435,7 +431,6 @@ public class Omnibus {
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root) {
@@ -447,7 +442,6 @@ public class Omnibus {
         ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
-        extraLdflags,
         spec,
         omnibus,
         root,
@@ -463,7 +457,6 @@ public class Omnibus {
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
-      ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec,
       SourcePath omnibus,
       NativeLinkTarget root) {
@@ -475,7 +468,6 @@ public class Omnibus {
         ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
-        extraLdflags,
         spec,
         omnibus,
         root,
@@ -677,7 +669,6 @@ public class Omnibus {
             ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
-            ImmutableList.of(),
             spec,
             dummyOmnibus,
             target);
@@ -691,7 +682,6 @@ public class Omnibus {
                 ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
-                ImmutableList.of(),
                 spec,
                 dummyOmnibus,
                 target);
@@ -731,7 +721,6 @@ public class Omnibus {
                 ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
-                ImmutableList.of(),
                 spec,
                 realOmnibus.orElse(dummyOmnibus),
                 target);
