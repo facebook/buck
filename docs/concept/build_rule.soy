@@ -60,6 +60,38 @@ Consult the table of contents to locate the build rules that are
 appropriate for your development project.
 </p>
 
+<p>
+You can view a list of Buck's build rules from the command line with the
+command: 
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit ruletypes
+{/literal}
+</pre>
+</p>
+
+<p>
+You can also view the arguments supported by a particular rule with the
+command:
+</p>
+
+<p>
+<pre>
+{literal}
+buck audit ruletype &#x3C;rule>
+{/literal}
+</pre>
+</p>
+
+<p>
+Note that the first of these commands uses the <em>plural</em> <code>ruletypes</code>, and 
+the second uses the <em>singular</em> <code>ruletype</code>. For more information, 
+see the {call buck.cmd_audit /} documentation.
+</p>
+
 
 <h2>Source files as inputs to build rules</h2>
 
