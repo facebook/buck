@@ -71,6 +71,11 @@ public class FakeAndroidBuckConfig {
     return this;
   }
 
+  public FakeAndroidBuckConfig setNdkSearchOrder(String searchOrder) {
+    ndkSection.put("ndk_search_order", searchOrder);
+    return this;
+  }
+
   public FakeAndroidBuckConfig setNdkVersion(String ndkVersion) {
     ndkSection.put("ndk_version", ndkVersion);
     return this;

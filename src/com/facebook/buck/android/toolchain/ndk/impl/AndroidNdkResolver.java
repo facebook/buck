@@ -17,6 +17,7 @@
 package com.facebook.buck.android.toolchain.ndk.impl;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.android.AndroidBuckConfig.NdkSearchOrderEntry;
 import com.facebook.buck.android.toolchain.common.BaseAndroidToolchainResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
@@ -90,48 +91,40 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
   }
 
   private Optional<Path> findNdk(AndroidBuckConfig config) {
-    try {
-      Optional<Path> ndkRepositoryPath =
-          findFirstDirectory(ImmutableList.of(getEnvironmentVariable("ANDROID_NDK_REPOSITORY")));
-      if (ndkRepositoryPath.isPresent()) {
-        return findNdkFromRepository(ndkRepositoryPath.get());
-      }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
-    }
-    try {
-      Optional<Path> ndkDirectoryPath =
-          findFirstDirectory(
+    for (NdkSearchOrderEntry searchOrderEntry : config.getNdkSearchOrder()) {
+      ImmutableList<Pair<String, Optional<String>>> ndkRepositoryPaths = ImmutableList.of(),
+          ndkDirectoryPaths = ImmutableList.of();
+      switch (searchOrderEntry) {
+        case ANDROID_NDK_REPOSITORY_ENV:
+          ndkRepositoryPaths =
+              ImmutableList.of(getEnvironmentVariable(searchOrderEntry.entryValue));
+          break;
+        case ANDROID_NDK_ENV:
+        case NDK_HOME_ENV:
+          ndkDirectoryPaths = ImmutableList.of(getEnvironmentVariable(searchOrderEntry.entryValue));
+          break;
+        case NDK_REPOSITORY_CONFIG:
+          ndkRepositoryPaths =
               ImmutableList.of(
-                  getEnvironmentVariable("ANDROID_NDK"), getEnvironmentVariable("NDK_HOME")));
-      if (ndkDirectoryPath.isPresent()) {
-        return findNdkFromDirectory(ndkDirectoryPath.get());
+                  new Pair<>("ndk.ndk_repository_path", config.getNdkRepositoryPath()));
+          break;
+        case NDK_DIRECTORY_CONFIG:
+          ndkDirectoryPaths = ImmutableList.of(new Pair<>("ndk.ndk_path", config.getNdkPath()));
+          break;
+        default:
+          throw new AssertionError("Unreachable");
       }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
-    }
-    try {
-      Optional<Path> ndkRepositoryPath =
-          findFirstDirectory(
-              ImmutableList.of(
-                  new Pair<String, Optional<String>>(
-                      "ndk.ndk_repository_path", config.getNdkRepositoryPath())));
-      if (ndkRepositoryPath.isPresent()) {
-        return findNdkFromRepository(ndkRepositoryPath.get());
+      try {
+        Optional<Path> ndkRepositoryPath = findFirstDirectory(ndkRepositoryPaths);
+        Optional<Path> ndkDirectoryPath = findFirstDirectory(ndkDirectoryPaths);
+        if (ndkRepositoryPath.isPresent()) {
+          return findNdkFromRepository(ndkRepositoryPath.get());
+        } else if (ndkDirectoryPath.isPresent()) {
+          return findNdkFromDirectory(ndkDirectoryPath.get());
+        }
+      } catch (RuntimeException e) {
+        ndkErrorMessage = Optional.of(e.getMessage());
       }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
-    }
-    try {
-      Optional<Path> ndkDirectoryPath =
-          findFirstDirectory(
-              ImmutableList.of(
-                  new Pair<String, Optional<String>>("ndk.ndk_path", config.getNdkPath())));
-      if (ndkDirectoryPath.isPresent()) {
-        return findNdkFromDirectory(ndkDirectoryPath.get());
-      }
-    } catch (RuntimeException e) {
-      ndkErrorMessage = Optional.of(e.getMessage());
     }
 
     if (!ndkErrorMessage.isPresent()) {

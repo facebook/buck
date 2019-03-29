@@ -32,6 +32,7 @@ import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -40,8 +41,30 @@ public class AndroidBuckConfig {
 
   private static final String CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER = "<CONFIG>";
 
+  /** Values acceptable for ndk.ndk_search_order. */
+  public enum NdkSearchOrderEntry {
+    ANDROID_NDK_REPOSITORY_ENV("ANDROID_NDK_REPOSITORY"),
+    ANDROID_NDK_ENV("ANDROID_NDK"),
+    NDK_HOME_ENV("NDK_HOME"),
+    NDK_REPOSITORY_CONFIG("<NDK_REPOSITORY_CONFIG>"),
+    NDK_DIRECTORY_CONFIG("<NDK_DIRECTORY_CONFIG>"),
+    ;
+    public final String entryValue;
+
+    NdkSearchOrderEntry(String entryValue) {
+      this.entryValue = entryValue;
+    }
+  }
+
   private static final ImmutableList<String> DEFAULT_SDK_PATH_SEARCH_ORDER =
       ImmutableList.of("ANDROID_SDK", "ANDROID_HOME", CONFIG_ENTRY_IN_SDK_PATH_SEARCH_ORDER);
+  private static final ImmutableList<NdkSearchOrderEntry> DEFAULT_NDK_SEARCH_ORDER =
+      ImmutableList.of(
+          NdkSearchOrderEntry.ANDROID_NDK_REPOSITORY_ENV,
+          NdkSearchOrderEntry.ANDROID_NDK_ENV,
+          NdkSearchOrderEntry.NDK_HOME_ENV,
+          NdkSearchOrderEntry.NDK_REPOSITORY_CONFIG,
+          NdkSearchOrderEntry.NDK_DIRECTORY_CONFIG);
 
   private static final String ANDROID_SECTION = "android";
   private static final String REDEX = "redex";
@@ -112,6 +135,40 @@ public class AndroidBuckConfig {
 
   public Optional<String> getNdkRepositoryPath() {
     return delegate.getValue("ndk", "ndk_repository_path");
+  }
+
+  /**
+   * Defines the order of search of the Android NDK.
+   *
+   * <p>The order is the list of elements that can either be {@code <NDK_REPOSITORY_CONFIG>} to
+   * indicate the entry {@code ndk.ndk_repo_path} from {@code .buckconfig}, {@code
+   * <NDK_DIRECTORY_CONFIG>} to indicate the entry {@code ndk.ndk_path} from {@code .buckconfig}, or
+   * the name of an environment variable that contains path to Android NDK ({@code ANDROID_NDK},
+   * {@code NDK_HOME} or {@code ANDROID_NDK_REPOSITORY}).
+   *
+   * <p>If nothing is specified in {@code .buckconfig} the default order is: {@code
+   * ANDROID_NDK_REPOSITORY}, {@code ANDROID_NDK}, {@code NDK_HOME}, {@code
+   * <NDK_REPOSITORY_CONFIG>}, {@code <NDK_DIRECTORY_CONFIG>}
+   */
+  public ImmutableList<NdkSearchOrderEntry> getNdkSearchOrder() {
+    return delegate
+        .getOptionalListWithoutComments("ndk", "ndk_search_order")
+        .map(
+            configEntries ->
+                ImmutableList.copyOf(
+                    Iterables.transform(configEntries, this::convertNdkSearchEntry)))
+        .orElse(DEFAULT_NDK_SEARCH_ORDER);
+  }
+
+  private NdkSearchOrderEntry convertNdkSearchEntry(String configEntry) {
+    for (NdkSearchOrderEntry searchOrderEntry : NdkSearchOrderEntry.values()) {
+      if (configEntry.equals(searchOrderEntry.entryValue)) {
+        return searchOrderEntry;
+      }
+    }
+    throw new HumanReadableException(
+        "Unknown ndk.ndk_search_order entry: %s. Supported values: %s",
+        configEntry, ImmutableList.of(NdkSearchOrderEntry.values()));
   }
 
   public Optional<String> getNdkCpuAbiFallbackAppPlatform() {
