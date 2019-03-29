@@ -48,6 +48,8 @@ com/facebook/buck/testrunner/DelegateRunnerWithTimeout$1.class
 com/facebook/buck/testrunner/DelegateRunnerWithTimeout.class
 com/facebook/buck/testrunner/InstrumentationMain.class
 com/facebook/buck/testrunner/InstrumentationTestRunner$1.class
+com/facebook/buck/testrunner/InstrumentationTestRunner$ApkLocationReceiver.class
+com/facebook/buck/testrunner/InstrumentationTestRunner$Md5SumReceiver.class
 com/facebook/buck/testrunner/InstrumentationTestRunner$Nullable.class
 com/facebook/buck/testrunner/InstrumentationTestRunner.class
 com/facebook/buck/testrunner/JUnitMain.class
