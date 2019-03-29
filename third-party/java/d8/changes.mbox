@@ -1,19 +1,19 @@
-From 2f8c8cdf4616d1d761615812e9e52f37f09dca32 Mon Sep 17 00:00:00 2001
-From: Gautam Korlam <gkorlam@uber.com>
-Date: Tue, 19 Feb 2019 08:05:45 -0800
+From 996ce6686966d5736042a8ef52e420658d01d80d Mon Sep 17 00:00:00 2001
+From: Justin Hendrick <jhendrick@fb.com>
+Date: Thu, 28 Mar 2019 12:53:39 -0700
 Subject: [PATCH] Changes to D8 to make it work with facebook's buck build
  system
 
 ---
- src/main/java/com/android/tools/r8/D8.java    |  2 +-
- .../java/com/android/tools/r8/D8Command.java  | 14 +++++++++-
- .../com/android/tools/r8/graph/AppInfo.java   | 16 ++++++++++-
- .../tools/r8/graph/DexItemFactory.java        | 14 ++++++++++
- .../tools/r8/ir/conversion/IRConverter.java   |  2 +-
- .../r8/ir/desugar/Java8MethodRewriter.java    | 11 ++++----
- .../tools/r8/ir/desugar/LambdaDescriptor.java |  2 +-
- .../tools/r8/utils/AndroidApiLevel.java       |  3 +-
- .../android/tools/r8/utils/AndroidApp.java    | 28 +++++++++++++++++--
+ src/main/java/com/android/tools/r8/D8.java         |  2 +-
+ src/main/java/com/android/tools/r8/D8Command.java  | 14 ++++++++++-
+ .../java/com/android/tools/r8/graph/AppInfo.java   | 16 ++++++++++++-
+ .../com/android/tools/r8/graph/DexItemFactory.java | 14 +++++++++++
+ .../tools/r8/ir/conversion/IRConverter.java        |  2 +-
+ .../tools/r8/ir/desugar/Java8MethodRewriter.java   | 11 +++++----
+ .../tools/r8/ir/desugar/LambdaDescriptor.java      |  2 +-
+ .../android/tools/r8/utils/AndroidApiLevel.java    |  3 ++-
+ .../com/android/tools/r8/utils/AndroidApp.java     | 28 +++++++++++++++++++---
  9 files changed, 78 insertions(+), 14 deletions(-)
 
 diff --git a/src/main/java/com/android/tools/r8/D8.java b/src/main/java/com/android/tools/r8/D8.java
@@ -98,22 +98,22 @@ index 1754ad91c..266386386 100644
    }
  
    protected AppInfo(DirectMappedDexApplication application, GraphLense lense) {
-@@ -135,6 +142,13 @@ public class AppInfo implements DexDefinitionSupplier {
-     return existing != null ? existing : typeDefinitions;
+@@ -136,6 +143,13 @@ public class AppInfo implements DexDefinitionSupplier {
    }
  
-+  /**
+   /**
 +   * Get unique bucket id.
 +   */
 +  public String getBucketId() {
 +    return bucketId;
 +  }
 +
-   /**
++  /**
     * Lookup static method following the super chain from the holder of {@code method}.
     * <p>
+    * This method will resolve the method on the holder of {@code method} and only return a non-null
 diff --git a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
-index 5ef8072ac..bf3e60ef7 100644
+index 5ef8072ac..a6b9405cc 100644
 --- a/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 +++ b/src/main/java/com/android/tools/r8/graph/DexItemFactory.java
 @@ -39,6 +39,7 @@ import java.util.ArrayList;
@@ -134,7 +134,7 @@ index 5ef8072ac..bf3e60ef7 100644
 +  public Collection<String> computeReferencedResources() {
 +    Set<String> resourceNames = new HashSet<>();
 +    for (DexField item: fields.values()) {
-+      DexType clazz = item.type;
++      DexType clazz = item.holder;
 +      if (clazz.toDescriptorString().contains("/R$")) {
 +        resourceNames.add(clazz.getPackageDescriptor().replaceAll("/", ".") + "." + item.name.toString());
 +      }
@@ -281,11 +281,10 @@ index 4c1552447..f871ae6a8 100644
  
      // Proguard map data is output only data. This should never be used as input to a compilation.
      private StringResource proguardMapOutputData;
-@@ -652,6 +665,14 @@ public class AndroidApp {
-       return this;
+@@ -653,6 +666,14 @@ public class AndroidApp {
      }
  
-+    /**
+     /**
 +     * Set unique identifier of a bucket of Java classes that D8 will dex independently in parallel.
 +     */
 +    public Builder setBucketId(String value) {
@@ -293,9 +292,10 @@ index 4c1552447..f871ae6a8 100644
 +      return this;
 +    }
 +
-     /**
++    /**
       * Build final AndroidApp.
       */
+     public AndroidApp build() {
 @@ -698,7 +719,8 @@ public class AndroidApp {
            ImmutableList.copyOf(archiveProvidersToClose),
            proguardMapOutputData,
@@ -307,5 +307,5 @@ index 4c1552447..f871ae6a8 100644
  
      public Builder addProgramFile(Path file) {
 -- 
-2.20.1
+2.13.5
 

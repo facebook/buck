@@ -79,6 +79,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   private ProjectFilesystem filesystem;
 
   private static final String SIMPLE_TARGET = "//apps/multidex:app";
+  private static final String RES_D8_TARGET = "//apps/multidex:app_with_resources_and_d8";
   private static final String RAW_DEX_TARGET = "//apps/multidex:app-art";
   private static final String APP_REDEX_TARGET = "//apps/sample:app_redex";
 
@@ -303,6 +304,19 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   public void testDxFindsReferencedResources() throws IOException {
     workspace.runBuckBuild(SIMPLE_TARGET).assertSuccess();
     BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#dex");
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    Optional<String> resourcesFromMetadata =
+        DexProducedFromJavaLibrary.readMetadataValue(
+            filesystem, dexTarget, DexProducedFromJavaLibrary.REFERENCED_RESOURCES);
+    assertTrue(resourcesFromMetadata.isPresent());
+    assertEquals("[\"com.sample.top_layout\",\"com.sample2.title\"]", resourcesFromMetadata.get());
+  }
+
+  @Test
+  public void testD8FindsReferencedResources() throws IOException {
+    workspace.runBuckBuild(RES_D8_TARGET).assertSuccess();
+    BuildTarget dexTarget = BuildTargetFactory.newInstance("//java/com/sample/lib:lib#d8");
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
     Optional<String> resourcesFromMetadata =
