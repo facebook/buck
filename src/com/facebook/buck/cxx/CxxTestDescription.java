@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -92,22 +93,22 @@ public class CxxTestDescription
   }
 
   private ImmutableSet<BuildTarget> getImplicitFrameworkDeps(
-      AbstractCxxTestDescriptionArg constructorArg) {
+      TargetConfiguration targetConfiguration, AbstractCxxTestDescriptionArg constructorArg) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
 
     CxxTestType type = constructorArg.getFramework().orElse(getDefaultTestType());
     switch (type) {
       case GTEST:
         {
-          cxxBuckConfig.getGtestDep().ifPresent(deps::add);
+          cxxBuckConfig.getGtestDep(targetConfiguration).ifPresent(deps::add);
           if (constructorArg.getUseDefaultTestMain().orElse(true)) {
-            cxxBuckConfig.getGtestDefaultTestMainDep().ifPresent(deps::add);
+            cxxBuckConfig.getGtestDefaultTestMainDep(targetConfiguration).ifPresent(deps::add);
           }
           break;
         }
       case BOOST:
         {
-          cxxBuckConfig.getBoostTestDep().ifPresent(deps::add);
+          cxxBuckConfig.getBoostTestDep(targetConfiguration).ifPresent(deps::add);
           break;
         }
       default:
@@ -178,7 +179,7 @@ public class CxxTestDescription
               cxxBuckConfig,
               cxxPlatform,
               args,
-              getImplicitFrameworkDeps(args),
+              getImplicitFrameworkDeps(buildTarget.getTargetConfiguration(), args),
               flavoredStripStyle,
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
@@ -204,7 +205,7 @@ public class CxxTestDescription
             cxxBuckConfig,
             cxxPlatform,
             args,
-            getImplicitFrameworkDeps(args),
+            getImplicitFrameworkDeps(buildTarget.getTargetConfiguration(), args),
             flavoredStripStyle,
             flavoredLinkerMapMode);
 
@@ -340,7 +341,8 @@ public class CxxTestDescription
         getCxxPlatform(buildTarget, constructorArg).getParseTimeDeps());
 
     // Add in any implicit framework deps.
-    extraDepsBuilder.addAll(getImplicitFrameworkDeps(constructorArg));
+    extraDepsBuilder.addAll(
+        getImplicitFrameworkDeps(buildTarget.getTargetConfiguration(), constructorArg));
 
     constructorArg
         .getDepsQuery()

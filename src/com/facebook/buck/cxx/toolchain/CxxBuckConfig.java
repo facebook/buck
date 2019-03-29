@@ -188,22 +188,21 @@ public class CxxBuckConfig {
   }
 
   /** @return the {@link BuildTarget} which represents the gtest library. */
-  public Optional<BuildTarget> getGtestDep() {
-    return delegate.getBuildTarget(cxxSection, GTEST_DEP, EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getGtestDep(TargetConfiguration targetConfiguration) {
+    return delegate.getBuildTarget(cxxSection, GTEST_DEP, targetConfiguration);
   }
 
   /**
    * @return the {@link BuildTarget} which represents the main function that gtest tests should use
    *     by default (if no other main is given).
    */
-  public Optional<BuildTarget> getGtestDefaultTestMainDep() {
-    return delegate.getBuildTarget(
-        cxxSection, GTEST_DEFAULT_TEST_MAIN_DEP, EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getGtestDefaultTestMainDep(TargetConfiguration targetConfiguration) {
+    return delegate.getBuildTarget(cxxSection, GTEST_DEFAULT_TEST_MAIN_DEP, targetConfiguration);
   }
 
   /** @return the {@link BuildTarget} which represents the boost testing library. */
-  public Optional<BuildTarget> getBoostTestDep() {
-    return delegate.getBuildTarget(cxxSection, BOOST_TEST_DEP, EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getBoostTestDep(TargetConfiguration targetConfiguration) {
+    return delegate.getBuildTarget(cxxSection, BOOST_TEST_DEP, targetConfiguration);
   }
 
   public Optional<Path> getPath(String name) {
