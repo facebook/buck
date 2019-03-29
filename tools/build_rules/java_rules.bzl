@@ -133,8 +133,6 @@ def standard_java_test(
         labels = None,
         with_test_data = False,
         **kwargs):
-    if vm_args == None:
-        vm_args = ["-Xmx256M"]
 
     test_srcs = native.glob(["*Test.java"])
 
