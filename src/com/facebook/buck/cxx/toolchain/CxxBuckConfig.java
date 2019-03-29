@@ -91,6 +91,7 @@ public class CxxBuckConfig {
   private static final String INDEPENDENT_SHLIB_INTERFACE_LDFLAGS =
       "independent_shlib_interface_ldflags";
   private static final String DECLARED_PLATFORMS = "declared_platforms";
+  private static final String BINARY_EXT = "binary_extension";
   private static final String SHARED_LIBRARY_EXT = "shared_library_extension";
   private static final String STATIC_LIBRARY_EXT = "static_library_extension";
   private static final String OBJECT_FILE_EXT = "object_file_extension";
@@ -571,6 +572,11 @@ public class CxxBuckConfig {
         .stream()
         .map(s -> UserFlavor.of(s, String.format("Declared platform: %s", s)))
         .collect(ImmutableSet.toImmutableSet());
+  }
+
+  /** @return the extension to use for binaries (e.g. ".exe"). */
+  public Optional<String> getBinaryExtension() {
+    return delegate.getValue(cxxSection, BINARY_EXT);
   }
 
   /** @return the extension to use for shared libraries (e.g. ".so"). */

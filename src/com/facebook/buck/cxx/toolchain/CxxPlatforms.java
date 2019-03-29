@@ -115,6 +115,14 @@ public class CxxPlatforms {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
+    if (config.getBinaryExtension().isPresent()) {
+      if (config.getBinaryExtension().get().isEmpty()) {
+        binaryExtension = Optional.empty();
+      } else {
+        binaryExtension = config.getBinaryExtension();
+      }
+    }
+
     builder
         .setFlavor(flavor)
         .setAs(config.getAs().orElse(as))
@@ -135,6 +143,7 @@ public class CxxPlatforms {
         .setAr(config.getArchiverProvider(platform).orElse(ar))
         .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
         .setStrip(config.getStrip().orElse(strip))
+        .setBinaryExtension(binaryExtension)
         .setSharedLibraryExtension(
             config.getSharedLibraryExtension().orElse(sharedLibraryExtension))
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
@@ -144,7 +153,6 @@ public class CxxPlatforms {
         .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
         .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setFlagMacros(flagMacros)
-        .setBinaryExtension(binaryExtension)
         .setHeaderVerification(headerVerification)
         .setPublicHeadersSymlinksEnabled(
             config.getPublicHeadersSymlinksSetting().orElse(publicHeadersSymlinksEnabled))

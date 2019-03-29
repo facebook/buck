@@ -221,7 +221,7 @@ public class CxxPlatformsTest {
   @Test
   public void sharedLibraryExtensionOverride() {
     Flavor flavor = InternalFlavor.of("custom");
-    String extension = ".foo";
+    String extension = "foo";
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("shared_library_extension", extension));
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
@@ -233,6 +233,74 @@ public class CxxPlatformsTest {
                 InternalFlavor.of("custom"))
             .getSharedLibraryExtension(),
         equalTo(extension));
+  }
+
+  @Test
+  public void staticLibraryExtensionOverride() {
+    Flavor flavor = InternalFlavor.of("custom");
+    String extension = "foo";
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("static_library_extension", extension));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    assertThat(
+        CxxPlatforms.copyPlatformWithFlavorAndConfig(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Platform.UNKNOWN,
+                new CxxBuckConfig(buckConfig, flavor),
+                InternalFlavor.of("custom"))
+            .getStaticLibraryExtension(),
+        equalTo(extension));
+  }
+
+  @Test
+  public void objectFileExtensionOverride() {
+    Flavor flavor = InternalFlavor.of("custom");
+    String extension = "bar";
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("object_file_extension", extension));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    assertThat(
+        CxxPlatforms.copyPlatformWithFlavorAndConfig(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Platform.UNKNOWN,
+                new CxxBuckConfig(buckConfig, flavor),
+                InternalFlavor.of("custom"))
+            .getObjectFileExtension(),
+        equalTo(extension));
+  }
+
+  @Test
+  public void binaryExtensionOverride() {
+    Flavor flavor = InternalFlavor.of("custom");
+    String extension = "bar";
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("binary_extension", extension));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    assertThat(
+        CxxPlatforms.copyPlatformWithFlavorAndConfig(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Platform.UNKNOWN,
+                new CxxBuckConfig(buckConfig, flavor),
+                InternalFlavor.of("custom"))
+            .getBinaryExtension(),
+        equalTo(Optional.of(extension)));
+  }
+
+  @Test
+  public void binaryExtensionEmptyOverride() {
+    Flavor flavor = InternalFlavor.of("custom");
+    String extension = "";
+    ImmutableMap<String, ImmutableMap<String, String>> sections =
+        ImmutableMap.of("cxx#" + flavor, ImmutableMap.of("binary_extension", extension));
+    BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
+    assertThat(
+        CxxPlatforms.copyPlatformWithFlavorAndConfig(
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Platform.UNKNOWN,
+                new CxxBuckConfig(buckConfig, flavor),
+                InternalFlavor.of("custom"))
+            .getBinaryExtension(),
+        equalTo(Optional.empty()));
   }
 
   @Test
