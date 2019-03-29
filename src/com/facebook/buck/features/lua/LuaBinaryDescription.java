@@ -700,10 +700,9 @@ public class LuaBinaryDescription
                     .withoutExtraDeps(),
                 packager,
                 output,
-                Optional.of(starter),
+                starter,
                 components,
                 mainModule,
-                lua,
                 luaPlatform.shouldCacheBinaries()));
 
     return new CommandTool.Builder()
