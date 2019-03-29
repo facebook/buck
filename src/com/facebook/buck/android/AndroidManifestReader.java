@@ -35,4 +35,7 @@ public interface AndroidManifestReader {
 
   /** @return the name of the instrumentation test runner. */
   String getInstrumentationTestRunner();
+
+  /** @return the value of the target package attribute to the manifest element. */
+  String getTargetPackage();
 }

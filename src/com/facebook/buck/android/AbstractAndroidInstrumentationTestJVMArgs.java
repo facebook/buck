@@ -41,6 +41,8 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
   abstract String getTestRunner();
 
+  abstract String getTargetPackage();
+
   abstract String getDdmlibJarPath();
 
   abstract String getKxmlJarPath();
@@ -111,6 +113,7 @@ abstract class AbstractAndroidInstrumentationTestJVMArgs {
 
     // The InstrumentationRunner requires the package name of the test
     args.add("--test-package-name", getTestPackage());
+    args.add("--target-package-name", getTargetPackage());
     args.add("--test-runner", getTestRunner());
     args.add("--adb-executable-path", getPathToAdbExecutable());
 

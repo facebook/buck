@@ -41,6 +41,7 @@ public class InstrumentationTestRunner {
   private final String adbExecutablePath;
   private final String deviceSerial;
   private final String packageName;
+  private final String targetPackageName;
   private final String testRunner;
   private final File outputDirectory;
   private final String exopackageLocalPath;
@@ -57,6 +58,7 @@ public class InstrumentationTestRunner {
       String adbExecutablePath,
       String deviceSerial,
       String packageName,
+      String targetPackageName,
       String testRunner,
       File outputDirectory,
       String instrumentationApkPath,
@@ -71,6 +73,7 @@ public class InstrumentationTestRunner {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
     this.packageName = packageName;
+    this.targetPackageName = targetPackageName;
     this.testRunner = testRunner;
     this.outputDirectory = outputDirectory;
     this.instrumentationApkPath = instrumentationApkPath;
@@ -89,6 +92,7 @@ public class InstrumentationTestRunner {
     String adbExecutablePath = null;
     String apkUnderTestPath = null;
     String packageName = null;
+    String targetPackageName = null;
     String testRunner = null;
     String instrumentationApkPath = null;
     String codeCoverageOutputFile = null;
@@ -103,6 +107,9 @@ public class InstrumentationTestRunner {
       switch (args[i]) {
         case "--test-package-name":
           packageName = args[++i];
+          break;
+        case "--target-package-name":
+          targetPackageName = args[++i];
           break;
         case "--test-runner":
           testRunner = args[++i];
@@ -183,6 +190,7 @@ public class InstrumentationTestRunner {
         adbExecutablePath,
         deviceSerial,
         packageName,
+        targetPackageName,
         testRunner,
         outputDirectory,
         instrumentationApkPath,

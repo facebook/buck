@@ -147,6 +147,22 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     }
   }
 
+  private static String tryToExtractTargetPackageFromManifest(
+      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+    Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
+
+    if (!Files.isRegularFile(pathToManifest)) {
+      throw new HumanReadableException(
+          "Manifest file %s does not exist, so could not extract package name.", pathToManifest);
+    }
+
+    try {
+      return DefaultAndroidManifestReader.forPath(pathToManifest).getTargetPackage();
+    } catch (IOException e) {
+      throw new HumanReadableException("Could not extract package name from %s", pathToManifest);
+    }
+  }
+
   @Override
   public ImmutableSet<String> getLabels() {
     return labels;
@@ -239,6 +255,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, apk.getApkInfo());
     String testRunner =
         tryToExtractInstrumentationTestRunnerFromManifest(pathResolver, apk.getApkInfo());
+    String targetPackageName =
+        tryToExtractTargetPackageFromManifest(pathResolver, apk.getApkInfo());
 
     String ddmlib = getPathForResourceJar(ddmlibJar);
     String kxml2 = getPathForResourceJar(kxml2Jar);
@@ -260,6 +278,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             .setInstrumentationApkPath(instrumentationApkPath)
             .setExopackageLocalDir(exopackageSymlinkTreePath)
             .setTestPackage(packageName)
+            .setTargetPackage(targetPackageName)
             .setCodeCoverageEnabled(codeCoverageEnabled)
             .setDebugEnabled(debugEnabled)
             .setTestRunner(testRunner)
