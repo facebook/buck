@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.kotlin;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -58,6 +59,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
+      TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
     CoreArg kotlinArgs = Objects.requireNonNull((CoreArg) args);
     return new KotlincToJarStepFactory(

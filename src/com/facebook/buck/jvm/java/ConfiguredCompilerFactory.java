@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.google.common.collect.ImmutableCollection;
@@ -31,6 +32,7 @@ public abstract class ConfiguredCompilerFactory {
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
+      TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider);
 
   public boolean trackClassUsage(@SuppressWarnings("unused") JavacOptions javacOptions) {
@@ -61,10 +63,12 @@ public abstract class ConfiguredCompilerFactory {
   }
 
   public void addTargetDeps(
+      @SuppressWarnings("unused") TargetConfiguration targetConfiguration,
       @SuppressWarnings("unused") ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       @SuppressWarnings("unused")
           ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {}
 
   public void getNonProvidedClasspathDeps(
+      @SuppressWarnings("unused") TargetConfiguration targetConfiguration,
       @SuppressWarnings("unused") Consumer<BuildTarget> depsConsumer) {}
 }

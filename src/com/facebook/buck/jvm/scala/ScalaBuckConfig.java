@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.scala;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -54,17 +54,16 @@ public class ScalaBuckConfig {
     return scalac.build();
   }
 
-  public BuildTarget getScalaLibraryTarget() {
-    return delegate.getRequiredBuildTarget(SECTION, "library", EmptyTargetConfiguration.INSTANCE);
+  public BuildTarget getScalaLibraryTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getRequiredBuildTarget(SECTION, "library", targetConfiguration);
   }
 
-  public Iterable<BuildTarget> getCompilerPlugins() {
-    return delegate.getFullyQualifiedBuildTargets(
-        SECTION, "compiler_plugins", EmptyTargetConfiguration.INSTANCE);
+  public Iterable<BuildTarget> getCompilerPlugins(TargetConfiguration targetConfiguration) {
+    return delegate.getFullyQualifiedBuildTargets(SECTION, "compiler_plugins", targetConfiguration);
   }
 
-  public Optional<BuildTarget> getScalacTarget() {
-    return delegate.getMaybeBuildTarget(SECTION, "compiler", EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getScalacTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getMaybeBuildTarget(SECTION, "compiler", targetConfiguration);
   }
 
   public ImmutableList<String> getCompilerFlags() {

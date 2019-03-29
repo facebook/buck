@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.groovy;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.CoreArg;
@@ -42,21 +43,24 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       @Nullable JvmLibraryArg args,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
+      TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
     GroovyLibraryDescription.CoreArg groovyArgs = (CoreArg) Objects.requireNonNull(args);
 
     return new GroovycToJarStepFactory(
-        groovyBuckConfig.getGroovyc(),
+        groovyBuckConfig.getGroovyc(targetConfiguration),
         Optional.of(groovyArgs.getExtraGroovycArguments()),
         javacOptions);
   }
 
   @Override
   public void addTargetDeps(
+      TargetConfiguration targetConfiguration,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (groovyBuckConfig != null) {
-      Optionals.addIfPresent(groovyBuckConfig.getGroovycTarget(), extraDepsBuilder);
+      Optionals.addIfPresent(
+          groovyBuckConfig.getGroovycTarget(targetConfiguration), extraDepsBuilder);
     }
   }
 }

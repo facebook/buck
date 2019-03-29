@@ -523,7 +523,12 @@ public abstract class DefaultJavaLibraryRules {
   @Value.Lazy
   CompileToJarStepFactory getConfiguredCompiler() {
     return getConfiguredCompilerFactory()
-        .configure(getArgs(), getJavacOptions(), getActionGraphBuilder(), getToolchainProvider());
+        .configure(
+            getArgs(),
+            getJavacOptions(),
+            getActionGraphBuilder(),
+            getInitialBuildTarget().getTargetConfiguration(),
+            getToolchainProvider());
   }
 
   @Value.Lazy
@@ -533,6 +538,7 @@ public abstract class DefaultJavaLibraryRules {
             getArgs(),
             getJavacOptionsForSourceOnlyAbi(),
             getActionGraphBuilder(),
+            getInitialBuildTarget().getTargetConfiguration(),
             getToolchainProvider());
   }
 
@@ -650,7 +656,12 @@ public abstract class DefaultJavaLibraryRules {
             .setResourcesRoot(args.getResourcesRoot())
             .setProguardConfig(args.getProguardConfig())
             .setPostprocessClassesCommands(args.getPostprocessClassesCommands())
-            .setDeps(JavaLibraryDeps.newInstance(args, graphBuilder, configuredCompilerFactory))
+            .setDeps(
+                JavaLibraryDeps.newInstance(
+                    args,
+                    graphBuilder,
+                    initialBuildTarget.getTargetConfiguration(),
+                    configuredCompilerFactory))
             .setTests(args.getTests())
             .setManifestFile(args.getManifestFile())
             .setMavenCoords(args.getMavenCoords())

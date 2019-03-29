@@ -171,9 +171,10 @@ public class ScalaLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder
-        .add(scalaBuckConfig.getScalaLibraryTarget())
-        .addAll(scalaBuckConfig.getCompilerPlugins());
-    Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(), extraDepsBuilder);
+        .add(scalaBuckConfig.getScalaLibraryTarget(buildTarget.getTargetConfiguration()))
+        .addAll(scalaBuckConfig.getCompilerPlugins(buildTarget.getTargetConfiguration()));
+    Optionals.addIfPresent(
+        scalaBuckConfig.getScalacTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 

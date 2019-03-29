@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.scala;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -66,12 +67,13 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       @Nullable JvmLibraryArg arg,
       JavacOptions javacOptions,
       BuildRuleResolver buildRuleResolver,
+      TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
     return new ScalacToJarStepFactory(
         getScalac(buildRuleResolver),
         scalaBuckConfig.getCompilerFlags(),
         Objects.requireNonNull(arg).getExtraArguments(),
-        buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins()),
+        buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins(targetConfiguration)),
         getJavac(buildRuleResolver, arg),
         javacOptions,
         extraClasspathProviderSupplier.apply(toolchainProvider));
@@ -79,18 +81,20 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   @Override
   public void addTargetDeps(
+      TargetConfiguration targetConfiguration,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
     extraDepsBuilder
-        .add(scalaBuckConfig.getScalaLibraryTarget())
-        .addAll(scalaBuckConfig.getCompilerPlugins());
-    Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(), extraDepsBuilder);
+        .add(scalaBuckConfig.getScalaLibraryTarget(targetConfiguration))
+        .addAll(scalaBuckConfig.getCompilerPlugins(targetConfiguration));
+    Optionals.addIfPresent(scalaBuckConfig.getScalacTarget(targetConfiguration), extraDepsBuilder);
   }
 
   @Override
-  public void getNonProvidedClasspathDeps(Consumer<BuildTarget> depsConsumer) {
-    depsConsumer.accept(scalaBuckConfig.getScalaLibraryTarget());
+  public void getNonProvidedClasspathDeps(
+      TargetConfiguration targetConfiguration, Consumer<BuildTarget> depsConsumer) {
+    depsConsumer.accept(scalaBuckConfig.getScalaLibraryTarget(targetConfiguration));
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {

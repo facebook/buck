@@ -181,8 +181,9 @@ public class ScalaTestDescription
       AbstractScalaTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    extraDepsBuilder.add(config.getScalaLibraryTarget());
-    Optionals.addIfPresent(config.getScalacTarget(), extraDepsBuilder);
+    extraDepsBuilder.add(config.getScalaLibraryTarget(buildTarget.getTargetConfiguration()));
+    Optionals.addIfPresent(
+        config.getScalacTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
     javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }

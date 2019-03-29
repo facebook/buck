@@ -18,7 +18,7 @@ package com.facebook.buck.jvm.groovy;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.ExecutableFinder;
@@ -40,9 +40,9 @@ public class GroovyBuckConfig {
     return delegate;
   }
 
-  Tool getGroovyc() {
+  Tool getGroovyc(TargetConfiguration targetConfiguration) {
     Optional<SourcePath> sourcePath =
-        delegate.getSourcePath(SECTION, GROOVY_HOME_CONFIG, EmptyTargetConfiguration.INSTANCE);
+        delegate.getSourcePath(SECTION, GROOVY_HOME_CONFIG, targetConfiguration);
     if (sourcePath.isPresent()) {
       return new Groovyc(sourcePath.get(), false);
     } else {
@@ -62,8 +62,7 @@ public class GroovyBuckConfig {
     }
   }
 
-  public Optional<BuildTarget> getGroovycTarget() {
-    return delegate.getMaybeBuildTarget(
-        SECTION, GROOVY_HOME_CONFIG, EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getGroovycTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getMaybeBuildTarget(SECTION, GROOVY_HOME_CONFIG, targetConfiguration);
   }
 }

@@ -149,7 +149,8 @@ public class AndroidLibraryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     compilerFactory
         .getCompiler(constructorArg.getLanguage().orElse(JvmLanguage.JAVA), javacFactory)
-        .addTargetDeps(extraDepsBuilder, targetGraphOnlyDepsBuilder);
+        .addTargetDeps(
+            buildTarget.getTargetConfiguration(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 

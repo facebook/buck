@@ -105,7 +105,8 @@ public class GroovyLibraryDescription
       AbstractGroovyLibraryDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    compilerFactory.addTargetDeps(extraDepsBuilder, targetGraphOnlyDepsBuilder);
+    compilerFactory.addTargetDeps(
+        buildTarget.getTargetConfiguration(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
   }
 
   public interface CoreArg extends JavaLibraryDescription.CoreArg {

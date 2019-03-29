@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.rules.query.Query;
@@ -41,6 +42,7 @@ public abstract class JavaLibraryDeps {
   public static JavaLibraryDeps newInstance(
       JavaLibraryDescription.CoreArg args,
       BuildRuleResolver resolver,
+      TargetConfiguration targetConfiguration,
       ConfiguredCompilerFactory compilerFactory) {
     Builder builder =
         new Builder(resolver)
@@ -49,7 +51,7 @@ public abstract class JavaLibraryDeps {
             .setProvidedDepTargets(args.getProvidedDeps())
             .setExportedProvidedDepTargets(args.getExportedProvidedDeps())
             .setSourceOnlyAbiDepTargets(args.getSourceOnlyAbiDeps());
-    compilerFactory.getNonProvidedClasspathDeps(builder::addDepTargets);
+    compilerFactory.getNonProvidedClasspathDeps(targetConfiguration, builder::addDepTargets);
 
     if (args instanceof HasDepsQuery) {
       builder.setDepsQuery(((HasDepsQuery) args).getDepsQuery());
