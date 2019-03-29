@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -52,7 +53,8 @@ public class ProGuardConfigTest {
             .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
-    Optional<SourcePath> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
+    Optional<SourcePath> proGuardJarOverride =
+        proGuardConfig.getProguardJarOverride(EmptyTargetConfiguration.INSTANCE);
 
     assertTrue(proGuardJarOverride.isPresent());
     assertEquals(FakeSourcePath.of(filesystem, proGuardJar), proGuardJarOverride.get());
@@ -71,7 +73,8 @@ public class ProGuardConfigTest {
             .build();
     ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
 
-    Optional<SourcePath> proGuardJarOverride = proGuardConfig.getProguardJarOverride();
+    Optional<SourcePath> proGuardJarOverride =
+        proGuardConfig.getProguardJarOverride(EmptyTargetConfiguration.INSTANCE);
 
     assertTrue(proGuardJarOverride.isPresent());
     assertEquals(FakeSourcePath.of(filesystem, proGuardJar), proGuardJarOverride.get());

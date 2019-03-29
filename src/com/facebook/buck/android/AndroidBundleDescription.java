@@ -245,7 +245,8 @@ public class AndroidBundleDescription
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
     javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
 
-    Optionals.addIfPresent(proGuardConfig.getProguardTarget(), extraDepsBuilder);
+    Optionals.addIfPresent(
+        proGuardConfig.getProguardTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
 
     if (constructorArg.getRedex()) {
       // If specified, this option may point to either a BuildTarget or a file.
