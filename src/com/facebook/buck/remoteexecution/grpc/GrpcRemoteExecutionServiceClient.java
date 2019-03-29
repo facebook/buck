@@ -181,18 +181,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
         if (stdoutRaw == null
             || (stdoutRaw.isEmpty() && actionResult.getStdoutDigest().getSizeBytes() > 0)) {
           LOG.debug("Got stdout digest.");
-          try {
-            ByteString data = ByteString.EMPTY;
-            GrpcRemoteExecutionClients.readByteStream(
-                    instanceName,
-                    new GrpcDigest(actionResult.getStdoutDigest()),
-                    byteStreamStub,
-                    data::concat)
-                .get();
-            return Optional.of(data.toStringUtf8());
-          } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-          }
+          return Optional.of(fetch(new GrpcDigest(actionResult.getStdoutDigest())));
         } else {
           LOG.debug("Got raw stdout: " + stdoutRaw.toStringUtf8());
           return Optional.of(stdoutRaw.toStringUtf8());
@@ -205,18 +194,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
         if (stderrRaw == null
             || (stderrRaw.isEmpty() && actionResult.getStderrDigest().getSizeBytes() > 0)) {
           LOG.debug("Got stderr digest.");
-          try {
-            ByteString data = ByteString.EMPTY;
-            GrpcRemoteExecutionClients.readByteStream(
-                    instanceName,
-                    new GrpcDigest(actionResult.getStderrDigest()),
-                    byteStreamStub,
-                    data::concat)
-                .get();
-            return Optional.of(data.toStringUtf8());
-          } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-          }
+          return Optional.of(fetch(new GrpcDigest(actionResult.getStderrDigest())));
         } else {
           LOG.debug("Got raw stderr: " + stderrRaw.toStringUtf8());
           return Optional.of(stderrRaw.toStringUtf8());
@@ -231,6 +209,26 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
       @Override
       public ExecutedActionMetadata getActionMetadata() {
         return actionResult.getExecutionMetadata();
+      }
+
+      private String fetch(Protocol.Digest digest) {
+        /** Payload received on a fetch request. */
+        class Data {
+          ByteString data = ByteString.EMPTY;
+
+          public void concat(ByteString bytes) {
+            data = data.concat(bytes);
+          }
+        }
+        Data data = new Data();
+        try {
+          GrpcRemoteExecutionClients.readByteStream(
+                  instanceName, digest, byteStreamStub, data::concat)
+              .get();
+        } catch (InterruptedException | ExecutionException e) {
+          throw new RuntimeException(e);
+        }
+        return data.data.toStringUtf8();
       }
     };
   }

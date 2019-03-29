@@ -27,8 +27,8 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 
 /** GRPC implementation of the AsyncBlobFetcher. */
 public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
@@ -73,11 +73,18 @@ public class GrpcAsyncBlobFetcher implements AsyncBlobFetcher {
   }
 
   @Override
-  public ListenableFuture<Void> fetchToStream(Protocol.Digest digest, OutputStream outputStream) {
+  public ListenableFuture<Void> fetchToStream(Protocol.Digest digest, FileChannel channel) {
     return closeScopeWhenFutureCompletes(
         CasBlobDownloadEvent.sendEvent(buckEventBus, 1, digest.getSize()),
         GrpcRemoteExecutionClients.readByteStream(
-            instanceName, digest, byteStreamStub, data -> data.writeTo(outputStream)));
+            instanceName,
+            digest,
+            byteStreamStub,
+            byteString -> {
+              for (ByteBuffer d : byteString.asReadOnlyByteBufferList()) {
+                channel.write(d);
+              }
+            }));
   }
 
   private <T> ListenableFuture<T> closeScopeWhenFutureCompletes(

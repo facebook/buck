@@ -53,6 +53,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -110,9 +111,10 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
           }
 
           @Override
-          public ListenableFuture<Void> fetchToStream(Digest digest, OutputStream outputStream) {
-            try (InputStream stream = getData(digest)) {
-              ByteStreams.copy(stream, outputStream);
+          public ListenableFuture<Void> fetchToStream(Digest digest, FileChannel channel) {
+            try (FileInputStream stream = getFileInputStream(digest)) {
+              FileChannel input = stream.getChannel();
+              input.transferTo(0, input.size(), channel);
               return Futures.immediateFuture(null);
             } catch (IOException e) {
               return Futures.immediateFailedFuture(e);
@@ -302,7 +304,14 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   public InputStream getData(Protocol.Digest digest) throws IOException {
     Path path = getPath(digest.getHash());
     Preconditions.checkState(Files.exists(path), "Couldn't find %s.", path);
-    return new BufferedInputStream(new FileInputStream(path.toFile()));
+    return new BufferedInputStream(getFileInputStream(digest));
+  }
+
+  /** Get a file input stream to a Digest */
+  public FileInputStream getFileInputStream(Protocol.Digest digest) throws IOException {
+    Path path = getPath(digest.getHash());
+    Preconditions.checkState(Files.exists(path), "Couldn't find %s.", path);
+    return new FileInputStream(path.toFile());
   }
 
   private static Path ensureParent(Path path) throws IOException {
