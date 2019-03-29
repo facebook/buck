@@ -301,8 +301,7 @@ public class WorkspaceAndProjectGenerator {
         LOG.debug("Generating schemes for all sub-projects.");
 
         writeWorkspaceSchemesForProjects(
-            workspaceName,
-            outputDirectory,
+            buildTargetToPBXTarget,
             schemeTargets,
             generatedProjectToPbxTargets,
             targetToProjectPathMap,
@@ -1102,10 +1101,10 @@ public class WorkspaceAndProjectGenerator {
   /**
    * Create individual schemes for each project and associated tests. Provided as a workaround for a
    * change in Xcode 10 where Apple started building all scheme targets and tests when clicking on a
-   * single item from the test navigator.
+   * single item from the test navigator. These schemes will be written inside of the xcodeproj.
    *
-   * @param workspaceName
-   * @param outputDirectory
+   * @param buildTargetToPBXTarget Map that, when reversed, is used to look up of the BuildTarget to
+   *     generate the output directory for the scheme.
    * @param schemeTargets Targets to be considered for scheme. Allows external filtering of targets
    *     included in the project's scheme.
    * @param generatedProjectToPbxTargets
@@ -1115,8 +1114,7 @@ public class WorkspaceAndProjectGenerator {
    * @throws IOException
    */
   private void writeWorkspaceSchemesForProjects(
-      String workspaceName,
-      Path outputDirectory,
+      ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget,
       ImmutableSet<PBXTarget> schemeTargets,
       ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToPbxTargets,
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
@@ -1124,6 +1122,10 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap<String, PBXTarget> ungroupedTestTargets)
       throws IOException {
 
+    ImmutableSetMultimap<PBXTarget, BuildTarget> pbxTargetToBuildTarget =
+        buildTargetToPBXTarget.asMultimap().inverse();
+
+    // create all the scheme generators for each project
     for (PBXProject project : generatedProjectToPbxTargets.keys()) {
       String schemeName = project.getName();
 
@@ -1149,11 +1151,17 @@ public class WorkspaceAndProjectGenerator {
               .filter(pbxTarget -> !orderedBuildTestTargets.contains(pbxTarget))
               .collect(ImmutableSet.toImmutableSet());
 
+      // generate scheme inside xcodeproj
+      ImmutableSet<BuildTarget> buildTargets =
+          pbxTargetToBuildTarget.get(project.getTargets().get(0));
+      BuildTarget buildTarget = buildTargets.iterator().next();
+      Path projectOutputDirectory =
+          buildTarget.getBasePath().resolve(project.getName() + ".xcodeproj");
+
       SchemeGenerator schemeGenerator =
           buildSchemeGenerator(
               targetToProjectPathMap,
-              workspaceName,
-              outputDirectory,
+              projectOutputDirectory,
               schemeName,
               Optional.empty(),
               Optional.empty(),
@@ -1208,11 +1216,16 @@ public class WorkspaceAndProjectGenerator {
       } else {
         remoteRunnablePath = Optional.empty();
       }
+
+      Path schemeOutputDirectory =
+          combinedProject
+              ? outputDirectory
+              : outputDirectory.resolve(workspaceName + ".xcworkspace");
+
       SchemeGenerator schemeGenerator =
           buildSchemeGenerator(
               targetToProjectPathMap,
-              workspaceName,
-              outputDirectory,
+              schemeOutputDirectory,
               schemeName,
               schemeConfigArg.getSrcTarget().map(buildTargetToPBXTarget::get),
               Optional.of(schemeConfigArg),
@@ -1228,7 +1241,6 @@ public class WorkspaceAndProjectGenerator {
 
   private SchemeGenerator buildSchemeGenerator(
       ImmutableMap<PBXTarget, Path> targetToProjectPathMap,
-      String workspaceName,
       Path outputDirectory,
       String schemeName,
       Optional<PBXTarget> primaryTarget,
@@ -1265,7 +1277,7 @@ public class WorkspaceAndProjectGenerator {
         orderedBuildTestTargets,
         orderedRunTestTargets,
         schemeName,
-        combinedProject ? outputDirectory : outputDirectory.resolve(workspaceName + ".xcworkspace"),
+        outputDirectory,
         parallelizeBuild,
         wasCreatedForAppExtension,
         runnablePath,

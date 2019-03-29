@@ -164,6 +164,11 @@ class SchemeGenerator {
   }
 
   @VisibleForTesting
+  Path getOutputDirectory() {
+    return outputDirectory;
+  }
+
+  @VisibleForTesting
   Optional<XCScheme> getOutputScheme() {
     return outputScheme;
   }

@@ -473,7 +473,11 @@ public class WorkspaceAndProjectGeneratorTest {
         mainSchemeTestAction.getTestables(), hasItem(withName("bin-xctest")));
 
     // validate project specific (foo) scheme values
-    Optional<XCScheme> fooScheme = generator.getSchemeGenerators().get("foo").getOutputScheme();
+    SchemeGenerator fooSchemeGenerator = generator.getSchemeGenerators().get("foo");
+
+    assertThat(fooSchemeGenerator.getOutputDirectory(), is(Paths.get("foo/foo.xcodeproj")));
+
+    Optional<XCScheme> fooScheme = fooSchemeGenerator.getOutputScheme();
 
     assertThat(fooScheme.isPresent(), is(true));
 
@@ -499,7 +503,11 @@ public class WorkspaceAndProjectGeneratorTest {
         fooSchemeTestAction.getTestables(), hasItem(withName("bin-xctest")));
 
     // validate project specific (bar) scheme values
-    Optional<XCScheme> barScheme = generator.getSchemeGenerators().get("bar").getOutputScheme();
+    SchemeGenerator barSchemeGenerator = generator.getSchemeGenerators().get("bar");
+
+    assertThat(barSchemeGenerator.getOutputDirectory(), is(Paths.get("bar/bar.xcodeproj")));
+
+    Optional<XCScheme> barScheme = barSchemeGenerator.getOutputScheme();
 
     assertThat(barScheme.isPresent(), is(true));
 
