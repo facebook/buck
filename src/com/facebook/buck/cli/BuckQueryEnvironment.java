@@ -317,10 +317,9 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
-    TargetNode<?> node = getNode(target);
-    Preconditions.checkState(target instanceof QueryBuildTarget);
-    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+  public Set<QueryFileTarget> getInputs(QueryBuildTarget target) throws QueryException {
+    TargetNode<?> node = getNodeForQueryBuildTarget(target);
+    BuildTarget buildTarget = target.getBuildTarget();
     Cell cell = rootCell.getCell(buildTarget);
     return node.getInputs()
         .stream()

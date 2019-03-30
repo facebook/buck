@@ -217,7 +217,7 @@ public interface QueryEnvironment {
   /** Returns the direct reverse dependencies of the specified targets. */
   Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets) throws QueryException;
 
-  Set<QueryTarget> getInputs(QueryTarget target) throws QueryException;
+  Set<QueryFileTarget> getInputs(QueryBuildTarget target) throws QueryException;
 
   /**
    * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure

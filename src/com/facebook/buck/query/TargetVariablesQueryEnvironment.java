@@ -55,7 +55,7 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
+  public Set<QueryFileTarget> getInputs(QueryBuildTarget target) throws QueryException {
     return delegate.getInputs(target);
   }
 

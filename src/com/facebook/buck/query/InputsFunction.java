@@ -21,7 +21,6 @@ import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import java.util.Set;
 
 /**
  * An 'inputs(x)' expression, which finds the direct input files of the given argument set 'x'.
@@ -50,12 +49,13 @@ public class InputsFunction implements QueryFunction {
   public ImmutableSet<QueryTarget> eval(
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
-    Set<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
+    ImmutableSet<QueryBuildTarget> argumentSet =
+        QueryTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
     env.buildTransitiveClosure(argumentSet, 0);
 
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
 
-    for (QueryTarget target : argumentSet) {
+    for (QueryBuildTarget target : argumentSet) {
       result.addAll(env.getInputs(target));
     }
     return result.build();

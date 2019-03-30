@@ -137,7 +137,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getInputs(QueryTarget target) {
+  public Set<QueryFileTarget> getInputs(QueryBuildTarget target) {
     TargetNode<?> node = getNode(target);
     return node.getInputs()
         .stream()

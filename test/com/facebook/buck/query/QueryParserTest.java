@@ -160,7 +160,7 @@ public class QueryParserTest {
     }
 
     @Override
-    public Set<QueryTarget> getInputs(QueryTarget target) {
+    public Set<QueryFileTarget> getInputs(QueryBuildTarget target) {
       throw new UnsupportedOperationException();
     }
 
