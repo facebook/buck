@@ -16,8 +16,6 @@
 
 package com.facebook.buck.query;
 
-import com.google.common.collect.ImmutableSet;
-
 /**
  * Currently, this is effectively a marker interface, but given the actual implementations of this
  * interface, it would be more accurate to represent it as an algebraic data type:
@@ -49,48 +47,6 @@ import com.google.common.collect.ImmutableSet;
  * Object#toString()}: https://stackoverflow.com/q/24595266/396304.
  */
 public interface QueryTarget extends Comparable<QueryTarget> {
-
-  /** @return target as {@link QueryBuildTarget} or throw {@link IllegalArgumentException} */
-  static QueryBuildTarget asQueryBuildTarget(QueryTarget target) {
-    if (!(target instanceof QueryBuildTarget)) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Expected %s to be a build target but it was an instance of %s",
-              target, target.getClass().getName()));
-    }
-
-    return (QueryBuildTarget) target;
-  }
-
-  /** @return set as {@link QueryBuildTarget}s or throw {@link IllegalArgumentException} */
-  @SuppressWarnings("unchecked")
-  static ImmutableSet<QueryBuildTarget> asQueryBuildTargets(
-      ImmutableSet<? extends QueryTarget> set) {
-    // It is probably rare that there is a QueryTarget that is not a QueryBuildTarget.
-    boolean hasInvalidItem = set.stream().anyMatch(item -> !(item instanceof QueryBuildTarget));
-    if (!hasInvalidItem) {
-      return (ImmutableSet<QueryBuildTarget>) set;
-    } else {
-      throw new IllegalArgumentException(
-          String.format("%s has elements that are not QueryBuildTarget", set));
-    }
-  }
-
-  /** @return the set filtered by items that are instances of {@link QueryBuildTarget} */
-  @SuppressWarnings("unchecked")
-  static ImmutableSet<QueryBuildTarget> filterQueryBuildTargets(
-      ImmutableSet<? extends QueryTarget> set) {
-    // It is probably rare that there is a QueryTarget that is not a QueryBuildTarget.
-    boolean needsFilter = set.stream().anyMatch(item -> !(item instanceof QueryBuildTarget));
-    if (!needsFilter) {
-      return (ImmutableSet<QueryBuildTarget>) set;
-    } else {
-      return set.stream()
-          .filter(QueryBuildTarget.class::isInstance)
-          .map(QueryBuildTarget.class::cast)
-          .collect(ImmutableSet.toImmutableSet());
-    }
-  }
 
   @Override
   default int compareTo(QueryTarget other) {

@@ -76,8 +76,9 @@ public class AllPathsFunction implements QueryFunction {
     QueryExpression from = args.get(0).getExpression();
     QueryExpression to = args.get(1).getExpression();
 
-    Set<QueryBuildTarget> fromSet = QueryTarget.filterQueryBuildTargets(evaluator.eval(from, env));
-    Set<QueryBuildTarget> toSet = QueryTarget.filterQueryBuildTargets(evaluator.eval(to, env));
+    Set<QueryBuildTarget> fromSet =
+        QueryBuildTarget.filterQueryBuildTargets(evaluator.eval(from, env));
+    Set<QueryBuildTarget> toSet = QueryBuildTarget.filterQueryBuildTargets(evaluator.eval(to, env));
 
     // Algorithm:
     // 1) compute "reachableFromX", the forward transitive closure of the "from" set;

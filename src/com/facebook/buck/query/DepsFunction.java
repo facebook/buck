@@ -95,7 +95,7 @@ public class DepsFunction implements QueryFunction {
                       "@this",
                       ImmutableSet.of(target)),
                   env));
-      QueryTarget.asQueryBuildTargets(deps).forEach(consumer);
+      QueryBuildTarget.asQueryBuildTargets(deps).forEach(consumer);
     }
   }
 
@@ -118,7 +118,7 @@ public class DepsFunction implements QueryFunction {
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
     Set<QueryTarget> result = new LinkedHashSet<>(argumentSet);
-    Collection<QueryBuildTarget> current = QueryTarget.asQueryBuildTargets(argumentSet);
+    Collection<QueryBuildTarget> current = QueryBuildTarget.asQueryBuildTargets(argumentSet);
 
     // Iterating depthBound+1 times because the first one processes the given argument set.
     for (int i = 0; i < depthBound; i++) {

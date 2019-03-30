@@ -50,7 +50,7 @@ public class InputsFunction implements QueryFunction {
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     ImmutableSet<QueryBuildTarget> argumentSet =
-        QueryTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
+        QueryBuildTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
     env.buildTransitiveClosure(argumentSet, 0);
 
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();

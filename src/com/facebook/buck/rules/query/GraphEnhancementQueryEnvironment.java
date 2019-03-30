@@ -200,7 +200,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   private TargetNode<?> getNode(QueryTarget target) {
-    return getNodeForQueryBuildTarget(QueryTarget.asQueryBuildTarget(target));
+    return getNodeForQueryBuildTarget(QueryBuildTarget.asQueryBuildTarget(target));
   }
 
   private TargetNode<?> getNodeForQueryBuildTarget(QueryBuildTarget target) {

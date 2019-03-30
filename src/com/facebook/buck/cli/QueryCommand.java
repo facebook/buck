@@ -395,19 +395,20 @@ public class QueryCommand extends AbstractCommand {
       PrintStream printStream = printStreamWrapper.get();
 
       if (sortOutputFormat.needToSortByRank()) {
-        printRankOutput(params, env, QueryTarget.asQueryBuildTargets(queryResult), printStream);
+        printRankOutput(
+            params, env, QueryBuildTarget.asQueryBuildTargets(queryResult), printStream);
         return;
       }
 
       switch (outputFormat) {
         case DOT:
           printDotOutput(
-              params, env, QueryTarget.asQueryBuildTargets(queryResult), false, printStream);
+              params, env, QueryBuildTarget.asQueryBuildTargets(queryResult), false, printStream);
           break;
 
         case DOT_BFS:
           printDotOutput(
-              params, env, QueryTarget.asQueryBuildTargets(queryResult), true, printStream);
+              params, env, QueryBuildTarget.asQueryBuildTargets(queryResult), true, printStream);
           break;
 
         case JSON:
@@ -415,7 +416,8 @@ public class QueryCommand extends AbstractCommand {
           break;
 
         case THRIFT:
-          printThriftOutput(params, env, QueryTarget.asQueryBuildTargets(queryResult), printStream);
+          printThriftOutput(
+              params, env, QueryBuildTarget.asQueryBuildTargets(queryResult), printStream);
           break;
 
         case LIST:

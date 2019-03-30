@@ -82,7 +82,7 @@ public class RdepsFunction implements QueryFunction {
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     Set<QueryBuildTarget> universeSet =
-        QueryTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
+        QueryBuildTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
     env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE);
     Predicate<QueryBuildTarget> inUniversePredicate =
         env.getTransitiveClosure(universeSet)::contains;
@@ -92,7 +92,7 @@ public class RdepsFunction implements QueryFunction {
     // traversed level-by-level.
     Set<QueryBuildTarget> visited = new LinkedHashSet<>();
     ImmutableSet<QueryTarget> argumentSet = evaluator.eval(args.get(1).getExpression(), env);
-    Collection<QueryBuildTarget> current = QueryTarget.asQueryBuildTargets(argumentSet);
+    Collection<QueryBuildTarget> current = QueryBuildTarget.asQueryBuildTargets(argumentSet);
     Predicate<QueryBuildTarget> notVisited = target -> !visited.contains(target);
 
     int depthBound = args.size() > 2 ? args.get(2).getInteger() : Integer.MAX_VALUE;
