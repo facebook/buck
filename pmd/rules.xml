@@ -11,8 +11,14 @@
   for ruleset definitions. Note that Buck is currently built with PMD 5.0.3.
   -->
 
-  <rule ref="rulesets/java/basic.xml" />
-  <rule ref="rulesets/java/empty.xml" />
+  <rule ref="rulesets/java/basic.xml">
+    <exclude name="CollapsibleIfStatements" />
+  </rule>
+
+  <rule ref="rulesets/java/empty.xml">
+    <exclude name="EmptyCatchBlock" />
+    <exclude name="EmptyWhileStmt" />
+  </rule>
 
   <rule ref="rulesets/java/imports.xml">
     <!--
@@ -56,6 +62,7 @@
     <exclude name="RedundantFieldInitializer" />
     <exclude name="UseStringBufferForStringAppends" />
     <exclude name="SimplifyStartsWith" />
+    <exclude name="PrematureDeclaration" />
   </rule>
 
   <rule name="BuckStyleImmutableMustBePackagePrivate"
