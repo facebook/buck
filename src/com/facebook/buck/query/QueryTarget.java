@@ -48,6 +48,17 @@ package com.facebook.buck.query;
  */
 public interface QueryTarget extends Comparable<QueryTarget> {
 
+  static QueryBuildTarget asQueryBuildTarget(QueryTarget target) {
+    if (!(target instanceof QueryBuildTarget)) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Expected %s to be a build target but it was an instance of %s",
+              target, target.getClass().getName()));
+    }
+
+    return (QueryBuildTarget) target;
+  }
+
   @Override
   default int compareTo(QueryTarget other) {
     if (this == other) {

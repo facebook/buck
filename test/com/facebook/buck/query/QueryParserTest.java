@@ -175,7 +175,7 @@ public class QueryParserTest {
     }
 
     @Override
-    public String getTargetKind(QueryTarget target) {
+    public String getTargetKind(QueryBuildTarget target) {
       throw new UnsupportedOperationException();
     }
 

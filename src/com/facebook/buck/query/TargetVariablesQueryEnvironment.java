@@ -69,7 +69,7 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public String getTargetKind(QueryTarget target) throws QueryException {
+  public String getTargetKind(QueryBuildTarget target) throws QueryException {
     return delegate.getTargetKind(target);
   }
 

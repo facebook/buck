@@ -243,14 +243,11 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   TargetNode<?> getNode(QueryTarget target) throws QueryException {
-    if (!(target instanceof QueryBuildTarget)) {
-      throw new IllegalArgumentException(
-          String.format(
-              "Expected %s to be a build target but it was an instance of %s",
-              target, target.getClass().getName()));
-    }
+    return getNodeForQueryBuildTarget(QueryTarget.asQueryBuildTarget(target));
+  }
 
-    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+  TargetNode<?> getNodeForQueryBuildTarget(QueryBuildTarget target) throws QueryException {
+    BuildTarget buildTarget = target.getBuildTarget();
     TargetNode<?> node = targetsToNodes.get(buildTarget);
     if (node != null) {
       return node;
@@ -536,8 +533,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public String getTargetKind(QueryTarget target) throws QueryException {
-    return getNode(target).getRuleType().getName();
+  public String getTargetKind(QueryBuildTarget target) throws QueryException {
+    return getNodeForQueryBuildTarget(target).getRuleType().getName();
   }
 
   @Override

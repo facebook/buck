@@ -233,7 +233,7 @@ public interface QueryEnvironment {
    */
   void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) throws QueryException;
 
-  String getTargetKind(QueryTarget target) throws QueryException;
+  String getTargetKind(QueryBuildTarget target) throws QueryException;
 
   /** Returns the tests associated with the given target. */
   ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException;
