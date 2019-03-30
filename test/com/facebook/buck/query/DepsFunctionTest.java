@@ -105,7 +105,7 @@ public class DepsFunctionTest {
                 ImmutableSet.of(
                     QueryBuildTarget.of(BuildTargetFactory.newInstance(stringCapture.getValue()))));
 
-    Capture<Iterable<QueryTarget>> targetsCapture = Capture.newInstance();
+    Capture<Iterable<QueryBuildTarget>> targetsCapture = Capture.newInstance();
     expect(env.getFwdDeps(EasyMock.capture(targetsCapture)))
         .andStubAnswer(
             () ->
@@ -116,7 +116,6 @@ public class DepsFunctionTest {
                     .flatMap(n -> targetGraph.getOutgoingNodesFor(n).stream())
                     .map(TargetNode::getBuildTarget)
                     .map(QueryBuildTarget::of)
-                    .map(QueryTarget.class::cast)
                     .toImmutableSet());
 
     replay(env);

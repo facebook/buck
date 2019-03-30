@@ -201,14 +201,15 @@ public interface QueryEnvironment {
   }
 
   /** Returns the direct forward dependencies of the specified targets. */
-  ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException;
+  ImmutableSet<QueryBuildTarget> getFwdDeps(Iterable<QueryBuildTarget> targets)
+      throws QueryException;
 
   /**
    * Applies {@code action} to each forward dependencies of the specified targets.
    *
    * <p>Might apply more than once to the same target, so {@code action} should be idempotent.
    */
-  default void forEachFwdDep(Iterable<QueryTarget> targets, Consumer<? super QueryTarget> action)
+  default void forEachFwdDep(Iterable<QueryBuildTarget> targets, Consumer<QueryBuildTarget> action)
       throws QueryException {
     getFwdDeps(targets).forEach(action);
   }

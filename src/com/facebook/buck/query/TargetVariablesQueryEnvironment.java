@@ -43,7 +43,8 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
+  public ImmutableSet<QueryBuildTarget> getFwdDeps(Iterable<QueryBuildTarget> targets)
+      throws QueryException {
     return delegate.getFwdDeps(targets);
   }
 

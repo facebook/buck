@@ -150,7 +150,7 @@ public class QueryParserTest {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) {
+    public ImmutableSet<QueryBuildTarget> getFwdDeps(Iterable<QueryBuildTarget> targets) {
       throw new UnsupportedOperationException();
     }
 

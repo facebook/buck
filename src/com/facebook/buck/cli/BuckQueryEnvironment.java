@@ -293,10 +293,11 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
-    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
-    for (QueryTarget target : targets) {
-      TargetNode<?> node = getNode(target);
+  public ImmutableSet<QueryBuildTarget> getFwdDeps(Iterable<QueryBuildTarget> targets)
+      throws QueryException {
+    ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
+    for (QueryBuildTarget target : targets) {
+      TargetNode<?> node = getNodeForQueryBuildTarget(target);
       result.addAll(getTargetsFromTargetNodes(graph.getOutgoingNodesFor(node)));
     }
     return result.build();

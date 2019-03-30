@@ -110,19 +110,19 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
     return targetEvaluator;
   }
 
-  private Stream<QueryTarget> getFwdDepsStream(Iterable<QueryTarget> targets) {
+  private Stream<QueryBuildTarget> getFwdDepsStream(Iterable<QueryBuildTarget> targets) {
     return RichStream.from(targets)
-        .flatMap(target -> this.getNode(target).getParseDeps().stream())
+        .flatMap(target -> this.getNodeForQueryBuildTarget(target).getParseDeps().stream())
         .map(QueryBuildTarget::of);
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) {
+  public ImmutableSet<QueryBuildTarget> getFwdDeps(Iterable<QueryBuildTarget> targets) {
     return getFwdDepsStream(targets).collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
-  public void forEachFwdDep(Iterable<QueryTarget> targets, Consumer<? super QueryTarget> action) {
+  public void forEachFwdDep(Iterable<QueryBuildTarget> targets, Consumer<QueryBuildTarget> action) {
     getFwdDepsStream(targets).forEach(action);
   }
 

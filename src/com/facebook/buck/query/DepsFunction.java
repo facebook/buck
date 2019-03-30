@@ -81,11 +81,11 @@ public class DepsFunction implements QueryFunction {
   private void forEachDep(
       QueryEnvironment env,
       QueryExpression depsExpression,
-      Iterable<QueryTarget> targets,
-      Consumer<? super QueryTarget> consumer)
+      Iterable<QueryBuildTarget> targets,
+      Consumer<QueryBuildTarget> consumer)
       throws QueryException {
-    for (QueryTarget target : targets) {
-      Set<QueryTarget> deps =
+    for (QueryBuildTarget target : targets) {
+      ImmutableSet<QueryTarget> deps =
           depsExpression.eval(
               new NoopQueryEvaluator(),
               new TargetVariablesQueryEnvironment(
@@ -95,7 +95,7 @@ public class DepsFunction implements QueryFunction {
                       "@this",
                       ImmutableSet.of(target)),
                   env));
-      deps.forEach(consumer);
+      QueryTarget.asQueryBuildTargets(deps).forEach(consumer);
     }
   }
 
@@ -108,7 +108,7 @@ public class DepsFunction implements QueryFunction {
   public ImmutableSet<QueryTarget> eval(
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
-    Set<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
+    ImmutableSet<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
     Optional<QueryExpression> deps =
         args.size() > 2 ? Optional.of(args.get(2).getExpression()) : Optional.empty();
@@ -118,12 +118,12 @@ public class DepsFunction implements QueryFunction {
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
     Set<QueryTarget> result = new LinkedHashSet<>(argumentSet);
-    Collection<QueryTarget> current = argumentSet;
+    Collection<QueryBuildTarget> current = QueryTarget.asQueryBuildTargets(argumentSet);
 
     // Iterating depthBound+1 times because the first one processes the given argument set.
     for (int i = 0; i < depthBound; i++) {
-      Collection<QueryTarget> next = new ArrayList<>();
-      Consumer<? super QueryTarget> consumer =
+      Collection<QueryBuildTarget> next = new ArrayList<>();
+      Consumer<QueryBuildTarget> consumer =
           queryTarget -> {
             boolean added = result.add(queryTarget);
             if (added) {
