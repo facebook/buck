@@ -263,7 +263,7 @@ public interface QueryEnvironment {
   Iterable<QueryFunction> getFunctions();
 
   /** @return the {@link QueryTarget}s expanded from the given variable {@code name}. */
-  default ImmutableSet<QueryTarget> resolveTargetVariable(String name) {
+  default ImmutableSet<QueryBuildTarget> resolveTargetVariable(String name) {
     throw new IllegalArgumentException(String.format("unexpected target variable \"%s\"", name));
   }
 }

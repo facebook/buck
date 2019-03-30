@@ -28,11 +28,12 @@ import java.util.function.Predicate;
  */
 public class TargetVariablesQueryEnvironment implements QueryEnvironment {
 
-  private final ImmutableMap<String, ImmutableSet<QueryTarget>> targetVariables;
+  private final ImmutableMap<String, ImmutableSet<QueryBuildTarget>> targetVariables;
   private final QueryEnvironment delegate;
 
   public TargetVariablesQueryEnvironment(
-      ImmutableMap<String, ImmutableSet<QueryTarget>> targetVariables, QueryEnvironment delegate) {
+      ImmutableMap<String, ImmutableSet<QueryBuildTarget>> targetVariables,
+      QueryEnvironment delegate) {
     this.targetVariables = targetVariables;
     this.delegate = delegate;
   }
@@ -113,8 +114,8 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> resolveTargetVariable(String name) {
-    ImmutableSet<QueryTarget> targets = targetVariables.get(name);
+  public ImmutableSet<QueryBuildTarget> resolveTargetVariable(String name) {
+    ImmutableSet<QueryBuildTarget> targets = targetVariables.get(name);
     if (targets != null) {
       return targets;
     }
