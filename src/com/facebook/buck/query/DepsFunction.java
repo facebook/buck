@@ -170,7 +170,7 @@ public class DepsFunction implements QueryFunction {
     public ImmutableSet<? extends QueryTarget> eval(
         QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args) {
       Preconditions.checkArgument(args.isEmpty());
-      return QueryTarget.toQueryTargets(env.resolveTargetVariable(getName()));
+      return env.resolveTargetVariable(getName());
     }
   }
 
@@ -195,7 +195,7 @@ public class DepsFunction implements QueryFunction {
     public ImmutableSet<? extends QueryTarget> eval(
         QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args) {
       Preconditions.checkArgument(args.size() == 1);
-      return QueryTarget.toQueryTargets(env.resolveTargetVariable(args.get(0).getWord()));
+      return env.resolveTargetVariable(args.get(0).getWord());
     }
   }
 }

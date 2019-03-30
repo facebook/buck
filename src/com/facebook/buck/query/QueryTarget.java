@@ -76,11 +76,6 @@ public interface QueryTarget extends Comparable<QueryTarget> {
     }
   }
 
-  // HACK: Find a way to do this without creating a copy.
-  static ImmutableSet<QueryTarget> toQueryTargets(ImmutableSet<? extends QueryTarget> set) {
-    return set.stream().map(QueryTarget.class::cast).collect(ImmutableSet.toImmutableSet());
-  }
-
   /** @return the set filtered by items that are instances of {@link QueryBuildTarget} */
   @SuppressWarnings("unchecked")
   static ImmutableSet<QueryBuildTarget> filterQueryBuildTargets(

@@ -52,7 +52,6 @@ public class OwnerFunction implements QueryFunction {
   public ImmutableSet<? extends QueryTarget> eval(
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
-
-    return QueryTarget.toQueryTargets(env.getFileOwners(ImmutableList.of(args.get(0).getWord())));
+    return env.getFileOwners(ImmutableList.of(args.get(0).getWord()));
   }
 }

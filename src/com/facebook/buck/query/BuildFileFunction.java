@@ -53,7 +53,6 @@ public class BuildFileFunction implements QueryFunction {
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     ImmutableSet<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
-    return QueryTarget.toQueryTargets(
-        env.getBuildFiles(QueryTarget.asQueryBuildTargets(argumentSet)));
+    return env.getBuildFiles(QueryTarget.asQueryBuildTargets(argumentSet));
   }
 }
