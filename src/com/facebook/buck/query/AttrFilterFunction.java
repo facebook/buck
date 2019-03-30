@@ -73,7 +73,8 @@ public class AttrFilterFunction implements QueryFunction {
 
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget target : evaluator.eval(argument, env)) {
-      ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
+      ImmutableSet<Object> matchingObjects =
+          env.filterAttributeContents(QueryTarget.asQueryBuildTarget(target), attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);
       }

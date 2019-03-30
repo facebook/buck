@@ -246,13 +246,18 @@ public interface QueryEnvironment {
   /** Returns the targets that own one or more of the given files. */
   ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files) throws QueryException;
 
-  /** Returns the existing targets in the value of `attribute` of the given `target`. */
-  ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
-      throws QueryException;
+  /**
+   * Returns the existing targets in the value of `attribute` of the given `target`.
+   *
+   * <p>Note that unlike most methods in this interface, this method can return a heterogeneous
+   * collection of objects that implement {@link QueryTarget}.
+   */
+  ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
+      QueryBuildTarget target, String attribute) throws QueryException;
 
   /** Returns the objects in the `attribute` of the given `target` that satisfy `predicate` */
   ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException;
+      QueryBuildTarget target, String attribute, Predicate<Object> predicate) throws QueryException;
 
   /** Returns the set of query functions implemented by this query environment. */
   Iterable<QueryFunction> getFunctions();

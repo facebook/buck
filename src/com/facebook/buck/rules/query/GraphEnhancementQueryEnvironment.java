@@ -186,14 +186,15 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute) {
+  public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
+      QueryBuildTarget target, String attribute) {
     return QueryTargetAccessor.getTargetsInAttribute(
         typeCoercerFactory, getNode(target), attribute);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, Predicate<Object> predicate) {
+      QueryBuildTarget target, String attribute, Predicate<Object> predicate) {
     return QueryTargetAccessor.filterAttributeContents(
         typeCoercerFactory, getNode(target), attribute, predicate);
   }

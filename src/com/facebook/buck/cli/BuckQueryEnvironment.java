@@ -545,17 +545,18 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
-      throws QueryException {
+  public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
+      QueryBuildTarget target, String attribute) throws QueryException {
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, getNode(target), attribute);
+        typeCoercerFactory, getNodeForQueryBuildTarget(target), attribute);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
+      QueryBuildTarget target, String attribute, Predicate<Object> predicate)
+      throws QueryException {
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, getNode(target), attribute, predicate);
+        typeCoercerFactory, getNodeForQueryBuildTarget(target), attribute, predicate);
   }
 
   @Override

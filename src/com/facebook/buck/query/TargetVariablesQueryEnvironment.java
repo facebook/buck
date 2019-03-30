@@ -94,14 +94,15 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
-      throws QueryException {
+  public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
+      QueryBuildTarget target, String attribute) throws QueryException {
     return delegate.getTargetsInAttribute(target, attribute);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
+      QueryBuildTarget target, String attribute, Predicate<Object> predicate)
+      throws QueryException {
     return delegate.filterAttributeContents(target, attribute, predicate);
   }
 

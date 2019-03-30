@@ -74,7 +74,7 @@ public class LabelsFunction implements QueryFunction {
     Set<QueryTarget> inputs = evaluator.eval(args.get(1).getExpression(), env);
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (QueryTarget input : inputs) {
-      result.addAll(env.getTargetsInAttribute(input, label));
+      result.addAll(env.getTargetsInAttribute(QueryTarget.asQueryBuildTarget(input), label));
     }
     return result.build();
   }

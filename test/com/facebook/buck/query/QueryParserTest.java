@@ -195,13 +195,14 @@ public class QueryParserTest {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute) {
+    public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
+        QueryBuildTarget target, String attribute) {
       throw new UnsupportedOperationException();
     }
 
     @Override
     public ImmutableSet<Object> filterAttributeContents(
-        QueryTarget target, String attribute, Predicate<Object> predicate) {
+        QueryBuildTarget target, String attribute, Predicate<Object> predicate) {
       throw new UnsupportedOperationException();
     }
   }
