@@ -83,7 +83,8 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException {
+  public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets)
+      throws QueryException {
     return delegate.getBuildFiles(targets);
   }
 

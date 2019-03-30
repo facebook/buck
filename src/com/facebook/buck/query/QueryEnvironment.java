@@ -241,7 +241,7 @@ public interface QueryEnvironment {
   ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target) throws QueryException;
 
   /** Returns the build files that define the given targets. */
-  ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException;
+  ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets) throws QueryException;
 
   /** Returns the targets that own one or more of the given files. */
   ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files) throws QueryException;

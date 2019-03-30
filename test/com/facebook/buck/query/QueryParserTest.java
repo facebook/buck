@@ -185,7 +185,7 @@ public class QueryParserTest {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) {
+    public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets) {
       throw new UnsupportedOperationException();
     }
 

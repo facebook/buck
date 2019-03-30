@@ -499,15 +499,15 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) {
+  public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets) {
     ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
     Path rootPath = cellFilesystem.getRootPath();
     Preconditions.checkState(rootPath.isAbsolute());
 
-    ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
-    for (QueryTarget target : targets) {
-      Preconditions.checkState(target instanceof QueryBuildTarget);
-      BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+    ImmutableSet.Builder<QueryFileTarget> builder =
+        ImmutableSet.builderWithExpectedSize(targets.size());
+    for (QueryBuildTarget target : targets) {
+      BuildTarget buildTarget = target.getBuildTarget();
       Cell cell = rootCell.getCell(buildTarget);
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
       Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(buildTarget.getBasePath());
