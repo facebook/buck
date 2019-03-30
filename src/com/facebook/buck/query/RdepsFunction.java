@@ -78,7 +78,7 @@ public class RdepsFunction implements QueryFunction {
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public ImmutableSet<QueryTarget> eval(
+  public ImmutableSet<? extends QueryTarget> eval(
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     Set<QueryBuildTarget> universeSet =

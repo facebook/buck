@@ -167,7 +167,7 @@ public interface QueryEnvironment {
      * @param args the input arguments. These are type-checked against the specification returned by
      *     {@link #getArgumentTypes} and {@link #getMandatoryArguments}
      */
-    ImmutableSet<QueryTarget> eval(
+    ImmutableSet<? extends QueryTarget> eval(
         QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
         throws QueryException;
   }

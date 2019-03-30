@@ -103,7 +103,7 @@ abstract class AbstractBinaryOperatorExpression extends QueryExpression {
   }
 
   @Override
-  ImmutableSet<QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
+  ImmutableSet<? extends QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
       throws QueryException {
     ImmutableList<QueryExpression> operands = getOperands();
     Set<QueryTarget> lhsValue = new LinkedHashSet<>(evaluator.eval(operands.get(0), env));

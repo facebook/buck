@@ -59,7 +59,7 @@ abstract class AbstractSetExpression extends QueryExpression {
   abstract ImmutableList<TargetLiteral> getWords();
 
   @Override
-  ImmutableSet<QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
+  ImmutableSet<? extends QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
       throws QueryException {
     ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
     for (TargetLiteral expr : getWords()) {

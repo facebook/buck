@@ -20,8 +20,9 @@ import com.google.common.collect.ImmutableSet;
 
 public class NoopQueryEvaluator implements QueryEvaluator {
   @Override
+  @SuppressWarnings("unchecked")
   public ImmutableSet<QueryTarget> eval(QueryExpression exp, QueryEnvironment env)
       throws QueryException {
-    return exp.eval(this, env);
+    return (ImmutableSet<QueryTarget>) exp.eval(this, env);
   }
 }

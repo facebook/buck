@@ -62,11 +62,6 @@ public interface QueryTarget extends Comparable<QueryTarget> {
     return (QueryBuildTarget) target;
   }
 
-  // HACK: Find a way to do this without creating a copy.
-  static ImmutableSet<QueryTarget> toQueryTargets(ImmutableSet<? extends QueryTarget> set) {
-    return set.stream().map(QueryTarget.class::cast).collect(ImmutableSet.toImmutableSet());
-  }
-
   /** @return set as {@link QueryBuildTarget}s or throw {@link IllegalArgumentException} */
   @SuppressWarnings("unchecked")
   static ImmutableSet<QueryBuildTarget> asQueryBuildTargets(
@@ -79,6 +74,11 @@ public interface QueryTarget extends Comparable<QueryTarget> {
       throw new IllegalArgumentException(
           String.format("%s has elements that are not QueryBuildTarget", set));
     }
+  }
+
+  // HACK: Find a way to do this without creating a copy.
+  static ImmutableSet<QueryTarget> toQueryTargets(ImmutableSet<? extends QueryTarget> set) {
+    return set.stream().map(QueryTarget.class::cast).collect(ImmutableSet.toImmutableSet());
   }
 
   /** @return the set filtered by items that are instances of {@link QueryBuildTarget} */

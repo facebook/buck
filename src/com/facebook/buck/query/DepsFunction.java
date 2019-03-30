@@ -85,7 +85,7 @@ public class DepsFunction implements QueryFunction {
       Consumer<QueryBuildTarget> consumer)
       throws QueryException {
     for (QueryBuildTarget target : targets) {
-      ImmutableSet<QueryTarget> deps =
+      ImmutableSet<? extends QueryTarget> deps =
           depsExpression.eval(
               new NoopQueryEvaluator(),
               new TargetVariablesQueryEnvironment(
@@ -105,7 +105,7 @@ public class DepsFunction implements QueryFunction {
    * supplied) is reached.
    */
   @Override
-  public ImmutableSet<QueryTarget> eval(
+  public ImmutableSet<? extends QueryTarget> eval(
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     ImmutableSet<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
@@ -167,7 +167,7 @@ public class DepsFunction implements QueryFunction {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> eval(
+    public ImmutableSet<? extends QueryTarget> eval(
         QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args) {
       Preconditions.checkArgument(args.isEmpty());
       return QueryTarget.toQueryTargets(env.resolveTargetVariable(getName()));
@@ -192,7 +192,7 @@ public class DepsFunction implements QueryFunction {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> eval(
+    public ImmutableSet<? extends QueryTarget> eval(
         QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args) {
       Preconditions.checkArgument(args.size() == 1);
       return QueryTarget.toQueryTargets(env.resolveTargetVariable(args.get(0).getWord()));

@@ -37,7 +37,7 @@ abstract class RegexFilterFunction implements QueryFunction {
       QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target) throws QueryException;
 
   @Override
-  public ImmutableSet<QueryTarget> eval(
+  public ImmutableSet<? extends QueryTarget> eval(
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     Pattern compiledPattern;

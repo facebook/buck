@@ -31,10 +31,11 @@ public class CachingQueryEvaluator implements QueryEvaluator {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public ImmutableSet<QueryTarget> eval(QueryExpression exp, QueryEnvironment env)
       throws QueryException {
     try {
-      return cache.get(exp, () -> exp.eval(this, env));
+      return cache.get(exp, () -> (ImmutableSet<QueryTarget>) exp.eval(this, env));
     } catch (ExecutionException e) {
       throw new QueryException(e, "Failed executing query [%s]", exp);
     }

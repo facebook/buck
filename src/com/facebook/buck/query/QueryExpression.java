@@ -67,7 +67,7 @@ public abstract class QueryExpression {
    *
    * <p>Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  abstract ImmutableSet<QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
+  abstract ImmutableSet<? extends QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
       throws QueryException;
 
   /**

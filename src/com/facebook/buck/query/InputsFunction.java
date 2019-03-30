@@ -46,7 +46,7 @@ public class InputsFunction implements QueryFunction {
 
   /** Evaluates to the direct inputs of the argument. */
   @Override
-  public ImmutableSet<QueryTarget> eval(
+  public ImmutableSet<? extends QueryTarget> eval(
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
     ImmutableSet<QueryBuildTarget> argumentSet =
