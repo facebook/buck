@@ -76,8 +76,8 @@ public class AllPathsFunction implements QueryFunction {
     QueryExpression from = args.get(0).getExpression();
     QueryExpression to = args.get(1).getExpression();
 
-    Set<QueryTarget> fromSet = evaluator.eval(from, env);
-    Set<QueryTarget> toSet = evaluator.eval(to, env);
+    Set<QueryBuildTarget> fromSet = QueryTarget.filterQueryBuildTargets(evaluator.eval(from, env));
+    Set<QueryBuildTarget> toSet = QueryTarget.filterQueryBuildTargets(evaluator.eval(to, env));
 
     // Algorithm:
     // 1) compute "reachableFromX", the forward transitive closure of the "from" set;
@@ -87,13 +87,13 @@ public class AllPathsFunction implements QueryFunction {
 
     env.buildTransitiveClosure(fromSet, Integer.MAX_VALUE);
 
-    Set<QueryTarget> reachableFromX = env.getTransitiveClosure(fromSet);
-    Set<QueryTarget> result = MoreSets.intersection(reachableFromX, toSet);
-    Collection<QueryTarget> worklist = result;
+    Set<QueryBuildTarget> reachableFromX = env.getTransitiveClosure(fromSet);
+    Set<QueryBuildTarget> result = MoreSets.intersection(reachableFromX, toSet);
+    Collection<QueryBuildTarget> worklist = result;
     while (!worklist.isEmpty()) {
-      Collection<QueryTarget> reverseDeps = env.getReverseDeps(worklist);
+      Collection<QueryBuildTarget> reverseDeps = env.getReverseDeps(worklist);
       worklist = new ArrayList<>();
-      for (QueryTarget target : reverseDeps) {
+      for (QueryBuildTarget target : reverseDeps) {
         if (reachableFromX.contains(target) && result.add(target)) {
           worklist.add(target);
         }

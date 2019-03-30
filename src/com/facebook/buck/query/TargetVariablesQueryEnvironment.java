@@ -48,7 +48,8 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException {
+  public Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets)
+      throws QueryException {
     return delegate.getReverseDeps(targets);
   }
 
@@ -58,12 +59,13 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) throws QueryException {
+  public Set<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets)
+      throws QueryException {
     return delegate.getTransitiveClosure(targets);
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth)
+  public void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth)
       throws QueryException {
     delegate.buildTransitiveClosure(targetNodes, maxDepth);
   }

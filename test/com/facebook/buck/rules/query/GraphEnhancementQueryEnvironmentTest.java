@@ -171,7 +171,7 @@ public class GraphEnhancementQueryEnvironmentTest {
         EmptyTargetConfiguration.INSTANCE);
   }
 
-  private static QueryTarget getQueryTarget(String target) {
+  private static QueryBuildTarget getQueryTarget(String target) {
     return QueryBuildTarget.of(BuildTargetFactory.newInstance(target));
   }
 

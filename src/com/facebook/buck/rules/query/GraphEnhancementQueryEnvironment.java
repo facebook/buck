@@ -127,10 +127,10 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) {
+  public Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets) {
     Preconditions.checkState(targetGraph.isPresent());
     return StreamSupport.stream(targets.spliterator(), false)
-        .map(this::getNode)
+        .map(this::getNodeForQueryBuildTarget)
         .flatMap(targetNode -> targetGraph.get().getIncomingNodesFor(targetNode).stream())
         .map(node -> QueryBuildTarget.of(node.getBuildTarget()))
         .collect(Collectors.toSet());
@@ -147,11 +147,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) {
+  public Set<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets) {
     Preconditions.checkState(targetGraph.isPresent());
     return targetGraph
         .get()
-        .getSubgraph(targets.stream().map(this::getNode).collect(Collectors.toList()))
+        .getSubgraph(
+            targets.stream().map(this::getNodeForQueryBuildTarget).collect(Collectors.toList()))
         .getNodes()
         .stream()
         .map(TargetNode::getBuildTarget)
@@ -160,7 +161,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) {
+  public void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth) {
     // No-op, since the closure should have already been built during parsing
   }
 
@@ -198,9 +199,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   private TargetNode<?> getNode(QueryTarget target) {
-    Preconditions.checkState(target instanceof QueryBuildTarget);
-    Preconditions.checkArgument(targetGraph.isPresent());
-    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+    return getNodeForQueryBuildTarget(QueryTarget.asQueryBuildTarget(target));
+  }
+
+  private TargetNode<?> getNodeForQueryBuildTarget(QueryBuildTarget target) {
+    Preconditions.checkState(targetGraph.isPresent());
+    BuildTarget buildTarget = target.getBuildTarget();
     return targetGraph.get().get(buildTarget);
   }
 

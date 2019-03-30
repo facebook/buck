@@ -155,7 +155,7 @@ public class QueryParserTest {
     }
 
     @Override
-    public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) {
+    public Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets) {
       throw new UnsupportedOperationException();
     }
 
@@ -165,12 +165,12 @@ public class QueryParserTest {
     }
 
     @Override
-    public Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) {
+    public Set<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets) {
       throw new UnsupportedOperationException();
     }
 
     @Override
-    public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) {
+    public void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth) {
       throw new UnsupportedOperationException();
     }
 

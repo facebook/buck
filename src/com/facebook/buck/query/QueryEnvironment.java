@@ -214,7 +214,7 @@ public interface QueryEnvironment {
   }
 
   /** Returns the direct reverse dependencies of the specified targets. */
-  Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException;
+  Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets) throws QueryException;
 
   Set<QueryTarget> getInputs(QueryTarget target) throws QueryException;
 
@@ -222,7 +222,7 @@ public interface QueryEnvironment {
    * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure
    * that {@link #buildTransitiveClosure} has been called for the relevant subgraph.
    */
-  Set<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets) throws QueryException;
+  Set<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets) throws QueryException;
 
   /**
    * Construct the dependency graph for a depth-bounded forward transitive closure of all nodes in
@@ -231,7 +231,8 @@ public interface QueryEnvironment {
    * <p>If a larger transitive closure was already built, returns it to improve incrementality,
    * since all depth-constrained methods filter it after it is built anyway.
    */
-  void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) throws QueryException;
+  void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth)
+      throws QueryException;
 
   String getTargetKind(QueryBuildTarget target) throws QueryException;
 

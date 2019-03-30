@@ -128,7 +128,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   private final TypeCoercerFactory typeCoercerFactory;
 
   private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
-  private final Map<BuildTarget, QueryTarget> buildTargetToQueryTarget = new HashMap<>();
+  private final Map<BuildTarget, QueryBuildTarget> buildTargetToQueryTarget = new HashMap<>();
 
   // Query execution is single threaded, however the buildTransitiveClosure implementation
   // traverses the graph in parallel.
@@ -260,7 +260,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     }
   }
 
-  private QueryTarget getOrCreateQueryBuildTarget(BuildTarget buildTarget) {
+  private QueryBuildTarget getOrCreateQueryBuildTarget(BuildTarget buildTarget) {
     return buildTargetToQueryTarget.computeIfAbsent(buildTarget, QueryBuildTarget::of);
   }
 
@@ -301,10 +301,11 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException {
-    Set<QueryTarget> result = new LinkedHashSet<>();
-    for (QueryTarget target : targets) {
-      TargetNode<?> node = getNode(target);
+  public Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets)
+      throws QueryException {
+    Set<QueryBuildTarget> result = new LinkedHashSet<>();
+    for (QueryBuildTarget target : targets) {
+      TargetNode<?> node = getNodeForQueryBuildTarget(target);
       for (TargetNode<?> parentNode : graph.getIncomingNodesFor(node)) {
         result.add(getOrCreateQueryBuildTarget(parentNode.getBuildTarget()));
       }
@@ -332,13 +333,13 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
+  public ImmutableSet<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets)
       throws QueryException {
-    Set<TargetNode<?>> nodes = new LinkedHashSet<>();
-    for (QueryTarget target : targets) {
-      nodes.add(getNode(target));
+    Set<TargetNode<?>> nodes = new LinkedHashSet<>(targets.size());
+    for (QueryBuildTarget target : targets) {
+      nodes.add(getNodeForQueryBuildTarget(target));
     }
-    ImmutableSet.Builder<QueryTarget> result = ImmutableSet.builder();
+    ImmutableSet.Builder<QueryBuildTarget> result = ImmutableSet.builder();
 
     new AbstractBreadthFirstTraversal<TargetNode<?>>(nodes) {
       @Override
@@ -355,7 +356,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth) throws QueryException {
+  public void buildTransitiveClosure(Set<? extends QueryTarget> targets, int maxDepth)
+      throws QueryException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     ImmutableSet<BuildTarget> newBuildTargets =
         targets
