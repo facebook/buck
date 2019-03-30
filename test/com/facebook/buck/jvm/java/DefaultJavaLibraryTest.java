@@ -17,8 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
-import static org.easymock.EasyMock.createNiceMock;
-import static org.easymock.EasyMock.replay;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -62,7 +60,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -73,7 +70,6 @@ import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -131,9 +127,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toPath());
-    StepRunner stepRunner = createNiceMock(StepRunner.class);
-    JavaPackageFinder packageFinder = createNiceMock(JavaPackageFinder.class);
-    replay(packageFinder, stepRunner);
 
     annotationScenarioGenPath =
         filesystem
