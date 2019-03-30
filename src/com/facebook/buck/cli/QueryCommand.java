@@ -395,17 +395,19 @@ public class QueryCommand extends AbstractCommand {
       PrintStream printStream = printStreamWrapper.get();
 
       if (sortOutputFormat.needToSortByRank()) {
-        printRankOutput(params, env, queryResult, printStream);
+        printRankOutput(params, env, QueryTarget.asQueryBuildTargets(queryResult), printStream);
         return;
       }
 
       switch (outputFormat) {
         case DOT:
-          printDotOutput(params, env, queryResult, false, printStream);
+          printDotOutput(
+              params, env, QueryTarget.asQueryBuildTargets(queryResult), false, printStream);
           break;
 
         case DOT_BFS:
-          printDotOutput(params, env, queryResult, true, printStream);
+          printDotOutput(
+              params, env, QueryTarget.asQueryBuildTargets(queryResult), true, printStream);
           break;
 
         case JSON:
@@ -413,7 +415,7 @@ public class QueryCommand extends AbstractCommand {
           break;
 
         case THRIFT:
-          printThriftOutput(params, env, queryResult, printStream);
+          printThriftOutput(params, env, QueryTarget.asQueryBuildTargets(queryResult), printStream);
           break;
 
         case LIST:
@@ -452,7 +454,7 @@ public class QueryCommand extends AbstractCommand {
   private void printDotOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      ImmutableSet<QueryBuildTarget> queryResult,
       boolean bfsSorted,
       PrintStream printStream)
       throws IOException, QueryException {
@@ -492,7 +494,7 @@ public class QueryCommand extends AbstractCommand {
   private void printRankOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      ImmutableSet<QueryBuildTarget> queryResult,
       PrintStream printStream)
       throws QueryException {
     Map<TargetNode<?>, Integer> ranks =
@@ -527,7 +529,7 @@ public class QueryCommand extends AbstractCommand {
   private void printThriftOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
-      Set<QueryTarget> queryResult,
+      ImmutableSet<QueryBuildTarget> queryResult,
       PrintStream printStream)
       throws IOException, QueryException {
 
@@ -666,7 +668,7 @@ public class QueryCommand extends AbstractCommand {
       if (!(target instanceof QueryBuildTarget)) {
         continue;
       }
-      TargetNode<?> node = env.getNode(target);
+      TargetNode<?> node = env.getNode((QueryBuildTarget) target);
       try {
         getAttributes(params, env, patternsMatcher, node)
             .ifPresent(attrMap -> attributesMap.put(toPresentationForm(node), attrMap));

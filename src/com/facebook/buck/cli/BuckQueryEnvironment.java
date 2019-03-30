@@ -242,11 +242,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return evaluateQuery(QueryExpression.parse(query, this));
   }
 
-  TargetNode<?> getNode(QueryTarget target) throws QueryException {
-    return getNodeForQueryBuildTarget(QueryTarget.asQueryBuildTarget(target));
-  }
-
-  TargetNode<?> getNodeForQueryBuildTarget(QueryBuildTarget target) throws QueryException {
+  TargetNode<?> getNode(QueryBuildTarget target) throws QueryException {
     BuildTarget buildTarget = target.getBuildTarget();
     TargetNode<?> node = targetsToNodes.get(buildTarget);
     if (node != null) {
@@ -282,11 +278,11 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return builder.build();
   }
 
-  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Collection<QueryTarget> input)
+  public ImmutableSet<TargetNode<?>> getNodesFromQueryTargets(Collection<QueryBuildTarget> input)
       throws QueryException {
     ImmutableSet.Builder<TargetNode<?>> builder =
         ImmutableSet.builderWithExpectedSize(input.size());
-    for (QueryTarget target : input) {
+    for (QueryBuildTarget target : input) {
       builder.add(getNode(target));
     }
     return builder.build();
@@ -297,7 +293,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       throws QueryException {
     ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
     for (QueryBuildTarget target : targets) {
-      TargetNode<?> node = getNodeForQueryBuildTarget(target);
+      TargetNode<?> node = getNode(target);
       result.addAll(getTargetsFromTargetNodes(graph.getOutgoingNodesFor(node)));
     }
     return result.build();
@@ -308,7 +304,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       throws QueryException {
     Set<QueryBuildTarget> result = new LinkedHashSet<>();
     for (QueryBuildTarget target : targets) {
-      TargetNode<?> node = getNodeForQueryBuildTarget(target);
+      TargetNode<?> node = getNode(target);
       for (TargetNode<?> parentNode : graph.getIncomingNodesFor(node)) {
         result.add(getOrCreateQueryBuildTarget(parentNode.getBuildTarget()));
       }
@@ -318,7 +314,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public Set<QueryFileTarget> getInputs(QueryBuildTarget target) throws QueryException {
-    TargetNode<?> node = getNodeForQueryBuildTarget(target);
+    TargetNode<?> node = getNode(target);
     BuildTarget buildTarget = target.getBuildTarget();
     Cell cell = rootCell.getCell(buildTarget);
     return node.getInputs()
@@ -339,7 +335,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       throws QueryException {
     Set<TargetNode<?>> nodes = new LinkedHashSet<>(targets.size());
     for (QueryBuildTarget target : targets) {
-      nodes.add(getNodeForQueryBuildTarget(target));
+      nodes.add(getNode(target));
     }
     ImmutableSet.Builder<QueryBuildTarget> result = ImmutableSet.builder();
 
@@ -494,8 +490,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   @Override
   public ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target)
       throws QueryException {
-    return getTargetsFromBuildTargets(
-        TargetNodes.getTestTargetsForNode(getNodeForQueryBuildTarget(target)));
+    return getTargetsFromBuildTargets(TargetNodes.getTestTargetsForNode(getNode(target)));
   }
 
   @Override
@@ -540,14 +535,14 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
   @Override
   public String getTargetKind(QueryBuildTarget target) throws QueryException {
-    return getNodeForQueryBuildTarget(target).getRuleType().getName();
+    return getNode(target).getRuleType().getName();
   }
 
   @Override
   public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
       QueryBuildTarget target, String attribute) throws QueryException {
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, getNodeForQueryBuildTarget(target), attribute);
+        typeCoercerFactory, getNode(target), attribute);
   }
 
   @Override
@@ -555,7 +550,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
       QueryBuildTarget target, String attribute, Predicate<Object> predicate)
       throws QueryException {
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, getNodeForQueryBuildTarget(target), attribute, predicate);
+        typeCoercerFactory, getNode(target), attribute, predicate);
   }
 
   @Override
