@@ -53,6 +53,11 @@ public class OwnerFunction implements QueryFunction {
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
 
-    return env.getFileOwners(ImmutableList.of(args.get(0).getWord()));
+    // HACK: Ideally, we would change the return signature to `ImmutableSet<? extends QueryTarget>`
+    // rather than create an unnecessary copy of a set.
+    return env.getFileOwners(ImmutableList.of(args.get(0).getWord()))
+        .stream()
+        .map(QueryTarget.class::cast)
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

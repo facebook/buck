@@ -55,9 +55,10 @@ public class TestsOfFunction implements QueryFunction {
   public ImmutableSet<QueryTarget> eval(
       QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
       throws QueryException {
-    Set<QueryTarget> targets = evaluator.eval(args.get(0).getExpression(), env);
+    Set<QueryBuildTarget> targets =
+        QueryTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
     ImmutableSet.Builder<QueryTarget> tests = new ImmutableSet.Builder<>();
-    for (QueryTarget target : targets) {
+    for (QueryBuildTarget target : targets) {
       tests.addAll(env.getTestsForTarget(target));
     }
     return tests.build();

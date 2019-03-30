@@ -237,13 +237,13 @@ public interface QueryEnvironment {
   String getTargetKind(QueryBuildTarget target) throws QueryException;
 
   /** Returns the tests associated with the given target. */
-  ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException;
+  ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target) throws QueryException;
 
   /** Returns the build files that define the given targets. */
   ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) throws QueryException;
 
   /** Returns the targets that own one or more of the given files. */
-  ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) throws QueryException;
+  ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files) throws QueryException;
 
   /** Returns the existing targets in the value of `attribute` of the given `target`. */
   ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)

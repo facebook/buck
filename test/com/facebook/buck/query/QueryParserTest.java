@@ -180,7 +180,7 @@ public class QueryParserTest {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) {
+    public ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target) {
       throw new UnsupportedOperationException();
     }
 
@@ -190,7 +190,7 @@ public class QueryParserTest {
     }
 
     @Override
-    public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) {
+    public ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files) {
       throw new UnsupportedOperationException();
     }
 

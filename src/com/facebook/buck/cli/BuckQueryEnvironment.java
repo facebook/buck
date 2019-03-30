@@ -264,16 +264,18 @@ public class BuckQueryEnvironment implements QueryEnvironment {
     return buildTargetToQueryTarget.computeIfAbsent(buildTarget, QueryBuildTarget::of);
   }
 
-  public ImmutableSet<QueryTarget> getTargetsFromTargetNodes(Iterable<TargetNode<?>> targetNodes) {
-    ImmutableSortedSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+  public ImmutableSet<QueryBuildTarget> getTargetsFromTargetNodes(
+      Iterable<TargetNode<?>> targetNodes) {
+    ImmutableSortedSet.Builder<QueryBuildTarget> builder = ImmutableSortedSet.naturalOrder();
     for (TargetNode<?> targetNode : targetNodes) {
       builder.add(getOrCreateQueryBuildTarget(targetNode.getBuildTarget()));
     }
     return builder.build();
   }
 
-  public ImmutableSet<QueryTarget> getTargetsFromBuildTargets(Iterable<BuildTarget> buildTargets) {
-    ImmutableSortedSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+  public ImmutableSet<QueryBuildTarget> getTargetsFromBuildTargets(
+      Iterable<BuildTarget> buildTargets) {
+    ImmutableSortedSet.Builder<QueryBuildTarget> builder = ImmutableSortedSet.naturalOrder();
     for (BuildTarget buildTarget : buildTargets) {
       builder.add(getOrCreateQueryBuildTarget(buildTarget));
     }
@@ -490,8 +492,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException {
-    return getTargetsFromBuildTargets(TargetNodes.getTestTargetsForNode(getNode(target)));
+  public ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target)
+      throws QueryException {
+    return getTargetsFromBuildTargets(
+        TargetNodes.getTestTargetsForNode(getNodeForQueryBuildTarget(target)));
   }
 
   @Override
@@ -520,7 +524,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) {
+  public ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files) {
     OwnersReport report = ownersReportBuilder.build(buildFileTrees, files);
     report
         .getInputsWithNoOwners()

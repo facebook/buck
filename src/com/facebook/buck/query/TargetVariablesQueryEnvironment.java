@@ -76,7 +76,8 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException {
+  public ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target)
+      throws QueryException {
     return delegate.getTestsForTarget(target);
   }
 
@@ -86,7 +87,7 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files)
+  public ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files)
       throws QueryException {
     return delegate.getFileOwners(files);
   }
