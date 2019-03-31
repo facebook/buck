@@ -1,0 +1,22 @@
+kotlin_library(
+    name = "kotlin",
+    srcs = glob([
+        "*.kt",
+        "*.java",
+    ]),
+    annotation_processor_deps = [
+        "//com/example/ap/kotlinapwithapoption:ap-lib-apoption",
+    ],
+    annotation_processors = [
+        "com.example.ap.kotlinap.KotlinAnnotationProcessorWithApoption",
+    ],
+    kapt_ap_options = {
+        "someApoption": "someApoptionValue",
+    },
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//com/example/ap/kotlinannotation:annotation-lib",
+    ],
+)

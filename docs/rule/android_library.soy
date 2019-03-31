@@ -186,6 +186,19 @@ compiled class files and resources.
   {/param}
 {/call}
 
+{call buck.arg}
+  {param name: 'kapt_ap_options' /}
+  {param desc}{literal}
+  Map of annotation processor options to pass into kapt via the apoptions plugin option. Each entry
+  should be a key value pair of the processor option and its value. Default is an empty map.
+  E.g.
+  kapt_ap_options = {
+    'someAnnotationOption': 'someValue'
+  }
+  More information here: https://kotlinlang.org/docs/reference/kapt.html{/literal}
+  {/param}
+{/call}
+
 {call jvm_common.exported_deps}
   {param library: 'android_library' /}
 {/call}

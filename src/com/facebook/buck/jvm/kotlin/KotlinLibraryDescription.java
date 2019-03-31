@@ -45,6 +45,7 @@ import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.maven.aether.AetherUtil;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
@@ -199,6 +200,8 @@ public class KotlinLibraryDescription
     Optional<AnnotationProcessingTool> getAnnotationProcessingTool();
 
     ImmutableList<SourcePath> getFriendPaths();
+
+    ImmutableMap<String, String> getKaptApOptions();
   }
 
   @BuckStyleImmutable
