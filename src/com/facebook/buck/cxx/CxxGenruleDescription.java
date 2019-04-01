@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -365,13 +366,20 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     }
 
     protected abstract Arg expand(
-        ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter);
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration,
+        ImmutableList<BuildRule> rules,
+        Optional<Pattern> filter);
 
     @Override
     public Arg expandFrom(
         BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
         throws MacroException {
-      return expand(graphBuilder, resolve(graphBuilder, input.getTargets()), input.getFilter());
+      return expand(
+          graphBuilder,
+          target.getTargetConfiguration(),
+          resolve(graphBuilder, input.getTargets()),
+          input.getFilter());
     }
   }
 
@@ -437,7 +445,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     @Override
     protected Arg expand(
-        ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration,
+        ImmutableList<BuildRule> rules,
+        Optional<Pattern> filter) {
       return new CxxPreprocessorFlagsArg(
           getPreprocessorFlags(getCxxPreprocessorInput(graphBuilder, rules)),
           CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(graphBuilder));
@@ -608,7 +619,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
      */
     @Override
     public Arg expand(
-        ActionGraphBuilder graphBuilder, ImmutableList<BuildRule> rules, Optional<Pattern> filter) {
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration,
+        ImmutableList<BuildRule> rules,
+        Optional<Pattern> filter) {
       return new ShQuoteJoinArg(getLinkerArgs(graphBuilder, rules, filter));
     }
   }
