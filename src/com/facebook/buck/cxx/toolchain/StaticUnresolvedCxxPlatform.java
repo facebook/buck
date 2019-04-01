@@ -54,12 +54,12 @@ public class StaticUnresolvedCxxPlatform implements UnresolvedCxxPlatform {
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    return CxxPlatforms.getParseTimeDeps(cxxPlatform);
+    return CxxPlatforms.getParseTimeDeps(targetConfiguration, cxxPlatform);
   }
 
   @Override
   public Iterable<? extends BuildTarget> getLinkerParseTimeDeps(
       TargetConfiguration targetConfiguration) {
-    return cxxPlatform.getLd().getParseTimeDeps();
+    return cxxPlatform.getLd().getParseTimeDeps(targetConfiguration);
   }
 }

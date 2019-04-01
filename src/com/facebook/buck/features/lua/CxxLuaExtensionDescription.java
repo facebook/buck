@@ -370,7 +370,8 @@ public class CxxLuaExtensionDescription
 
       // Get any parse time deps from the C/C++ platforms.
       targetGraphOnlyDepsBuilder.addAll(
-          CxxPlatforms.getParseTimeDeps(luaPlatform.getCxxPlatform()));
+          CxxPlatforms.getParseTimeDeps(
+              buildTarget.getTargetConfiguration(), luaPlatform.getCxxPlatform()));
     }
   }
 

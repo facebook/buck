@@ -17,6 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -144,12 +145,13 @@ public class OcamlUtil {
     return (index > 0) ? fileName.substring(0, index) : fileName;
   }
 
-  static Iterable<BuildTarget> getParseTimeDeps(OcamlPlatform platform) {
+  static Iterable<BuildTarget> getParseTimeDeps(
+      TargetConfiguration targetConfiguration, OcamlPlatform platform) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     deps.addAll(platform.getCCompiler().getParseTimeDeps());
     deps.addAll(platform.getCxxCompiler().getParseTimeDeps());
     deps.addAll(platform.getCPreprocessor().getParseTimeDeps());
-    deps.addAll(CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform()));
+    deps.addAll(CxxPlatforms.getParseTimeDeps(targetConfiguration, platform.getCxxPlatform()));
     return deps.build();
   }
 }

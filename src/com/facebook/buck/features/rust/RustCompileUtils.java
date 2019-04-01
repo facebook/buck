@@ -23,6 +23,7 @@ import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -360,17 +361,19 @@ public class RustCompileUtils {
                 .orElseGet(rustToolchain::getDefaultRustPlatform));
   }
 
-  static Iterable<BuildTarget> getPlatformParseTimeDeps(RustPlatform rustPlatform) {
+  static Iterable<BuildTarget> getPlatformParseTimeDeps(
+      TargetConfiguration targetConfiguration, RustPlatform rustPlatform) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
     deps.addAll(rustPlatform.getRustCompiler().getParseTimeDeps());
     rustPlatform.getLinker().ifPresent(l -> deps.addAll(l.getParseTimeDeps()));
-    deps.addAll(CxxPlatforms.getParseTimeDeps(rustPlatform.getCxxPlatform()));
+    deps.addAll(CxxPlatforms.getParseTimeDeps(targetConfiguration, rustPlatform.getCxxPlatform()));
     return deps.build();
   }
 
   public static Iterable<BuildTarget> getPlatformParseTimeDeps(
       RustToolchain rustToolchain, BuildTarget buildTarget, HasDefaultPlatform hasDefaultPlatform) {
     return getPlatformParseTimeDeps(
+        buildTarget.getTargetConfiguration(),
         getRustPlatform(rustToolchain, buildTarget, hasDefaultPlatform));
   }
 

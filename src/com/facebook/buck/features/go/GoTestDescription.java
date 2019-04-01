@@ -494,7 +494,9 @@ public class GoTestDescription
     GoPlatform platform =
         GoDescriptors.getPlatformForRule(
             getGoToolchain(), this.goBuckConfig, buildTarget, constructorArg);
-    targetGraphOnlyDepsBuilder.addAll(CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform()));
+    targetGraphOnlyDepsBuilder.addAll(
+        CxxPlatforms.getParseTimeDeps(
+            buildTarget.getTargetConfiguration(), platform.getCxxPlatform()));
   }
 
   private GoToolchain getGoToolchain() {

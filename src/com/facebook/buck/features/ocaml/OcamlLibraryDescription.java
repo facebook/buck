@@ -237,7 +237,8 @@ public class OcamlLibraryDescription
             .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
             .getOcamlPlatforms()
             .getValues()) {
-      targetGraphOnlyDepsBuilder.addAll(OcamlUtil.getParseTimeDeps(platform));
+      targetGraphOnlyDepsBuilder.addAll(
+          OcamlUtil.getParseTimeDeps(buildTarget.getTargetConfiguration(), platform));
     }
   }
 

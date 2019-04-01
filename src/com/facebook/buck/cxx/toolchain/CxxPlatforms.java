@@ -301,7 +301,8 @@ public class CxxPlatforms {
     return systemDefaultCxxPlatform;
   }
 
-  public static Iterable<BuildTarget> getParseTimeDeps(CxxPlatform cxxPlatform) {
+  public static Iterable<BuildTarget> getParseTimeDeps(
+      TargetConfiguration targetConfiguration, CxxPlatform cxxPlatform) {
     ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
     deps.addAll(cxxPlatform.getAspp().getParseTimeDeps());
     deps.addAll(cxxPlatform.getAs().getParseTimeDeps());
@@ -327,7 +328,7 @@ public class CxxPlatforms {
     if (cxxPlatform.getAsm().isPresent()) {
       deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps());
     }
-    deps.addAll(cxxPlatform.getLd().getParseTimeDeps());
+    deps.addAll(cxxPlatform.getLd().getParseTimeDeps(targetConfiguration));
     deps.addAll(cxxPlatform.getAr().getParseTimeDeps());
     if (cxxPlatform.getRanlib().isPresent()) {
       deps.addAll(cxxPlatform.getRanlib().get().getParseTimeDeps());

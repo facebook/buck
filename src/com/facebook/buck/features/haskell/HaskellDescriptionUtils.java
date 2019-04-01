@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -389,7 +390,9 @@ public class HaskellDescriptionUtils {
 
   /** Accumulate parse-time deps needed by Haskell descriptions in depsBuilder. */
   public static void getParseTimeDeps(
-      Iterable<HaskellPlatform> platforms, ImmutableCollection.Builder<BuildTarget> depsBuilder) {
+      TargetConfiguration targetConfiguration,
+      Iterable<HaskellPlatform> platforms,
+      ImmutableCollection.Builder<BuildTarget> depsBuilder) {
     RichStream.from(platforms)
         .forEach(
             platform -> {
@@ -402,7 +405,8 @@ public class HaskellDescriptionUtils {
 
               // We use the C/C++ linker's Linker object to find out how to pass in the soname, so
               // just add all C/C++ platform parse time deps.
-              depsBuilder.addAll(CxxPlatforms.getParseTimeDeps(platform.getCxxPlatform()));
+              depsBuilder.addAll(
+                  CxxPlatforms.getParseTimeDeps(targetConfiguration, platform.getCxxPlatform()));
             });
   }
 

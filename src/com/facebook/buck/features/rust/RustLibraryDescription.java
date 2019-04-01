@@ -483,7 +483,11 @@ public class RustLibraryDescription
         .getRustPlatforms()
         .getValues()
         .stream()
-        .flatMap(p -> RichStream.from(RustCompileUtils.getPlatformParseTimeDeps(p)))
+        .flatMap(
+            p ->
+                RichStream.from(
+                    RustCompileUtils.getPlatformParseTimeDeps(
+                        buildTarget.getTargetConfiguration(), p)))
         .forEach(targetGraphOnlyDepsBuilder::add);
   }
 

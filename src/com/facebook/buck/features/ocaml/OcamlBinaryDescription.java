@@ -151,7 +151,8 @@ public class OcamlBinaryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     targetGraphOnlyDepsBuilder.addAll(
-        OcamlUtil.getParseTimeDeps(getPlatform(constructorArg.getPlatform())));
+        OcamlUtil.getParseTimeDeps(
+            buildTarget.getTargetConfiguration(), getPlatform(constructorArg.getPlatform())));
   }
 
   @BuckStyleImmutable
