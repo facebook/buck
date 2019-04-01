@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -762,7 +763,8 @@ public class PythonBinaryDescriptionTest {
     PythonBuckConfig config =
         new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
-          public Optional<BuildTarget> getPexExecutorTarget() {
+          public Optional<BuildTarget> getPexExecutorTarget(
+              TargetConfiguration targetConfiguration) {
             return Optional.of(pexBuilder);
           }
         };

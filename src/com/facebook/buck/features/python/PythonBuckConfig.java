@@ -18,9 +18,9 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -51,8 +51,8 @@ public class PythonBuckConfig {
     return delegate.getValue(section, "interpreter");
   }
 
-  public Optional<BuildTarget> getPexTarget() {
-    return delegate.getMaybeBuildTarget(SECTION, "path_to_pex", EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getPexTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getMaybeBuildTarget(SECTION, "path_to_pex", targetConfiguration);
   }
 
   public String getPexFlags() {
@@ -63,9 +63,8 @@ public class PythonBuckConfig {
     return delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex", resolver);
   }
 
-  public Optional<BuildTarget> getPexExecutorTarget() {
-    return delegate.getMaybeBuildTarget(
-        SECTION, "path_to_pex_executer", EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getPexExecutorTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getMaybeBuildTarget(SECTION, "path_to_pex_executer", targetConfiguration);
   }
 
   public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
@@ -119,8 +118,9 @@ public class PythonBuckConfig {
     return InternalFlavor.of(section.substring(PYTHON_PLATFORM_SECTION_PREFIX.length()));
   }
 
-  public Optional<BuildTarget> getCxxLibrary(String section) {
-    return delegate.getBuildTarget(section, "library", EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getCxxLibrary(
+      String section, TargetConfiguration targetConfiguration) {
+    return delegate.getBuildTarget(section, "library", targetConfiguration);
   }
 
   public String getDefaultSection() {

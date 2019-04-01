@@ -18,6 +18,7 @@ package com.facebook.buck.features.python.toolchain.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
@@ -40,6 +41,7 @@ public class LazyPythonPlatform implements PythonPlatform {
 
   private final PythonBuckConfig pythonBuckConfig;
   private final ProcessExecutor processExecutor;
+  private final TargetConfiguration targetConfiguration;
   private final Flavor flavor;
   private final String configSection;
   private final Supplier<PythonEnvironment> pythonEnvironmentSupplier;
@@ -48,10 +50,12 @@ public class LazyPythonPlatform implements PythonPlatform {
       ToolchainProvider toolchainProvider,
       PythonBuckConfig pythonBuckConfig,
       ProcessExecutor processExecutor,
+      TargetConfiguration targetConfiguration,
       Flavor flavor,
       String configSection) {
     this.pythonBuckConfig = pythonBuckConfig;
     this.processExecutor = processExecutor;
+    this.targetConfiguration = targetConfiguration;
     this.flavor = flavor;
     this.configSection = configSection;
 
@@ -100,6 +104,6 @@ public class LazyPythonPlatform implements PythonPlatform {
 
   @Override
   public Optional<BuildTarget> getCxxLibrary() {
-    return pythonBuckConfig.getCxxLibrary(configSection);
+    return pythonBuckConfig.getCxxLibrary(configSection, targetConfiguration);
   }
 }

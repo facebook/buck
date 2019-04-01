@@ -468,8 +468,11 @@ public class PythonTestDescription
 
     if (constructorArg.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle())
         == PythonBuckConfig.PackageStyle.STANDALONE) {
-      Optionals.addIfPresent(pythonBuckConfig.getPexTarget(), extraDepsBuilder);
-      Optionals.addIfPresent(pythonBuckConfig.getPexExecutorTarget(), extraDepsBuilder);
+      Optionals.addIfPresent(
+          pythonBuckConfig.getPexTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
+      Optionals.addIfPresent(
+          pythonBuckConfig.getPexExecutorTarget(buildTarget.getTargetConfiguration()),
+          extraDepsBuilder);
     }
   }
 
