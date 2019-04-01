@@ -27,6 +27,7 @@ import com.facebook.buck.apple.toolchain.impl.AppleToolchainDiscovery;
 import com.facebook.buck.apple.toolchain.impl.XcodeToolFinder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -82,6 +83,7 @@ public class AppleNativeIntegrationTestUtils {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             new FakeProjectFilesystem(),
+            EmptyTargetConfiguration.INSTANCE,
             anySdk,
             "fakeversion",
             "fakearch",

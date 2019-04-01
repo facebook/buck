@@ -192,11 +192,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBuildTarget(APPLE_SECTION, "xctool_zip_target", targetConfiguration);
   }
 
-  public ToolProvider getCodesignProvider() {
+  public ToolProvider getCodesignProvider(TargetConfiguration targetConfiguration) {
     String codesignField = "codesign";
     Optional<BuildTarget> target =
-        delegate.getMaybeBuildTarget(
-            APPLE_SECTION, codesignField, EmptyTargetConfiguration.INSTANCE);
+        delegate.getMaybeBuildTarget(APPLE_SECTION, codesignField, targetConfiguration);
     String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
     if (target.isPresent()) {
       return new BinaryBuildRuleToolProvider(target.get(), source);

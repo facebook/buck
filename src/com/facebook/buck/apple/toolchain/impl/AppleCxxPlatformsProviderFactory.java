@@ -27,6 +27,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -62,6 +63,7 @@ public class AppleCxxPlatformsProviderFactory
               create(
                   context.getBuckConfig(),
                   context.getFilesystem(),
+                  context.getTargetConfiguration().get(),
                   appleSdkPaths,
                   appleToolchains)));
     } catch (HumanReadableException e) {
@@ -72,11 +74,12 @@ public class AppleCxxPlatformsProviderFactory
   private static FlavorDomain<AppleCxxPlatform> create(
       BuckConfig config,
       ProjectFilesystem filesystem,
+      TargetConfiguration targetConfiguration,
       Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> appleSdkPaths,
       Optional<ImmutableMap<String, AppleToolchain>> appleToolchains) {
     ImmutableList<AppleCxxPlatform> appleCxxPlatforms =
         AppleCxxPlatforms.buildAppleCxxPlatforms(
-            appleSdkPaths, appleToolchains, filesystem, config);
+            appleSdkPaths, appleToolchains, filesystem, config, targetConfiguration);
     checkApplePlatforms(appleCxxPlatforms);
     return FlavorDomain.from("Apple C++ Platform", appleCxxPlatforms);
   }
