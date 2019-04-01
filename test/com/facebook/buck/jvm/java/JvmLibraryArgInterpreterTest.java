@@ -62,7 +62,11 @@ public class JvmLibraryArgInterpreterTest {
 
   @Before
   public void createHelpers() {
-    defaults = JavacOptions.builder().setSourceLevel("8").setTargetLevel("8").build();
+    defaults =
+        JavacOptions.builder()
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("8").setTargetLevel("8").build())
+            .build();
     graphBuilder = new TestActionGraphBuilder();
     ruleFinder = new SourcePathRuleFinder(graphBuilder);
     sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -75,8 +79,8 @@ public class JvmLibraryArgInterpreterTest {
 
     JavacOptions options = createJavacOptions(arg);
 
-    assertEquals("1.4", options.getSourceLevel());
-    assertEquals("1.4", options.getTargetLevel());
+    assertEquals("1.4", options.getLanguageLevelOptions().getSourceLevel());
+    assertEquals("1.4", options.getLanguageLevelOptions().getTargetLevel());
   }
 
   @Test

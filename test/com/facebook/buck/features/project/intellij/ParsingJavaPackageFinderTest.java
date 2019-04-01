@@ -78,7 +78,8 @@ public class ParsingJavaPackageFinderTest {
         };
 
     javaFileParser =
-        JavaFileParser.createJavaFileParser(JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS);
+        JavaFileParser.createJavaFileParser(
+            JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS.getLanguageLevelOptions());
   }
 
   @Test

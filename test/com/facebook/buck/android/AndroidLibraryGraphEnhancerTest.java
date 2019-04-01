@@ -37,6 +37,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavacFactoryHelper;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
@@ -192,8 +193,11 @@ public class AndroidLibraryGraphEnhancerTest {
             JavacOptions.builder(ANDROID_JAVAC_OPTIONS)
                 .setJavaAnnotationProcessorParams(
                     JavacPluginParams.builder().setProcessOnly(true).build())
-                .setSourceLevel("7")
-                .setTargetLevel("7")
+                .setLanguageLevelOptions(
+                    JavacLanguageLevelOptions.builder()
+                        .setSourceLevel("7")
+                        .setTargetLevel("7")
+                        .build())
                 .build(),
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,
@@ -209,7 +213,7 @@ public class AndroidLibraryGraphEnhancerTest {
     JavacOptions javacOptions =
         ((JavacToJarStepFactory) dummyRDotJava.get().getCompileStepFactory()).getJavacOptions();
     assertFalse(javacOptions.getJavaAnnotationProcessorParams().getProcessOnly());
-    assertEquals("7", javacOptions.getSourceLevel());
+    assertEquals("7", javacOptions.getLanguageLevelOptions().getSourceLevel());
   }
 
   @Test
@@ -226,7 +230,11 @@ public class AndroidLibraryGraphEnhancerTest {
             .build()
             .getView(JavaBuckConfig.class);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
-    JavacOptions options = JavacOptions.builder().setSourceLevel("5").setTargetLevel("5").build();
+    JavacOptions options =
+        JavacOptions.builder()
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("5").setTargetLevel("5").build())
+            .build();
     AndroidLibraryGraphEnhancer graphEnhancer =
         new AndroidLibraryGraphEnhancer(
             target,

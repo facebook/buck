@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.JavacOptions.TARGETED_JAVA_VERSION;
+import static com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -250,7 +250,7 @@ public class JavaBuckConfigTest {
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacOptions options = config.getDefaultJavacOptions();
+    AbstractJavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
 
     assertEquals(sourceLevel, options.getSourceLevel());
     assertEquals(targetLevel, options.getTargetLevel());
@@ -260,7 +260,7 @@ public class JavaBuckConfigTest {
   public void shouldSetJavaTargetAndSourceVersionDefaultToSaneValues() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
-    JavacOptions options = config.getDefaultJavacOptions();
+    AbstractJavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
 
     assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
     assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());
@@ -273,9 +273,21 @@ public class JavaBuckConfigTest {
 
     JavacOptions options = config.getDefaultJavacOptions();
 
-    JavacOptions jse5 = JavacOptions.builder(options).setSourceLevel("5").build();
-    JavacOptions jse6 = JavacOptions.builder(options).setSourceLevel("6").build();
-    JavacOptions jse7 = JavacOptions.builder(options).setSourceLevel("7").build();
+    JavacOptions jse5 =
+        JavacOptions.builder(options)
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("5").build())
+            .build();
+    JavacOptions jse6 =
+        JavacOptions.builder(options)
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("6").build())
+            .build();
+    JavacOptions jse7 =
+        JavacOptions.builder(options)
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("7").build())
+            .build();
 
     assertOptionKeyAbsent(jse5, "bootclasspath");
     assertOptionsContains(jse6, "bootclasspath", "one.jar");

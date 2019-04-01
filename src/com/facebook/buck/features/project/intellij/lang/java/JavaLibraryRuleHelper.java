@@ -24,8 +24,8 @@ import com.facebook.buck.features.project.intellij.ModuleBuildContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationContext;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationKeys;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
-import com.facebook.buck.jvm.java.JavacOptions;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -58,9 +58,10 @@ public class JavaLibraryRuleHelper {
     JavaLibraryDescription.CoreArg arg = targetNode.getConstructorArg();
 
     if (arg.getSource().isPresent()) {
-      JavacOptions defaultJavacOptions = projectConfig.getJavaBuckConfig().getDefaultJavacOptions();
-      String defaultSourceLevel = defaultJavacOptions.getSourceLevel();
-      String defaultTargetLevel = defaultJavacOptions.getTargetLevel();
+      AbstractJavacLanguageLevelOptions languageLevelOptions =
+          projectConfig.getJavaBuckConfig().getJavacLanguageLevelOptions();
+      String defaultSourceLevel = languageLevelOptions.getSourceLevel();
+      String defaultTargetLevel = languageLevelOptions.getTargetLevel();
       boolean languageLevelsAreDifferent =
           !defaultSourceLevel.equals(arg.getSource().orElse(defaultSourceLevel))
               || !defaultTargetLevel.equals(arg.getTarget().orElse(defaultTargetLevel));

@@ -43,11 +43,11 @@ import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
+import com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
-import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.parser.BuildFileSpec;
 import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.Parser;
@@ -272,13 +272,14 @@ public class IjProjectCommandHelper {
 
     ActionGraphBuilder graphBuilder = result.getActionGraphBuilder();
 
-    JavacOptions javacOptions = buckConfig.getView(JavaBuckConfig.class).getDefaultJavacOptions();
+    AbstractJavacLanguageLevelOptions languageLevelOptions =
+        buckConfig.getView(JavaBuckConfig.class).getJavacLanguageLevelOptions();
 
     IjProject project =
         new IjProject(
             targetGraphAndTargets,
             getJavaPackageFinder(buckConfig),
-            JavaFileParser.createJavaFileParser(javacOptions),
+            JavaFileParser.createJavaFileParser(languageLevelOptions),
             graphBuilder,
             cell.getFilesystem(),
             projectConfig,

@@ -93,18 +93,17 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
         .orElseGet(this::getDefaultJavaOptions);
   }
 
+  public JavacLanguageLevelOptions getJavacLanguageLevelOptions() {
+    JavacLanguageLevelOptions.Builder builder = JavacLanguageLevelOptions.builder();
+    delegate.getValue(SECTION, "source_level").map(builder::setSourceLevel);
+    delegate.getValue(SECTION, "target_level").map(builder::setTargetLevel);
+    return builder.build();
+  }
+
   public JavacOptions getDefaultJavacOptions() {
     JavacOptions.Builder builder = JavacOptions.builderForUseInJavaBuckConfig();
 
-    Optional<String> sourceLevel = delegate.getValue(SECTION, "source_level");
-    if (sourceLevel.isPresent()) {
-      builder.setSourceLevel(sourceLevel.get());
-    }
-
-    Optional<String> targetLevel = delegate.getValue(SECTION, "target_level");
-    if (targetLevel.isPresent()) {
-      builder.setTargetLevel(targetLevel.get());
-    }
+    builder.setLanguageLevelOptions(getJavacLanguageLevelOptions());
 
     ImmutableList<String> extraArguments =
         delegate.getListWithoutComments(SECTION, "extra_arguments");

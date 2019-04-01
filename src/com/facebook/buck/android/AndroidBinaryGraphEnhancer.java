@@ -49,6 +49,7 @@ import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavaLibraryDeps;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacFactory;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.rules.args.Arg;
@@ -380,7 +381,12 @@ public class AndroidBinaryGraphEnhancer {
               // Kind of a hack: override language level to 7 to allow string switch.
               // This can be removed once no one who uses this feature sets the level
               // to 6 in their .buckconfig.
-              .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
+              .setJavacOptions(
+                  javacOptions.withLanguageLevelOptions(
+                      JavacLanguageLevelOptions.builder()
+                          .setSourceLevel("7")
+                          .setTargetLevel("7")
+                          .build()))
               .setSrcs(
                   ImmutableSortedSet.of(generateCodeForMergedLibraryMap.getSourcePathToOutput()))
               .setSourceOnlyAbisAllowed(false)
@@ -525,7 +531,12 @@ public class AndroidBinaryGraphEnhancer {
                 new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
                 javaBuckConfig,
                 null)
-            .setJavacOptions(javacOptions.withSourceLevel("7").withTargetLevel("7"))
+            .setJavacOptions(
+                javacOptions.withLanguageLevelOptions(
+                    JavacLanguageLevelOptions.builder()
+                        .setSourceLevel("7")
+                        .setTargetLevel("7")
+                        .build()))
             .setSrcs(ImmutableSortedSet.of(trimUberRDotJava.getSourcePathToOutput()))
             .setSourceOnlyAbisAllowed(false)
             .setDeps(

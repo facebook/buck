@@ -277,7 +277,7 @@ public abstract class DefaultJavaLibraryRules {
   private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("^(1\\.)*(?<version>\\d)$");
 
   private boolean isDesugarRequired() {
-    String sourceLevel = getJavacOptions().getSourceLevel();
+    String sourceLevel = getJavacOptions().getLanguageLevelOptions().getSourceLevel();
     Matcher matcher = JAVA_VERSION_PATTERN.matcher(sourceLevel);
     if (!matcher.find()) {
       return false;

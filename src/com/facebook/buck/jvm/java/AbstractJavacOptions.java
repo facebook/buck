@@ -25,7 +25,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.DefaultFieldInputs;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -47,9 +46,6 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = true)
 @BuckStyleImmutable
 abstract class AbstractJavacOptions implements AddsToRuleKey {
-
-  // Default combined source and target level.
-  public static final String TARGETED_JAVA_VERSION = "7";
 
   /** The method in which the compiler output is spooled. */
   public enum SpoolMode {
@@ -89,15 +85,8 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
 
   @Value.Default
   @AddToRuleKey
-  public String getSourceLevel() {
-    return TARGETED_JAVA_VERSION;
-  }
-
-  @VisibleForTesting
-  @Value.Default
-  @AddToRuleKey
-  public String getTargetLevel() {
-    return TARGETED_JAVA_VERSION;
+  public JavacLanguageLevelOptions getLanguageLevelOptions() {
+    return JavacLanguageLevelOptions.DEFAULT;
   }
 
   @Value.Default
@@ -173,8 +162,8 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       ProjectFilesystem filesystem) {
 
     // Add some standard options.
-    optionsConsumer.addOptionValue("source", getSourceLevel());
-    optionsConsumer.addOptionValue("target", getTargetLevel());
+    optionsConsumer.addOptionValue("source", getLanguageLevelOptions().getSourceLevel());
+    optionsConsumer.addOptionValue("target", getLanguageLevelOptions().getTargetLevel());
 
     // Set the sourcepath to stop us reading source files out of jars by mistake.
     optionsConsumer.addOptionValue("sourcepath", "");
@@ -192,7 +181,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       optionsConsumer.addOptionValue("bootclasspath", getBootclasspath().get());
     } else {
       ImmutableList<PathSourcePath> bootclasspath =
-          getSourceToBootclasspath().get(getSourceLevel());
+          getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
       if (bootclasspath != null) {
         String bcp =
             bootclasspath

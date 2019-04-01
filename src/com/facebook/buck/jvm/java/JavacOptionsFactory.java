@@ -31,19 +31,28 @@ public final class JavacOptionsFactory {
     }
 
     JavacOptions.Builder builder = JavacOptions.builder(defaultOptions);
+    JavacLanguageLevelOptions.Builder languageLevelOptionsBuilder =
+        JavacLanguageLevelOptions.builder();
+
+    languageLevelOptionsBuilder.setSourceLevel(
+        defaultOptions.getLanguageLevelOptions().getSourceLevel());
+    languageLevelOptionsBuilder.setTargetLevel(
+        defaultOptions.getLanguageLevelOptions().getTargetLevel());
 
     if (jvmLibraryArg.getJavaVersion().isPresent()) {
-      builder.setSourceLevel(jvmLibraryArg.getJavaVersion().get());
-      builder.setTargetLevel(jvmLibraryArg.getJavaVersion().get());
+      languageLevelOptionsBuilder.setSourceLevel(jvmLibraryArg.getJavaVersion().get());
+      languageLevelOptionsBuilder.setTargetLevel(jvmLibraryArg.getJavaVersion().get());
     }
 
     if (jvmLibraryArg.getSource().isPresent()) {
-      builder.setSourceLevel(jvmLibraryArg.getSource().get());
+      languageLevelOptionsBuilder.setSourceLevel(jvmLibraryArg.getSource().get());
     }
 
     if (jvmLibraryArg.getTarget().isPresent()) {
-      builder.setTargetLevel(jvmLibraryArg.getTarget().get());
+      languageLevelOptionsBuilder.setTargetLevel(jvmLibraryArg.getTarget().get());
     }
+
+    builder.setLanguageLevelOptions(languageLevelOptionsBuilder.build());
 
     builder.addAllExtraArguments(jvmLibraryArg.getExtraArguments());
 

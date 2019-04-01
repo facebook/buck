@@ -16,7 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.JavacOptions.TARGETED_JAVA_VERSION;
+import static com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableList;

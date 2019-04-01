@@ -186,9 +186,12 @@ public class JavacOptionsTest {
 
   @Test
   public void shouldSetSourceAndTargetLevels() {
-    JavacOptions original = createStandardBuilder().setSourceLevel("8").setTargetLevel("5").build();
+    JavacLanguageLevelOptions javacLanguageLevelOptions =
+        JavacLanguageLevelOptions.builder().setSourceLevel("8").setTargetLevel("5").build();
+    JavacOptions original = createStandardBuilder().build();
 
-    JavacOptions copy = JavacOptions.builder(original).build();
+    JavacOptions copy =
+        JavacOptions.builder(original).setLanguageLevelOptions(javacLanguageLevelOptions).build();
     assertOptionsHasKeyValue(copy, "source", "8");
     assertOptionsHasKeyValue(copy, "target", "5");
   }
@@ -197,7 +200,8 @@ public class JavacOptionsTest {
   public void shouldAddABootClasspathIfTheMapContainsOne() {
     JavacOptions options =
         createStandardBuilder()
-            .setSourceLevel("5")
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("5").build())
             .putSourceToBootclasspath(
                 "5",
                 ImmutableList.of(
@@ -214,7 +218,8 @@ public class JavacOptionsTest {
     JavacOptions options =
         createStandardBuilder()
             .setBootclasspath(expectedBootClasspath)
-            .setSourceLevel("5")
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("5").build())
             .putSourceToBootclasspath(
                 "5", ImmutableList.of(FakeSourcePath.of("not-the-right-path.jar")))
             .build();
@@ -227,7 +232,8 @@ public class JavacOptionsTest {
     JavacOptions options =
         createStandardBuilder()
             .setBootclasspath("cake.jar")
-            .setSourceLevel("6")
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("6").build())
             .putSourceToBootclasspath(
                 "5",
                 ImmutableList.of(
@@ -241,7 +247,8 @@ public class JavacOptionsTest {
   public void shouldCopyMapOfSourceLevelToBootclassPathWhenBuildingNewJavacOptions() {
     JavacOptions original =
         createStandardBuilder()
-            .setSourceLevel("5")
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder().setSourceLevel("5").build())
             .putSourceToBootclasspath(
                 "5",
                 ImmutableList.of(

@@ -182,7 +182,8 @@ public class IjProjectDataPreparerTest {
     IjModule depModule = IjModuleGraphTest.getModuleForTarget(moduleGraph, depTargetNode);
 
     JavaFileParser javaFileParser =
-        JavaFileParser.createJavaFileParser(JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS);
+        JavaFileParser.createJavaFileParser(
+            JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS.getLanguageLevelOptions());
 
     IjProjectTemplateDataPreparer dataPreparer =
         new IjProjectTemplateDataPreparer(

@@ -38,6 +38,7 @@ import com.facebook.buck.jvm.java.ExtraClasspathProvider;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.rules.query.Query;
@@ -231,7 +232,13 @@ public class AndroidLibraryDescriptionTest extends AbiCompilationModeTest {
                 .build());
 
     JavacOptions options =
-        JavacOptions.builder().setSourceLevel("1.7").setTargetLevel("1.7").build();
+        JavacOptions.builder()
+            .setLanguageLevelOptions(
+                JavacLanguageLevelOptions.builder()
+                    .setSourceLevel("1.7")
+                    .setTargetLevel("1.7")
+                    .build())
+            .build();
     JavacOptions updated = options.withBootclasspathFromContext(extraClasspathProvider);
 
     assertEquals(

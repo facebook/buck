@@ -129,7 +129,8 @@ public class DiffRuleKeysScriptIntegrationTest {
         Joiner.on('\n')
             .join(
                 "Change details for "
-                    + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions]",
+                    + "[//:java_lib_2->jarBuildStepsFactory->configuredCompiler->javacOptions"
+                    + "->languageLevelOptions]",
                 "  (sourceLevel):",
                 "    -[string(\"6\")]",
                 "    +[string(\"7\")]",
