@@ -19,7 +19,6 @@ package com.facebook.buck.cxx.toolchain;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
@@ -319,14 +318,15 @@ public class CxxBuckConfig {
     return delegate.getLong(cxxSection, MAX_TEST_OUTPUT_SIZE).orElse(DEFAULT_MAX_TEST_OUTPUT_SIZE);
   }
 
-  private Optional<CxxToolProviderParams> getCxxToolProviderParams(String field) {
+  private Optional<CxxToolProviderParams> getCxxToolProviderParams(
+      String field, TargetConfiguration targetConfiguration) {
     Optional<String> value = delegate.getValue(cxxSection, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
     String source = String.format("[%s] %s", cxxSection, field);
     Optional<BuildTarget> target =
-        delegate.getMaybeBuildTarget(cxxSection, field, EmptyTargetConfiguration.INSTANCE);
+        delegate.getMaybeBuildTarget(cxxSection, field, targetConfiguration);
     Optional<CxxToolProvider.Type> type =
         delegate.getEnum(cxxSection, field + "_type", CxxToolProvider.Type.class);
     if (target.isPresent()) {
@@ -348,61 +348,64 @@ public class CxxBuckConfig {
     }
   }
 
-  private Optional<PreprocessorProvider> getPreprocessorProvider(String field) {
-    return getCxxToolProviderParams(field)
+  private Optional<PreprocessorProvider> getPreprocessorProvider(
+      String field, TargetConfiguration targetConfiguration) {
+    return getCxxToolProviderParams(field, targetConfiguration)
         .map(AbstractCxxToolProviderParams::getPreprocessorProvider);
   }
 
-  private Optional<CompilerProvider> getCompilerProvider(String field) {
-    return getCxxToolProviderParams(field).map(AbstractCxxToolProviderParams::getCompilerProvider);
+  private Optional<CompilerProvider> getCompilerProvider(
+      String field, TargetConfiguration targetConfiguration) {
+    return getCxxToolProviderParams(field, targetConfiguration)
+        .map(AbstractCxxToolProviderParams::getCompilerProvider);
   }
 
-  public Optional<CompilerProvider> getAs() {
-    return getCompilerProvider(AS);
+  public Optional<CompilerProvider> getAs(TargetConfiguration targetConfiguration) {
+    return getCompilerProvider(AS, targetConfiguration);
   }
 
-  public Optional<PreprocessorProvider> getAspp() {
-    return getPreprocessorProvider(ASPP);
+  public Optional<PreprocessorProvider> getAspp(TargetConfiguration targetConfiguration) {
+    return getPreprocessorProvider(ASPP, targetConfiguration);
   }
 
-  public Optional<CompilerProvider> getCc() {
-    return getCompilerProvider(CC);
+  public Optional<CompilerProvider> getCc(TargetConfiguration targetConfiguration) {
+    return getCompilerProvider(CC, targetConfiguration);
   }
 
-  public Optional<PreprocessorProvider> getCpp() {
-    return getPreprocessorProvider(CPP);
+  public Optional<PreprocessorProvider> getCpp(TargetConfiguration targetConfiguration) {
+    return getPreprocessorProvider(CPP, targetConfiguration);
   }
 
-  public Optional<CompilerProvider> getCxx() {
-    return getCompilerProvider(CXX);
+  public Optional<CompilerProvider> getCxx(TargetConfiguration targetConfiguration) {
+    return getCompilerProvider(CXX, targetConfiguration);
   }
 
-  public Optional<PreprocessorProvider> getCxxpp() {
-    return getPreprocessorProvider(CXXPP);
+  public Optional<PreprocessorProvider> getCxxpp(TargetConfiguration targetConfiguration) {
+    return getPreprocessorProvider(CXXPP, targetConfiguration);
   }
 
-  public Optional<CompilerProvider> getCuda() {
-    return getCompilerProvider(CUDA);
+  public Optional<CompilerProvider> getCuda(TargetConfiguration targetConfiguration) {
+    return getCompilerProvider(CUDA, targetConfiguration);
   }
 
-  public Optional<PreprocessorProvider> getCudapp() {
-    return getPreprocessorProvider(CUDAPP);
+  public Optional<PreprocessorProvider> getCudapp(TargetConfiguration targetConfiguration) {
+    return getPreprocessorProvider(CUDAPP, targetConfiguration);
   }
 
-  public Optional<CompilerProvider> getHip() {
-    return getCompilerProvider(HIP);
+  public Optional<CompilerProvider> getHip(TargetConfiguration targetConfiguration) {
+    return getCompilerProvider(HIP, targetConfiguration);
   }
 
-  public Optional<PreprocessorProvider> getHippp() {
-    return getPreprocessorProvider(HIPPP);
+  public Optional<PreprocessorProvider> getHippp(TargetConfiguration targetConfiguration) {
+    return getPreprocessorProvider(HIPPP, targetConfiguration);
   }
 
-  public Optional<CompilerProvider> getAsm() {
-    return getCompilerProvider(ASM);
+  public Optional<CompilerProvider> getAsm(TargetConfiguration targetConfiguration) {
+    return getCompilerProvider(ASM, targetConfiguration);
   }
 
-  public Optional<PreprocessorProvider> getAsmpp() {
-    return getPreprocessorProvider(ASMPP);
+  public Optional<PreprocessorProvider> getAsmpp(TargetConfiguration targetConfiguration) {
+    return getPreprocessorProvider(ASMPP, targetConfiguration);
   }
 
   public Optional<Boolean> getUseArgFile() {
@@ -615,11 +618,11 @@ public class CxxBuckConfig {
    * backed by the specified target.
    */
   public static Optional<UnresolvedCxxPlatform> getProviderBasedPlatform(
-      BuckConfig config, Flavor flavor) {
+      BuckConfig config, Flavor flavor, TargetConfiguration targetConfiguration) {
     String cxxSection = new CxxBuckConfig(config, flavor).cxxSection;
 
     Optional<BuildTarget> toolchainTarget =
-        config.getBuildTarget(cxxSection, TOOLCHAIN_TARGET, EmptyTargetConfiguration.INSTANCE);
+        config.getBuildTarget(cxxSection, TOOLCHAIN_TARGET, targetConfiguration);
     if (!toolchainTarget.isPresent()) {
       return Optional.empty();
     }

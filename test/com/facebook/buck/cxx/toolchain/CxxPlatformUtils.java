@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -98,7 +99,7 @@ public class CxxPlatformUtils {
       FlavorDomain.of("C/C++ Platform", DEFAULT_UNRESOLVED_PLATFORM);
 
   public static CxxPlatform build(CxxBuckConfig config) {
-    return DefaultCxxPlatforms.build(Platform.detect(), config);
+    return DefaultCxxPlatforms.build(EmptyTargetConfiguration.INSTANCE, Platform.detect(), config);
   }
 
   private static CxxPlatform getDefaultPlatform(Path root) throws IOException {
@@ -109,7 +110,8 @@ public class CxxPlatformUtils {
             .setFilesystem(TestProjectFilesystems.createProjectFilesystem(root))
             .setEnvironment(ImmutableMap.of())
             .build();
-    return DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig));
+    return DefaultCxxPlatforms.build(
+        EmptyTargetConfiguration.INSTANCE, Platform.detect(), new CxxBuckConfig(buckConfig));
   }
 
   public static HeaderMode getHeaderModeForDefaultPlatform(Path root) throws IOException {

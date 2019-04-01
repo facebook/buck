@@ -416,6 +416,7 @@ public class AppleCxxPlatforms {
 
     CxxPlatform cxxPlatform =
         CxxPlatforms.build(
+            targetConfiguration,
             targetFlavor,
             Platform.MACOS,
             config,

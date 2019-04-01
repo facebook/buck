@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -54,14 +55,20 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     }
 
     try {
-      return Optional.of(createProvider(context.getBuckConfig(), cxxSystemPlatforms.build()));
+      return Optional.of(
+          createProvider(
+              context.getBuckConfig(),
+              context.getTargetConfiguration().get(),
+              cxxSystemPlatforms.build()));
     } catch (HumanReadableException e) {
       throw ToolchainInstantiationException.wrap(e);
     }
   }
 
   private static CxxPlatformsProvider createProvider(
-      BuckConfig config, ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatforms) {
+      BuckConfig config,
+      TargetConfiguration targetConfiguration,
+      ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatforms) {
     Platform platform = Platform.detect();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
@@ -71,7 +78,8 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
     cxxSystemPlatformsBuilder.putAll(cxxSystemPlatforms);
 
-    CxxPlatform defaultHostCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
+    CxxPlatform defaultHostCxxPlatform =
+        DefaultCxxPlatforms.build(targetConfiguration, platform, cxxBuckConfig);
     cxxSystemPlatformsBuilder.put(
         defaultHostCxxPlatform.getFlavor(),
         new StaticUnresolvedCxxPlatform(defaultHostCxxPlatform));
@@ -83,7 +91,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
     Map<Flavor, UnresolvedCxxPlatform> cxxOverridePlatformsMap =
         updateCxxPlatformsWithOptionsFromBuckConfig(
-            platform, config, cxxSystemPlatformsMap, defaultHostCxxPlatform);
+            targetConfiguration, platform, config, cxxSystemPlatformsMap, defaultHostCxxPlatform);
 
     UnresolvedCxxPlatform hostCxxPlatform =
         getHostCxxPlatform(cxxBuckConfig, cxxOverridePlatformsMap);
@@ -127,6 +135,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
    * cxx#{flavor name}. These platforms are overrides for existing system platforms.
    */
   private static Map<Flavor, UnresolvedCxxPlatform> updateCxxPlatformsWithOptionsFromBuckConfig(
+      TargetConfiguration targetConfiguration,
       Platform platform,
       BuckConfig config,
       ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsMap,
@@ -137,11 +146,12 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
     for (Flavor flavor : cxxFlavors) {
       Optional<UnresolvedCxxPlatform> newPlatform =
-          CxxBuckConfig.getProviderBasedPlatform(config, flavor);
+          CxxBuckConfig.getProviderBasedPlatform(config, flavor, targetConfiguration);
 
       if (!newPlatform.isPresent()) {
         newPlatform =
             augmentSystemPlatform(
+                targetConfiguration,
                 platform,
                 cxxSystemPlatformsMap,
                 defaultHostCxxPlatform,
@@ -160,6 +170,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
   }
 
   private static Optional<UnresolvedCxxPlatform> augmentSystemPlatform(
+      TargetConfiguration targetConfiguration,
       Platform platform,
       ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsMap,
       CxxPlatform defaultHostCxxPlatform,
@@ -185,7 +196,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     StaticUnresolvedCxxPlatform augmentedPlatform =
         new StaticUnresolvedCxxPlatform(
             CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                baseCxxPlatform, platform, cxxConfig, flavor));
+                targetConfiguration, baseCxxPlatform, platform, cxxConfig, flavor));
     return Optional.of(augmentedPlatform);
   }
 

@@ -233,7 +233,10 @@ public class FakeAppleRuleDescriptions {
 
   public static final UnresolvedCxxPlatform DEFAULT_PLATFORM =
       new StaticUnresolvedCxxPlatform(
-          DefaultCxxPlatforms.build(Platform.MACOS, new CxxBuckConfig(DEFAULT_BUCK_CONFIG)));
+          DefaultCxxPlatforms.build(
+              EmptyTargetConfiguration.INSTANCE,
+              Platform.MACOS,
+              new CxxBuckConfig(DEFAULT_BUCK_CONFIG)));
 
   public static final FlavorDomain<UnresolvedCxxPlatform> DEFAULT_APPLE_FLAVOR_DOMAIN =
       FlavorDomain.of(

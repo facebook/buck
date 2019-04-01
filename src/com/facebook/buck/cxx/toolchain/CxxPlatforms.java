@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.log.Logger;
@@ -77,6 +78,7 @@ public class CxxPlatforms {
   }
 
   public static CxxPlatform build(
+      TargetConfiguration targetConfiguration,
       Flavor flavor,
       Platform platform,
       CxxBuckConfig config,
@@ -123,18 +125,18 @@ public class CxxPlatforms {
 
     builder
         .setFlavor(flavor)
-        .setAs(config.getAs().orElse(as))
-        .setAspp(config.getAspp().orElse(aspp))
-        .setCc(config.getCc().orElse(cc))
-        .setCxx(config.getCxx().orElse(cxx))
-        .setCpp(config.getCpp().orElse(cpp))
-        .setCxxpp(config.getCxxpp().orElse(cxxpp))
-        .setCuda(config.getCuda())
-        .setCudapp(config.getCudapp())
-        .setHip(config.getHip())
-        .setHippp(config.getHippp())
-        .setAsm(config.getAsm())
-        .setAsmpp(config.getAsmpp())
+        .setAs(config.getAs(targetConfiguration).orElse(as))
+        .setAspp(config.getAspp(targetConfiguration).orElse(aspp))
+        .setCc(config.getCc(targetConfiguration).orElse(cc))
+        .setCxx(config.getCxx(targetConfiguration).orElse(cxx))
+        .setCpp(config.getCpp(targetConfiguration).orElse(cpp))
+        .setCxxpp(config.getCxxpp(targetConfiguration).orElse(cxxpp))
+        .setCuda(config.getCuda(targetConfiguration))
+        .setCudapp(config.getCudapp(targetConfiguration))
+        .setHip(config.getHip(targetConfiguration))
+        .setHippp(config.getHippp(targetConfiguration))
+        .setAsm(config.getAsm(targetConfiguration))
+        .setAsmpp(config.getAsmpp(targetConfiguration))
         .setLd(config.getLinkerProvider(ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
         .setRuntimeLdflags(runtimeLdflags)
@@ -190,8 +192,13 @@ public class CxxPlatforms {
    * from another default CxxPlatform
    */
   public static CxxPlatform copyPlatformWithFlavorAndConfig(
-      CxxPlatform defaultPlatform, Platform platform, CxxBuckConfig config, Flavor flavor) {
+      TargetConfiguration targetConfiguration,
+      CxxPlatform defaultPlatform,
+      Platform platform,
+      CxxBuckConfig config,
+      Flavor flavor) {
     return CxxPlatforms.build(
+        targetConfiguration,
         flavor,
         platform,
         config,
