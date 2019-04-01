@@ -34,6 +34,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -158,7 +159,7 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertEquals(Optional.empty(), config.getJavacPath());
+    assertEquals(Optional.empty(), config.getJavacPath(EmptyTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -171,7 +172,9 @@ public class JavaBuckConfigTest {
                 .join("[tools]", "    javac = " + javac.toString().replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
 
-    assertEquals(config.getDelegate().getPathSourcePath(javac), config.getJavacPath().get());
+    assertEquals(
+        config.getDelegate().getPathSourcePath(javac),
+        config.getJavacPath(EmptyTargetConfiguration.INSTANCE).get());
   }
 
   @Test
@@ -181,7 +184,9 @@ public class JavaBuckConfigTest {
         new StringReader(
             Joiner.on('\n').join("[tools]", "    javac = " + javacTarget.getFullyQualifiedName()));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
-    assertEquals(DefaultBuildTargetSourcePath.of(javacTarget), config.getJavacPath().get());
+    assertEquals(
+        DefaultBuildTargetSourcePath.of(javacTarget),
+        config.getJavacPath(EmptyTargetConfiguration.INSTANCE).get());
   }
 
   @Test
@@ -192,7 +197,7 @@ public class JavaBuckConfigTest {
             Joiner.on('\n').join("[tools]", "    javac = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavacPath();
+      config.getJavacPath(EmptyTargetConfiguration.INSTANCE);
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -213,7 +218,7 @@ public class JavaBuckConfigTest {
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
       config
-          .getJavacSpec()
+          .getJavacSpec(EmptyTargetConfiguration.INSTANCE)
           .getJavacProvider()
           .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
       fail("Should throw exception as javac file is not executable.");
@@ -231,7 +236,7 @@ public class JavaBuckConfigTest {
                 .join("[tools]", "    javac_jar = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavacSpec().getJavacJarPath();
+      config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacJarPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -271,7 +276,7 @@ public class JavaBuckConfigTest {
     String localConfig = "[java]\nbootclasspath-6 = one.jar\nbootclasspath-7 = two.jar";
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacOptions options = config.getDefaultJavacOptions();
+    JavacOptions options = config.getDefaultJavacOptions(EmptyTargetConfiguration.INSTANCE);
 
     JavacOptions jse5 =
         JavacOptions.builder(options)
@@ -327,8 +332,10 @@ public class JavaBuckConfigTest {
             .build()
             .getView(JavaBuckConfig.class);
 
-    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
-    assertFalse(config.trackClassUsage());
+    assumeThat(
+        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        is(Javac.Source.JDK));
+    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -355,9 +362,11 @@ public class JavaBuckConfigTest {
             .build()
             .getView(JavaBuckConfig.class);
 
-    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.EXTERNAL));
+    assumeThat(
+        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        is(Javac.Source.EXTERNAL));
 
-    assertFalse(config.trackClassUsage());
+    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -374,8 +383,10 @@ public class JavaBuckConfigTest {
             .build()
             .getView(JavaBuckConfig.class);
 
-    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.EXTERNAL));
-    assertFalse(config.trackClassUsage());
+    assumeThat(
+        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        is(Javac.Source.EXTERNAL));
+    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -390,18 +401,22 @@ public class JavaBuckConfigTest {
             .build()
             .getView(JavaBuckConfig.class);
 
-    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JAR));
+    assumeThat(
+        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        is(Javac.Source.JAR));
 
-    assertTrue(config.trackClassUsage());
+    assertTrue(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
   }
 
   @Test
   public void trackClassUsageByDefaultForJavacFromJDK() {
     JavaBuckConfig config = FakeBuckConfig.builder().build().getView(JavaBuckConfig.class);
 
-    assumeThat(config.getJavacSpec().getJavacSource(), is(Javac.Source.JDK));
+    assumeThat(
+        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        is(Javac.Source.JDK));
 
-    assertTrue(config.trackClassUsage());
+    assertTrue(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
   }
 
   @Test

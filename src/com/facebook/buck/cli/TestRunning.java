@@ -432,7 +432,9 @@ public class TestRunning {
                 JacocoConstants.getJacocoOutputDir(params.getCell().getFilesystem()),
                 options.getCoverageReportFormats(),
                 options.getCoverageReportTitle(),
-                javaBuckConfig.getDefaultJavacOptions().getSpoolMode()
+                javaBuckConfig
+                        .getDefaultJavacOptions(params.getTargetConfiguration())
+                        .getSpoolMode()
                     == JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK,
                 options.getCoverageIncludes(),
                 options.getCoverageExcludes()),

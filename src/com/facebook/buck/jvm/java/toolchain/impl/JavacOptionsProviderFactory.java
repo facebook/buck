@@ -30,7 +30,8 @@ public class JavacOptionsProviderFactory implements ToolchainFactory<JavacOption
   public Optional<JavacOptionsProvider> createToolchain(
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
     JavaBuckConfig javaConfig = context.getBuckConfig().getView(JavaBuckConfig.class);
-    JavacOptions defaultJavacOptions = javaConfig.getDefaultJavacOptions();
+    JavacOptions defaultJavacOptions =
+        javaConfig.getDefaultJavacOptions(context.getTargetConfiguration().get());
 
     return Optional.of(JavacOptionsProvider.of(defaultJavacOptions));
   }

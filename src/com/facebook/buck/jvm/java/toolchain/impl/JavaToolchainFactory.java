@@ -36,7 +36,7 @@ public class JavaToolchainFactory implements ToolchainFactory<JavaToolchain> {
                 context
                     .getBuckConfig()
                     .getView(JavaBuckConfig.class)
-                    .getJavacSpec()
+                    .getJavacSpec(context.getTargetConfiguration().get())
                     .getJavacProvider())
             .build());
   }

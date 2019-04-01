@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.google.common.collect.ImmutableList;
 
@@ -50,7 +51,10 @@ public class JavaCompilationConstants {
   public static final Javac DEFAULT_JAVAC = new JdkProvidedInMemoryJavac();
   public static final JavaToolchain DEFAULT_JAVA_TOOLCHAIN =
       JavaToolchain.builder()
-          .setJavacProvider(DEFAULT_JAVA_CONFIG.getJavacSpec().getJavacProvider())
+          .setJavacProvider(
+              DEFAULT_JAVA_CONFIG
+                  .getJavacSpec(EmptyTargetConfiguration.INSTANCE)
+                  .getJavacProvider())
           .build();
 
   private JavaCompilationConstants() {

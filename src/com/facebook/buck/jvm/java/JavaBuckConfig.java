@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -28,7 +28,6 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +40,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 /** A java-specific "view" of BuckConfig. */
@@ -55,7 +54,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       JavaOptions.of(new ConstantToolProvider(DEFAULT_JAVA_TOOL));
 
   private final BuckConfig delegate;
-  private final Supplier<JavacSpec> javacSpecSupplier;
+  private final Function<TargetConfiguration, JavacSpec> javacSpecSupplier;
 
   // Interface for reflection-based ConfigView to instantiate this class.
   public static JavaBuckConfig of(BuckConfig delegate) {
@@ -65,13 +64,12 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
   private JavaBuckConfig(BuckConfig delegate) {
     this.delegate = delegate;
     this.javacSpecSupplier =
-        MoreSuppliers.memoize(
-            () ->
-                JavacSpec.builder()
-                    .setJavacPath(getJavacPath())
-                    .setJavacJarPath(getJavacJarPath())
-                    .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
-                    .build());
+        targetConfiguration ->
+            JavacSpec.builder()
+                .setJavacPath(getJavacPath(targetConfiguration))
+                .setJavacJarPath(getJavacJarPath(targetConfiguration))
+                .setCompilerClassName(delegate.getValue("tools", "compiler_class_name"))
+                .build();
   }
 
   @Override
@@ -100,7 +98,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return builder.build();
   }
 
-  public JavacOptions getDefaultJavacOptions() {
+  public JavacOptions getDefaultJavacOptions(TargetConfiguration targetConfiguration) {
     JavacOptions.Builder builder = JavacOptions.builderForUseInJavaBuckConfig();
 
     builder.setLanguageLevelOptions(getJavacLanguageLevelOptions());
@@ -108,7 +106,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     ImmutableList<String> extraArguments =
         delegate.getListWithoutComments(SECTION, "extra_arguments");
 
-    builder.setTrackClassUsage(trackClassUsage());
+    builder.setTrackClassUsage(trackClassUsage(targetConfiguration));
     Optional<Boolean> trackJavacPhaseEvents =
         delegate.getBoolean(SECTION, "track_javac_phase_events");
     if (trackJavacPhaseEvents.isPresent()) {
@@ -159,7 +157,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return DefaultJavaPackageFinder.createDefaultJavaPackageFinder(getSrcRoots());
   }
 
-  public boolean trackClassUsage() {
+  public boolean trackClassUsage(TargetConfiguration targetConfiguration) {
     // This is just to make it possible to turn off dep-based rulekeys in case anything goes wrong
     // and can be removed when we're sure class usage tracking and dep-based keys for Java
     // work fine.
@@ -168,7 +166,7 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
       return false;
     }
 
-    Javac.Source javacSource = getJavacSpec().getJavacSource();
+    Javac.Source javacSource = getJavacSpec(targetConfiguration).getJavacSource();
     return (javacSource == Javac.Source.JAR || javacSource == Javac.Source.JDK);
   }
 
@@ -176,14 +174,13 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBoolean(SECTION, "desugar_interface_methods").orElse(false);
   }
 
-  public JavacSpec getJavacSpec() {
-    return javacSpecSupplier.get();
+  public JavacSpec getJavacSpec(TargetConfiguration targetConfiguration) {
+    return javacSpecSupplier.apply(targetConfiguration);
   }
 
   @VisibleForTesting
-  Optional<SourcePath> getJavacPath() {
-    Optional<SourcePath> sourcePath =
-        delegate.getSourcePath("tools", "javac", EmptyTargetConfiguration.INSTANCE);
+  Optional<SourcePath> getJavacPath(TargetConfiguration targetConfiguration) {
+    Optional<SourcePath> sourcePath = delegate.getSourcePath("tools", "javac", targetConfiguration);
     if (sourcePath.isPresent() && sourcePath.get() instanceof PathSourcePath) {
       PathSourcePath pathSourcePath = (PathSourcePath) sourcePath.get();
       if (!pathSourcePath.getFilesystem().isExecutable(pathSourcePath.getRelativePath())) {
@@ -193,8 +190,8 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return sourcePath;
   }
 
-  private Optional<SourcePath> getJavacJarPath() {
-    return delegate.getSourcePath("tools", "javac_jar", EmptyTargetConfiguration.INSTANCE);
+  private Optional<SourcePath> getJavacJarPath(TargetConfiguration targetConfiguration) {
+    return delegate.getSourcePath("tools", "javac_jar", targetConfiguration);
   }
 
   private Optional<Tool> getToolForExecutable(String executableName) {
