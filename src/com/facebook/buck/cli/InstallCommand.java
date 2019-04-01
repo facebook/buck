@@ -373,7 +373,8 @@ public class InstallCommand extends BuildCommand {
           if (ApplePlatform.needsInstallHelper(flavor.getName())) {
             AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
-            Optional<BuildTarget> deviceHelperTarget = appleConfig.getAppleDeviceHelperTarget();
+            Optional<BuildTarget> deviceHelperTarget =
+                appleConfig.getAppleDeviceHelperTarget(params.getTargetConfiguration());
             Optionals.addIfPresent(
                 Optionals.bind(
                     deviceHelperTarget,
@@ -491,7 +492,8 @@ public class InstallCommand extends BuildCommand {
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
     Path helperPath;
-    Optional<BuildTarget> helperTarget = appleConfig.getAppleDeviceHelperTarget();
+    Optional<BuildTarget> helperTarget =
+        appleConfig.getAppleDeviceHelperTarget(params.getTargetConfiguration());
     if (helperTarget.isPresent()) {
       ActionGraphBuilder graphBuilder = getBuild().getGraphBuilder();
       BuildRule buildRule = graphBuilder.requireRule(helperTarget.get());
