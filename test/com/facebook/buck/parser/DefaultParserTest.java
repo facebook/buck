@@ -146,8 +146,12 @@ public class DefaultParserTest {
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private final int threads;
-  private final boolean parallelParsing;
+  @Parameterized.Parameter(0)
+  public int parsingThreads;
+
+  @Parameterized.Parameter(1)
+  public boolean parallelParsing;
+
   private BuildTarget buildTarget;
   private Path defaultIncludeFile;
   private Path includedByIncludeFile;
@@ -170,12 +174,7 @@ public class DefaultParserTest {
     return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
   }
 
-  public DefaultParserTest(int threads, boolean parallelParsing) {
-    this.threads = threads;
-    this.parallelParsing = parallelParsing;
-  }
-
-  @Parameterized.Parameters
+  @Parameterized.Parameters(name = "project.parsing_threads={0}, project.parallel_parsing={1}")
   public static Collection<Object[]> generateData() {
     return Arrays.asList(
         new Object[][] {
@@ -263,7 +262,7 @@ public class DefaultParserTest {
     projectSectionBuilder.put("allow_symlinks", "warn");
     if (parallelParsing) {
       projectSectionBuilder.put("parallel_parsing", "true");
-      projectSectionBuilder.put("parsing_threads", Integer.toString(threads));
+      projectSectionBuilder.put("parsing_threads", Integer.toString(parsingThreads));
     }
 
     ImmutableMap.Builder<String, ImmutableMap<String, String>> configSectionsBuilder =
@@ -329,7 +328,8 @@ public class DefaultParserTest {
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
 
-    executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threads));
+    executorService =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(parsingThreads));
 
     parsingContext = ParsingContext.builder(cell, executorService).build();
   }
