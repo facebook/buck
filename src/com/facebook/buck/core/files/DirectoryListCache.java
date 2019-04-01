@@ -29,12 +29,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, DirectoryList> {
 
   private ConcurrentHashMap<DirectoryListKey, DirectoryList> cache = new ConcurrentHashMap<>();
-  private final Path rootPath;
   private final Invalidator invalidator;
 
   private DirectoryListCache(Path rootPath) {
-    this.rootPath = rootPath;
-    this.invalidator = new Invalidator(this);
+    this.invalidator = new Invalidator(this, rootPath);
   }
 
   /**
@@ -68,9 +66,11 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
   public static class Invalidator {
 
     private final DirectoryListCache dirListCache;
+    private final Path rootPath;
 
-    public Invalidator(DirectoryListCache dirListCache) {
+    private Invalidator(DirectoryListCache dirListCache, Path rootPath) {
       this.dirListCache = dirListCache;
+      this.rootPath = rootPath;
     }
 
     /** Invoked asynchronously by event bus when file system change is detected with Watchman */
@@ -81,7 +81,7 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
         return;
       }
 
-      if (!dirListCache.rootPath.equals(event.getCellPath())) {
+      if (!rootPath.equals(event.getCellPath())) {
         // must be same cell
         return;
       }

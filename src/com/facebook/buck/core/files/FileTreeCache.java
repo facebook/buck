@@ -31,12 +31,10 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
   // TODO(sergeyb): probably use same cache data for DirectoryList and FileTree
 
   private ConcurrentHashMap<FileTreeKey, FileTree> cache = new ConcurrentHashMap<>();
-  private final Path rootPath;
   private final Invalidator invalidator;
 
   private FileTreeCache(Path rootPath) {
-    this.rootPath = rootPath;
-    invalidator = new Invalidator(this);
+    invalidator = new Invalidator(this, rootPath);
   }
 
   /**
@@ -69,9 +67,11 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
    */
   public static class Invalidator {
     private final FileTreeCache fileTreeCache;
+    private final Path rootPath;
 
-    public Invalidator(FileTreeCache fileTreeCache) {
+    private Invalidator(FileTreeCache fileTreeCache, Path rootPath) {
       this.fileTreeCache = fileTreeCache;
+      this.rootPath = rootPath;
     }
 
     /** Invoked asynchronously by event bus when file system change is detected with Watchman */
@@ -82,7 +82,7 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
         return;
       }
 
-      if (!fileTreeCache.rootPath.equals(event.getCellPath())) {
+      if (!rootPath.equals(event.getCellPath())) {
         // must be same cell
         return;
       }
