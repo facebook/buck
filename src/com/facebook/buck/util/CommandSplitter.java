@@ -32,7 +32,7 @@ public class CommandSplitter {
   private final ImmutableList<String> commandPrefix;
   private final int commandPrefixLength;
 
-  private static final int DEFAULT_DESIRED_LIMIT = 32 * 1024;
+  private static final int DEFAULT_DESIRED_LIMIT = 32 * 1024 - 1;
 
   public CommandSplitter(List<String> commandPrefix, int desiredLimit) {
     this.desiredLimit = desiredLimit;
