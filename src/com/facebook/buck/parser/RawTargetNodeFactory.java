@@ -19,17 +19,9 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent.Scope;
 import java.nio.file.Path;
-import java.util.function.Function;
 
 /** Generic factory to create {@link RawTargetNode} */
 public interface RawTargetNodeFactory<T> {
-  RawTargetNode create(
-      Cell cell,
-      Path buildFile,
-      UnconfiguredBuildTarget buildTarget,
-      T rawNode,
-      Function<PerfEventId, Scope> perfEventScope);
+  RawTargetNode create(Cell cell, Path buildFile, UnconfiguredBuildTarget buildTarget, T rawNode);
 }

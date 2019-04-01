@@ -27,13 +27,11 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
 import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import java.util.Optional;
 import org.junit.Test;
 
 public class DefaultRawTargetNodeFactoryTest {
@@ -73,12 +71,7 @@ public class DefaultRawTargetNodeFactoryTest {
             .put("within_view", ImmutableList.of("//b/..."))
             .build();
     RawTargetNode rawTargetNode =
-        factory.create(
-            cell,
-            cell.getRoot().resolve("a/b/BUCK"),
-            buildTarget,
-            attributes,
-            (id) -> SimplePerfEvent.scope(Optional.empty(), null, null));
+        factory.create(cell, cell.getRoot().resolve("a/b/BUCK"), buildTarget, attributes);
 
     assertEquals(RuleType.of("java_library", RuleType.Kind.BUILD), rawTargetNode.getRuleType());
     assertEquals(buildTarget, rawTargetNode.getBuildTarget());

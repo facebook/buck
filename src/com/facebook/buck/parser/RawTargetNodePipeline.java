@@ -90,8 +90,7 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
         cell,
         cell.getAbsolutePathToBuildFile(buildTarget),
         buildTarget.getUnconfiguredBuildTarget(),
-        rawNode,
-        perfEventScopeFunction);
+        rawNode);
   }
 
   @Override

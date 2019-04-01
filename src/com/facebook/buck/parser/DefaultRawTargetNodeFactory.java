@@ -25,8 +25,6 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
@@ -36,7 +34,6 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 
 /**
  * Creates {@link RawTargetNode} instances from raw data coming in form the {@link
@@ -58,9 +55,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
       Cell cell,
       Path buildFile,
       UnconfiguredBuildTarget target,
-      Map<String, Object> rawAttributes,
-      Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
-    // TODO(sergeyb): remove perfEventScope
+      Map<String, Object> rawAttributes) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
 

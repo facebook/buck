@@ -23,8 +23,6 @@ import com.facebook.buck.core.graph.transformation.GraphTransformer;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.parser.RawTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -33,7 +31,6 @@ import com.facebook.buck.parser.manifest.ImmutableBuildFilePathToBuildFileManife
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Transforms one target from specific {@link BuildFileManifest} to {@link RawTargetNode} */
@@ -85,9 +82,7 @@ public class BuildTargetToRawTargetNodeTransformer
         // with manifest, then resolve it here, or may be include it with build target itself
         cell.getAbsolutePathToBuildFile(buildTarget),
         buildTarget,
-        rawAttributes,
-        // TODO (sergeyb): remove scope, it is not used
-        id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("manifest_to_rawtargetnode")));
+        rawAttributes);
   }
 
   @Override
