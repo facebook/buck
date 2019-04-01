@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -341,7 +342,8 @@ public class AppleTestDescription
                         swiftBuckConfig.getCopyStdlibToFrameworks(),
                         cxxBuckConfig.shouldCacheStrip())));
 
-    Optional<SourcePath> xctool = getXctool(projectFilesystem, params, graphBuilder);
+    Optional<SourcePath> xctool =
+        getXctool(projectFilesystem, params, buildTarget.getTargetConfiguration(), graphBuilder);
 
     return new AppleTest(
         xctool,
@@ -381,12 +383,14 @@ public class AppleTestDescription
   private Optional<SourcePath> getXctool(
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
+      TargetConfiguration targetConfiguration,
       ActionGraphBuilder graphBuilder) {
     // If xctool is specified as a build target in the buck config, it's wrapping ZIP file which
     // we need to unpack to get at the actual binary.  Otherwise, if it's specified as a path, we
     // can use that directly.
-    if (appleConfig.getXctoolZipTarget().isPresent()) {
-      BuildRule xctoolZipBuildRule = graphBuilder.getRule(appleConfig.getXctoolZipTarget().get());
+    if (appleConfig.getXctoolZipTarget(targetConfiguration).isPresent()) {
+      BuildRule xctoolZipBuildRule =
+          graphBuilder.getRule(appleConfig.getXctoolZipTarget(targetConfiguration).get());
 
       // Since the content is unzipped in a directory that might differ for each cell the tests are
       // from, we append a flavor that depends on the root path of the projectFilesystem
@@ -504,7 +508,8 @@ public class AppleTestDescription
     // TODO(beng, coneko): This should technically only be a runtime dependency;
     // doing this adds it to the extra deps in BuildRuleParams passed to
     // the bundle and test rule.
-    Optional<BuildTarget> xctoolZipTarget = appleConfig.getXctoolZipTarget();
+    Optional<BuildTarget> xctoolZipTarget =
+        appleConfig.getXctoolZipTarget(buildTarget.getTargetConfiguration());
     if (xctoolZipTarget.isPresent()) {
       extraDepsBuilder.add(xctoolZipTarget.get());
     }

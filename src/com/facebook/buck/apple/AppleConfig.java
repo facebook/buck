@@ -22,6 +22,7 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
@@ -187,9 +188,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return new ExecutableFinder().getOptionalExecutable(xctool, delegate.getEnvironment());
   }
 
-  public Optional<BuildTarget> getXctoolZipTarget() {
-    return delegate.getBuildTarget(
-        APPLE_SECTION, "xctool_zip_target", EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getXctoolZipTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getBuildTarget(APPLE_SECTION, "xctool_zip_target", targetConfiguration);
   }
 
   public ToolProvider getCodesignProvider() {
