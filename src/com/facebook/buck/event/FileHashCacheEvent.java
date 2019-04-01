@@ -78,6 +78,8 @@ public class FileHashCacheEvent extends AbstractBuckEvent implements LeafEvent {
   }
 
   public static class InvalidationStarted extends FileHashCacheEvent {
+    // TODO: move from FileHashCacheEvent to standalone event
+
     public InvalidationStarted() {
       super(EventKey.unique());
     }
@@ -89,6 +91,7 @@ public class FileHashCacheEvent extends AbstractBuckEvent implements LeafEvent {
   }
 
   public static class InvalidationFinished extends FileHashCacheEvent {
+    // TODO: move from FileHashCacheEvent to standalone event
 
     public InvalidationFinished(InvalidationStarted started) {
       super(started.getEventKey());
