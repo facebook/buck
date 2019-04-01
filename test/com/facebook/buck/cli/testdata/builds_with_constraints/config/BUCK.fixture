@@ -36,3 +36,17 @@ platform(
         ":x86-64",
     ],
 )
+
+config_setting(
+    name = "osx_config",
+    constraint_values = [
+        ":osx",
+    ],
+)
+
+config_setting(
+    name = "linux_config",
+    constraint_values = [
+        ":linux",
+    ],
+)

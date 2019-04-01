@@ -254,10 +254,15 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ProcessResult runBuckBuild(String... args) throws IOException {
+    return runBuckBuild(Optional.empty(), args);
+  }
+
+  public ProcessResult runBuckBuild(Optional<NGContext> context, String... args)
+      throws IOException {
     String[] totalArgs = new String[args.length + 1];
     totalArgs[0] = "build";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
-    return runBuckCommand(totalArgs);
+    return runBuckCommand(context, totalArgs);
   }
 
   public ProcessResult runBuckTest(String... args) throws IOException {
@@ -411,6 +416,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
   public ProcessResult runBuckCommand(String... args) throws IOException {
     return runBuckCommandWithEnvironmentOverridesAndContext(
         destPath, Optional.empty(), ImmutableMap.of(), args);
+  }
+
+  public ProcessResult runBuckCommand(Optional<NGContext> context, String... args)
+      throws IOException {
+    return runBuckCommandWithEnvironmentOverridesAndContext(
+        destPath, context, ImmutableMap.of(), args);
   }
 
   @Override

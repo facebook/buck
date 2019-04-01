@@ -35,6 +35,7 @@ import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.ExitCode;
@@ -48,6 +49,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.thrift.TException;
@@ -405,6 +407,31 @@ public class BuildCommandIntegrationTest {
             "Build target //:dep is restricted to constraints in \"target_compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target constraints:\n//config:linux"));
+  }
+
+  @Test
+  public void changingTargetPlatformTriggersRebuild() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    try (TestContext context = new TestContext()) {
+      workspace.runBuckBuild(
+          Optional.of(context),
+          "--target-platforms",
+          "//config:osx_x86-64",
+          "//:platform_dependent_genrule");
+
+      workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
+
+      workspace.runBuckBuild(
+          Optional.of(context),
+          "--target-platforms",
+          "//config:linux_x86-64",
+          "//:platform_dependent_genrule");
+
+      workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
+    }
   }
 
   @Test

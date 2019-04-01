@@ -17,3 +17,12 @@ java_library(
         ":dep",
     ],
 )
+
+genrule(
+    name = "platform_dependent_genrule",
+    out = "out",
+    cmd = select({
+        "//config:linux_config": "echo linux > $OUT",
+        "//config:osx_config": "echo osx > $OUT",
+    }),
+)
