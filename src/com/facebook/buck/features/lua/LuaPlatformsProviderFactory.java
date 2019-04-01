@@ -40,7 +40,8 @@ public class LuaPlatformsProviderFactory implements ToolchainFactory<LuaPlatform
     LuaBuckConfig luaBuckConfig =
         new LuaBuckConfig(context.getBuckConfig(), context.getExecutableFinder());
 
-    FlavorDomain<LuaPlatform> luaPlatforms = luaBuckConfig.getPlatforms(cxxPlatforms);
+    FlavorDomain<LuaPlatform> luaPlatforms =
+        luaBuckConfig.getPlatforms(context.getTargetConfiguration().get(), cxxPlatforms);
     LuaPlatform defaultLuaPlatform = luaPlatforms.getValue(defaultCxxPlatform.getFlavor());
 
     return Optional.of(LuaPlatformsProvider.of(defaultLuaPlatform, luaPlatforms));
