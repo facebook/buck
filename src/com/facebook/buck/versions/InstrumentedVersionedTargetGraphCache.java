@@ -17,6 +17,7 @@
 package com.facebook.buck.versions;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.event.BuckEventBus;
@@ -72,7 +73,8 @@ public class InstrumentedVersionedTargetGraphCache {
       BuckConfig buckConfig,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
-      TargetGraphAndBuildTargets targetGraphAndBuildTargets)
+      TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      TargetConfiguration targetConfiguration)
       throws VersionException, InterruptedException {
     return cache
         .getVersionedTargetGraph(
@@ -81,6 +83,7 @@ public class InstrumentedVersionedTargetGraphCache {
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
             targetGraphAndBuildTargets,
+            targetConfiguration,
             statsTracker)
         .getTargetGraphAndBuildTargets();
   }

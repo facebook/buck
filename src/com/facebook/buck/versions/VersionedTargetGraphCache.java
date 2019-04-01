@@ -24,6 +24,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutorWithLocalStack;
 import com.facebook.buck.core.graph.transformation.executor.impl.JavaExecutorBackedDefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.ToposortBasedDepsAwareExecutor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
@@ -201,12 +202,13 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetGraphAndBuildTargets targetGraphAndBuildTargets,
+      TargetConfiguration targetConfiguration,
       CacheStatsTracker statsTracker)
       throws VersionException, InterruptedException {
 
     VersionBuckConfig versionBuckConfig = new VersionBuckConfig(buckConfig);
     ImmutableMap<String, VersionUniverse> versionUniverses =
-        versionBuckConfig.getVersionUniverses();
+        versionBuckConfig.getVersionUniverses(targetConfiguration);
     int numberOfThreads = buckConfig.getView(BuildBuckConfig.class).getNumThreads();
 
     VersionedTargetGraphEvent.Started started = VersionedTargetGraphEvent.started();

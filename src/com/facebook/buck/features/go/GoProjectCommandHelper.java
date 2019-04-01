@@ -414,7 +414,8 @@ public class GoProjectCommandHelper {
               buckConfig,
               params.getTypeCoercerFactory(),
               params.getUnconfiguredBuildTargetFactory(),
-              explicitTestTargets);
+              explicitTestTargets,
+              targetConfiguration);
     }
     return targetGraphAndTargets;
   }

@@ -750,7 +750,8 @@ public class XCodeProjectCommandHelper {
               buckConfig,
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
-              explicitTestTargets);
+              explicitTestTargets,
+              targetConfiguration);
     }
     return targetGraphAndTargets;
   }

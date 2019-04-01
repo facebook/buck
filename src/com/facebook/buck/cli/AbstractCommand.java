@@ -363,7 +363,8 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             params.getBuckConfig(),
             params.getTypeCoercerFactory(),
             params.getUnconfiguredBuildTargetFactory(),
-            targetGraphAndBuildTargets);
+            targetGraphAndBuildTargets,
+            params.getTargetConfiguration());
   }
 
   @Override

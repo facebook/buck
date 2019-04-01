@@ -412,7 +412,8 @@ public class IjProjectCommandHelper {
               buckConfig,
               typeCoercerFactory,
               unconfiguredBuildTargetFactory,
-              explicitTestTargets);
+              explicitTestTargets,
+              targetConfiguration);
     }
     return targetGraphAndTargets;
   }

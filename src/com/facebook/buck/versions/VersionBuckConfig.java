@@ -17,7 +17,7 @@ package com.facebook.buck.versions;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -36,7 +36,7 @@ public class VersionBuckConfig {
     this.delegate = delegate;
   }
 
-  private VersionUniverse getVersionUniverse(String name) {
+  private VersionUniverse getVersionUniverse(String name, TargetConfiguration targetConfiguration) {
     VersionUniverse.Builder universe = VersionUniverse.builder();
     ImmutableList<String> vals = delegate.getListWithoutComments(UNIVERSES_SECTION, name);
     for (String val : vals) {
@@ -48,19 +48,19 @@ public class VersionBuckConfig {
             UNIVERSES_SECTION, name, val);
       }
       universe.putVersions(
-          delegate.getBuildTargetForFullyQualifiedTarget(
-              parts.get(0), EmptyTargetConfiguration.INSTANCE),
+          delegate.getBuildTargetForFullyQualifiedTarget(parts.get(0), targetConfiguration),
           Version.of(parts.get(1)));
     }
     return universe.build();
   }
 
-  public ImmutableMap<String, VersionUniverse> getVersionUniverses() {
+  public ImmutableMap<String, VersionUniverse> getVersionUniverses(
+      TargetConfiguration targetConfiguration) {
     ImmutableSet<String> entries = delegate.getEntriesForSection(UNIVERSES_SECTION).keySet();
     ImmutableMap.Builder<String, VersionUniverse> universes =
         ImmutableMap.builderWithExpectedSize(entries.size());
     for (String name : entries) {
-      universes.put(name, getVersionUniverse(name));
+      universes.put(name, getVersionUniverse(name, targetConfiguration));
     }
     return universes.build();
   }
