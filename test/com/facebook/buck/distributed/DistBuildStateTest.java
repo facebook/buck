@@ -28,6 +28,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -156,7 +157,8 @@ public class DistBuildStateTest {
             moduleManager,
             pluginManager,
             new DefaultProjectFilesystemFactory(),
-            unconfiguredBuildTargetFactory);
+            unconfiguredBuildTargetFactory,
+            () -> EmptyTargetConfiguration.INSTANCE);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(1));
     assertThat(cells.get(0).getBuckConfig(), Matchers.equalTo(buckConfig));
@@ -224,7 +226,8 @@ public class DistBuildStateTest {
             moduleManager,
             pluginManager,
             new DefaultProjectFilesystemFactory(),
-            unconfiguredBuildTargetFactory);
+            unconfiguredBuildTargetFactory,
+            () -> EmptyTargetConfiguration.INSTANCE);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
 
     assertThat(cells, Matchers.aMapWithSize(1));
@@ -277,7 +280,8 @@ public class DistBuildStateTest {
             moduleManager,
             pluginManager,
             new DefaultProjectFilesystemFactory(),
-            unconfiguredBuildTargetFactory);
+            unconfiguredBuildTargetFactory,
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     ProjectFilesystem reconstructedCellFilesystem =
         distributedBuildState.getCells().get(0).getFilesystem();
@@ -365,7 +369,8 @@ public class DistBuildStateTest {
             moduleManager,
             pluginManager,
             new DefaultProjectFilesystemFactory(),
-            unconfiguredBuildTargetFactory);
+            unconfiguredBuildTargetFactory,
+            () -> EmptyTargetConfiguration.INSTANCE);
     ImmutableMap<Integer, Cell> cells = distributedBuildState.getCells();
     assertThat(cells, Matchers.aMapWithSize(2));
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.features.python.toolchain.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.features.python.PythonBuckConfig;
@@ -51,7 +52,8 @@ public class PythonPlatformsProviderFactoryUtils {
                 new FakeProjectFilesystem(),
                 processExecutor,
                 executableFinder,
-                TestRuleKeyConfigurationFactory.create()))
+                TestRuleKeyConfigurationFactory.create(),
+                () -> EmptyTargetConfiguration.INSTANCE))
         .get()
         .getPythonPlatforms()
         .getValue(PythonBuckConfig.DEFAULT_PYTHON_PLATFORM);

@@ -25,6 +25,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
@@ -163,7 +164,11 @@ public abstract class IsolatedBuildableBuilder {
 
     ToolchainProviderFactory toolchainProviderFactory =
         new DefaultToolchainProviderFactory(
-            pluginManager, clientEnvironment, processExecutor, executableFinder);
+            pluginManager,
+            clientEnvironment,
+            processExecutor,
+            executableFinder,
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     CellProvider cellProvider =
         LocalCellProviderFactory.create(

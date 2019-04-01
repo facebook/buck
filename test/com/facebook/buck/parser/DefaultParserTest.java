@@ -288,7 +288,8 @@ public class DefaultParserTest {
             filesystem,
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
     Optional<AppleDeveloperDirectoryProvider> appleDeveloperDirectoryProvider =

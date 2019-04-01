@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -69,7 +70,8 @@ public class RustToolchainFactoryTest {
             filesystem,
             new FakeProcessExecutor(),
             new AlwaysFoundExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
     RustToolchainFactory factory = new RustToolchainFactory();
     Optional<RustToolchain> toolchain =
         factory.createToolchain(toolchainProvider, toolchainCreationContext);
@@ -127,7 +129,8 @@ public class RustToolchainFactoryTest {
             filesystem,
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     RustToolchainFactory factory = new RustToolchainFactory();
     Optional<RustToolchain> toolchain =

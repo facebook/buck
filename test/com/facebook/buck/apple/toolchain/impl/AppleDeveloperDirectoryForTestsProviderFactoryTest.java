@@ -22,6 +22,7 @@ import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.ExecutableFinder;
@@ -56,7 +57,8 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
             new FakeProjectFilesystem(),
             new FakeProcessExecutor(),
             new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     AppleDeveloperDirectoryProvider appleDeveloperDirectoryProvider =
         new AppleDeveloperDirectoryProviderFactory()
@@ -99,7 +101,8 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
             new FakeProjectFilesystem(),
             new FakeProcessExecutor(),
             new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     AppleDeveloperDirectoryProvider appleDeveloperDirectoryProvider =
         new AppleDeveloperDirectoryProviderFactory()

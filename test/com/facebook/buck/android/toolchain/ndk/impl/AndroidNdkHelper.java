@@ -29,6 +29,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -82,7 +83,8 @@ public class AndroidNdkHelper {
                       filesystem,
                       new DefaultProcessExecutor(new TestConsole()),
                       new ExecutableFinder(),
-                      TestRuleKeyConfigurationFactory.create()));
+                      TestRuleKeyConfigurationFactory.create(),
+                      () -> EmptyTargetConfiguration.INSTANCE));
     } catch (HumanReadableException e) {
       LOG.info(e, "Cannot detect Android NDK");
       androidNdk = Optional.empty();

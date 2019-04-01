@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -78,7 +79,8 @@ public class OcamlToolchainFactoryTest {
             new FakeProjectFilesystem(),
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     OcamlToolchainFactory factory = new OcamlToolchainFactory();
     Optional<OcamlToolchain> toolchain =
@@ -122,7 +124,8 @@ public class OcamlToolchainFactoryTest {
             filesystem,
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     OcamlToolchainFactory factory = new OcamlToolchainFactory();
     Optional<OcamlToolchain> toolchain =

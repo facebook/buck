@@ -18,6 +18,7 @@ package com.facebook.buck.android.toolchain;
 
 import com.facebook.buck.android.toolchain.impl.AndroidSdkLocationFactory;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.ExecutableFinder;
@@ -36,7 +37,8 @@ public class TestAndroidSdkLocationFactory {
             filesystem,
             new DefaultProcessExecutor(new TestConsole()),
             new ExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     return new AndroidSdkLocationFactory()
         .createToolchain(new ToolchainProviderBuilder().build(), toolchainCreationContext)

@@ -41,6 +41,7 @@ import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
@@ -783,6 +784,9 @@ public final class MainRunner {
       ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
 
+      Supplier<TargetConfiguration> targetConfigurationSupplier =
+          () -> EmptyTargetConfiguration.INSTANCE;
+
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
               knownRuleTypesFactoryFactory.create(
@@ -795,7 +799,11 @@ public final class MainRunner {
 
       ToolchainProviderFactory toolchainProviderFactory =
           new DefaultToolchainProviderFactory(
-              pluginManager, clientEnvironment, processExecutor, executableFinder);
+              pluginManager,
+              clientEnvironment,
+              processExecutor,
+              executableFinder,
+              targetConfigurationSupplier);
 
       DefaultCellPathResolver rootCellCellPathResolver =
           DefaultCellPathResolver.of(filesystem.getRootPath(), buckConfig.getConfig());
@@ -1325,7 +1333,7 @@ public final class MainRunner {
                         artifactCacheFactory,
                         parserAndCaches.getTypeCoercerFactory(),
                         buildTargetFactory,
-                        () -> EmptyTargetConfiguration.INSTANCE,
+                        targetConfigurationSupplier,
                         targetConfigurationSerializer,
                         parserAndCaches.getParser(),
                         buildEventBus,

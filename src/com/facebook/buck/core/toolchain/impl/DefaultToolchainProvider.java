@@ -17,6 +17,7 @@
 package com.facebook.buck.core.toolchain.impl;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.BaseToolchainProvider;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -41,6 +42,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.pf4j.PluginManager;
 
@@ -75,7 +77,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
       ExecutableFinder executableFinder,
-      RuleKeyConfiguration ruleKeyConfiguration) {
+      RuleKeyConfiguration ruleKeyConfiguration,
+      Supplier<TargetConfiguration> targetConfiguration) {
     toolchainCreationContext =
         ToolchainCreationContext.of(
             environment,
@@ -83,7 +86,8 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
             projectFilesystem,
             processExecutor,
             executableFinder,
-            ruleKeyConfiguration);
+            ruleKeyConfiguration,
+            targetConfiguration);
 
     toolchainDescriptors =
         loadToolchainDescriptorsFromPlugins(pluginManager).collect(ImmutableList.toImmutableList());

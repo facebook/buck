@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -63,7 +64,8 @@ public class PexToolProviderFactoryTest {
                     new FakeProjectFilesystem(),
                     new FakeProcessExecutor(),
                     new AlwaysFoundExecutableFinder(),
-                    TestRuleKeyConfigurationFactory.create()))
+                    TestRuleKeyConfigurationFactory.create(),
+                    () -> EmptyTargetConfiguration.INSTANCE))
             .get();
     assertThat(
         pexToolProvider

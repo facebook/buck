@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -77,7 +78,8 @@ public class KnownRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     KnownRuleTypes knownRuleTypes1 =
         TestKnownRuleTypesFactory.create(
@@ -96,7 +98,8 @@ public class KnownRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     KnownRuleTypes knownRuleTypes2 =
         TestKnownRuleTypesFactory.create(
@@ -118,7 +121,8 @@ public class KnownRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create()) {
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE) {
           @Override
           public Toolchain getByName(String toolchainName) {
             throw new IllegalStateException(
@@ -146,7 +150,8 @@ public class KnownRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     // This would throw if "default" weren't available as a platform.
     TestKnownRuleTypesFactory.create(
@@ -170,7 +175,8 @@ public class KnownRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
     CxxPlatformsProvider cxxPlatformsProvider =
         toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
     assertThat(
@@ -202,7 +208,8 @@ public class KnownRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create());
+            TestRuleKeyConfigurationFactory.create(),
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.

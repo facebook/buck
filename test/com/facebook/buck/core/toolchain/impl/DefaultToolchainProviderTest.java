@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainDescriptor;
@@ -112,7 +113,8 @@ public class DefaultToolchainProviderTest {
         new FakeProjectFilesystem(),
         new FakeProcessExecutor(),
         new ExecutableFinder(),
-        TestRuleKeyConfigurationFactory.create());
+        TestRuleKeyConfigurationFactory.create(),
+        () -> EmptyTargetConfiguration.INSTANCE);
   }
 
   @Rule public ExpectedException thrown = ExpectedException.none();

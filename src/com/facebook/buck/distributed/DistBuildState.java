@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.module.BuckModuleManager;
@@ -56,6 +57,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.pf4j.PluginManager;
 
 /** Saves and restores the state of a build to/from a thrift data structure. */
@@ -149,7 +151,8 @@ public class DistBuildState {
       BuckModuleManager moduleManager,
       PluginManager pluginManager,
       ProjectFilesystemFactory projectFilesystemFactory,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory)
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      Supplier<TargetConfiguration> targetConfiguration)
       throws InterruptedException, IOException {
     ProjectFilesystem rootCellFilesystem = rootCell.getFilesystem();
 
@@ -213,7 +216,8 @@ public class DistBuildState {
             Objects.requireNonNull(rootCellParams),
             cellParams.build(),
             rootCellPathResolver,
-            unconfiguredBuildTargetFactory);
+            unconfiguredBuildTargetFactory,
+            targetConfiguration);
 
     ImmutableBiMap<Integer, Cell> cells =
         ImmutableBiMap.copyOf(Maps.transformValues(cellIndex.build(), cellProvider::getCellByPath));

@@ -39,6 +39,7 @@ import com.facebook.buck.core.exceptions.handler.HumanReadableExceptionAugmentor
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -681,7 +682,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
     ExecutableFinder executableFinder = new ExecutableFinder();
 
     ToolchainProviderFactory toolchainProviderFactory =
-        new DefaultToolchainProviderFactory(pluginManager, env, processExecutor, executableFinder);
+        new DefaultToolchainProviderFactory(
+            pluginManager,
+            env,
+            processExecutor,
+            executableFinder,
+            () -> EmptyTargetConfiguration.INSTANCE);
 
     return LocalCellProviderFactory.create(
             filesystem,

@@ -17,12 +17,14 @@
 package com.facebook.buck.core.toolchain;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.ProcessExecutor;
 import com.google.common.collect.ImmutableMap;
+import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /** Contains objects that can be used during the creation of a toolchain. */
@@ -46,4 +48,7 @@ interface AbstractToolchainCreationContext {
 
   @Value.Parameter
   RuleKeyConfiguration getRuleKeyConfiguration();
+
+  @Value.Parameter
+  Supplier<TargetConfiguration> getTargetConfiguration();
 }
