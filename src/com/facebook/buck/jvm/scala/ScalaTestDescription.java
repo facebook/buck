@@ -148,7 +148,9 @@ public class ScalaTestDescription
         args.getLabels(),
         args.getContacts(),
         args.getTestType().isPresent() ? args.getTestType().get() : TestType.JUNIT,
-        javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder),
+        javaOptionsForTests
+            .get()
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         Lists.transform(args.getVmArgs(), vmArg -> macrosConverter.convert(vmArg, graphBuilder)),
         cxxLibraryEnhancement.nativeLibsEnvironment,
         args.getTestRuleTimeoutMs()
@@ -184,7 +186,9 @@ public class ScalaTestDescription
     extraDepsBuilder.add(config.getScalaLibraryTarget(buildTarget.getTargetConfiguration()));
     Optionals.addIfPresent(
         config.getScalacTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
-    javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javaOptionsForTests
+        .get()
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 

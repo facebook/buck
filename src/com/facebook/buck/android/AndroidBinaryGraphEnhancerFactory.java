@@ -125,7 +125,9 @@ public class AndroidBinaryGraphEnhancerFactory {
             .setOptimizationPasses(args.getOptimizationPasses())
             .setProguardJvmArgs(args.getProguardJvmArgs())
             .setSkipProguard(args.isSkipProguard())
-            .setJavaRuntimeLauncher(javaOptions.getJavaRuntimeLauncher(graphBuilder))
+            .setJavaRuntimeLauncher(
+                javaOptions.getJavaRuntimeLauncher(
+                    graphBuilder, buildTarget.getTargetConfiguration()))
             .setProguardConfigPath(args.getProguardConfig())
             .setShouldProguard(shouldProguard)
             .build();

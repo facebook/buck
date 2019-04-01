@@ -81,7 +81,9 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
         buildTarget.getShortName(),
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
-        javaOptions.get().getJavaRuntimeLauncher(graphBuilder));
+        javaOptions
+            .get()
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
   }
 
   @Override
@@ -91,7 +93,9 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
       JarGenruleDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javaOptions
+        .get()
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   /** jar_genrule constructor arg. */

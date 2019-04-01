@@ -89,7 +89,10 @@ public class AndroidInstrumentationTestDescription
         (HasInstallableApk) apk,
         args.getLabels(),
         args.getContacts(),
-        javaOptions.get().getJavaRuntimeLauncher(context.getActionGraphBuilder()),
+        javaOptions
+            .get()
+            .getJavaRuntimeLauncher(
+                context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
         args.getTestRuleTimeoutMs()
             .map(Optional::of)
             .orElse(buckConfig.getView(TestBuckConfig.class).getDefaultTestRuleTimeoutMs()),
@@ -123,7 +126,9 @@ public class AndroidInstrumentationTestDescription
       AndroidInstrumentationTestDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javaOptions
+        .get()
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   @BuckStyleImmutable

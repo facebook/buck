@@ -255,7 +255,9 @@ public class RobolectricTestDescription
         javaBuckConfig
             .getDelegate()
             .getBooleanValue("test", "pass_robolectric_directories_in_file", false),
-        javaOptionsForTests.get().getJavaRuntimeLauncher(graphBuilder));
+        javaOptionsForTests
+            .get()
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
   }
 
   @Override
@@ -269,7 +271,9 @@ public class RobolectricTestDescription
       targetGraphOnlyDepsBuilder.addAll(
           getCxxPlatform(constructorArg).getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
-    javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javaOptionsForTests
+        .get()
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
   }
 

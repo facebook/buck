@@ -124,7 +124,9 @@ public class JavaBinaryDescription
             binaryBuildTarget,
             projectFilesystem,
             params.copyAppendingExtraDeps(transitiveClasspathDeps),
-            javaOptions.get().getJavaRuntimeLauncher(graphBuilder),
+            javaOptions
+                .get()
+                .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
             args.getMainClass().orElse(null),
             args.getManifestFile().orElse(null),
             args.getMergeManifests().orElse(true),
@@ -165,7 +167,9 @@ public class JavaBinaryDescription
               innerJar,
               javaBinary,
               nativeLibraries,
-              javaOptions.get().getJavaRuntimeLauncher(graphBuilder));
+              javaOptions
+                  .get()
+                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
     }
 
     return rule;
@@ -181,7 +185,9 @@ public class JavaBinaryDescription
     targetGraphOnlyDepsBuilder.addAll(
         getCxxPlatform(constructorArg).getParseTimeDeps(buildTarget.getTargetConfiguration()));
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
-    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javaOptions
+        .get()
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   @BuckStyleImmutable

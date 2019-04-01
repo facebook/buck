@@ -85,12 +85,16 @@ public class JavaBuckConfigTest {
     JavaOptions javaOptions = config.getDefaultJavaOptions();
     assertEquals(
         ImmutableList.of("java"),
-        javaOptions.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
+        javaOptions
+            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of("java"),
-        javaForTestsOptions.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
+        javaForTestsOptions
+            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -114,12 +118,16 @@ public class JavaBuckConfigTest {
     JavaOptions javaOptions = config.getDefaultJavaOptions();
     assertEquals(
         ImmutableList.of(javaCommand),
-        javaOptions.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
+        javaOptions
+            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of(javaForTestsCommand),
-        javaForTestsOptions.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
+        javaForTestsOptions
+            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -136,7 +144,9 @@ public class JavaBuckConfigTest {
     JavaOptions options = config.getDefaultJavaOptions();
     assertEquals(
         ImmutableList.of(java.toString()),
-        options.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
+        options
+            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
@@ -153,7 +163,9 @@ public class JavaBuckConfigTest {
     JavaOptions options = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of(javaCommand),
-        options.getJavaRuntimeLauncher(RULE_RESOLVER).getCommandPrefix(PATH_RESOLVER));
+        options
+            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test

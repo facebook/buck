@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -29,11 +30,16 @@ import org.immutables.value.Value;
 abstract class AbstractJavaOptions {
   public abstract ToolProvider getJavaRuntimeProvider();
 
-  public Tool getJavaRuntimeLauncher(BuildRuleResolver ruleResolver) {
+  @SuppressWarnings("unused")
+  public Tool getJavaRuntimeLauncher(
+      BuildRuleResolver ruleResolver, TargetConfiguration targetConfiguration) {
     return getJavaRuntimeProvider().resolve(ruleResolver);
   }
 
-  public void addParseTimeDeps(ImmutableCollection.Builder<BuildTarget> depsBuilder) {
+  @SuppressWarnings("unused")
+  public void addParseTimeDeps(
+      ImmutableCollection.Builder<BuildTarget> depsBuilder,
+      TargetConfiguration targetConfiguration) {
     depsBuilder.addAll(getJavaRuntimeProvider().getParseTimeDeps());
   }
 }

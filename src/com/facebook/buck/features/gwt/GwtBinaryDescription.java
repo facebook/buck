@@ -151,7 +151,9 @@ public class GwtBinaryDescription
         context.getProjectFilesystem(),
         params.withExtraDeps(extraDeps.build()),
         args.getModules(),
-        javaOptions.get().getJavaRuntimeLauncher(graphBuilder),
+        javaOptions
+            .get()
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         args.getVmArgs(),
         args.getStyle().orElse(DEFAULT_STYLE),
         args.getDraftCompile().orElse(DEFAULT_DRAFT_COMPILE),
@@ -169,7 +171,9 @@ public class GwtBinaryDescription
       GwtBinaryDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
+    javaOptions
+        .get()
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
   @BuckStyleImmutable

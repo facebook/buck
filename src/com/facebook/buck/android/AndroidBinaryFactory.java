@@ -133,7 +133,7 @@ public class AndroidBinaryFactory {
         args.isCompressAssetLibraries(),
         args.getAssetCompressionAlgorithm(),
         args.getManifestEntries(),
-        javaOptions.getJavaRuntimeLauncher(graphBuilder),
+        javaOptions.getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         args.getIsCacheable(),
         moduleVerification,
         filesInfo.getDexFilesInfo(),
