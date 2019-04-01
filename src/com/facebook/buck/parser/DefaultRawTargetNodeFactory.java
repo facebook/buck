@@ -60,6 +60,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
       UnconfiguredBuildTarget target,
       Map<String, Object> rawAttributes,
       Function<PerfEventId, SimplePerfEvent.Scope> perfEventScope) {
+    // TODO(sergeyb): remove perfEventScope
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
 

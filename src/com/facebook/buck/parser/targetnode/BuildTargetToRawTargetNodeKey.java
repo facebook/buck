@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -14,22 +14,23 @@
  * under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.parser.targetnode;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.graph.transformation.ComputeKey;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
-import com.facebook.buck.event.PerfEventId;
-import com.facebook.buck.event.SimplePerfEvent.Scope;
-import java.nio.file.Path;
-import java.util.function.Function;
+import org.immutables.value.Value;
 
-/** Generic factory to create {@link RawTargetNode} */
-public interface RawTargetNodeFactory<T> {
-  RawTargetNode create(
-      Cell cell,
-      Path buildFile,
-      UnconfiguredBuildTarget buildTarget,
-      T rawNode,
-      Function<PerfEventId, Scope> perfEventScope);
+/** Transformation key containing build target to get {@link RawTargetNode} for. */
+@Value.Immutable(builder = false, copy = false, prehash = true)
+public abstract class BuildTargetToRawTargetNodeKey implements ComputeKey<RawTargetNode> {
+
+  /** Build target that uniquely identifies {@link RawTargetNode} */
+  @Value.Parameter
+  public abstract UnconfiguredBuildTarget getBuildTarget();
+
+  @Override
+  public Class<? extends ComputeKey<?>> getKeyClass() {
+    return BuildTargetToRawTargetNodeKey.class;
+  }
 }

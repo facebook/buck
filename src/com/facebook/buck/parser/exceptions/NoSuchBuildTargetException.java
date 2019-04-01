@@ -27,6 +27,10 @@ public class NoSuchBuildTargetException extends BuildTargetException {
     this(String.format("No such target: '%s'", target));
   }
 
+  public NoSuchBuildTargetException(UnconfiguredBuildTarget target) {
+    this(String.format("No such target: '%s'", target));
+  }
+
   private NoSuchBuildTargetException(String message) {
     super(message);
   }
