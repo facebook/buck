@@ -18,24 +18,24 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
-import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.platform.PlatformRule;
+import com.facebook.buck.core.rules.platform.CachingTargetPlatformResolver;
+import com.facebook.buck.core.rules.platform.DefaultTargetPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.rules.platform.RuleBasedTargetPlatformResolver;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
@@ -53,7 +53,6 @@ import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.MostExecutors;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -64,7 +63,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 
 /** Version of {@link PerBuildStateFactory} that supports configurable attributes. */
 class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactory {
@@ -197,11 +195,12 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
     ConstraintResolver constraintResolver =
         new RuleBasedConstraintResolver(configurationRuleResolver);
 
-    Supplier<Platform> targetPlatform =
-        Suppliers.memoize(
-            () ->
-                getTargetPlatform(
-                    configurationRuleResolver, constraintResolver, rootCell, targetPlatforms));
+    Platform defaultPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
+    TargetPlatformResolver targetPlatformResolver =
+        new CachingTargetPlatformResolver(
+            new DefaultTargetPlatformResolver(
+                new RuleBasedTargetPlatformResolver(configurationRuleResolver, constraintResolver),
+                defaultPlatform));
 
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(
@@ -212,7 +211,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
             symlinkCheckers,
             selectorListResolver,
             constraintResolver,
-            targetPlatform);
+            targetPlatformResolver);
 
     ListeningExecutorService configuredPipelineExecutor =
         MoreExecutors.listeningDecorator(
@@ -254,7 +253,7 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         constraintResolver,
         selectorListResolver,
         selectorListFactory,
-        targetPlatform);
+        targetPlatformResolver);
   }
 
   @SuppressWarnings("PMD.AvoidThreadGroup")
@@ -271,38 +270,5 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
                     GlobalStateManager.singleton().getThreadToCommandRegister()))
             .build(),
         concurrencyLimit.managedThreadCount);
-  }
-
-  private Platform getTargetPlatform(
-      ConfigurationRuleResolver configurationRuleResolver,
-      ConstraintResolver constraintResolver,
-      Cell rootCell,
-      ImmutableList<String> targetPlatforms) {
-    if (targetPlatforms.isEmpty()) {
-      return new ConstraintBasedPlatform("", ImmutableSet.of());
-    }
-
-    String targetPlatformName = targetPlatforms.get(0);
-    ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(
-            unconfiguredBuildTargetFactory.create(
-                rootCell.getCellPathResolver(), targetPlatformName));
-
-    if (!(configurationRule instanceof PlatformRule)) {
-      throw new HumanReadableException(
-          "%s is used as a target platform, but not declared using `platform` rule",
-          targetPlatformName);
-    }
-
-    PlatformRule platformRule = (PlatformRule) configurationRule;
-
-    ImmutableSet<ConstraintValue> constraintValues =
-        platformRule
-            .getConstrainValues()
-            .stream()
-            .map(constraintResolver::getConstraintValue)
-            .collect(ImmutableSet.toImmutableSet());
-
-    return new ConstraintBasedPlatform(targetPlatformName, constraintValues);
   }
 }

@@ -17,8 +17,9 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingSelectableConfigurationContext;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import org.immutables.value.Value;
@@ -39,5 +40,8 @@ public abstract class AbstractDefaultSelectableConfigurationContext
   public abstract ConstraintResolver getConstraintResolver();
 
   @Override
-  public abstract Platform getTargetPlatform();
+  public abstract TargetConfiguration getTargetConfiguration();
+
+  @Override
+  public abstract TargetPlatformResolver getPlatformProvider();
 }

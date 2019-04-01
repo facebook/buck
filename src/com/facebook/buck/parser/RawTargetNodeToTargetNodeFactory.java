@@ -21,7 +21,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 /** Creates {@link TargetNode} from {@link RawTargetNode}. */
 public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory<RawTargetNode> {
@@ -49,7 +48,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
   private final TargetNodeListener<TargetNode<?>> nodeListener;
   private final SelectorListResolver selectorListResolver;
   private final ConstraintResolver constraintResolver;
-  private final Supplier<Platform> targetPlatform;
+  private final TargetPlatformResolver targetPlatformResolver;
 
   public RawTargetNodeToTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
@@ -59,7 +58,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
       TargetNodeListener<TargetNode<?>> nodeListener,
       SelectorListResolver selectorListResolver,
       ConstraintResolver constraintResolver,
-      Supplier<Platform> targetPlatform) {
+      TargetPlatformResolver targetPlatformResolver) {
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.marshaller = marshaller;
     this.targetNodeFactory = targetNodeFactory;
@@ -67,7 +66,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
     this.nodeListener = nodeListener;
     this.selectorListResolver = selectorListResolver;
     this.constraintResolver = constraintResolver;
-    this.targetPlatform = targetPlatform;
+    this.targetPlatformResolver = targetPlatformResolver;
   }
 
   @Override
@@ -84,7 +83,10 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
 
     SelectableConfigurationContext configurationContext =
         DefaultSelectableConfigurationContext.of(
-            cell.getBuckConfig(), constraintResolver, targetPlatform.get());
+            cell.getBuckConfig(),
+            constraintResolver,
+            target.getTargetConfiguration(),
+            targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     Object constructorArg;
     try (SimplePerfEvent.Scope scope =

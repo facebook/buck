@@ -27,6 +27,7 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
@@ -648,7 +649,8 @@ public class ConstructorArgMarshallerImmutableTest {
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             new RuleBasedConstraintResolver(DummyConfigurationRule::of),
-            new ConstraintBasedPlatform("", ImmutableSet.of()));
+            EmptyTargetConfiguration.INSTANCE,
+            configuration -> new ConstraintBasedPlatform("", ImmutableSet.of()));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
     DtoWithString dto =

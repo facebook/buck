@@ -57,7 +57,7 @@ public class ConfigSettingSelectable implements Selectable {
     return calculateMatches(
         context.getBuckConfig(),
         context.getConstraintResolver(),
-        context.getTargetPlatform(),
+        context.getPlatformProvider().getTargetPlatform(context.getTargetConfiguration()),
         constraintValues,
         values);
   }

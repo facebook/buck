@@ -43,4 +43,8 @@ public class ConstraintBasedPlatform implements Platform {
   public String toString() {
     return platformName;
   }
+
+  public ImmutableSet<ConstraintValue> getConstraintValues() {
+    return constraintValues;
+  }
 }

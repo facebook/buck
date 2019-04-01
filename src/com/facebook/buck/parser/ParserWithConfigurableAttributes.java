@@ -138,7 +138,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         DefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(),
             stateWithConfigurableAttributes.getConstraintResolver(),
-            stateWithConfigurableAttributes.getTargetPlatform().get());
+            buildTarget.getTargetConfiguration(),
+            stateWithConfigurableAttributes.getTargetPlatformResolver());
 
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
 
@@ -217,13 +218,14 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   private Stream<TargetNode<?>> filterIncompatibleTargetNodes(
       PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes,
       Stream<TargetNode<?>> targetNodes) {
-    Platform targetPlatform = stateWithConfigurableAttributes.getTargetPlatform().get();
     return targetNodes.filter(
         targetNode ->
             TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
                 stateWithConfigurableAttributes.getConstraintResolver(),
                 targetNode.getConstructorArg(),
-                targetPlatform));
+                stateWithConfigurableAttributes
+                    .getTargetPlatformResolver()
+                    .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration())));
   }
 
   @Override
@@ -329,7 +331,10 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     PerBuildStateWithConfigurableAttributes stateWithConfigurableAttributes =
         (PerBuildStateWithConfigurableAttributes) state;
 
-    Platform targetPlatform = stateWithConfigurableAttributes.getTargetPlatform().get();
+    Platform targetPlatform =
+        stateWithConfigurableAttributes
+            .getTargetPlatformResolver()
+            .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration());
     if (!TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
         stateWithConfigurableAttributes.getConstraintResolver(),
         targetNode.getConstructorArg(),

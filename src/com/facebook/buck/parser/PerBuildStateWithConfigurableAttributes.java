@@ -16,11 +16,10 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
-import java.util.function.Supplier;
 
 /**
  * A variant of {@link PerBuildState} that keeps additional information used by {@link
@@ -30,8 +29,8 @@ class PerBuildStateWithConfigurableAttributes extends PerBuildState {
 
   private final ConstraintResolver constraintResolver;
   private final SelectorListResolver selectorListResolver;
-  private final Supplier<Platform> targetPlatform;
   private final SelectorListFactory selectorListFactory;
+  private final TargetPlatformResolver targetPlatformResolver;
 
   PerBuildStateWithConfigurableAttributes(
       CellManager cellManager,
@@ -41,12 +40,12 @@ class PerBuildStateWithConfigurableAttributes extends PerBuildState {
       ConstraintResolver constraintResolver,
       SelectorListResolver selectorListResolver,
       SelectorListFactory selectorListFactory,
-      Supplier<Platform> targetPlatform) {
+      TargetPlatformResolver targetPlatformResolver) {
     super(cellManager, buildFileRawNodeParsePipeline, targetNodeParsePipeline, parsingContext);
     this.constraintResolver = constraintResolver;
     this.selectorListResolver = selectorListResolver;
     this.selectorListFactory = selectorListFactory;
-    this.targetPlatform = targetPlatform;
+    this.targetPlatformResolver = targetPlatformResolver;
   }
 
   public ConstraintResolver getConstraintResolver() {
@@ -61,7 +60,7 @@ class PerBuildStateWithConfigurableAttributes extends PerBuildState {
     return selectorListFactory;
   }
 
-  public Supplier<Platform> getTargetPlatform() {
-    return targetPlatform;
+  public TargetPlatformResolver getTargetPlatformResolver() {
+    return targetPlatformResolver;
   }
 }

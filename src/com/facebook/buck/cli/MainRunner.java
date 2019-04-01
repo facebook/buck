@@ -32,6 +32,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.InvalidCellOverrideException;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
@@ -43,9 +44,11 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
@@ -213,6 +216,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -784,8 +788,11 @@ public final class MainRunner {
       ImmutableList<ConfigurationRuleDescription<?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
 
+      DefaultCellPathResolver rootCellCellPathResolver =
+          DefaultCellPathResolver.of(filesystem.getRootPath(), buckConfig.getConfig());
+
       Supplier<TargetConfiguration> targetConfigurationSupplier =
-          () -> EmptyTargetConfiguration.INSTANCE;
+          () -> createTargetConfiguration(command, buildTargetFactory, rootCellCellPathResolver);
 
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
@@ -804,9 +811,6 @@ public final class MainRunner {
               processExecutor,
               executableFinder,
               targetConfigurationSupplier);
-
-      DefaultCellPathResolver rootCellCellPathResolver =
-          DefaultCellPathResolver.of(filesystem.getRootPath(), buckConfig.getConfig());
 
       Cell rootCell =
           LocalCellProviderFactory.create(
@@ -1408,6 +1412,19 @@ public final class MainRunner {
       }
     }
     return exitCode;
+  }
+
+  private TargetConfiguration createTargetConfiguration(
+      Command command,
+      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
+      CellPathResolver cellPathResolver) {
+    if (command.getTargetPlatforms().isEmpty()) {
+      return EmptyTargetConfiguration.INSTANCE;
+    }
+    UnconfiguredBuildTarget targetPlatform =
+        unconfiguredBuildTargetFactory.create(
+            cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms()));
+    return ImmutableDefaultTargetConfiguration.of(targetPlatform);
   }
 
   private boolean isReuseCurrentConfigPropertySet(BuckCommand command) {
