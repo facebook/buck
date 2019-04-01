@@ -347,7 +347,8 @@ public class SwiftLibraryDescription
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, buildTarget, sharedLibrarySoname);
 
-    SwiftRuntimeNativeLinkable swiftRuntimeLinkable = new SwiftRuntimeNativeLinkable(swiftPlatform);
+    SwiftRuntimeNativeLinkable swiftRuntimeLinkable =
+        new SwiftRuntimeNativeLinkable(swiftPlatform, buildTarget.getTargetConfiguration());
 
     BuildTarget requiredBuildTarget =
         buildTarget

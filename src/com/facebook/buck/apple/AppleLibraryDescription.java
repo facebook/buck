@@ -1152,7 +1152,9 @@ public class AppleLibraryDescription
     BuildTarget targetWithPlatform = target.withAppendedFlavors(platform.getFlavor());
     Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(targetWithPlatform);
     return swiftPlatform.map(
-        theSwiftPlatform -> ImmutableList.of(new SwiftRuntimeNativeLinkable(theSwiftPlatform)));
+        theSwiftPlatform ->
+            ImmutableList.of(
+                new SwiftRuntimeNativeLinkable(theSwiftPlatform, target.getTargetConfiguration())));
   }
 
   @Override

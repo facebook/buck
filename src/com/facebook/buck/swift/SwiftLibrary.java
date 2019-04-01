@@ -133,7 +133,9 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       return ImmutableList.of();
     }
     SwiftRuntimeNativeLinkable swiftRuntimeNativeLinkable =
-        new SwiftRuntimeNativeLinkable(swiftPlatformFlavorDomain.getValue(cxxPlatform.getFlavor()));
+        new SwiftRuntimeNativeLinkable(
+            swiftPlatformFlavorDomain.getValue(cxxPlatform.getFlavor()),
+            getBuildTarget().getTargetConfiguration());
     return RichStream.from(exportedDeps)
         .filter(NativeLinkable.class)
         .concat(RichStream.of(swiftRuntimeNativeLinkable))

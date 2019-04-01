@@ -20,8 +20,8 @@ import static com.facebook.buck.core.model.UnflavoredBuildTarget.BUILD_TARGET_PR
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -44,19 +44,22 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
 
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
-  private static final BuildTarget PSEUDO_BUILD_TARGET =
+  private static final UnconfiguredBuildTarget PSEUDO_BUILD_TARGET =
       ImmutableUnconfiguredBuildTarget.of(
-              Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME)
-          .configure(EmptyTargetConfiguration.INSTANCE);
-  private final SwiftPlatform swiftPlatform;
+          Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME);
 
-  public SwiftRuntimeNativeLinkable(SwiftPlatform swiftPlatform) {
+  private final SwiftPlatform swiftPlatform;
+  private final BuildTarget buildTarget;
+
+  public SwiftRuntimeNativeLinkable(
+      SwiftPlatform swiftPlatform, TargetConfiguration targetConfiguration) {
     this.swiftPlatform = swiftPlatform;
+    this.buildTarget = PSEUDO_BUILD_TARGET.configure(targetConfiguration);
   }
 
   @Override
   public BuildTarget getBuildTarget() {
-    return PSEUDO_BUILD_TARGET;
+    return buildTarget;
   }
 
   @Override
