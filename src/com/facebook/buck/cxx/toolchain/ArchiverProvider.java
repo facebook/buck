@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -26,20 +27,20 @@ import java.util.Optional;
 
 public interface ArchiverProvider {
 
-  Archiver resolve(BuildRuleResolver resolver);
+  Archiver resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration);
 
-  Iterable<BuildTarget> getParseTimeDeps();
+  Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration);
 
   static ArchiverProvider from(Archiver archiver) {
     return new ArchiverProvider() {
 
       @Override
-      public Archiver resolve(BuildRuleResolver resolver) {
+      public Archiver resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
         return archiver;
       }
 
       @Override
-      public Iterable<BuildTarget> getParseTimeDeps() {
+      public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
         return ImmutableList.of();
       }
     };
@@ -73,13 +74,14 @@ public interface ArchiverProvider {
       default:
         return new ArchiverProvider() {
           @Override
-          public Archiver resolve(BuildRuleResolver resolver) {
+          public Archiver resolve(
+              BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
             throw new RuntimeException(
                 "Invalid platform for archiver. Must be one of {MACOS, LINUX, WINDOWS}");
           }
 
           @Override
-          public Iterable<BuildTarget> getParseTimeDeps() {
+          public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
             return ImmutableList.of();
           }
         };
@@ -91,7 +93,7 @@ public interface ArchiverProvider {
   static ArchiverProvider from(ToolProvider toolProvider, Type type) {
     return new ArchiverProvider() {
       @Override
-      public Archiver resolve(BuildRuleResolver resolver) {
+      public Archiver resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
         Tool archiver = toolProvider.resolve(resolver);
         switch (type) {
           case BSD:
@@ -109,7 +111,7 @@ public interface ArchiverProvider {
       }
 
       @Override
-      public Iterable<BuildTarget> getParseTimeDeps() {
+      public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
         return toolProvider.getParseTimeDeps();
       }
     };

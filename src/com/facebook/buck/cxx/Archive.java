@@ -99,7 +99,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
         target,
         projectFilesystem,
         ruleFinder,
-        platform.getAr().resolve(resolver),
+        platform.getAr().resolve(resolver, target.getTargetConfiguration()),
         platform.getArflags(),
         platform.getRanlib().map(r -> r.resolve(resolver)),
         platform.getRanlibflags(),

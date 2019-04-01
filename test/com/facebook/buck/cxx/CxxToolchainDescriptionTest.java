@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -104,7 +105,10 @@ public class CxxToolchainDescriptionTest {
     assertIsBinaryTool(resolver, pathTool, platform.getCxx().resolve(graphBuilder));
     assertIsBinaryTool(resolver, pathTool, platform.getCxxpp().resolve(graphBuilder));
     assertIsBinaryTool(resolver, pathTool, platform.getLd().resolve(graphBuilder));
-    assertIsBinaryTool(resolver, binaryTool, platform.getAr().resolve(graphBuilder));
+    assertIsBinaryTool(
+        resolver,
+        binaryTool,
+        platform.getAr().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
     assertIsBinaryTool(resolver, binaryTool, platform.getAs().resolve(graphBuilder));
     assertEquals(Optional.empty(), platform.getAsm());
     assertEquals(Optional.empty(), platform.getAsmpp());

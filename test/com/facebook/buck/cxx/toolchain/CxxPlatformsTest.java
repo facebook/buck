@@ -200,7 +200,9 @@ public class CxxPlatformsTest {
                 .build());
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    return CxxPlatformUtils.build(buckConfig).getAr().resolve(ruleResolver);
+    return CxxPlatformUtils.build(buckConfig)
+        .getAr()
+        .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
   }
 
   @Test

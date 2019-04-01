@@ -329,7 +329,7 @@ public class CxxPlatforms {
       deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps());
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps(targetConfiguration));
-    deps.addAll(cxxPlatform.getAr().getParseTimeDeps());
+    deps.addAll(cxxPlatform.getAr().getParseTimeDeps(targetConfiguration));
     if (cxxPlatform.getRanlib().isPresent()) {
       deps.addAll(cxxPlatform.getRanlib().get().getParseTimeDeps());
     }
