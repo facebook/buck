@@ -148,29 +148,13 @@ public class NdkCxxPlatforms {
           // means the resulting link will only use it if it was actually needed it.
           "-Wl,--as-needed");
 
+  private static final Pattern NDK_MAJOR_VERSION_PATTERN = Pattern.compile("^[rR]?(\\d+).*");
+
   // Utility class, do not instantiate.
   private NdkCxxPlatforms() {}
 
   static int getNdkMajorVersion(String ndkVersion) {
-    return ndkVersion.startsWith("r9")
-        ? 9
-        : ndkVersion.startsWith("r10")
-            ? 10
-            : ndkVersion.startsWith("11.")
-                ? 11
-                : ndkVersion.startsWith("12.")
-                    ? 12
-                    : ndkVersion.startsWith("13.")
-                        ? 13
-                        : ndkVersion.startsWith("14.")
-                            ? 14
-                            : ndkVersion.startsWith("15.")
-                                ? 15
-                                : ndkVersion.startsWith("16.")
-                                    ? 16
-                                    : ndkVersion.startsWith("17.")
-                                        ? 17
-                                        : ndkVersion.startsWith("18.") ? 18 : -1;
+    return Integer.parseInt(NDK_MAJOR_VERSION_PATTERN.matcher(ndkVersion).replaceAll("$1"));
   }
 
   public static NdkCompilerType getDefaultCompilerTypeForNdk(String ndkVersion) {
@@ -195,8 +179,10 @@ public class NdkCxxPlatforms {
       return "5.0";
     } else if (ndkMajorVersion < 18) {
       return "6.0.2";
-    } else {
+    } else if (ndkMajorVersion < 19) {
       return "7.0.2";
+    } else {
+      return "8.0.2";
     }
   }
 

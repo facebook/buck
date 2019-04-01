@@ -30,8 +30,9 @@ import java.util.regex.Pattern;
 public class VersionStringComparator implements Comparator<String> {
 
   private static final Pattern VERSION_STRING_PATTERN =
-      Pattern.compile("^[rR]?(\\d+)[a-zA-Z]*(\\.\\d+)*?([-_]rc\\d+)*?(?:-preview)?$");
-  private static final Pattern IGNORED_FIELDS_PATTERN = Pattern.compile("(?:^[rR])|(?:-preview)");
+      Pattern.compile("^[rR]?(\\d+)[a-zA-Z]*(\\.\\d+)*?([-_]rc\\d+)*?(?:-preview)?(-beta\\d+)?$");
+  private static final Pattern IGNORED_FIELDS_PATTERN =
+      Pattern.compile("(?:^[rR])|(?:-preview)|(?:-beta\\d+)");
   private static final Pattern DELIMITER_PATTERN = Pattern.compile("\\.|(?:[-_]rc[0-9]+)");
   private static final Pattern RC_DELIMITER_PATTERN = Pattern.compile("(\\.|\\d+|[a-zA-Z])*[-_]rc");
   private static final Pattern NUMBER_ALPHA_PATTERN = Pattern.compile("(\\d+)([a-zA-Z]+)");
