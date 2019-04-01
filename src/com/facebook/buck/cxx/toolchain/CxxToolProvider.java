@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -26,22 +27,33 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.util.function.Supplier;
 import javax.annotation.Nonnull;
+import org.immutables.value.Value.Immutable;
+import org.immutables.value.Value.Parameter;
 
 /** A provide for the {@link Preprocessor} and {@link Compiler} C/C++ drivers. */
 public abstract class CxxToolProvider<T> {
+
+  @Immutable(builder = false, copy = false, prehash = true)
+  interface CxxToolProviderCacheKey {
+    @Parameter
+    BuildRuleResolver getBuildRuleResolver();
+
+    @Parameter
+    TargetConfiguration getTargetConfiguration();
+  }
 
   private final ToolProvider toolProvider;
   private final Supplier<Type> type;
   private final boolean useUnixFileSeparator;
 
-  private final LoadingCache<BuildRuleResolver, T> cache =
+  private final LoadingCache<CxxToolProviderCacheKey, T> cache =
       CacheBuilder.newBuilder()
           .weakKeys()
           .build(
-              new CacheLoader<BuildRuleResolver, T>() {
+              new CacheLoader<CxxToolProviderCacheKey, T>() {
                 @Override
-                public T load(@Nonnull BuildRuleResolver resolver) {
-                  return build(type.get(), toolProvider.resolve(resolver));
+                public T load(@Nonnull CxxToolProviderCacheKey key) {
+                  return build(type.get(), toolProvider.resolve(key.getBuildRuleResolver()));
                 }
               });
 
@@ -67,8 +79,8 @@ public abstract class CxxToolProvider<T> {
 
   protected abstract T build(Type type, Tool tool);
 
-  public T resolve(BuildRuleResolver resolver) {
-    return cache.getUnchecked(resolver);
+  public T resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
+    return cache.getUnchecked(ImmutableCxxToolProviderCacheKey.of(resolver, targetConfiguration));
   }
 
   public Iterable<BuildTarget> getParseTimeDeps() {

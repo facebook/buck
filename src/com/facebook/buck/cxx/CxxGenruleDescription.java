@@ -219,8 +219,14 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     expanders.add(
         new StringExpander<>(
             PlatformNameMacro.class, StringArg.of(cxxPlatform.getFlavor().toString())));
-    expanders.add(new ToolExpander<>(CcMacro.class, cxxPlatform.getCc().resolve(resolver)));
-    expanders.add(new ToolExpander<>(CxxMacro.class, cxxPlatform.getCxx().resolve(resolver)));
+    expanders.add(
+        new ToolExpander<>(
+            CcMacro.class,
+            cxxPlatform.getCc().resolve(resolver, buildTarget.getTargetConfiguration())));
+    expanders.add(
+        new ToolExpander<>(
+            CxxMacro.class,
+            cxxPlatform.getCxx().resolve(resolver, buildTarget.getTargetConfiguration())));
 
     ImmutableList<String> asflags = cxxPlatform.getAsflags();
     ImmutableList<String> cflags = cxxPlatform.getCflags();
@@ -451,7 +457,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         Optional<Pattern> filter) {
       return new CxxPreprocessorFlagsArg(
           getPreprocessorFlags(getCxxPreprocessorInput(graphBuilder, rules)),
-          CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType).resolve(graphBuilder));
+          CxxSourceTypes.getPreprocessor(cxxPlatform, sourceType)
+              .resolve(graphBuilder, targetConfiguration));
     }
 
     private class CxxPreprocessorFlagsArg implements Arg {

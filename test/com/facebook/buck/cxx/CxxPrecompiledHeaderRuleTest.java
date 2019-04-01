@@ -33,6 +33,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -140,7 +141,10 @@ public class CxxPrecompiledHeaderRuleTest {
   public final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
   public final BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
-  public final Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(graphBuilder);
+  public final Compiler compiler =
+      CxxPlatformUtils.DEFAULT_PLATFORM
+          .getCxx()
+          .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
 
   public BuildTarget newTarget(String fullyQualifiedName) {
     return BuildTargetFactory.newInstance(fullyQualifiedName);

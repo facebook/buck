@@ -117,7 +117,10 @@ public class CxxPlatformUtils {
   public static HeaderMode getHeaderModeForDefaultPlatform(Path root) throws IOException {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
-    return defaultPlatform.getCpp().resolve(ruleResolver).supportsHeaderMaps()
+    return defaultPlatform
+            .getCpp()
+            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .supportsHeaderMaps()
         ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
         : HeaderMode.SYMLINK_TREE_ONLY;
   }

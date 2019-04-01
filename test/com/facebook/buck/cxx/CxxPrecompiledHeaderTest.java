@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -52,13 +53,19 @@ public class CxxPrecompiledHeaderTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Preprocessor preprocessorSupportingPch =
-        new GccPreprocessor(CxxPlatformUtils.DEFAULT_PLATFORM.getCpp().resolve(graphBuilder)) {
+        new GccPreprocessor(
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getCpp()
+                .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE)) {
           @Override
           public boolean supportsPrecompiledHeaders() {
             return true;
           }
         };
-    Compiler compiler = CxxPlatformUtils.DEFAULT_PLATFORM.getCxx().resolve(graphBuilder);
+    Compiler compiler =
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .getCxx()
+            .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CxxPrecompiledHeader precompiledHeader =

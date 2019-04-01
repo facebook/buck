@@ -140,7 +140,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return getCxxBuckConfig().isPCHEnabled()
         && sourceType.getPrecompiledHeaderLanguage().isPresent()
         && CxxSourceTypes.getPreprocessor(getCxxPlatform(), sourceType)
-            .resolve(getActionGraphBuilder())
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration())
             .supportsPrecompiledHeaders();
   }
 
@@ -207,7 +207,8 @@ abstract class AbstractCxxSourceRuleFactory {
               key -> {
                 Preprocessor preprocessor =
                     CxxSourceTypes.getPreprocessor(getCxxPlatform(), key.getSourceType())
-                        .resolve(getActionGraphBuilder());
+                        .resolve(
+                            getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
                 // TODO(cjhopman): The aggregated deps logic should move into PreprocessorDelegate
                 // itself.
                 BuildRule aggregatedDeps = requireAggregatedPreprocessDepsRule();
@@ -361,7 +362,7 @@ abstract class AbstractCxxSourceRuleFactory {
 
     Compiler compiler =
         CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType())
-            .resolve(getActionGraphBuilder());
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
 
     // Build up the list of compiler flags.
     CxxToolFlags flags =
@@ -415,7 +416,7 @@ abstract class AbstractCxxSourceRuleFactory {
       CxxSource.Type type, ImmutableList<String> sourceFlags) {
     Compiler compiler =
         CxxSourceTypes.getCompiler(getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(type))
-            .resolve(getActionGraphBuilder());
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
     return CxxToolFlags.explicitBuilder()
         .addAllPlatformFlags(StringArg.from(getPicType().getFlags(compiler)))
         .addAllPlatformFlags(getPlatformPreprocessorFlags(type))
@@ -435,7 +436,9 @@ abstract class AbstractCxxSourceRuleFactory {
                 getPicType()
                     .getFlags(
                         CxxSourceTypes.getCompiler(getCxxPlatform(), outputType)
-                            .resolve(getActionGraphBuilder()))))
+                            .resolve(
+                                getActionGraphBuilder(),
+                                getBaseBuildTarget().getTargetConfiguration()))))
         // Add in the platform specific compiler flags.
         .addAllPlatformFlags(getPlatformCompileFlags(outputType))
         .addAllRuleFlags(getRuleCompileFlags(outputType))
@@ -504,7 +507,7 @@ abstract class AbstractCxxSourceRuleFactory {
             getCxxPlatform().getCompilerDebugPathSanitizer(),
             CxxSourceTypes.getCompiler(
                     getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(source.getType()))
-                .resolve(getActionGraphBuilder()),
+                .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration()),
             computeCompilerFlags(source.getType(), source.getFlags()),
             getCxxPlatform().getUseArgFile());
 

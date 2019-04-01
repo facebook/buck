@@ -112,8 +112,14 @@ public class CxxLibraryDescriptionTest {
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
-    if (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps()
-        && cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps()) {
+    if (cxxPlatform
+            .getCpp()
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .supportsHeaderMaps()
+        && cxxPlatform
+            .getCxxpp()
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .supportsHeaderMaps()) {
       BuildTarget headerMapBuildTarget =
           CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
               target, headerVisibility, cxxPlatform.getFlavor());

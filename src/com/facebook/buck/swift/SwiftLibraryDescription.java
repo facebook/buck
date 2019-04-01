@@ -272,7 +272,8 @@ public class SwiftLibraryDescription
                       headers -> headers.getIncludeType() != CxxPreprocessables.IncludeType.SYSTEM)
                   .toImmutableSet(),
               inputs.getFrameworks());
-      Preprocessor preprocessor = cxxPlatform.getCpp().resolve(graphBuilder);
+      Preprocessor preprocessor =
+          cxxPlatform.getCpp().resolve(graphBuilder, buildTarget.getTargetConfiguration());
       SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
       BuildTarget buildTargetCopy = buildTarget;

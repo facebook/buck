@@ -74,7 +74,8 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         target);
     SwiftLibraryDescriptionArg swiftArgs = delegateArgsBuilder.build();
 
-    Preprocessor preprocessor = platform.getCpp().resolve(graphBuilder);
+    Preprocessor preprocessor =
+        platform.getCpp().resolve(graphBuilder, target.getTargetConfiguration());
 
     ImmutableSet<BuildRule> inputDeps =
         RichStream.from(inputs)

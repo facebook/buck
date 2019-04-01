@@ -218,7 +218,8 @@ public class NdkLibraryDescription
           Arg.stringify(
               cxxPreprocessorInput.getPreprocessorFlags().get(CxxSource.Type.C), pathResolver));
       Preprocessor preprocessor =
-          CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C).resolve(graphBuilder);
+          CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C)
+              .resolve(graphBuilder, targetConfiguration);
       ppFlags.addAll(
           CxxHeaders.getArgs(
               cxxPreprocessorInput.getIncludes(), pathResolver, Optional.empty(), preprocessor));

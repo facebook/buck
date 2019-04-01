@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -67,7 +68,7 @@ public class CxxCompileStepIntegrationTest {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    Compiler compiler = platform.getCc().resolve(resolver);
+    Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));
@@ -139,7 +140,7 @@ public class CxxCompileStepIntegrationTest {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
-    Compiler compiler = platform.getCc().resolve(resolver);
+    Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));
     Path depFile = filesystem.resolve(Paths.get("output.dep"));

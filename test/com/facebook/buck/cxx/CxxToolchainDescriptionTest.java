@@ -101,9 +101,18 @@ public class CxxToolchainDescriptionTest {
     Tool pathTool = new HashedFileTool(pathToolPath);
 
     assertIsBinaryTool(resolver, binaryTool, platform.getStrip());
-    assertIsBinaryTool(resolver, pathTool, platform.getCc().resolve(graphBuilder));
-    assertIsBinaryTool(resolver, pathTool, platform.getCxx().resolve(graphBuilder));
-    assertIsBinaryTool(resolver, pathTool, platform.getCxxpp().resolve(graphBuilder));
+    assertIsBinaryTool(
+        resolver,
+        pathTool,
+        platform.getCc().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+    assertIsBinaryTool(
+        resolver,
+        pathTool,
+        platform.getCxx().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+    assertIsBinaryTool(
+        resolver,
+        pathTool,
+        platform.getCxxpp().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         pathTool,
@@ -112,7 +121,10 @@ public class CxxToolchainDescriptionTest {
         resolver,
         binaryTool,
         platform.getAr().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
-    assertIsBinaryTool(resolver, binaryTool, platform.getAs().resolve(graphBuilder));
+    assertIsBinaryTool(
+        resolver,
+        binaryTool,
+        platform.getAs().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
     assertEquals(Optional.empty(), platform.getAsm());
     assertEquals(Optional.empty(), platform.getAsmpp());
     assertEquals(Optional.empty(), platform.getHip());

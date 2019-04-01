@@ -234,10 +234,18 @@ public class AppleCxxPlatformsTest {
     assertEquals(InternalFlavor.of("iphoneos8.0-armv7"), cxxPlatform.getFlavor());
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
-        cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform
+            .getCc()
+            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(resolver)
+            .get(0));
     assertThat(
         ImmutableList.<String>builder()
-            .addAll(cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver))
+            .addAll(
+                cxxPlatform
+                    .getCc()
+                    .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+                    .getCommandPrefix(resolver))
             .addAll(cxxPlatform.getCflags())
             .build(),
         hasConsecutiveItems(
@@ -248,7 +256,11 @@ public class AppleCxxPlatformsTest {
     assertThat(cxxPlatform.getLdflags(), hasConsecutiveItems("-Wl,-sdk_version", "-Wl,8.0"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
-        cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform
+            .getCxx()
+            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(resolver)
+            .get(0));
     assertEquals(
         "/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin/ar",
         cxxPlatform
@@ -331,10 +343,18 @@ public class AppleCxxPlatformsTest {
     assertEquals(InternalFlavor.of("watchos2.0-armv7k"), cxxPlatform.getFlavor());
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
-        cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform
+            .getCc()
+            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(resolver)
+            .get(0));
     assertThat(
         ImmutableList.<String>builder()
-            .addAll(cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver))
+            .addAll(
+                cxxPlatform
+                    .getCc()
+                    .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+                    .getCommandPrefix(resolver))
             .addAll(cxxPlatform.getCflags())
             .build(),
         hasConsecutiveItems(
@@ -344,7 +364,11 @@ public class AppleCxxPlatformsTest {
     assertThat(cxxPlatform.getLdflags(), hasConsecutiveItems("-Wl,-sdk_version", "-Wl,2.0"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
-        cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform
+            .getCxx()
+            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(resolver)
+            .get(0));
     assertEquals(
         "/Developer/Platforms/WatchOS.platform/Developer/usr/bin/ar",
         cxxPlatform
@@ -428,10 +452,18 @@ public class AppleCxxPlatformsTest {
     assertEquals(InternalFlavor.of("appletvos9.1-arm64"), cxxPlatform.getFlavor());
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
-        cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform
+            .getCc()
+            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(resolver)
+            .get(0));
     assertThat(
         ImmutableList.<String>builder()
-            .addAll(cxxPlatform.getCc().resolve(ruleResolver).getCommandPrefix(resolver))
+            .addAll(
+                cxxPlatform
+                    .getCc()
+                    .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+                    .getCommandPrefix(resolver))
             .addAll(cxxPlatform.getCflags())
             .build(),
         hasConsecutiveItems(
@@ -442,7 +474,11 @@ public class AppleCxxPlatformsTest {
     assertThat(cxxPlatform.getLdflags(), hasConsecutiveItems("-Wl,-sdk_version", "-Wl,9.1"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
-        cxxPlatform.getCxx().resolve(ruleResolver).getCommandPrefix(resolver).get(0));
+        cxxPlatform
+            .getCxx()
+            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(resolver)
+            .get(0));
     assertEquals(
         "/Developer/Platforms/AppleTVOS.platform/Developer/usr/bin/ar",
         cxxPlatform

@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -130,14 +131,20 @@ public class CxxDescriptionEnhancer {
   private CxxDescriptionEnhancer() {}
 
   public static HeaderMode getHeaderModeForPlatform(
-      BuildRuleResolver resolver, CxxPlatform cxxPlatform, boolean shouldCreateHeadersSymlinks) {
+      BuildRuleResolver resolver,
+      TargetConfiguration targetConfiguration,
+      CxxPlatform cxxPlatform,
+      boolean shouldCreateHeadersSymlinks) {
     return cxxPlatform
         .getHeaderMode()
         .orElseGet(
             () -> {
               boolean useHeaderMap =
-                  (cxxPlatform.getCpp().resolve(resolver).supportsHeaderMaps()
-                      && cxxPlatform.getCxxpp().resolve(resolver).supportsHeaderMaps());
+                  (cxxPlatform.getCpp().resolve(resolver, targetConfiguration).supportsHeaderMaps()
+                      && cxxPlatform
+                          .getCxxpp()
+                          .resolve(resolver, targetConfiguration)
+                          .supportsHeaderMaps());
               return !useHeaderMap
                   ? HeaderMode.SYMLINK_TREE_ONLY
                   : (shouldCreateHeadersSymlinks
@@ -182,7 +189,11 @@ public class CxxDescriptionEnhancer {
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        getHeaderModeForPlatform(resolver, cxxPlatform, shouldCreateHeadersSymlinks),
+        getHeaderModeForPlatform(
+            resolver,
+            buildTarget.getTargetConfiguration(),
+            cxxPlatform,
+            shouldCreateHeadersSymlinks),
         headers,
         headerVisibility,
         cxxPlatform.getFlavor());

@@ -153,6 +153,7 @@ public class CxxLibraryMetadataFactory {
                     baseTarget,
                     CxxDescriptionEnhancer.getHeaderModeForPlatform(
                         graphBuilder,
+                        buildTarget.getTargetConfiguration(),
                         cxxPlatform,
                         args.getXcodePublicHeadersSymlinks()
                             .orElse(cxxPlatform.getPublicHeadersSymlinksEnabled())))

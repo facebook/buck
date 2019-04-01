@@ -235,10 +235,16 @@ public class OcamlRuleBuilder {
     }
     allDepsBuilder.addAll(
         BuildableSupport.getDepsCollection(
-            ocamlPlatform.getCCompiler().resolve(graphBuilder), ruleFinder));
+            ocamlPlatform
+                .getCCompiler()
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            ruleFinder));
     allDepsBuilder.addAll(
         BuildableSupport.getDepsCollection(
-            ocamlPlatform.getCxxCompiler().resolve(graphBuilder), ruleFinder));
+            ocamlPlatform
+                .getCxxCompiler()
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            ruleFinder));
     allDepsBuilder.addAll(
         argFlags.stream().flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder)).iterator());
 
@@ -284,7 +290,10 @@ public class OcamlRuleBuilder {
             .setNativeCompileDeps(nativeCompileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
-            .setCPreprocessor(ocamlPlatform.getCPreprocessor().resolve(graphBuilder))
+            .setCPreprocessor(
+                ocamlPlatform
+                    .getCPreprocessor()
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration()))
             .build();
 
     return graphBuilder.addToIndex(
@@ -293,8 +302,12 @@ public class OcamlRuleBuilder {
             projectFilesystem,
             params.withDeclaredDeps(allDeps).withoutExtraDeps(),
             ocamlContext,
-            ocamlPlatform.getCCompiler().resolve(graphBuilder),
-            ocamlPlatform.getCxxCompiler().resolve(graphBuilder),
+            ocamlPlatform
+                .getCCompiler()
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            ocamlPlatform
+                .getCxxCompiler()
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             bytecodeOnly));
   }
 
@@ -357,10 +370,16 @@ public class OcamlRuleBuilder {
                             .iterator())
                     .addAll(
                         BuildableSupport.getDepsCollection(
-                            ocamlPlatform.getCCompiler().resolve(graphBuilder), ruleFinder))
+                            ocamlPlatform
+                                .getCCompiler()
+                                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+                            ruleFinder))
                     .addAll(
                         BuildableSupport.getDepsCollection(
-                            ocamlPlatform.getCxxCompiler().resolve(graphBuilder), ruleFinder))
+                            ocamlPlatform
+                                .getCxxCompiler()
+                                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+                            ruleFinder))
                     .build())
             .withoutExtraDeps();
 
@@ -400,7 +419,10 @@ public class OcamlRuleBuilder {
             .setNativeCompileDeps(nativeCompileDepsBuilder.build())
             .setBytecodeCompileDeps(bytecodeCompileDepsBuilder.build())
             .setBytecodeLinkDeps(bytecodeLinkDepsBuilder.build())
-            .setCPreprocessor(ocamlPlatform.getCPreprocessor().resolve(graphBuilder))
+            .setCPreprocessor(
+                ocamlPlatform
+                    .getCPreprocessor()
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration()))
             .build();
 
     Path baseDir = projectFilesystem.getRootPath().toAbsolutePath();
@@ -419,8 +441,12 @@ public class OcamlRuleBuilder {
             ocamlContext,
             mlInput,
             cInput,
-            ocamlPlatform.getCCompiler().resolve(graphBuilder),
-            ocamlPlatform.getCxxCompiler().resolve(graphBuilder),
+            ocamlPlatform
+                .getCCompiler()
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
+            ocamlPlatform
+                .getCxxCompiler()
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             bytecodeOnly,
             buildNativePlugin);
 

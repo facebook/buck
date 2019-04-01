@@ -560,7 +560,7 @@ public class HaskellLibraryDescription
             getPackageInfo(platform, baseTarget),
             platform,
             CxxSourceTypes.getPreprocessor(platform.getCxxPlatform(), CxxSource.Type.C)
-                .resolve(graphBuilder),
+                .resolve(graphBuilder, baseTarget.getTargetConfiguration()),
             ppFlagsBuilder.build()));
   }
 

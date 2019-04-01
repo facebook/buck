@@ -196,7 +196,8 @@ public class HaskellDescriptionUtils {
         exposedPackages,
         packages,
         sources,
-        CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C).resolve(graphBuilder));
+        CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C)
+            .resolve(graphBuilder, target.getTargetConfiguration()));
   }
 
   protected static BuildTarget getCompileBuildTarget(

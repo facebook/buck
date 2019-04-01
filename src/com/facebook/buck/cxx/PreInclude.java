@@ -327,7 +327,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
                       cxxPlatform.getCompilerDebugPathSanitizer(),
                       CxxSourceTypes.getCompiler(
                               cxxPlatform, CxxSourceTypes.getPreprocessorOutputType(sourceType))
-                          .resolve(graphBuilder),
+                          .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                       compilerFlags,
                       cxxPlatform.getUseArgFile());
               depsBuilder.add(compilerDelegate);
