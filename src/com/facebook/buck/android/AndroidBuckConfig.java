@@ -23,6 +23,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -244,15 +245,14 @@ public class AndroidBuckConfig {
   }
 
   /** Gets the ndk_toolchain target for the abi if it is specified in the config. */
-  public Optional<BuildTarget> getNdkCxxToolchainTargetForAbi(String cpuAbi) {
+  public Optional<BuildTarget> getNdkCxxToolchainTargetForAbi(
+      String cpuAbi, TargetConfiguration targetConfiguration) {
     ImmutableMap<String, String> platformMap =
         delegate.getMap("ndk", "toolchain_target_per_cpu_abi");
     platformMap.keySet().forEach(key -> Verify.verify(VALID_ABI_KEYS.contains(key)));
     Optional<String> platformTarget = Optional.ofNullable(platformMap.get(cpuAbi));
     return platformTarget.map(
-        target ->
-            delegate.getBuildTargetForFullyQualifiedTarget(
-                target, EmptyTargetConfiguration.INSTANCE));
+        target -> delegate.getBuildTargetForFullyQualifiedTarget(target, targetConfiguration));
   }
 
   /**

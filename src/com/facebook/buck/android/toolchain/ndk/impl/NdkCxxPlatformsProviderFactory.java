@@ -22,6 +22,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -39,13 +40,20 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
       ToolchainProvider toolchainProvider, ToolchainCreationContext context) {
 
     ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> ndkCxxPlatforms =
-        getNdkCxxPlatforms(context.getBuckConfig(), context.getFilesystem(), toolchainProvider);
+        getNdkCxxPlatforms(
+            context.getBuckConfig(),
+            context.getFilesystem(),
+            context.getTargetConfiguration().get(),
+            toolchainProvider);
 
     return Optional.of(NdkCxxPlatformsProvider.of(ndkCxxPlatforms));
   }
 
   private static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getNdkCxxPlatforms(
-      BuckConfig config, ProjectFilesystem filesystem, ToolchainProvider toolchainProvider) {
+      BuckConfig config,
+      ProjectFilesystem filesystem,
+      TargetConfiguration targetConfiguration,
+      ToolchainProvider toolchainProvider) {
 
     Platform platform = Platform.detect();
     AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
@@ -62,7 +70,13 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
 
     try {
       return NdkCxxPlatforms.getPlatforms(
-          cxxBuckConfig, androidConfig, filesystem, platform, toolchainProvider, ndkVersion);
+          cxxBuckConfig,
+          androidConfig,
+          filesystem,
+          targetConfiguration,
+          platform,
+          toolchainProvider,
+          ndkVersion);
     } catch (AssertionError e) {
       throw new ToolchainInstantiationException(e, e.getMessage());
     }

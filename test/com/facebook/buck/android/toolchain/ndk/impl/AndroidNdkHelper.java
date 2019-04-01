@@ -110,6 +110,7 @@ public class AndroidNdkHelper {
                 AndroidNdkHelper.DEFAULT_CONFIG,
                 filesystem,
                 ndkPath,
+                EmptyTargetConfiguration.INSTANCE,
                 NdkCxxPlatformCompiler.builder()
                     .setType(compilerType)
                     .setVersion(compilerVersion)

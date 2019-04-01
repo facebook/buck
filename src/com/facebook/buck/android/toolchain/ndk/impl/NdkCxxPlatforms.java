@@ -31,6 +31,7 @@ import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -198,6 +199,7 @@ public class NdkCxxPlatforms {
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
+      TargetConfiguration targetConfiguration,
       Platform platform,
       ToolchainProvider toolchainProvider,
       String ndkVersion) {
@@ -228,6 +230,7 @@ public class NdkCxxPlatforms {
         androidConfig,
         filesystem,
         ndkRoot,
+        targetConfiguration,
         compiler,
         androidConfig.getNdkCxxRuntime().orElseGet(() -> getDefaultCxxRuntimeForNdk(ndkVersion)),
         androidConfig.getNdkCxxRuntimeType().orElse(NdkCxxRuntimeType.DYNAMIC),
@@ -251,6 +254,7 @@ public class NdkCxxPlatforms {
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
+      TargetConfiguration targetConfiguration,
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
       NdkCxxRuntimeType runtimeType,
@@ -261,6 +265,7 @@ public class NdkCxxPlatforms {
         androidConfig,
         filesystem,
         ndkRoot,
+        targetConfiguration,
         compiler,
         cxxRuntime,
         runtimeType,
@@ -276,6 +281,7 @@ public class NdkCxxPlatforms {
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
+      TargetConfiguration targetConfiguration,
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
       NdkCxxRuntimeType runtimeType,
@@ -295,6 +301,7 @@ public class NdkCxxPlatforms {
               androidConfig,
               filesystem,
               ndkRoot,
+              targetConfiguration,
               compiler,
               cxxRuntime,
               runtimeType,
@@ -315,6 +322,7 @@ public class NdkCxxPlatforms {
               androidConfig,
               filesystem,
               ndkRoot,
+              targetConfiguration,
               compiler,
               cxxRuntime,
               runtimeType,
@@ -335,6 +343,7 @@ public class NdkCxxPlatforms {
               androidConfig,
               filesystem,
               ndkRoot,
+              targetConfiguration,
               compiler,
               cxxRuntime,
               runtimeType,
@@ -355,6 +364,7 @@ public class NdkCxxPlatforms {
               androidConfig,
               filesystem,
               ndkRoot,
+              targetConfiguration,
               compiler,
               cxxRuntime,
               runtimeType,
@@ -375,6 +385,7 @@ public class NdkCxxPlatforms {
               androidConfig,
               filesystem,
               ndkRoot,
+              targetConfiguration,
               compiler,
               cxxRuntime,
               runtimeType,
@@ -394,6 +405,7 @@ public class NdkCxxPlatforms {
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
+      TargetConfiguration targetConfiguration,
       NdkCxxPlatformCompiler compiler,
       NdkCxxRuntime cxxRuntime,
       NdkCxxRuntimeType runtimeType,
@@ -405,7 +417,7 @@ public class NdkCxxPlatforms {
       String flavorValue) {
     Flavor flavor = InternalFlavor.of(flavorValue);
     Optional<UnresolvedNdkCxxPlatform> dynamicPlatform =
-        getDynamicNdkCxxPlatform(androidConfig, cpuAbi, flavor);
+        getDynamicNdkCxxPlatform(androidConfig, cpuAbi, flavor, targetConfiguration);
     if (dynamicPlatform.isPresent()) {
       return dynamicPlatform.get();
     }
@@ -413,7 +425,7 @@ public class NdkCxxPlatforms {
         androidConfig
             .getNdkAppPlatformForCpuAbi(cpuAbi)
             .orElse(NdkCxxPlatforms.DEFAULT_TARGET_APP_PLATFORM);
-    NdkCxxPlatformTargetConfiguration targetConfiguration =
+    NdkCxxPlatformTargetConfiguration ndkCxxPlatformTargetConfiguration =
         getTargetConfiguration(cpuType, compiler, androidPlatform);
     return build(
         config,
@@ -422,7 +434,7 @@ public class NdkCxxPlatforms {
         flavor,
         platform,
         ndkRoot,
-        targetConfiguration,
+        ndkCxxPlatformTargetConfiguration,
         cxxRuntime,
         runtimeType,
         executableFinder,
@@ -430,9 +442,12 @@ public class NdkCxxPlatforms {
   }
 
   private static Optional<UnresolvedNdkCxxPlatform> getDynamicNdkCxxPlatform(
-      AndroidBuckConfig androidConfig, String abi, Flavor flavor) {
+      AndroidBuckConfig androidConfig,
+      String abi,
+      Flavor flavor,
+      TargetConfiguration targetConfiguration) {
     return androidConfig
-        .getNdkCxxToolchainTargetForAbi(abi)
+        .getNdkCxxToolchainTargetForAbi(abi, targetConfiguration)
         .map(target -> new ProviderBackedUnresolvedNdkCxxPlatform(target, flavor));
   }
 
