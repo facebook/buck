@@ -131,7 +131,10 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibrary library = builder.build(graphBuilder);
 
     // Lookup the link whole flags.
-    Linker linker = CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(graphBuilder);
+    Linker linker =
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .getLd()
+            .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> linkWholeFlags =
         FluentIterable.from(linker.linkWhole(StringArg.of("sentinel"), pathResolver))
             .transformAndConcat((input) -> Arg.stringifyList(input, pathResolver))

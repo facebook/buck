@@ -290,7 +290,11 @@ public class HaskellDescriptionUtils {
                   StringArg.from(
                       MoreIterables.zipAndConcat(
                           Iterables.cycle("-optl"),
-                          platform.getCxxPlatform().getLd().resolve(graphBuilder).soname(name)))));
+                          platform
+                              .getCxxPlatform()
+                              .getLd()
+                              .resolve(graphBuilder, target.getTargetConfiguration())
+                              .soname(name)))));
     }
 
     // Add in extra flags passed into this function.
@@ -511,7 +515,11 @@ public class HaskellDescriptionUtils {
                 "-rpath",
                 String.format(
                     "%s/%s",
-                    platform.getCxxPlatform().getLd().resolve(graphBuilder).origin(),
+                    platform
+                        .getCxxPlatform()
+                        .getLd()
+                        .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                        .origin(),
                     symlinkRelDir.toString()))));
 
     // Construct the omnibus shared library.

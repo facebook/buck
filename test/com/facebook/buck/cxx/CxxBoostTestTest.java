@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
@@ -80,7 +81,9 @@ public class CxxBoostTestTest {
                 new FakeProjectFilesystem(),
                 ruleFinder,
                 TestCellPathResolver.get(projectFilesystem),
-                CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(ruleResolver),
+                CxxPlatformUtils.DEFAULT_PLATFORM
+                    .getLd()
+                    .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE),
                 Paths.get("output"),
                 ImmutableMap.of(),
                 ImmutableList.of(),

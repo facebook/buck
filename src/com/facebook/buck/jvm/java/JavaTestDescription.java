@@ -301,7 +301,10 @@ public class JavaTestDescription
                     .build());
         nativeLibsEnvironment =
             ImmutableMap.of(
-                cxxPlatform.getLd().resolve(graphBuilder).searchPathEnvVar(),
+                cxxPlatform
+                    .getLd()
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                    .searchPathEnvVar(),
                 nativeLibsSymlinkTree.getRoot().toString());
       } else {
         updatedParams = params;

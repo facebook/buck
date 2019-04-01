@@ -961,7 +961,7 @@ public class CxxDescriptionEnhancer {
           .forEach(argsBuilder::add);
     }
 
-    Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
+    Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
 
     // Special handling for dynamically linked binaries with rpath support
     if (linkStyle == Linker.LinkableDepType.SHARED

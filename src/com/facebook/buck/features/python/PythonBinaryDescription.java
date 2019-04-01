@@ -150,7 +150,8 @@ public class PythonBinaryDescription
       PackageStyle packageStyle) {
 
     // We don't currently support targeting Windows.
-    if (cxxPlatform.getLd().resolve(graphBuilder) instanceof WindowsLinker) {
+    if (cxxPlatform.getLd().resolve(graphBuilder, buildTarget.getTargetConfiguration())
+        instanceof WindowsLinker) {
       throw new HumanReadableException(
           "%s: cannot build in-place python binaries for Windows (%s)",
           buildTarget, cxxPlatform.getFlavor());

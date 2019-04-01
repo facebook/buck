@@ -239,7 +239,9 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                             getLuaPlatform()
                                 .getCxxPlatform()
                                 .getLd()
-                                .resolve(getActionGraphBuilder())
+                                .resolve(
+                                    getActionGraphBuilder(),
+                                    getBaseTarget().getTargetConfiguration())
                                 .origin(),
                             getRelativeNativeLibsDir().get().toString())))
                 : ImmutableList.of())

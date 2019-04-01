@@ -230,7 +230,11 @@ public class HaskellBinaryDescription
                       "-rpath",
                       String.format(
                           "%s/%s",
-                          platform.getCxxPlatform().getLd().resolve(graphBuilder).origin(),
+                          platform
+                              .getCxxPlatform()
+                              .getLd()
+                              .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                              .origin(),
                           absBinaryDir.relativize(sharedLibraries.getRoot()).toString())))));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents

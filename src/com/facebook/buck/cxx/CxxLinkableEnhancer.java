@@ -88,7 +88,7 @@ public class CxxLinkableEnhancer {
       CxxLinkOptions linkOptions,
       Optional<LinkOutputPostprocessor> postprocessor) {
 
-    Linker linker = cxxPlatform.getLd().resolve(ruleResolver);
+    Linker linker = cxxPlatform.getLd().resolve(ruleResolver, target.getTargetConfiguration());
 
     // Build up the arguments to pass to the linker.
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -226,7 +226,11 @@ public class CxxLinkableEnhancer {
     // If we're doing a shared build, pass the necessary flags to the linker, including setting
     // the soname.
     if (linkType == Linker.LinkType.SHARED) {
-      argsBuilder.addAll(cxxPlatform.getLd().resolve(graphBuilder).getSharedLibFlag());
+      argsBuilder.addAll(
+          cxxPlatform
+              .getLd()
+              .resolve(graphBuilder, target.getTargetConfiguration())
+              .getSharedLibFlag());
     } else if (linkType == Linker.LinkType.MACH_O_BUNDLE) {
       argsBuilder.add(StringArg.of("-bundle"));
       // It's possible to build a Mach-O bundle without a bundle loader (logic tests, for example).
@@ -236,7 +240,11 @@ public class CxxLinkableEnhancer {
     }
     if (soname.isPresent()) {
       argsBuilder.addAll(
-          StringArg.from(cxxPlatform.getLd().resolve(graphBuilder).soname(soname.get())));
+          StringArg.from(
+              cxxPlatform
+                  .getLd()
+                  .resolve(graphBuilder, target.getTargetConfiguration())
+                  .soname(soname.get())));
     }
 
     // Add all arguments from our dependencies.
@@ -325,10 +333,18 @@ public class CxxLinkableEnhancer {
       ImmutableList<? extends Arg> args,
       CellPathResolver cellPathResolver) {
     ImmutableList.Builder<Arg> linkArgsBuilder = ImmutableList.builder();
-    linkArgsBuilder.addAll(cxxPlatform.getLd().resolve(ruleResolver).getSharedLibFlag());
+    linkArgsBuilder.addAll(
+        cxxPlatform
+            .getLd()
+            .resolve(ruleResolver, target.getTargetConfiguration())
+            .getSharedLibFlag());
     if (soname.isPresent()) {
       linkArgsBuilder.addAll(
-          StringArg.from(cxxPlatform.getLd().resolve(ruleResolver).soname(soname.get())));
+          StringArg.from(
+              cxxPlatform
+                  .getLd()
+                  .resolve(ruleResolver, target.getTargetConfiguration())
+                  .soname(soname.get())));
     }
     linkArgsBuilder.addAll(args);
     ImmutableList<Arg> linkArgs = linkArgsBuilder.build();

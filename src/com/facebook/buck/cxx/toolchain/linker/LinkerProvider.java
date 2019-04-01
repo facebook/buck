@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 
 public interface LinkerProvider {
 
-  Linker resolve(BuildRuleResolver resolver);
+  Linker resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration);
 
   Type getType();
 

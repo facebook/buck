@@ -264,7 +264,11 @@ public class CxxLinkableEnhancerTest {
 
     String soname = "soname";
     ImmutableList<String> sonameArgs =
-        ImmutableList.copyOf(CXX_PLATFORM.getLd().resolve(graphBuilder).soname(soname));
+        ImmutableList.copyOf(
+            CXX_PLATFORM
+                .getLd()
+                .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE)
+                .soname(soname));
 
     // Construct a CxxLink object which links as an executable.
     CxxLink executable =

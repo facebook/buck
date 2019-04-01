@@ -923,7 +923,7 @@ class NativeLibraryMergeEnhancer {
         TargetConfiguration targetConfiguration,
         SourcePathResolver pathResolver,
         SourcePathRuleFinder ruleFinder) {
-      Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
+      Linker linker = cxxPlatform.getLd().resolve(graphBuilder, targetConfiguration);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
       ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
       if (glueLinkable.isPresent() && constituents.isActuallyMerged()) {

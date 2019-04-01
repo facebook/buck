@@ -104,7 +104,10 @@ public class CxxToolchainDescriptionTest {
     assertIsBinaryTool(resolver, pathTool, platform.getCc().resolve(graphBuilder));
     assertIsBinaryTool(resolver, pathTool, platform.getCxx().resolve(graphBuilder));
     assertIsBinaryTool(resolver, pathTool, platform.getCxxpp().resolve(graphBuilder));
-    assertIsBinaryTool(resolver, pathTool, platform.getLd().resolve(graphBuilder));
+    assertIsBinaryTool(
+        resolver,
+        pathTool,
+        platform.getLd().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         binaryTool,

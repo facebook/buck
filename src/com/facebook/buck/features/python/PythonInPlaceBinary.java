@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -99,6 +100,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     this.script =
         getScript(
             ruleResolver,
+            buildTarget.getTargetConfiguration(),
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -135,6 +137,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
 
   private static Supplier<String> getScript(
       BuildRuleResolver resolver,
+      TargetConfiguration targetConfiguration,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -143,7 +146,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       ImmutableSet<String> preloadLibraries,
       PackageStyle packageStyle) {
     String relativeLinkTreeRootStr = Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());
-    Linker ld = cxxPlatform.getLd().resolve(resolver);
+    Linker ld = cxxPlatform.getLd().resolve(resolver, targetConfiguration);
     return () -> {
       ST st =
           new ST(

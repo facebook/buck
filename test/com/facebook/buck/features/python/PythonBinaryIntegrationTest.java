@@ -30,6 +30,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
@@ -220,7 +221,7 @@ public class PythonBinaryIntegrationTest {
     String nativeLibsEnvVarName =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
             .getLd()
-            .resolve(resolver)
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
             .searchPathEnvVar();
     String originalNativeLibsEnvVar = "something";
     workspace.writeContentsToPath(

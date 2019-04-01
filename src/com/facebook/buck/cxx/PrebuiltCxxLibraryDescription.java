@@ -273,7 +273,7 @@ public class PrebuiltCxxLibraryDescription
             .addAllArgs(
                 cxxPlatform
                     .getLd()
-                    .resolve(graphBuilder)
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration())
                     .linkWhole(SourcePathArg.of(library), pathResolver))
             .addAllArgs(
                 StringArg.from(
@@ -729,7 +729,8 @@ public class PrebuiltCxxLibraryDescription
                             new HumanReadableException(
                                 "Could not find static library for %s.", getBuildTarget())));
             if (args.isLinkWhole() || forceLinkWhole) {
-              Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
+              Linker linker =
+                  cxxPlatform.getLd().resolve(graphBuilder, buildTarget.getTargetConfiguration());
               DefaultSourcePathResolver pathResolver =
                   DefaultSourcePathResolver.from(
                       new SourcePathRuleFinder(context.getActionGraphBuilder()));
@@ -857,7 +858,7 @@ public class PrebuiltCxxLibraryDescription
                     .addAllArgs(
                         cxxPlatform
                             .getLd()
-                            .resolve(graphBuilder)
+                            .resolve(graphBuilder, buildTarget.getTargetConfiguration())
                             .linkWhole(
                                 SourcePathArg.of(
                                     getStaticPicLibrary(cxxPlatform, graphBuilder).get()),

@@ -351,7 +351,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
         if (linkWhole || forceLinkWhole) {
           SourcePathResolver pathResolver =
               DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
-          Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
+          Linker linker =
+              cxxPlatform.getLd().resolve(graphBuilder, getBuildTarget().getTargetConfiguration());
           linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg(), pathResolver));
         } else {
           Arg libraryArg = archive.toArg();

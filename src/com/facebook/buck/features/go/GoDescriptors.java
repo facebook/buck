@@ -396,7 +396,11 @@ abstract class GoDescriptors {
               "-rpath",
               String.format(
                   "%s/%s",
-                  platform.getCxxPlatform().getLd().resolve(graphBuilder).origin(),
+                  platform
+                      .getCxxPlatform()
+                      .getLd()
+                      .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                      .origin(),
                   absBinaryDir.relativize(sharedLibraries.getRoot()).toString())));
     }
 
@@ -428,7 +432,11 @@ abstract class GoDescriptors {
                   : GoLinkStep.LinkMode.INTERNAL);
     }
 
-    Linker cxxLinker = platform.getCxxPlatform().getLd().resolve(graphBuilder);
+    Linker cxxLinker =
+        platform
+            .getCxxPlatform()
+            .getLd()
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     return new GoBinary(
         buildTarget,
         projectFilesystem,

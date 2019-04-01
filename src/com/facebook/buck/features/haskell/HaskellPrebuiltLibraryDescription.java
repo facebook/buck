@@ -140,7 +140,7 @@ public class HaskellPrebuiltLibraryDescription
         if (type == Linker.LinkableDepType.SHARED) {
           builder.addAllArgs(SourcePathArg.from(args.getSharedLibs().values()));
         } else {
-          Linker linker = cxxPlatform.getLd().resolve(resolver);
+          Linker linker = cxxPlatform.getLd().resolve(resolver, targetConfiguration);
           ImmutableList<Arg> libArgs =
               SourcePathArg.from(
                   args.isEnableProfiling() ? args.getProfiledStaticLibs() : args.getStaticLibs());

@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -68,7 +69,9 @@ public class CxxPrepareForLinkStepTest {
             ImmutableList.of(StringArg.of("-filelist"), StringArg.of(dummyPath.toString())),
             dummyPath,
             dummyArgs,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getLd()
+                .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE),
             dummyPath,
             pathResolver);
 
@@ -86,7 +89,9 @@ public class CxxPrepareForLinkStepTest {
             ImmutableList.of(),
             dummyPath,
             dummyArgs,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getLd()
+                .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE),
             dummyPath,
             pathResolver);
 
@@ -175,7 +180,9 @@ public class CxxPrepareForLinkStepTest {
             ImmutableList.of(StringArg.of("-filelist"), StringArg.of(fileListPath.toString())),
             output,
             args,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getLd()
+                .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE),
             currentCellPath,
             pathResolver);
 
@@ -241,7 +248,9 @@ public class CxxPrepareForLinkStepTest {
             ImmutableList.of(),
             output,
             args,
-            CxxPlatformUtils.DEFAULT_PLATFORM.getLd().resolve(buildRuleResolver),
+            CxxPlatformUtils.DEFAULT_PLATFORM
+                .getLd()
+                .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE),
             currentCellPath,
             pathResolver);
 

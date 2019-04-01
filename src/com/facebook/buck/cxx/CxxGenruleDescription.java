@@ -235,7 +235,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         new CxxPreprocessorFlagsExpander<>(CppFlagsMacro.class, cxxPlatform, CxxSource.Type.C));
     expanders.add(
         new CxxPreprocessorFlagsExpander<>(CxxppFlagsMacro.class, cxxPlatform, CxxSource.Type.CXX));
-    expanders.add(new ToolExpander<>(LdMacro.class, cxxPlatform.getLd().resolve(resolver)));
+    expanders.add(
+        new ToolExpander<>(
+            LdMacro.class,
+            cxxPlatform.getLd().resolve(resolver, buildTarget.getTargetConfiguration())));
 
     for (Map.Entry<Class<? extends CxxGenruleFilterAndTargetsMacro>, LinkableDepType> ent :
         ImmutableMap.<Class<? extends CxxGenruleFilterAndTargetsMacro>, LinkableDepType>builder()
@@ -531,7 +534,10 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
                       "-rpath",
                       String.format(
                           "%s/%s",
-                          cxxPlatform.getLd().resolve(graphBuilder).origin(),
+                          cxxPlatform
+                              .getLd()
+                              .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                              .origin(),
                           absLinkOut.getParent().relativize(symlinkTree.getRoot()).toString()))))
           .map(
               arg ->

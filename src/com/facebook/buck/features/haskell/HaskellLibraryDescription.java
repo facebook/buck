@@ -921,7 +921,7 @@ public class HaskellLibraryDescription
                 args.getLinkWhole() || forceLinkWhole
                     ? cxxPlatform
                         .getLd()
-                        .resolve(graphBuilder)
+                        .resolve(graphBuilder, targetConfiguration)
                         .linkWhole(archive.toArg(), pathResolver)
                     : ImmutableList.of(archive.toArg());
             break;

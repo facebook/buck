@@ -121,7 +121,7 @@ public class RustCompileUtils {
 
     if (crateType == CrateType.CDYLIB) {
       String soname = filename.get();
-      Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
+      Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
       linkerArgs.addAll(StringArg.from(linker.soname(soname)));
     }
 
@@ -269,7 +269,7 @@ public class RustCompileUtils {
         params,
         filename,
         rustPlatform.getRustCompiler().resolve(graphBuilder),
-        rustPlatform.getLinkerProvider().resolve(graphBuilder),
+        rustPlatform.getLinkerProvider().resolve(graphBuilder, target.getTargetConfiguration()),
         args.build(),
         depArgs.build(),
         linkerArgs.build(),
@@ -472,7 +472,10 @@ public class RustCompileUtils {
               "-rpath",
               String.format(
                   "%s/%s",
-                  cxxPlatform.getLd().resolve(graphBuilder).origin(),
+                  cxxPlatform
+                      .getLd()
+                      .resolve(graphBuilder, buildTarget.getTargetConfiguration())
+                      .origin(),
                   absBinaryDir.relativize(sharedLibraries.getRoot()).toString())));
 
       // Add all the shared libraries and the symlink tree as inputs to the tool that represents

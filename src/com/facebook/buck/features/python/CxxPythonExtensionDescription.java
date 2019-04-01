@@ -265,7 +265,12 @@ public class CxxPythonExtensionDescription
         StringArg.from(
             Linkers.iXlinker(
                 "-rpath",
-                String.format("%s/", cxxPlatform.getLd().resolve(graphBuilder).libOrigin()))));
+                String.format(
+                    "%s/",
+                    cxxPlatform
+                        .getLd()
+                        .resolve(graphBuilder, target.getTargetConfiguration())
+                        .libOrigin()))));
 
     // Add object files into the args.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =

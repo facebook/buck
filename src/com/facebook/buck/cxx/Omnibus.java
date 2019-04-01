@@ -293,11 +293,19 @@ public class Omnibus {
     // Since the dummy omnibus library doesn't actually contain any symbols, make sure the linker
     // won't drop its runtime reference to it.
     argsBuilder.addAll(
-        StringArg.from(cxxPlatform.getLd().resolve(graphBuilder).getNoAsNeededSharedLibsFlags()));
+        StringArg.from(
+            cxxPlatform
+                .getLd()
+                .resolve(graphBuilder, target.getTargetConfiguration())
+                .getNoAsNeededSharedLibsFlags()));
 
     // Since we're linking against a dummy libomnibus, ignore undefined symbols.
     argsBuilder.addAll(
-        StringArg.from(cxxPlatform.getLd().resolve(graphBuilder).getIgnoreUndefinedSymbolsFlags()));
+        StringArg.from(
+            cxxPlatform
+                .getLd()
+                .resolve(graphBuilder, target.getTargetConfiguration())
+                .getIgnoreUndefinedSymbolsFlags()));
 
     // Add the args for the root link target first.
     NativeLinkableInput input =
@@ -502,7 +510,7 @@ public class Omnibus {
                 linkerInputs);
     return cxxPlatform
         .getLd()
-        .resolve(graphBuilder)
+        .resolve(graphBuilder, buildTarget.getTargetConfiguration())
         .createUndefinedSymbolsLinkerArgs(
             projectFilesystem,
             params,
