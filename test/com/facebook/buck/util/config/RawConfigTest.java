@@ -16,11 +16,15 @@
 package com.facebook.buck.util.config;
 
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.Optional;
@@ -59,5 +63,51 @@ public class RawConfigTest {
   @Test
   public void emptySectionReturnsEmptyList() {
     assertThat(RawConfig.builder().build().getSection("foo"), Matchers.anEmptyMap());
+  }
+
+  @Test
+  public void compareEqualConfigs() {
+    RawConfig rawConfig1 =
+        RawConfig.builder()
+            .putAll(ImmutableMap.of("section", ImmutableMap.of("field", "value1")))
+            .putAll(ImmutableMap.of("section", ImmutableMap.of("field", "value2")))
+            .build();
+
+    RawConfig rawConfig2 =
+        RawConfig.builder()
+            .putAll(ImmutableMap.of("section", ImmutableMap.of("field", "value1")))
+            .putAll(ImmutableMap.of("section", ImmutableMap.of("field", "value2")))
+            .build();
+
+    ImmutableSet<String> diff = rawConfig1.compare(rawConfig2);
+    assertTrue(diff.isEmpty());
+  }
+
+  @Test
+  public void compareNotEqualConfigs() {
+    RawConfig rawConfig1 =
+        RawConfig.builder()
+            .putAll(ImmutableMap.of("section1", ImmutableMap.of("field1", "diffValue1")))
+            .putAll(ImmutableMap.of("section2", ImmutableMap.of("field2", "someValue")))
+            .putAll(ImmutableMap.of("section3", ImmutableMap.of("onlyOnLeft", "someValue")))
+            .putAll(ImmutableMap.of("section4", ImmutableMap.of("onlyOnLeft", "someValue")))
+            .build();
+
+    RawConfig rawConfig2 =
+        RawConfig.builder()
+            .putAll(ImmutableMap.of("section1", ImmutableMap.of("field1", "diffValue2")))
+            .putAll(ImmutableMap.of("section2", ImmutableMap.of("field2", "someValue")))
+            .putAll(ImmutableMap.of("section5", ImmutableMap.of("onlyOnRight", "someValue")))
+            .build();
+
+    ImmutableSet<String> diff = rawConfig1.compare(rawConfig2);
+    assertEquals(4, diff.size());
+    assertThat(
+        diff,
+        containsInAnyOrder(
+            "section1.field1",
+            "section3.onlyOnLeft",
+            "section4.onlyOnLeft",
+            "section5.onlyOnRight"));
   }
 }

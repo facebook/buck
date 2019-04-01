@@ -138,6 +138,14 @@ public class MainIntegrationTest {
             "--json",
             "-c",
             "ui.json_attribute_format=snake_case",
+            "-c",
+            "client.id=123",
+            "-c",
+            "ui.warn_on_config_file_overrides=true",
+            "-c",
+            "foo.bar3=1",
+            "-c",
+            "foo.bar4=1",
             "--show-output",
             "...");
     result.assertSuccess();
@@ -155,10 +163,24 @@ public class MainIntegrationTest {
             "targets", "--json", GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG, "--show-output", "...");
     result.assertSuccess();
     assertJsonMatches(expectedJson, result.getStdout());
+    String stderr = result.getStderr();
     assertThat(
         GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " provided",
-        result.getStderr(),
+        stderr,
         containsString(warningMessage));
+    assertThat(
+        stderr,
+        containsString(
+            "Running with reused config, some configuration changes would not be applied:"));
+    assertThat(
+        "show config key in the diff", stderr, containsString("\t-\tui.json_attribute_format"));
+    assertThat(
+        "show whitelisted config settings in the diff",
+        stderr,
+        containsString("\t-\tui.warn_on_config_file_overrides"));
+    assertThat(
+        "show whitelisted config settings in the diff", stderr, containsString("\t-\tclient.id"));
+    assertThat(stderr, containsString("\t-\t... and 2 more."));
 
     // the third execution without specific configuration params for ui.json_attribute_format and
     // without --reuse-current-config param

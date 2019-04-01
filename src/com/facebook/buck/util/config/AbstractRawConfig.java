@@ -16,9 +16,15 @@
 package com.facebook.buck.util.config;
 
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.MapDifference;
+import com.google.common.collect.MapDifference.ValueDifference;
+import com.google.common.collect.Maps;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -101,6 +107,43 @@ public abstract class AbstractRawConfig {
         values.put(sectionName, section);
       }
       return section;
+    }
+  }
+
+  /**
+   * compares current config with the provided one
+   *
+   * @return set of keys that are different.
+   */
+  public ImmutableSet<String> compare(AbstractRawConfig rawConfig) {
+
+    MapDifference<String, ImmutableMap<String, String>> difference =
+        Maps.difference(getValues(), rawConfig.getValues());
+
+    if (difference.areEqual()) {
+      return ImmutableSet.of();
+    }
+
+    ImmutableSet.Builder<String> resultBuilder = new ImmutableSet.Builder<>();
+
+    for (Entry<String, ValueDifference<ImmutableMap<String, String>>> e :
+        difference.entriesDiffering().entrySet()) {
+      ImmutableMap<String, ImmutableMap<String, String>> diffMap =
+          ImmutableMap.of(e.getKey(), e.getValue().leftValue());
+      appendDiffToResult(resultBuilder, diffMap);
+    }
+    appendDiffToResult(resultBuilder, difference.entriesOnlyOnLeft());
+    appendDiffToResult(resultBuilder, difference.entriesOnlyOnRight());
+    return resultBuilder.build();
+  }
+
+  private void appendDiffToResult(
+      ImmutableCollection.Builder<String> result, Map<String, ImmutableMap<String, String>> diff) {
+    for (Entry<String, ImmutableMap<String, String>> e : diff.entrySet()) {
+      String key = e.getKey();
+      for (String diffKey : e.getValue().keySet()) {
+        result.add(key + "." + diffKey);
+      }
     }
   }
 }

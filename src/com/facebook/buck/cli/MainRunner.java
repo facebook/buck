@@ -150,7 +150,6 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
-import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
@@ -211,11 +210,9 @@ import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.nailgun.NGClientDisconnectReason;
 import com.facebook.nailgun.NGContext;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
@@ -238,7 +235,6 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -654,6 +650,7 @@ public final class MainRunner {
       UnconfiguredBuildTargetFactory buildTargetFactory =
           new ParsingUnconfiguredBuildTargetFactory();
 
+      Config currentConfig = setupDefaultConfig(rootCellMapping, command);
       Config config;
       ProjectFilesystem filesystem;
       DefaultCellPathResolver cellPathResolver;
@@ -662,10 +659,7 @@ public final class MainRunner {
       boolean reusePreviousConfig =
           isReuseCurrentConfigPropertySet(command) && daemonLifecycleManager.hasDaemon();
       if (reusePreviousConfig) {
-        printWarnMessage(
-            String.format(
-                "`%s` parameter provided. Reusing previously defined config.",
-                GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG));
+        printWarnMessage(UIMessagesFormatter.reuseConfigPropertyProvidedMessage());
         buckConfig =
             daemonLifecycleManager
                 .getBuckConfig()
@@ -674,8 +668,12 @@ public final class MainRunner {
         config = buckConfig.getConfig();
         filesystem = buckConfig.getFilesystem();
         cellPathResolver = DefaultCellPathResolver.of(filesystem.getRootPath(), config);
+
+        ImmutableSet<String> configDiff =
+            config.getRawConfig().compare(currentConfig.getRawConfig());
+        UIMessagesFormatter.configComparisonMessage(configDiff).ifPresent(this::printWarnMessage);
       } else {
-        config = setupDefaultConfig(rootCellMapping, command);
+        config = currentConfig;
         filesystem = projectFilesystemFactory.createProjectFilesystem(canonicalRootPath, config);
         cellPathResolver = DefaultCellPathResolver.of(filesystem.getRootPath(), config);
         buckConfig =
@@ -1427,10 +1425,18 @@ public final class MainRunner {
     return ImmutableDefaultTargetConfiguration.of(targetPlatform);
   }
 
-  private boolean isReuseCurrentConfigPropertySet(BuckCommand command) {
-    if (command.subcommand instanceof AbstractCommand) {
-      AbstractCommand subcommand = (AbstractCommand) command.subcommand;
-      return subcommand.isReuseCurrentConfig();
+  private boolean isReuseCurrentConfigPropertySet(AbstractContainerCommand command) {
+    Optional<Command> optionalCommand = command.getSubcommand();
+    if (optionalCommand.isPresent()) {
+      Command subcommand = optionalCommand.get();
+      if (subcommand instanceof AbstractContainerCommand) {
+        return isReuseCurrentConfigPropertySet((AbstractContainerCommand) subcommand);
+      }
+
+      if (subcommand instanceof AbstractCommand) {
+        AbstractCommand abstractCommand = (AbstractCommand) subcommand;
+        return abstractCommand.isReuseCurrentConfig();
+      }
     }
     return false;
   }
@@ -1448,26 +1454,10 @@ public final class MainRunner {
     // by the system. We don't want to warn users about files that they have not necessarily
     // created.
     ImmutableSet<Path> overridesToIgnore = cliConfig.getWarnOnConfigFileOverridesIgnoredFiles();
-    Path mainConfigPath = Configs.getMainConfigurationFile(root);
-
-    ImmutableSortedSet<Path> userSpecifiedOverrides =
-        Configs.getDefaultConfigurationFiles(root)
-            .stream()
-            .filter(
-                path ->
-                    !overridesToIgnore.contains(path.getFileName()) && !mainConfigPath.equals(path))
-            .map(path -> path.startsWith(root) ? root.relativize(path) : path)
-            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
-
-    if (userSpecifiedOverrides.isEmpty()) {
-      return;
-    }
 
     // Use the raw stream because otherwise this will stop superconsole from ever printing again
-    printWarnMessage(
-        String.format(
-            "Using additional configuration options from %s",
-            Joiner.on(", ").join(userSpecifiedOverrides)));
+    UIMessagesFormatter.useSpecificOverridesMessage(root, overridesToIgnore)
+        .ifPresent(this::printWarnMessage);
   }
 
   private void printWarnMessage(String message) {
