@@ -30,13 +30,13 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.cxx.CxxBridgingHeaders;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
+import com.facebook.buck.cxx.CxxRawHeaders;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
@@ -52,6 +52,7 @@ import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -273,7 +274,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     builder.addIncludes(
         CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, rule.getSourcePathToOutput()));
     if (bridgingHeader.isPresent()) {
-      builder.addIncludes(CxxBridgingHeaders.from(bridgingHeader.get()));
+      builder.addIncludes(CxxRawHeaders.of(ImmutableSortedSet.of(bridgingHeader.get())));
     }
     return builder.build();
   }

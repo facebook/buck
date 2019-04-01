@@ -197,10 +197,6 @@ class HeaderPathNormalizer {
       return addHeader(sourcePath);
     }
 
-    public Builder addBridgingHeader(SourcePath sourcePath) {
-      return addHeader(sourcePath);
-    }
-
     public HeaderPathNormalizer build() {
       return new HeaderPathNormalizer(
           pathResolver,
