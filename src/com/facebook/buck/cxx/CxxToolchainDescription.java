@@ -170,7 +170,9 @@ public class CxxToolchainDescription
             ToolProviders.getToolProvider(args.getArchiver()), args.getArchiverType()));
     cxxPlatform.setArflags(args.getArchiverFlags());
 
-    cxxPlatform.setStrip(ToolProviders.getToolProvider(args.getStrip()).resolve(ruleResolver));
+    cxxPlatform.setStrip(
+        ToolProviders.getToolProvider(args.getStrip())
+            .resolve(ruleResolver, buildTarget.getTargetConfiguration()));
     cxxPlatform.setStripFlags(args.getStripFlags());
 
     cxxPlatform.setRanlib(args.getRanlib().map(ToolProviders::getToolProvider));
@@ -185,7 +187,8 @@ public class CxxToolchainDescription
 
     cxxPlatform.setSymbolNameTool(
         new PosixNmSymbolNameTool(
-            ToolProviders.getToolProvider(args.getNm()).resolve(ruleResolver)));
+            ToolProviders.getToolProvider(args.getNm())
+                .resolve(ruleResolver, buildTarget.getTargetConfiguration())));
 
     // User-configured cxx platforms are required to handle path sanitization themselves.
     cxxPlatform.setCompilerDebugPathSanitizer(NoopDebugPathSanitizer.INSTANCE);

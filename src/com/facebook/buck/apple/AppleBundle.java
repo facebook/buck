@@ -279,7 +279,10 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       this.codeSignIdentitiesSupplier = Suppliers.ofInstance(ImmutableList.of());
     }
     this.codesignAllocatePath = appleCxxPlatform.getCodesignAllocate();
-    this.codesign = appleCxxPlatform.getCodesignProvider().resolve(graphBuilder);
+    this.codesign =
+        appleCxxPlatform
+            .getCodesignProvider()
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     this.swiftStdlibTool =
         appleCxxPlatform.getSwiftPlatform().isPresent()
             ? appleCxxPlatform.getSwiftPlatform().get().getSwiftStdlibTool()

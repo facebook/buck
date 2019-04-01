@@ -317,7 +317,8 @@ public class PythonBinaryDescriptionTest {
     PythonBuckConfig config =
         new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
-          public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
+          public Optional<Tool> getPexExecutor(
+              BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
             return Optional.of(new HashedFileTool(PathSourcePath.of(filesystem, executor)));
           }
         };
@@ -358,7 +359,7 @@ public class PythonBinaryDescriptionTest {
             .build(graphBuilder);
     PythonBuckConfig config = new PythonBuckConfig(FakeBuckConfig.builder().build());
     PexToolProvider pexToolProvider =
-        (__) ->
+        (__, ___) ->
             new CommandTool.Builder()
                 .addArg(SourcePathArg.of(pexTool.getSourcePathToOutput()))
                 .build();
@@ -794,7 +795,8 @@ public class PythonBinaryDescriptionTest {
     PythonBuckConfig config =
         new PythonBuckConfig(FakeBuckConfig.builder().build()) {
           @Override
-          public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
+          public Optional<Tool> getPexExecutor(
+              BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
             return Optional.of(pyTool.getExecutableCommand());
           }
         };

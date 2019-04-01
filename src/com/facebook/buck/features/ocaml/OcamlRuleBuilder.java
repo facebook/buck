@@ -272,7 +272,7 @@ public class OcamlRuleBuilder {
       transitiveBytecodeIncludesBuilder.addAll(library.getBytecodeIncludeDirs(ocamlPlatform));
     }
     OcamlBuildContext ocamlContext =
-        OcamlBuildContext.builder(ocamlPlatform, graphBuilder)
+        OcamlBuildContext.builder(ocamlPlatform, graphBuilder, buildTarget.getTargetConfiguration())
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())
@@ -401,7 +401,7 @@ public class OcamlRuleBuilder {
       transitiveBytecodeIncludesBuilder.addAll(library.getBytecodeIncludeDirs(ocamlPlatform));
     }
     OcamlBuildContext ocamlContext =
-        OcamlBuildContext.builder(ocamlPlatform, graphBuilder)
+        OcamlBuildContext.builder(ocamlPlatform, graphBuilder, buildTarget.getTargetConfiguration())
             .setProjectFilesystem(projectFilesystem)
             .setSourcePathResolver(pathResolver)
             .setFlags(flagsBuilder.build())

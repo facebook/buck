@@ -148,9 +148,9 @@ public class OcamlUtil {
   static Iterable<BuildTarget> getParseTimeDeps(
       TargetConfiguration targetConfiguration, OcamlPlatform platform) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-    deps.addAll(platform.getCCompiler().getParseTimeDeps());
-    deps.addAll(platform.getCxxCompiler().getParseTimeDeps());
-    deps.addAll(platform.getCPreprocessor().getParseTimeDeps());
+    deps.addAll(platform.getCCompiler().getParseTimeDeps(targetConfiguration));
+    deps.addAll(platform.getCxxCompiler().getParseTimeDeps(targetConfiguration));
+    deps.addAll(platform.getCPreprocessor().getParseTimeDeps(targetConfiguration));
     deps.addAll(CxxPlatforms.getParseTimeDeps(targetConfiguration, platform.getCxxPlatform()));
     return deps.build();
   }

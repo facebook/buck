@@ -18,6 +18,7 @@ package com.facebook.buck.core.toolchain.toolprovider.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -36,12 +37,12 @@ public class ErrorToolProvider implements ToolProvider {
   }
 
   @Override
-  public Tool resolve(BuildRuleResolver resolver) {
+  public Tool resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     throw new HumanReadableException(msg);
   }
 
   @Override
-  public Iterable<BuildTarget> getParseTimeDeps() {
+  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
     return ImmutableList.of();
   }
 }

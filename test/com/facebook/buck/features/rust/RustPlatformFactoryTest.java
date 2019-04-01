@@ -56,7 +56,10 @@ public class RustPlatformFactoryTest {
             new AlwaysFoundExecutableFinder());
     RustPlatform platform = factory.getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
-        platform.getRustCompiler().resolve(resolver).getCommandPrefix(pathResolver),
+        platform
+            .getRustCompiler()
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(pathResolver),
         Matchers.equalTo(ImmutableList.of(filesystem.resolve("compiler").toString())));
     assertThat(
         platform

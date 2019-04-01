@@ -69,7 +69,7 @@ public class PexToolProviderFactoryTest {
             .get();
     assertThat(
         pexToolProvider
-            .getPexTool(resolver)
+            .getPexTool(resolver, EmptyTargetConfiguration.INSTANCE)
             .getCommandPrefix(DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))),
         hasConsecutiveItems("--hello", "--world"));
   }

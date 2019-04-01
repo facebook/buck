@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python.toolchain.impl;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -61,9 +62,9 @@ public class DefaultPexToolProvider implements PexToolProvider {
   }
 
   @Override
-  public Tool getPexTool(BuildRuleResolver resolver) {
+  public Tool getPexTool(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     CommandTool.Builder builder =
-        new CommandTool.Builder(getRawPexTool(resolver, ruleKeyConfiguration));
+        new CommandTool.Builder(getRawPexTool(resolver, ruleKeyConfiguration, targetConfiguration));
     for (String flag : Splitter.on(' ').omitEmptyStrings().split(pythonBuckConfig.getPexFlags())) {
       builder.addArg(flag);
     }
@@ -72,8 +73,10 @@ public class DefaultPexToolProvider implements PexToolProvider {
   }
 
   private Tool getRawPexTool(
-      BuildRuleResolver resolver, RuleKeyConfiguration ruleKeyConfiguration) {
-    Optional<Tool> executable = pythonBuckConfig.getRawPexTool(resolver);
+      BuildRuleResolver resolver,
+      RuleKeyConfiguration ruleKeyConfiguration,
+      TargetConfiguration targetConfiguration) {
+    Optional<Tool> executable = pythonBuckConfig.getRawPexTool(resolver, targetConfiguration);
     if (executable.isPresent()) {
       return executable.get();
     }

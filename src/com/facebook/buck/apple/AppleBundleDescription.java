@@ -34,6 +34,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -295,13 +296,16 @@ public class AppleBundleDescription
                   .get()
                   .getRepresentativePlatform()
                   .getCodesignProvider()
-                  .getParseTimeDeps());
+                  .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     } else {
+      TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
       depsExcludingBinary =
           depsExcludingBinary.append(
               appleCxxPlatformsFlavorDomain
                   .getValue(buildTarget)
-                  .map(platform -> platform.getCodesignProvider().getParseTimeDeps())
+                  .map(
+                      platform ->
+                          platform.getCodesignProvider().getParseTimeDeps(targetConfiguration))
                   .orElse(ImmutableSet.of()));
     }
 

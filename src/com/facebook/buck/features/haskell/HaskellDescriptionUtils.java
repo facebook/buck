@@ -182,7 +182,7 @@ public class HaskellDescriptionUtils {
         projectFilesystem,
         baseParams,
         ruleFinder,
-        platform.getCompiler().resolve(graphBuilder),
+        platform.getCompiler().resolve(graphBuilder, target.getTargetConfiguration()),
         platform.getHaskellVersion(),
         platform.shouldUseArgsfile(),
         compileFlags,
@@ -274,7 +274,7 @@ public class HaskellDescriptionUtils {
       Optional<String> soname,
       boolean hsProfile) {
 
-    Tool linker = platform.getLinker().resolve(graphBuilder);
+    Tool linker = platform.getLinker().resolve(graphBuilder, target.getTargetConfiguration());
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -404,9 +404,9 @@ public class HaskellDescriptionUtils {
 
               // Since this description generates haskell link/compile/package rules, make sure the
               // parser includes deps for these tools.
-              depsBuilder.addAll(platform.getCompiler().getParseTimeDeps());
-              depsBuilder.addAll(platform.getLinker().getParseTimeDeps());
-              depsBuilder.addAll(platform.getPackager().getParseTimeDeps());
+              depsBuilder.addAll(platform.getCompiler().getParseTimeDeps(targetConfiguration));
+              depsBuilder.addAll(platform.getLinker().getParseTimeDeps(targetConfiguration));
+              depsBuilder.addAll(platform.getPackager().getParseTimeDeps(targetConfiguration));
 
               // We use the C/C++ linker's Linker object to find out how to pass in the soname, so
               // just add all C/C++ platform parse time deps.

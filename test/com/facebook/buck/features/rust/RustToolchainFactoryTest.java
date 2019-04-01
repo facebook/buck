@@ -142,7 +142,7 @@ public class RustToolchainFactoryTest {
             .getRustPlatforms()
             .getValue(custom)
             .getRustCompiler()
-            .resolve(resolver)
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
             .getCommandPrefix(pathResolver),
         Matchers.contains(filesystem.resolve(compiler).toString()));
     assertThat(
@@ -152,7 +152,7 @@ public class RustToolchainFactoryTest {
             .getValue(custom)
             .getLinker()
             .get()
-            .resolve(resolver)
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
             .getCommandPrefix(pathResolver),
         Matchers.contains(filesystem.resolve(linker).toString()));
     assertThat(

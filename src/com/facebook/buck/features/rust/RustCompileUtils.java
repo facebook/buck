@@ -268,7 +268,7 @@ public class RustCompileUtils {
         projectFilesystem,
         params,
         filename,
-        rustPlatform.getRustCompiler().resolve(graphBuilder),
+        rustPlatform.getRustCompiler().resolve(graphBuilder, target.getTargetConfiguration()),
         rustPlatform.getLinkerProvider().resolve(graphBuilder, target.getTargetConfiguration()),
         args.build(),
         depArgs.build(),
@@ -364,8 +364,8 @@ public class RustCompileUtils {
   static Iterable<BuildTarget> getPlatformParseTimeDeps(
       TargetConfiguration targetConfiguration, RustPlatform rustPlatform) {
     ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-    deps.addAll(rustPlatform.getRustCompiler().getParseTimeDeps());
-    rustPlatform.getLinker().ifPresent(l -> deps.addAll(l.getParseTimeDeps()));
+    deps.addAll(rustPlatform.getRustCompiler().getParseTimeDeps(targetConfiguration));
+    rustPlatform.getLinker().ifPresent(l -> deps.addAll(l.getParseTimeDeps(targetConfiguration)));
     deps.addAll(CxxPlatforms.getParseTimeDeps(targetConfiguration, rustPlatform.getCxxPlatform()));
     return deps.build();
   }

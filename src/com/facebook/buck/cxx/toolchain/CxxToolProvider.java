@@ -53,7 +53,10 @@ public abstract class CxxToolProvider<T> {
               new CacheLoader<CxxToolProviderCacheKey, T>() {
                 @Override
                 public T load(@Nonnull CxxToolProviderCacheKey key) {
-                  return build(type.get(), toolProvider.resolve(key.getBuildRuleResolver()));
+                  return build(
+                      type.get(),
+                      toolProvider.resolve(
+                          key.getBuildRuleResolver(), key.getTargetConfiguration()));
                 }
               });
 
@@ -83,8 +86,8 @@ public abstract class CxxToolProvider<T> {
     return cache.getUnchecked(ImmutableCxxToolProviderCacheKey.of(resolver, targetConfiguration));
   }
 
-  public Iterable<BuildTarget> getParseTimeDeps() {
-    return toolProvider.getParseTimeDeps();
+  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+    return toolProvider.getParseTimeDeps(targetConfiguration);
   }
 
   public enum Type {

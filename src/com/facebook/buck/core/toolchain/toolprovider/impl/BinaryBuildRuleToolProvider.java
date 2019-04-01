@@ -18,6 +18,7 @@ package com.facebook.buck.core.toolchain.toolprovider.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -41,7 +42,7 @@ public class BinaryBuildRuleToolProvider implements ToolProvider {
   }
 
   @Override
-  public Tool resolve(BuildRuleResolver resolver) {
+  public Tool resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     Optional<BuildRule> rule = resolver.getRuleOptional(target);
     if (!rule.isPresent()) {
       throw new HumanReadableException("%s: no rule found for %s", source, target);
@@ -53,7 +54,7 @@ public class BinaryBuildRuleToolProvider implements ToolProvider {
   }
 
   @Override
-  public Iterable<BuildTarget> getParseTimeDeps() {
+  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
     return ImmutableList.of(target);
   }
 }

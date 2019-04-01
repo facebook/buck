@@ -274,9 +274,12 @@ public class AndroidBuckConfig {
     return delegate.getMaybeBuildTarget(ANDROID_SECTION, REDEX, targetConfiguration);
   }
 
-  public Tool getRedexTool(BuildRuleResolver buildRuleResolver) {
+  public Tool getRedexTool(
+      BuildRuleResolver buildRuleResolver, TargetConfiguration targetConfiguration) {
     Optional<Tool> redexBinary =
-        delegate.getView(ToolConfig.class).getTool(ANDROID_SECTION, REDEX, buildRuleResolver);
+        delegate
+            .getView(ToolConfig.class)
+            .getTool(ANDROID_SECTION, REDEX, buildRuleResolver, targetConfiguration);
     if (!redexBinary.isPresent()) {
       throw new HumanReadableException(
           "Requested running ReDex but the path to the tool"

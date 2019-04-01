@@ -23,6 +23,7 @@ import static org.junit.Assume.assumeNoException;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -62,7 +63,8 @@ public class ScalaLibraryIntegrationTest {
   @Test(timeout = (2 * 60 * 1000))
   public void shouldWorkWithLocalCompiler() throws Exception {
     try {
-      new ScalaBuckConfig(FakeBuckConfig.builder().build()).getScalac(new TestActionGraphBuilder());
+      new ScalaBuckConfig(FakeBuckConfig.builder().build())
+          .getScalac(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
     } catch (HumanReadableException e) {
       assumeNoException("Could not find local scalac", e);
     }

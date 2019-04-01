@@ -50,7 +50,11 @@ public class DefaultLinkerProvider implements LinkerProvider {
               new CacheLoader<DefaultLinkerProviderCacheKey, Linker>() {
                 @Override
                 public Linker load(@Nonnull DefaultLinkerProviderCacheKey key) {
-                  return build(type, toolProvider.resolve(key.getBuildRuleResolver()), cacheLinks);
+                  return build(
+                      type,
+                      toolProvider.resolve(
+                          key.getBuildRuleResolver(), key.getTargetConfiguration()),
+                      cacheLinks);
                 }
               });
 
@@ -88,6 +92,6 @@ public class DefaultLinkerProvider implements LinkerProvider {
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    return toolProvider.getParseTimeDeps();
+    return toolProvider.getParseTimeDeps(targetConfiguration);
   }
 }

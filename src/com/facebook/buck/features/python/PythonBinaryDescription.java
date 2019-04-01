@@ -236,9 +236,11 @@ public class PythonBinaryDescription
             pythonPlatform,
             toolchainProvider
                 .getByName(PexToolProvider.DEFAULT_NAME, PexToolProvider.class)
-                .getPexTool(graphBuilder),
+                .getPexTool(graphBuilder, buildTarget.getTargetConfiguration()),
             buildArgs,
-            pythonBuckConfig.getPexExecutor(graphBuilder).orElse(pythonPlatform.getEnvironment()),
+            pythonBuckConfig
+                .getPexExecutor(graphBuilder, buildTarget.getTargetConfiguration())
+                .orElse(pythonPlatform.getEnvironment()),
             extension.orElse(pythonBuckConfig.getPexExtension()),
             pythonPlatform.getEnvironment(),
             mainModule,

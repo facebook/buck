@@ -41,8 +41,8 @@ public class ScalaBuckConfig {
     this.delegate = delegate;
   }
 
-  public Tool getScalac(BuildRuleResolver resolver) {
-    CommandTool.Builder scalac = new CommandTool.Builder(findScalac(resolver));
+  public Tool getScalac(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
+    CommandTool.Builder scalac = new CommandTool.Builder(findScalac(resolver, targetConfiguration));
 
     // Add some standard options.
     scalac.addArg("-target:" + delegate.getValue(SECTION, "target_level").orElse("jvm-1.7"));
@@ -73,9 +73,11 @@ public class ScalaBuckConfig {
             .split(delegate.getValue(SECTION, "compiler_flags").orElse("")));
   }
 
-  private Tool findScalac(BuildRuleResolver resolver) {
+  private Tool findScalac(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     Optional<Tool> configScalac =
-        delegate.getView(ToolConfig.class).getTool(SECTION, "compiler", resolver);
+        delegate
+            .getView(ToolConfig.class)
+            .getTool(SECTION, "compiler", resolver, targetConfiguration);
     if (configScalac.isPresent()) {
       return configScalac.get();
     }

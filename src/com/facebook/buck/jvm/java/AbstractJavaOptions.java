@@ -30,16 +30,14 @@ import org.immutables.value.Value;
 abstract class AbstractJavaOptions {
   public abstract ToolProvider getJavaRuntimeProvider();
 
-  @SuppressWarnings("unused")
   public Tool getJavaRuntimeLauncher(
       BuildRuleResolver ruleResolver, TargetConfiguration targetConfiguration) {
-    return getJavaRuntimeProvider().resolve(ruleResolver);
+    return getJavaRuntimeProvider().resolve(ruleResolver, targetConfiguration);
   }
 
-  @SuppressWarnings("unused")
   public void addParseTimeDeps(
       ImmutableCollection.Builder<BuildTarget> depsBuilder,
       TargetConfiguration targetConfiguration) {
-    depsBuilder.addAll(getJavaRuntimeProvider().getParseTimeDeps());
+    depsBuilder.addAll(getJavaRuntimeProvider().getParseTimeDeps(targetConfiguration));
   }
 }

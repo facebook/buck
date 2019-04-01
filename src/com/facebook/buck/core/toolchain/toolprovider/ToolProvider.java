@@ -17,13 +17,14 @@
 package com.facebook.buck.core.toolchain.toolprovider;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 
 public interface ToolProvider {
   /** @return the provided {@link Tool} object. */
-  Tool resolve(BuildRuleResolver resolver);
+  Tool resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration);
 
   /** @return any dependencies required at parse time to support the provided tool. */
-  Iterable<BuildTarget> getParseTimeDeps();
+  Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration);
 }

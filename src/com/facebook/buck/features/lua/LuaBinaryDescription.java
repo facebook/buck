@@ -681,8 +681,9 @@ public class LuaBinaryDescription
       LuaPackageComponents components) {
     Path output = getOutputPath(buildTarget, projectFilesystem, luaPlatform);
 
-    Tool lua = luaPlatform.getLua().resolve(graphBuilder);
-    Tool packager = luaPlatform.getPackager().resolve(graphBuilder);
+    Tool lua = luaPlatform.getLua().resolve(graphBuilder, buildTarget.getTargetConfiguration());
+    Tool packager =
+        luaPlatform.getPackager().resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
     LuaStandaloneBinary binary =
         graphBuilder.addToIndex(
@@ -830,7 +831,7 @@ public class LuaBinaryDescription
         binary,
         args.getMainModule(),
         components.getComponents(),
-        luaPlatform.getLua().resolve(graphBuilder),
+        luaPlatform.getLua().resolve(graphBuilder, buildTarget.getTargetConfiguration()),
         packageStyle);
   }
 
@@ -843,7 +844,8 @@ public class LuaBinaryDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     LuaPlatform luaPlatform = getPlatform(buildTarget, constructorArg);
     if (luaPlatform.getPackageStyle() == LuaPlatform.PackageStyle.STANDALONE) {
-      extraDepsBuilder.addAll(luaPlatform.getPackager().getParseTimeDeps());
+      extraDepsBuilder.addAll(
+          luaPlatform.getPackager().getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
     extraDepsBuilder.addAll(getNativeStarterDepTargets(luaPlatform));
   }

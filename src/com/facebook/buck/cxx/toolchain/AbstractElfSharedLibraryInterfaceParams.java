@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableList;
@@ -34,8 +35,8 @@ abstract class AbstractElfSharedLibraryInterfaceParams implements SharedLibraryI
   abstract boolean isRemoveUndefinedSymbols();
 
   @Override
-  public Iterable<BuildTarget> getParseTimeDeps() {
-    return getObjcopy().getParseTimeDeps();
+  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+    return getObjcopy().getParseTimeDeps(targetConfiguration);
   }
 
   @Override

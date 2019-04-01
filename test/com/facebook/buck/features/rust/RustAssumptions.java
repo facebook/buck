@@ -22,6 +22,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -47,7 +48,10 @@ abstract class RustAssumptions {
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     Throwable exception = null;
     try {
-      rustPlatform.getRustCompiler().resolve(resolver).getCommandPrefix(pathResolver);
+      rustPlatform
+          .getRustCompiler()
+          .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+          .getCommandPrefix(pathResolver);
     } catch (HumanReadableException e) {
       exception = e;
     }
@@ -63,7 +67,10 @@ abstract class RustAssumptions {
         RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     ImmutableList<String> rustc =
-        rustPlatform.getRustCompiler().resolve(resolver).getCommandPrefix(pathResolver);
+        rustPlatform
+            .getRustCompiler()
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(pathResolver);
 
     Result res = workspace.runCommand(rustc.get(0), "-Zhelp");
     assumeTrue("Requires nightly Rust", res.getExitCode() == 0);
@@ -78,7 +85,10 @@ abstract class RustAssumptions {
         RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     ImmutableList<String> rustc =
-        rustPlatform.getRustCompiler().resolve(resolver).getCommandPrefix(pathResolver);
+        rustPlatform
+            .getRustCompiler()
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .getCommandPrefix(pathResolver);
 
     String[] versionParts = version.split("\\.");
 

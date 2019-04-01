@@ -136,7 +136,7 @@ public class OcamlToolchainFactoryTest {
             .getOcamlPlatforms()
             .getValue(custom)
             .getOcamlCompiler()
-            .resolve(resolver)
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
             .getCommandPrefix(pathResolver),
         Matchers.equalTo(ImmutableList.of(filesystem.resolve(compiler).toString())));
   }

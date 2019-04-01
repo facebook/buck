@@ -417,7 +417,8 @@ public class TestRunning {
         JavaOptions javaOptions = javaBuckConfig.getDefaultJavaOptions();
         ToolProvider javaRuntimeProvider = javaOptions.getJavaRuntimeProvider();
         Preconditions.checkState(
-            Iterables.isEmpty(javaRuntimeProvider.getParseTimeDeps()),
+            Iterables.isEmpty(
+                javaRuntimeProvider.getParseTimeDeps(params.getTargetConfiguration())),
             "Using a rule-defined java runtime does not currently support generating code coverage.");
 
         stepRunner.runStepForBuildTarget(
@@ -425,7 +426,7 @@ public class TestRunning {
             getReportCommand(
                 rulesUnderTestForCoverage,
                 defaultJavaPackageFinder,
-                javaRuntimeProvider.resolve(ruleResolver),
+                javaRuntimeProvider.resolve(ruleResolver, params.getTargetConfiguration()),
                 params.getCell().getFilesystem(),
                 buildContext.getSourcePathResolver(),
                 ruleFinder,

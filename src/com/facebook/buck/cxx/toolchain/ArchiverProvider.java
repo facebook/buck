@@ -94,7 +94,7 @@ public interface ArchiverProvider {
     return new ArchiverProvider() {
       @Override
       public Archiver resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-        Tool archiver = toolProvider.resolve(resolver);
+        Tool archiver = toolProvider.resolve(resolver, targetConfiguration);
         switch (type) {
           case BSD:
             return new BsdArchiver(archiver);
@@ -112,7 +112,7 @@ public interface ArchiverProvider {
 
       @Override
       public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-        return toolProvider.getParseTimeDeps();
+        return toolProvider.getParseTimeDeps(targetConfiguration);
       }
     };
   }

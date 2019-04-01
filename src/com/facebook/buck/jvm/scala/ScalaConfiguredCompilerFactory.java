@@ -55,9 +55,9 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     this.javacFactory = javacFactory;
   }
 
-  private Tool getScalac(BuildRuleResolver resolver) {
+  private Tool getScalac(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     if (scalac == null) {
-      scalac = scalaBuckConfig.getScalac(resolver);
+      scalac = scalaBuckConfig.getScalac(resolver, targetConfiguration);
     }
     return scalac;
   }
@@ -70,7 +70,7 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
     return new ScalacToJarStepFactory(
-        getScalac(buildRuleResolver),
+        getScalac(buildRuleResolver, targetConfiguration),
         scalaBuckConfig.getCompilerFlags(),
         Objects.requireNonNull(arg).getExtraArguments(),
         buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins(targetConfiguration)),

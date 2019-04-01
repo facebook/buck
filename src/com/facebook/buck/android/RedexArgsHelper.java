@@ -44,7 +44,8 @@ public class RedexArgsHelper {
       return Optional.empty();
     }
 
-    Tool redexBinary = androidBuckConfig.getRedexTool(graphBuilder);
+    Tool redexBinary =
+        androidBuckConfig.getRedexTool(graphBuilder, buildTarget.getTargetConfiguration());
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()

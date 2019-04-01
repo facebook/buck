@@ -979,7 +979,7 @@ public class AppleCxxPlatformsTest {
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
-            .resolve(buildRuleResolver)
+            .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE)
             .getCommandPrefix(sourcePathResolver),
         is(Collections.singletonList("/usr/bin/codesign")));
   }
@@ -1024,7 +1024,11 @@ public class AppleCxxPlatformsTest {
         };
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.computeIfAbsent(buildTarget, target -> buildRule);
-    assertThat(appleCxxPlatform.getCodesignProvider().resolve(graphBuilder), is(codesign));
+    assertThat(
+        appleCxxPlatform
+            .getCodesignProvider()
+            .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE),
+        is(codesign));
   }
 
   @Test
@@ -1044,7 +1048,7 @@ public class AppleCxxPlatformsTest {
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
-            .resolve(buildRuleResolver)
+            .resolve(buildRuleResolver, EmptyTargetConfiguration.INSTANCE)
             .getCommandPrefix(sourcePathResolver),
         is(Collections.singletonList(codesignPath.toString())));
   }

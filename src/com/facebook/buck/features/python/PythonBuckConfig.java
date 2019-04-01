@@ -59,16 +59,22 @@ public class PythonBuckConfig {
     return delegate.getValue(SECTION, "pex_flags").orElse("");
   }
 
-  public Optional<Tool> getRawPexTool(BuildRuleResolver resolver) {
-    return delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex", resolver);
+  public Optional<Tool> getRawPexTool(
+      BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
+    return delegate
+        .getView(ToolConfig.class)
+        .getTool(SECTION, "path_to_pex", resolver, targetConfiguration);
   }
 
   public Optional<BuildTarget> getPexExecutorTarget(TargetConfiguration targetConfiguration) {
     return delegate.getMaybeBuildTarget(SECTION, "path_to_pex_executer", targetConfiguration);
   }
 
-  public Optional<Tool> getPexExecutor(BuildRuleResolver resolver) {
-    return delegate.getView(ToolConfig.class).getTool(SECTION, "path_to_pex_executer", resolver);
+  public Optional<Tool> getPexExecutor(
+      BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
+    return delegate
+        .getView(ToolConfig.class)
+        .getTool(SECTION, "path_to_pex_executer", resolver, targetConfiguration);
   }
 
   public NativeLinkStrategy getNativeLinkStrategy() {

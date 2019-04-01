@@ -129,7 +129,10 @@ public class OCamlIntegrationTest {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     try {
-      ocamlPlatform.getOcamlCompiler().resolve(resolver).getCommandPrefix(pathResolver);
+      ocamlPlatform
+          .getOcamlCompiler()
+          .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+          .getCommandPrefix(pathResolver);
     } catch (HumanReadableException e) {
       assumeNoException(e);
     }

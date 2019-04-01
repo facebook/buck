@@ -304,36 +304,38 @@ public class CxxPlatforms {
   public static Iterable<BuildTarget> getParseTimeDeps(
       TargetConfiguration targetConfiguration, CxxPlatform cxxPlatform) {
     ImmutableList.Builder<BuildTarget> deps = ImmutableList.builder();
-    deps.addAll(cxxPlatform.getAspp().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getAs().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getCpp().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getCc().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getCxxpp().getParseTimeDeps());
-    deps.addAll(cxxPlatform.getCxx().getParseTimeDeps());
+    deps.addAll(cxxPlatform.getAspp().getParseTimeDeps(targetConfiguration));
+    deps.addAll(cxxPlatform.getAs().getParseTimeDeps(targetConfiguration));
+    deps.addAll(cxxPlatform.getCpp().getParseTimeDeps(targetConfiguration));
+    deps.addAll(cxxPlatform.getCc().getParseTimeDeps(targetConfiguration));
+    deps.addAll(cxxPlatform.getCxxpp().getParseTimeDeps(targetConfiguration));
+    deps.addAll(cxxPlatform.getCxx().getParseTimeDeps(targetConfiguration));
     if (cxxPlatform.getCudapp().isPresent()) {
-      deps.addAll(cxxPlatform.getCudapp().get().getParseTimeDeps());
+      deps.addAll(cxxPlatform.getCudapp().get().getParseTimeDeps(targetConfiguration));
     }
     if (cxxPlatform.getCuda().isPresent()) {
-      deps.addAll(cxxPlatform.getCuda().get().getParseTimeDeps());
+      deps.addAll(cxxPlatform.getCuda().get().getParseTimeDeps(targetConfiguration));
     }
     if (cxxPlatform.getHippp().isPresent()) {
-      deps.addAll(cxxPlatform.getHippp().get().getParseTimeDeps());
+      deps.addAll(cxxPlatform.getHippp().get().getParseTimeDeps(targetConfiguration));
     }
     if (cxxPlatform.getHip().isPresent()) {
-      deps.addAll(cxxPlatform.getHip().get().getParseTimeDeps());
+      deps.addAll(cxxPlatform.getHip().get().getParseTimeDeps(targetConfiguration));
     }
     if (cxxPlatform.getAsmpp().isPresent()) {
-      deps.addAll(cxxPlatform.getAsmpp().get().getParseTimeDeps());
+      deps.addAll(cxxPlatform.getAsmpp().get().getParseTimeDeps(targetConfiguration));
     }
     if (cxxPlatform.getAsm().isPresent()) {
-      deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps());
+      deps.addAll(cxxPlatform.getAsm().get().getParseTimeDeps(targetConfiguration));
     }
     deps.addAll(cxxPlatform.getLd().getParseTimeDeps(targetConfiguration));
     deps.addAll(cxxPlatform.getAr().getParseTimeDeps(targetConfiguration));
     if (cxxPlatform.getRanlib().isPresent()) {
-      deps.addAll(cxxPlatform.getRanlib().get().getParseTimeDeps());
+      deps.addAll(cxxPlatform.getRanlib().get().getParseTimeDeps(targetConfiguration));
     }
-    cxxPlatform.getSharedLibraryInterfaceParams().ifPresent(f -> deps.addAll(f.getParseTimeDeps()));
+    cxxPlatform
+        .getSharedLibraryInterfaceParams()
+        .ifPresent(f -> deps.addAll(f.getParseTimeDeps(targetConfiguration)));
     return deps.build();
   }
 
