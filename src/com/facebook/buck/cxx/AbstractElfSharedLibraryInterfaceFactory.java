@@ -81,11 +81,6 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
         isRemoveUndefinedSymbols());
   }
 
-  @Override
-  public Iterable<BuildTarget> getParseTimeDeps() {
-    return getObjcopy().getParseTimeDeps();
-  }
-
   public static ElfSharedLibraryInterfaceFactory from(ElfSharedLibraryInterfaceParams params) {
     return ElfSharedLibraryInterfaceFactory.of(
         params.getObjcopy(), params.isRemoveUndefinedSymbols());

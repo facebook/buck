@@ -50,6 +50,4 @@ public interface SharedLibraryInterfaceFactory {
       String libName,
       Linker linker,
       ImmutableList<Arg> args);
-
-  Iterable<BuildTarget> getParseTimeDeps();
 }
