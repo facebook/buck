@@ -22,7 +22,6 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -271,8 +270,8 @@ public class AndroidBuckConfig {
     return getToolOverride("aapt2");
   }
 
-  public Optional<BuildTarget> getRedexTarget() {
-    return delegate.getMaybeBuildTarget(ANDROID_SECTION, REDEX, EmptyTargetConfiguration.INSTANCE);
+  public Optional<BuildTarget> getRedexTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getMaybeBuildTarget(ANDROID_SECTION, REDEX, targetConfiguration);
   }
 
   public Tool getRedexTool(BuildRuleResolver buildRuleResolver) {

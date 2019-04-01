@@ -250,7 +250,8 @@ public class AndroidBundleDescription
 
     if (constructorArg.getRedex()) {
       // If specified, this option may point to either a BuildTarget or a file.
-      Optional<BuildTarget> redexTarget = androidBuckConfig.getRedexTarget();
+      Optional<BuildTarget> redexTarget =
+          androidBuckConfig.getRedexTarget(buildTarget.getTargetConfiguration());
       redexTarget.ifPresent(extraDepsBuilder::add);
     }
   }
