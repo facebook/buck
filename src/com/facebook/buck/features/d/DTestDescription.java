@@ -141,7 +141,7 @@ public class DTestDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     extraDepsBuilder.addAll(
         DDescriptionUtils.getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)
-            .getParseTimeDeps());
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
   @BuckStyleImmutable

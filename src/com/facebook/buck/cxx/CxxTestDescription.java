@@ -338,7 +338,8 @@ public class CxxTestDescription
 
     // Get any parse time deps from the C/C++ platforms.
     targetGraphOnlyDepsBuilder.addAll(
-        getCxxPlatform(buildTarget, constructorArg).getParseTimeDeps());
+        getCxxPlatform(buildTarget, constructorArg)
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
 
     // Add in any implicit framework deps.
     extraDepsBuilder.addAll(

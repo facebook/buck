@@ -178,7 +178,8 @@ public class JavaBinaryDescription
       AbstractJavaBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    targetGraphOnlyDepsBuilder.addAll(getCxxPlatform(constructorArg).getParseTimeDeps());
+    targetGraphOnlyDepsBuilder.addAll(
+        getCxxPlatform(constructorArg).getParseTimeDeps(buildTarget.getTargetConfiguration()));
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
     javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
   }

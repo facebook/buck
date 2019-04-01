@@ -18,6 +18,7 @@ package com.facebook.buck.android.toolchain.ndk.impl;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
@@ -34,10 +35,9 @@ abstract class AbstractStaticUnresolvedNdkCxxPlatform implements UnresolvedNdkCx
   @Value.Parameter
   public abstract NdkCxxPlatform getStaticallyResolvedInstance();
 
-  @Value.Lazy
   @Override
-  public Iterable<BuildTarget> getParseTimeDeps() {
-    return getCxxPlatform().getParseTimeDeps();
+  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+    return getCxxPlatform().getParseTimeDeps(targetConfiguration);
   }
 
   @Override

@@ -370,7 +370,7 @@ public class CxxPlatforms {
     // Get any parse time deps from the C/C++ platforms.
     deps.addAll(
         getCxxPlatform(cxxPlatformsProvider, buildTarget, defaultCxxPlatformFlavor)
-            .getParseTimeDeps());
+            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
 
     return deps.build();
   }

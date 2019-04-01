@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.google.common.base.Verify;
 
@@ -40,7 +41,7 @@ public interface UnresolvedCxxPlatform extends FlavorConvertible {
   UnresolvedCxxPlatform withFlavor(Flavor hostFlavor);
 
   /** Returns the parse-time deps required for this platform. */
-  Iterable<BuildTarget> getParseTimeDeps();
+  Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration);
 
   /**
    * This probably shouldn't exist. Users probably shouldn't be able to specify specific individual
@@ -48,7 +49,7 @@ public interface UnresolvedCxxPlatform extends FlavorConvertible {
    * getParseTimeDeps() instead or update this comment with your valid use case.
    */
   // TODO(cjhopman): delete this.
-  Iterable<? extends BuildTarget> getLinkerParseTimeDeps();
+  Iterable<? extends BuildTarget> getLinkerParseTimeDeps(TargetConfiguration targetConfiguration);
 
   /**
    * This definitely shouldn't exist. Currently, there are cases where we require resolving the

@@ -16,6 +16,7 @@
 package com.facebook.buck.android.toolchain.ndk;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
@@ -27,7 +28,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
  */
 public interface UnresolvedNdkCxxPlatform {
   /** Returns the parse time deps of this platform. */
-  Iterable<BuildTarget> getParseTimeDeps();
+  Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration);
 
   /** Returns the resolved @{link NdkCxxPlatform}. */
   NdkCxxPlatform resolve(BuildRuleResolver ruleResolver);

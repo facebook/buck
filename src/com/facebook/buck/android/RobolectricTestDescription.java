@@ -266,7 +266,8 @@ public class RobolectricTestDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     if (constructorArg.getUseCxxLibraries().orElse(false)) {
-      targetGraphOnlyDepsBuilder.addAll(getCxxPlatform(constructorArg).getParseTimeDeps());
+      targetGraphOnlyDepsBuilder.addAll(
+          getCxxPlatform(constructorArg).getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
     javaOptionsForTests.get().addParseTimeDeps(targetGraphOnlyDepsBuilder);
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);

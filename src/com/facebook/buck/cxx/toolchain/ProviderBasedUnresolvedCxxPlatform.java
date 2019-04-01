@@ -17,6 +17,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.google.common.base.Verify;
@@ -51,12 +52,13 @@ public class ProviderBasedUnresolvedCxxPlatform implements UnresolvedCxxPlatform
   }
 
   @Override
-  public Iterable<BuildTarget> getParseTimeDeps() {
+  public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
     return ImmutableList.of(buildTarget);
   }
 
   @Override
-  public Iterable<? extends BuildTarget> getLinkerParseTimeDeps() {
+  public Iterable<? extends BuildTarget> getLinkerParseTimeDeps(
+      TargetConfiguration targetConfiguration) {
     return ImmutableList.of(buildTarget);
   }
 }

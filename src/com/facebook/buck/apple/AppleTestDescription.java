@@ -522,9 +522,14 @@ public class AppleTestDescription
 
     if (cxxPlatforms.isEmpty()) {
       extraDepsBuilder.addAll(
-          cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getParseTimeDeps());
+          cxxPlatformsProvider
+              .getDefaultUnresolvedCxxPlatform()
+              .getParseTimeDeps(buildTarget.getTargetConfiguration()));
     } else {
-      cxxPlatforms.forEach(platform -> extraDepsBuilder.addAll(platform.getParseTimeDeps()));
+      cxxPlatforms.forEach(
+          platform ->
+              extraDepsBuilder.addAll(
+                  platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
     }
   }
 

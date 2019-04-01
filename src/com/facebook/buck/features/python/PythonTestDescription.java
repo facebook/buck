@@ -464,7 +464,9 @@ public class PythonTestDescription
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // We need to use the C/C++ linker for native libs handling, so add in the C/C++ linker to
     // parse time deps.
-    extraDepsBuilder.addAll(getCxxPlatform(buildTarget, constructorArg).getLinkerParseTimeDeps());
+    extraDepsBuilder.addAll(
+        getCxxPlatform(buildTarget, constructorArg)
+            .getLinkerParseTimeDeps(buildTarget.getTargetConfiguration()));
 
     if (constructorArg.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle())
         == PythonBuckConfig.PackageStyle.STANDALONE) {

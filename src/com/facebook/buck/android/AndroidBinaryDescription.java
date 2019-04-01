@@ -257,7 +257,10 @@ public class AndroidBinaryDescription
                 ndkCxxPlatformsProvider
                     .getNdkCxxPlatforms()
                     .values()
-                    .forEach(platform -> extraDepsBuilder.addAll(platform.getParseTimeDeps())));
+                    .forEach(
+                        platform ->
+                            extraDepsBuilder.addAll(
+                                platform.getParseTimeDeps(buildTarget.getTargetConfiguration()))));
   }
 
   @BuckStyleImmutable

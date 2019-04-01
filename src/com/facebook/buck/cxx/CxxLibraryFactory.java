@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -361,7 +362,7 @@ public class CxxLibraryFactory {
   /**
    * @return an {@link Iterable} with platform dependencies that need to be resolved at parse time.
    */
-  public Iterable<BuildTarget> getPlatformParseTimeDeps() {
+  public Iterable<BuildTarget> getPlatformParseTimeDeps(TargetConfiguration targetConfiguration) {
     // Since we don't have context on the top-level rules using this C/C++ library (e.g. it may be
     // a `python_binary`), we eagerly add the deps for all possible platforms to guarantee that the
     // correct ones are included.
@@ -369,7 +370,7 @@ public class CxxLibraryFactory {
         .getUnresolvedCxxPlatforms()
         .getValues()
         .stream()
-        .flatMap(p -> RichStream.from(p.getParseTimeDeps()))
+        .flatMap(p -> RichStream.from(p.getParseTimeDeps(targetConfiguration)))
         .collect(ImmutableList.toImmutableList());
   }
 

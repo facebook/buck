@@ -300,7 +300,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add in all parse time deps from the C/C++ platforms.
     for (UnresolvedCxxPlatform cxxPlatform : getCxxPlatforms().getValues()) {
-      targetGraphOnlyDepsBuilder.addAll(cxxPlatform.getParseTimeDeps());
+      targetGraphOnlyDepsBuilder.addAll(
+          cxxPlatform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }
   }
 

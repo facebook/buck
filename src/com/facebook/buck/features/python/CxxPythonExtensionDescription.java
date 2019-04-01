@@ -572,7 +572,8 @@ public class CxxPythonExtensionDescription
     // Get any parse time deps from the C/C++ platforms.
     getCxxPlatforms()
         .getValues(buildTarget)
-        .forEach(p -> extraDepsBuilder.addAll(p.getParseTimeDeps()));
+        .forEach(
+            p -> extraDepsBuilder.addAll(p.getParseTimeDeps(buildTarget.getTargetConfiguration())));
 
     for (PythonPlatform pythonPlatform : getPythonPlatforms().getValues()) {
       Optionals.addIfPresent(pythonPlatform.getCxxLibrary(), extraDepsBuilder);

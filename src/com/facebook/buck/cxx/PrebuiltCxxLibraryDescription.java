@@ -910,7 +910,9 @@ public class PrebuiltCxxLibraryDescription
         .findParseTimeDeps(cellRoots, extraDepsBuilder, targetGraphOnlyDepsBuilder);
     getUnresolvedCxxPlatform(buildTarget)
         .ifPresent(
-            provider -> targetGraphOnlyDepsBuilder.addAll(provider.getValue().getParseTimeDeps()));
+            provider ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    provider.getValue().getParseTimeDeps(buildTarget.getTargetConfiguration())));
   }
 
   @Override

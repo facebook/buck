@@ -1016,7 +1016,8 @@ public class AppleLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     MultiarchFileInfos.checkTargetSupportsMultiarch(getAppleCxxPlatformDomain(), buildTarget);
-    targetGraphOnlyDepsBuilder.addAll(cxxLibraryFactory.getPlatformParseTimeDeps());
+    targetGraphOnlyDepsBuilder.addAll(
+        cxxLibraryFactory.getPlatformParseTimeDeps(buildTarget.getTargetConfiguration()));
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(

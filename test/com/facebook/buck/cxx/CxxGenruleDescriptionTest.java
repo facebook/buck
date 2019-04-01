@@ -20,6 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -87,7 +88,8 @@ public class CxxGenruleDescriptionTest {
           ImmutableSet.copyOf(builder.findImplicitDeps()),
           Matchers.equalTo(
               ImmutableSet.copyOf(
-                  CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.getParseTimeDeps())));
+                  CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.getParseTimeDeps(
+                      EmptyTargetConfiguration.INSTANCE))));
     }
   }
 
