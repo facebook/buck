@@ -18,9 +18,9 @@ package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -37,11 +37,6 @@ import org.immutables.value.Value;
 abstract class AbstractLuaPlatform implements FlavorConvertible {
 
   public static final String FLAVOR_DOMAIN_NAME = "Lua Platform";
-
-  private static final AbstractCxxLibrary SYSTEM_CXX_LIBRARY =
-      new SystemLuaCxxLibrary(
-          ImmutableUnconfiguredBuildTarget.of(Paths.get(""), "//system", "lua")
-              .configure(EmptyTargetConfiguration.INSTANCE));
 
   @Override
   public Flavor getFlavor() {
@@ -72,7 +67,8 @@ abstract class AbstractLuaPlatform implements FlavorConvertible {
 
   public abstract CxxPlatform getCxxPlatform();
 
-  public AbstractCxxLibrary getLuaCxxLibrary(BuildRuleResolver resolver) {
+  public AbstractCxxLibrary getLuaCxxLibrary(
+      BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     return getLuaCxxLibraryTarget()
         .map(
             target ->
@@ -82,7 +78,10 @@ abstract class AbstractLuaPlatform implements FlavorConvertible {
                         () ->
                             new HumanReadableException(
                                 "Cannot find C/C++ library rule %s", target)))
-        .orElse(SYSTEM_CXX_LIBRARY);
+        .orElse(
+            new SystemLuaCxxLibrary(
+                ImmutableUnconfiguredBuildTarget.of(Paths.get(""), "//system", "lua")
+                    .configure(targetConfiguration)));
   }
 
   protected enum PackageStyle {

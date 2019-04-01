@@ -193,7 +193,9 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
         getNativeStarterLibrary().isPresent()
             ? getActionGraphBuilder()
                 .getRuleWithType(getNativeStarterLibrary().get(), AbstractCxxLibrary.class)
-            : getLuaPlatform().getLuaCxxLibrary(getActionGraphBuilder()));
+            : getLuaPlatform()
+                .getLuaCxxLibrary(
+                    getActionGraphBuilder(), getBaseTarget().getTargetConfiguration()));
   }
 
   private NativeLinkableInput getNativeLinkableInput() {

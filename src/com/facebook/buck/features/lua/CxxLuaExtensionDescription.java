@@ -144,7 +144,7 @@ public class CxxLuaExtensionDescription
         ImmutableList.<CxxPreprocessorInput>builder()
             .add(
                 luaPlatform
-                    .getLuaCxxLibrary(graphBuilder)
+                    .getLuaCxxLibrary(graphBuilder, buildTarget.getTargetConfiguration())
                     .getCxxPreprocessorInput(cxxPlatform, graphBuilder))
             .addAll(
                 CxxDescriptionEnhancer.collectCxxPreprocessorInput(
@@ -245,7 +245,10 @@ public class CxxLuaExtensionDescription
         CxxLinkOptions.of(),
         RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
             .filter(NativeLinkable.class)
-            .concat(Stream.of(luaPlatform.getLuaCxxLibrary(graphBuilder)))
+            .concat(
+                Stream.of(
+                    luaPlatform.getLuaCxxLibrary(
+                        graphBuilder, buildTarget.getTargetConfiguration())))
             .toImmutableList(),
         args.getCxxRuntimeType(),
         Optional.empty(),
