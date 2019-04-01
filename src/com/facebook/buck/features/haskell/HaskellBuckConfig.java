@@ -17,6 +17,7 @@
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -50,8 +51,11 @@ public class HaskellBuckConfig {
     return Optional.of(split.build());
   }
 
-  private Optional<ToolProvider> getToolProvider(String section, String configName) {
-    return delegate.getView(ToolConfig.class).getToolProvider(section, configName);
+  private Optional<ToolProvider> getToolProvider(
+      String section, String configName, TargetConfiguration targetConfiguration) {
+    return delegate
+        .getView(ToolConfig.class)
+        .getToolProvider(section, configName, targetConfiguration);
   }
 
   private String getToolSource(String section, String configName) {
@@ -70,32 +74,35 @@ public class HaskellBuckConfig {
     return delegate.getInteger(section, "compiler_major_version").orElse(DEFAULT_MAJOR_VERSION);
   }
 
-  public Optional<ToolProvider> getCompiler(String section) {
-    return getToolProvider(section, "compiler");
+  public Optional<ToolProvider> getCompiler(
+      String section, TargetConfiguration targetConfiguration) {
+    return getToolProvider(section, "compiler", targetConfiguration);
   }
 
   public String getCompilerSource(String section) {
     return getToolSource(section, "compiler");
   }
 
-  public Optional<ToolProvider> getLinker(String section) {
-    return getToolProvider(section, "linker");
+  public Optional<ToolProvider> getLinker(String section, TargetConfiguration targetConfiguration) {
+    return getToolProvider(section, "linker", targetConfiguration);
   }
 
   public String getLinkerSource(String section) {
     return getToolSource(section, "linker");
   }
 
-  public Optional<ToolProvider> getPackager(String section) {
-    return getToolProvider(section, "packager");
+  public Optional<ToolProvider> getPackager(
+      String section, TargetConfiguration targetConfiguration) {
+    return getToolProvider(section, "packager", targetConfiguration);
   }
 
   public String getPackagerSource(String section) {
     return getToolSource(section, "packager");
   }
 
-  public Optional<ToolProvider> getHaddock(String section) {
-    return getToolProvider(section, "haddock");
+  public Optional<ToolProvider> getHaddock(
+      String section, TargetConfiguration targetConfiguration) {
+    return getToolProvider(section, "haddock", targetConfiguration);
   }
 
   public String getHaddockSource(String section) {

@@ -65,7 +65,7 @@ public class CsharpLibraryDescription
         context
             .getToolchainProvider()
             .getByName(DotnetToolchain.DEFAULT_NAME, DotnetToolchain.class)
-            .getCsharpCompiler()
+            .getCsharpCompiler(buildTarget.getTargetConfiguration())
             .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration()),
         args.getDllName(),
         args.getSrcs(),

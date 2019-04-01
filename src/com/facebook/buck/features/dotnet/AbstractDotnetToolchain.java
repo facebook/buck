@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.features.dotnet;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
@@ -33,8 +34,10 @@ abstract class AbstractDotnetToolchain implements Toolchain {
   @Value.Parameter
   abstract SystemToolProvider getSystemCsharpCompiler();
 
-  public ToolProvider getCsharpCompiler() {
-    return getDotnetBuckConfig().getCsharpCompiler().orElse(getSystemCsharpCompiler());
+  public ToolProvider getCsharpCompiler(TargetConfiguration targetConfiguration) {
+    return getDotnetBuckConfig()
+        .getCsharpCompiler(targetConfiguration)
+        .orElse(getSystemCsharpCompiler());
   }
 
   @Override

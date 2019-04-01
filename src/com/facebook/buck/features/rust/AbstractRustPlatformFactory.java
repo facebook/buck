@@ -17,6 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -43,13 +44,14 @@ abstract class AbstractRustPlatformFactory {
   abstract ExecutableFinder getExecutableFinder();
 
   /** @return a {@link RustPlatform} from the given config subsection name. */
-  public RustPlatform getPlatform(String name, CxxPlatform cxxPlatform) {
+  public RustPlatform getPlatform(
+      String name, CxxPlatform cxxPlatform, TargetConfiguration targetConfiguration) {
     RustBuckConfig rustBuckConfig = new RustBuckConfig(getBuckConfig());
-    Optional<ToolProvider> linker = rustBuckConfig.getRustLinker(name);
+    Optional<ToolProvider> linker = rustBuckConfig.getRustLinker(name, targetConfiguration);
     return RustPlatform.builder()
         .setRustCompiler(
             rustBuckConfig
-                .getRustCompiler(name)
+                .getRustCompiler(name, targetConfiguration)
                 .orElseGet(
                     () -> {
                       HashedFileTool tool =

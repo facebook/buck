@@ -17,6 +17,7 @@
 package com.facebook.buck.features.rust;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -84,14 +85,22 @@ public class RustBuckConfig {
     return getFlags(platform, field, ' ');
   }
 
-  private Optional<ToolProvider> getRustTool(String platform, String field) {
+  private Optional<ToolProvider> getRustTool(
+      String platform, String field, TargetConfiguration targetConfiguration) {
     return firstOf(
-        () -> delegate.getView(ToolConfig.class).getToolProvider(SECTION + '#' + platform, field),
-        () -> delegate.getView(ToolConfig.class).getToolProvider(SECTION, field));
+        () ->
+            delegate
+                .getView(ToolConfig.class)
+                .getToolProvider(SECTION + '#' + platform, field, targetConfiguration),
+        () ->
+            delegate
+                .getView(ToolConfig.class)
+                .getToolProvider(SECTION, field, targetConfiguration));
   }
 
-  public Optional<ToolProvider> getRustCompiler(String platform) {
-    return getRustTool(platform, "compiler");
+  public Optional<ToolProvider> getRustCompiler(
+      String platform, TargetConfiguration targetConfiguration) {
+    return getRustTool(platform, "compiler", targetConfiguration);
   }
 
   /**
@@ -152,8 +161,9 @@ public class RustBuckConfig {
         .build();
   }
 
-  public Optional<ToolProvider> getRustLinker(String platform) {
-    return getRustTool(platform, "linker");
+  public Optional<ToolProvider> getRustLinker(
+      String platform, TargetConfiguration targetConfiguration) {
+    return getRustTool(platform, "linker", targetConfiguration);
   }
 
   public Optional<LinkerProvider.Type> getLinkerPlatform(String platform) {

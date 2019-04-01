@@ -53,7 +53,7 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
             context
                 .getBuckConfig()
                 .getView(ToolConfig.class)
-                .getToolProvider(section, field)
+                .getToolProvider(section, field, context.getTargetConfiguration().get())
                 .orElseGet(
                     () ->
                         new ConstantToolProvider(

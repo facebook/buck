@@ -18,6 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -40,17 +41,20 @@ public class HaskellPlatformsFactory {
     this.executableFinder = executableFinder;
   }
 
-  private HaskellPlatform getPlatform(String section, UnresolvedCxxPlatform unresolvedCxxPlatform) {
+  private HaskellPlatform getPlatform(
+      String section,
+      UnresolvedCxxPlatform unresolvedCxxPlatform,
+      TargetConfiguration targetConfiguration) {
     CxxPlatform cxxPlatform = unresolvedCxxPlatform.getLegacyTotallyUnsafe();
 
     return HaskellPlatform.builder()
         .setHaskellVersion(HaskellVersion.of(haskellBuckConfig.getCompilerMajorVersion(section)))
-        .setCompiler(getCompiler(section))
+        .setCompiler(getCompiler(section, targetConfiguration))
         .setCompilerFlags(haskellBuckConfig.getCompilerFlags(section).orElse(ImmutableList.of()))
-        .setLinker(getLinker(section))
+        .setLinker(getLinker(section, targetConfiguration))
         .setLinkerFlags(haskellBuckConfig.getLinkerFlags(section).orElse(ImmutableList.of()))
-        .setPackager(getPackager(section))
-        .setHaddock(getHaddock(section))
+        .setPackager(getPackager(section, targetConfiguration))
+        .setHaddock(getHaddock(section, targetConfiguration))
         .setShouldCacheLinks(haskellBuckConfig.getShouldCacheLinks(section))
         .setShouldUseArgsfile(haskellBuckConfig.getShouldUseArgsfile(section))
         .setShouldUsedOldBinaryOutputLocation(
@@ -74,7 +78,7 @@ public class HaskellPlatformsFactory {
 
   /** Maps the cxxPlatforms to corresponding HaskellPlatform. */
   public FlavorDomain<HaskellPlatform> getPlatforms(
-      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
+      TargetConfiguration targetConfiguration, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     // Use convert (instead of map) so that if we ever have the haskell platform flavor different
     // from the underlying c++ platform's flavor this will continue to work correctly.
     return cxxPlatforms.convert(
@@ -82,8 +86,12 @@ public class HaskellPlatformsFactory {
         cxxPlatform ->
             // We special case the "default" C/C++ platform to just use the "haskell" section.
             cxxPlatform.getFlavor().equals(DefaultCxxPlatforms.FLAVOR)
-                ? getPlatform(haskellBuckConfig.getDefaultSection(), cxxPlatform)
-                : getPlatform(haskellBuckConfig.getSectionForPlatform(cxxPlatform), cxxPlatform));
+                ? getPlatform(
+                    haskellBuckConfig.getDefaultSection(), cxxPlatform, targetConfiguration)
+                : getPlatform(
+                    haskellBuckConfig.getSectionForPlatform(cxxPlatform),
+                    cxxPlatform,
+                    targetConfiguration));
   }
 
   private ToolProvider getTool(
@@ -99,28 +107,30 @@ public class HaskellPlatformsFactory {
                 .build());
   }
 
-  private ToolProvider getCompiler(String section) {
+  private ToolProvider getCompiler(String section, TargetConfiguration targetConfiguration) {
     return getTool(
-        haskellBuckConfig.getCompiler(section),
+        haskellBuckConfig.getCompiler(section, targetConfiguration),
         haskellBuckConfig.getCompilerSource(section),
         "ghc");
   }
 
-  private ToolProvider getLinker(String section) {
+  private ToolProvider getLinker(String section, TargetConfiguration targetConfiguration) {
     return getTool(
-        haskellBuckConfig.getLinker(section), haskellBuckConfig.getLinkerSource(section), "ghc");
+        haskellBuckConfig.getLinker(section, targetConfiguration),
+        haskellBuckConfig.getLinkerSource(section),
+        "ghc");
   }
 
-  private ToolProvider getPackager(String section) {
+  private ToolProvider getPackager(String section, TargetConfiguration targetConfiguration) {
     return getTool(
-        haskellBuckConfig.getPackager(section),
+        haskellBuckConfig.getPackager(section, targetConfiguration),
         haskellBuckConfig.getPackagerSource(section),
         "ghc-pkg");
   }
 
-  private ToolProvider getHaddock(String section) {
+  private ToolProvider getHaddock(String section, TargetConfiguration targetConfiguration) {
     return getTool(
-        haskellBuckConfig.getHaddock(section),
+        haskellBuckConfig.getHaddock(section, targetConfiguration),
         haskellBuckConfig.getHaddockSource(section),
         "haddock");
   }

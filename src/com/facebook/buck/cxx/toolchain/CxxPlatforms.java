@@ -57,7 +57,7 @@ public class CxxPlatforms {
   private CxxPlatforms() {}
 
   private static Optional<SharedLibraryInterfaceParams> getSharedLibraryInterfaceParams(
-      CxxBuckConfig config, Platform platform) {
+      CxxBuckConfig config, Platform platform, TargetConfiguration targetConfiguration) {
     Optional<SharedLibraryInterfaceParams> sharedLibraryInterfaceParams = Optional.empty();
     SharedLibraryInterfaceParams.Type type = config.getSharedLibraryInterfaces();
     if (type != SharedLibraryInterfaceParams.Type.DISABLED) {
@@ -66,7 +66,7 @@ public class CxxPlatforms {
           sharedLibraryInterfaceParams =
               Optional.of(
                   ElfSharedLibraryInterfaceParams.of(
-                      config.getObjcopy().get(),
+                      config.getObjcopy(targetConfiguration).get(),
                       config.getIndependentShlibInterfacesLdflags().orElse(ImmutableList.of()),
                       type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
@@ -137,11 +137,14 @@ public class CxxPlatforms {
         .setHippp(config.getHippp(targetConfiguration))
         .setAsm(config.getAsm(targetConfiguration))
         .setAsmpp(config.getAsmpp(targetConfiguration))
-        .setLd(config.getLinkerProvider(ld.getType()).orElse(ld))
+        .setLd(config.getLinkerProvider(ld.getType(), targetConfiguration).orElse(ld))
         .addAllLdflags(ldFlags)
         .setRuntimeLdflags(runtimeLdflags)
-        .setAr(config.getArchiverProvider(platform).orElse(ar))
-        .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
+        .setAr(config.getArchiverProvider(platform, targetConfiguration).orElse(ar))
+        .setRanlib(
+            config.getRanlib(targetConfiguration).isPresent()
+                ? config.getRanlib(targetConfiguration)
+                : ranlib)
         .setStrip(config.getStrip().orElse(strip))
         .setBinaryExtension(binaryExtension)
         .setSharedLibraryExtension(
@@ -175,7 +178,8 @@ public class CxxPlatforms {
 
     builder.setArchiveContents(config.getArchiveContents().orElse(archiveContents));
 
-    builder.setSharedLibraryInterfaceParams(getSharedLibraryInterfaceParams(config, platform));
+    builder.setSharedLibraryInterfaceParams(
+        getSharedLibraryInterfaceParams(config, platform, targetConfiguration));
 
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cxxflags);

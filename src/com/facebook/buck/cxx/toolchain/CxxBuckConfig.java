@@ -297,9 +297,10 @@ public class CxxBuckConfig {
   /*
    * Constructs the appropriate Archiver for the specified platform.
    */
-  public Optional<ArchiverProvider> getArchiverProvider(Platform defaultPlatform) {
+  public Optional<ArchiverProvider> getArchiverProvider(
+      Platform defaultPlatform, TargetConfiguration targetConfiguration) {
     Optional<ToolProvider> toolProvider =
-        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, AR);
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, AR, targetConfiguration);
     // TODO(cjhopman): This should probably accept ArchiverProvider.Type, not LegacyArchiverType.
     Optional<LegacyArchiverType> type =
         delegate.getEnum(cxxSection, ARCHIVER_TYPE, LegacyArchiverType.class);
@@ -418,9 +419,10 @@ public class CxxBuckConfig {
    * @param defaultType the default type for a linker if `linker_platform` is not specified in the
    *     config.
    */
-  public Optional<LinkerProvider> getLinkerProvider(LinkerProvider.Type defaultType) {
+  public Optional<LinkerProvider> getLinkerProvider(
+      LinkerProvider.Type defaultType, TargetConfiguration targetConfiguration) {
     Optional<ToolProvider> toolProvider =
-        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, LD);
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, LD, targetConfiguration);
     if (!toolProvider.isPresent()) {
       return Optional.empty();
     }
@@ -490,16 +492,19 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, SHOULD_REMAP_HOST_PLATFORM, false);
   }
 
-  private Optional<ToolProvider> getToolProvider(String name) {
-    return delegate.getView(ToolConfig.class).getToolProvider(cxxSection, name);
+  private Optional<ToolProvider> getToolProvider(
+      String name, TargetConfiguration targetConfiguration) {
+    return delegate
+        .getView(ToolConfig.class)
+        .getToolProvider(cxxSection, name, targetConfiguration);
   }
 
-  public Optional<ToolProvider> getRanlib() {
-    return getToolProvider(RANLIB);
+  public Optional<ToolProvider> getRanlib(TargetConfiguration targetConfiguration) {
+    return getToolProvider(RANLIB, targetConfiguration);
   }
 
-  public Optional<ToolProvider> getObjcopy() {
-    return getToolProvider(OBJCOPY);
+  public Optional<ToolProvider> getObjcopy(TargetConfiguration targetConfiguration) {
+    return getToolProvider(OBJCOPY, targetConfiguration);
   }
 
   private Optional<Tool> getTool(String name) {
