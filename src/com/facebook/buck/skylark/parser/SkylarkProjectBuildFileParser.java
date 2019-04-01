@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.PojoTransformer;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
@@ -172,7 +173,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
         (ImmutableMap<String, Map<String, Object>>)
             getBuildFileManifestPojoizer().convertToPojo(parseResult.getRawRules());
 
-    return BuildFileManifest.of(
+    return ImmutableBuildFileManifest.of(
         targets,
         ImmutableSortedSet.copyOf(parseResult.getLoadedPaths()),
         parseResult.getReadConfigurationOptions(),

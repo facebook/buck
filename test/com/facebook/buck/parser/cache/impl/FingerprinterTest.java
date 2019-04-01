@@ -24,6 +24,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.environment.Architecture;
@@ -97,7 +98,7 @@ public class FingerprinterTest {
     ImmutableSortedSet<String> includes =
         ImmutableSortedSet.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
     BuildFileManifest buildFileManifest =
-        BuildFileManifest.of(
+        ImmutableBuildFileManifest.of(
             ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
     FakeFileHashCache fileHashCache =
         new FakeFileHashCache(
@@ -131,7 +132,7 @@ public class FingerprinterTest {
     ImmutableSortedSet<String> includes =
         ImmutableSortedSet.of("/foo/bar/FooBar.bzl", "/foo/bar/BUCK", "/foo/bar/BarFoo.bzl");
     BuildFileManifest buildFileManifest =
-        BuildFileManifest.of(
+        ImmutableBuildFileManifest.of(
             ImmutableMap.of(), includes, ImmutableMap.of(), Optional.empty(), ImmutableList.of());
 
     Fingerprinter.getStrongFingerprint(

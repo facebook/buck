@@ -20,6 +20,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.environment.Platform;
@@ -39,8 +40,6 @@ import org.junit.rules.ExpectedException;
 public class BuildFileManifestSerializerTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private static final BuildFileManifest FAKE_MANIFEST = createFakeManifest();
-
   @Before
   public void setUp() {
     // JimFS has issues with absolute and relative Windows paths.
@@ -48,6 +47,10 @@ public class BuildFileManifestSerializerTest {
   }
 
   private static BuildFileManifest createFakeManifest() {
+    return createFakeManifest(ImmutableMap.of("envKey", Optional.of("envVal")));
+  }
+
+  private static BuildFileManifest createFakeManifest(ImmutableMap<String, Optional<String>> envs) {
     GlobSpec globSpec =
         GlobSpec.builder()
             .setExclude(ImmutableList.of("excludeSpec"))
@@ -68,7 +71,6 @@ public class BuildFileManifestSerializerTest {
     globSpecBuilder.add(GlobSpecWithResult.of(globSpec, globs));
     ImmutableList<GlobSpecWithResult> globSpecs = globSpecBuilder.build();
 
-    ImmutableMap<String, Optional<String>> envs = ImmutableMap.of("envKey", Optional.of("envVal"));
     ImmutableMap<String, String> configs =
         ImmutableMap.of("confKey1", "confVal1", "confKey2", "confVal2");
     ImmutableSortedSet<String> includes = ImmutableSortedSet.of("/Includes1", "/includes2");
@@ -77,13 +79,13 @@ public class BuildFileManifestSerializerTest {
     ImmutableMap<String, ImmutableMap<String, Object>> targets =
         ImmutableMap.of("tar1", target1, "tar2", target2);
 
-    return BuildFileManifest.of(targets, includes, configs, Optional.of(envs), globSpecs);
+    return ImmutableBuildFileManifest.of(targets, includes, configs, Optional.of(envs), globSpecs);
   }
 
   @Test
   public void buildFileManifestSerializationToJson() throws Exception {
 
-    byte[] serializedManifest = BuildFileManifestSerializer.serialize(FAKE_MANIFEST);
+    byte[] serializedManifest = BuildFileManifestSerializer.serialize(createFakeManifest());
     String resultString =
         new String(serializedManifest, 0, serializedManifest.length, StandardCharsets.UTF_8);
 
@@ -102,7 +104,7 @@ public class BuildFileManifestSerializerTest {
 
   @Test
   public void buildFileManifestSerializationToJsonWhenEnvIsEmpty() throws Exception {
-    BuildFileManifest noEnvFakeManifest = FAKE_MANIFEST.withEnv(ImmutableMap.of());
+    BuildFileManifest noEnvFakeManifest = createFakeManifest(ImmutableMap.of());
 
     byte[] serializedManifest = BuildFileManifestSerializer.serialize(noEnvFakeManifest);
     String resultString =

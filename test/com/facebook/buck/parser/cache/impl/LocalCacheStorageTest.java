@@ -31,6 +31,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.cache.ParserCacheException;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -281,7 +282,7 @@ public class LocalCacheStorageTest {
         ImmutableMap.of("tar1", target1Map, "tar2", target2Map);
 
     BuildFileManifest buildFileManifest =
-        BuildFileManifest.of(
+        ImmutableBuildFileManifest.of(
             targets, includes, configs, Optional.of(ImmutableMap.of()), globSpecMap);
 
     byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);

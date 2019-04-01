@@ -22,6 +22,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -139,7 +140,7 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void getBuildFileManifestReturnsUnderlyingRules() throws Exception {
     allRulesAndMetadata =
-        BuildFileManifest.of(
+        ImmutableBuildFileManifest.of(
             ImmutableMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),

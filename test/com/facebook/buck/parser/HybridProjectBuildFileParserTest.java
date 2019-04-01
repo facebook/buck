@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
@@ -44,7 +45,7 @@ import org.junit.runner.RunWith;
 public class HybridProjectBuildFileParserTest {
 
   private static final BuildFileManifest EMPTY_BUILD_FILE_MANIFEST =
-      BuildFileManifest.of(
+      ImmutableBuildFileManifest.of(
           ImmutableMap.of(),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),

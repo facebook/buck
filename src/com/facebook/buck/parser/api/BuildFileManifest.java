@@ -17,7 +17,6 @@
 package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.graph.transformation.ComputeResult;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -29,10 +28,9 @@ import java.util.Optional;
 import org.immutables.value.Value;
 
 /** Describes the content of a build file, which includes defined targets and their metadata. */
-@BuckStyleImmutable
-@Value.Immutable(builder = false)
+@Value.Immutable(builder = false, copy = false)
 @JsonDeserialize
-public abstract class AbstractBuildFileManifest implements ComputeResult {
+public abstract class BuildFileManifest implements ComputeResult {
   /** @return a list of targets defined in the build file. */
   @Value.Parameter
   @JsonProperty("targets")

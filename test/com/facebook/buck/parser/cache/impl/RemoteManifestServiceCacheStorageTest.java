@@ -34,6 +34,7 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.cache.ParserCacheStorage;
 import com.facebook.buck.parser.cache.json.BuildFileManifestSerializer;
 import com.facebook.buck.skylark.io.GlobSpec;
@@ -247,7 +248,8 @@ public class RemoteManifestServiceCacheStorageTest {
     ImmutableMap targets = ImmutableMap.of("tar1", target1, "tar2", target2);
 
     BuildFileManifest buildFileManifest =
-        BuildFileManifest.of(targets, includes, configs, Optional.of(ImmutableMap.of()), globSpecs);
+        ImmutableBuildFileManifest.of(
+            targets, includes, configs, Optional.of(ImmutableMap.of()), globSpecs);
 
     byte[] serializedManifest = BuildFileManifestSerializer.serialize(buildFileManifest);
     String resultString =

@@ -26,7 +26,7 @@ public class BuildFileManifestFactory {
   private BuildFileManifestFactory() {}
 
   public static BuildFileManifest create(ImmutableMap<String, Map<String, Object>> targets) {
-    return BuildFileManifest.of(
+    return ImmutableBuildFileManifest.of(
         targets, ImmutableSortedSet.of(), ImmutableMap.of(), Optional.empty(), ImmutableList.of());
   }
 }
