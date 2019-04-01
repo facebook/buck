@@ -237,6 +237,7 @@ public class RustCompileUtils {
           NativeLinkables.getTransitiveNativeLinkableInput(
                   cxxPlatform,
                   graphBuilder,
+                  target.getTargetConfiguration(),
                   ruledeps,
                   depType,
                   r ->

@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -164,10 +165,14 @@ public class OcamlRuleBuilder {
   }
 
   private static NativeLinkableInput getCLinkableInput(
-      OcamlPlatform platform, ActionGraphBuilder graphBuilder, Iterable<BuildRule> deps) {
+      OcamlPlatform platform,
+      ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration,
+      Iterable<BuildRule> deps) {
     return NativeLinkables.getTransitiveNativeLinkableInput(
         platform.getCxxPlatform(),
         graphBuilder,
+        targetConfiguration,
         deps,
         Linker.LinkableDepType.STATIC,
         r ->
@@ -211,7 +216,8 @@ public class OcamlRuleBuilder {
 
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(ocamlPlatform, deps);
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(ocamlPlatform, deps);
-    NativeLinkableInput cLinkableInput = getCLinkableInput(ocamlPlatform, graphBuilder, deps);
+    NativeLinkableInput cLinkableInput =
+        getCLinkableInput(ocamlPlatform, graphBuilder, buildTarget.getTargetConfiguration(), deps);
 
     ImmutableList<OcamlLibrary> ocamlInput = getTransitiveOcamlLibraryDeps(ocamlPlatform, deps);
 
@@ -329,7 +335,8 @@ public class OcamlRuleBuilder {
 
     NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(ocamlPlatform, deps);
     NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(ocamlPlatform, deps);
-    NativeLinkableInput cLinkableInput = getCLinkableInput(ocamlPlatform, graphBuilder, deps);
+    NativeLinkableInput cLinkableInput =
+        getCLinkableInput(ocamlPlatform, graphBuilder, buildTarget.getTargetConfiguration(), deps);
 
     ImmutableList<OcamlLibrary> ocamlInput = getTransitiveOcamlLibraryDeps(ocamlPlatform, deps);
 

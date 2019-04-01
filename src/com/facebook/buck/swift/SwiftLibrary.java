@@ -22,6 +22,7 @@ import static com.facebook.buck.swift.SwiftLibraryDescription.SWIFT_COMPILE_FLAV
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -144,7 +145,8 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder) {
+      ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration) {
     SwiftCompile rule = requireSwiftCompileRule(cxxPlatform.getFlavor());
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
     inputBuilder

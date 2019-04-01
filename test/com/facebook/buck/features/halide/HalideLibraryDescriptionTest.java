@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -106,7 +107,11 @@ public class HalideLibraryDescriptionTest {
 
     // Check that the library rule has the correct native linkable input.
     NativeLinkableInput input =
-        lib.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC, graphBuilder);
+        lib.getNativeLinkableInput(
+            cxxPlatform,
+            Linker.LinkableDepType.STATIC,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     BuildRule buildRule =
         FluentIterable.from(input.getArgs())
             .transformAndConcat(
@@ -131,7 +136,10 @@ public class HalideLibraryDescriptionTest {
     assertThat(
         halideLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, graphBuilder1)
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.STATIC,
+                graphBuilder1,
+                EmptyTargetConfiguration.INSTANCE)
             .getArgs(),
         not(Matchers.empty()));
 
@@ -144,7 +152,10 @@ public class HalideLibraryDescriptionTest {
     assertThat(
         halideLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, graphBuilder2)
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.STATIC,
+                graphBuilder2,
+                EmptyTargetConfiguration.INSTANCE)
             .getArgs(),
         Matchers.empty());
   }

@@ -21,6 +21,7 @@ import static com.facebook.buck.core.model.UnflavoredBuildTarget.BUILD_TARGET_PR
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -74,7 +75,8 @@ public final class SwiftRuntimeNativeLinkable implements NativeLinkable {
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder) {
+      ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration) {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
     ImmutableList.Builder<Arg> linkerArgsBuilder = ImmutableList.builder();

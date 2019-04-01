@@ -31,6 +31,8 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -113,7 +115,8 @@ public class CxxLinkableEnhancerTest {
         CxxPlatform cxxPlatform,
         LinkableDepType type,
         boolean forceLinkWhole,
-        ActionGraphBuilder graphBuilder) {
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration) {
       return type == Linker.LinkableDepType.STATIC ? staticInput : sharedInput;
     }
 
@@ -500,6 +503,7 @@ public class CxxLinkableEnhancerTest {
         NativeLinkables.getTransitiveNativeLinkableInput(
             cxxPlatform,
             graphBuilder,
+            EmptyTargetConfiguration.INSTANCE,
             ImmutableList.of(top),
             Linker.LinkableDepType.STATIC,
             r -> Optional.empty());

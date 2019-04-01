@@ -25,6 +25,7 @@ import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.macros.MacroFinder;
 import com.facebook.buck.core.macros.MacroMatchResult;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -232,7 +233,8 @@ abstract class AbstractPrebuiltCxxLibraryGroupDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ActionGraphBuilder graphBuilder) {
+          ActionGraphBuilder graphBuilder,
+          TargetConfiguration targetConfiguration) {
 
         if (!isPlatformSupported(cxxPlatform)) {
           return NativeLinkableInput.of();

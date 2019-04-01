@@ -19,6 +19,7 @@ package com.facebook.buck.features.haskell;
 import com.facebook.buck.core.description.arg.CommonDescriptionArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -132,7 +133,8 @@ public class HaskellPrebuiltLibraryDescription
           CxxPlatform cxxPlatform,
           Linker.LinkableDepType type,
           boolean forceLinkWhole,
-          ActionGraphBuilder graphBuilder) {
+          ActionGraphBuilder graphBuilder,
+          TargetConfiguration targetConfiguration) {
         NativeLinkableInput.Builder builder = NativeLinkableInput.builder();
         builder.addAllArgs(StringArg.from(args.getExportedLinkerFlags()));
         if (type == Linker.LinkableDepType.SHARED) {

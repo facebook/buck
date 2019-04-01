@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -259,6 +260,7 @@ abstract class GoDescriptors {
 
   static ImmutableList<Arg> getCxxLinkerArgs(
       ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration,
       CxxPlatform cxxPlatform,
       Iterable<BuildRule> linkables,
       Linker.LinkableDepType linkStyle,
@@ -271,7 +273,12 @@ abstract class GoDescriptors {
 
     NativeLinkableInput linkableInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
-            cxxPlatform, graphBuilder, linkables, linkStyle, r -> Optional.empty());
+            cxxPlatform,
+            graphBuilder,
+            targetConfiguration,
+            linkables,
+            linkStyle,
+            r -> Optional.empty());
 
     // skip setting any arg if no linkable inputs are present
     if (linkableInput.getArgs().isEmpty() && Iterables.size(externalLinkerFlags) == 0) {
@@ -396,6 +403,7 @@ abstract class GoDescriptors {
     ImmutableList<Arg> cxxLinkerArgs =
         getCxxLinkerArgs(
             graphBuilder,
+            buildTarget.getTargetConfiguration(),
             platform.getCxxPlatform(),
             cgoLinkables,
             linkStyle,

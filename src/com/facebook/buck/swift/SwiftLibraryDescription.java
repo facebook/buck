@@ -359,7 +359,10 @@ public class SwiftLibraryDescription
         NativeLinkableInput.builder()
             .from(
                 swiftRuntimeLinkable.getNativeLinkableInput(
-                    cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder))
+                    cxxPlatform,
+                    Linker.LinkableDepType.SHARED,
+                    graphBuilder,
+                    buildTarget.getTargetConfiguration()))
             .addAllArgs(rule.getAstLinkArgs())
             .addAllArgs(rule.getFileListLinkArg());
     return graphBuilder.addToIndex(

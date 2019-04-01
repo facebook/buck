@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -146,7 +147,10 @@ public class CxxLibraryTest {
     assertEquals(
         expectedStaticNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            cxxPlatform, Linker.LinkableDepType.STATIC, graphBuilder));
+            cxxPlatform,
+            Linker.LinkableDepType.STATIC,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
@@ -158,7 +162,10 @@ public class CxxLibraryTest {
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder));
+            cxxPlatform,
+            Linker.LinkableDepType.SHARED,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE));
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
@@ -218,7 +225,10 @@ public class CxxLibraryTest {
     assertEquals(
         expectedSharedNativeLinkableInput,
         cxxLibrary.getNativeLinkableInput(
-            cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder));
+            cxxPlatform,
+            Linker.LinkableDepType.SHARED,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -277,7 +287,11 @@ public class CxxLibraryTest {
         NativeLinkableInput.of(linkerArgs, ImmutableSet.of(frameworkPath), ImmutableSet.of());
 
     NativeLinkableInput actualSharedNativeLinkableInput =
-        cxxLibrary.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder);
+        cxxLibrary.getNativeLinkableInput(
+            cxxPlatform,
+            Linker.LinkableDepType.SHARED,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
 
     assertEquals(expectedSharedNativeLinkableInput, actualSharedNativeLinkableInput);
   }

@@ -26,6 +26,7 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -181,7 +182,8 @@ public class NdkLibraryDescription
       ToolchainProvider toolchainProvider,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      ActionGraphBuilder graphBuilder) {
+      ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration) {
 
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
@@ -234,6 +236,7 @@ public class NdkLibraryDescription
           NativeLinkables.getTransitiveNativeLinkableInput(
               cxxPlatform,
               graphBuilder,
+              targetConfiguration,
               params.getBuildDeps(),
               Linker.LinkableDepType.SHARED,
               r -> r instanceof NdkLibrary ? Optional.of(r.getBuildDeps()) : Optional.empty());
@@ -375,7 +378,12 @@ public class NdkLibraryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     Pair<String, Iterable<BuildRule>> makefilePair =
-        generateMakefile(toolchainProvider, projectFilesystem, params, graphBuilder);
+        generateMakefile(
+            toolchainProvider,
+            projectFilesystem,
+            params,
+            graphBuilder,
+            buildTarget.getTargetConfiguration());
 
     ImmutableSortedSet<SourcePath> sources;
     if (!args.getSrcs().isEmpty()) {

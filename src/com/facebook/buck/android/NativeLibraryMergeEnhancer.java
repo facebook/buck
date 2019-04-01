@@ -26,6 +26,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -860,7 +861,8 @@ class NativeLibraryMergeEnhancer {
         CxxPlatform cxxPlatform,
         Linker.LinkableDepType type,
         boolean forceLinkWhole,
-        ActionGraphBuilder graphBuilder) {
+        ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration) {
 
       // This path gets taken for a force-static library.
       if (type == Linker.LinkableDepType.STATIC_PIC) {
@@ -868,7 +870,10 @@ class NativeLibraryMergeEnhancer {
         for (NativeLinkable linkable : constituents.getLinkables()) {
           builder.add(
               linkable.getNativeLinkableInput(
-                  cxxPlatform, Linker.LinkableDepType.STATIC_PIC, graphBuilder));
+                  cxxPlatform,
+                  Linker.LinkableDepType.STATIC_PIC,
+                  graphBuilder,
+                  targetConfiguration));
         }
         return NativeLinkableInput.concat(builder.build());
       }
@@ -915,6 +920,7 @@ class NativeLibraryMergeEnhancer {
     private NativeLinkableInput getImmediateNativeLinkableInput(
         CxxPlatform cxxPlatform,
         ActionGraphBuilder graphBuilder,
+        TargetConfiguration targetConfiguration,
         SourcePathResolver pathResolver,
         SourcePathRuleFinder ruleFinder) {
       Linker linker = cxxPlatform.getLd().resolve(graphBuilder);
@@ -935,7 +941,10 @@ class NativeLibraryMergeEnhancer {
           // Otherwise, just get the static pic output.
           NativeLinkableInput staticPic =
               linkable.getNativeLinkableInput(
-                  cxxPlatform, Linker.LinkableDepType.STATIC_PIC, graphBuilder);
+                  cxxPlatform,
+                  Linker.LinkableDepType.STATIC_PIC,
+                  graphBuilder,
+                  targetConfiguration);
           builder.add(
               staticPic.withArgs(
                   FluentIterable.from(staticPic.getArgs())
@@ -1009,7 +1018,11 @@ class NativeLibraryMergeEnhancer {
                       ImmutableSet.of(),
                       ImmutableSet.of(),
                       getImmediateNativeLinkableInput(
-                          cxxPlatform, graphBuilder, pathResolver, ruleFinder),
+                          cxxPlatform,
+                          graphBuilder,
+                          target.getTargetConfiguration(),
+                          pathResolver,
+                          ruleFinder),
                       constituents.isActuallyMerged()
                           ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
                           : Optional.empty(),

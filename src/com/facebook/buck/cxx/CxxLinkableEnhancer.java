@@ -209,7 +209,8 @@ public class CxxLinkableEnhancer {
                           cxxPlatform,
                           NativeLinkables.getLinkStyle(link, depType),
                           linkWholeDeps.contains(nativeLinkable.getBuildTarget()),
-                          graphBuilder);
+                          graphBuilder,
+                          target.getTargetConfiguration());
                   LOG.verbose("Native linkable %s returned input %s", nativeLinkable, input);
                   return input;
                 });

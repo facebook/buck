@@ -39,6 +39,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -271,7 +272,11 @@ public class CxxLibraryDescriptionTest {
                 filesystem, target, graphBuilder, cxxPlatform, HeaderVisibility.PRIVATE)));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC, graphBuilder);
+    rule.getNativeLinkableInput(
+        cxxPlatform,
+        Linker.LinkableDepType.STATIC,
+        graphBuilder,
+        EmptyTargetConfiguration.INSTANCE);
     BuildRule archiveRule =
         graphBuilder.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
@@ -409,7 +414,11 @@ public class CxxLibraryDescriptionTest {
 
     // Verify that the linker args contains the link whole flags.
     NativeLinkableInput input =
-        normal.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC, graphBuilder);
+        normal.getNativeLinkableInput(
+            cxxPlatform,
+            Linker.LinkableDepType.STATIC,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(input.getArgs(), pathResolver),
         not(hasItems(linkWholeFlags.toArray(new String[0]))));
@@ -430,7 +439,11 @@ public class CxxLibraryDescriptionTest {
 
     // Verify that the linker args contains the link whole flags.
     NativeLinkableInput linkWholeInput =
-        linkWhole.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC, graphBuilder);
+        linkWhole.getNativeLinkableInput(
+            cxxPlatform,
+            Linker.LinkableDepType.STATIC,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(linkWholeInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[0])));
@@ -531,7 +544,11 @@ public class CxxLibraryDescriptionTest {
             getHeaderMaps(filesystem, target, graphBuilder, cxxPlatform, HeaderVisibility.PUBLIC)));
 
     // Verify that the archive rule has the correct deps: the object files from our sources.
-    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC, graphBuilder);
+    rule.getNativeLinkableInput(
+        cxxPlatform,
+        Linker.LinkableDepType.STATIC,
+        graphBuilder,
+        EmptyTargetConfiguration.INSTANCE);
     BuildRule staticRule =
         graphBuilder.getRule(
             CxxDescriptionEnhancer.createStaticLibraryBuildTarget(
@@ -585,7 +602,11 @@ public class CxxLibraryDescriptionTest {
     // Verify that the archive rule has the correct deps: the object files from our sources.
     CxxSourceRuleFactory cxxSourceRuleFactoryPIC =
         CxxSourceRuleFactoryHelper.of(filesystem.getRootPath(), target, cxxPlatform, PicType.PIC);
-    rule.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.SHARED, graphBuilder);
+    rule.getNativeLinkableInput(
+        cxxPlatform,
+        Linker.LinkableDepType.SHARED,
+        graphBuilder,
+        EmptyTargetConfiguration.INSTANCE);
     BuildRule sharedRule =
         graphBuilder.getRule(
             CxxDescriptionEnhancer.createSharedLibraryBuildTarget(
@@ -658,7 +679,10 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         cxxLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, builder1)
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.SHARED,
+                builder1,
+                EmptyTargetConfiguration.INSTANCE)
             .getArgs(),
         not(empty()));
 
@@ -673,7 +697,10 @@ public class CxxLibraryDescriptionTest {
     assertThat(
         cxxLibrary
             .getNativeLinkableInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, builder2)
+                CxxPlatformUtils.DEFAULT_PLATFORM,
+                Linker.LinkableDepType.SHARED,
+                builder2,
+                EmptyTargetConfiguration.INSTANCE)
             .getArgs(),
         empty());
   }
@@ -690,7 +717,10 @@ public class CxxLibraryDescriptionTest {
     CxxLibrary lib = (CxxLibrary) libBuilder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC, graphBuilder);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     Arg firstArg = nativeLinkableInput.getArgs().get(0);
     assertThat(firstArg, instanceOf(FileListableLinkerInputArg.class));
     ImmutableCollection<BuildRule> deps =
@@ -868,7 +898,10 @@ public class CxxLibraryDescriptionTest {
 
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, graphBuilder);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
@@ -911,7 +944,10 @@ public class CxxLibraryDescriptionTest {
 
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, graphBuilder);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())
@@ -956,7 +992,10 @@ public class CxxLibraryDescriptionTest {
 
     NativeLinkableInput nativeLinkableInput =
         lib.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, graphBuilder);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     assertThat(
         FluentIterable.from(nativeLinkableInput.getArgs())

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -140,7 +141,10 @@ public class HaskellLibraryDescriptionTest {
     // Test static dep type.
     NativeLinkableInput staticInput =
         library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC, graphBuilder);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(staticInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[0])));
@@ -148,7 +152,10 @@ public class HaskellLibraryDescriptionTest {
     // Test static-pic dep type.
     NativeLinkableInput staticPicInput =
         library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.STATIC_PIC, graphBuilder);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.STATIC_PIC,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(staticPicInput.getArgs(), pathResolver),
         hasItems(linkWholeFlags.toArray(new String[0])));
@@ -156,7 +163,10 @@ public class HaskellLibraryDescriptionTest {
     // Test shared dep type.
     NativeLinkableInput sharedInput =
         library.getNativeLinkableInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, Linker.LinkableDepType.SHARED, graphBuilder);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            Linker.LinkableDepType.SHARED,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     assertThat(
         Arg.stringify(sharedInput.getArgs(), pathResolver),
         not(hasItems(linkWholeFlags.toArray(new String[0]))));
@@ -227,7 +237,11 @@ public class HaskellLibraryDescriptionTest {
 
     // Test static dep type.
     NativeLinkableInput staticInput =
-        library.getNativeLinkableInput(cxxPlatform, Linker.LinkableDepType.STATIC, graphBuilder);
+        library.getNativeLinkableInput(
+            cxxPlatform,
+            Linker.LinkableDepType.STATIC,
+            graphBuilder,
+            EmptyTargetConfiguration.INSTANCE);
     assertThat(
         FluentIterable.from(staticInput.getArgs())
             .transformAndConcat(

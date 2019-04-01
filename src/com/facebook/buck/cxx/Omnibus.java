@@ -325,7 +325,10 @@ public class Omnibus {
       if (linkStyle != Linker.LinkableDepType.SHARED) {
         Preconditions.checkState(linkStyle == Linker.LinkableDepType.STATIC_PIC);
         argsBuilder.addAll(
-            nativeLinkable.getNativeLinkableInput(cxxPlatform, linkStyle, graphBuilder).getArgs());
+            nativeLinkable
+                .getNativeLinkableInput(
+                    cxxPlatform, linkStyle, graphBuilder, target.getTargetConfiguration())
+                .getArgs());
         continue;
       }
 
@@ -352,7 +355,10 @@ public class Omnibus {
       // normally.
       Preconditions.checkState(spec.getExcluded().containsKey(linkableTarget));
       argsBuilder.addAll(
-          nativeLinkable.getNativeLinkableInput(cxxPlatform, linkStyle, graphBuilder).getArgs());
+          nativeLinkable
+              .getNativeLinkableInput(
+                  cxxPlatform, linkStyle, graphBuilder, target.getTargetConfiguration())
+              .getArgs());
     }
 
     // Create the root library rule using the arguments assembled above.
@@ -572,7 +578,11 @@ public class Omnibus {
       NativeLinkable nativeLinkable = Objects.requireNonNull(spec.getBody().get(target));
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(
-              cxxPlatform, Linker.LinkableDepType.STATIC_PIC, nativeLinkable, graphBuilder);
+              cxxPlatform,
+              Linker.LinkableDepType.STATIC_PIC,
+              nativeLinkable,
+              graphBuilder,
+              buildTarget.getTargetConfiguration());
       argsBuilder.addAll(input.getArgs());
     }
 
@@ -584,7 +594,11 @@ public class Omnibus {
     for (NativeLinkable nativeLinkable : deps) {
       NativeLinkableInput input =
           NativeLinkables.getNativeLinkableInput(
-              cxxPlatform, Linker.LinkableDepType.SHARED, nativeLinkable, graphBuilder);
+              cxxPlatform,
+              Linker.LinkableDepType.SHARED,
+              nativeLinkable,
+              graphBuilder,
+              buildTarget.getTargetConfiguration());
       argsBuilder.addAll(input.getArgs());
     }
 

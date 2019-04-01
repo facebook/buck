@@ -17,6 +17,7 @@
 package com.facebook.buck.features.d;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -65,7 +66,8 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
       CxxPlatform cxxPlatform,
       Linker.LinkableDepType type,
       boolean forceLinkWhole,
-      ActionGraphBuilder graphBuilder) {
+      ActionGraphBuilder graphBuilder,
+      TargetConfiguration targetConfiguration) {
     Archive archive =
         (Archive)
             this.graphBuilder.requireRule(
