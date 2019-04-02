@@ -147,6 +147,7 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.log.LogBuckConfig;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;

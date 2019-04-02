@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.support.cli.config;
 
 import com.google.common.base.CaseFormat;
 
