@@ -104,16 +104,6 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   }
 
   @Override
-  public ArchiveMemberPath getAbsoluteArchiveMemberPath(SourcePath sourcePath) {
-    Preconditions.checkState(sourcePath instanceof ArchiveMemberSourcePath);
-    ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;
-
-    Path archiveAbsolutePath = getAbsolutePath(archiveMemberSourcePath.getArchiveSourcePath());
-
-    return ArchiveMemberPath.of(archiveAbsolutePath, archiveMemberSourcePath.getMemberPath());
-  }
-
-  @Override
   public ArchiveMemberPath getRelativeArchiveMemberPath(SourcePath sourcePath) {
     Preconditions.checkState(sourcePath instanceof ArchiveMemberSourcePath);
     ArchiveMemberSourcePath archiveMemberSourcePath = (ArchiveMemberSourcePath) sourcePath;

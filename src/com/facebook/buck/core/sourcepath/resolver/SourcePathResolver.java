@@ -38,8 +38,6 @@ public interface SourcePathResolver {
 
   Path getAbsolutePath(SourcePath sourcePath);
 
-  ArchiveMemberPath getAbsoluteArchiveMemberPath(SourcePath sourcePath);
-
   ArchiveMemberPath getRelativeArchiveMemberPath(SourcePath sourcePath);
 
   ImmutableSortedSet<Path> getAllAbsolutePaths(Collection<? extends SourcePath> sourcePaths);

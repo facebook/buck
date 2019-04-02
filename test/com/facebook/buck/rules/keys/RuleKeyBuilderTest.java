@@ -38,6 +38,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePathFactoryForTests;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -221,8 +222,10 @@ public class RuleKeyBuilderTest {
                 FILESYSTEM.resolve(PATH_1), HashCode.fromInt(0),
                 FILESYSTEM.resolve(PATH_2), HashCode.fromInt(42)),
             ImmutableMap.of(
-                pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_1), HashCode.fromInt(0),
-                pathResolver.getAbsoluteArchiveMemberPath(ARCHIVE_PATH_2), HashCode.fromInt(42)),
+                SourcePathFactoryForTests.toAbsoluteArchiveMemberPath(pathResolver, ARCHIVE_PATH_1),
+                    HashCode.fromInt(0),
+                SourcePathFactoryForTests.toAbsoluteArchiveMemberPath(pathResolver, ARCHIVE_PATH_2),
+                    HashCode.fromInt(42)),
             ImmutableMap.of());
 
     return new RuleKeyBuilder<HashCode>(

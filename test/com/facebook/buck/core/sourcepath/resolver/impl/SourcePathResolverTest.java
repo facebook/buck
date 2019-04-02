@@ -457,29 +457,6 @@ public class SourcePathResolverTest {
   }
 
   @Test
-  public void testGetAbsolutePathForArchiveMemberSourcePath() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
-
-    BuildRule rule =
-        graphBuilder.addToIndex(
-            new FakeBuildRule(BuildTargetFactory.newInstance("//foo:bar"), filesystem));
-    Path archivePath = filesystem.getBuckPaths().getGenDir().resolve("foo.jar");
-    Path archiveAbsolutePath = filesystem.resolve(archivePath);
-    SourcePath archiveSourcePath =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), archivePath);
-    Path memberPath = Paths.get("foo.class");
-
-    ArchiveMemberSourcePath path = ArchiveMemberSourcePath.of(archiveSourcePath, memberPath);
-
-    ArchiveMemberPath absolutePath = pathResolver.getAbsoluteArchiveMemberPath(path);
-    assertEquals(archiveAbsolutePath, absolutePath.getArchivePath());
-    assertEquals(memberPath, absolutePath.getMemberPath());
-  }
-
-  @Test
   public void getPathSourcePath() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =

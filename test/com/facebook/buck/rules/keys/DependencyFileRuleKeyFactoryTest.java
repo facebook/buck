@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.SourcePathFactoryForTests;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -132,10 +133,20 @@ public class DependencyFileRuleKeyFactoryTest {
         unusedSourcePath,
         noncoveredSourcePath,
         interestingSourcePath,
-        Paths.get(pathResolver.getAbsoluteArchiveMemberPath(usedSourcePath).toString()),
-        Paths.get(pathResolver.getAbsoluteArchiveMemberPath(unusedSourcePath).toString()),
-        Paths.get(pathResolver.getAbsoluteArchiveMemberPath(noncoveredSourcePath).toString()),
-        Paths.get(pathResolver.getAbsoluteArchiveMemberPath(interestingSourcePath).toString()),
+        Paths.get(
+            SourcePathFactoryForTests.toAbsoluteArchiveMemberPath(pathResolver, usedSourcePath)
+                .toString()),
+        Paths.get(
+            SourcePathFactoryForTests.toAbsoluteArchiveMemberPath(pathResolver, unusedSourcePath)
+                .toString()),
+        Paths.get(
+            SourcePathFactoryForTests.toAbsoluteArchiveMemberPath(
+                    pathResolver, noncoveredSourcePath)
+                .toString()),
+        Paths.get(
+            SourcePathFactoryForTests.toAbsoluteArchiveMemberPath(
+                    pathResolver, interestingSourcePath)
+                .toString()),
         DependencyFileEntry.fromSourcePath(usedSourcePath, pathResolver));
   }
 
