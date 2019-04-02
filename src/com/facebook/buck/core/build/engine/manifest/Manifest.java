@@ -22,7 +22,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.cache.FileHashCache;
+import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -144,31 +144,31 @@ public class Manifest {
   /** Hash the files pointed to by the source paths. */
   @VisibleForTesting
   static HashCode hashSourcePathGroup(
-      FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableList<SourcePath> paths)
+      FileHashLoader fileHashLoader, SourcePathResolver resolver, ImmutableList<SourcePath> paths)
       throws IOException {
     if (paths.size() == 1) {
-      return hashSourcePath(paths.get(0), fileHashCache, resolver);
+      return hashSourcePath(paths.get(0), fileHashLoader, resolver);
     }
     Hasher hasher = Hashing.md5().newHasher();
     for (SourcePath path : paths) {
-      hasher.putBytes(hashSourcePath(path, fileHashCache, resolver).asBytes());
+      hasher.putBytes(hashSourcePath(path, fileHashLoader, resolver).asBytes());
     }
     return hasher.hash();
   }
 
   private static HashCode hashSourcePath(
-      SourcePath path, FileHashCache fileHashCache, SourcePathResolver resolver)
+      SourcePath path, FileHashLoader fileHashLoader, SourcePathResolver resolver)
       throws IOException {
     if (path instanceof ArchiveMemberSourcePath) {
-      return fileHashCache.get(
+      return fileHashLoader.get(
           resolver.getFilesystem(path), resolver.getRelativeArchiveMemberPath(path));
     } else {
-      return fileHashCache.get(resolver.getFilesystem(path), resolver.getRelativePath(path));
+      return fileHashLoader.get(resolver.getFilesystem(path), resolver.getRelativePath(path));
     }
   }
 
   private boolean hashesMatch(
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       SourcePathResolver resolver,
       ImmutableListMultimap<String, SourcePath> universe,
       int[] hashIndices)
@@ -182,7 +182,7 @@ public class Manifest {
       }
       HashCode onDiskHeaderHash;
       try {
-        onDiskHeaderHash = hashSourcePathGroup(fileHashCache, resolver, candidates);
+        onDiskHeaderHash = hashSourcePathGroup(fileHashLoader, resolver, candidates);
       } catch (NoSuchFileException e) {
         return false;
       }
@@ -196,10 +196,10 @@ public class Manifest {
 
   /**
    * @return the {@link RuleKey} of the entry that matches the on disk hashes provided by {@code
-   *     fileHashCache}.
+   *     fileHashLoader}.
    */
   public Optional<RuleKey> lookup(
-      FileHashCache fileHashCache, SourcePathResolver resolver, ImmutableSet<SourcePath> universe)
+      FileHashLoader fileHashLoader, SourcePathResolver resolver, ImmutableSet<SourcePath> universe)
       throws IOException {
     // Create a set of all paths we care about.
     ImmutableSet.Builder<String> interestingPathsBuilder = new ImmutableSet.Builder<>();
@@ -216,7 +216,7 @@ public class Manifest {
 
     // Find a matching entry.
     for (Pair<RuleKey, int[]> entry : entries) {
-      if (hashesMatch(fileHashCache, resolver, mappedUniverse, entry.getSecond())) {
+      if (hashesMatch(fileHashLoader, resolver, mappedUniverse, entry.getSecond())) {
         return Optional.of(entry.getFirst());
       }
     }
@@ -238,7 +238,7 @@ public class Manifest {
 
   /** Adds a new output file to the manifest. */
   public void addEntry(
-      FileHashCache fileHashCache,
+      FileHashLoader fileHashLoader,
       RuleKey key,
       SourcePathResolver resolver,
       ImmutableSet<SourcePath> universe,
@@ -260,7 +260,7 @@ public class Manifest {
       ImmutableList<SourcePath> paths = sortedUniverse.get(relativePath);
       Preconditions.checkState(!paths.isEmpty());
       hashIndices[index++] =
-          addHash(relativePath, hashSourcePathGroup(fileHashCache, resolver, paths));
+          addHash(relativePath, hashSourcePathGroup(fileHashLoader, resolver, paths));
     }
     entries.add(new Pair<>(key, hashIndices));
   }

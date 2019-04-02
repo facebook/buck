@@ -110,6 +110,11 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   }
 
   @Override
+  public boolean useDependencyFileRuleKeys() {
+    return false;
+  }
+
+  @Override
   public SourcePath getPathToTextSymbolsFile() {
     return ExplicitBuildTargetSourcePath.of(
         unzipAar.getBuildTarget(), unzipAar.getTextSymbolsFile());

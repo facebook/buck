@@ -102,7 +102,7 @@ public class ManifestRuleKeyManager {
   }
 
   @VisibleForTesting
-  protected static Path getManifestPath(BuildRule rule) {
+  public static Path getManifestPath(BuildRule rule) {
     return BuildInfo.getPathToOtherMetadataDirectory(
             rule.getBuildTarget(), rule.getProjectFilesystem())
         .resolve(BuildInfo.MANIFEST);
