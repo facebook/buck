@@ -1218,11 +1218,9 @@ public final class MainRunner {
           }
 
           // This needs to be after the registration of the event listener so they can pick it up.
-          Optional<String> newDaemonEvent = stateLifecycleStatus.getLifecycleStatusString();
-          newDaemonEvent.ifPresent(
-              event -> {
-                buildEventBus.post(DaemonEvent.newDaemonInstance(event));
-              });
+          stateLifecycleStatus
+              .getLifecycleStatusString()
+              .ifPresent(event -> buildEventBus.post(DaemonEvent.newDaemonInstance(event)));
 
 
           VersionControlBuckConfig vcBuckConfig = new VersionControlBuckConfig(buckConfig);
@@ -1960,9 +1958,7 @@ public final class MainRunner {
     } else {
       LOG.info("::: ChromeTrace listener disabled");
     }
-    if (webServer.isPresent()) {
-      eventListenersBuilder.add(webServer.get().createListener());
-    }
+    webServer.map(WebServer::createListener).ifPresent(eventListenersBuilder::add);
 
     ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
 
