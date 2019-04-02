@@ -103,6 +103,8 @@ struct BuckCacheFetchRequest {
   2: optional string repository;
   3: optional string scheduleType;
   4: optional bool distributedBuildModeEnabled;
+  // The fully qualified target name associated with the ruleKey
+  5: optional string buildTarget;
 }
 
 struct BuckCacheFetchResponse {
@@ -165,6 +167,12 @@ struct BuckCacheMultiFetchRequest {
   2: optional string repository;
   3: optional string scheduleType;
   4: optional bool distributedBuildModeEnabled;
+  // Fully qualified target names associated with the rulekeys. There should
+  // always be the same number of these as ruleKeys, and the entries should
+  // match 1:1 (aka buildTargets[2] is associated with ruleKeys[2]).
+  // RuleKeys that don't have an associated build target (for whatever reason)
+  // will have an entry of "" (aka empty string).
+  5: optional list<string> buildTargets;
 }
 
 struct BuckCacheMultiFetchResponse {

@@ -404,13 +404,13 @@ public class Manifest implements org.apache.thrift.TBase<Manifest, Manifest._Fie
           case 2: // VALUES
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list90 = iprot.readListBegin();
-                struct.values = new java.util.ArrayList<java.nio.ByteBuffer>(_list90.size);
-                java.nio.ByteBuffer _elem91;
-                for (int _i92 = 0; _i92 < _list90.size; ++_i92)
+                org.apache.thrift.protocol.TList _list98 = iprot.readListBegin();
+                struct.values = new java.util.ArrayList<java.nio.ByteBuffer>(_list98.size);
+                java.nio.ByteBuffer _elem99;
+                for (int _i100 = 0; _i100 < _list98.size; ++_i100)
                 {
-                  _elem91 = iprot.readBinary();
-                  struct.values.add(_elem91);
+                  _elem99 = iprot.readBinary();
+                  struct.values.add(_elem99);
                 }
                 iprot.readListEnd();
               }
@@ -446,9 +446,9 @@ public class Manifest implements org.apache.thrift.TBase<Manifest, Manifest._Fie
           oprot.writeFieldBegin(VALUES_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.values.size()));
-            for (java.nio.ByteBuffer _iter93 : struct.values)
+            for (java.nio.ByteBuffer _iter101 : struct.values)
             {
-              oprot.writeBinary(_iter93);
+              oprot.writeBinary(_iter101);
             }
             oprot.writeListEnd();
           }
@@ -486,9 +486,9 @@ public class Manifest implements org.apache.thrift.TBase<Manifest, Manifest._Fie
       if (struct.isSetValues()) {
         {
           oprot.writeI32(struct.values.size());
-          for (java.nio.ByteBuffer _iter94 : struct.values)
+          for (java.nio.ByteBuffer _iter102 : struct.values)
           {
-            oprot.writeBinary(_iter94);
+            oprot.writeBinary(_iter102);
           }
         }
       }
@@ -504,13 +504,13 @@ public class Manifest implements org.apache.thrift.TBase<Manifest, Manifest._Fie
       }
       if (incoming.get(1)) {
         {
-          org.apache.thrift.protocol.TList _list95 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.values = new java.util.ArrayList<java.nio.ByteBuffer>(_list95.size);
-          java.nio.ByteBuffer _elem96;
-          for (int _i97 = 0; _i97 < _list95.size; ++_i97)
+          org.apache.thrift.protocol.TList _list103 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.values = new java.util.ArrayList<java.nio.ByteBuffer>(_list103.size);
+          java.nio.ByteBuffer _elem104;
+          for (int _i105 = 0; _i105 < _list103.size; ++_i105)
           {
-            _elem96 = iprot.readBinary();
-            struct.values.add(_elem96);
+            _elem104 = iprot.readBinary();
+            struct.values.add(_elem104);
           }
         }
         struct.setValuesIsSet(true);

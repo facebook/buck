@@ -318,14 +318,14 @@ public class BuckCacheMultiFetchResponse implements org.apache.thrift.TBase<Buck
           case 1: // RESULTS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list66 = iprot.readListBegin();
-                struct.results = new java.util.ArrayList<FetchResult>(_list66.size);
-                FetchResult _elem67;
-                for (int _i68 = 0; _i68 < _list66.size; ++_i68)
+                org.apache.thrift.protocol.TList _list74 = iprot.readListBegin();
+                struct.results = new java.util.ArrayList<FetchResult>(_list74.size);
+                FetchResult _elem75;
+                for (int _i76 = 0; _i76 < _list74.size; ++_i76)
                 {
-                  _elem67 = new FetchResult();
-                  _elem67.read(iprot);
-                  struct.results.add(_elem67);
+                  _elem75 = new FetchResult();
+                  _elem75.read(iprot);
+                  struct.results.add(_elem75);
                 }
                 iprot.readListEnd();
               }
@@ -354,9 +354,9 @@ public class BuckCacheMultiFetchResponse implements org.apache.thrift.TBase<Buck
           oprot.writeFieldBegin(RESULTS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.results.size()));
-            for (FetchResult _iter69 : struct.results)
+            for (FetchResult _iter77 : struct.results)
             {
-              _iter69.write(oprot);
+              _iter77.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -388,9 +388,9 @@ public class BuckCacheMultiFetchResponse implements org.apache.thrift.TBase<Buck
       if (struct.isSetResults()) {
         {
           oprot.writeI32(struct.results.size());
-          for (FetchResult _iter70 : struct.results)
+          for (FetchResult _iter78 : struct.results)
           {
-            _iter70.write(oprot);
+            _iter78.write(oprot);
           }
         }
       }
@@ -402,14 +402,14 @@ public class BuckCacheMultiFetchResponse implements org.apache.thrift.TBase<Buck
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list71 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.results = new java.util.ArrayList<FetchResult>(_list71.size);
-          FetchResult _elem72;
-          for (int _i73 = 0; _i73 < _list71.size; ++_i73)
+          org.apache.thrift.protocol.TList _list79 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.results = new java.util.ArrayList<FetchResult>(_list79.size);
+          FetchResult _elem80;
+          for (int _i81 = 0; _i81 < _list79.size; ++_i81)
           {
-            _elem72 = new FetchResult();
-            _elem72.read(iprot);
-            struct.results.add(_elem72);
+            _elem80 = new FetchResult();
+            _elem80.read(iprot);
+            struct.results.add(_elem80);
           }
         }
         struct.setResultsIsSet(true);

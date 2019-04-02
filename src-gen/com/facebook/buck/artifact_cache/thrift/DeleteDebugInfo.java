@@ -315,13 +315,13 @@ public class DeleteDebugInfo implements org.apache.thrift.TBase<DeleteDebugInfo,
           case 1: // STORES_DELETED_FROM
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list82 = iprot.readListBegin();
-                struct.storesDeletedFrom = new java.util.ArrayList<java.lang.String>(_list82.size);
-                java.lang.String _elem83;
-                for (int _i84 = 0; _i84 < _list82.size; ++_i84)
+                org.apache.thrift.protocol.TList _list90 = iprot.readListBegin();
+                struct.storesDeletedFrom = new java.util.ArrayList<java.lang.String>(_list90.size);
+                java.lang.String _elem91;
+                for (int _i92 = 0; _i92 < _list90.size; ++_i92)
                 {
-                  _elem83 = iprot.readString();
-                  struct.storesDeletedFrom.add(_elem83);
+                  _elem91 = iprot.readString();
+                  struct.storesDeletedFrom.add(_elem91);
                 }
                 iprot.readListEnd();
               }
@@ -350,9 +350,9 @@ public class DeleteDebugInfo implements org.apache.thrift.TBase<DeleteDebugInfo,
           oprot.writeFieldBegin(STORES_DELETED_FROM_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.storesDeletedFrom.size()));
-            for (java.lang.String _iter85 : struct.storesDeletedFrom)
+            for (java.lang.String _iter93 : struct.storesDeletedFrom)
             {
-              oprot.writeString(_iter85);
+              oprot.writeString(_iter93);
             }
             oprot.writeListEnd();
           }
@@ -384,9 +384,9 @@ public class DeleteDebugInfo implements org.apache.thrift.TBase<DeleteDebugInfo,
       if (struct.isSetStoresDeletedFrom()) {
         {
           oprot.writeI32(struct.storesDeletedFrom.size());
-          for (java.lang.String _iter86 : struct.storesDeletedFrom)
+          for (java.lang.String _iter94 : struct.storesDeletedFrom)
           {
-            oprot.writeString(_iter86);
+            oprot.writeString(_iter94);
           }
         }
       }
@@ -398,13 +398,13 @@ public class DeleteDebugInfo implements org.apache.thrift.TBase<DeleteDebugInfo,
       java.util.BitSet incoming = iprot.readBitSet(1);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list87 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-          struct.storesDeletedFrom = new java.util.ArrayList<java.lang.String>(_list87.size);
-          java.lang.String _elem88;
-          for (int _i89 = 0; _i89 < _list87.size; ++_i89)
+          org.apache.thrift.protocol.TList _list95 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.storesDeletedFrom = new java.util.ArrayList<java.lang.String>(_list95.size);
+          java.lang.String _elem96;
+          for (int _i97 = 0; _i97 < _list95.size; ++_i97)
           {
-            _elem88 = iprot.readString();
-            struct.storesDeletedFrom.add(_elem88);
+            _elem96 = iprot.readString();
+            struct.storesDeletedFrom.add(_elem96);
           }
         }
         struct.setStoresDeletedFromIsSet(true);

@@ -560,14 +560,14 @@ public class BuckCacheDeleteRequest implements org.apache.thrift.TBase<BuckCache
           case 1: // RULE_KEYS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list74 = iprot.readListBegin();
-                struct.ruleKeys = new java.util.ArrayList<RuleKey>(_list74.size);
-                RuleKey _elem75;
-                for (int _i76 = 0; _i76 < _list74.size; ++_i76)
+                org.apache.thrift.protocol.TList _list82 = iprot.readListBegin();
+                struct.ruleKeys = new java.util.ArrayList<RuleKey>(_list82.size);
+                RuleKey _elem83;
+                for (int _i84 = 0; _i84 < _list82.size; ++_i84)
                 {
-                  _elem75 = new RuleKey();
-                  _elem75.read(iprot);
-                  struct.ruleKeys.add(_elem75);
+                  _elem83 = new RuleKey();
+                  _elem83.read(iprot);
+                  struct.ruleKeys.add(_elem83);
                 }
                 iprot.readListEnd();
               }
@@ -620,9 +620,9 @@ public class BuckCacheDeleteRequest implements org.apache.thrift.TBase<BuckCache
           oprot.writeFieldBegin(RULE_KEYS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.ruleKeys.size()));
-            for (RuleKey _iter77 : struct.ruleKeys)
+            for (RuleKey _iter85 : struct.ruleKeys)
             {
-              _iter77.write(oprot);
+              _iter85.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -682,9 +682,9 @@ public class BuckCacheDeleteRequest implements org.apache.thrift.TBase<BuckCache
       if (struct.isSetRuleKeys()) {
         {
           oprot.writeI32(struct.ruleKeys.size());
-          for (RuleKey _iter78 : struct.ruleKeys)
+          for (RuleKey _iter86 : struct.ruleKeys)
           {
-            _iter78.write(oprot);
+            _iter86.write(oprot);
           }
         }
       }
@@ -705,14 +705,14 @@ public class BuckCacheDeleteRequest implements org.apache.thrift.TBase<BuckCache
       java.util.BitSet incoming = iprot.readBitSet(4);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list79 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.ruleKeys = new java.util.ArrayList<RuleKey>(_list79.size);
-          RuleKey _elem80;
-          for (int _i81 = 0; _i81 < _list79.size; ++_i81)
+          org.apache.thrift.protocol.TList _list87 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.ruleKeys = new java.util.ArrayList<RuleKey>(_list87.size);
+          RuleKey _elem88;
+          for (int _i89 = 0; _i89 < _list87.size; ++_i89)
           {
-            _elem80 = new RuleKey();
-            _elem80.read(iprot);
-            struct.ruleKeys.add(_elem80);
+            _elem88 = new RuleKey();
+            _elem88.read(iprot);
+            struct.ruleKeys.add(_elem88);
           }
         }
         struct.setRuleKeysIsSet(true);

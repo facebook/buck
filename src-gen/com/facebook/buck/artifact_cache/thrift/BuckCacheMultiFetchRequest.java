@@ -15,6 +15,7 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
   private static final org.apache.thrift.protocol.TField REPOSITORY_FIELD_DESC = new org.apache.thrift.protocol.TField("repository", org.apache.thrift.protocol.TType.STRING, (short)2);
   private static final org.apache.thrift.protocol.TField SCHEDULE_TYPE_FIELD_DESC = new org.apache.thrift.protocol.TField("scheduleType", org.apache.thrift.protocol.TType.STRING, (short)3);
   private static final org.apache.thrift.protocol.TField DISTRIBUTED_BUILD_MODE_ENABLED_FIELD_DESC = new org.apache.thrift.protocol.TField("distributedBuildModeEnabled", org.apache.thrift.protocol.TType.BOOL, (short)4);
+  private static final org.apache.thrift.protocol.TField BUILD_TARGETS_FIELD_DESC = new org.apache.thrift.protocol.TField("buildTargets", org.apache.thrift.protocol.TType.LIST, (short)5);
 
   private static final org.apache.thrift.scheme.SchemeFactory STANDARD_SCHEME_FACTORY = new BuckCacheMultiFetchRequestStandardSchemeFactory();
   private static final org.apache.thrift.scheme.SchemeFactory TUPLE_SCHEME_FACTORY = new BuckCacheMultiFetchRequestTupleSchemeFactory();
@@ -23,13 +24,15 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
   public java.lang.String repository; // optional
   public java.lang.String scheduleType; // optional
   public boolean distributedBuildModeEnabled; // optional
+  public java.util.List<java.lang.String> buildTargets; // optional
 
   /** The set of fields this struct contains, along with convenience methods for finding and manipulating them. */
   public enum _Fields implements org.apache.thrift.TFieldIdEnum {
     RULE_KEYS((short)1, "ruleKeys"),
     REPOSITORY((short)2, "repository"),
     SCHEDULE_TYPE((short)3, "scheduleType"),
-    DISTRIBUTED_BUILD_MODE_ENABLED((short)4, "distributedBuildModeEnabled");
+    DISTRIBUTED_BUILD_MODE_ENABLED((short)4, "distributedBuildModeEnabled"),
+    BUILD_TARGETS((short)5, "buildTargets");
 
     private static final java.util.Map<java.lang.String, _Fields> byName = new java.util.HashMap<java.lang.String, _Fields>();
 
@@ -52,6 +55,8 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
           return SCHEDULE_TYPE;
         case 4: // DISTRIBUTED_BUILD_MODE_ENABLED
           return DISTRIBUTED_BUILD_MODE_ENABLED;
+        case 5: // BUILD_TARGETS
+          return BUILD_TARGETS;
         default:
           return null;
       }
@@ -94,7 +99,7 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
   // isset id assignments
   private static final int __DISTRIBUTEDBUILDMODEENABLED_ISSET_ID = 0;
   private byte __isset_bitfield = 0;
-  private static final _Fields optionals[] = {_Fields.RULE_KEYS,_Fields.REPOSITORY,_Fields.SCHEDULE_TYPE,_Fields.DISTRIBUTED_BUILD_MODE_ENABLED};
+  private static final _Fields optionals[] = {_Fields.RULE_KEYS,_Fields.REPOSITORY,_Fields.SCHEDULE_TYPE,_Fields.DISTRIBUTED_BUILD_MODE_ENABLED,_Fields.BUILD_TARGETS};
   public static final java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     java.util.Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new java.util.EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -107,6 +112,9 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING)));
     tmpMap.put(_Fields.DISTRIBUTED_BUILD_MODE_ENABLED, new org.apache.thrift.meta_data.FieldMetaData("distributedBuildModeEnabled", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.BOOL)));
+    tmpMap.put(_Fields.BUILD_TARGETS, new org.apache.thrift.meta_data.FieldMetaData("buildTargets", org.apache.thrift.TFieldRequirementType.OPTIONAL, 
+        new org.apache.thrift.meta_data.ListMetaData(org.apache.thrift.protocol.TType.LIST, 
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.STRING))));
     metaDataMap = java.util.Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(BuckCacheMultiFetchRequest.class, metaDataMap);
   }
@@ -133,6 +141,10 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
       this.scheduleType = other.scheduleType;
     }
     this.distributedBuildModeEnabled = other.distributedBuildModeEnabled;
+    if (other.isSetBuildTargets()) {
+      java.util.List<java.lang.String> __this__buildTargets = new java.util.ArrayList<java.lang.String>(other.buildTargets);
+      this.buildTargets = __this__buildTargets;
+    }
   }
 
   public BuckCacheMultiFetchRequest deepCopy() {
@@ -146,6 +158,7 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
     this.scheduleType = null;
     setDistributedBuildModeEnabledIsSet(false);
     this.distributedBuildModeEnabled = false;
+    this.buildTargets = null;
   }
 
   public int getRuleKeysSize() {
@@ -258,6 +271,45 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
     __isset_bitfield = org.apache.thrift.EncodingUtils.setBit(__isset_bitfield, __DISTRIBUTEDBUILDMODEENABLED_ISSET_ID, value);
   }
 
+  public int getBuildTargetsSize() {
+    return (this.buildTargets == null) ? 0 : this.buildTargets.size();
+  }
+
+  public java.util.Iterator<java.lang.String> getBuildTargetsIterator() {
+    return (this.buildTargets == null) ? null : this.buildTargets.iterator();
+  }
+
+  public void addToBuildTargets(java.lang.String elem) {
+    if (this.buildTargets == null) {
+      this.buildTargets = new java.util.ArrayList<java.lang.String>();
+    }
+    this.buildTargets.add(elem);
+  }
+
+  public java.util.List<java.lang.String> getBuildTargets() {
+    return this.buildTargets;
+  }
+
+  public BuckCacheMultiFetchRequest setBuildTargets(java.util.List<java.lang.String> buildTargets) {
+    this.buildTargets = buildTargets;
+    return this;
+  }
+
+  public void unsetBuildTargets() {
+    this.buildTargets = null;
+  }
+
+  /** Returns true if field buildTargets is set (has been assigned a value) and false otherwise */
+  public boolean isSetBuildTargets() {
+    return this.buildTargets != null;
+  }
+
+  public void setBuildTargetsIsSet(boolean value) {
+    if (!value) {
+      this.buildTargets = null;
+    }
+  }
+
   public void setFieldValue(_Fields field, java.lang.Object value) {
     switch (field) {
     case RULE_KEYS:
@@ -292,6 +344,14 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
       }
       break;
 
+    case BUILD_TARGETS:
+      if (value == null) {
+        unsetBuildTargets();
+      } else {
+        setBuildTargets((java.util.List<java.lang.String>)value);
+      }
+      break;
+
     }
   }
 
@@ -308,6 +368,9 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
 
     case DISTRIBUTED_BUILD_MODE_ENABLED:
       return isDistributedBuildModeEnabled();
+
+    case BUILD_TARGETS:
+      return getBuildTargets();
 
     }
     throw new java.lang.IllegalStateException();
@@ -328,6 +391,8 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
       return isSetScheduleType();
     case DISTRIBUTED_BUILD_MODE_ENABLED:
       return isSetDistributedBuildModeEnabled();
+    case BUILD_TARGETS:
+      return isSetBuildTargets();
     }
     throw new java.lang.IllegalStateException();
   }
@@ -383,6 +448,15 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
         return false;
     }
 
+    boolean this_present_buildTargets = true && this.isSetBuildTargets();
+    boolean that_present_buildTargets = true && that.isSetBuildTargets();
+    if (this_present_buildTargets || that_present_buildTargets) {
+      if (!(this_present_buildTargets && that_present_buildTargets))
+        return false;
+      if (!this.buildTargets.equals(that.buildTargets))
+        return false;
+    }
+
     return true;
   }
 
@@ -405,6 +479,10 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
     hashCode = hashCode * 8191 + ((isSetDistributedBuildModeEnabled()) ? 131071 : 524287);
     if (isSetDistributedBuildModeEnabled())
       hashCode = hashCode * 8191 + ((distributedBuildModeEnabled) ? 131071 : 524287);
+
+    hashCode = hashCode * 8191 + ((isSetBuildTargets()) ? 131071 : 524287);
+    if (isSetBuildTargets())
+      hashCode = hashCode * 8191 + buildTargets.hashCode();
 
     return hashCode;
   }
@@ -453,6 +531,16 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
     }
     if (isSetDistributedBuildModeEnabled()) {
       lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.distributedBuildModeEnabled, other.distributedBuildModeEnabled);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = java.lang.Boolean.valueOf(isSetBuildTargets()).compareTo(other.isSetBuildTargets());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetBuildTargets()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.buildTargets, other.buildTargets);
       if (lastComparison != 0) {
         return lastComparison;
       }
@@ -510,6 +598,16 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
       if (!first) sb.append(", ");
       sb.append("distributedBuildModeEnabled:");
       sb.append(this.distributedBuildModeEnabled);
+      first = false;
+    }
+    if (isSetBuildTargets()) {
+      if (!first) sb.append(", ");
+      sb.append("buildTargets:");
+      if (this.buildTargets == null) {
+        sb.append("null");
+      } else {
+        sb.append(this.buildTargets);
+      }
       first = false;
     }
     sb.append(")");
@@ -600,6 +698,24 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 5: // BUILD_TARGETS
+            if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
+              {
+                org.apache.thrift.protocol.TList _list61 = iprot.readListBegin();
+                struct.buildTargets = new java.util.ArrayList<java.lang.String>(_list61.size);
+                java.lang.String _elem62;
+                for (int _i63 = 0; _i63 < _list61.size; ++_i63)
+                {
+                  _elem62 = iprot.readString();
+                  struct.buildTargets.add(_elem62);
+                }
+                iprot.readListEnd();
+              }
+              struct.setBuildTargetsIsSet(true);
+            } else { 
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -620,9 +736,9 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
           oprot.writeFieldBegin(RULE_KEYS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.ruleKeys.size()));
-            for (RuleKey _iter61 : struct.ruleKeys)
+            for (RuleKey _iter64 : struct.ruleKeys)
             {
-              _iter61.write(oprot);
+              _iter64.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -647,6 +763,20 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
         oprot.writeFieldBegin(DISTRIBUTED_BUILD_MODE_ENABLED_FIELD_DESC);
         oprot.writeBool(struct.distributedBuildModeEnabled);
         oprot.writeFieldEnd();
+      }
+      if (struct.buildTargets != null) {
+        if (struct.isSetBuildTargets()) {
+          oprot.writeFieldBegin(BUILD_TARGETS_FIELD_DESC);
+          {
+            oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, struct.buildTargets.size()));
+            for (java.lang.String _iter65 : struct.buildTargets)
+            {
+              oprot.writeString(_iter65);
+            }
+            oprot.writeListEnd();
+          }
+          oprot.writeFieldEnd();
+        }
       }
       oprot.writeFieldStop();
       oprot.writeStructEnd();
@@ -678,13 +808,16 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
       if (struct.isSetDistributedBuildModeEnabled()) {
         optionals.set(3);
       }
-      oprot.writeBitSet(optionals, 4);
+      if (struct.isSetBuildTargets()) {
+        optionals.set(4);
+      }
+      oprot.writeBitSet(optionals, 5);
       if (struct.isSetRuleKeys()) {
         {
           oprot.writeI32(struct.ruleKeys.size());
-          for (RuleKey _iter62 : struct.ruleKeys)
+          for (RuleKey _iter66 : struct.ruleKeys)
           {
-            _iter62.write(oprot);
+            _iter66.write(oprot);
           }
         }
       }
@@ -697,22 +830,31 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
       if (struct.isSetDistributedBuildModeEnabled()) {
         oprot.writeBool(struct.distributedBuildModeEnabled);
       }
+      if (struct.isSetBuildTargets()) {
+        {
+          oprot.writeI32(struct.buildTargets.size());
+          for (java.lang.String _iter67 : struct.buildTargets)
+          {
+            oprot.writeString(_iter67);
+          }
+        }
+      }
     }
 
     @Override
     public void read(org.apache.thrift.protocol.TProtocol prot, BuckCacheMultiFetchRequest struct) throws org.apache.thrift.TException {
       org.apache.thrift.protocol.TTupleProtocol iprot = (org.apache.thrift.protocol.TTupleProtocol) prot;
-      java.util.BitSet incoming = iprot.readBitSet(4);
+      java.util.BitSet incoming = iprot.readBitSet(5);
       if (incoming.get(0)) {
         {
-          org.apache.thrift.protocol.TList _list63 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.ruleKeys = new java.util.ArrayList<RuleKey>(_list63.size);
-          RuleKey _elem64;
-          for (int _i65 = 0; _i65 < _list63.size; ++_i65)
+          org.apache.thrift.protocol.TList _list68 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.ruleKeys = new java.util.ArrayList<RuleKey>(_list68.size);
+          RuleKey _elem69;
+          for (int _i70 = 0; _i70 < _list68.size; ++_i70)
           {
-            _elem64 = new RuleKey();
-            _elem64.read(iprot);
-            struct.ruleKeys.add(_elem64);
+            _elem69 = new RuleKey();
+            _elem69.read(iprot);
+            struct.ruleKeys.add(_elem69);
           }
         }
         struct.setRuleKeysIsSet(true);
@@ -728,6 +870,19 @@ public class BuckCacheMultiFetchRequest implements org.apache.thrift.TBase<BuckC
       if (incoming.get(3)) {
         struct.distributedBuildModeEnabled = iprot.readBool();
         struct.setDistributedBuildModeEnabledIsSet(true);
+      }
+      if (incoming.get(4)) {
+        {
+          org.apache.thrift.protocol.TList _list71 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+          struct.buildTargets = new java.util.ArrayList<java.lang.String>(_list71.size);
+          java.lang.String _elem72;
+          for (int _i73 = 0; _i73 < _list71.size; ++_i73)
+          {
+            _elem72 = iprot.readString();
+            struct.buildTargets.add(_elem72);
+          }
+        }
+        struct.setBuildTargetsIsSet(true);
       }
     }
   }

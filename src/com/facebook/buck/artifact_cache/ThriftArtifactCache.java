@@ -129,6 +129,10 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     fetchRequest.setScheduleType(scheduleType);
     fetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
 
+    if (target != null) {
+      fetchRequest.setBuildTarget(target.getFullyQualifiedName());
+    }
+
     BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.FETCH);
     cacheRequest.setFetchRequest(fetchRequest);
@@ -411,6 +415,11 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
         RichStream.from(requests)
             .map(FetchRequest::getRuleKey)
             .collect(ImmutableList.toImmutableList());
+    ImmutableList<String> targets =
+        RichStream.from(requests)
+            .map(FetchRequest::getBuildTarget)
+            .map(t -> t != null ? t.getFullyQualifiedName() : "")
+            .collect(ImmutableList.toImmutableList());
     ImmutableList<LazyPath> outputs =
         RichStream.from(requests)
             .map(FetchRequest::getOutput)
@@ -419,7 +428,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     String joinedKeys = Joiner.on(", ").join(keys);
     LOG.verbose("Will fetch keys <%s>", joinedKeys);
 
-    BuckCacheRequest cacheRequest = createMultiFetchRequest(keys);
+    BuckCacheRequest cacheRequest = createMultiFetchRequest(keys, targets);
     try (HttpResponse httpResponse =
         fetchClient.makeRequest(
             hybridThriftEndpoint,
@@ -436,12 +445,14 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     return thriftRuleKey;
   }
 
-  private BuckCacheRequest createMultiFetchRequest(ImmutableList<RuleKey> keys) {
+  private BuckCacheRequest createMultiFetchRequest(
+      ImmutableList<RuleKey> keys, ImmutableList<String> targets) {
     BuckCacheMultiFetchRequest multiFetchRequest = new BuckCacheMultiFetchRequest();
     multiFetchRequest.setRepository(getRepository());
     multiFetchRequest.setScheduleType(scheduleType);
     multiFetchRequest.setDistributedBuildModeEnabled(distributedBuildModeEnabled);
     keys.forEach(k -> multiFetchRequest.addToRuleKeys(toThriftRuleKey(k)));
+    targets.forEach(t -> multiFetchRequest.addToBuildTargets(t));
 
     BuckCacheRequest cacheRequest = newCacheRequest();
     cacheRequest.setType(BuckCacheRequestType.MULTI_FETCH);

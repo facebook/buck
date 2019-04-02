@@ -1448,14 +1448,14 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
           case 100: // PAYLOADS
             if (schemeField.type == org.apache.thrift.protocol.TType.LIST) {
               {
-                org.apache.thrift.protocol.TList _list106 = iprot.readListBegin();
-                struct.payloads = new java.util.ArrayList<PayloadInfo>(_list106.size);
-                PayloadInfo _elem107;
-                for (int _i108 = 0; _i108 < _list106.size; ++_i108)
+                org.apache.thrift.protocol.TList _list114 = iprot.readListBegin();
+                struct.payloads = new java.util.ArrayList<PayloadInfo>(_list114.size);
+                PayloadInfo _elem115;
+                for (int _i116 = 0; _i116 < _list114.size; ++_i116)
                 {
-                  _elem107 = new PayloadInfo();
-                  _elem107.read(iprot);
-                  struct.payloads.add(_elem107);
+                  _elem115 = new PayloadInfo();
+                  _elem115.read(iprot);
+                  struct.payloads.add(_elem115);
                 }
                 iprot.readListEnd();
               }
@@ -1591,9 +1591,9 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
           oprot.writeFieldBegin(PAYLOADS_FIELD_DESC);
           {
             oprot.writeListBegin(new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, struct.payloads.size()));
-            for (PayloadInfo _iter109 : struct.payloads)
+            for (PayloadInfo _iter117 : struct.payloads)
             {
-              _iter109.write(oprot);
+              _iter117.write(oprot);
             }
             oprot.writeListEnd();
           }
@@ -1739,9 +1739,9 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       if (struct.isSetPayloads()) {
         {
           oprot.writeI32(struct.payloads.size());
-          for (PayloadInfo _iter110 : struct.payloads)
+          for (PayloadInfo _iter118 : struct.payloads)
           {
-            _iter110.write(oprot);
+            _iter118.write(oprot);
           }
         }
       }
@@ -1796,14 +1796,14 @@ public class BuckCacheResponse implements org.apache.thrift.TBase<BuckCacheRespo
       }
       if (incoming.get(4)) {
         {
-          org.apache.thrift.protocol.TList _list111 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
-          struct.payloads = new java.util.ArrayList<PayloadInfo>(_list111.size);
-          PayloadInfo _elem112;
-          for (int _i113 = 0; _i113 < _list111.size; ++_i113)
+          org.apache.thrift.protocol.TList _list119 = new org.apache.thrift.protocol.TList(org.apache.thrift.protocol.TType.STRUCT, iprot.readI32());
+          struct.payloads = new java.util.ArrayList<PayloadInfo>(_list119.size);
+          PayloadInfo _elem120;
+          for (int _i121 = 0; _i121 < _list119.size; ++_i121)
           {
-            _elem112 = new PayloadInfo();
-            _elem112.read(iprot);
-            struct.payloads.add(_elem112);
+            _elem120 = new PayloadInfo();
+            _elem120.read(iprot);
+            struct.payloads.add(_elem120);
           }
         }
         struct.setPayloadsIsSet(true);
