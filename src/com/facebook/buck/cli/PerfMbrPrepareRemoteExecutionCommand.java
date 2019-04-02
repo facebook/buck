@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.cli.HeapDumper.DumpType;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
@@ -34,6 +35,7 @@ import com.facebook.buck.rules.modern.builders.RemoteExecutionActionInfo;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.types.Pair;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -50,7 +52,9 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.Option;
 
 /**
  * Tests performance of preparing MBR rules for remote execution (primarily merkle tree node
@@ -60,6 +64,12 @@ public class PerfMbrPrepareRemoteExecutionCommand
     extends AbstractPerfCommand<PerfMbrPrepareRemoteExecutionCommand.PreparedState> {
   @Argument private List<String> arguments = new ArrayList<>();
 
+  @Nullable
+  @Option(
+      name = "--heap-dump",
+      usage = "path to write a heap dump after the first iteration. The path must end in .hprof.")
+  private String heapDumpPath = null;
+
   @Override
   protected String getComputationName() {
     return "creating mbr merkle trees";
@@ -67,6 +77,13 @@ public class PerfMbrPrepareRemoteExecutionCommand
 
   @Override
   PreparedState prepareTest(CommandRunnerParams params) throws Exception {
+    if (heapDumpPath != null) {
+      Verify.verify(
+          heapDumpPath.endsWith(".hprof"),
+          "--heap-dump path must end in .hprof, got %s",
+          heapDumpPath);
+      HeapDumper.init();
+    }
     // Create a TargetGraph that is composed of the transitive closure of all of the dependent
     // BuildRules for the specified BuildTargetPaths.
     ImmutableSet<BuildTarget> targets = convertArgumentsToBuildTargets(params, arguments);
@@ -171,6 +188,13 @@ public class PerfMbrPrepareRemoteExecutionCommand
       }
     }
 
+    // Do this before clearing out the remaining Futures so it reflects some work still in progress.
+    if (heapDumpPath != null && !state.heapDumped) {
+      printWarning(params, "Dumping heap to %s.", heapDumpPath);
+      HeapDumper.dumpHeap(heapDumpPath, DumpType.REACHABLE_OBJECTS_ONLY);
+      state.heapDumped = true;
+    }
+
     for (Pair<RemoteExecutionActionInfo, SettableFuture<?>> finishedInfo : pendingInfos) {
       finishedInfo.getSecond().set(null);
     }
@@ -185,6 +209,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
   static class PreparedState {
     private final ImmutableList<BuildRule> rulesInGraph;
     private final BuildRuleResolver graphBuilder;
+    private boolean heapDumped = false;
 
     public PreparedState(ImmutableList<BuildRule> rulesInGraph, BuildRuleResolver graphBuilder) {
       this.rulesInGraph = rulesInGraph;
