@@ -118,11 +118,11 @@ public class PrebuiltJarDescription
       input = arg.getBinaryJar();
     }
 
-    class ExistingOuputs extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+    class ExistingOutputs extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       @AddToRuleKey private final SourcePath source;
       private final Path output;
 
-      protected ExistingOuputs(
+      protected ExistingOutputs(
           BuildTarget buildTarget,
           ProjectFilesystem projectFilesystem,
           BuildRuleParams params,
@@ -162,7 +162,7 @@ public class PrebuiltJarDescription
         return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
       }
     }
-    return new ExistingOuputs(buildTarget, projectFilesystem, params, input);
+    return new ExistingOutputs(buildTarget, projectFilesystem, params, input);
   }
 
   @Override
