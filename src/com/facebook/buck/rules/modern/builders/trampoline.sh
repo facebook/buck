@@ -48,10 +48,3 @@ java -cp $CLASSPATH \
   com.facebook.buck.rules.modern.builders.OutOfProcessIsolatedBuilder \
   $BUCK_ISOLATED_ROOT $1 $2
 )
-
-export IFS=':'
-if [ ! -z "$OUTPUTS" ]; then
-  for out in $OUTPUTS; do
-      find $out -type f
-  done
-fi

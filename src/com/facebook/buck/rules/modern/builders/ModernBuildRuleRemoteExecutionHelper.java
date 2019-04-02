@@ -361,7 +361,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
       ImmutableList<String> command = getBuilderCommand(projectRoot, hash.toString());
       ImmutableSortedMap<String, String> commandEnvironment =
           getBuilderEnvironmentOverrides(
-              isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix, outputs);
+              isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix);
 
       Protocol.Command actionCommand =
           protocol.newCommand(command, commandEnvironment, outputs, workerRequirements);
@@ -518,10 +518,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(
-      ImmutableList<Path> bootstrapClasspath,
-      Iterable<Path> classpath,
-      Path cellPrefixRoot,
-      Set<Path> outputs) {
+      ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath, Path cellPrefixRoot) {
 
     // TODO(shivanker): Pass all user environment overrides to remote workers.
     String relativePluginRoot = "";
@@ -542,7 +539,6 @@ public class ModernBuildRuleRemoteExecutionHelper {
         .put("BUCK_PLUGIN_RESOURCES", relativePluginResources)
         // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
         .put("BUCK_DISTCC", "0")
-        .put("OUTPUTS", Joiner.on(":").join(outputs))
         .build();
   }
 
