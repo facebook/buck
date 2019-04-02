@@ -104,6 +104,7 @@ java_immutables_library(
     ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
+        "//src/com/facebook/buck/support/state:state",
         "//test/com/facebook/buck/artifact_cache/...",
         "//test/com/facebook/buck/httpserver:httpserver_cache_integration_test",
     ],

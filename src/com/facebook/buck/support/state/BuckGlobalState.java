@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.support.state;
 
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.ArtifactCaches;
@@ -83,7 +83,7 @@ import java.util.function.Supplier;
  *
  * <p>All Graph Engine caches are required to be kept here.
  */
-final class BuckGlobalState implements Closeable {
+public final class BuckGlobalState implements Closeable {
   private static final Logger LOG = Logger.get(BuckGlobalState.class);
 
   private final Cell rootCell;
@@ -117,7 +117,7 @@ final class BuckGlobalState implements Closeable {
       TargetConfigurationSerializer targetConfigurationSerializer,
       Clock clock,
       Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
-      Optional<NGContext> context) {
+      Optional<NGContext> context) { // TODO(bobyf): remove nailgun dependency
     this.rootCell = rootCell;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.targetConfigurationSerializer = targetConfigurationSerializer;
@@ -225,7 +225,7 @@ final class BuckGlobalState implements Closeable {
     return rootCell;
   }
 
-  Optional<BuckEventListener> getDevspeedDaemonListener() {
+  public Optional<BuckEventListener> getDevspeedDaemonListener() {
     return devspeedBuildListenerFactory.map(DevspeedBuildListenerFactory::newBuildListener);
   }
 
@@ -266,27 +266,27 @@ final class BuckGlobalState implements Closeable {
     return port >= 0 ? OptionalInt.of(port) : OptionalInt.empty();
   }
 
-  BackgroundTaskManager getBgTaskManager() {
+  public BackgroundTaskManager getBgTaskManager() {
     return bgTaskManager;
   }
 
-  Optional<WebServer> getWebServer() {
+  public Optional<WebServer> getWebServer() {
     return webServer;
   }
 
-  TypeCoercerFactory getTypeCoercerFactory() {
+  public TypeCoercerFactory getTypeCoercerFactory() {
     return typeCoercerFactory;
   }
 
-  VersionedTargetGraphCache getVersionedTargetGraphCache() {
+  public VersionedTargetGraphCache getVersionedTargetGraphCache() {
     return versionedTargetGraphCache;
   }
 
-  ActionGraphCache getActionGraphCache() {
+  public ActionGraphCache getActionGraphCache() {
     return actionGraphCache;
   }
 
-  ImmutableList<ProjectFileHashCache> getFileHashCaches() {
+  public ImmutableList<ProjectFileHashCache> getFileHashCaches() {
     return hashCaches;
   }
 
@@ -295,7 +295,7 @@ final class BuckGlobalState implements Closeable {
    * cache directory structure (i.e. list of files and folders) for all subfolders that exist under
    * that cell root folder
    */
-  LoadingCache<Path, DirectoryListCache> getDirectoryListCaches() {
+  public LoadingCache<Path, DirectoryListCache> getDirectoryListCaches() {
     return directoryListCachePerRoot;
   }
 
@@ -303,7 +303,7 @@ final class BuckGlobalState implements Closeable {
    * Return a map of file tree caches for each cell which is a key. For every cell and each
    * subfolder under cell root path, we cache the whole subtree of folders and files recursively
    */
-  LoadingCache<Path, FileTreeCache> getFileTreeCaches() {
+  public LoadingCache<Path, FileTreeCache> getFileTreeCaches() {
     return fileTreeCachePerRoot;
   }
 
@@ -311,19 +311,19 @@ final class BuckGlobalState implements Closeable {
     return knownRuleTypesProvider;
   }
 
-  ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools() {
+  public ConcurrentMap<String, WorkerProcessPool> getPersistentWorkerPools() {
     return persistentWorkerPools;
   }
 
-  RuleKeyCacheRecycler<RuleKey> getDefaultRuleKeyFactoryCacheRecycler() {
+  public RuleKeyCacheRecycler<RuleKey> getDefaultRuleKeyFactoryCacheRecycler() {
     return defaultRuleKeyFactoryCacheRecycler;
   }
 
-  DaemonicParserState getDaemonicParserState() {
+  public DaemonicParserState getDaemonicParserState() {
     return daemonicParserState;
   }
 
-  void interruptOnClientExit(Thread threadToInterrupt) {
+  public void interruptOnClientExit(Thread threadToInterrupt) {
     // Synchronize on parser object so that the main command processing thread is not
     // interrupted mid way through a Parser cache update by the Thread.interrupt() call
     // triggered by System.exit(). The Parser cache will be reused by subsequent commands
@@ -335,7 +335,7 @@ final class BuckGlobalState implements Closeable {
     }
   }
 
-  void watchFileSystem(
+  public void watchFileSystem(
       BuckEventBus eventBus,
       WatchmanWatcher watchmanWatcher,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction)

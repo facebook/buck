@@ -44,6 +44,7 @@ java_library(
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/event/listener:listener",
+        "//src/com/facebook/buck/support/state:state",
         "//test/com/facebook/buck/cli:",
         "//test/com/facebook/buck/event/listener:",
         "//test/com/facebook/buck/httpserver:",

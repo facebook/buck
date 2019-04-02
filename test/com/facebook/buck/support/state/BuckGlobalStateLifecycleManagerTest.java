@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.support.state;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -26,7 +26,6 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.cli.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -46,6 +45,7 @@ import com.facebook.buck.io.watchman.FakeWatchmanClient;
 import com.facebook.buck.io.watchman.FakeWatchmanFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.FakeProcess;

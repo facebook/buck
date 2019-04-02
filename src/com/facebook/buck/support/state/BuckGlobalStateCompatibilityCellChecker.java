@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.cli;
+package com.facebook.buck.support.state;
 
 import com.facebook.buck.command.config.ConfigIgnoredByDaemon;
 import com.facebook.buck.core.cell.Cell;

@@ -14,9 +14,8 @@
  * under the License.
  */
 
-package com.facebook.buck.cli;
+package com.facebook.buck.support.state;
 
-import com.facebook.buck.cli.BuckGlobalStateCompatibilityCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -27,6 +26,7 @@ import com.facebook.buck.event.listener.devspeed.DevspeedBuildListenerFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.support.state.BuckGlobalStateCompatibilityCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
@@ -42,13 +42,13 @@ import javax.annotation.concurrent.ThreadSafe;
  * or re-creates the daemon state as necessary if the cell configuration changes.
  */
 @ThreadSafe
-class BuckGlobalStateLifecycleManager {
+public class BuckGlobalStateLifecycleManager {
   private static final Logger LOG = Logger.get(BuckGlobalStateLifecycleManager.class);
 
   @Nullable private volatile BuckGlobalState buckGlobalState;
 
   /** Indicates whether a daemon's {@link BuckGlobalState} is reused, or why it can't be reused */
-  enum LifecycleStatus {
+  public enum LifecycleStatus {
     REUSED,
     NEW,
     INVALIDATED_NO_WATCHMAN,
@@ -91,7 +91,7 @@ class BuckGlobalStateLifecycleManager {
     }
 
     /** Get the string to be logged as an event, if an event should be logged. */
-    protected Optional<String> getLifecycleStatusString() {
+    public Optional<String> getLifecycleStatusString() {
       switch (this) {
         case REUSED:
           return Optional.empty();
@@ -111,18 +111,18 @@ class BuckGlobalStateLifecycleManager {
     }
   }
 
-  synchronized boolean hasStoredBuckGlobalState() {
+  public synchronized boolean hasStoredBuckGlobalState() {
     return buckGlobalState != null;
   }
 
-  synchronized Optional<BuckConfig> getBuckConfig() {
+  public synchronized Optional<BuckConfig> getBuckConfig() {
     return Optional.ofNullable(buckGlobalState)
         .map(BuckGlobalState::getRootCell)
         .map(Cell::getBuckConfig);
   }
 
   /** Get or create Daemon. */
-  synchronized Pair<BuckGlobalState, LifecycleStatus> getBuckGlobalState(
+  public synchronized Pair<BuckGlobalState, LifecycleStatus> getBuckGlobalState(
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
@@ -209,7 +209,7 @@ class BuckGlobalStateLifecycleManager {
   }
 
   /** Manually reset the {@link BuckGlobalState}, used for testing. */
-  synchronized void resetBuckGlobalState() {
+  public synchronized void resetBuckGlobalState() {
     if (buckGlobalState != null) {
       LOG.info("Closing daemon's global state on reset request.");
       buckGlobalState.close();

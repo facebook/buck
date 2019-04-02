@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.cli;
+package com.facebook.buck.support.state;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
