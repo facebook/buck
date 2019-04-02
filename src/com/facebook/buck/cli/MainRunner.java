@@ -45,7 +45,6 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
@@ -126,7 +125,6 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.manifestservice.ManifestServiceConfig;
-import com.facebook.buck.parser.DaemonicParserState;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserFactory;
@@ -138,7 +136,6 @@ import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionConsoleLi
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionEventListener;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
@@ -205,7 +202,6 @@ import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInte
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
-import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.nailgun.NGClientDisconnectReason;
 import com.facebook.nailgun.NGContext;
@@ -1616,7 +1612,7 @@ public final class MainRunner {
                   buckConfig),
               defaultRuleKeyFactoryCacheRecycler);
     } else {
-      TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
+      TypeCoercerFactory typeCoercerFactory = buckGlobalState.getTypeCoercerFactory();
       parserAndCaches =
           ParserAndCaches.of(
               ParserFactory.create(
@@ -1625,7 +1621,7 @@ public final class MainRunner {
                   knownRuleTypesProvider,
                   new ParserPythonInterpreterProvider(parserConfig, executableFinder),
                   rootCell.getBuckConfig(),
-                  new DaemonicParserState(parserConfig.getNumParsingThreads()),
+                  buckGlobalState.getDaemonicParserState(),
                   targetSpecResolver,
                   watchman,
                   buildEventBus,
@@ -1635,13 +1631,13 @@ public final class MainRunner {
                   unconfiguredBuildTargetFactory),
               typeCoercerFactory,
               new InstrumentedVersionedTargetGraphCache(
-                  new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
+                  buckGlobalState.getVersionedTargetGraphCache(),
+                  new InstrumentingCacheStatsTracker()),
               new ActionGraphProvider(
                   buildEventBus,
                   ActionGraphFactory.create(
                       buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
-                  new ActionGraphCache(
-                      buckConfig.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries()),
+                  buckGlobalState.getActionGraphCache(),
                   ruleKeyConfiguration,
                   buckConfig),
               /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
