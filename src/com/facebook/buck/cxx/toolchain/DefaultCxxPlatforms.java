@@ -18,7 +18,6 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -71,8 +70,7 @@ public class DefaultCxxPlatforms {
   private static final String DEFAULT_WINDOWS_LIB = "lib";
   private static final String DEFAULT_UNIX_RANLIB = "ranlib";
 
-  public static CxxPlatform build(
-      TargetConfiguration targetConfiguration, Platform platform, CxxBuckConfig config) {
+  public static CxxPlatform build(Platform platform, CxxBuckConfig config) {
     String sharedLibraryExtension;
     String sharedLibraryVersionedExtensionFormat;
     String staticLibraryExtension;
@@ -224,7 +222,6 @@ public class DefaultCxxPlatforms {
             config.getUseDetailedUntrackedHeaderMessages());
 
     return CxxPlatforms.build(
-        targetConfiguration,
         FLAVOR,
         platform,
         config,

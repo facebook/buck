@@ -237,7 +237,6 @@ public class CxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                EmptyTargetConfiguration.INSTANCE,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
@@ -255,7 +254,6 @@ public class CxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                EmptyTargetConfiguration.INSTANCE,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
@@ -273,7 +271,6 @@ public class CxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                EmptyTargetConfiguration.INSTANCE,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
@@ -291,7 +288,6 @@ public class CxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                EmptyTargetConfiguration.INSTANCE,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
@@ -309,7 +305,6 @@ public class CxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertThat(
         CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                EmptyTargetConfiguration.INSTANCE,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
@@ -332,7 +327,6 @@ public class CxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     assertEquals(
         CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                EmptyTargetConfiguration.INSTANCE,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),

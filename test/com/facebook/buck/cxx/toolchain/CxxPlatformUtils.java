@@ -104,7 +104,7 @@ public class CxxPlatformUtils {
       FlavorDomain.of("C/C++ Platform", DEFAULT_UNRESOLVED_PLATFORM);
 
   public static CxxPlatform build(CxxBuckConfig config) {
-    return DefaultCxxPlatforms.build(EmptyTargetConfiguration.INSTANCE, Platform.detect(), config);
+    return DefaultCxxPlatforms.build(Platform.detect(), config);
   }
 
   private static CxxPlatform getDefaultPlatform(Path root) throws IOException {
@@ -115,8 +115,7 @@ public class CxxPlatformUtils {
             .setFilesystem(TestProjectFilesystems.createProjectFilesystem(root))
             .setEnvironment(ImmutableMap.of())
             .build();
-    return DefaultCxxPlatforms.build(
-        EmptyTargetConfiguration.INSTANCE, Platform.detect(), new CxxBuckConfig(buckConfig));
+    return DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig));
   }
 
   public static HeaderMode getHeaderModeForDefaultPlatform(Path root) throws IOException {

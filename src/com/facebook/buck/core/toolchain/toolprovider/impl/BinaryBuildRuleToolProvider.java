@@ -19,6 +19,7 @@ package com.facebook.buck.core.toolchain.toolprovider.impl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -33,17 +34,17 @@ import java.util.Optional;
  */
 public class BinaryBuildRuleToolProvider implements ToolProvider {
 
-  private final BuildTarget target;
+  private final UnconfiguredBuildTarget target;
   private final String source;
 
-  public BinaryBuildRuleToolProvider(BuildTarget target, String source) {
+  public BinaryBuildRuleToolProvider(UnconfiguredBuildTarget target, String source) {
     this.target = target;
     this.source = source;
   }
 
   @Override
   public Tool resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-    Optional<BuildRule> rule = resolver.getRuleOptional(target);
+    Optional<BuildRule> rule = resolver.getRuleOptional(target.configure(targetConfiguration));
     if (!rule.isPresent()) {
       throw new HumanReadableException("%s: no rule found for %s", source, target);
     }
@@ -55,6 +56,6 @@ public class BinaryBuildRuleToolProvider implements ToolProvider {
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    return ImmutableList.of(target);
+    return ImmutableList.of(target.configure(targetConfiguration));
   }
 }

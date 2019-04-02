@@ -22,6 +22,7 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
@@ -191,10 +192,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBuildTarget(APPLE_SECTION, "xctool_zip_target", targetConfiguration);
   }
 
-  public ToolProvider getCodesignProvider(TargetConfiguration targetConfiguration) {
+  public ToolProvider getCodesignProvider() {
     String codesignField = "codesign";
-    Optional<BuildTarget> target =
-        delegate.getMaybeBuildTarget(APPLE_SECTION, codesignField, targetConfiguration);
+    Optional<UnconfiguredBuildTarget> target =
+        delegate.getMaybeUnconfiguredBuildTarget(APPLE_SECTION, codesignField);
     String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
     if (target.isPresent()) {
       return new BinaryBuildRuleToolProvider(target.get(), source);

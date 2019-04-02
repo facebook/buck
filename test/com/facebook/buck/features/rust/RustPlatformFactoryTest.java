@@ -54,9 +54,7 @@ public class RustPlatformFactoryTest {
                             "linker", "linker")))
                 .build(),
             new AlwaysFoundExecutableFinder());
-    RustPlatform platform =
-        factory.getPlatform(
-            "rust", CxxPlatformUtils.DEFAULT_PLATFORM, EmptyTargetConfiguration.INSTANCE);
+    RustPlatform platform = factory.getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     assertThat(
         platform
             .getRustCompiler()

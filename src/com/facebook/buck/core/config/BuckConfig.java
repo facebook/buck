@@ -192,12 +192,24 @@ public class BuckConfig {
    */
   public Optional<BuildTarget> getMaybeBuildTarget(
       String section, String field, TargetConfiguration targetConfiguration) {
+    return getMaybeUnconfiguredBuildTarget(section, field)
+        .map(target -> target.configure(targetConfiguration));
+  }
+
+  /**
+   * @return the parsed UnconfiguredBuildTarget in the given section and field, if set and a valid
+   *     build target.
+   *     <p>This is useful if you use getTool to get the target, if any, but allow filesystem
+   *     references.
+   */
+  public Optional<UnconfiguredBuildTarget> getMaybeUnconfiguredBuildTarget(
+      String section, String field) {
     Optional<String> value = getValue(section, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
     try {
-      return Optional.of(getBuildTargetForFullyQualifiedTarget(value.get(), targetConfiguration));
+      return Optional.of(getUnconfiguredBuildTargetForFullyQualifiedTarget(value.get()));
     } catch (BuildTargetParseException e) {
       return Optional.empty();
     }

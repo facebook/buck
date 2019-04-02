@@ -18,8 +18,8 @@ package com.facebook.buck.rules.tool.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
@@ -45,14 +45,13 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
    * @return a {@link Tool} identified by a @{link BuildTarget} or {@link Path} reference by the
    *     given section:field, if set.
    */
-  public Optional<ToolProvider> getToolProvider(
-      String section, String field, TargetConfiguration targetConfiguration) {
+  public Optional<ToolProvider> getToolProvider(String section, String field) {
     Optional<String> value = getDelegate().getValue(section, field);
     if (!value.isPresent()) {
       return Optional.empty();
     }
-    Optional<BuildTarget> target =
-        getDelegate().getMaybeBuildTarget(section, field, targetConfiguration);
+    Optional<UnconfiguredBuildTarget> target =
+        getDelegate().getMaybeUnconfiguredBuildTarget(section, field);
     if (target.isPresent()) {
       return Optional.of(
           new BinaryBuildRuleToolProvider(target.get(), String.format("[%s] %s", section, field)));
@@ -84,7 +83,7 @@ abstract class AbstractToolConfig implements ConfigView<BuckConfig> {
       String field,
       BuildRuleResolver resolver,
       TargetConfiguration targetConfiguration) {
-    Optional<ToolProvider> provider = getToolProvider(section, field, targetConfiguration);
+    Optional<ToolProvider> provider = getToolProvider(section, field);
     return provider.map(toolProvider -> toolProvider.resolve(resolver, targetConfiguration));
   }
 

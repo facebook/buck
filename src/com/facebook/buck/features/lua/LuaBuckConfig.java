@@ -47,7 +47,7 @@ public class LuaBuckConfig {
         .setLua(
             delegate
                 .getView(ToolConfig.class)
-                .getToolProvider(section, "lua", targetConfiguration)
+                .getToolProvider(section, "lua")
                 .orElseGet(
                     () ->
                         SystemToolProvider.builder()
@@ -70,7 +70,7 @@ public class LuaBuckConfig {
         .setPackager(
             delegate
                 .getView(ToolConfig.class)
-                .getToolProvider(section, "packager", targetConfiguration)
+                .getToolProvider(section, "packager")
                 .orElseGet(
                     () -> ErrorToolProvider.from("no packager set in '%s.packager'", section)))
         .setShouldCacheBinaries(delegate.getBooleanValue(section, "cache_binaries", true))

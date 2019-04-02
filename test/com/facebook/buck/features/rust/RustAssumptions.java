@@ -45,8 +45,7 @@ abstract class RustAssumptions {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     RustPlatform rustPlatform =
         RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform(
-                "rust", CxxPlatformUtils.DEFAULT_PLATFORM, EmptyTargetConfiguration.INSTANCE);
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     Throwable exception = null;
     try {
       rustPlatform
@@ -66,8 +65,7 @@ abstract class RustAssumptions {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     RustPlatform rustPlatform =
         RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform(
-                "rust", CxxPlatformUtils.DEFAULT_PLATFORM, EmptyTargetConfiguration.INSTANCE);
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     ImmutableList<String> rustc =
         rustPlatform
             .getRustCompiler()
@@ -85,8 +83,7 @@ abstract class RustAssumptions {
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     RustPlatform rustPlatform =
         RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform(
-                "rust", CxxPlatformUtils.DEFAULT_PLATFORM, EmptyTargetConfiguration.INSTANCE);
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
     ImmutableList<String> rustc =
         rustPlatform
             .getRustCompiler()

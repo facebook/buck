@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -300,12 +301,9 @@ public class CxxBuckConfig {
   /*
    * Constructs the appropriate Archiver for the specified platform.
    */
-  public Optional<ArchiverProvider> getArchiverProvider(
-      Platform defaultPlatform, TargetConfiguration targetConfiguration) {
+  public Optional<ArchiverProvider> getArchiverProvider(Platform defaultPlatform) {
     Optional<ToolProvider> toolProvider =
-        delegate
-            .getView(ToolConfig.class)
-            .getToolProvider(cxxSection, ToolType.AR.key, targetConfiguration);
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, ToolType.AR.key);
     // TODO(cjhopman): This should probably accept ArchiverProvider.Type, not LegacyArchiverType.
     Optional<LegacyArchiverType> type =
         delegate.getEnum(cxxSection, ARCHIVER_TYPE, LegacyArchiverType.class);
@@ -324,15 +322,14 @@ public class CxxBuckConfig {
     return delegate.getLong(cxxSection, MAX_TEST_OUTPUT_SIZE).orElse(DEFAULT_MAX_TEST_OUTPUT_SIZE);
   }
 
-  private Optional<CxxToolProviderParams> getCxxToolProviderParams(
-      ToolType toolType, TargetConfiguration targetConfiguration) {
+  private Optional<CxxToolProviderParams> getCxxToolProviderParams(ToolType toolType) {
     Optional<String> value = delegate.getValue(cxxSection, toolType.key);
     if (!value.isPresent()) {
       return Optional.empty();
     }
     String source = String.format("[%s] %s", cxxSection, toolType.key);
-    Optional<BuildTarget> target =
-        delegate.getMaybeBuildTarget(cxxSection, toolType.key, targetConfiguration);
+    Optional<UnconfiguredBuildTarget> target =
+        delegate.getMaybeUnconfiguredBuildTarget(cxxSection, toolType.key);
     Optional<CxxToolProvider.Type> type =
         delegate.getEnum(cxxSection, toolType.key + "_type", CxxToolProvider.Type.class);
     if (target.isPresent()) {
@@ -357,64 +354,62 @@ public class CxxBuckConfig {
     }
   }
 
-  private Optional<PreprocessorProvider> getPreprocessorProvider(
-      ToolType toolType, TargetConfiguration targetConfiguration) {
-    return getCxxToolProviderParams(toolType, targetConfiguration)
+  private Optional<PreprocessorProvider> getPreprocessorProvider(ToolType toolType) {
+    return getCxxToolProviderParams(toolType)
         .map(AbstractCxxToolProviderParams::getPreprocessorProvider);
   }
 
-  private Optional<CompilerProvider> getCompilerProvider(
-      ToolType toolType, TargetConfiguration targetConfiguration) {
-    return getCxxToolProviderParams(toolType, targetConfiguration)
+  private Optional<CompilerProvider> getCompilerProvider(ToolType toolType) {
+    return getCxxToolProviderParams(toolType)
         .map(AbstractCxxToolProviderParams::getCompilerProvider);
   }
 
-  public Optional<CompilerProvider> getAs(TargetConfiguration targetConfiguration) {
-    return getCompilerProvider(ToolType.AS, targetConfiguration);
+  public Optional<CompilerProvider> getAs() {
+    return getCompilerProvider(ToolType.AS);
   }
 
-  public Optional<PreprocessorProvider> getAspp(TargetConfiguration targetConfiguration) {
-    return getPreprocessorProvider(ToolType.ASPP, targetConfiguration);
+  public Optional<PreprocessorProvider> getAspp() {
+    return getPreprocessorProvider(ToolType.ASPP);
   }
 
-  public Optional<CompilerProvider> getCc(TargetConfiguration targetConfiguration) {
-    return getCompilerProvider(ToolType.CC, targetConfiguration);
+  public Optional<CompilerProvider> getCc() {
+    return getCompilerProvider(ToolType.CC);
   }
 
-  public Optional<PreprocessorProvider> getCpp(TargetConfiguration targetConfiguration) {
-    return getPreprocessorProvider(ToolType.CPP, targetConfiguration);
+  public Optional<PreprocessorProvider> getCpp() {
+    return getPreprocessorProvider(ToolType.CPP);
   }
 
-  public Optional<CompilerProvider> getCxx(TargetConfiguration targetConfiguration) {
-    return getCompilerProvider(ToolType.CXX, targetConfiguration);
+  public Optional<CompilerProvider> getCxx() {
+    return getCompilerProvider(ToolType.CXX);
   }
 
-  public Optional<PreprocessorProvider> getCxxpp(TargetConfiguration targetConfiguration) {
-    return getPreprocessorProvider(ToolType.CXXPP, targetConfiguration);
+  public Optional<PreprocessorProvider> getCxxpp() {
+    return getPreprocessorProvider(ToolType.CXXPP);
   }
 
-  public Optional<CompilerProvider> getCuda(TargetConfiguration targetConfiguration) {
-    return getCompilerProvider(ToolType.CUDA, targetConfiguration);
+  public Optional<CompilerProvider> getCuda() {
+    return getCompilerProvider(ToolType.CUDA);
   }
 
-  public Optional<PreprocessorProvider> getCudapp(TargetConfiguration targetConfiguration) {
-    return getPreprocessorProvider(ToolType.CUDAPP, targetConfiguration);
+  public Optional<PreprocessorProvider> getCudapp() {
+    return getPreprocessorProvider(ToolType.CUDAPP);
   }
 
-  public Optional<CompilerProvider> getHip(TargetConfiguration targetConfiguration) {
-    return getCompilerProvider(ToolType.HIP, targetConfiguration);
+  public Optional<CompilerProvider> getHip() {
+    return getCompilerProvider(ToolType.HIP);
   }
 
-  public Optional<PreprocessorProvider> getHippp(TargetConfiguration targetConfiguration) {
-    return getPreprocessorProvider(ToolType.HIPPP, targetConfiguration);
+  public Optional<PreprocessorProvider> getHippp() {
+    return getPreprocessorProvider(ToolType.HIPPP);
   }
 
-  public Optional<CompilerProvider> getAsm(TargetConfiguration targetConfiguration) {
-    return getCompilerProvider(ToolType.ASM, targetConfiguration);
+  public Optional<CompilerProvider> getAsm() {
+    return getCompilerProvider(ToolType.ASM);
   }
 
-  public Optional<PreprocessorProvider> getAsmpp(TargetConfiguration targetConfiguration) {
-    return getPreprocessorProvider(ToolType.ASMPP, targetConfiguration);
+  public Optional<PreprocessorProvider> getAsmpp() {
+    return getPreprocessorProvider(ToolType.ASMPP);
   }
 
   public Optional<Boolean> getUseArgFile() {
@@ -427,12 +422,9 @@ public class CxxBuckConfig {
    * @param defaultType the default type for a linker if `linker_platform` is not specified in the
    *     config.
    */
-  public Optional<LinkerProvider> getLinkerProvider(
-      LinkerProvider.Type defaultType, TargetConfiguration targetConfiguration) {
+  public Optional<LinkerProvider> getLinkerProvider(LinkerProvider.Type defaultType) {
     Optional<ToolProvider> toolProvider =
-        delegate
-            .getView(ToolConfig.class)
-            .getToolProvider(cxxSection, ToolType.LD.key, targetConfiguration);
+        delegate.getView(ToolConfig.class).getToolProvider(cxxSection, ToolType.LD.key);
     if (!toolProvider.isPresent()) {
       return Optional.empty();
     }
@@ -502,19 +494,16 @@ public class CxxBuckConfig {
     return delegate.getBooleanValue(cxxSection, SHOULD_REMAP_HOST_PLATFORM, false);
   }
 
-  private Optional<ToolProvider> getToolProvider(
-      String name, TargetConfiguration targetConfiguration) {
-    return delegate
-        .getView(ToolConfig.class)
-        .getToolProvider(cxxSection, name, targetConfiguration);
+  private Optional<ToolProvider> getToolProvider(String name) {
+    return delegate.getView(ToolConfig.class).getToolProvider(cxxSection, name);
   }
 
-  public Optional<ToolProvider> getRanlib(TargetConfiguration targetConfiguration) {
-    return getToolProvider(ToolType.RANLIB.key, targetConfiguration);
+  public Optional<ToolProvider> getRanlib() {
+    return getToolProvider(ToolType.RANLIB.key);
   }
 
-  public Optional<ToolProvider> getObjcopy(TargetConfiguration targetConfiguration) {
-    return getToolProvider(OBJCOPY, targetConfiguration);
+  public Optional<ToolProvider> getObjcopy() {
+    return getToolProvider(OBJCOPY);
   }
 
   private Optional<Tool> getTool(String name) {
@@ -664,7 +653,7 @@ public class CxxBuckConfig {
 
     public abstract String getSource();
 
-    public abstract Optional<BuildTarget> getBuildTarget();
+    public abstract Optional<UnconfiguredBuildTarget> getBuildTarget();
 
     public abstract Optional<PathSourcePath> getPath();
 

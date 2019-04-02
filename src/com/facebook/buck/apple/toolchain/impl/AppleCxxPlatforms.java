@@ -30,7 +30,6 @@ import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -99,8 +98,7 @@ public class AppleCxxPlatforms {
       Optional<ImmutableMap<AppleSdk, AppleSdkPaths>> sdkPaths,
       Optional<ImmutableMap<String, AppleToolchain>> toolchains,
       ProjectFilesystem filesystem,
-      BuckConfig buckConfig,
-      TargetConfiguration targetConfiguration) {
+      BuckConfig buckConfig) {
     if (!sdkPaths.isPresent() || !toolchains.isPresent()) {
       return ImmutableList.of();
     }
@@ -121,7 +119,6 @@ public class AppleCxxPlatforms {
                 appleCxxPlatformsBuilder.add(
                     buildWithXcodeToolFinder(
                         filesystem,
-                        targetConfiguration,
                         sdk,
                         targetSdkVersion,
                         architecture,
@@ -152,7 +149,6 @@ public class AppleCxxPlatforms {
   @VisibleForTesting
   public static AppleCxxPlatform buildWithXcodeToolFinder(
       ProjectFilesystem filesystem,
-      TargetConfiguration targetConfiguration,
       AppleSdk targetSdk,
       String minVersion,
       String targetArchitecture,
@@ -423,7 +419,6 @@ public class AppleCxxPlatforms {
 
     CxxPlatform cxxPlatform =
         CxxPlatforms.build(
-            targetConfiguration,
             targetFlavor,
             Platform.MACOS,
             config,
@@ -498,7 +493,7 @@ public class AppleCxxPlatforms {
         .setCodesignAllocate(
             getOptionalTool(
                 "codesign_allocate", toolSearchPaths, xcodeToolFinder, version, filesystem))
-        .setCodesignProvider(appleConfig.getCodesignProvider(targetConfiguration));
+        .setCodesignProvider(appleConfig.getCodesignProvider());
 
     return platformBuilder.build();
   }

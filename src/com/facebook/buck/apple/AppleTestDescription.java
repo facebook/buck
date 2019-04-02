@@ -514,9 +514,7 @@ public class AppleTestDescription
       extraDepsBuilder.add(xctoolZipTarget.get());
     }
     extraDepsBuilder.addAll(
-        appleConfig
-            .getCodesignProvider(buildTarget.getTargetConfiguration())
-            .getParseTimeDeps(buildTarget.getTargetConfiguration()));
+        appleConfig.getCodesignProvider().getParseTimeDeps(buildTarget.getTargetConfiguration()));
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     ImmutableList<UnresolvedCxxPlatform> cxxPlatforms =

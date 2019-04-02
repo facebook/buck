@@ -78,8 +78,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
     cxxSystemPlatformsBuilder.putAll(cxxSystemPlatforms);
 
-    CxxPlatform defaultHostCxxPlatform =
-        DefaultCxxPlatforms.build(targetConfiguration, platform, cxxBuckConfig);
+    CxxPlatform defaultHostCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
     cxxSystemPlatformsBuilder.put(
         defaultHostCxxPlatform.getFlavor(),
         new StaticUnresolvedCxxPlatform(defaultHostCxxPlatform));
@@ -151,7 +150,6 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
       if (!newPlatform.isPresent()) {
         newPlatform =
             augmentSystemPlatform(
-                targetConfiguration,
                 platform,
                 cxxSystemPlatformsMap,
                 defaultHostCxxPlatform,
@@ -170,7 +168,6 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
   }
 
   private static Optional<UnresolvedCxxPlatform> augmentSystemPlatform(
-      TargetConfiguration targetConfiguration,
       Platform platform,
       ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsMap,
       CxxPlatform defaultHostCxxPlatform,
@@ -196,7 +193,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     StaticUnresolvedCxxPlatform augmentedPlatform =
         new StaticUnresolvedCxxPlatform(
             CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                targetConfiguration, baseCxxPlatform, platform, cxxConfig, flavor));
+                baseCxxPlatform, platform, cxxConfig, flavor));
     return Optional.of(augmentedPlatform);
   }
 

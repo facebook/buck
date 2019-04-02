@@ -18,7 +18,6 @@ package com.facebook.buck.features.dotnet;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -36,9 +35,7 @@ public abstract class AbstractDotnetBuckConfig implements ConfigView<BuckConfig>
   @Value.Parameter
   public abstract BuckConfig getDelegate();
 
-  public Optional<ToolProvider> getCsharpCompiler(TargetConfiguration targetConfiguration) {
-    return getDelegate()
-        .getView(ToolConfig.class)
-        .getToolProvider(SECTION, CSC, targetConfiguration);
+  public Optional<ToolProvider> getCsharpCompiler() {
+    return getDelegate().getView(ToolConfig.class).getToolProvider(SECTION, CSC);
   }
 }

@@ -109,9 +109,7 @@ public class LuaBinaryIntegrationTest {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     CxxPlatform cxxPlatform =
         DefaultCxxPlatforms.build(
-            EmptyTargetConfiguration.INSTANCE,
-            Platform.detect(),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()));
+            Platform.detect(), new CxxBuckConfig(FakeBuckConfig.builder().build()));
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .setCommand(

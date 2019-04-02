@@ -52,8 +52,7 @@ public class RustToolchainFactory implements ToolchainFactory<RustToolchain> {
                     cxxPlatform ->
                         platformFactory.getPlatform(
                             cxxPlatform.getLegacyTotallyUnsafe().getFlavor().getName(),
-                            cxxPlatform.getLegacyTotallyUnsafe(),
-                            context.getTargetConfiguration().get()))
+                            cxxPlatform.getLegacyTotallyUnsafe()))
                 .toImmutableList());
     RustPlatform defaultRustPlatform = rustPlatforms.getValue(defaultCxxPlatform.getFlavor());
 

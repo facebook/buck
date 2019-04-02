@@ -57,7 +57,7 @@ public class CxxPlatforms {
   private CxxPlatforms() {}
 
   private static Optional<SharedLibraryInterfaceParams> getSharedLibraryInterfaceParams(
-      CxxBuckConfig config, Platform platform, TargetConfiguration targetConfiguration) {
+      CxxBuckConfig config, Platform platform) {
     Optional<SharedLibraryInterfaceParams> sharedLibraryInterfaceParams = Optional.empty();
     SharedLibraryInterfaceParams.Type type = config.getSharedLibraryInterfaces();
     if (type != SharedLibraryInterfaceParams.Type.DISABLED) {
@@ -66,7 +66,7 @@ public class CxxPlatforms {
           sharedLibraryInterfaceParams =
               Optional.of(
                   ElfSharedLibraryInterfaceParams.of(
-                      config.getObjcopy(targetConfiguration).get(),
+                      config.getObjcopy().get(),
                       config.getIndependentShlibInterfacesLdflags().orElse(ImmutableList.of()),
                       type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
@@ -78,7 +78,6 @@ public class CxxPlatforms {
   }
 
   public static CxxPlatform build(
-      TargetConfiguration targetConfiguration,
       Flavor flavor,
       Platform platform,
       CxxBuckConfig config,
@@ -125,26 +124,23 @@ public class CxxPlatforms {
 
     builder
         .setFlavor(flavor)
-        .setAs(config.getAs(targetConfiguration).orElse(as))
-        .setAspp(config.getAspp(targetConfiguration).orElse(aspp))
-        .setCc(config.getCc(targetConfiguration).orElse(cc))
-        .setCxx(config.getCxx(targetConfiguration).orElse(cxx))
-        .setCpp(config.getCpp(targetConfiguration).orElse(cpp))
-        .setCxxpp(config.getCxxpp(targetConfiguration).orElse(cxxpp))
-        .setCuda(config.getCuda(targetConfiguration))
-        .setCudapp(config.getCudapp(targetConfiguration))
-        .setHip(config.getHip(targetConfiguration))
-        .setHippp(config.getHippp(targetConfiguration))
-        .setAsm(config.getAsm(targetConfiguration))
-        .setAsmpp(config.getAsmpp(targetConfiguration))
-        .setLd(config.getLinkerProvider(ld.getType(), targetConfiguration).orElse(ld))
+        .setAs(config.getAs().orElse(as))
+        .setAspp(config.getAspp().orElse(aspp))
+        .setCc(config.getCc().orElse(cc))
+        .setCxx(config.getCxx().orElse(cxx))
+        .setCpp(config.getCpp().orElse(cpp))
+        .setCxxpp(config.getCxxpp().orElse(cxxpp))
+        .setCuda(config.getCuda())
+        .setCudapp(config.getCudapp())
+        .setHip(config.getHip())
+        .setHippp(config.getHippp())
+        .setAsm(config.getAsm())
+        .setAsmpp(config.getAsmpp())
+        .setLd(config.getLinkerProvider(ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
         .setRuntimeLdflags(runtimeLdflags)
-        .setAr(config.getArchiverProvider(platform, targetConfiguration).orElse(ar))
-        .setRanlib(
-            config.getRanlib(targetConfiguration).isPresent()
-                ? config.getRanlib(targetConfiguration)
-                : ranlib)
+        .setAr(config.getArchiverProvider(platform).orElse(ar))
+        .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
         .setStrip(config.getStrip().orElse(strip))
         .setBinaryExtension(binaryExtension)
         .setSharedLibraryExtension(
@@ -178,8 +174,7 @@ public class CxxPlatforms {
 
     builder.setArchiveContents(config.getArchiveContents().orElse(archiveContents));
 
-    builder.setSharedLibraryInterfaceParams(
-        getSharedLibraryInterfaceParams(config, platform, targetConfiguration));
+    builder.setSharedLibraryInterfaceParams(getSharedLibraryInterfaceParams(config, platform));
 
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cxxflags);
@@ -196,13 +191,8 @@ public class CxxPlatforms {
    * from another default CxxPlatform
    */
   public static CxxPlatform copyPlatformWithFlavorAndConfig(
-      TargetConfiguration targetConfiguration,
-      CxxPlatform defaultPlatform,
-      Platform platform,
-      CxxBuckConfig config,
-      Flavor flavor) {
+      CxxPlatform defaultPlatform, Platform platform, CxxBuckConfig config, Flavor flavor) {
     return CxxPlatforms.build(
-        targetConfiguration,
         flavor,
         platform,
         config,

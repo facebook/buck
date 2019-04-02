@@ -195,7 +195,6 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
-            EmptyTargetConfiguration.INSTANCE,
             targetSdk,
             "7.0",
             "armv7",
@@ -308,7 +307,6 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
-            EmptyTargetConfiguration.INSTANCE,
             targetSdk,
             "2.0",
             "armv7k",
@@ -417,7 +415,6 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
-            EmptyTargetConfiguration.INSTANCE,
             targetSdk,
             "9.1",
             "arm64",
@@ -527,7 +524,6 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
-            EmptyTargetConfiguration.INSTANCE,
             targetSdk,
             "7.0",
             "cha+rs",
@@ -590,7 +586,6 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
-            EmptyTargetConfiguration.INSTANCE,
             targetSdk,
             "7.0",
             "armv7",
@@ -638,7 +633,6 @@ public class AppleCxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
-        EmptyTargetConfiguration.INSTANCE,
         targetSdk,
         "7.0",
         "armv7",
@@ -688,7 +682,6 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
-            EmptyTargetConfiguration.INSTANCE,
             targetSdk,
             "7.0",
             "armv7",
@@ -743,7 +736,6 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
-            EmptyTargetConfiguration.INSTANCE,
             targetSdk,
             "2.0",
             "armv7k",
@@ -799,7 +791,6 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
-            EmptyTargetConfiguration.INSTANCE,
             targetSdk,
             "9.1",
             "arm64",
@@ -950,7 +941,6 @@ public class AppleCxxPlatformsTest {
     this.touchFile(root.resolve("Toolchains/XcodeDefault.xctoolchain/usr/bin/ar"));
     return AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
-        EmptyTargetConfiguration.INSTANCE,
         targetSdk,
         "7.0",
         "armv7",
@@ -1261,7 +1251,6 @@ public class AppleCxxPlatformsTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     return AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
-        EmptyTargetConfiguration.INSTANCE,
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK,
         "7.0",
         "i386",

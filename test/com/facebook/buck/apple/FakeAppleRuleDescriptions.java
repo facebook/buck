@@ -28,7 +28,6 @@ import com.facebook.buck.apple.toolchain.impl.AppleCxxPlatforms;
 import com.facebook.buck.apple.toolchain.impl.XcodeToolFinder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -174,7 +173,6 @@ public class FakeAppleRuleDescriptions {
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_I386_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
-          EmptyTargetConfiguration.INSTANCE,
           DEFAULT_IPHONEOS_SDK,
           "8.0",
           "i386",
@@ -186,7 +184,6 @@ public class FakeAppleRuleDescriptions {
   public static final AppleCxxPlatform DEFAULT_IPHONEOS_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
-          EmptyTargetConfiguration.INSTANCE,
           DEFAULT_IPHONEOS_SDK,
           "8.0",
           "x86_64",
@@ -198,7 +195,6 @@ public class FakeAppleRuleDescriptions {
   public static final AppleCxxPlatform DEFAULT_WATCHOS_ARMV7K_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
-          EmptyTargetConfiguration.INSTANCE,
           DEFAULT_WATCHOS_SDK,
           "2.0",
           "armv7k",
@@ -210,7 +206,6 @@ public class FakeAppleRuleDescriptions {
   public static final AppleCxxPlatform DEFAULT_WATCHOS_ARM6432_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
-          EmptyTargetConfiguration.INSTANCE,
           DEFAULT_WATCHOS_SDK,
           "2.0",
           "arm64_32",
@@ -222,7 +217,6 @@ public class FakeAppleRuleDescriptions {
   public static final AppleCxxPlatform DEFAULT_MACOSX_X86_64_PLATFORM =
       AppleCxxPlatforms.buildWithXcodeToolFinder(
           FAKE_PROJECT_FILESYSTEM,
-          EmptyTargetConfiguration.INSTANCE,
           DEFAULT_MACOSX_SDK,
           "8.0",
           "x86_64",
@@ -233,10 +227,7 @@ public class FakeAppleRuleDescriptions {
 
   public static final UnresolvedCxxPlatform DEFAULT_PLATFORM =
       new StaticUnresolvedCxxPlatform(
-          DefaultCxxPlatforms.build(
-              EmptyTargetConfiguration.INSTANCE,
-              Platform.MACOS,
-              new CxxBuckConfig(DEFAULT_BUCK_CONFIG)));
+          DefaultCxxPlatforms.build(Platform.MACOS, new CxxBuckConfig(DEFAULT_BUCK_CONFIG)));
 
   public static final FlavorDomain<UnresolvedCxxPlatform> DEFAULT_APPLE_FLAVOR_DOMAIN =
       FlavorDomain.of(
