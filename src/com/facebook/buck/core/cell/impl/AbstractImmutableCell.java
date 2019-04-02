@@ -191,10 +191,5 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
-  public Path getAbsolutePathToBuildFile(BuildTarget target) throws MissingBuildFileException {
-    return getAbsolutePathToBuildFile(target.getUnconfiguredBuildTarget());
-  }
-
-  @Override
   public abstract CellPathResolver getCellPathResolver();
 }

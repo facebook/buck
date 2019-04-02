@@ -88,7 +88,7 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
       throws BuildTargetException {
     return rawTargetNodeFactory.create(
         cell,
-        cell.getAbsolutePathToBuildFile(buildTarget),
+        cell.getAbsolutePathToBuildFile(buildTarget.getUnconfiguredBuildTarget()),
         buildTarget.getUnconfiguredBuildTarget(),
         rawNode);
   }

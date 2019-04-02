@@ -132,7 +132,10 @@ abstract class AbstractParser implements Parser {
     Cell owningCell = cell.getCell(targetNode.getBuildTarget());
     BuildFileManifest buildFileManifest =
         getTargetNodeRawAttributes(
-            state, owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
+            state,
+            owningCell,
+            cell.getAbsolutePathToBuildFile(
+                targetNode.getBuildTarget().getUnconfiguredBuildTarget()));
     return getTargetFromManifest(targetNode, buildFileManifest);
   }
 
@@ -142,7 +145,9 @@ abstract class AbstractParser implements Parser {
     Cell owningCell = cell.getCell(targetNode.getBuildTarget());
     ListenableFuture<BuildFileManifest> buildFileManifestFuture =
         state.getBuildFileManifestJob(
-            owningCell, cell.getAbsolutePathToBuildFile(targetNode.getBuildTarget()));
+            owningCell,
+            cell.getAbsolutePathToBuildFile(
+                targetNode.getBuildTarget().getUnconfiguredBuildTarget()));
     return Futures.transform(
         buildFileManifestFuture,
         buildFileManifest -> getTargetFromManifest(targetNode, buildFileManifest),

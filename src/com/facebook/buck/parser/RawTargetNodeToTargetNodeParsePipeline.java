@@ -86,7 +86,7 @@ public class RawTargetNodeToTargetNodeParsePipeline
     TargetNode<?> targetNode =
         rawTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
-            cell.getAbsolutePathToBuildFile(buildTarget),
+            cell.getAbsolutePathToBuildFile(buildTarget.getUnconfiguredBuildTarget()),
             buildTarget,
             rawNode,
             perfEventScopeFunction);

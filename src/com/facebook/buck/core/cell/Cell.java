@@ -95,8 +95,6 @@ public interface Cell {
 
   Path getAbsolutePathToBuildFile(UnconfiguredBuildTarget target) throws MissingBuildFileException;
 
-  Path getAbsolutePathToBuildFile(BuildTarget target) throws MissingBuildFileException;
-
   CellPathResolver getCellPathResolver();
 
   Cell withCanonicalName(String canonicalName);
