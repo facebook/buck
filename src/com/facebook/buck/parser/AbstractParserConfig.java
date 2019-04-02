@@ -16,9 +16,12 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
@@ -303,5 +306,19 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   @Value.Lazy
   public boolean getEnableTargetCompatibilityChecks() {
     return getDelegate().getBooleanValue("parser", "enable_target_compatibility_checks", true);
+  }
+
+  /**
+   * For use in performance-sensitive code or if you don't care if the build file actually exists,
+   * otherwise prefer {@link Cell#getAbsolutePathToBuildFile(UnconfiguredBuildTarget)}.
+   *
+   * @param cell the cell where the given target is defined
+   * @param target target to look up
+   * @return path which may or may not exist.
+   */
+  public Path getAbsolutePathToBuildFileUnsafe(Cell cell, UnconfiguredBuildTarget target) {
+    Cell targetCell = cell.getCell(target);
+    ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
+    return targetFilesystem.resolve(target.getBasePath()).resolve(targetCell.getBuildFileName());
   }
 }

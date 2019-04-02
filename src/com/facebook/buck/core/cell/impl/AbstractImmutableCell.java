@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -77,6 +78,12 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public abstract BuckConfig getBuckConfig();
+
+  /** See {@link BuckConfig#getView(Class)} */
+  @Override
+  public <T extends ConfigView<BuckConfig>> T getBuckConfigView(Class<T> cls) {
+    return getBuckConfig().getView(cls);
+  }
 
   @Override
   @Value.Auxiliary
@@ -167,16 +174,10 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
-  public Path getAbsolutePathToBuildFileUnsafe(UnconfiguredBuildTarget target) {
-    Cell targetCell = getCell(target);
-    ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
-    return targetFilesystem.resolve(target.getBasePath()).resolve(targetCell.getBuildFileName());
-  }
-
-  @Override
   public Path getAbsolutePathToBuildFile(UnconfiguredBuildTarget target)
       throws MissingBuildFileException {
-    Path buildFile = getAbsolutePathToBuildFileUnsafe(target);
+    Path buildFile =
+        getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFileUnsafe(this, target);
     Cell cell = getCell(target);
     if (!cell.getFilesystem().isFile(buildFile)) {
 
