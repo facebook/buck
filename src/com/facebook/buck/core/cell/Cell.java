@@ -23,7 +23,6 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
-import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -58,8 +57,6 @@ public interface Cell {
   ToolchainProvider getToolchainProvider();
 
   Path getRoot();
-
-  RuleKeyConfiguration getRuleKeyConfiguration();
 
   String getBuildFileName();
 

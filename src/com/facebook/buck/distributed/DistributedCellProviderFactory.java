@@ -111,7 +111,6 @@ public class DistributedCellProviderFactory {
                       configWithResolver,
                       cellProvider,
                       toolchainProvider,
-                      ruleKeyConfiguration,
                       currentCellResolver);
                 }),
         cellProvider ->

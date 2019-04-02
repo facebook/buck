@@ -79,7 +79,6 @@ public class RootCellFactory {
         rootConfig,
         cellProvider,
         toolchainProvider,
-        ruleKeyConfiguration,
         rootCellPathResolver);
   }
 
@@ -104,7 +103,6 @@ public class RootCellFactory {
         rootConfig,
         cellProvider,
         toolchainProvider,
-        ruleKeyConfiguration,
         rootCellCellPathResolver);
   }
 }

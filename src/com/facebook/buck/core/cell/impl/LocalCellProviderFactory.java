@@ -160,7 +160,6 @@ public class LocalCellProviderFactory {
                     buckConfig,
                     cellProvider,
                     toolchainProvider,
-                    ruleKeyConfiguration,
                     cellPathResolver);
               }
             },
