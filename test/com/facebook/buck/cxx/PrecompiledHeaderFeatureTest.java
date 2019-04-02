@@ -36,6 +36,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
@@ -447,7 +448,8 @@ public class PrecompiledHeaderFeatureTest {
                     new HashedFileTool(
                         PathSourcePath.of(
                             new FakeProjectFilesystem(), Paths.get("/usr/bin/foopp")))),
-                type));
+                type,
+                ToolType.CPP));
   }
 
   private static final CxxPlatform PLATFORM_SUPPORTING_PCH =

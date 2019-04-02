@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -44,6 +45,7 @@ public abstract class CxxToolProvider<T> {
 
   private final ToolProvider toolProvider;
   private final Supplier<Type> type;
+  private final ToolType toolType;
   private final boolean useUnixFileSeparator;
 
   private final LoadingCache<CxxToolProviderCacheKey, T> cache =
@@ -61,9 +63,13 @@ public abstract class CxxToolProvider<T> {
               });
 
   public CxxToolProvider(
-      ToolProvider toolProvider, Supplier<Type> type, boolean useUnixFileSeparator) {
+      ToolProvider toolProvider,
+      Supplier<Type> type,
+      ToolType toolType,
+      boolean useUnixFileSeparator) {
     this.toolProvider = toolProvider;
     this.type = type;
+    this.toolType = toolType;
     this.useUnixFileSeparator = useUnixFileSeparator;
   }
 
@@ -71,13 +77,14 @@ public abstract class CxxToolProvider<T> {
    * Build using a {@link ToolProvider} and a required type. It also allows to specify to use Unix
    * path separators for the NDK compiler.
    */
-  public CxxToolProvider(ToolProvider toolProvider, Type type, boolean useUnixFileSeparator) {
-    this(toolProvider, Suppliers.ofInstance(type), useUnixFileSeparator);
+  public CxxToolProvider(
+      ToolProvider toolProvider, Type type, ToolType toolType, boolean useUnixFileSeparator) {
+    this(toolProvider, Suppliers.ofInstance(type), toolType, useUnixFileSeparator);
   }
 
   /** Build using a {@link ToolProvider} and a required type. */
-  public CxxToolProvider(ToolProvider toolProvider, Type type) {
-    this(toolProvider, Suppliers.ofInstance(type), false);
+  public CxxToolProvider(ToolProvider toolProvider, Type type, ToolType toolType) {
+    this(toolProvider, Suppliers.ofInstance(type), toolType, false);
   }
 
   protected abstract T build(Type type, Tool tool);
@@ -97,6 +104,11 @@ public abstract class CxxToolProvider<T> {
     GCC,
     WINDOWS,
     WINDOWS_ML64
+  }
+
+  /** Return tool type of this provider instance */
+  public ToolType getToolType() {
+    return toolType;
   }
 
   /** @returns whether the specific CxxTool is accepting paths with Unix path separator only. */

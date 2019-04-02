@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -549,12 +550,16 @@ public class NdkCxxPlatforms {
             getCTool(toolchainPaths, compilerType.cxx, version, executableFinder));
     CompilerProvider cc =
         new CompilerProvider(
-            ccTool, () -> type, config.getUseDetailedUntrackedHeaderMessages(), true);
-    PreprocessorProvider cpp = new PreprocessorProvider(ccTool, type, true);
+            ccTool, () -> type, ToolType.CC, config.getUseDetailedUntrackedHeaderMessages(), true);
+    PreprocessorProvider cpp = new PreprocessorProvider(ccTool, type, ToolType.CPP, true);
     CompilerProvider cxx =
         new CompilerProvider(
-            cxxTool, () -> type, config.getUseDetailedUntrackedHeaderMessages(), true);
-    PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type, true);
+            cxxTool,
+            () -> type,
+            ToolType.CXX,
+            config.getUseDetailedUntrackedHeaderMessages(),
+            true);
+    PreprocessorProvider cxxpp = new PreprocessorProvider(cxxTool, type, ToolType.CXXPP, true);
 
     CxxPlatform.Builder cxxPlatformBuilder = CxxPlatform.builder();
     ImmutableBiMap<Path, String> sanitizePaths = sanitizePathsBuilder.build();

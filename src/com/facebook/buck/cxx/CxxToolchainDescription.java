@@ -29,6 +29,7 @@ import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
@@ -119,17 +120,20 @@ public class CxxToolchainDescription
         new CompilerProvider(
             ToolProviders.getToolProvider(args.getAssembler()),
             compilerType,
+            ToolType.AS,
             preferDependencyTree));
     cxxPlatform.setAsflags(args.getAssemblerFlags());
 
     cxxPlatform.setAspp(
-        new PreprocessorProvider(ToolProviders.getToolProvider(args.getAssembler()), compilerType));
+        new PreprocessorProvider(
+            ToolProviders.getToolProvider(args.getAssembler()), compilerType, ToolType.ASPP));
     cxxPlatform.setAsppflags(ImmutableList.of());
 
     cxxPlatform.setCc(
         new CompilerProvider(
             ToolProviders.getToolProvider(args.getCCompiler()),
             compilerType,
+            ToolType.CC,
             preferDependencyTree));
     cxxPlatform.setCflags(args.getCCompilerFlags());
 
@@ -137,16 +141,18 @@ public class CxxToolchainDescription
         new CompilerProvider(
             ToolProviders.getToolProvider(args.getCxxCompiler()),
             compilerType,
+            ToolType.CXX,
             preferDependencyTree));
     cxxPlatform.setCxxflags(args.getCxxCompilerFlags());
 
     cxxPlatform.setCpp(
-        new PreprocessorProvider(ToolProviders.getToolProvider(args.getCCompiler()), compilerType));
+        new PreprocessorProvider(
+            ToolProviders.getToolProvider(args.getCCompiler()), compilerType, ToolType.CPP));
     cxxPlatform.setCppflags(ImmutableList.of());
 
     cxxPlatform.setCxxpp(
         new PreprocessorProvider(
-            ToolProviders.getToolProvider(args.getCxxCompiler()), compilerType));
+            ToolProviders.getToolProvider(args.getCxxCompiler()), compilerType, ToolType.CXXPP));
     cxxPlatform.setCxxppflags(ImmutableList.of());
 
     cxxPlatform.setLd(

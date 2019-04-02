@@ -55,6 +55,7 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
@@ -120,7 +121,8 @@ public class CxxPrecompiledHeaderRuleTest {
         new PreprocessorProvider(
             new ConstantToolProvider(
                 new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("foopp")))),
-            Type.CLANG);
+            Type.CLANG,
+            ToolType.CPP);
 
     platformSupportingPch =
         CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(preprocessorSupportingPch);

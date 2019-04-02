@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
@@ -57,36 +58,17 @@ public class CxxPlatformsTest {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("cxx", ImmutableMap.of("default_platform", "borland_cxx_452"));
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CompilerProvider compiler =
-        new CompilerProvider(
-            new ConstantToolProvider(
-                new HashedFileTool(
-                    Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))))),
-            () -> Optional.of(Type.GCC).get(),
-            false);
-    PreprocessorProvider preprocessor =
-        new PreprocessorProvider(
-            new ConstantToolProvider(
-                new HashedFileTool(
-                    Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))))),
-            Optional.of(Type.GCC)
-                .orElseGet(
-                    () ->
-                        CxxToolTypeInferer.getTypeFromPath(
-                            Suppliers.ofInstance(
-                                    PathSourcePath.of(filesystem, Paths.get("borland")))
-                                .get())));
     HashedFileTool borland =
         new HashedFileTool(PathSourcePath.of(filesystem, Paths.get("borland")));
     CxxPlatform borlandCxx452Platform =
         CxxPlatform.builder()
             .setFlavor(InternalFlavor.of("borland_cxx_452"))
-            .setAs(compiler)
-            .setAspp(preprocessor)
-            .setCc(compiler)
-            .setCpp(preprocessor)
-            .setCxx(compiler)
-            .setCxxpp(preprocessor)
+            .setAs(createCompilerProvider(filesystem, ToolType.AS))
+            .setAspp(createPreprocessorProvider(filesystem, ToolType.ASPP))
+            .setCc(createCompilerProvider(filesystem, ToolType.CC))
+            .setCpp(createPreprocessorProvider(filesystem, ToolType.CPP))
+            .setCxx(createCompilerProvider(filesystem, ToolType.CXX))
+            .setCxxpp(createPreprocessorProvider(filesystem, ToolType.CXXPP))
             .setLd(
                 new DefaultLinkerProvider(
                     LinkerProvider.Type.GNU, new ConstantToolProvider(borland), true))
@@ -116,6 +98,31 @@ public class CxxPlatformsTest {
                 CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
             .resolve(new TestActionGraphBuilder()),
         equalTo(borlandCxx452Platform));
+  }
+
+  private PreprocessorProvider createPreprocessorProvider(
+      ProjectFilesystem filesystem, ToolType toolType) {
+    return new PreprocessorProvider(
+        new ConstantToolProvider(
+            new HashedFileTool(
+                Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))))),
+        Optional.of(Type.GCC)
+            .orElseGet(
+                () ->
+                    CxxToolTypeInferer.getTypeFromPath(
+                        Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland")))
+                            .get())),
+        toolType);
+  }
+
+  private CompilerProvider createCompilerProvider(ProjectFilesystem filesystem, ToolType toolType) {
+    return new CompilerProvider(
+        new ConstantToolProvider(
+            new HashedFileTool(
+                Suppliers.ofInstance(PathSourcePath.of(filesystem, Paths.get("borland"))))),
+        () -> Optional.of(Type.GCC).get(),
+        toolType,
+        false);
   }
 
   @Test

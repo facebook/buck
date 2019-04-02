@@ -27,6 +27,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
@@ -195,26 +196,31 @@ public class DefaultCxxPlatforms {
                 finalDefaultToolType.orElseGet(
                     () -> CxxToolTypeInferer.getTypeFromPath(cxxFrontendPath.get())));
 
-    PreprocessorProvider aspp = new PreprocessorProvider(defaultCFrontendSupplier, cFrontendType);
+    PreprocessorProvider aspp =
+        new PreprocessorProvider(defaultCFrontendSupplier, cFrontendType, ToolType.ASPP);
     CompilerProvider as =
         new CompilerProvider(
             defaultCFrontendSupplier,
             cFrontendType,
+            ToolType.AS,
             config.getUseDetailedUntrackedHeaderMessages());
 
-    PreprocessorProvider cpp = new PreprocessorProvider(defaultCFrontendSupplier, cFrontendType);
+    PreprocessorProvider cpp =
+        new PreprocessorProvider(defaultCFrontendSupplier, cFrontendType, ToolType.CPP);
     CompilerProvider cc =
         new CompilerProvider(
             defaultCFrontendSupplier,
             cFrontendType,
+            ToolType.CC,
             config.getUseDetailedUntrackedHeaderMessages());
 
     PreprocessorProvider cxxpp =
-        new PreprocessorProvider(defaultCxxFrontendSupplier, cxxFrontendType);
+        new PreprocessorProvider(defaultCxxFrontendSupplier, cxxFrontendType, ToolType.CXXPP);
     CompilerProvider cxx =
         new CompilerProvider(
             defaultCxxFrontendSupplier,
             cxxFrontendType,
+            ToolType.CXX,
             config.getUseDetailedUntrackedHeaderMessages());
 
     return CxxPlatforms.build(

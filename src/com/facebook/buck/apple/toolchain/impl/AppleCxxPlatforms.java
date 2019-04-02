@@ -42,6 +42,7 @@ import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.BsdArchiver;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
@@ -375,25 +376,31 @@ public class AppleCxxPlatforms {
     }
 
     PreprocessorProvider aspp =
-        new PreprocessorProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
+        new PreprocessorProvider(
+            new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG, ToolType.ASPP);
     CompilerProvider as =
         new CompilerProvider(
             new ConstantToolProvider(clangPath),
             CxxToolProvider.Type.CLANG,
+            ToolType.AS,
             config.getUseDetailedUntrackedHeaderMessages());
     PreprocessorProvider cpp =
-        new PreprocessorProvider(new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG);
+        new PreprocessorProvider(
+            new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG, ToolType.CPP);
     CompilerProvider cc =
         new CompilerProvider(
             new ConstantToolProvider(clangPath),
             CxxToolProvider.Type.CLANG,
+            ToolType.CC,
             config.getUseDetailedUntrackedHeaderMessages());
     PreprocessorProvider cxxpp =
-        new PreprocessorProvider(new ConstantToolProvider(clangXxPath), CxxToolProvider.Type.CLANG);
+        new PreprocessorProvider(
+            new ConstantToolProvider(clangXxPath), CxxToolProvider.Type.CLANG, ToolType.CXXPP);
     CompilerProvider cxx =
         new CompilerProvider(
             new ConstantToolProvider(clangXxPath),
             CxxToolProvider.Type.CLANG,
+            ToolType.CXX,
             config.getUseDetailedUntrackedHeaderMessages());
     ImmutableList.Builder<String> whitelistBuilder = ImmutableList.builder();
     whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getSdkPath().toString()) + "\\/.*");

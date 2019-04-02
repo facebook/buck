@@ -44,6 +44,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
 import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
@@ -414,11 +415,13 @@ public class CxxSourceRuleFactoryTest {
               .withCxxpp(
                   new PreprocessorProvider(
                       new BinaryBuildRuleToolProvider(cxxpp.getBuildTarget(), ""),
-                      CxxToolProvider.Type.GCC))
+                      CxxToolProvider.Type.GCC,
+                      ToolType.CXXPP))
               .withCxx(
                   new CompilerProvider(
                       new BinaryBuildRuleToolProvider(cxx.getBuildTarget(), ""),
                       CxxToolProvider.Type.GCC,
+                      ToolType.CXX,
                       false));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =

@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -48,11 +49,15 @@ public class CxxPlatformUtils {
 
   private static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
 
-  private static final PreprocessorProvider DEFAULT_PREPROCESSOR_PROVIDER =
-      new PreprocessorProvider(new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC);
+  private static PreprocessorProvider defaultPreprocessorProvider(ToolType toolType) {
+    return new PreprocessorProvider(
+        new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC, toolType);
+  }
 
-  private static final CompilerProvider DEFAULT_COMPILER_PROVIDER =
-      new CompilerProvider(new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC, false);
+  private static CompilerProvider defaultCompilerProvider(ToolType toolType) {
+    return new CompilerProvider(
+        new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC, toolType, false);
+  }
 
   public static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
       new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
@@ -64,16 +69,16 @@ public class CxxPlatformUtils {
   public static final CxxPlatform DEFAULT_PLATFORM =
       CxxPlatform.builder()
           .setFlavor(DEFAULT_PLATFORM_FLAVOR)
-          .setAs(DEFAULT_COMPILER_PROVIDER)
-          .setAspp(DEFAULT_PREPROCESSOR_PROVIDER)
-          .setCc(DEFAULT_COMPILER_PROVIDER)
-          .setCpp(DEFAULT_PREPROCESSOR_PROVIDER)
-          .setCxx(DEFAULT_COMPILER_PROVIDER)
-          .setCxxpp(DEFAULT_PREPROCESSOR_PROVIDER)
-          .setCuda(DEFAULT_COMPILER_PROVIDER)
-          .setCudapp(DEFAULT_PREPROCESSOR_PROVIDER)
-          .setAsm(DEFAULT_COMPILER_PROVIDER)
-          .setAsmpp(DEFAULT_PREPROCESSOR_PROVIDER)
+          .setAs(defaultCompilerProvider(ToolType.AS))
+          .setAspp(defaultPreprocessorProvider(ToolType.ASPP))
+          .setCc(defaultCompilerProvider(ToolType.CC))
+          .setCpp(defaultPreprocessorProvider(ToolType.CPP))
+          .setCxx(defaultCompilerProvider(ToolType.CXX))
+          .setCxxpp(defaultPreprocessorProvider(ToolType.CXXPP))
+          .setCuda(defaultCompilerProvider(ToolType.CUDA))
+          .setCudapp(defaultPreprocessorProvider(ToolType.CUDAPP))
+          .setAsm(defaultCompilerProvider(ToolType.ASM))
+          .setAsmpp(defaultPreprocessorProvider(ToolType.ASMPP))
           .setLd(
               new DefaultLinkerProvider(
                   LinkerProvider.Type.GNU, new ConstantToolProvider(DEFAULT_TOOL), true))
