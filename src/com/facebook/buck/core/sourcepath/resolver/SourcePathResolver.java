@@ -60,8 +60,6 @@ public interface SourcePathResolver {
 
   ImmutableCollection<Path> filterInputsToCompareToOutput(Iterable<? extends SourcePath> sources);
 
-  ImmutableCollection<Path> filterInputsToCompareToOutput(SourcePath... sources);
-
   Optional<PathSourcePath> getPathSourcePath(SourcePath sourcePath);
 
   /**

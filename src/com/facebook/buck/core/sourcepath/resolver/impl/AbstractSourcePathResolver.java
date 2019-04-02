@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -228,11 +227,6 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
         .filter(PathSourcePath.class)
         .transform(PathSourcePath::getRelativePath)
         .toList();
-  }
-
-  @Override
-  public ImmutableCollection<Path> filterInputsToCompareToOutput(SourcePath... sources) {
-    return filterInputsToCompareToOutput(Arrays.asList(sources));
   }
 
   /** @return the {@link PathSourcePath} backing the given {@link SourcePath}, if any. */

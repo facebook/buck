@@ -184,7 +184,7 @@ public class ExportFileTest {
 
     assertIterablesEquals(
         singleton(Paths.get("chips")),
-        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()));
+        pathResolver.filterInputsToCompareToOutput(singleton(exportFile.getSource())));
 
     graphBuilder = new TestActionGraphBuilder();
     pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -195,7 +195,8 @@ public class ExportFileTest {
     builder.setSrc(DefaultBuildTargetSourcePath.of(rule.getBuildTarget()));
     exportFile = builder.build(graphBuilder, projectFilesystem);
     assertThat(
-        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()), Matchers.empty());
+        pathResolver.filterInputsToCompareToOutput(singleton(exportFile.getSource())),
+        Matchers.empty());
 
     graphBuilder = new TestActionGraphBuilder();
     pathResolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
@@ -204,7 +205,7 @@ public class ExportFileTest {
     exportFile = builder.build(graphBuilder, projectFilesystem);
     assertIterablesEquals(
         singleton(projectFilesystem.getPath("example.html")),
-        pathResolver.filterInputsToCompareToOutput(exportFile.getSource()));
+        pathResolver.filterInputsToCompareToOutput(singleton(exportFile.getSource())));
   }
 
   @Test
