@@ -107,7 +107,7 @@ public class DaemonicParserState {
     public Optional<T> lookupComputedNode(Cell cell, BuildTarget target, BuckEventBus eventBus)
         throws BuildTargetException {
       invalidateIfProjectBuildFileParserStateChanged(cell);
-      Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
+      Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target.getUnconfiguredBuildTarget());
       invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus);
 
       DaemonicCellState.Cache<T> state = getCache(cell);
@@ -129,7 +129,7 @@ public class DaemonicParserState {
           "Unexpected invalidation due to build file parser state change for %s %s",
           cell.getRoot(),
           target);
-      Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target);
+      Path buildFile = cell.getAbsolutePathToBuildFileUnsafe(target.getUnconfiguredBuildTarget());
       Preconditions.checkState(
           !invalidateIfBuckConfigOrEnvHasChanged(cell, buildFile, eventBus),
           "Unexpected invalidation due to config/env change for %s %s",

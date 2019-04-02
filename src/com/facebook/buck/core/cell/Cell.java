@@ -89,16 +89,14 @@ public interface Cell {
   /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
   ImmutableMap<Path, Cell> getLoadedCells();
 
-  Path getAbsolutePathToBuildFileUnsafe(UnconfiguredBuildTarget target);
-
   /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
-   * otherwise prefer {@link #getAbsolutePathToBuildFile(BuildTarget)}.
+   * otherwise prefer {@link #getAbsolutePathToBuildFile(UnconfiguredBuildTarget)}.
    *
    * @param target target to look up
    * @return path which may or may not exist.
    */
-  Path getAbsolutePathToBuildFileUnsafe(BuildTarget target);
+  Path getAbsolutePathToBuildFileUnsafe(UnconfiguredBuildTarget target);
 
   Path getAbsolutePathToBuildFile(UnconfiguredBuildTarget target) throws MissingBuildFileException;
 

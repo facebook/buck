@@ -167,11 +167,6 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
-  public Path getAbsolutePathToBuildFileUnsafe(BuildTarget target) {
-    return getAbsolutePathToBuildFileUnsafe(target.getUnconfiguredBuildTarget());
-  }
-
-  @Override
   public Path getAbsolutePathToBuildFileUnsafe(UnconfiguredBuildTarget target) {
     Cell targetCell = getCell(target);
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
