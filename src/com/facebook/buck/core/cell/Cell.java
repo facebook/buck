@@ -61,8 +61,6 @@ public interface Cell {
 
   Path getRoot();
 
-  String getBuildFileName();
-
   /**
    * Whether the cell is enforcing buck package boundaries for the package at the passed path.
    *

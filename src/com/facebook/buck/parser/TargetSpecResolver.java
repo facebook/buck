@@ -214,7 +214,9 @@ public class TargetSpecResolver implements AutoCloseable {
           // build file under base path
           Path buildFile =
               projectFilesystemView.resolve(
-                  buildFileSpec.getBasePath().resolve(cell.getBuildFileName()));
+                  buildFileSpec
+                      .getBasePath()
+                      .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
           perBuildFileSpecs.put(buildFile, index);
         } else {
           // For recursive spec, i.e. //path/to/... we use cached file tree
@@ -231,7 +233,9 @@ public class TargetSpecResolver implements AutoCloseable {
                   .getUnchecked(cellPath)
                   .computeUnchecked(ImmutableFileTreeKey.of(basePath));
 
-          for (Path path : FileTreeFileNameIterator.ofIterable(fileTree, cell.getBuildFileName())) {
+          for (Path path :
+              FileTreeFileNameIterator.ofIterable(
+                  fileTree, cell.getBuckConfigView(ParserConfig.class).getBuildFileName())) {
             perBuildFileSpecs.put(projectFilesystemView.resolve(path), index);
           }
         }

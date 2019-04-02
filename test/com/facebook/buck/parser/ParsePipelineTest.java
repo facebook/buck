@@ -414,7 +414,8 @@ public class ParsePipelineTest {
                     @Override
                     public BuildFileTree load(Cell cell) {
                       return new FilesystemBackedBuildFileTree(
-                          cell.getFilesystem(), cell.getBuildFileName());
+                          cell.getFilesystem(),
+                          cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
                     }
                   });
       buildFileRawNodeParsePipeline =

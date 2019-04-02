@@ -98,11 +98,6 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
-  public String getBuildFileName() {
-    return getBuckConfig().getView(ParserConfig.class).getBuildFileName();
-  }
-
-  @Override
   public boolean isEnforcingBuckPackageBoundaries(Path path) {
     ParserConfig configView = getBuckConfig().getView(ParserConfig.class);
     if (!configView.getEnforceBuckPackageBoundary()) {

@@ -40,6 +40,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.TestPerBuildStateFactory;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -277,6 +278,7 @@ public class OwnersReportTest {
                 Function.identity(),
                 cell ->
                     new FilesystemBackedBuildFileTree(
-                        cell.getFilesystem(), cell.getBuildFileName())));
+                        cell.getFilesystem(),
+                        cell.getBuckConfigView(ParserConfig.class).getBuildFileName())));
   }
 }

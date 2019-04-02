@@ -34,6 +34,7 @@ import com.facebook.buck.distributed.thrift.BuildJobStateTargetGraph;
 import com.facebook.buck.distributed.thrift.BuildJobStateTargetNode;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.ParserTargetNodeFactory;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -220,7 +221,9 @@ public class DistBuildTargetGraphCodec {
           Map<String, Object> rawNode = getRawNode(remoteNode);
 
           Path buildFilePath =
-              projectFilesystem.resolve(target.getBasePath()).resolve(cell.getBuildFileName());
+              projectFilesystem
+                  .resolve(target.getBasePath())
+                  .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
 
           TargetNode<?> targetNode =
               parserTargetNodeFactory.createTargetNode(

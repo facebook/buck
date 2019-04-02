@@ -302,7 +302,8 @@ public class DaemonicParserState {
                   @Override
                   public BuildFileTree load(Cell cell) {
                     return new FilesystemBackedBuildFileTree(
-                        cell.getFilesystem(), cell.getBuildFileName());
+                        cell.getFilesystem(),
+                        cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
                   }
                 });
     this.cachedIncludes = new ConcurrentHashMap<>();
@@ -385,7 +386,7 @@ public class DaemonicParserState {
             Cell cell = state.getCell();
             BuildFileTree buildFiles = buildFileTrees.get(cell);
 
-            if (fullPath.endsWith(cell.getBuildFileName())) {
+            if (fullPath.endsWith(cell.getBuckConfigView(ParserConfig.class).getBuildFileName())) {
               LOG.debug(
                   "Build file %s changed, invalidating build file tree for cell %s",
                   fullPath, cell);
@@ -475,7 +476,8 @@ public class DaemonicParserState {
     }
     // Invalidate all the packages we found.
     for (Path buildFile : packageBuildFiles) {
-      invalidatePath(state, buildFile.resolve(cell.getBuildFileName()));
+      invalidatePath(
+          state, buildFile.resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
     }
   }
 

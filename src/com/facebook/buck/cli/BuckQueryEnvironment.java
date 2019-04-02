@@ -158,7 +158,8 @@ public class BuckQueryEnvironment implements QueryEnvironment {
                     Function.identity(),
                     cell ->
                         new FilesystemBackedBuildFileTree(
-                            cell.getFilesystem(), cell.getBuildFileName())));
+                            cell.getFilesystem(),
+                            cell.getBuckConfigView(ParserConfig.class).getBuildFileName())));
     this.targetPatternEvaluator = targetPatternEvaluator;
     this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator);
     this.typeCoercerFactory = typeCoercerFactory;
@@ -510,7 +511,10 @@ public class BuckQueryEnvironment implements QueryEnvironment {
 
       Path buildFilePath =
           MorePaths.relativize(
-              rootPath, cell.getFilesystem().resolve(path.get()).resolve(cell.getBuildFileName()));
+              rootPath,
+              cell.getFilesystem()
+                  .resolve(path.get())
+                  .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
       Preconditions.checkState(cellFilesystem.exists(buildFilePath));
       SourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);
       builder.add(QueryFileTarget.of(sourcePath));

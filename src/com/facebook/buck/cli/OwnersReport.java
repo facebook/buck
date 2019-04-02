@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.RichStream;
@@ -181,7 +182,10 @@ final class OwnersReport {
         Cell cell,
         Path basePath,
         Path cellRelativePath) {
-      Path buckFile = cell.getFilesystem().resolve(basePath).resolve(cell.getBuildFileName());
+      Path buckFile =
+          cell.getFilesystem()
+              .resolve(basePath)
+              .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName());
       ImmutableList<TargetNode<?>> targetNodes =
           map.computeIfAbsent(
               buckFile,
