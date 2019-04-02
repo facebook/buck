@@ -61,13 +61,6 @@ public interface Cell {
 
   Path getRoot();
 
-  /**
-   * Whether the cell is enforcing buck package boundaries for the package at the passed path.
-   *
-   * @param path Path of package (or file in a package) relative to the cell root.
-   */
-  boolean isEnforcingBuckPackageBoundaries(Path path);
-
   Cell getCellIgnoringVisibilityCheck(Path cellPath);
 
   Cell getCell(Path cellPath);

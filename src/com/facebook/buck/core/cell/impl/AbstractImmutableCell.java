@@ -30,7 +30,6 @@ import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -95,24 +94,6 @@ abstract class AbstractImmutableCell implements Cell {
   @Override
   public Path getRoot() {
     return getFilesystem().getRootPath();
-  }
-
-  @Override
-  public boolean isEnforcingBuckPackageBoundaries(Path path) {
-    ParserConfig configView = getBuckConfig().getView(ParserConfig.class);
-    if (!configView.getEnforceBuckPackageBoundary()) {
-      return false;
-    }
-
-    Path absolutePath = getFilesystem().resolve(path);
-
-    ImmutableList<Path> exceptions = configView.getBuckPackageBoundaryExceptions();
-    for (Path exception : exceptions) {
-      if (absolutePath.startsWith(exception)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   @Override

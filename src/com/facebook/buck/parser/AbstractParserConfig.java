@@ -343,4 +343,25 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     }
     return buildFile;
   }
+
+  /**
+   * Whether the cell is enforcing buck package boundaries for the package at the passed path.
+   *
+   * @param path Path of package (or file in a package) relative to the cell root.
+   */
+  public boolean isEnforcingBuckPackageBoundaries(Path path) {
+    if (!getEnforceBuckPackageBoundary()) {
+      return false;
+    }
+
+    Path absolutePath = getDelegate().getFilesystem().resolve(path);
+
+    ImmutableList<Path> exceptions = getBuckPackageBoundaryExceptions();
+    for (Path exception : exceptions) {
+      if (absolutePath.startsWith(exception)) {
+        return false;
+      }
+    }
+    return true;
+  }
 }

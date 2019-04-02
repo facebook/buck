@@ -44,7 +44,9 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
 
     Path basePath = target.getBasePath();
 
-    if (!targetCell.isEnforcingBuckPackageBoundaries(basePath)) {
+    if (!targetCell
+        .getBuckConfigView(ParserConfig.class)
+        .isEnforcingBuckPackageBoundaries(basePath)) {
       return;
     }
 
