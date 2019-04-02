@@ -56,7 +56,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildId;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -1273,7 +1272,6 @@ class CachingBuildRuleBuilder {
 
     LOG.debug("Running post-build steps for %s", rule);
 
-    Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
     for (Step step : postBuildSteps) {
       stepRunner.runStepForBuildTarget(
           executionContext.withProcessExecutor(
@@ -1284,8 +1282,7 @@ class CachingBuildRuleBuilder {
                       rule.getType(),
                       CachingBuildEngine.STEP_TYPE_CONTEXT_KEY,
                       CachingBuildEngine.StepType.POST_BUILD_STEP.toString()))),
-          step,
-          optionalTarget);
+          step);
 
       // Check for interruptions that may have been ignored by step.
       if (Thread.interrupted()) {
@@ -1465,9 +1462,8 @@ class CachingBuildRuleBuilder {
         }
       }
 
-      Optional<BuildTarget> optionalTarget = Optional.of(rule.getBuildTarget());
       for (Step step : steps) {
-        stepRunner.runStepForBuildTarget(executionContext, step, optionalTarget);
+        stepRunner.runStepForBuildTarget(executionContext, step);
         // Check for interruptions that may have been ignored by step.
         if (Thread.interrupted()) {
           Thread.currentThread().interrupt();

@@ -336,8 +336,7 @@ public abstract class IsolatedBuildableBuilder {
       for (Step step :
           ModernBuildRule.stepsForBuildable(
               buildContext, reconstructed.buildable, filesystem, reconstructed.target)) {
-        new DefaultStepRunner()
-            .runStepForBuildTarget(executionContext, step, Optional.of(reconstructed.target));
+        new DefaultStepRunner().runStepForBuildTarget(executionContext, step);
       }
 
       LOG.info(

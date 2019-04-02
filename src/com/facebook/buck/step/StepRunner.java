@@ -17,8 +17,6 @@
 package com.facebook.buck.step;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.model.BuildTarget;
-import java.util.Optional;
 
 public interface StepRunner {
 
@@ -27,6 +25,6 @@ public interface StepRunner {
    *
    * <p>Note that this method blocks until the specified command terminates.
    */
-  void runStepForBuildTarget(ExecutionContext context, Step step, Optional<BuildTarget> buildTarget)
+  void runStepForBuildTarget(ExecutionContext context, Step step)
       throws StepFailedException, InterruptedException;
 }

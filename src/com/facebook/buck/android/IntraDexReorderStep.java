@@ -89,7 +89,7 @@ public class IntraDexReorderStep implements Step {
       DefaultStepRunner stepRunner = new DefaultStepRunner();
       List<Step> dxSteps = generateReorderCommands();
       for (Step step : dxSteps) {
-        stepRunner.runStepForBuildTarget(context, step, Optional.of(buildTarget));
+        stepRunner.runStepForBuildTarget(context, step);
       }
     } catch (StepFailedException e) {
       context.logError(e, "There was an error in intra dex reorder step.");

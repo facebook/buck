@@ -218,8 +218,8 @@ public class SmartDexingStep implements Step {
                     secondaryBlobOutput,
                     secondaryCompressedBlobOutput,
                     xzCompressionLevel.orElse(XzStep.DEFAULT_COMPRESSION_LEVEL));
-            stepRunner.runStepForBuildTarget(context, concatStep, Optional.empty());
-            stepRunner.runStepForBuildTarget(context, xzStep, Optional.empty());
+            stepRunner.runStepForBuildTarget(context, concatStep);
+            stepRunner.runStepForBuildTarget(context, xzStep);
           }
         }
       }
@@ -245,7 +245,7 @@ public class SmartDexingStep implements Step {
                     (Callable<Void>)
                         () -> {
                           for (Step step : steps) {
-                            stepRunner.runStepForBuildTarget(context, step, Optional.empty());
+                            stepRunner.runStepForBuildTarget(context, step);
                           }
                           return null;
                         })

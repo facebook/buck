@@ -153,7 +153,7 @@ public class TestRunning {
                       buildContext.getBuildCellRootPath(),
                       library.getProjectFilesystem(),
                       JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())))) {
-            stepRunner.runStepForBuildTarget(executionContext, step, Optional.empty());
+            stepRunner.runStepForBuildTarget(executionContext, step);
           }
         } catch (StepFailedException e) {
           params
@@ -438,8 +438,7 @@ public class TestRunning {
                         .getSpoolMode()
                     == JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK,
                 options.getCoverageIncludes(),
-                options.getCoverageExcludes()),
-            Optional.empty());
+                options.getCoverageExcludes()));
       } catch (StepFailedException e) {
         params
             .getBuckEventBus()
@@ -850,7 +849,7 @@ public class TestRunning {
           LOG.debug("Test steps will run for %s", buildTarget);
           eventBus.post(TestRuleEvent.started(buildTarget));
           for (Step step : steps) {
-            stepRunner.runStepForBuildTarget(context, step, Optional.of(buildTarget));
+            stepRunner.runStepForBuildTarget(context, step);
           }
           LOG.debug("Test steps did run for %s", buildTarget);
           eventBus.post(TestRuleEvent.finished(buildTarget));
