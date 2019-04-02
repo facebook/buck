@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.cache.impl;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.util.cache.FileHashCacheEngine;

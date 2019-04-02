@@ -17,6 +17,7 @@
 package com.facebook.buck.core.sourcepath.resolver.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -26,7 +27,6 @@ import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;

@@ -1,0 +1,9 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "io",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+    ],
+)

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.hashing;
 
-import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;

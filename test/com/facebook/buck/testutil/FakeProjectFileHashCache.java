@@ -16,7 +16,7 @@
 
 package com.facebook.buck.testutil;
 
-import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.google.common.hash.HashCode;

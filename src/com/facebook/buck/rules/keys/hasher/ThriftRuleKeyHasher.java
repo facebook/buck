@@ -18,12 +18,12 @@ package com.facebook.buck.rules.keys.hasher;
 
 import static com.facebook.buck.log.thrift.rulekeys.Value._Fields.STRING_VALUE;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.ByteArray;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;

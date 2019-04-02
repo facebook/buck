@@ -1,6 +1,9 @@
 java_library(
     name = "hashing",
     srcs = glob(["*.java"]),
+    exported_deps = [
+        "//src/com/facebook/buck/core/io:io",
+    ],
     tests = [
         "//test/com/facebook/buck/util/hashing:hashing",
     ],

@@ -16,9 +16,9 @@
 
 package com.facebook.buck.util.cache.impl;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.FileHashCacheEvent;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.util.cache.DelegatingFileHashCacheEngine;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.google.common.collect.ImmutableList;

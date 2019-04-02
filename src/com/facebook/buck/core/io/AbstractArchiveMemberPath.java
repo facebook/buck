@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.io;
+package com.facebook.buck.core.io;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import java.nio.file.Path;

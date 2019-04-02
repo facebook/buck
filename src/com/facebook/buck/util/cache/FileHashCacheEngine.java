@@ -16,8 +16,8 @@
 
 package com.facebook.buck.util.cache;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Path;

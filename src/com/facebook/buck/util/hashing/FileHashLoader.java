@@ -16,7 +16,7 @@
 
 package com.facebook.buck.util.hashing;
 
-import com.facebook.buck.io.ArchiveMemberPath;
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.hash.HashCode;
 import java.io.IOException;

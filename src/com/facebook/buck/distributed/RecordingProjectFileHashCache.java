@@ -17,10 +17,10 @@
 package com.facebook.buck.distributed;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.PathWithUnixSeparators;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCacheVerificationResult;

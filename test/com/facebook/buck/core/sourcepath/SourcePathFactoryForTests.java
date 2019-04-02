@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.core.sourcepath;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 

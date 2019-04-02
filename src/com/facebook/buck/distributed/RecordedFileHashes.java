@@ -16,9 +16,9 @@
 
 package com.facebook.buck.distributed;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashEntry;
 import com.facebook.buck.distributed.thrift.BuildJobStateFileHashes;
-import com.facebook.buck.io.ArchiveMemberPath;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;

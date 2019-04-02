@@ -16,10 +16,10 @@
 
 package com.facebook.buck.core.sourcepath.resolver;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;

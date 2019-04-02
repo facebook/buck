@@ -22,12 +22,12 @@ import static org.easymock.EasyMock.expect;
 import static org.easymock.EasyMock.replay;
 import static org.junit.Assert.assertSame;
 
+import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
-import com.facebook.buck.io.ArchiveMemberPath;
 import com.facebook.buck.rules.keys.hasher.ForwardingRuleKeyHasher;
 import com.facebook.buck.rules.keys.hasher.RuleKeyHasher;
 import com.facebook.buck.util.sha1.Sha1HashCode;
