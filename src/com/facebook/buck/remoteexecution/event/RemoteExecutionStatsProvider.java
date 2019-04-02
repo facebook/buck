@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution.event.listener;
+package com.facebook.buck.remoteexecution.event;
 
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.google.common.collect.ImmutableMap;

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.remoteexecution.event.listener;
+package com.facebook.buck.remoteexecution.event;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;

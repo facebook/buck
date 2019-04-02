@@ -175,6 +175,7 @@ standard_java_test(
         "//src/com/facebook/buck/parser/events:events",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/query:query",
+        "//src/com/facebook/buck/remoteexecution/event:event",
         "//src/com/facebook/buck/remoteexecution/event/listener/model:model",
         "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/rules/coercer:coercer",
