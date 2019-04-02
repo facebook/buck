@@ -38,19 +38,19 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Guards access to the daemon instance behind cell configuration checks. Creates or re-creates the
- * daemon instance as necessary if the cell configuration changes.
+ * Guards access to the {@link BuckGlobalState} instance behind cell configuration checks. Creates
+ * or re-creates the daemon state as necessary if the cell configuration changes.
  */
 @ThreadSafe
-class DaemonLifecycleManager {
-  private static final Logger LOG = Logger.get(DaemonLifecycleManager.class);
+class BuckGlobalStateLifecycleManager {
+  private static final Logger LOG = Logger.get(BuckGlobalStateLifecycleManager.class);
 
   @Nullable private volatile BuckGlobalState buckGlobalState;
 
-  /** Indicates whether a daemon is reused, or why it can't be reused */
-  enum DaemonStatus {
+  /** Indicates whether a daemon's {@link BuckGlobalState} is reused, or why it can't be reused */
+  enum LifecycleStatus {
     REUSED,
-    NEW_DAEMON,
+    NEW,
     INVALIDATED_NO_WATCHMAN,
     INVALIDATED_FILESYSTEM_CHANGED,
     INVALIDATED_BUCK_CONFIG_CHANGED,
@@ -59,9 +59,9 @@ class DaemonLifecycleManager {
     private String toHumanReadableError() {
       switch (this) {
         case REUSED:
-          return "Reusing existing daemon";
-        case NEW_DAEMON:
-          return "Initializing daemon for the first time";
+          return "Reusing existing daemon's stored global state";
+        case NEW:
+          return "Initializing daemon state for the first time";
         case INVALIDATED_NO_WATCHMAN:
           return "Watchman failed to start";
         case INVALIDATED_FILESYSTEM_CHANGED:
@@ -75,27 +75,27 @@ class DaemonLifecycleManager {
       }
     }
 
-    private static DaemonStatus fromCellInvalidation(IsCompatibleForCaching compatible) {
+    private static LifecycleStatus fromCellInvalidation(IsCompatibleForCaching compatible) {
       switch (compatible) {
         case FILESYSTEM_CHANGED:
-          return DaemonStatus.INVALIDATED_FILESYSTEM_CHANGED;
+          return LifecycleStatus.INVALIDATED_FILESYSTEM_CHANGED;
         case BUCK_CONFIG_CHANGED:
-          return DaemonStatus.INVALIDATED_BUCK_CONFIG_CHANGED;
+          return LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED;
         case TOOLCHAINS_INCOMPATIBLE:
-          return DaemonStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
+          return LifecycleStatus.INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
         case IS_COMPATIBLE:
-          return DaemonStatus.REUSED;
+          return LifecycleStatus.REUSED;
         default:
           throw new AssertionError(String.format("Unknown value: %s", compatible));
       }
     }
 
     /** Get the string to be logged as an event, if an event should be logged. */
-    protected Optional<String> newDaemonEvent() {
+    protected Optional<String> getLifecycleStatusString() {
       switch (this) {
         case REUSED:
           return Optional.empty();
-        case NEW_DAEMON:
+        case NEW:
           return Optional.of("DaemonInitialized");
         case INVALIDATED_NO_WATCHMAN:
           return Optional.of("DaemonWatchmanInvalidated");
@@ -111,7 +111,7 @@ class DaemonLifecycleManager {
     }
   }
 
-  synchronized boolean hasDaemon() {
+  synchronized boolean hasStoredBuckGlobalState() {
     return buckGlobalState != null;
   }
 
@@ -122,7 +122,7 @@ class DaemonLifecycleManager {
   }
 
   /** Get or create Daemon. */
-  synchronized Pair<BuckGlobalState, DaemonStatus> getDaemon(
+  synchronized Pair<BuckGlobalState, LifecycleStatus> getBuckGlobalState(
       Cell rootCell,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
@@ -134,14 +134,14 @@ class DaemonLifecycleManager {
       Optional<NGContext> context) {
 
     BuckGlobalState currentState = buckGlobalState;
-    DaemonStatus daemonStatus =
-        buckGlobalState == null ? DaemonStatus.NEW_DAEMON : DaemonStatus.REUSED;
+    LifecycleStatus lifecycleStatus =
+        buckGlobalState == null ? LifecycleStatus.NEW : LifecycleStatus.REUSED;
 
     // If Watchman failed to start, drop all caches
     if (buckGlobalState != null && watchman == WatchmanFactory.NULL_WATCHMAN) {
       // TODO(buck_team): make Watchman a requirement
-      LOG.info("Restarting daemon because watchman failed to start");
-      daemonStatus = DaemonStatus.INVALIDATED_NO_WATCHMAN;
+      LOG.info("Restarting daemon state because watchman failed to start");
+      lifecycleStatus = LifecycleStatus.INVALIDATED_NO_WATCHMAN;
       buckGlobalState = null;
     }
 
@@ -151,9 +151,9 @@ class DaemonLifecycleManager {
           DaemonCellChecker.areCellsCompatibleForCaching(buckGlobalState.getRootCell(), rootCell);
       if (cacheCompat != IsCompatibleForCaching.IS_COMPATIBLE) {
         LOG.info(
-            "Shutting down and restarting daemon on config or directory graphBuilder change (%s != %s)",
+            "Shutting down and restarting daemon state on config or directory graphBuilder change (%s != %s)",
             buckGlobalState.getRootCell(), rootCell);
-        daemonStatus = DaemonStatus.fromCellInvalidation(cacheCompat);
+        lifecycleStatus = LifecycleStatus.fromCellInvalidation(cacheCompat);
         buckGlobalState = null;
       }
     }
@@ -172,12 +172,13 @@ class DaemonLifecycleManager {
                   .asWarningText(
                       String.format(
                           "Invalidating internal cached state: %s. This may cause slower builds.",
-                          daemonStatus.toHumanReadableError())));
+                          lifecycleStatus.toHumanReadableError())));
     }
 
     // start new daemon, clean old one if needed
     if (buckGlobalState == null) {
-      LOG.debug("Starting up daemon for project root [%s]", rootCell.getFilesystem().getRootPath());
+      LOG.debug(
+          "Starting up daemon state for project root [%s]", rootCell.getFilesystem().getRootPath());
 
       // try to reuse webserver from previous state
       // does it need to be in daemon at all?
@@ -203,13 +204,13 @@ class DaemonLifecycleManager {
               context);
     }
 
-    return new Pair<>(buckGlobalState, daemonStatus);
+    return new Pair<>(buckGlobalState, lifecycleStatus);
   }
 
-  /** Manually kill the daemon instance, used for testing. */
-  synchronized void resetDaemon() {
+  /** Manually reset the {@link BuckGlobalState}, used for testing. */
+  synchronized void resetBuckGlobalState() {
     if (buckGlobalState != null) {
-      LOG.info("Closing daemon on reset request.");
+      LOG.info("Closing daemon's global state on reset request.");
       buckGlobalState.close();
     }
     buckGlobalState = null;

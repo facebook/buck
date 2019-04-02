@@ -26,7 +26,7 @@ import com.facebook.buck.artifact_cache.ArtifactCaches;
 import com.facebook.buck.artifact_cache.ClientCertificateHandler;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig.Executor;
-import com.facebook.buck.cli.DaemonLifecycleManager.DaemonStatus;
+import com.facebook.buck.cli.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.cli.exceptions.handlers.ExceptionHandlerRegistryFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
@@ -299,7 +299,8 @@ public final class MainRunner {
 
   private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
-  private static final DaemonLifecycleManager daemonLifecycleManager = new DaemonLifecycleManager();
+  private static final BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager =
+      new BuckGlobalStateLifecycleManager();
 
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
@@ -441,7 +442,7 @@ public final class MainRunner {
       // Only post an overflow event if Watchman indicates a fresh instance event
       // after our initial query.
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction =
-          daemonLifecycleManager.hasDaemon()
+          buckGlobalStateLifecycleManager.hasStoredBuckGlobalState()
               ? WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT
               : WatchmanWatcher.FreshInstanceAction.NONE;
 
@@ -657,11 +658,12 @@ public final class MainRunner {
       BuckConfig buckConfig;
 
       boolean reusePreviousConfig =
-          isReuseCurrentConfigPropertySet(command) && daemonLifecycleManager.hasDaemon();
+          isReuseCurrentConfigPropertySet(command)
+              && buckGlobalStateLifecycleManager.hasStoredBuckGlobalState();
       if (reusePreviousConfig) {
         printWarnMessage(UIMessagesFormatter.reuseConfigPropertyProvidedMessage());
         buckConfig =
-            daemonLifecycleManager
+            buckGlobalStateLifecycleManager
                 .getBuckConfig()
                 .orElseThrow(
                     () -> new IllegalStateException("Deamon is present but config is missing."));
@@ -834,8 +836,8 @@ public final class MainRunner {
         telemetryPlugins = Lists.newArrayList();
       }
 
-      Pair<BuckGlobalState, DaemonStatus> daemonRequest =
-          daemonLifecycleManager.getDaemon(
+      Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
+          buckGlobalStateLifecycleManager.getBuckGlobalState(
               rootCell,
               knownRuleTypesProvider,
               watchman,
@@ -852,8 +854,8 @@ public final class MainRunner {
                               rootCell.getFilesystem(), System.getProperties()),
               context);
 
-      BuckGlobalState buckGlobalState = daemonRequest.getFirst();
-      DaemonStatus daemonStatus = daemonRequest.getSecond();
+      BuckGlobalState buckGlobalState = buckGlobalStateRequest.getFirst();
+      LifecycleStatus stateLifecycleStatus = buckGlobalStateRequest.getSecond();
 
       if (!context.isPresent()) {
         // Clean up the trash on a background thread if this was a
@@ -1216,7 +1218,7 @@ public final class MainRunner {
           }
 
           // This needs to be after the registration of the event listener so they can pick it up.
-          Optional<String> newDaemonEvent = daemonStatus.newDaemonEvent();
+          Optional<String> newDaemonEvent = stateLifecycleStatus.getLifecycleStatusString();
           newDaemonEvent.ifPresent(
               event -> {
                 buildEventBus.post(DaemonEvent.newDaemonInstance(event));
@@ -1568,7 +1570,7 @@ public final class MainRunner {
     // Create or get Parser and invalidate cached command parameters.
     ParserAndCaches parserAndCaches;
     if (context.isPresent()) {
-      // Note that watchmanWatcher is non-null only when daemon.isPresent().
+      // Note that watchmanWatcher is non-null only when context.isPresent().
       registerClientDisconnectedListener(context.get(), buckGlobalState);
       if (watchmanWatcher.isPresent()) {
         buckGlobalState.watchFileSystem(
@@ -2166,9 +2168,11 @@ public final class MainRunner {
         });
   }
 
-  /** Used to clean up the daemon after running integration tests that exercise it. */
+  /**
+   * Used to clean up the {@link BuckGlobalState} after running integration tests that exercise it.
+   */
   @VisibleForTesting
-  static void resetDaemon() {
-    daemonLifecycleManager.resetDaemon();
+  static void resetBuckGlobalState() {
+    buckGlobalStateLifecycleManager.resetBuckGlobalState();
   }
 }

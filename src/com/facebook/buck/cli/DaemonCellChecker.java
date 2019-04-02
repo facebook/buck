@@ -30,7 +30,7 @@ import java.util.Set;
  * Contains logic to figure out whether two cells are equals enough for a purpose of re-using the
  * daemon.
  *
- * <p>{@see DaemonLifecycleManager} for more information about daemon lifecycle.
+ * <p>{@link BuckGlobalStateLifecycleManager} for more information about daemon lifecycle.
  */
 class DaemonCellChecker {
   /** Whether or not the cell has changed significantly enough to invalidate caches */

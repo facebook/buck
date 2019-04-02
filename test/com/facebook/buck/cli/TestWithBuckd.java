@@ -72,6 +72,6 @@ public class TestWithBuckd extends ExternalResource {
 
   @Override
   protected void after() {
-    MainRunner.resetDaemon();
+    MainRunner.resetBuckGlobalState();
   }
 }

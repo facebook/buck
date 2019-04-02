@@ -26,7 +26,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.cli.DaemonLifecycleManager.DaemonStatus;
+import com.facebook.buck.cli.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
@@ -68,12 +68,12 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.pf4j.PluginManager;
 
-public class DaemonLifecycleManagerTest {
+public class BuckGlobalStateLifecycleManagerTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectFilesystem filesystem;
-  private DaemonLifecycleManager daemonLifecycleManager;
+  private BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager;
   private KnownRuleTypesProvider knownRuleTypesProvider;
   private BuckConfig buckConfig;
   private Clock clock;
@@ -87,7 +87,7 @@ public class DaemonLifecycleManagerTest {
   public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     buckConfig = FakeBuckConfig.builder().build();
-    daemonLifecycleManager = new DaemonLifecycleManager();
+    buckGlobalStateLifecycleManager = new BuckGlobalStateLifecycleManager();
     pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
     clock = FakeClock.doNotCare();
@@ -104,9 +104,9 @@ public class DaemonLifecycleManagerTest {
 
   @Test
   public void whenBuckConfigChangesParserInvalidated() {
-    daemonLifecycleManager.resetDaemon();
-    Pair<BuckGlobalState, DaemonStatus> daemonResult1 =
-        daemonLifecycleManager.getDaemon(
+    buckGlobalStateLifecycleManager.resetBuckGlobalState();
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResult1 =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
             new TestCellBuilder()
                 .setBuckConfig(
                     FakeBuckConfig.builder()
@@ -125,8 +125,8 @@ public class DaemonLifecycleManagerTest {
             Optional::empty,
             Optional.empty());
 
-    Pair<BuckGlobalState, DaemonStatus> daemonResult2 =
-        daemonLifecycleManager.getDaemon(
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResult2 =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
             new TestCellBuilder()
                 .setBuckConfig(
                     FakeBuckConfig.builder()
@@ -145,8 +145,8 @@ public class DaemonLifecycleManagerTest {
             Optional::empty,
             Optional.empty());
 
-    Pair<BuckGlobalState, DaemonStatus> daemonResult3 =
-        daemonLifecycleManager.getDaemon(
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResult3 =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
             new TestCellBuilder()
                 .setBuckConfig(
                     FakeBuckConfig.builder()
@@ -167,17 +167,17 @@ public class DaemonLifecycleManagerTest {
 
     assertEquals(
         "Daemon should not be replaced when config equal.",
-        daemonResult1.getFirst(),
-        daemonResult2.getFirst());
+        buckStateResult1.getFirst(),
+        buckStateResult2.getFirst());
 
     assertNotEquals(
         "Daemon should be replaced when config not equal.",
-        daemonResult1.getFirst(),
-        daemonResult3.getFirst());
+        buckStateResult1.getFirst(),
+        buckStateResult3.getFirst());
 
-    assertEquals(DaemonStatus.NEW_DAEMON, daemonResult1.getSecond());
-    assertEquals(DaemonStatus.REUSED, daemonResult2.getSecond());
-    assertEquals(DaemonStatus.INVALIDATED_BUCK_CONFIG_CHANGED, daemonResult3.getSecond());
+    assertEquals(LifecycleStatus.NEW, buckStateResult1.getSecond());
+    assertEquals(LifecycleStatus.REUSED, buckStateResult2.getSecond());
+    assertEquals(LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED, buckStateResult3.getSecond());
   }
 
   @Test
@@ -193,8 +193,8 @@ public class DaemonLifecycleManagerTest {
             .setSections(ImmutableMap.of("ndk", ImmutableMap.of("ndk_version", "different")))
             .build();
 
-    Object daemon =
-        daemonLifecycleManager.getDaemon(
+    Object buckGlobalState =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
             new TestCellBuilder().setBuckConfig(buckConfig1).setFilesystem(filesystem).build(),
             knownRuleTypesProvider,
             watchman,
@@ -206,9 +206,9 @@ public class DaemonLifecycleManagerTest {
             Optional.empty());
 
     assertNotEquals(
-        "Daemon should be replaced when not equal.",
-        daemon,
-        daemonLifecycleManager.getDaemon(
+        "Daemon state should be replaced when not equal.",
+        buckGlobalState,
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
             new TestCellBuilder().setBuckConfig(buckConfig2).setFilesystem(filesystem).build(),
             knownRuleTypesProvider,
             watchman,
@@ -227,9 +227,9 @@ public class DaemonLifecycleManagerTest {
 
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
-    Object daemon1 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState1 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
                 knownRuleTypesProvider,
                 watchman,
@@ -241,9 +241,9 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    Object daemon2 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState2 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
                 knownRuleTypesProvider,
                 watchman,
@@ -254,7 +254,7 @@ public class DaemonLifecycleManagerTest {
                 Optional::empty,
                 Optional.empty())
             .getFirst();
-    assertEquals("Apple SDK should still be not found", daemon1, daemon2);
+    assertEquals("Apple SDK should still be not found", buckGlobalState1, buckGlobalState2);
 
     Path appleDeveloperDirectoryPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
@@ -264,9 +264,9 @@ public class DaemonLifecycleManagerTest {
                 "[apple]", "xcode_developer_dir = " + appleDeveloperDirectoryPath.toAbsolutePath())
             .build();
 
-    Object daemon3 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState3 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 new TestCellBuilder()
                     .setBuckConfig(buckConfigWithDeveloperDirectory)
                     .setFilesystem(filesystem)
@@ -280,11 +280,11 @@ public class DaemonLifecycleManagerTest {
                 Optional::empty,
                 Optional.empty())
             .getFirst();
-    assertNotEquals("Apple SDK should be found", daemon2, daemon3);
+    assertNotEquals("Apple SDK should be found", buckGlobalState2, buckGlobalState3);
 
-    Object daemon4 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState4 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 new TestCellBuilder()
                     .setBuckConfig(buckConfigWithDeveloperDirectory)
                     .setFilesystem(filesystem)
@@ -298,7 +298,7 @@ public class DaemonLifecycleManagerTest {
                 Optional::empty,
                 Optional.empty())
             .getFirst();
-    assertEquals("Apple SDK should still be found", daemon3, daemon4);
+    assertEquals("Apple SDK should still be found", buckGlobalState3, buckGlobalState4);
   }
 
   @Test
@@ -329,9 +329,9 @@ public class DaemonLifecycleManagerTest {
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(processExecutorParams, new FakeProcess(0, "/dev/null", "")));
 
-    Object daemon1 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState1 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
                 knownRuleTypesProvider,
                 watchman,
@@ -342,9 +342,9 @@ public class DaemonLifecycleManagerTest {
                 Optional::empty,
                 Optional.empty())
             .getFirst();
-    Object daemon2 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState2 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
                 knownRuleTypesProvider,
                 watchman,
@@ -355,15 +355,16 @@ public class DaemonLifecycleManagerTest {
                 Optional::empty,
                 Optional.empty())
             .getFirst();
-    assertEquals("Android SDK should be the same initial location", daemon1, daemon2);
+    assertEquals(
+        "Android SDK should be the same initial location", buckGlobalState1, buckGlobalState2);
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
 
-    Object daemon3 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState3 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -375,10 +376,10 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertEquals("Daemon should not be re-created", daemon2, daemon3);
-    Object daemon4 =
-        daemonLifecycleManager
-            .getDaemon(
+    assertEquals("Daemon should not be re-created", buckGlobalState2, buckGlobalState3);
+    Object buckGlobalState4 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -390,7 +391,8 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertEquals("Android SDK should be the same other location", daemon3, daemon4);
+    assertEquals(
+        "Android SDK should be the same other location", buckGlobalState3, buckGlobalState4);
   }
 
   @Test
@@ -421,9 +423,9 @@ public class DaemonLifecycleManagerTest {
     fakeProcessesBuilder.add(
         new SimpleImmutableEntry<>(processExecutorParams, new FakeProcess(0, "/dev/null", "")));
 
-    Object daemon1 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState1 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
                 knownRuleTypesProvider,
                 watchman,
@@ -434,9 +436,9 @@ public class DaemonLifecycleManagerTest {
                 Optional::empty,
                 Optional.empty())
             .getFirst();
-    Object daemon2 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState2 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
                 knownRuleTypesProvider,
                 watchman,
@@ -447,16 +449,17 @@ public class DaemonLifecycleManagerTest {
                 Optional::empty,
                 Optional.empty())
             .getFirst();
-    assertEquals("Android SDK should be the same initial location", daemon1, daemon2);
+    assertEquals(
+        "Android SDK should be the same initial location", buckGlobalState1, buckGlobalState2);
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider().getByName(AndroidSdkLocation.DEFAULT_NAME);
 
-    Object daemon3 =
-        daemonLifecycleManager
-            .getDaemon(
+    Object buckGlobalState3 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -468,10 +471,10 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertNotEquals("Android SDK should be the other location", daemon2, daemon3);
-    Object daemon4 =
-        daemonLifecycleManager
-            .getDaemon(
+    assertNotEquals("Android SDK should be the other location", buckGlobalState2, buckGlobalState3);
+    Object buckGlobalState4 =
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -483,7 +486,8 @@ public class DaemonLifecycleManagerTest {
                 Optional.empty())
             .getFirst();
 
-    assertEquals("Android SDK should be the same other location", daemon3, daemon4);
+    assertEquals(
+        "Android SDK should be the same other location", buckGlobalState3, buckGlobalState4);
   }
 
   private Cell createCellWithAndroidSdk(Path androidSdkPath) {
@@ -506,8 +510,8 @@ public class DaemonLifecycleManagerTest {
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -523,8 +527,8 @@ public class DaemonLifecycleManagerTest {
 
     cell = createCellWithAndroidSdk(androidSdkPath);
     BuckGlobalState buckGlobalStateWithWorkingAndroidSdk =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -550,8 +554,8 @@ public class DaemonLifecycleManagerTest {
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithWorkingAndroidSdk =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -567,8 +571,8 @@ public class DaemonLifecycleManagerTest {
 
     cell = createCellWithAndroidSdk(androidSdkPath);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -594,8 +598,8 @@ public class DaemonLifecycleManagerTest {
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -611,8 +615,8 @@ public class DaemonLifecycleManagerTest {
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk2 =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -639,8 +643,8 @@ public class DaemonLifecycleManagerTest {
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -654,8 +658,8 @@ public class DaemonLifecycleManagerTest {
 
     cell = createCellWithAndroidSdk(androidSdkPath);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk2 =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,
@@ -680,8 +684,8 @@ public class DaemonLifecycleManagerTest {
     Cell cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getToolchainProvider()
         .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
-    Object daemonWithBrokenAndroidSdk1 =
-        daemonLifecycleManager.getDaemon(
+    Object buckGlobalStateWithBrokenAndroidSdk1 =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
             cell,
             knownRuleTypesProvider,
             watchman,
@@ -693,8 +697,8 @@ public class DaemonLifecycleManagerTest {
             Optional.empty());
 
     cell = createCellWithAndroidSdk(androidSdkPath.resolve("some-other-dir"));
-    Object daemonWithBrokenAndroidSdk2 =
-        daemonLifecycleManager.getDaemon(
+    Object buckGlobalStateWithBrokenAndroidSdk2 =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
             cell,
             knownRuleTypesProvider,
             watchman,
@@ -705,16 +709,16 @@ public class DaemonLifecycleManagerTest {
             Optional::empty,
             Optional.empty());
 
-    assertNotEquals(daemonWithBrokenAndroidSdk1, daemonWithBrokenAndroidSdk2);
+    assertNotEquals(buckGlobalStateWithBrokenAndroidSdk1, buckGlobalStateWithBrokenAndroidSdk2);
   }
 
   @Test
-  public void testDaemonUptime() {
+  public void testBuckGlobalStateUptime() {
     Cell cell = new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build();
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     BuckGlobalState buckGlobalState =
-        daemonLifecycleManager
-            .getDaemon(
+        buckGlobalStateLifecycleManager
+            .getBuckGlobalState(
                 cell,
                 knownRuleTypesProvider,
                 watchman,

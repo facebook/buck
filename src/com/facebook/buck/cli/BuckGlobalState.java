@@ -78,7 +78,7 @@ import java.util.function.Supplier;
  * <p>This state is uniformly invalidated on major changes, like configuration changes, so it is
  * essential all in-proc caches to contain in this class for proper invalidation. If caches need to
  * be kept between configuration changes, a custom logic should reside in {@link
- * DaemonLifecycleManager}
+ * BuckGlobalStateLifecycleManager}
  *
  * <p>All Graph Engine caches are required to be kept here.
  */
