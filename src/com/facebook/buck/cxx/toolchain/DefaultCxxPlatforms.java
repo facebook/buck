@@ -261,6 +261,8 @@ public class DefaultCxxPlatforms {
         ImmutableMap.of(),
         binaryExtension,
         config.getHeaderVerificationOrIgnore(),
+        config.getPublicHeadersSymlinksEnabled(),
+        config.getPrivateHeadersSymlinksEnabled(),
         picTypeForSharedLinking);
   }
 

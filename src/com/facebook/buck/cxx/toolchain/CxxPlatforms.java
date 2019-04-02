@@ -110,6 +110,8 @@ public class CxxPlatforms {
       ImmutableMap<String, String> flagMacros,
       Optional<String> binaryExtension,
       HeaderVerification headerVerification,
+      boolean publicHeadersSymlinksEnabled,
+      boolean privateHeadersSymlinksEnabled,
       PicType picTypeForSharedLinking) {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
@@ -153,8 +155,10 @@ public class CxxPlatforms {
         .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setFlagMacros(flagMacros)
         .setHeaderVerification(headerVerification)
-        .setPublicHeadersSymlinksEnabled(config.getPublicHeadersSymlinksEnabled())
-        .setPrivateHeadersSymlinksEnabled(config.getPrivateHeadersSymlinksEnabled())
+        .setPublicHeadersSymlinksEnabled(
+            config.getPublicHeadersSymlinksSetting().orElse(publicHeadersSymlinksEnabled))
+        .setPrivateHeadersSymlinksEnabled(
+            config.getPrivateHeadersSymlinksSetting().orElse(privateHeadersSymlinksEnabled))
         .setPicTypeForSharedLinking(picTypeForSharedLinking)
         .setConflictingHeaderBasenameWhitelist(config.getConflictingHeaderBasenameWhitelist())
         .setHeaderMode(config.getHeaderMode())
@@ -225,6 +229,8 @@ public class CxxPlatforms {
         defaultPlatform.getFlagMacros(),
         defaultPlatform.getBinaryExtension(),
         defaultPlatform.getHeaderVerification(),
+        defaultPlatform.getPublicHeadersSymlinksEnabled(),
+        defaultPlatform.getPrivateHeadersSymlinksEnabled(),
         defaultPlatform.getPicTypeForSharedLinking());
   }
 
