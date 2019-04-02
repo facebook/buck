@@ -28,7 +28,6 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
@@ -51,7 +50,6 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -119,22 +117,10 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.metadataProvider = metadataProvider;
 
     ImmutableSet<Optional<String>> cellNames =
-        rootCell
-            .getCellProvider()
-            .getLoadedCells()
-            .values()
-            .stream()
-            .map(Cell::getCanonicalName)
-            .collect(ImmutableSet.toImmutableSet());
+        ModernBuildRuleRemoteExecutionHelper.getCellNames(rootCell);
 
     this.cellPathPrefix =
-        MorePaths.splitOnCommonPrefix(
-                cellNames
-                    .stream()
-                    .map(name -> cellResolver.getCellPath(name).get())
-                    .collect(ImmutableList.toImmutableList()))
-            .get()
-            .getFirst();
+        ModernBuildRuleRemoteExecutionHelper.getCellPathPrefix(cellResolver, cellNames);
 
     this.mbrHelper =
         new ModernBuildRuleRemoteExecutionHelper(

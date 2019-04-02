@@ -27,6 +27,7 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.LeafEvents;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -100,6 +101,29 @@ public class ModernBuildRuleRemoteExecutionHelper {
   public static final Path TRAMPOLINE_PATH = Paths.get("__trampoline__.sh");
 
   private final InputsMapBuilder inputsMapBuilder;
+
+  /** Gets the shared path prefix of all the cells. */
+  public static Path getCellPathPrefix(
+      CellPathResolver cellResolver, ImmutableSet<Optional<String>> cellNames) {
+    return MorePaths.splitOnCommonPrefix(
+            cellNames
+                .stream()
+                .map(name -> cellResolver.getCellPath(name).get())
+                .collect(ImmutableList.toImmutableList()))
+        .get()
+        .getFirst();
+  }
+
+  /** Gets all the canonical cell names. */
+  public static ImmutableSet<Optional<String>> getCellNames(Cell rootCell) {
+    return rootCell
+        .getCellProvider()
+        .getLoadedCells()
+        .values()
+        .stream()
+        .map(Cell::getCanonicalName)
+        .collect(ImmutableSet.toImmutableSet());
+  }
 
   /**
    * Used to store information about the common files required by all rules (classpaths, plugin
@@ -323,7 +347,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
    * Gets all the information needed to run the rule via Remote Execution (inputs merkle tree,
    * action and digest, outputs).
    */
-  RemoteExecutionActionInfo prepareRemoteExecution(
+  public RemoteExecutionActionInfo prepareRemoteExecution(
       ModernBuildRule<?> rule, WorkerRequirements workerRequirements) throws IOException {
     Set<Path> outputs;
     HashCode hash;

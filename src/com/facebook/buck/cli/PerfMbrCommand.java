@@ -13,26 +13,24 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.cli;
 
+import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import java.util.Optional;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
-/** The PerfCommand is for targeted tests of the performance of buck components. */
-public class PerfCommand extends AbstractContainerCommand {
+/** Container for {@link ModernBuildRule}-related perf tests. */
+public class PerfMbrCommand extends AbstractContainerCommand {
 
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
-    // TODO(cjhopman): Should we enforce that each of these commands derives from
-    // AbstractPerfCommand?
-    @SubCommand(name = "action-graph", impl = PerfActionGraphCommand.class),
-    @SubCommand(name = "rk", impl = PerfRuleKeyCommand.class),
-    @SubCommand(name = "manifest", impl = PerfManifestCommand.class),
-    @SubCommand(name = "mbr", impl = PerfMbrCommand.class),
+    @SubCommand(
+        name = "prepare-remote-execution",
+        impl = PerfMbrPrepareRemoteExecutionCommand.class),
+    @SubCommand(name = "serialization", impl = PerfMbrSerializationCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;
@@ -44,14 +42,14 @@ public class PerfCommand extends AbstractContainerCommand {
 
   @Override
   public String getShortDescription() {
-    return "various utilities for testing performance of Buck against real codebases and "
-        + "configurations. NOTE: This command's interface is unstable and will change without "
+    return "utilities for testing performance of ModernBuildRule-related components of Buck. "
+        + "NOTE: This command's interface is unstable and will change without "
         + "warning.";
   }
 
   @Override
   protected String getContainerCommandPrefix() {
-    return "buck perf";
+    return "buck perf mbr";
   }
 
   @Override

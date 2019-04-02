@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 /** Provides rule's RE worker requirements based on JSON file */
 public final class WorkerRequirementsProvider {
-  static final WorkerRequirements DEFAULT =
+  public static final WorkerRequirements DEFAULT =
       WorkerRequirements.newBuilder()
           .setWorkerSize(WorkerSize.SMALL)
           .setPlatformType(WorkerPlatformType.LINUX)
