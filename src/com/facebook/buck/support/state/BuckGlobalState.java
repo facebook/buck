@@ -16,17 +16,10 @@
 
 package com.facebook.buck.support.state;
 
-import com.facebook.buck.artifact_cache.ArtifactCache;
-import com.facebook.buck.artifact_cache.ArtifactCaches;
-import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
-import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
@@ -35,29 +28,18 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.event.listener.devspeed.DevspeedBuildListenerFactory;
 import com.facebook.buck.httpserver.WebServer;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanCursor;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.DaemonicParserState;
-import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
-import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.cli.config.CliConfig;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
-import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.WatchedFileHashCache;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.facebook.nailgun.NGContext;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -66,10 +48,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
 
 /**
  * {@link BuckGlobalState} contains all the global state of Buck which is kept between invocations
@@ -100,8 +79,6 @@ public final class BuckGlobalState implements Closeable {
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
   private final ImmutableMap<Path, WatchmanCursor> cursor;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
-  private final UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
-  private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final Clock clock;
   private final long startTime;
   private final Optional<DevspeedBuildListenerFactory> devspeedBuildListenerFactory;
@@ -110,115 +87,41 @@ public final class BuckGlobalState implements Closeable {
 
   BuckGlobalState(
       Cell rootCell,
+      TypeCoercerFactory typeCoercerFactory,
+      DaemonicParserState daemonicParserState,
+      ImmutableList<ProjectFileHashCache> hashCaches,
+      LoadingCache<Path, DirectoryListCache> directoryListCachePerRoot,
+      LoadingCache<Path, FileTreeCache> fileTreeCachePerRoot,
+      EventBus fileEventBus,
+      Optional<WebServer> webServer,
+      ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools,
+      VersionedTargetGraphCache versionedTargetGraphCache,
+      ActionGraphCache actionGraphCache,
+      RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler,
+      ImmutableMap<Path, WatchmanCursor> cursor,
       KnownRuleTypesProvider knownRuleTypesProvider,
-      Watchman watchman,
-      Optional<WebServer> webServerToReuse,
-      UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
-      TargetConfigurationSerializer targetConfigurationSerializer,
       Clock clock,
-      Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
-      Optional<NGContext> context) { // TODO(bobyf): remove nailgun dependency
+      Optional<DevspeedBuildListenerFactory> devspeedBuildListenerFactory,
+      BackgroundTaskManager bgTaskManager) {
     this.rootCell = rootCell;
-    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
-    this.targetConfigurationSerializer = targetConfigurationSerializer;
-    this.fileEventBus = new EventBus("file-change-events");
-
-    ImmutableList<Cell> allCells = rootCell.getAllCells();
-    BuildBuckConfig buildBuckConfig = rootCell.getBuckConfig().getView(BuildBuckConfig.class);
-
-    // Setup the stacked file hash cache from all cells.
-    ImmutableList.Builder<ProjectFileHashCache> hashCachesBuilder =
-        ImmutableList.builderWithExpectedSize(allCells.size() + 1);
-    for (Cell subCell : allCells) {
-      WatchedFileHashCache watchedCache =
-          new WatchedFileHashCache(subCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode());
-      fileEventBus.register(watchedCache);
-      hashCachesBuilder.add(watchedCache);
-    }
-    hashCachesBuilder.add(
-        DefaultFileHashCache.createBuckOutFileHashCache(
-            rootCell.getFilesystem(), buildBuckConfig.getFileHashCacheMode()));
-    this.hashCaches = hashCachesBuilder.build();
-
-    // Setup file list cache and file tree cache from all cells
-    directoryListCachePerRoot = createDirectoryListCachePerCellMap(fileEventBus);
-    fileTreeCachePerRoot = createFileTreeCachePerCellMap(fileEventBus);
-    this.actionGraphCache = new ActionGraphCache(buildBuckConfig.getMaxActionGraphCacheEntries());
-    this.versionedTargetGraphCache = new VersionedTargetGraphCache();
+    this.typeCoercerFactory = typeCoercerFactory;
+    this.daemonicParserState = daemonicParserState;
+    this.hashCaches = hashCaches;
+    this.directoryListCachePerRoot = directoryListCachePerRoot;
+    this.fileTreeCachePerRoot = fileTreeCachePerRoot;
+    this.fileEventBus = fileEventBus;
+    this.webServer = webServer;
+    this.persistentWorkerPools = persistentWorkerPools;
+    this.versionedTargetGraphCache = versionedTargetGraphCache;
+    this.actionGraphCache = actionGraphCache;
+    this.defaultRuleKeyFactoryCacheRecycler = defaultRuleKeyFactoryCacheRecycler;
+    this.cursor = cursor;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
-
-    typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
-    this.daemonicParserState = new DaemonicParserState(parserConfig.getNumParsingThreads());
-
-    // Build the the rule key cache recycler.
-    this.defaultRuleKeyFactoryCacheRecycler =
-        RuleKeyCacheRecycler.createAndRegister(
-            fileEventBus,
-            new DefaultRuleKeyCache<>(),
-            RichStream.from(allCells).map(Cell::getFilesystem).toImmutableSet());
-
-    if (webServerToReuse.isPresent()) {
-      webServer = webServerToReuse;
-    } else {
-      webServer = createWebServer(rootCell.getBuckConfig(), rootCell.getFilesystem());
-    }
-    if (!initWebServer()) {
-      LOG.warn("Can't start web server");
-    }
-    if (rootCell.getBuckConfig().getView(ParserConfig.class).getWatchmanCursor()
-            == WatchmanWatcher.CursorType.CLOCK_ID
-        && !watchman.getClockIds().isEmpty()) {
-      cursor = watchman.buildClockWatchmanCursorMap();
-    } else {
-      LOG.debug("Falling back to named cursors: %s", watchman.getProjectWatches());
-      cursor = watchman.buildNamedWatchmanCursorMap();
-    }
-    LOG.debug("Using Watchman Cursor: %s", cursor);
-    persistentWorkerPools = new ConcurrentHashMap<>();
-
-    // When Nailgun context is not present it means the process will be finished immediately after
-    // the command. So, override task manager to be blocking one, i.e. execute background
-    // clean up tasks synchronously
-    this.bgTaskManager =
-        new AsyncBackgroundTaskManager(
-            !context.isPresent()
-                || rootCell.getBuckConfig().getView(CliConfig.class).getFlushEventsBeforeExit());
     this.clock = clock;
+    this.devspeedBuildListenerFactory = devspeedBuildListenerFactory;
+    this.bgTaskManager = bgTaskManager;
+
     this.startTime = clock.currentTimeMillis();
-
-    // Create this last so that it won't leak if something else throws in the constructor
-    this.devspeedBuildListenerFactory = devspeedBuildListenerFactorySupplier.get();
-  }
-
-  /** Create a number of instances of {@link DirectoryListCache}, one per each cell */
-  private static LoadingCache<Path, DirectoryListCache> createDirectoryListCachePerCellMap(
-      EventBus fileEventBus) {
-    return CacheBuilder.newBuilder()
-        .build(
-            new CacheLoader<Path, DirectoryListCache>() {
-              @Override
-              public DirectoryListCache load(Path path) {
-                DirectoryListCache cache = DirectoryListCache.of(path);
-                fileEventBus.register(cache.getInvalidator());
-                return cache;
-              }
-            });
-  }
-
-  /** Create a number of instances of {@link DirectoryListCache}, one per each cell */
-  private static LoadingCache<Path, FileTreeCache> createFileTreeCachePerCellMap(
-      EventBus fileEventBus) {
-    return CacheBuilder.newBuilder()
-        .build(
-            new CacheLoader<Path, FileTreeCache>() {
-              @Override
-              public FileTreeCache load(Path path) {
-                FileTreeCache cache = FileTreeCache.of(path);
-                fileEventBus.register(cache.getInvalidator());
-                return cache;
-              }
-            });
   }
 
   Cell getRootCell() {
@@ -227,43 +130,6 @@ public final class BuckGlobalState implements Closeable {
 
   public Optional<BuckEventListener> getDevspeedDaemonListener() {
     return devspeedBuildListenerFactory.map(DevspeedBuildListenerFactory::newBuildListener);
-  }
-
-  private static Optional<WebServer> createWebServer(
-      BuckConfig config, ProjectFilesystem filesystem) {
-    OptionalInt port = getValidWebServerPort(config);
-    if (!port.isPresent()) {
-      return Optional.empty();
-    }
-    return Optional.of(new WebServer(port.getAsInt(), filesystem));
-  }
-
-  /**
-   * If the return value is not absent, then the port is a nonnegative integer. This means that
-   * specifying a port of -1 effectively disables the WebServer.
-   */
-  static OptionalInt getValidWebServerPort(BuckConfig config) {
-    // Enable the web httpserver if it is given by command line parameter or specified in
-    // .buckconfig. The presence of a nonnegative port number is sufficient.
-    Optional<String> serverPort = Optional.ofNullable(System.getProperty("buck.httpserver.port"));
-    if (!serverPort.isPresent()) {
-      serverPort = config.getValue("httpserver", "port");
-    }
-
-    if (!serverPort.isPresent() || serverPort.get().isEmpty()) {
-      return OptionalInt.empty();
-    }
-
-    String rawPort = serverPort.get();
-    int port;
-    try {
-      port = Integer.parseInt(rawPort, 10);
-    } catch (NumberFormatException e) {
-      LOG.error("Could not parse port for httpserver: %s.", rawPort);
-      return OptionalInt.empty();
-    }
-
-    return port >= 0 ? OptionalInt.of(port) : OptionalInt.empty();
   }
 
   public BackgroundTaskManager getBgTaskManager() {
@@ -361,26 +227,6 @@ public final class BuckGlobalState implements Closeable {
         }
       }
     }
-  }
-
-  /** @return true if the web server was started successfully. */
-  private boolean initWebServer() {
-    if (webServer.isPresent()) {
-      Optional<ArtifactCache> servedCache =
-          ArtifactCaches.newServedCache(
-              new ArtifactCacheBuckConfig(rootCell.getBuckConfig()),
-              target ->
-                  unconfiguredBuildTargetFactory.create(rootCell.getCellPathResolver(), target),
-              targetConfigurationSerializer,
-              rootCell.getFilesystem());
-      try {
-        webServer.get().updateAndStartIfNeeded(servedCache);
-        return true;
-      } catch (WebServer.WebServerException e) {
-        LOG.error(e);
-      }
-    }
-    return false;
   }
 
   public EventBus getFileEventBus() {

@@ -193,7 +193,7 @@ public class BuckGlobalStateLifecycleManager {
       }
 
       buckGlobalState =
-          new BuckGlobalState(
+          BuckGlobalStateFactory.create(
               rootCell,
               knownRuleTypesProvider,
               watchman,
@@ -222,9 +222,11 @@ public class BuckGlobalStateLifecycleManager {
       return false;
     }
     OptionalInt portFromOldConfig =
-        getBuckConfig().map(BuckGlobalState::getValidWebServerPort).orElse(OptionalInt.empty());
+        getBuckConfig()
+            .map(BuckGlobalStateFactory::getValidWebServerPort)
+            .orElse(OptionalInt.empty());
     OptionalInt portFromUpdatedConfig =
-        BuckGlobalState.getValidWebServerPort(newCell.getBuckConfig());
+        BuckGlobalStateFactory.getValidWebServerPort(newCell.getBuckConfig());
 
     return portFromOldConfig.equals(portFromUpdatedConfig);
   }
