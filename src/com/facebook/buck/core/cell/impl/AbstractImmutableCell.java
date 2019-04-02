@@ -31,7 +31,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.parser.ParserConfig;
-import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -171,23 +170,6 @@ abstract class AbstractImmutableCell implements Cell {
   @Override
   public ImmutableMap<Path, Cell> getLoadedCells() {
     return getCellProvider().getLoadedCells();
-  }
-
-  @Override
-  public Path getAbsolutePathToBuildFile(UnconfiguredBuildTarget target)
-      throws MissingBuildFileException {
-    Path buildFile =
-        getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFileUnsafe(this, target);
-    Cell cell = getCell(target);
-    if (!cell.getFilesystem().isFile(buildFile)) {
-
-      throw new MissingBuildFileException(
-          target.getFullyQualifiedName(),
-          target
-              .getBasePath()
-              .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
-    }
-    return buildFile;
   }
 
   @Override

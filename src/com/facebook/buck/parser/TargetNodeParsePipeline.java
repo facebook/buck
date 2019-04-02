@@ -118,7 +118,8 @@ public class TargetNodeParsePipeline
     TargetNode<?> targetNode =
         delegate.createTargetNode(
             cell,
-            cell.getAbsolutePathToBuildFile(buildTarget.getUnconfiguredBuildTarget()),
+            cell.getBuckConfigView(ParserConfig.class)
+                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTarget()),
             buildTarget,
             rawNode,
             perfEventScopeFunction);

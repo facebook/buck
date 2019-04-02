@@ -54,7 +54,8 @@ public class NonResolvingRawTargetNodeToTargetNodeFactory
 
     return parserTargetNodeFactory.createTargetNode(
         cell,
-        cell.getAbsolutePathToBuildFile(target.getUnconfiguredBuildTarget()),
+        cell.getBuckConfigView(ParserConfig.class)
+            .getAbsolutePathToBuildFile(cell, target.getUnconfiguredBuildTarget()),
         target,
         assertRawTargetNodeAttributesNotConfigurable(
             target, rawTargetNode.getAttributes().getAll()),

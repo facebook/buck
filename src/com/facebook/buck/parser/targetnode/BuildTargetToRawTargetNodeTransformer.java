@@ -23,6 +23,7 @@ import com.facebook.buck.core.graph.transformation.GraphTransformer;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.RawTargetNode;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.RawTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -80,7 +81,7 @@ public class BuildTargetToRawTargetNodeTransformer
         cell,
         // TODO(sergeyb): this is expensive and involves filesystem access. Pass relative path along
         // with manifest, then resolve it here, or may be include it with build target itself
-        cell.getAbsolutePathToBuildFile(buildTarget),
+        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget),
         buildTarget,
         rawAttributes);
   }
@@ -104,7 +105,8 @@ public class BuildTargetToRawTargetNodeTransformer
 
     // TODO(sergeyb): this is expensive and involves filesystem access, and happens twice for same
     // raw target and multiple times per same manifest. The path should come from upstream as input.
-    Path absolutePath = cell.getAbsolutePathToBuildFile(buildTarget);
+    Path absolutePath =
+        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
     Path relativePath = cell.getRoot().relativize(absolutePath);
 
     return ImmutableBuildFilePathToBuildFileManifestKey.of(relativePath);

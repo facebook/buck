@@ -44,11 +44,15 @@ public class BuildTargetRawNodeParsePipeline
       Cell cell, UnconfiguredBuildTarget buildTarget) throws BuildTargetException {
     return Futures.transformAsync(
         buildFileRawNodeParsePipeline.getAllNodesJob(
-            cell, cell.getAbsolutePathToBuildFile(buildTarget)),
+            cell,
+            cell.getBuckConfigView(ParserConfig.class)
+                .getAbsolutePathToBuildFile(cell, buildTarget)),
         input -> {
           if (!input.getTargets().containsKey(buildTarget.getShortName())) {
             throw NoSuchBuildTargetException.createForMissingBuildRule(
-                buildTarget, cell.getAbsolutePathToBuildFile(buildTarget));
+                buildTarget,
+                cell.getBuckConfigView(ParserConfig.class)
+                    .getAbsolutePathToBuildFile(cell, buildTarget));
           }
           return Futures.immediateFuture(input.getTargets().get(buildTarget.getShortName()));
         },

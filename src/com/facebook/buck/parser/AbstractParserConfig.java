@@ -24,6 +24,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.api.Syntax;
+import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.facebook.buck.parser.implicit.ImplicitInclude;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
@@ -310,7 +311,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   /**
    * For use in performance-sensitive code or if you don't care if the build file actually exists,
-   * otherwise prefer {@link Cell#getAbsolutePathToBuildFile(UnconfiguredBuildTarget)}.
+   * otherwise prefer {@link #getAbsolutePathToBuildFile}.
    *
    * @param cell the cell where the given target is defined
    * @param target target to look up
@@ -320,5 +321,24 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
     Cell targetCell = cell.getCell(target);
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
     return targetFilesystem.resolve(target.getBasePath()).resolve(targetCell.getBuildFileName());
+  }
+
+  /**
+   * @param cell the cell where the given target is defined
+   * @param target target to look up
+   * @return an absolute path to a build file that contains the definition of the given target.
+   */
+  public Path getAbsolutePathToBuildFile(Cell cell, UnconfiguredBuildTarget target)
+      throws MissingBuildFileException {
+    Path buildFile = getAbsolutePathToBuildFileUnsafe(cell, target);
+    Cell targetCell = cell.getCell(target);
+    if (!targetCell.getFilesystem().isFile(buildFile)) {
+      throw new MissingBuildFileException(
+          target.getFullyQualifiedName(),
+          target
+              .getBasePath()
+              .resolve(targetCell.getBuckConfig().getView(ParserConfig.class).getBuildFileName()));
+    }
+    return buildFile;
   }
 }

@@ -22,6 +22,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.exceptions.MissingBuildFileException;
 import com.google.common.collect.ImmutableList;
@@ -77,7 +78,10 @@ public class ResolveAliasHelper {
     Cell owningCell = params.getCell().getCell(buildTarget);
     Path buildFile;
     try {
-      buildFile = owningCell.getAbsolutePathToBuildFile(buildTarget);
+      buildFile =
+          owningCell
+              .getBuckConfigView(ParserConfig.class)
+              .getAbsolutePathToBuildFile(owningCell, buildTarget);
     } catch (MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }
