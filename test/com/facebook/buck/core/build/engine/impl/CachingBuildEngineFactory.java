@@ -38,7 +38,6 @@ import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
@@ -149,7 +148,6 @@ public class CachingBuildEngineFactory {
           cachingBuildEngineDelegate,
           customBuildRuleStrategy,
           executorService,
-          new DefaultStepRunner(),
           buildMode,
           metadataStorage,
           depFiles,
@@ -172,7 +170,6 @@ public class CachingBuildEngineFactory {
         cachingBuildEngineDelegate,
         customBuildRuleStrategy,
         executorService,
-        new DefaultStepRunner(),
         buildMode,
         metadataStorage,
         depFiles,

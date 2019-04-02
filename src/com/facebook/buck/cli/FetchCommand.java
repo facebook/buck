@@ -48,7 +48,6 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -136,7 +135,6 @@ public class FetchCommand extends BuildCommand {
                   localCachingBuildEngineDelegate,
                   Optional.empty(),
                   pool.getWeightedListeningExecutorService(),
-                  new DefaultStepRunner(),
                   getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                   cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
                   cachingBuildEngineBuckConfig.getBuildDepFiles(),

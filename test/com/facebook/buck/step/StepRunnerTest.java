@@ -29,7 +29,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 
-public class DefaultStepRunnerTest {
+public class StepRunnerTest {
 
   @Test
   public void testEventsFired() throws StepFailedException, InterruptedException {
@@ -42,10 +42,9 @@ public class DefaultStepRunnerTest {
     eventBus.register(listener);
 
     ExecutionContext context = TestExecutionContext.newBuilder().setBuckEventBus(eventBus).build();
-    DefaultStepRunner runner = new DefaultStepRunner();
-    runner.runStepForBuildTarget(context, passingStep);
+    StepRunner.runStep(context, passingStep);
     try {
-      runner.runStepForBuildTarget(context, failingStep);
+      StepRunner.runStep(context, failingStep);
       fail("Failing step should have thrown an exception");
     } catch (StepFailedException e) {
       assertEquals(e.getStep(), failingStep);
@@ -84,9 +83,8 @@ public class DefaultStepRunnerTest {
   public void testExplodingStep() throws InterruptedException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    DefaultStepRunner runner = new DefaultStepRunner();
     try {
-      runner.runStepForBuildTarget(context, new ExplosionStep());
+      StepRunner.runStep(context, new ExplosionStep());
       fail("Should have thrown a StepFailedException!");
     } catch (StepFailedException e) {
       assertTrue(

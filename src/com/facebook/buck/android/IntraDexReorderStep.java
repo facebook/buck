@@ -22,11 +22,11 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.DefaultShellStep;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.unarchive.UnzipStep;
@@ -86,10 +86,9 @@ public class IntraDexReorderStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws InterruptedException {
     try {
-      DefaultStepRunner stepRunner = new DefaultStepRunner();
       List<Step> dxSteps = generateReorderCommands();
       for (Step step : dxSteps) {
-        stepRunner.runStepForBuildTarget(context, step);
+        StepRunner.runStep(context, step);
       }
     } catch (StepFailedException e) {
       context.logError(e, "There was an error in intra dex reorder step.");

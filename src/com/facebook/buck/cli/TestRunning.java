@@ -131,7 +131,6 @@ public class TestRunning {
       TestRunningOptions options,
       ListeningExecutorService service,
       BuildEngine buildEngine,
-      StepRunner stepRunner,
       BuildContext buildContext,
       SourcePathRuleFinder ruleFinder)
       throws IOException, InterruptedException {
@@ -153,7 +152,7 @@ public class TestRunning {
                       buildContext.getBuildCellRootPath(),
                       library.getProjectFilesystem(),
                       JacocoConstants.getJacocoOutputDir(library.getProjectFilesystem())))) {
-            stepRunner.runStepForBuildTarget(executionContext, step);
+            StepRunner.runStep(executionContext, step);
           }
         } catch (StepFailedException e) {
           params
@@ -303,7 +302,6 @@ public class TestRunning {
     for (TestRun testRun : parallelTestRuns) {
       ListenableFuture<TestResults> testResults =
           runStepsAndYieldResult(
-              stepRunner,
               executionContext,
               testRun.getSteps(),
               testRun.getTestResultsCallable(),
@@ -340,7 +338,6 @@ public class TestRunning {
                       transformTestResults(
                           params,
                           runStepsAndYieldResult(
-                              stepRunner,
                               executionContext,
                               testRun.getSteps(),
                               testRun.getTestResultsCallable(),
@@ -421,7 +418,7 @@ public class TestRunning {
                 javaRuntimeProvider.getParseTimeDeps(params.getTargetConfiguration())),
             "Using a rule-defined java runtime does not currently support generating code coverage.");
 
-        stepRunner.runStepForBuildTarget(
+        StepRunner.runStep(
             executionContext,
             getReportCommand(
                 rulesUnderTestForCoverage,
@@ -836,7 +833,6 @@ public class TestRunning {
   }
 
   private static ListenableFuture<TestResults> runStepsAndYieldResult(
-      StepRunner stepRunner,
       ExecutionContext context,
       List<Step> steps,
       Callable<TestResults> interpretResults,
@@ -849,7 +845,7 @@ public class TestRunning {
           LOG.debug("Test steps will run for %s", buildTarget);
           eventBus.post(TestRuleEvent.started(buildTarget));
           for (Step step : steps) {
-            stepRunner.runStepForBuildTarget(context, step);
+            StepRunner.runStep(context, step);
           }
           LOG.debug("Test steps did run for %s", buildTarget);
           eventBus.post(TestRuleEvent.finished(buildTarget));

@@ -56,9 +56,9 @@ import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.modern.Deserializer;
 import com.facebook.buck.rules.modern.Deserializer.DataProvider;
 import com.facebook.buck.rules.modern.ModernBuildRule;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
@@ -336,7 +336,7 @@ public abstract class IsolatedBuildableBuilder {
       for (Step step :
           ModernBuildRule.stepsForBuildable(
               buildContext, reconstructed.buildable, filesystem, reconstructed.target)) {
-        new DefaultStepRunner().runStepForBuildTarget(executionContext, step);
+        StepRunner.runStep(executionContext, step);
       }
 
       LOG.info(

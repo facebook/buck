@@ -62,7 +62,6 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AdbOptions;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.config.TestBuckConfig;
@@ -326,7 +325,6 @@ public class TestCommand extends BuildCommand {
               getTestRunningOptions(params),
               testPool.getWeightedListeningExecutorService(),
               buildEngine,
-              new DefaultStepRunner(),
               buildContext,
               ruleFinder);
       return ExitCode.map(exitCodeInt);
@@ -591,7 +589,6 @@ public class TestCommand extends BuildCommand {
                         params.getBuckEventBus(),
                         params.getMetadataProvider()),
                     pool.getWeightedListeningExecutorService(),
-                    new DefaultStepRunner(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                     cachingBuildEngineBuckConfig.getBuildMetadataStorage(),
                     cachingBuildEngineBuckConfig.getBuildDepFiles(),

@@ -54,7 +54,6 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
@@ -242,7 +241,6 @@ public class LocalBuildExecutor implements BuildExecutor {
             args.getBuckEventBus(),
             metadataProvider),
         executorService,
-        new DefaultStepRunner(),
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),
         engineConfig.getBuildMetadataStorage(),
         engineConfig.getBuildDepFiles(),

@@ -49,7 +49,6 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.shell.GenruleDescriptionArg;
-import com.facebook.buck.step.DefaultStepRunner;
 import com.facebook.buck.step.ExecutionOrderAwareFakeStep;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.test.FakeTestResults;
@@ -461,7 +460,6 @@ public class TestRunningTest {
                 separateTest3Target,
                 BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss())));
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
-    DefaultStepRunner stepRunner = new DefaultStepRunner();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     int ret =
         TestRunning.runTests(
@@ -472,7 +470,6 @@ public class TestRunningTest {
             DEFAULT_OPTIONS,
             service,
             fakeBuildEngine,
-            stepRunner,
             FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(ruleFinder)),
             ruleFinder);
 
@@ -620,7 +617,6 @@ public class TestRunningTest {
                     BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.miss()))
                 .build());
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
-    DefaultStepRunner stepRunner = new DefaultStepRunner();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
     int ret =
         TestRunning.runTests(
@@ -637,7 +633,6 @@ public class TestRunningTest {
             DEFAULT_OPTIONS,
             service,
             fakeBuildEngine,
-            stepRunner,
             FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(ruleFinder)),
             ruleFinder);
 
@@ -742,7 +737,6 @@ public class TestRunningTest {
                 failingTestTarget,
                 BuildResult.success(failingTest, BUILT_LOCALLY, CacheResult.miss())));
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
-    DefaultStepRunner stepRunner = new DefaultStepRunner();
     int ret =
         TestRunning.runTests(
             commandRunnerParams,
@@ -752,7 +746,6 @@ public class TestRunningTest {
             DEFAULT_OPTIONS,
             service,
             fakeBuildEngine,
-            stepRunner,
             FakeBuildContext.withSourcePathResolver(resolver),
             ruleFinder);
 

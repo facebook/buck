@@ -54,7 +54,6 @@ import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
-import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.collect.SortedSets;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -124,7 +123,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
   private final WeightedListeningExecutorService service;
-  private final StepRunner stepRunner;
   private final BuildType buildMode;
   private final MetadataStorage metadataStorage;
   private final DepFiles depFiles;
@@ -159,7 +157,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
-      StepRunner stepRunner,
       BuildType buildMode,
       MetadataStorage metadataStorage,
       DepFiles depFiles,
@@ -179,7 +176,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         cachingBuildEngineDelegate,
         customBuildRuleStrategy,
         service,
-        stepRunner,
         buildMode,
         metadataStorage,
         depFiles,
@@ -212,7 +208,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
       Optional<BuildRuleStrategy> customBuildRuleStrategy,
       WeightedListeningExecutorService service,
-      StepRunner stepRunner,
       BuildType buildMode,
       MetadataStorage metadataStorage,
       DepFiles depFiles,
@@ -234,7 +229,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
     this.manifestService = manifestService;
     this.service = service;
-    this.stepRunner = stepRunner;
     this.buildMode = buildMode;
     this.metadataStorage = metadataStorage;
     this.depFiles = depFiles;
@@ -532,7 +526,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             resourceAwareSchedulingInfo,
             ruleKeyFactories,
             service,
-            stepRunner,
             this.ruleDeps,
             rule,
             buildContext,

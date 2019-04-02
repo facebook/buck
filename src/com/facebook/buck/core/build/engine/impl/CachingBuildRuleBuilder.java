@@ -137,7 +137,6 @@ class CachingBuildRuleBuilder {
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
   private final RuleKeyFactories ruleKeyFactories;
   private final WeightedListeningExecutorService service;
-  private final StepRunner stepRunner;
   private final BuildRule rule;
   private final ExecutionContext executionContext;
   private final OnDiskBuildInfo onDiskBuildInfo;
@@ -209,7 +208,6 @@ class CachingBuildRuleBuilder {
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyFactories ruleKeyFactories,
       WeightedListeningExecutorService service,
-      StepRunner stepRunner,
       RuleDepsCache ruleDeps,
       BuildRule rule,
       BuildEngineBuildContext buildContext,
@@ -230,7 +228,6 @@ class CachingBuildRuleBuilder {
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.ruleKeyFactories = ruleKeyFactories;
     this.service = service;
-    this.stepRunner = stepRunner;
     this.rule = rule;
     this.executionContext = executionContext;
     this.onDiskBuildInfo = onDiskBuildInfo;
@@ -1273,7 +1270,7 @@ class CachingBuildRuleBuilder {
     LOG.debug("Running post-build steps for %s", rule);
 
     for (Step step : postBuildSteps) {
-      stepRunner.runStepForBuildTarget(
+      StepRunner.runStep(
           executionContext.withProcessExecutor(
               new ContextualProcessExecutor(
                   executionContext.getProcessExecutor(),
@@ -1426,8 +1423,7 @@ class CachingBuildRuleBuilder {
           LOG.debug("Building locally: %s", rule);
           // Attempt to get an approximation of how long it takes to actually run the command.
           long start = System.nanoTime();
-          executeCommands(
-              ruleExecutionContext, buildRuleBuildContext, buildableContext, stepRunner);
+          executeCommands(ruleExecutionContext, buildRuleBuildContext, buildableContext);
           long end = System.nanoTime();
           LOG.debug(
               "Build completed: %s %s (%dns)",
@@ -1445,8 +1441,7 @@ class CachingBuildRuleBuilder {
     private void executeCommands(
         ExecutionContext executionContext,
         BuildContext buildRuleBuildContext,
-        BuildableContext buildableContext,
-        StepRunner stepRunner)
+        BuildableContext buildableContext)
         throws StepFailedException, InterruptedException {
       // Get and run all of the commands.
       List<? extends Step> steps;
@@ -1463,7 +1458,7 @@ class CachingBuildRuleBuilder {
       }
 
       for (Step step : steps) {
-        stepRunner.runStepForBuildTarget(executionContext, step);
+        StepRunner.runStep(executionContext, step);
         // Check for interruptions that may have been ignored by step.
         if (Thread.interrupted()) {
           Thread.currentThread().interrupt();
