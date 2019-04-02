@@ -1561,8 +1561,10 @@ public final class MainRunner {
     }
 
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
+    TypeCoercerFactory typeCoercerFactory = buckGlobalState.getTypeCoercerFactory();
+    Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler = Optional.empty();
+
     // Create or get Parser and invalidate cached command parameters.
-    ParserAndCaches parserAndCaches;
     if (context.isPresent()) {
       // Note that watchmanWatcher is non-null only when context.isPresent().
       registerClientDisconnectedListener(context.get(), buckGlobalState);
@@ -1570,7 +1572,6 @@ public final class MainRunner {
         buckGlobalState.watchFileSystem(
             buildEventBus, watchmanWatcher.get(), watchmanFreshInstanceAction);
       }
-      Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler;
       if (buckConfig.getView(BuildBuckConfig.class).getRuleKeyCaching()) {
         LOG.debug("Using rule key calculation caching");
         defaultRuleKeyFactoryCacheRecycler =
@@ -1578,71 +1579,35 @@ public final class MainRunner {
       } else {
         defaultRuleKeyFactoryCacheRecycler = Optional.empty();
       }
-      TypeCoercerFactory typeCoercerFactory = buckGlobalState.getTypeCoercerFactory();
-      Parser parser =
-          ParserFactory.create(
-              typeCoercerFactory,
-              new DefaultConstructorArgMarshaller(typeCoercerFactory),
-              knownRuleTypesProvider,
-              new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-              rootCell.getBuckConfig(),
-              buckGlobalState.getDaemonicParserState(),
-              targetSpecResolver,
-              watchman,
-              buildEventBus,
-              targetPlatforms,
-              manifestServiceSupplier,
-              fileHashCache,
-              unconfiguredBuildTargetFactory);
-      buckGlobalState.getFileEventBus().register(buckGlobalState.getDaemonicParserState());
 
-      parserAndCaches =
-          ParserAndCaches.of(
-              parser,
-              buckGlobalState.getTypeCoercerFactory(),
-              new InstrumentedVersionedTargetGraphCache(
-                  buckGlobalState.getVersionedTargetGraphCache(),
-                  new InstrumentingCacheStatsTracker()),
-              new ActionGraphProvider(
-                  buildEventBus,
-                  ActionGraphFactory.create(
-                      buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
-                  buckGlobalState.getActionGraphCache(),
-                  ruleKeyConfiguration,
-                  buckConfig),
-              defaultRuleKeyFactoryCacheRecycler);
-    } else {
-      TypeCoercerFactory typeCoercerFactory = buckGlobalState.getTypeCoercerFactory();
-      parserAndCaches =
-          ParserAndCaches.of(
-              ParserFactory.create(
-                  typeCoercerFactory,
-                  new DefaultConstructorArgMarshaller(typeCoercerFactory),
-                  knownRuleTypesProvider,
-                  new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-                  rootCell.getBuckConfig(),
-                  buckGlobalState.getDaemonicParserState(),
-                  targetSpecResolver,
-                  watchman,
-                  buildEventBus,
-                  targetPlatforms,
-                  manifestServiceSupplier,
-                  fileHashCache,
-                  unconfiguredBuildTargetFactory),
-              typeCoercerFactory,
-              new InstrumentedVersionedTargetGraphCache(
-                  buckGlobalState.getVersionedTargetGraphCache(),
-                  new InstrumentingCacheStatsTracker()),
-              new ActionGraphProvider(
-                  buildEventBus,
-                  ActionGraphFactory.create(
-                      buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
-                  buckGlobalState.getActionGraphCache(),
-                  ruleKeyConfiguration,
-                  buckConfig),
-              /* defaultRuleKeyFactoryCacheRecycler */ Optional.empty());
+      buckGlobalState.getFileEventBus().register(buckGlobalState.getDaemonicParserState());
     }
-    return parserAndCaches;
+    return ParserAndCaches.of(
+        ParserFactory.create(
+            typeCoercerFactory,
+            new DefaultConstructorArgMarshaller(typeCoercerFactory),
+            knownRuleTypesProvider,
+            new ParserPythonInterpreterProvider(parserConfig, executableFinder),
+            rootCell.getBuckConfig(),
+            buckGlobalState.getDaemonicParserState(),
+            targetSpecResolver,
+            watchman,
+            buildEventBus,
+            targetPlatforms,
+            manifestServiceSupplier,
+            fileHashCache,
+            unconfiguredBuildTargetFactory),
+        buckGlobalState.getTypeCoercerFactory(),
+        new InstrumentedVersionedTargetGraphCache(
+            buckGlobalState.getVersionedTargetGraphCache(), new InstrumentingCacheStatsTracker()),
+        new ActionGraphProvider(
+            buildEventBus,
+            ActionGraphFactory.create(
+                buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
+            buckGlobalState.getActionGraphCache(),
+            ruleKeyConfiguration,
+            buckConfig),
+        defaultRuleKeyFactoryCacheRecycler);
   }
 
   private static void registerClientDisconnectedListener(
