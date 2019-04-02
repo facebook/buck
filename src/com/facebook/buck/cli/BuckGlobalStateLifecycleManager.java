@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.DaemonCellChecker.IsCompatibleForCaching;
+import com.facebook.buck.cli.BuckGlobalStateCompatibilityCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -148,7 +148,8 @@ class BuckGlobalStateLifecycleManager {
     // If Buck config has changed or SDKs have changed, drop all caches
     if (buckGlobalState != null) {
       IsCompatibleForCaching cacheCompat =
-          DaemonCellChecker.areCellsCompatibleForCaching(buckGlobalState.getRootCell(), rootCell);
+          BuckGlobalStateCompatibilityCellChecker.areCellsCompatibleForCaching(
+              buckGlobalState.getRootCell(), rootCell);
       if (cacheCompat != IsCompatibleForCaching.IS_COMPATIBLE) {
         LOG.info(
             "Shutting down and restarting daemon state on config or directory graphBuilder change (%s != %s)",

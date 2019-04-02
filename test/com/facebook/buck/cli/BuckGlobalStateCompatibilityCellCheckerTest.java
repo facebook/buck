@@ -23,9 +23,9 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
-public class DaemonCellCheckerTest {
+public class BuckGlobalStateCompatibilityCellCheckerTest {
   @Test
-  public void testEqualsForDaemonRestart() {
+  public void equalsForBuckGlobalStateInvalidation() {
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
@@ -51,15 +51,19 @@ public class DaemonCellCheckerTest {
     assertFalse(buckConfig.equals(buckConfigMoreThreads));
     assertFalse(buckConfig.equals(buckConfigDifferentCompiler));
 
-    assertTrue(DaemonCellChecker.equalsForDaemonRestart(buckConfig, buckConfigMoreThreads));
-    assertFalse(DaemonCellChecker.equalsForDaemonRestart(buckConfig, buckConfigDifferentCompiler));
+    assertTrue(
+        BuckGlobalStateCompatibilityCellChecker.equalsForBuckGlobalStateInvalidation(
+            buckConfig, buckConfigMoreThreads));
     assertFalse(
-        DaemonCellChecker.equalsForDaemonRestart(
+        BuckGlobalStateCompatibilityCellChecker.equalsForBuckGlobalStateInvalidation(
+            buckConfig, buckConfigDifferentCompiler));
+    assertFalse(
+        BuckGlobalStateCompatibilityCellChecker.equalsForBuckGlobalStateInvalidation(
             buckConfigMoreThreads, buckConfigDifferentCompiler));
   }
 
   @Test
-  public void testEmptySectionsIgnoredWhenComparingBuckConfig() {
+  public void mptySectionsIgnoredWhenComparingBuckConfig() {
     BuckConfig buckConfigWithEmptyValue =
         FakeBuckConfig.builder()
             .setSections(
@@ -78,7 +82,7 @@ public class DaemonCellCheckerTest {
     assertFalse(buckConfigWithEmptyValue.equals(buckConfigWithRealValue));
 
     assertTrue(
-        DaemonCellChecker.equalsForDaemonRestart(
+        BuckGlobalStateCompatibilityCellChecker.equalsForBuckGlobalStateInvalidation(
             buckConfigWithEmptyValue, buckConfigWithRealValue));
   }
 }

@@ -28,11 +28,11 @@ import java.util.Set;
 
 /**
  * Contains logic to figure out whether two cells are equals enough for a purpose of re-using the
- * daemon.
+ * daemon's {@link BuckGlobalState}.
  *
  * <p>{@link BuckGlobalStateLifecycleManager} for more information about daemon lifecycle.
  */
-class DaemonCellChecker {
+class BuckGlobalStateCompatibilityCellChecker {
   /** Whether or not the cell has changed significantly enough to invalidate caches */
   enum IsCompatibleForCaching {
     IS_COMPATIBLE,
@@ -41,11 +41,11 @@ class DaemonCellChecker {
     TOOLCHAINS_INCOMPATIBLE,
   }
 
-  private DaemonCellChecker() {}
+  private BuckGlobalStateCompatibilityCellChecker() {}
 
   /**
-   * Compares two cells to figure out if they are equals enough for a purpose of re-using the
-   * daemon.
+   * Compares two cells to figure out if they are equals enough for a purpose of re-using the daemon
+   * global state.
    *
    * <p>The check performed by this method is basically a comparison of some subset of information
    * provided by the cells. Some information provided by the cells is excluded from the comparison,
@@ -56,7 +56,7 @@ class DaemonCellChecker {
     if (!cell1.getFilesystem().equals(cell2.getFilesystem())) {
       return IsCompatibleForCaching.FILESYSTEM_CHANGED;
     }
-    if (!equalsForDaemonRestart(cell1.getBuckConfig(), cell2.getBuckConfig())) {
+    if (!equalsForBuckGlobalStateInvalidation(cell1.getBuckConfig(), cell2.getBuckConfig())) {
       return IsCompatibleForCaching.BUCK_CONFIG_CHANGED;
     }
     if (!areToolchainsCompatibleForCaching(cell1, cell2)) {
@@ -66,9 +66,10 @@ class DaemonCellChecker {
   }
 
   // This is a hack. A cleaner approach would be to expose a narrow view of the config to any code
-  // that affects the state cached by the Daemon.
+  // that affects the state cached.
   @VisibleForTesting
-  static boolean equalsForDaemonRestart(BuckConfig buckConfig1, BuckConfig buckConfig2) {
+  static boolean equalsForBuckGlobalStateInvalidation(
+      BuckConfig buckConfig1, BuckConfig buckConfig2) {
     return buckConfig1
         .getView(ConfigIgnoredByDaemon.class)
         .getRawConfigForParser()
