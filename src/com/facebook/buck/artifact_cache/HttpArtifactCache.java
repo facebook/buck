@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URLEncoder;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
@@ -66,8 +67,14 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
       throws IOException {
     FetchResult.Builder resultBuilder = FetchResult.builder();
     Request.Builder requestBuilder = new Request.Builder().get();
+
+    String getParams = "";
+    if (target != null) {
+      getParams = "?target=" + URLEncoder.encode(target.getFullyQualifiedName(), "UTF-8");
+    }
+
     try (HttpResponse response =
-        fetchClient.makeRequest("/artifacts/key/" + ruleKey, requestBuilder)) {
+        fetchClient.makeRequest("/artifacts/key/" + ruleKey + getParams, requestBuilder)) {
       resultBuilder.setResponseSizeBytes(response.contentLength());
 
       try (DataInputStream input =

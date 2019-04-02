@@ -116,7 +116,7 @@ The body of each Request and Response is always composed of:
 
 <h3>Fetch an artifact from the cache.</h3>
 
-<p><code>GET /artifacts/key/[key]</code></p>
+<p><code>GET /artifacts/key/[key]?target=[buildTarget]</code></p>
 
 <ul>
   <li>
@@ -143,6 +143,8 @@ The body of each Request and Response is always composed of:
   </li>
 
 </ul>
+
+<p>The <code>target</code> <code>GET</code> parameter is the fully qualified target name (eg <code>//foo:bar#default,static</code>) associated with the rulekey. The parameter is optional and will only be included in situations where the target is known to Buck.</p>
 
 <h3>Store an artifact in the cache.</h3>
 

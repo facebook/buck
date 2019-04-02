@@ -26,6 +26,8 @@ import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -64,6 +66,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.Protocol;
 import okhttp3.Request;
@@ -253,6 +256,41 @@ public class HttpArtifactCacheTest {
     HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
     Futures.getUnchecked(
         cache.fetchAsync(null, ruleKey, LazyPath.ofInstance(Paths.get("output/file"))));
+    cache.close();
+  }
+
+  @Test
+  public void testFetchURLWithBuildTarget() {
+    RuleKey ruleKey = new RuleKey("00000000000000000000000000000000");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar#baz");
+    String expectedUri =
+        "/artifacts/key/00000000000000000000000000000000?target=%2F%2Ffoo%3Abar%23baz";
+
+    argsBuilder.setFetchClient(
+        withMakeRequest(
+            (path, requestBuilder) -> {
+              Request request = requestBuilder.url(SERVER + path).build();
+              assertEquals(expectedUri, path);
+              HttpUrl url = request.url();
+              assertEquals("/artifacts/key/00000000000000000000000000000000", url.encodedPath());
+              assertEquals("//foo:bar#baz", url.queryParameter("target"));
+              return new OkHttpResponseWrapper(
+                  new Response.Builder()
+                      .request(request)
+                      .protocol(Protocol.HTTP_1_1)
+                      .code(HttpURLConnection.HTTP_OK)
+                      .body(
+                          createResponseBody(
+                              ImmutableSet.of(ruleKey),
+                              ImmutableMap.of(),
+                              ByteSource.wrap(new byte[0]),
+                              "data"))
+                      .message("")
+                      .build());
+            }));
+    HttpArtifactCache cache = new HttpArtifactCache(argsBuilder.build());
+    Futures.getUnchecked(
+        cache.fetchAsync(target, ruleKey, LazyPath.ofInstance(Paths.get("output/file"))));
     cache.close();
   }
 
