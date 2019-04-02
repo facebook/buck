@@ -43,6 +43,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.Compiler;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.DefaultCompiler;
 import com.facebook.buck.cxx.toolchain.GccCompiler;
@@ -128,6 +129,7 @@ public class CxxPreprocessAndCompileTest {
                   PathSourcePath.of(
                       projectFilesystem,
                       PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")))),
+          ToolType.CXX,
           false,
           false);
   private Preprocessor PREPROCESSOR_WITH_COLOR_SUPPORT =
@@ -218,6 +220,7 @@ public class CxxPreprocessAndCompileTest {
                                     projectFilesystem,
                                     PathNormalizer.toWindowsPathIfNeeded(
                                         Paths.get("/root/different")))),
+                            ToolType.CXX,
                             false),
                         DEFAULT_TOOL_FLAGS,
                         DEFAULT_USE_ARG_FILE),
@@ -510,7 +513,7 @@ public class CxxPreprocessAndCompileTest {
             ruleFinder,
             new CompilerDelegate(
                 CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                new GccCompiler(compilerTool, false),
+                new GccCompiler(compilerTool, ToolType.CXX, false),
                 CxxToolFlags.of(),
                 DEFAULT_USE_ARG_FILE),
             DEFAULT_OUTPUT,
@@ -646,6 +649,7 @@ public class CxxPreprocessAndCompileTest {
                             PathSourcePath.of(
                                 projectFilesystem,
                                 PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/compiler")))),
+                    ToolType.CXX,
                     false),
                 flags,
                 DEFAULT_USE_ARG_FILE),

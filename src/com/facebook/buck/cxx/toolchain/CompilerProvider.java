@@ -58,7 +58,7 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
       case CLANG_WINDOWS:
         return new ClangWindowsCompiler(tool, preferDependencyTree);
       case GCC:
-        return new GccCompiler(tool, preferDependencyTree);
+        return new GccCompiler(tool, getToolType(), preferDependencyTree);
       case WINDOWS:
         return new WindowsCompiler(tool);
       case WINDOWS_ML64:

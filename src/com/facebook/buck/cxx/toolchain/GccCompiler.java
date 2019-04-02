@@ -17,6 +17,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -30,13 +31,14 @@ public class GccCompiler extends DefaultCompiler {
 
   @AddToRuleKey private final DependencyTrackingMode dependencyTrackingMode;
 
-  public GccCompiler(Tool tool, boolean useDependencyTree) {
-    this(tool, useDependencyTree, true);
+  public GccCompiler(Tool tool, ToolType toolType, boolean useDependencyTree) {
+    this(tool, toolType, useDependencyTree, true);
   }
 
-  public GccCompiler(Tool tool, boolean useDependencyTree, boolean useUnixPathSeparator) {
+  public GccCompiler(
+      Tool tool, ToolType toolType, boolean useDependencyTree, boolean useUnixPathSeparator) {
     super(tool, useUnixPathSeparator);
-    this.useDependencyTree = useDependencyTree;
+    this.useDependencyTree = useDependencyTree && toolType != ToolType.CUDA;
     if (useDependencyTree) {
       dependencyTrackingMode = DependencyTrackingMode.SHOW_HEADERS;
     } else {
