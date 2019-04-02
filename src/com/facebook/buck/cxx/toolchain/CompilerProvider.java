@@ -52,11 +52,11 @@ public class CompilerProvider extends CxxToolProvider<Compiler> {
   protected Compiler build(CxxToolProvider.Type type, Tool tool) {
     switch (type) {
       case CLANG:
-        return new ClangCompiler(tool, preferDependencyTree);
+        return new ClangCompiler(tool, getToolType(), preferDependencyTree);
       case CLANG_CL:
         return new ClangClCompiler(tool);
       case CLANG_WINDOWS:
-        return new ClangWindowsCompiler(tool, preferDependencyTree);
+        return new ClangWindowsCompiler(tool, getToolType(), preferDependencyTree);
       case GCC:
         return new GccCompiler(tool, getToolType(), preferDependencyTree);
       case WINDOWS:

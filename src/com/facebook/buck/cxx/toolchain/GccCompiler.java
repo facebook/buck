@@ -30,6 +30,7 @@ public class GccCompiler extends DefaultCompiler {
   @AddToRuleKey private final boolean useDependencyTree;
 
   @AddToRuleKey private final DependencyTrackingMode dependencyTrackingMode;
+  private final ToolType toolType;
 
   public GccCompiler(Tool tool, ToolType toolType, boolean useDependencyTree) {
     this(tool, toolType, useDependencyTree, true);
@@ -38,6 +39,7 @@ public class GccCompiler extends DefaultCompiler {
   public GccCompiler(
       Tool tool, ToolType toolType, boolean useDependencyTree, boolean useUnixPathSeparator) {
     super(tool, useUnixPathSeparator);
+    this.toolType = toolType;
     this.useDependencyTree = useDependencyTree && toolType != ToolType.CUDA;
     if (useDependencyTree) {
       dependencyTrackingMode = DependencyTrackingMode.SHOW_HEADERS;
@@ -67,6 +69,11 @@ public class GccCompiler extends DefaultCompiler {
 
   @Override
   public Optional<ImmutableList<String>> getFlagsForColorDiagnostics() {
-    return Optional.of(ImmutableList.of("-fdiagnostics-color=always"));
+    // We invoke asm compiler as clang but asm compiler doesn't support color diagnostics flag.
+    if (toolType == ToolType.ASM || toolType == ToolType.AS) {
+      return Optional.empty();
+    } else {
+      return Optional.of(ImmutableList.of("-fdiagnostics-color=always"));
+    }
   }
 }
