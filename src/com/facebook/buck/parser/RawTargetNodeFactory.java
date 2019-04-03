@@ -23,5 +23,15 @@ import java.nio.file.Path;
 
 /** Generic factory to create {@link RawTargetNode} */
 public interface RawTargetNodeFactory<T> {
+
+  /**
+   * Create new {@link RawTargetNode}
+   *
+   * @param cell {@Cell} object that current build target belongs to
+   * @param buildFile An absolute path to a build file that has the corresponding build target
+   * @param buildTarget A build target that uniquely identifies created {@link RawTargetNode}
+   * @param rawNode Raw attributes that forms the node, usually a Map where a key is attribute name
+   *     as string and value is attribute value as object.
+   */
   RawTargetNode create(Cell cell, Path buildFile, UnconfiguredBuildTarget buildTarget, T rawNode);
 }
