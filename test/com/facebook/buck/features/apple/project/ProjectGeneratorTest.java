@@ -507,11 +507,7 @@ public class ProjectGeneratorTest {
         UserFlavor.builder().setName("iphoneos-x86_64").setDescription("buck boilerplate");
     UserFlavor iOS = iOSBuilder.build();
 
-    ImmutableSet<String> appleFlavors =
-        ImmutableSet.of(simulator, iOS, macOS)
-            .stream()
-            .map(f -> ProjectGenerator.applePlatformAndArchitecture(f).getFirst())
-            .collect(ImmutableSet.toImmutableSet());
+    ImmutableSet<Flavor> appleFlavors = ImmutableSet.of(simulator, iOS, macOS);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
@@ -557,9 +553,10 @@ public class ProjectGeneratorTest {
 
     ImmutableMap.Builder<String, ImmutableSet<String>> expectedBuilder = ImmutableMap.builder();
     expectedBuilder.put("EXCLUDED_SOURCE_FILE_NAMES", excludedResults);
-    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=iphoneos*]", iOSResults);
-    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]", simulatorResults);
-    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=macosx*]", macOSResults);
+    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=iphoneos*][arch=x86_64]", iOSResults);
+    expectedBuilder.put(
+        "INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=i386]", simulatorResults);
+    expectedBuilder.put("INCLUDED_SOURCE_FILE_NAMES[sdk=macosx*][arch=x86_64]", macOSResults);
     ImmutableMap<String, ImmutableSet<String>> expectedResult = expectedBuilder.build();
 
     assertEquals(result, expectedResult);
@@ -1215,7 +1212,7 @@ public class ProjectGeneratorTest {
         buildSettings.get("EXCLUDED_SOURCE_FILE_NAMES"));
     assertEquals(
         "'../HeaderGroup1/foo1.h' '../HeaderGroup2/foo3.h'",
-        buildSettings.get("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]"));
+        buildSettings.get("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=i386]"));
   }
 
   @Test
@@ -1348,7 +1345,7 @@ public class ProjectGeneratorTest {
         buildSettings.get("EXCLUDED_SOURCE_FILE_NAMES"));
     assertEquals(
         "'../HeaderGroup1/foo1.h'",
-        buildSettings.get("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]"));
+        buildSettings.get("INCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=i386]"));
   }
 
   @Test

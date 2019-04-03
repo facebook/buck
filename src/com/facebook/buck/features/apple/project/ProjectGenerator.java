@@ -1125,7 +1125,7 @@ public class ProjectGenerator {
 
   @VisibleForTesting
   static ImmutableMap<String, ImmutableSortedSet<String>> gatherExcludedSources(
-      ImmutableSet<String> applePlatforms,
+      ImmutableSet<Flavor> appleCxxFlavors,
       ImmutableList<Pair<Pattern, ImmutableSortedSet<SourceWithFlags>>> platformSources,
       ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeaders,
       Path outputDirectory,
@@ -1167,14 +1167,26 @@ public class ProjectGenerator {
                 .stream()
                 .map(s -> "'" + s + "'")
                 .collect(Collectors.toSet())));
+
+    // Determine if any of the flavors match the regex. This will include prefix matching such as
+    // `iphoneos` matching `iphoneos-arm64` and `iphoneos-armv7`. It will split the platform and
+    // arch so it makes sense to Xcode. This will look like:
+    //
+    //   INCLUDED_SOURCE_FILE_NAMES[platform=iphoneos*][arch=arm64] = [...]
+    //   INCLUDED_SOURCE_FILE_NAMES[platform=iphoneos*][arch=armv7] = [...]
+    //
     // We need to convert the regex to a glob that Xcode will recognize so we match the regex
-    // against the name of a known sdk with the matcher, then glob that.
+    // against the name of a known flavor with the matcher, then glob that.
     for (String platformMatcher : includedSourcesByPlatform.keySet()) {
-      for (String flavor : applePlatforms) {
+      for (Flavor flavor : appleCxxFlavors) {
         Pattern pattern = Pattern.compile(platformMatcher);
-        Matcher matcher = pattern.matcher(flavor);
+        Matcher matcher = pattern.matcher(flavor.getName());
         if (matcher.lookingAt()) {
-          String key = "INCLUDED_SOURCE_FILE_NAMES[sdk=" + flavor + "*]";
+          Pair<String, String> applePlatformAndArch = applePlatformAndArchitecture(flavor);
+          String platform = applePlatformAndArch.getFirst();
+          String arch = applePlatformAndArch.getSecond();
+
+          String key = "INCLUDED_SOURCE_FILE_NAMES[sdk=" + platform + "*][arch=" + arch + "]";
           Set<String> sourcesMatchingPlatform = includedSourcesByPlatform.get(platformMatcher);
           if (sourcesMatchingPlatform != null) {
             Set<String> quotedSources =
@@ -1183,13 +1195,11 @@ public class ProjectGenerator {
                     .map(s -> "'" + s + "'")
                     .collect(Collectors.toSet());
             // They may have different matchers for similar things in which case the key will
-            // already
-            // be included
+            // already be included
             if (result.get(key) != null) {
               result.get(key).addAll(quotedSources);
             } else {
-              result.put(
-                  "INCLUDED_SOURCE_FILE_NAMES[sdk=" + flavor + "*]", new TreeSet<>(quotedSources));
+              result.put(key, new TreeSet<>(quotedSources));
             }
           }
         }
@@ -1334,10 +1344,7 @@ public class ProjectGenerator {
         arg.getPlatformSrcs().getPatternsAndValues();
     ImmutableMap<String, ImmutableSortedSet<String>> platformExcludedSourcesMapping =
         ProjectGenerator.gatherExcludedSources(
-            appleCxxFlavors
-                .stream()
-                .map(f -> applePlatformAndArchitecture(f).getFirst())
-                .collect(ImmutableSet.toImmutableSet()),
+            appleCxxFlavors,
             platformSources,
             platformHeadersIterable,
             outputDirectory,
