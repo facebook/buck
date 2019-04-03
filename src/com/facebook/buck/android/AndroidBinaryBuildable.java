@@ -110,6 +110,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   @AddToRuleKey private final ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths;
 
   private final boolean isApk;
+  // Path to Bundles config file
+  @AddToRuleKey private final Optional<SourcePath> bundleConfigFilePath;
 
   // These should be the only things not added to the rulekey.
   private final ProjectFilesystem filesystem;
@@ -139,6 +141,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
       ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
+      Optional<SourcePath> bundleConfigFilePath,
       boolean isApk) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
@@ -161,6 +164,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.compressAssetLibraries = compressAssetLibraries;
     this.assetCompressionAlgorithm = assetCompressionAlgorithm;
     this.resourceFilesInfo = resourceFilesInfo;
+    this.bundleConfigFilePath = bundleConfigFilePath;
     this.isApk = isApk;
   }
 
@@ -309,10 +313,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
       modulesInfo.add(baseModuleInfo.build());
 
+      Optional<Path> bundleConfigPath = bundleConfigFilePath.map(pathResolver::getAbsolutePath);
+
       steps.add(
           new AabBuilderStep(
               getProjectFilesystem(),
               getSignedApkPath(),
+              bundleConfigPath,
               buildTarget,
               false,
               modulesInfo.build(),

@@ -225,6 +225,7 @@ public class AndroidBinary extends AbstractBuildRule
             resourceFilesInfo,
             apkModules,
             enhancementResult.getModuleResourceApkPaths(),
+            Optional.empty(),
             true);
     this.exopackageInfo = exopackageInfo;
 
