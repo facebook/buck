@@ -162,6 +162,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private final ThrowingSupplier<ClassPath, IOException> pluginFiles;
   private final ThrowingSupplier<ImmutableList<RequiredFile>, IOException> configFiles;
 
+  private final ThrowingSupplier<ImmutableList<RequiredFile>, IOException> sharedRequiredFiles;
   private final ThrowingSupplier<MerkleTreeNode, IOException> sharedFilesNode;
 
   private final MerkleTreeNodeCache nodeCache;
@@ -303,24 +304,26 @@ public class ModernBuildRuleRemoteExecutionHelper {
             },
             IOException.class);
 
+    this.sharedRequiredFiles =
+        MoreSuppliers.memoize(
+            () -> {
+              ImmutableList.Builder<RequiredFile> requiredFiles = ImmutableList.builder();
+              requiredFiles.addAll(classPath.get().requiredFiles);
+              requiredFiles.addAll(bootstrapClassPath.get().requiredFiles);
+              requiredFiles.addAll(pluginFiles.get().requiredFiles);
+              requiredFiles.add(trampoline.get());
+              requiredFiles.addAll(configFiles.get());
+              return requiredFiles.build();
+            },
+            IOException.class);
+
     this.sharedFilesNode =
         MoreSuppliers.memoize(
             () -> {
               Map<Path, FileNode> sharedRequiredFiles = new HashMap<>();
-              classPath
+              this.sharedRequiredFiles
                   .get()
-                  .requiredFiles
                   .forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
-              bootstrapClassPath
-                  .get()
-                  .requiredFiles
-                  .forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
-              pluginFiles
-                  .get()
-                  .requiredFiles
-                  .forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
-              sharedRequiredFiles.put(trampoline.get().path, trampoline.get().fileNode);
-              configFiles.get().forEach(file -> sharedRequiredFiles.put(file.path, file.fileNode));
               return nodeCache.createNode(sharedRequiredFiles, ImmutableMap.of());
             },
             IOException.class);
@@ -459,19 +462,8 @@ public class ModernBuildRuleRemoteExecutionHelper {
 
   private void addSharedFilesData(Consumer<UploadDataSupplier> requiredDataBuilder)
       throws IOException {
-    for (RequiredFile requiredFile : classPath.get().requiredFiles) {
-      requiredDataBuilder.accept(requiredFile.dataSupplier);
-    }
-    for (RequiredFile requiredFile : bootstrapClassPath.get().requiredFiles) {
-      requiredDataBuilder.accept(requiredFile.dataSupplier);
-    }
-    for (RequiredFile requiredFile : pluginFiles.get().requiredFiles) {
-      requiredDataBuilder.accept(requiredFile.dataSupplier);
-    }
-    for (RequiredFile f : configFiles.get()) {
-      requiredDataBuilder.accept(f.dataSupplier);
-    }
-    requiredDataBuilder.accept(trampoline.get().dataSupplier);
+    ImmutableList<RequiredFile> requiredFiles = sharedRequiredFiles.get();
+    requiredFiles.forEach(r -> requiredDataBuilder.accept(r.dataSupplier));
   }
 
   private ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache = new ConcurrentHashMap<>();
