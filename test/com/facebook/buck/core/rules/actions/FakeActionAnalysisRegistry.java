@@ -16,11 +16,12 @@
 package com.facebook.buck.core.rules.actions;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.HashMap;
+import java.util.Map;
 
 public class FakeActionAnalysisRegistry implements ActionAnalysisDataRegistry {
 
-  private final ImmutableMap.Builder<ActionAnalysisDataKey, ActionAnalysisData> registry =
-      ImmutableMap.builder();
+  private Map<ActionAnalysisDataKey, ActionAnalysisData> registry = new HashMap<>();
 
   @Override
   public void registerAction(ActionAnalysisData actionAnalysisData) {
@@ -28,6 +29,10 @@ public class FakeActionAnalysisRegistry implements ActionAnalysisDataRegistry {
   }
 
   public ImmutableMap<ActionAnalysisDataKey, ActionAnalysisData> getRegistered() {
-    return registry.build();
+    return ImmutableMap.copyOf(registry);
+  }
+
+  public void clear() {
+    registry.clear();
   }
 }
