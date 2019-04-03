@@ -22,6 +22,7 @@ import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
@@ -99,8 +100,7 @@ public class RuleAnalysisTransformer
   public ImmutableSet<RuleAnalysisKey> discoverPreliminaryDeps(RuleAnalysisKey key) {
     return ImmutableSet.copyOf(
         Iterables.transform(
-            targetGraph.get(key.getBuildTarget()).getParseDeps(),
-            ImmutableRuleAnalysisKeyImpl::of));
+            targetGraph.get(key.getBuildTarget()).getParseDeps(), ImmutableRuleAnalysisKey::of));
   }
 
   @Override

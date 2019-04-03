@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
@@ -82,7 +83,7 @@ public class RuleAnalysisTransformerTest {
     RuleAnalysisTransformer transformer = new RuleAnalysisTransformer(targetGraph);
     assertEquals(
         ImmutableSet.of(),
-        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKeyImpl.of(buildTarget)));
+        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget)));
   }
 
   @Test
@@ -146,9 +147,8 @@ public class RuleAnalysisTransformerTest {
     RuleAnalysisTransformer transformer = new RuleAnalysisTransformer(targetGraph);
     assertEquals(
         ImmutableSet.of(
-            ImmutableRuleAnalysisKeyImpl.of(buildTarget2),
-            ImmutableRuleAnalysisKeyImpl.of(buildTarget3)),
-        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKeyImpl.of(buildTarget1)));
+            ImmutableRuleAnalysisKey.of(buildTarget2), ImmutableRuleAnalysisKey.of(buildTarget3)),
+        transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget1)));
   }
 
   @Test
@@ -195,7 +195,7 @@ public class RuleAnalysisTransformerTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
-            ImmutableRuleAnalysisKeyImpl.of(buildTarget),
+            ImmutableRuleAnalysisKey.of(buildTarget),
             new FakeTransformationEnvironment(ImmutableMap.of()));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
@@ -221,7 +221,7 @@ public class RuleAnalysisTransformerTest {
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
             // here we use the deps
             assertEquals(buildTarget, target);
-            return context.deps().get(ImmutableRuleAnalysisKeyImpl.of(buildTarget2));
+            return context.deps().get(ImmutableRuleAnalysisKey.of(buildTarget2));
           }
 
           @Override
@@ -276,11 +276,11 @@ public class RuleAnalysisTransformerTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
-            ImmutableRuleAnalysisKeyImpl.of(buildTarget),
+            ImmutableRuleAnalysisKey.of(buildTarget),
             // here we provide the deps via the TransformationEnvironment
             new FakeTransformationEnvironment(
                 ImmutableMap.of(
-                    ImmutableRuleAnalysisKeyImpl.of(buildTarget2),
+                    ImmutableRuleAnalysisKey.of(buildTarget2),
                     ImmutableRuleAnalysisResultImpl.of(
                         buildTarget2, expectedProviders, ImmutableMap.of()))));
 

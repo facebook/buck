@@ -34,6 +34,7 @@ import com.facebook.buck.core.rules.actions.Artifact;
 import com.facebook.buck.core.rules.actions.Artifact.BuildArtifact;
 import com.facebook.buck.core.rules.actions.FakeAction;
 import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
+import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
@@ -61,7 +62,7 @@ public class RuleAnalysisContextImplTest {
 
     deps =
         ImmutableMap.of(
-            ImmutableRuleAnalysisKeyImpl.of(BuildTargetFactory.newInstance("//my:foo")),
+            ImmutableRuleAnalysisKey.of(BuildTargetFactory.newInstance("//my:foo")),
             ProviderInfoCollectionImpl.builder().build());
     assertSame(deps, new RuleAnalysisContextImpl(deps).deps());
   }

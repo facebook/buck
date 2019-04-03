@@ -1,4 +1,6 @@
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "analysis",
     srcs = glob(["*.java"]),
     exported_deps = [

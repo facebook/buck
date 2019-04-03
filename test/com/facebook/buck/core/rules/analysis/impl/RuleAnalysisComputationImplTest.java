@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
@@ -108,7 +109,7 @@ public class RuleAnalysisComputationImplTest {
         RuleAnalysisComputationImpl.of(targetGraph, depsAwareExecutor, cache);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.computeUnchecked(ImmutableRuleAnalysisKeyImpl.of(buildTarget));
+        ruleAnalysisComputation.computeUnchecked(ImmutableRuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -133,7 +134,7 @@ public class RuleAnalysisComputationImplTest {
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
             // here we use the deps
             assertEquals(buildTarget, target);
-            return context.deps().get(ImmutableRuleAnalysisKeyImpl.of(buildTarget2));
+            return context.deps().get(ImmutableRuleAnalysisKey.of(buildTarget2));
           }
 
           @Override
@@ -188,7 +189,7 @@ public class RuleAnalysisComputationImplTest {
         RuleAnalysisComputationImpl.of(targetGraph, depsAwareExecutor, cache);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.computeUnchecked(ImmutableRuleAnalysisKeyImpl.of(buildTarget));
+        ruleAnalysisComputation.computeUnchecked(ImmutableRuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.

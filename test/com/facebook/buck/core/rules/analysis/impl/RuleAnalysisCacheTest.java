@@ -20,6 +20,7 @@ import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.providers.impl.ProviderInfoCollectionImpl;
 import com.google.common.collect.ImmutableMap;
@@ -40,7 +41,7 @@ public class RuleAnalysisCacheTest {
   public void emptyCacheReturnsEmpty() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
-    assertEquals(Optional.empty(), cache.get(ImmutableRuleAnalysisKeyImpl.of(buildTarget)));
+    assertEquals(Optional.empty(), cache.get(ImmutableRuleAnalysisKey.of(buildTarget)));
   }
 
   @Test
@@ -50,14 +51,14 @@ public class RuleAnalysisCacheTest {
     RuleAnalysisResult cachedResult =
         ImmutableRuleAnalysisResultImpl.of(
             buildTarget, ProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
-    cache.put(ImmutableRuleAnalysisKeyImpl.of(buildTarget), cachedResult);
+    cache.put(ImmutableRuleAnalysisKey.of(buildTarget), cachedResult);
 
     // assert that we cache and return the same instance
-    assertSame(cachedResult, cache.get(ImmutableRuleAnalysisKeyImpl.of(buildTarget)).get());
+    assertSame(cachedResult, cache.get(ImmutableRuleAnalysisKey.of(buildTarget)).get());
 
     BuildTarget buildTarget2 = BuildTargetFactory.newInstance("//my:target2");
 
-    assertEquals(Optional.empty(), cache.get(ImmutableRuleAnalysisKeyImpl.of(buildTarget2)));
+    assertEquals(Optional.empty(), cache.get(ImmutableRuleAnalysisKey.of(buildTarget2)));
   }
 
   @Test
@@ -73,12 +74,12 @@ public class RuleAnalysisCacheTest {
         ImmutableRuleAnalysisResultImpl.of(
             buildTarget2, ProviderInfoCollectionImpl.builder().build(), ImmutableMap.of());
 
-    cache.put(ImmutableRuleAnalysisKeyImpl.of(buildTarget1), cachedResult1);
-    cache.put(ImmutableRuleAnalysisKeyImpl.of(buildTarget2), cachedResult2);
+    cache.put(ImmutableRuleAnalysisKey.of(buildTarget1), cachedResult1);
+    cache.put(ImmutableRuleAnalysisKey.of(buildTarget2), cachedResult2);
 
-    assertEquals(Optional.empty(), cache.get(ImmutableRuleAnalysisKeyImpl.of(buildTarget3)));
+    assertEquals(Optional.empty(), cache.get(ImmutableRuleAnalysisKey.of(buildTarget3)));
 
-    assertSame(cachedResult1, cache.get(ImmutableRuleAnalysisKeyImpl.of(buildTarget1)).get());
-    assertSame(cachedResult2, cache.get(ImmutableRuleAnalysisKeyImpl.of(buildTarget2)).get());
+    assertSame(cachedResult1, cache.get(ImmutableRuleAnalysisKey.of(buildTarget1)).get());
+    assertSame(cachedResult2, cache.get(ImmutableRuleAnalysisKey.of(buildTarget2)).get());
   }
 }
