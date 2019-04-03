@@ -69,7 +69,7 @@ class FileInputsAdder {
     if (addedInputs.contains(path)) {
       return;
     }
-    Preconditions.checkState(path.isAbsolute(), "Expected absolute path: " + path);
+    Preconditions.checkState(path.isAbsolute(), "Expected absolute path: %s", path);
     addedInputs.add(path);
 
     if (!path.startsWith(cellPathPrefix)) {
