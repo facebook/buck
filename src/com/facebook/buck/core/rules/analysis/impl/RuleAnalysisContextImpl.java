@@ -16,6 +16,8 @@
 package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.rules.actions.ActionAnalysisData;
+import com.facebook.buck.core.rules.actions.ActionAnalysisDataRegistry;
+import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
@@ -28,13 +30,15 @@ import java.util.Map;
  * Implementation of {@link com.facebook.buck.core.rules.analysis.RuleAnalysisContext}. This context
  * is created per rule analysis.
  */
-class RuleAnalysisContextImpl implements RuleAnalysisContext {
+class RuleAnalysisContextImpl implements RuleAnalysisContext, ActionAnalysisDataRegistry {
 
   private final ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders;
   private final Map<ActionAnalysisData.ID, ActionAnalysisData> actionRegistry = new HashMap<>();
+  private final ActionWrapperDataFactory actionWrapperDataFactory;
 
   RuleAnalysisContextImpl(ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> depProviders) {
     this.depProviders = depProviders;
+    this.actionWrapperDataFactory = new ActionWrapperDataFactory(this);
   }
 
   @Override
@@ -42,6 +46,12 @@ class RuleAnalysisContextImpl implements RuleAnalysisContext {
     return depProviders;
   }
 
+  @Override
+  public ActionWrapperDataFactory actionFactory() {
+    return actionWrapperDataFactory;
+  }
+
+  // TODO(bobyf): should we get rid of this and enforce all actions go through the factory
   @Override
   public void registerAction(ActionAnalysisData actionAnalysisData) {
     ActionAnalysisData prev =

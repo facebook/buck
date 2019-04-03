@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
-import com.facebook.buck.core.rules.actions.ActionAnalysisDataRegistry;
+import com.facebook.buck.core.rules.actions.ActionWrapperDataFactory;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;
 import com.google.common.collect.ImmutableMap;
 
@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableMap;
  * their corresponding {@link com.google.devtools.build.lib.packages.InfoInterface}s. It will also
  * offer ways to register {@link com.facebook.buck.step.Step}s.
  */
-public interface RuleAnalysisContext extends ActionAnalysisDataRegistry {
+public interface RuleAnalysisContext {
 
   /**
    * @return a {@link ProviderInfoCollection} of the providers propagated for each dependency target
@@ -44,6 +44,12 @@ public interface RuleAnalysisContext extends ActionAnalysisDataRegistry {
    *     ProviderInfoCollection}.
    */
   ImmutableMap<RuleAnalysisKey, ProviderInfoCollection> deps();
+
+  /**
+   * @return the factory for creating and registering {@link
+   *     com.facebook.buck.core.rules.actions.Action}s
+   */
+  ActionWrapperDataFactory actionFactory();
 
   // TODO(bobyf): Fill as needed. This will probably contain most of {@link
   // BuildRuleCreationContext}
