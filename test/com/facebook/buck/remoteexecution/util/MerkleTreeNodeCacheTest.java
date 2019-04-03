@@ -155,10 +155,11 @@ public class MerkleTreeNodeCacheTest {
     filesSupplier.get().keySet().forEach(p -> expectedPaths.add(tmpRoot.getRoot().resolve(p)));
     assertEquals(filePaths, expectedPaths);
 
-    Map<Digest, Directory> dataMap = new HashMap<>();
-    nodeCache.forAllData(node, data -> dataMap.put(data.getDigest(), data.getDirectory()));
+    Map<Digest, NodeData> dataMap = new HashMap<>();
+    nodeCache.forAllData(node, data -> dataMap.put(data.getDigest(), data));
 
-    Directory rootDirectory = dataMap.get(nodeCache.getData(node).getDigest());
+    NodeData rootData = dataMap.get(nodeCache.getData(node).getDigest());
+    Directory rootDirectory = rootData.getDirectory();
 
     assertTrue(rootDirectory.getFilesList().isEmpty());
     MoreAsserts.assertIterablesEquals(
@@ -170,11 +171,13 @@ public class MerkleTreeNodeCacheTest {
 
     DirectoryNode catDirNode =
         rootDirectories.stream().filter(d -> d.getName().equals("cat")).findFirst().get();
-    Directory cat = dataMap.get(catDirNode.getDigest());
+    NodeData catData = dataMap.get(catDirNode.getDigest());
+    Directory cat = catData.getDirectory();
 
     DirectoryNode dogDirNode =
         rootDirectories.stream().filter(d -> d.getName().equals("dog")).findFirst().get();
-    Directory dog = dataMap.get(dogDirNode.getDigest());
+    NodeData dogData = dataMap.get(dogDirNode.getDigest());
+    Directory dog = dogData.getDirectory();
 
     assertTrue(cat.getSymlinksList().isEmpty());
     assertTrue(cat.getDirectoriesList().isEmpty());
@@ -193,6 +196,10 @@ public class MerkleTreeNodeCacheTest {
     DirectoryNode pigDirNode =
         rootDirectories.stream().filter(d -> d.getName().equals("pig")).findFirst().get();
     assertEquals(pigDirNode.getDigest(), dogDirNode.getDigest());
+
+    assertEquals(45, rootData.getTotalSize());
+    assertEquals(15, catData.getTotalSize());
+    assertEquals(15, dogData.getTotalSize());
   }
 
   @Test
@@ -257,6 +264,8 @@ public class MerkleTreeNodeCacheTest {
                 .build());
 
     assertSame(combinedNode, nodeCache.mergeNodes(ImmutableList.of(firstNode, secondNode)));
+
+    assertEquals(30, nodeCache.getData(combinedNode).getTotalSize());
   }
 
   @Test

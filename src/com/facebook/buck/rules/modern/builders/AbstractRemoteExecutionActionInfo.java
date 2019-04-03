@@ -31,5 +31,7 @@ interface AbstractRemoteExecutionActionInfo {
 
   ImmutableMap<Digest, UploadDataSupplier> getRequiredData();
 
+  long getTotalInputSize();
+
   Iterable<? extends Path> getOutputs();
 }

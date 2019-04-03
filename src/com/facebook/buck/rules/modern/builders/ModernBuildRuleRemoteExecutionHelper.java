@@ -36,6 +36,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.SymlinkNode;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
+import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.NodeData;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.Serializer;
@@ -399,7 +400,8 @@ public class ModernBuildRuleRemoteExecutionHelper {
                   childData.getDigest(),
                   () -> new ByteArrayInputStream(protocol.toByteArray(childData.getDirectory()))));
 
-      Digest inputsRootDigest = nodeCache.getData(mergedMerkleTree).getDigest();
+      NodeData data = nodeCache.getData(mergedMerkleTree);
+      Digest inputsRootDigest = data.getDigest();
 
       byte[] commandData = protocol.toByteArray(actionCommand);
       Digest commandDigest = protocol.computeDigest(commandData);
@@ -411,7 +413,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
       requiredDataBuilder.put(actionDigest, () -> new ByteArrayInputStream(actionData));
 
       return RemoteExecutionActionInfo.of(
-          actionDigest, ImmutableMap.copyOf(requiredDataBuilder), outputs);
+          actionDigest, ImmutableMap.copyOf(requiredDataBuilder), data.getTotalSize(), outputs);
     }
   }
 

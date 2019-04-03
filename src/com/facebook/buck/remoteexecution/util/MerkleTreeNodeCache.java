@@ -186,13 +186,19 @@ public class MerkleTreeNodeCache {
       // It's unlikely, but possible that multiple threads get here... that's okay they'll all
       // compute the same thing.
       List<DirectoryNode> childNodes = new ArrayList<>();
+      long totalInputsSize = 0;
       for (Entry<String, MerkleTreeNode> entry : children.entrySet()) {
         MerkleTreeNode child = entry.getValue();
         NodeData childData = child.getData(protocol);
+        totalInputsSize += childData.totalInputsSize;
         childNodes.add(protocol.newDirectoryNode(entry.getKey(), childData.digest));
       }
+      for (FileNode value : files.values()) {
+        totalInputsSize += value.getDigest().getSize();
+      }
       Directory directory = protocol.newDirectory(childNodes, files.values(), symlinks.values());
-      NodeData nodeData = new NodeData(directory, protocol.computeDigest(directory));
+      NodeData nodeData =
+          new NodeData(directory, protocol.computeDigest(directory), totalInputsSize);
       this.data = nodeData;
       return nodeData;
     }
@@ -319,10 +325,12 @@ public class MerkleTreeNodeCache {
   public static class NodeData {
     private final Directory directory;
     private final Digest digest;
+    private final long totalInputsSize;
 
-    NodeData(Directory directory, Digest digest) {
+    NodeData(Directory directory, Digest digest, long totalInputsSize) {
       this.directory = directory;
       this.digest = digest;
+      this.totalInputsSize = totalInputsSize;
     }
 
     public Digest getDigest() {
@@ -331,6 +339,10 @@ public class MerkleTreeNodeCache {
 
     public Directory getDirectory() {
       return directory;
+    }
+
+    public long getTotalSize() {
+      return totalInputsSize;
     }
   }
 }

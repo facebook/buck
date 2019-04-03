@@ -248,18 +248,15 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private ListenableFuture<RemoteExecutionActionInfo> uploadInputs(
       BuildTarget buildTarget, RemoteExecutionActionInfo actionInfo) throws Exception {
     Objects.requireNonNull(actionInfo);
-    ImmutableMap<Digest, UploadDataSupplier> requiredData = actionInfo.getRequiredData();
-    long totalInputSizeBytes = 0;
-    for (Digest digest : requiredData.keySet()) {
-      totalInputSizeBytes += digest.getSize();
-    }
-    if (maxInputSizeBytes.isPresent() && maxInputSizeBytes.getAsInt() < totalInputSizeBytes) {
+    if (maxInputSizeBytes.isPresent()
+        && maxInputSizeBytes.getAsInt() < actionInfo.getTotalInputSize()) {
       throw new RuntimeException(
           "Max file size exceeded for Remote Execution, action contains: "
-              + totalInputSizeBytes
+              + actionInfo.getTotalInputSize()
               + " bytes, max allowed: "
               + maxInputSizeBytes.getAsInt());
     }
+    ImmutableMap<Digest, UploadDataSupplier> requiredData = actionInfo.getRequiredData();
     Digest actionDigest = actionInfo.getActionDigest();
     Scope uploadingInputsScope =
         RemoteExecutionActionEvent.sendEvent(
