@@ -57,6 +57,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
@@ -211,11 +212,11 @@ public class ModernBuildRuleRemoteExecutionHelper {
           Node node =
               new Node(
                   data,
+                  hash,
                   children
                       .stream()
-                      .collect(
-                          ImmutableSortedMap.toImmutableSortedMap(
-                              Ordering.natural(), HashCode::toString, nodeMap::get)));
+                      .map(nodeMap::get)
+                      .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
           nodeMap.put(hash, node);
           return hash;
         };
@@ -584,14 +585,21 @@ public class ModernBuildRuleRemoteExecutionHelper {
     return ImmutableList.of("./" + TRAMPOLINE_PATH.toString(), rootString, hash);
   }
 
-  private static class Node {
+  private static class Node implements Comparable<Node> {
     private final byte[] data;
 
-    private final ImmutableSortedMap<String, Node> children;
+    private final String hash;
+    private final ImmutableSortedSet<Node> children;
 
-    Node(byte[] data, ImmutableSortedMap<String, Node> children) {
+    Node(byte[] data, HashCode hash, ImmutableSortedSet<Node> children) {
       this.data = data;
+      this.hash = hash.toString();
       this.children = children;
+    }
+
+    @Override
+    public int compareTo(Node other) {
+      return hash.compareTo(other.hash);
     }
   }
 
@@ -599,10 +607,10 @@ public class ModernBuildRuleRemoteExecutionHelper {
       HashCode hash, Consumer<UploadDataSupplier> requiredDataBuilder) {
     Map<Path, FileNode> fileNodes = new HashMap<>();
     class DataAdder {
-      void addData(Path root, String hash, Node node) {
+      void addData(Path root, Node node) {
         String fileName = "__value__";
-        Path valuePath = root.resolve(hash).resolve(fileName);
-        Digest digest = protocol.newDigest(hash, node.data.length);
+        Path valuePath = root.resolve(node.hash).resolve(fileName);
+        Digest digest = protocol.newDigest(node.hash, node.data.length);
         fileNodes.put(valuePath, protocol.newFileNode(digest, fileName, false));
         requiredDataBuilder.accept(
             new UploadDataSupplier() {
@@ -622,12 +630,11 @@ public class ModernBuildRuleRemoteExecutionHelper {
               }
             });
 
-        node.children.forEach((key, value) -> addData(root, key, value));
+        node.children.forEach(value -> addData(root, value));
       }
     }
 
-    new DataAdder()
-        .addData(Paths.get("__data__"), hash.toString(), Objects.requireNonNull(nodeMap.get(hash)));
+    new DataAdder().addData(Paths.get("__data__"), Objects.requireNonNull(nodeMap.get(hash)));
 
     return nodeCache.createNode(fileNodes, ImmutableMap.of());
   }
