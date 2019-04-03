@@ -171,10 +171,9 @@ public class ActionRunner {
         MerkleTreeNode node = merkleTreeCache.createNode(files, ImmutableMap.of());
 
         node.forAllFiles(
-            path,
             (file, fileNode) ->
                 requiredDataBuilder.put(
-                    fileNode.getDigest(), () -> new FileInputStream(file.toFile())));
+                    fileNode.getDigest(), () -> new FileInputStream(path.resolve(file).toFile())));
 
         List<Directory> directories = new ArrayList<>();
         merkleTreeCache.forAllData(node, data -> directories.add(data.getDirectory()));

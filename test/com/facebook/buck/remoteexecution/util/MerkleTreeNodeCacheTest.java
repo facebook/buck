@@ -57,7 +57,7 @@ public class MerkleTreeNodeCacheTest {
     MerkleTreeNode node = nodeCache.createNode(ImmutableMap.of(), ImmutableMap.of());
 
     // There shouldn't be any files.
-    node.forAllFiles((Paths.get("")), (path, n) -> fail());
+    node.forAllFiles((path, n) -> fail());
 
     NodeData data = nodeCache.getData(node);
     assertTrue(data.getDirectory().getDirectoriesList().isEmpty());
@@ -149,11 +149,11 @@ public class MerkleTreeNodeCacheTest {
 
     // There shouldn't be any files.
     Set<Path> filePaths = new HashSet<>();
-    node.forAllFiles((tmpRoot.getRoot()), (path, n) -> filePaths.add(path));
+    node.forAllFiles((path, n) -> filePaths.add(path));
 
     Set<Path> expectedPaths = new HashSet<>();
-    filesSupplier.get().keySet().forEach(p -> expectedPaths.add(tmpRoot.getRoot().resolve(p)));
-    assertEquals(filePaths, expectedPaths);
+    filesSupplier.get().keySet().forEach(p -> expectedPaths.add(p));
+    assertEquals(expectedPaths, filePaths);
 
     Map<Digest, NodeData> dataMap = new HashMap<>();
     nodeCache.forAllData(node, data -> dataMap.put(data.getDigest(), data));

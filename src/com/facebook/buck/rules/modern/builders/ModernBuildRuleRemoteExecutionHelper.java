@@ -420,14 +420,13 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private void addFileInputs(
       MerkleTreeNode inputsMerkleTree, Map<Digest, UploadDataSupplier> requiredDataBuilder) {
     inputsMerkleTree.forAllFiles(
-        cellPathPrefix,
         (path, fileNode) ->
             requiredDataBuilder.put(
                 fileNode.getDigest(),
                 new UploadDataSupplier() {
                   @Override
                   public InputStream get() throws IOException {
-                    return new FileInputStream(path.toFile());
+                    return new FileInputStream(cellPathPrefix.resolve(path).toFile());
                   }
 
                   @Override
@@ -593,7 +592,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
     class DataAdder {
       void addData(Path root, String hash, Node node) {
         String fileName = "__value__";
-        Path valuePath = root.resolve(fileName);
+        Path valuePath = root.resolve(hash).resolve(fileName);
         Digest digest = protocol.newDigest(hash, node.data.length);
         fileNodes.put(valuePath, protocol.newFileNode(digest, fileName, false));
         requiredDataBuilder.put(
@@ -610,17 +609,12 @@ public class ModernBuildRuleRemoteExecutionHelper {
               }
             });
 
-        for (Map.Entry<String, Node> child : node.children.entrySet()) {
-          addData(root.resolve(child.getKey()), child.getKey(), child.getValue());
-        }
+        node.children.forEach((key, value) -> addData(root, key, value));
       }
     }
 
     new DataAdder()
-        .addData(
-            Paths.get("__data__").resolve(hash.toString()),
-            hash.toString(),
-            Objects.requireNonNull(nodeMap.get(hash)));
+        .addData(Paths.get("__data__"), hash.toString(), Objects.requireNonNull(nodeMap.get(hash)));
 
     return nodeCache.createNode(fileNodes, ImmutableMap.of());
   }

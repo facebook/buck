@@ -308,8 +308,7 @@ public abstract class IsolatedBuildableBuilder {
     BuildableAndTarget reconstructed;
     try (Scope ignored = LeafEvents.scope(eventBus, "deserializing")) {
       reconstructed =
-          deserializer.deserialize(
-              getProvider(dataRoot.resolve(hash.toString())), BuildableAndTarget.class);
+          deserializer.deserialize(getProvider(dataRoot, hash), BuildableAndTarget.class);
     }
 
     try (Scope ignored = LeafEvents.scope(eventBus, "steps")) {
@@ -347,14 +346,16 @@ public abstract class IsolatedBuildableBuilder {
     }
   }
 
-  private DataProvider getProvider(Path dir) {
+  // TODO(cjhopman): The layout of this directory is just determined by what
+  // ModernBuildRuleRemoteExecutionHelper does. We should extract these to a single place.
+  private DataProvider getProvider(Path dir, HashCode hash) {
     Preconditions.checkState(Files.exists(dir), "Dir [%s] does not exist.", dir.toAbsolutePath());
 
     return new DataProvider() {
       @Override
       public InputStream getData() {
         try {
-          Path path = dir.resolve("__value__");
+          Path path = dir.resolve(hash.toString()).resolve("__value__");
           return new BufferedInputStream(new FileInputStream(path.toFile()));
         } catch (FileNotFoundException e) {
           throw new RuntimeException(e);
@@ -363,7 +364,7 @@ public abstract class IsolatedBuildableBuilder {
 
       @Override
       public DataProvider getChild(HashCode hash) {
-        return getProvider(dir.resolve(hash.toString()));
+        return getProvider(dir, hash);
       }
     };
   }
