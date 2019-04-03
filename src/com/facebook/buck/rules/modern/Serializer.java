@@ -122,6 +122,34 @@ public class Serializer {
     if (cache.containsKey(instance)) {
       return Objects.requireNonNull(cache.get(instance));
     }
+
+    Visitor visitor = reserialize(instance, classInfo);
+
+    return Objects.requireNonNull(
+        cache.computeIfAbsent(
+            instance,
+            ignored -> {
+              byte[] data = visitor.byteStream.toByteArray();
+              ImmutableList<HashCode> children =
+                  visitor.children.build().distinct().collect(ImmutableList.toImmutableList());
+              return data.length < MAX_INLINE_LENGTH && children.isEmpty()
+                  ? Either.ofRight(data)
+                  : Either.ofLeft(delegate.registerNewValue(instance, data, children));
+            }));
+  }
+
+  /**
+   * Returns the serialized bytes of the instance. This is useful if the caller has lost the value
+   * recorded in a previous serialize call.
+   */
+  public <T extends AddsToRuleKey> byte[] reserialize(T instance) throws IOException {
+    ClassInfo<T> classInfo = DefaultClassInfoFactory.forInstance(instance);
+    // TODO(cjhopman): Return children too?
+    return reserialize(instance, classInfo).byteStream.toByteArray();
+  }
+
+  private <T extends AddsToRuleKey> Visitor reserialize(T instance, ClassInfo<T> classInfo)
+      throws IOException {
     Visitor visitor = new Visitor(instance.getClass());
 
     Optional<CustomClassBehaviorTag> serializerTag =
@@ -134,23 +162,7 @@ public class Serializer {
     } else {
       classInfo.visit(instance, visitor);
     }
-
-    return Objects.requireNonNull(
-        cache.computeIfAbsent(
-            instance,
-            ignored -> {
-              byte[] data = visitor.byteStream.toByteArray();
-              ImmutableList<HashCode> children =
-                  visitor.children.build().distinct().collect(ImmutableList.toImmutableList());
-              return data.length < MAX_INLINE_LENGTH && children.isEmpty()
-                  ? Either.ofRight(data)
-                  : Either.ofLeft(registerNewValue(instance, data, children));
-            }));
-  }
-
-  private <T extends AddsToRuleKey> HashCode registerNewValue(
-      T instance, byte[] data, ImmutableList<HashCode> children) {
-    return delegate.registerNewValue(instance, data, children);
+    return visitor;
   }
 
   private class Visitor implements ValueVisitor<IOException> {

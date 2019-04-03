@@ -53,6 +53,7 @@ import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -66,6 +67,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -80,6 +82,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 /**
  * ModernBuildRuleRemoteExecutionHelper is used to create remote execution actions for a {@link
@@ -211,6 +214,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
           HashCode hash = hasher.hashBytes(data);
           Node node =
               new Node(
+                  instance,
                   data,
                   hash,
                   children
@@ -586,51 +590,96 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   private static class Node implements Comparable<Node> {
-    private final byte[] data;
-
+    private final AddsToRuleKey instance;
     private final String hash;
     private final ImmutableSortedSet<Node> children;
+    private final int dataLength;
 
-    Node(byte[] data, HashCode hash, ImmutableSortedSet<Node> children) {
+    // We hold the serialized form of the instance in memory only until it is uploaded once. There
+    // might be multiple different rules that reference this that all get scheduled at the same time
+    // and so there's some races in uploading such that all of the rules might need to get a
+    // reference to the serialized data but then only one will actually be uploaded. To handle this,
+    // we hold a strong ref to the data until it is first requested, then we hold a WeakReference to
+    // it. This means that if multiple concurrent rules request it, we'll still have the weak
+    // reference around to give them.
+    // There are a few edge cases where we will still need the data after that point: (1) if the
+    // first upload fails (2) if our blob uploader becomes aware of TTLs such that for very long
+    // builds it may upload the same thing multiple times. To support this, we reserialize the
+    // instance if its requested when we no longer hold any reference to the original serialized
+    // value.
+    @SuppressWarnings("unused")
+    @Nullable
+    private volatile byte[] data;
+
+    private WeakReference<byte[]> dataRef;
+
+    Node(AddsToRuleKey instance, byte[] data, HashCode hash, ImmutableSortedSet<Node> children) {
+      this.instance = instance;
       this.data = data;
+      this.dataRef = new WeakReference<>(data);
+      this.dataLength = data.length;
       this.hash = hash.toString();
       this.children = children;
+    }
+
+    public byte[] acquireData(Serializer serializer, HashFunction hasher) throws IOException {
+      // We should only ever need the data once.
+      byte[] current = dataRef.get();
+      if (current != null) {
+        dropData();
+        return current;
+      }
+
+      byte[] reserialized = serializer.reserialize(instance);
+      HashCode recomputedHash = hasher.hashBytes(reserialized);
+      Verify.verify(recomputedHash.toString().equals(hash));
+      this.dataRef = new WeakReference<>(reserialized);
+      return reserialized;
     }
 
     @Override
     public int compareTo(Node other) {
       return hash.compareTo(other.hash);
     }
+
+    public void dropData() {
+      this.data = null;
+    }
   }
 
   private MerkleTreeNode getSerializationTreeAndInputs(
-      HashCode hash, Consumer<UploadDataSupplier> requiredDataBuilder) {
+      HashCode hash, Consumer<UploadDataSupplier> requiredDataBuilder) throws IOException {
     Map<Path, FileNode> fileNodes = new HashMap<>();
     class DataAdder {
-      void addData(Path root, Node node) {
+      void addData(Path root, Node node) throws IOException {
         String fileName = "__value__";
         Path valuePath = root.resolve(node.hash).resolve(fileName);
-        Digest digest = protocol.newDigest(node.hash, node.data.length);
+        Digest digest = protocol.newDigest(node.hash, node.dataLength);
         fileNodes.put(valuePath, protocol.newFileNode(digest, fileName, false));
+        byte[] data = node.acquireData(serializer, hasher);
         requiredDataBuilder.accept(
             new UploadDataSupplier() {
+              @Override
+              public InputStream get() {
+                return new ByteArrayInputStream(data);
+              }
+
               @Override
               public Digest getDigest() {
                 return digest;
               }
 
               @Override
-              public InputStream get() {
-                return new ByteArrayInputStream(node.data);
-              }
-
-              @Override
               public String describe() {
-                return String.format("Serialized java object (size:%s).", node.data.length);
+                return String.format(
+                    "Serialized java object (class:%s, size:%s).",
+                    node.instance.getClass().getName(), node.dataLength);
               }
             });
 
-        node.children.forEach(value -> addData(root, value));
+        for (Node value : node.children) {
+          addData(root, value);
+        }
       }
     }
 
