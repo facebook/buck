@@ -212,7 +212,10 @@ public class Manifest {
 
     // Create a multimap from paths we care about to SourcePaths that maps to them.
     ImmutableListMultimap<String, SourcePath> mappedUniverse =
-        index(universe, sourcePathToManifestHeaderFunction(resolver), interestingPaths::contains);
+        index(
+            universe,
+            path -> sourcePathToManifestHeader(path, resolver),
+            interestingPaths::contains);
 
     // Find a matching entry.
     for (Pair<RuleKey, int[]> entry : entries) {
@@ -223,16 +226,19 @@ public class Manifest {
     return Optional.empty();
   }
 
-  private static Function<SourcePath, String> sourcePathToManifestHeaderFunction(
-      SourcePathResolver resolver) {
-    return input -> sourcePathToManifestHeader(input, resolver);
+  private static String sourcePathToManifestHeader(SourcePath input, SourcePathResolver resolver) {
+    return sourcePathToManifestPathKey(input, resolver).toString();
   }
 
-  private static String sourcePathToManifestHeader(SourcePath input, SourcePathResolver resolver) {
+  /**
+   * Converting Path to String is expensive when using BuckUnixPath so if we just need a key
+   * representation of a manifest path, use the corresponding Path/ArchiveMemberPath.
+   */
+  private static Object sourcePathToManifestPathKey(SourcePath input, SourcePathResolver resolver) {
     if (input instanceof ArchiveMemberSourcePath) {
-      return resolver.getRelativeArchiveMemberPath(input).toString();
+      return resolver.getRelativeArchiveMemberPath(input);
     } else {
-      return resolver.getRelativePath(input).toString();
+      return resolver.getRelativePath(input);
     }
   }
 
@@ -246,21 +252,23 @@ public class Manifest {
       throws IOException {
 
     // Construct the input sub-paths that we care about.
-    ImmutableSet<String> inputPaths =
-        RichStream.from(inputs).map(sourcePathToManifestHeaderFunction(resolver)).toImmutableSet();
+    ImmutableSet<Object> inputPaths =
+        RichStream.from(inputs)
+            .map(path -> sourcePathToManifestPathKey(path, resolver))
+            .toImmutableSet();
 
     // Create a multimap from paths we care about to SourcePaths that maps to them.
-    ImmutableListMultimap<String, SourcePath> sortedUniverse =
-        index(universe, sourcePathToManifestHeaderFunction(resolver), inputPaths::contains);
+    ImmutableListMultimap<Object, SourcePath> sortedUniverse =
+        index(universe, path -> sourcePathToManifestPathKey(path, resolver), inputPaths::contains);
 
     // Record the Entry.
     int index = 0;
     int[] hashIndices = new int[inputs.size()];
-    for (String relativePath : inputPaths) {
+    for (Object relativePath : inputPaths) {
       ImmutableList<SourcePath> paths = sortedUniverse.get(relativePath);
       Preconditions.checkState(!paths.isEmpty());
       hashIndices[index++] =
-          addHash(relativePath, hashSourcePathGroup(fileHashLoader, resolver, paths));
+          addHash(relativePath.toString(), hashSourcePathGroup(fileHashLoader, resolver, paths));
     }
     entries.add(new Pair<>(key, hashIndices));
   }
