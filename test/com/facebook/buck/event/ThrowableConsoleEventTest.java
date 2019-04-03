@@ -46,4 +46,14 @@ public class ThrowableConsoleEventTest {
     ThrowableConsoleEvent event = ThrowableConsoleEvent.create(new Throwable(), "%s %d", "a");
     assertThat(event.getMessage(), Matchers.stringContainsInOrder("%s %d", "a"));
   }
+
+  @Test
+  public void formatLineBreaksWithSystemLineBreak() {
+    ThrowableConsoleEvent event =
+        ThrowableConsoleEvent.create(new RuntimeException("exception"), "my message");
+    assertThat(
+        event.getMessage(),
+        Matchers.stringContainsInOrder(
+            "my message" + System.lineSeparator() + "java.lang.RuntimeException"));
+  }
 }
