@@ -36,10 +36,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 /**
  * MerkleTreeNodeCache is used to create and merge merkle trees for action inputs. The nodes are
@@ -50,9 +49,6 @@ import java.util.function.Consumer;
  */
 public class MerkleTreeNodeCache {
   private final Interner<MerkleTreeNode> nodeInterner = Interners.newStrongInterner();
-
-  private final ConcurrentHashMap<Reference<MerkleTreeNode>, NodeData> directoryCache =
-      new ConcurrentHashMap<>();
 
   private final Protocol protocol;
 
@@ -115,27 +111,13 @@ public class MerkleTreeNodeCache {
 
   /** Gets the {@link Protocol} encoded data for the provided tree. */
   public NodeData getData(MerkleTreeNode node) {
-    Reference<MerkleTreeNode> nodeRef = new Reference<>(node);
-    NodeData nodeData = directoryCache.get(nodeRef);
-    if (nodeData != null) {
-      return nodeData;
-    }
-
-    Map<String, NodeData> childrenData = new TreeMap<>();
-    node.children.forEach((k, v) -> childrenData.put(k, getData(v)));
-    return directoryCache.computeIfAbsent(
-        nodeRef,
-        ignored -> {
-          List<DirectoryNode> childNodes = new ArrayList<>();
-          childrenData.forEach((k, v) -> childNodes.add(protocol.newDirectoryNode(k, v.digest)));
-          Directory directory =
-              protocol.newDirectory(childNodes, node.files.values(), node.symlinks.values());
-          return new NodeData(directory, protocol.computeDigest(directory));
-        });
+    return node.getData(protocol);
   }
 
   /** Represents a node in the merkle tree of files and symlinks. */
   public static class MerkleTreeNode {
+    @Nullable private volatile NodeData data;
+
     private final int hashCode;
 
     private final ImmutableSortedMap<String, MerkleTreeNode> children;
@@ -194,6 +176,25 @@ public class MerkleTreeNodeCache {
       return Objects.equals(children, other.children)
           && Objects.equals(files, other.files)
           && Objects.equals(symlinks, other.symlinks);
+    }
+
+    private NodeData getData(Protocol protocol) {
+      if (data != null) {
+        return data;
+      }
+
+      // It's unlikely, but possible that multiple threads get here... that's okay they'll all
+      // compute the same thing.
+      List<DirectoryNode> childNodes = new ArrayList<>();
+      for (Entry<String, MerkleTreeNode> entry : children.entrySet()) {
+        MerkleTreeNode child = entry.getValue();
+        NodeData childData = child.getData(protocol);
+        childNodes.add(protocol.newDirectoryNode(entry.getKey(), childData.digest));
+      }
+      Directory directory = protocol.newDirectory(childNodes, files.values(), symlinks.values());
+      NodeData nodeData = new NodeData(directory, protocol.computeDigest(directory));
+      this.data = nodeData;
+      return nodeData;
     }
   }
 
@@ -330,28 +331,6 @@ public class MerkleTreeNodeCache {
 
     public Directory getDirectory() {
       return directory;
-    }
-  }
-
-  /** Used to get reference equality for interned objects. */
-  private static class Reference<T> {
-    private final T object;
-
-    Reference(T object) {
-      this.object = object;
-    }
-
-    @Override
-    public int hashCode() {
-      return object.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (!(obj instanceof Reference)) {
-        return false;
-      }
-      return this.object == ((Reference<?>) obj).object;
     }
   }
 }
