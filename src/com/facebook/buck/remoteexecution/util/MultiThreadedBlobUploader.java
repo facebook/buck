@@ -19,22 +19,20 @@ package com.facebook.buck.remoteexecution.util;
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
 import com.facebook.buck.remoteexecution.CasBlobUploader;
-import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.util.concurrent.MoreFutures;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -42,6 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A simple multi-threaded blob uploader for uploading inputs/outputs to the CAS.
@@ -69,16 +68,16 @@ public class MultiThreadedBlobUploader {
   private final CasBlobUploader asyncBlobUploader;
 
   private static class PendingUpload {
-    private final UploadData uploadData;
+    private final UploadDataSupplier uploadData;
     private final SettableFuture<Void> future;
 
-    PendingUpload(UploadData uploadData, SettableFuture<Void> future) {
+    PendingUpload(UploadDataSupplier uploadData, SettableFuture<Void> future) {
       this.uploadData = uploadData;
       this.future = future;
     }
 
     String getHash() {
-      return uploadData.getHash();
+      return uploadData.getDigest().getHash();
     }
   }
 
@@ -93,34 +92,48 @@ public class MultiThreadedBlobUploader {
     this.asyncBlobUploader = delegate;
   }
 
+  private boolean containsDigest(Digest digest) {
+    return containedHashes.contains(digest.getHash());
+  }
+
+  private void addContainedHash(Digest digest) {
+    containedHashes.add(digest.getHash());
+  }
+
   /** Uploads missing items to the CAS. */
-  public ListenableFuture<Void> addMissing(ImmutableMap<Digest, UploadDataSupplier> data) {
-    data = ImmutableMap.copyOf(Maps.filterKeys(data, k -> !containedHashes.contains(k.getHash())));
+  public ListenableFuture<Void> addMissing(Stream<UploadDataSupplier> dataSupplier)
+      throws IOException {
+    ImmutableList<UploadDataSupplier> data =
+        dataSupplier
+            // We don't trust the caller to have applied filtering. This means that
+            // each thing we upload we check this twice, but it is much, much more important to
+            // optimize the already contained case.
+            .filter(k -> !containsDigest(k.getDigest()))
+            .collect(ImmutableList.toImmutableList());
     if (data.isEmpty()) {
       return Futures.immediateFuture(null);
     }
     return enqueue(data);
   }
 
-  private ListenableFuture<Void> enqueue(ImmutableMap<Digest, UploadDataSupplier> data) {
-    ImmutableList.Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
-    for (Entry<Digest, UploadDataSupplier> entry : data.entrySet()) {
-      Digest digest = entry.getKey();
+  private ListenableFuture<Void> enqueue(ImmutableList<UploadDataSupplier> dataSupplier) {
+    Builder<ListenableFuture<Void>> futures = ImmutableList.builder();
+    for (UploadDataSupplier data : dataSupplier) {
+      Digest digest = data.getDigest();
       ListenableFuture<Void> resultFuture =
           pendingUploads.computeIfAbsent(
               digest.getHash(),
-              hash -> {
-                if (containedHashes.contains(hash)) {
+              ignored -> {
+                if (containsDigest(digest)) {
                   return Futures.immediateFuture(null);
                 }
                 SettableFuture<Void> future = SettableFuture.create();
-                waitingMissingCheck.add(
-                    new PendingUpload(new UploadData(digest, entry.getValue()), future));
+                waitingMissingCheck.add(new PendingUpload(data, future));
                 return Futures.transform(
                     future,
                     ignore -> {
                       // If the upload was successful short circuit for future requests.
-                      containedHashes.add(digest.getHash());
+                      addContainedHash(digest);
                       return null;
                     },
                     directExecutor());
@@ -158,7 +171,7 @@ public class MultiThreadedBlobUploader {
 
     try {
       List<Digest> requiredDigests =
-          data.stream().map(entry -> entry.uploadData.digest).collect(Collectors.toList());
+          data.stream().map(entry -> entry.uploadData.getDigest()).collect(Collectors.toList());
 
       Set<String> missing = asyncBlobUploader.getMissingHashes(requiredDigests);
 
@@ -184,18 +197,18 @@ public class MultiThreadedBlobUploader {
         break;
       }
       dataBuilder.put(data.getHash(), data);
-      size += data.uploadData.digest.getSize();
+      size += data.uploadData.getDigest().getSize();
     }
     ImmutableMap<String, PendingUpload> data = dataBuilder.build();
 
     if (!data.isEmpty()) {
       try {
-        ImmutableList.Builder<UploadData> blobsBuilder = ImmutableList.builder();
+        ImmutableList.Builder<UploadDataSupplier> blobsBuilder = ImmutableList.builder();
         for (PendingUpload entry : data.values()) {
           blobsBuilder.add(entry.uploadData);
         }
 
-        ImmutableList<UploadData> blobs =
+        ImmutableList<UploadDataSupplier> blobs =
             data.values().stream().map(e -> e.uploadData).collect(ImmutableList.toImmutableList());
 
         ImmutableList<UploadResult> results = asyncBlobUploader.batchUpdateBlobs(blobs);
@@ -211,7 +224,7 @@ public class MultiThreadedBlobUploader {
                     new IOException(
                         String.format(
                             "Failed uploading with message: %s. When uploading blob: %s.",
-                            result.message, pendingUpload.uploadData.data.describe())));
+                            result.message, pendingUpload.uploadData.describe())));
               }
             });
         data.forEach((k, pending) -> pending.future.setException(new RuntimeException("idk")));

@@ -16,20 +16,17 @@
 
 package com.facebook.buck.remoteexecution;
 
-import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 /** This is a simple ContentAddressedStorageClient interface used for remote execution. */
 public interface ContentAddressedStorageClient {
-
-  ListenableFuture<Void> addMissing(ImmutableMap<Digest, UploadDataSupplier> data)
-      throws IOException;
+  ListenableFuture<Void> addMissing(Collection<UploadDataSupplier> data) throws IOException;
 
   /** Materializes the outputFiles and outputDirectories into root. */
   ListenableFuture<Void> materializeOutputs(

@@ -20,7 +20,6 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
-import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
@@ -37,7 +36,6 @@ import com.facebook.buck.util.exceptions.BuckUncheckedExecutionException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.MoreFiles;
@@ -57,6 +55,7 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -88,7 +87,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
             new CasBlobUploader() {
               @Override
               public ImmutableList<UploadResult> batchUpdateBlobs(
-                  ImmutableList<UploadData> blobData) {
+                  ImmutableList<UploadDataSupplier> blobData) {
                 return LocalContentAddressedStorage.this.batchUpdateBlobs(blobData);
               }
 
@@ -162,10 +161,10 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
   }
 
   /** Upload blobs. */
-  public ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> blobData) {
+  public ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadDataSupplier> blobData) {
     ImmutableList.Builder<UploadResult> responseBuilder = ImmutableList.builder();
-    for (UploadData data : blobData) {
-      String hash = data.digest.getHash();
+    for (UploadDataSupplier data : blobData) {
+      String hash = data.getDigest().getHash();
       try {
         Path path = ensureParent(getPath(hash));
         try (AutoUnlocker ignored = fileLock.writeLock(hash)) {
@@ -175,23 +174,22 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
           Path tempPath = path.getParent().resolve(path.getFileName() + ".tmp");
           try (OutputStream outputStream =
                   new BufferedOutputStream(new FileOutputStream(tempPath.toFile()));
-              InputStream dataStream = data.data.get()) {
+              InputStream dataStream = data.get()) {
             ByteStreams.copy(dataStream, outputStream);
           }
           Files.move(tempPath, path);
         }
-        responseBuilder.add(new UploadResult(data.digest, 0, null));
+        responseBuilder.add(new UploadResult(data.getDigest(), 0, null));
       } catch (IOException e) {
-        responseBuilder.add(new UploadResult(data.digest, 1, e.getMessage()));
+        responseBuilder.add(new UploadResult(data.getDigest(), 1, e.getMessage()));
       }
     }
     return responseBuilder.build();
   }
 
   @Override
-  public ListenableFuture<Void> addMissing(ImmutableMap<Digest, UploadDataSupplier> data)
-      throws IOException {
-    return uploader.addMissing(data);
+  public ListenableFuture<Void> addMissing(Collection<UploadDataSupplier> data) throws IOException {
+    return uploader.addMissing(data.stream());
   }
 
   /**

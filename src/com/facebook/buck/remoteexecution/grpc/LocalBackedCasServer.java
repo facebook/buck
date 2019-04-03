@@ -24,8 +24,8 @@ import build.bazel.remote.execution.v2.FindMissingBlobsRequest;
 import build.bazel.remote.execution.v2.FindMissingBlobsResponse;
 import build.bazel.remote.execution.v2.GetTreeRequest;
 import build.bazel.remote.execution.v2.GetTreeResponse;
-import com.facebook.buck.remoteexecution.CasBlobUploader.UploadData;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
@@ -81,7 +81,7 @@ class LocalBackedCasServer extends ContentAddressableStorageImplBase {
                   .stream()
                   .map(
                       blobRequest ->
-                          new UploadData(
+                          UploadDataSupplier.of(
                               new GrpcDigest(blobRequest.getDigest()),
                               () -> new ByteArrayInputStream(blobRequest.getData().toByteArray())))
                   .collect(ImmutableList.toImmutableList()));

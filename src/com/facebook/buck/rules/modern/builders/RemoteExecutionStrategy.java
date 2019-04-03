@@ -33,7 +33,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
 import com.facebook.buck.remoteexecution.RemoteExecutionServiceClient.ExecutionResult;
-import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
@@ -50,7 +49,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import com.google.common.util.concurrent.Futures;
@@ -256,13 +255,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               + " bytes, max allowed: "
               + maxInputSizeBytes.getAsInt());
     }
-    ImmutableMap<Digest, UploadDataSupplier> requiredData = actionInfo.getRequiredData();
     Digest actionDigest = actionInfo.getActionDigest();
     Scope uploadingInputsScope =
         RemoteExecutionActionEvent.sendEvent(
             eventBus, State.UPLOADING_INPUTS, buildTarget, Optional.of(actionDigest));
     ListenableFuture<Void> inputsUploadedFuture =
-        executionClients.getContentAddressedStorage().addMissing(requiredData);
+        executionClients.getContentAddressedStorage().addMissing(actionInfo.getRequiredData());
     return Futures.transform(
         inputsUploadedFuture,
         ignored -> {
@@ -270,7 +268,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           // The actionInfo may be very large, so explicitly clear out the unneeded parts.
           // actionInfo.getRequiredData() in particular may be very, very large and is unneeded once
           // uploading has completed.
-          return actionInfo.withRequiredData(ImmutableMap.of());
+          return actionInfo.withRequiredData(ImmutableList.of());
         },
         MoreExecutors.directExecutor());
   }
@@ -288,13 +286,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     // very, very large.
     Digest actionDigest = actionInfo.getActionDigest();
     Iterable<? extends Path> actionOutputs = actionInfo.getOutputs();
-    ImmutableMap<Digest, UploadDataSupplier> requiredData = actionInfo.getRequiredData();
     Scope uploadingInputsScope =
         RemoteExecutionActionEvent.sendEvent(
             eventBus, State.UPLOADING_INPUTS, buildTarget, Optional.of(actionDigest));
 
     ListenableFuture<Void> inputsUploadedFuture =
-        executionClients.getContentAddressedStorage().addMissing(requiredData);
+        executionClients.getContentAddressedStorage().addMissing(actionInfo.getRequiredData());
 
     return Futures.transformAsync(
         inputsUploadedFuture,

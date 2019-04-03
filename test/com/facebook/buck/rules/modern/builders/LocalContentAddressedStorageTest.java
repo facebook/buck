@@ -28,6 +28,7 @@ import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.google.common.util.concurrent.Futures;
@@ -61,7 +62,8 @@ public class LocalContentAddressedStorageTest {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
     Digest digest = protocol.newDigest("myhashcode", data.length);
     Futures.getUnchecked(
-        storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data))));
+        storage.addMissing(
+            ImmutableList.of(UploadDataSupplier.of(digest, () -> new ByteArrayInputStream(data)))));
     assertDataEquals(data, getBytes(digest));
   }
 
@@ -82,14 +84,16 @@ public class LocalContentAddressedStorageTest {
     byte[] data = "hello world!".getBytes(Charsets.UTF_8);
     Digest digest = protocol.newDigest("myhashcode", data.length);
     Futures.getUnchecked(
-        storage.addMissing(ImmutableMap.of(digest, () -> new ByteArrayInputStream(data))));
+        storage.addMissing(
+            ImmutableList.of(UploadDataSupplier.of(digest, () -> new ByteArrayInputStream(data)))));
     Futures.getUnchecked(
         storage.addMissing(
-            ImmutableMap.of(
-                digest,
-                () -> {
-                  throw new RuntimeException();
-                })));
+            ImmutableList.of(
+                UploadDataSupplier.of(
+                    digest,
+                    () -> {
+                      throw new RuntimeException();
+                    }))));
   }
 
   @Test
@@ -106,16 +110,21 @@ public class LocalContentAddressedStorageTest {
     MerkleTreeNode node = nodeCache.createNode(files, ImmutableMap.of());
     Digest rootDigest = nodeCache.getData(node).getDigest();
 
-    ImmutableMap.Builder<Digest, UploadDataSupplier> requiredData = ImmutableMap.builder();
+    ImmutableList.Builder<UploadDataSupplier> requiredData = ImmutableList.builder();
 
-    requiredData.put(protocol.computeDigest(someData), () -> new ByteArrayInputStream(someData));
-    requiredData.put(protocol.computeDigest(otherData), () -> new ByteArrayInputStream(otherData));
+    requiredData.add(
+        UploadDataSupplier.of(
+            protocol.computeDigest(someData), () -> new ByteArrayInputStream(someData)));
+    requiredData.add(
+        UploadDataSupplier.of(
+            protocol.computeDigest(otherData), () -> new ByteArrayInputStream(otherData)));
     nodeCache.forAllData(
         node,
         data ->
-            requiredData.put(
-                data.getDigest(),
-                () -> new ByteArrayInputStream(protocol.toByteArray(data.getDirectory()))));
+            requiredData.add(
+                UploadDataSupplier.of(
+                    data.getDigest(),
+                    () -> new ByteArrayInputStream(protocol.toByteArray(data.getDirectory())))));
 
     Futures.getUnchecked(storage.addMissing(requiredData.build()));
 

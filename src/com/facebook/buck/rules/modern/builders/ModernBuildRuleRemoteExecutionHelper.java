@@ -77,6 +77,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 /**
@@ -225,30 +226,34 @@ public class ModernBuildRuleRemoteExecutionHelper {
     this.bootstrapClassPath = prepareClassPath(BuckClasspath::getBootstrapClasspath);
     this.trampoline =
         MoreSuppliers.memoize(
-            () ->
-                new RequiredFile(
-                    TRAMPOLINE_PATH,
-                    protocol.newFileNode(
-                        protocol.computeDigest(Files.readAllBytes(TRAMPOLINE)),
-                        TRAMPOLINE_PATH.getFileName().toString(),
-                        true),
-                    new UploadDataSupplier() {
-                      @Override
-                      public InputStream get() throws IOException {
-                        return new FileInputStream(TRAMPOLINE.toFile());
-                      }
+            () -> {
+              Digest digest = protocol.computeDigest(Files.readAllBytes(TRAMPOLINE));
+              return new RequiredFile(
+                  TRAMPOLINE_PATH,
+                  protocol.newFileNode(digest, TRAMPOLINE_PATH.getFileName().toString(), true),
+                  new UploadDataSupplier() {
+                    @Override
+                    public Digest getDigest() {
+                      return digest;
+                    }
 
-                      @Override
-                      public String describe() {
-                        try {
-                          return String.format(
-                              "MBR trampoline (path: %s size:%s).",
-                              TRAMPOLINE, Files.size(TRAMPOLINE));
-                        } catch (IOException e) {
-                          return String.format("failed to describe (%s)", e.getMessage());
-                        }
+                    @Override
+                    public InputStream get() throws IOException {
+                      return new FileInputStream(TRAMPOLINE.toFile());
+                    }
+
+                    @Override
+                    public String describe() {
+                      try {
+                        return String.format(
+                            "MBR trampoline (path: %s size:%s).",
+                            TRAMPOLINE, Files.size(TRAMPOLINE));
+                      } catch (IOException e) {
+                        return String.format("failed to describe (%s)", e.getMessage());
                       }
-                    }),
+                    }
+                  });
+            },
             IOException.class);
     if (pluginResources == null || pluginRoot == null) {
       pluginFiles = () -> new ClassPath(ImmutableList.of(), ImmutableList.of());
@@ -270,14 +275,17 @@ public class ModernBuildRuleRemoteExecutionHelper {
                             .getCellProvider()
                             .getCellByPath(cellResolver.getCellPath(cellName).get())
                             .getBuckConfig());
+                Digest digest = protocol.computeDigest(bytes);
                 filesBuilder.add(
                     new RequiredFile(
                         configPath,
-                        protocol.newFileNode(
-                            protocol.computeDigest(bytes),
-                            configPath.getFileName().toString(),
-                            false),
+                        protocol.newFileNode(digest, configPath.getFileName().toString(), false),
                         new UploadDataSupplier() {
+                          @Override
+                          public Digest getDigest() {
+                            return digest;
+                          }
+
                           @Override
                           public InputStream get() {
                             return new ByteArrayInputStream(bytes);
@@ -364,17 +372,17 @@ public class ModernBuildRuleRemoteExecutionHelper {
     List<MerkleTreeNode> allNodes = new ArrayList<>();
     allNodes.add(sharedFilesNode.get());
 
-    Map<Digest, UploadDataSupplier> requiredDataBuilder = new HashMap<>();
+    ImmutableList.Builder<UploadDataSupplier> requiredDataBuilder = ImmutableList.builder();
 
     try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
-      addSharedFilesData(requiredDataBuilder);
+      addSharedFilesData(requiredDataBuilder::add);
 
-      allNodes.add(getSerializationTreeAndInputs(hash, requiredDataBuilder));
+      allNodes.add(getSerializationTreeAndInputs(hash, requiredDataBuilder::add));
 
       MerkleTreeNode inputsMerkleTree = resolveInputs(inputsMapBuilder.getInputs(rule));
 
       allNodes.add(inputsMerkleTree);
-      addFileInputs(inputsMerkleTree, requiredDataBuilder);
+      addFileInputs(inputsMerkleTree, requiredDataBuilder::add);
 
       outputs = new HashSet<>();
       rule.recordOutputs(
@@ -396,34 +404,43 @@ public class ModernBuildRuleRemoteExecutionHelper {
       nodeCache.forAllData(
           mergedMerkleTree,
           childData ->
-              requiredDataBuilder.put(
-                  childData.getDigest(),
-                  () -> new ByteArrayInputStream(protocol.toByteArray(childData.getDirectory()))));
+              requiredDataBuilder.add(
+                  UploadDataSupplier.of(
+                      childData.getDigest(),
+                      () ->
+                          new ByteArrayInputStream(
+                              protocol.toByteArray(childData.getDirectory())))));
 
       NodeData data = nodeCache.getData(mergedMerkleTree);
       Digest inputsRootDigest = data.getDigest();
 
       byte[] commandData = protocol.toByteArray(actionCommand);
       Digest commandDigest = protocol.computeDigest(commandData);
-      requiredDataBuilder.put(commandDigest, () -> new ByteArrayInputStream(commandData));
+      requiredDataBuilder.add(
+          UploadDataSupplier.of(commandDigest, () -> new ByteArrayInputStream(commandData)));
 
       Protocol.Action action = protocol.newAction(commandDigest, inputsRootDigest);
       byte[] actionData = protocol.toByteArray(action);
       Digest actionDigest = protocol.computeDigest(actionData);
-      requiredDataBuilder.put(actionDigest, () -> new ByteArrayInputStream(actionData));
+      requiredDataBuilder.add(
+          UploadDataSupplier.of(actionDigest, () -> new ByteArrayInputStream(actionData)));
 
       return RemoteExecutionActionInfo.of(
-          actionDigest, ImmutableMap.copyOf(requiredDataBuilder), data.getTotalSize(), outputs);
+          actionDigest, requiredDataBuilder.build(), data.getTotalSize(), outputs);
     }
   }
 
   private void addFileInputs(
-      MerkleTreeNode inputsMerkleTree, Map<Digest, UploadDataSupplier> requiredDataBuilder) {
+      MerkleTreeNode inputsMerkleTree, Consumer<UploadDataSupplier> requiredDataBuilder) {
     inputsMerkleTree.forAllFiles(
         (path, fileNode) ->
-            requiredDataBuilder.put(
-                fileNode.getDigest(),
+            requiredDataBuilder.accept(
                 new UploadDataSupplier() {
+                  @Override
+                  public Digest getDigest() {
+                    return fileNode.getDigest();
+                  }
+
                   @Override
                   public InputStream get() throws IOException {
                     return new FileInputStream(cellPathPrefix.resolve(path).toFile());
@@ -440,21 +457,21 @@ public class ModernBuildRuleRemoteExecutionHelper {
                 }));
   }
 
-  private void addSharedFilesData(Map<Digest, UploadDataSupplier> requiredDataBuilder)
+  private void addSharedFilesData(Consumer<UploadDataSupplier> requiredDataBuilder)
       throws IOException {
     for (RequiredFile requiredFile : classPath.get().requiredFiles) {
-      requiredDataBuilder.put(requiredFile.fileNode.getDigest(), requiredFile.dataSupplier);
+      requiredDataBuilder.accept(requiredFile.dataSupplier);
     }
     for (RequiredFile requiredFile : bootstrapClassPath.get().requiredFiles) {
-      requiredDataBuilder.put(requiredFile.fileNode.getDigest(), requiredFile.dataSupplier);
+      requiredDataBuilder.accept(requiredFile.dataSupplier);
     }
     for (RequiredFile requiredFile : pluginFiles.get().requiredFiles) {
-      requiredDataBuilder.put(requiredFile.fileNode.getDigest(), requiredFile.dataSupplier);
+      requiredDataBuilder.accept(requiredFile.dataSupplier);
     }
     for (RequiredFile f : configFiles.get()) {
-      requiredDataBuilder.put(f.fileNode.getDigest(), f.dataSupplier);
+      requiredDataBuilder.accept(f.dataSupplier);
     }
-    requiredDataBuilder.put(trampoline.get().fileNode.getDigest(), trampoline.get().dataSupplier);
+    requiredDataBuilder.accept(trampoline.get().dataSupplier);
   }
 
   private ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache = new ConcurrentHashMap<>();
@@ -587,7 +604,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   private MerkleTreeNode getSerializationTreeAndInputs(
-      HashCode hash, Map<Digest, UploadDataSupplier> requiredDataBuilder) {
+      HashCode hash, Consumer<UploadDataSupplier> requiredDataBuilder) {
     Map<Path, FileNode> fileNodes = new HashMap<>();
     class DataAdder {
       void addData(Path root, String hash, Node node) {
@@ -595,9 +612,13 @@ public class ModernBuildRuleRemoteExecutionHelper {
         Path valuePath = root.resolve(hash).resolve(fileName);
         Digest digest = protocol.newDigest(hash, node.data.length);
         fileNodes.put(valuePath, protocol.newFileNode(digest, fileName, false));
-        requiredDataBuilder.put(
-            digest,
+        requiredDataBuilder.accept(
             new UploadDataSupplier() {
+              @Override
+              public Digest getDigest() {
+                return digest;
+              }
+
               @Override
               public InputStream get() {
                 return new ByteArrayInputStream(node.data);
@@ -631,12 +652,12 @@ public class ModernBuildRuleRemoteExecutionHelper {
               Path relative = cellPathPrefix.relativize(path);
               pathsBuilder.add(relative);
               byte[] data = Files.readAllBytes(path);
+              Digest digest = protocol.computeDigest(data);
               filesBuilder.add(
                   new RequiredFile(
                       relative,
-                      protocol.newFileNode(
-                          protocol.computeDigest(data), path.getFileName().toString(), false),
-                      () -> new FileInputStream(path.toFile())));
+                      protocol.newFileNode(digest, path.getFileName().toString(), false),
+                      UploadDataSupplier.of(digest, () -> new FileInputStream(path.toFile()))));
             } else {
               pathsBuilder.add(path);
             }

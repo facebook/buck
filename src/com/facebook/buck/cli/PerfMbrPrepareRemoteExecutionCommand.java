@@ -182,7 +182,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
           infoToFinish
               .getFirst()
               .getRequiredData()
-              .forEach((digest, data) -> containedHashes.add(digest));
+              .forEach(data -> containedHashes.add(data.getDigest()));
         }
         infoToFinish.getSecond().set(null);
       }

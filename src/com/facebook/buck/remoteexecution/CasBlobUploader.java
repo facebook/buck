@@ -27,7 +27,8 @@ import javax.annotation.Nullable;
 public interface CasBlobUploader {
   ImmutableSet<String> getMissingHashes(List<Digest> requiredDigests) throws IOException;
 
-  ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> build) throws IOException;
+  ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadDataSupplier> build)
+      throws IOException;
 
   /** Result (status/error message) of an upload. */
   class UploadResult {
@@ -39,24 +40,6 @@ public interface CasBlobUploader {
       this.digest = digest;
       this.status = status;
       this.message = message;
-    }
-  }
-
-  /**
-   * Data required to upload a file. The underlying data will only be read if the CAS is missing
-   * this digest.
-   */
-  class UploadData {
-    public final Digest digest;
-    public final UploadDataSupplier data;
-
-    public UploadData(Digest digest, UploadDataSupplier data) {
-      this.digest = digest;
-      this.data = data;
-    }
-
-    public String getHash() {
-      return digest.getHash();
     }
   }
 }

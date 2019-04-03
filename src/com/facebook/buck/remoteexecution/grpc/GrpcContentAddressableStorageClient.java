@@ -21,7 +21,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
-import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -29,10 +28,10 @@ import com.facebook.buck.remoteexecution.util.MultiThreadedBlobUploader;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 /** Implementation of a CAS client using GRPC. */
@@ -61,8 +60,8 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
   }
 
   @Override
-  public ListenableFuture<Void> addMissing(ImmutableMap<Digest, UploadDataSupplier> data) {
-    return uploader.addMissing(data);
+  public ListenableFuture<Void> addMissing(Collection<UploadDataSupplier> data) throws IOException {
+    return uploader.addMissing(data.stream());
   }
 
   @Override

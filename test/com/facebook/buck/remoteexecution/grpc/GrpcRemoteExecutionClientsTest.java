@@ -54,9 +54,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -165,17 +163,21 @@ public class GrpcRemoteExecutionClientsTest {
 
     setupServer();
 
-    Map<Digest, UploadDataSupplier> requiredData = new HashMap<>();
+    List<UploadDataSupplier> requiredData = new ArrayList<>();
 
     String data1 = "data1";
     Digest digest1 = protocol.computeDigest(data1.getBytes(Charsets.UTF_8));
-    requiredData.put(digest1, () -> new ByteArrayInputStream(data1.getBytes(Charsets.UTF_8)));
+    requiredData.add(
+        UploadDataSupplier.of(
+            digest1, () -> new ByteArrayInputStream(data1.getBytes(Charsets.UTF_8))));
 
     String data2 = "data2";
     Digest digest2 = protocol.computeDigest(data2.getBytes(Charsets.UTF_8));
-    requiredData.put(digest2, () -> new ByteArrayInputStream(data2.getBytes(Charsets.UTF_8)));
+    requiredData.add(
+        UploadDataSupplier.of(
+            digest2, () -> new ByteArrayInputStream(data2.getBytes(Charsets.UTF_8))));
 
-    clients.getContentAddressedStorage().addMissing(ImmutableMap.copyOf(requiredData)).get();
+    clients.getContentAddressedStorage().addMissing(requiredData).get();
 
     clients
         .getContentAddressedStorage()

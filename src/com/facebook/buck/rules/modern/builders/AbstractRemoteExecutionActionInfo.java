@@ -19,7 +19,7 @@ package com.facebook.buck.rules.modern.builders;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -29,7 +29,7 @@ import org.immutables.value.Value;
 interface AbstractRemoteExecutionActionInfo {
   Digest getActionDigest();
 
-  ImmutableMap<Digest, UploadDataSupplier> getRequiredData();
+  ImmutableList<UploadDataSupplier> getRequiredData();
 
   long getTotalInputSize();
 

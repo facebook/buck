@@ -71,7 +71,7 @@ public class ActionRunner {
   public static class ActionResult {
     public final ImmutableList<OutputFile> outputFiles;
     public final ImmutableList<OutputDirectory> outputDirectories;
-    public final ImmutableMap<Protocol.Digest, UploadDataSupplier> requiredData;
+    public final ImmutableList<UploadDataSupplier> requiredData;
     public final int exitCode;
     public final String stderr;
     public final String stdout;
@@ -79,7 +79,7 @@ public class ActionRunner {
     ActionResult(
         ImmutableList<OutputFile> outputFiles,
         ImmutableList<OutputDirectory> outputDirectories,
-        ImmutableMap<Digest, UploadDataSupplier> requiredData,
+        ImmutableList<UploadDataSupplier> requiredData,
         int exitCode,
         String stderr,
         String stdout) {
@@ -116,12 +116,10 @@ public class ActionRunner {
       result = new DefaultProcessExecutor(console).launchAndExecute(paramsBuilder.build());
     }
 
-    ImmutableList.Builder<OutputFile> outputFiles;
-    ImmutableList.Builder<OutputDirectory> outputDirectories;
-    Map<Digest, UploadDataSupplier> requiredData = new HashMap<>();
+    ImmutableList.Builder<OutputFile> outputFiles = ImmutableList.builder();
+    ImmutableList.Builder<OutputDirectory> outputDirectories = ImmutableList.builder();
+    ImmutableList.Builder<UploadDataSupplier> requiredData = ImmutableList.builder();
     try (Scope ignored = LeafEvents.scope(eventBus, "collecting_outputs")) {
-      outputFiles = ImmutableList.builder();
-      outputDirectories = ImmutableList.builder();
       if (result.getExitCode() == 0) {
         // TODO(cjhopman): Should outputs be returned on failure?
         collectOutputs(outputs, buildDir, outputFiles, outputDirectories, requiredData);
@@ -131,7 +129,7 @@ public class ActionRunner {
     return new ActionResult(
         outputFiles.build(),
         outputDirectories.build(),
-        ImmutableMap.copyOf(requiredData),
+        requiredData.build(),
         result.getExitCode(),
         result.getStderr().get(),
         result.getStdout().get());
@@ -142,7 +140,7 @@ public class ActionRunner {
       Path buildDir,
       ImmutableList.Builder<OutputFile> outputFilesBuilder,
       ImmutableList.Builder<OutputDirectory> outputDirectoriesBuilder,
-      Map<Digest, UploadDataSupplier> requiredDataBuilder)
+      ImmutableList.Builder<UploadDataSupplier> requiredDataBuilder)
       throws IOException {
     for (Path output : outputs) {
       Path path = buildDir.resolve(output);
@@ -172,8 +170,10 @@ public class ActionRunner {
 
         node.forAllFiles(
             (file, fileNode) ->
-                requiredDataBuilder.put(
-                    fileNode.getDigest(), () -> new FileInputStream(path.resolve(file).toFile())));
+                requiredDataBuilder.add(
+                    UploadDataSupplier.of(
+                        fileNode.getDigest(),
+                        () -> new FileInputStream(path.resolve(file).toFile()))));
 
         List<Directory> directories = new ArrayList<>();
         merkleTreeCache.forAllData(node, data -> directories.add(data.getDirectory()));
@@ -184,15 +184,17 @@ public class ActionRunner {
         Digest treeDigest = protocol.computeDigest(treeData);
 
         outputDirectoriesBuilder.add(protocol.newOutputDirectory(output, treeDigest));
-        requiredDataBuilder.put(treeDigest, () -> new ByteArrayInputStream(treeData));
+        requiredDataBuilder.add(
+            UploadDataSupplier.of(treeDigest, () -> new ByteArrayInputStream(treeData)));
       } else {
         long size = Files.size(path);
         boolean isExecutable = Files.isExecutable(path);
         Digest digest = protocol.newDigest(hashFile(path).toString(), (int) size);
 
-        UploadDataSupplier dataSupplier = () -> new FileInputStream(path.toFile());
+        UploadDataSupplier dataSupplier =
+            UploadDataSupplier.of(digest, () -> new FileInputStream(path.toFile()));
         outputFilesBuilder.add(protocol.newOutputFile(output, digest, isExecutable));
-        requiredDataBuilder.put(digest, dataSupplier);
+        requiredDataBuilder.add(dataSupplier);
       }
     }
   }

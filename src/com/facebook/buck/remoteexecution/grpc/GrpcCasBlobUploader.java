@@ -23,6 +23,7 @@ import build.bazel.remote.execution.v2.ContentAddressableStorageGrpc.ContentAddr
 import build.bazel.remote.execution.v2.FindMissingBlobsRequest;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.event.CasBlobUploadEvent;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol.GrpcDigest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -75,17 +76,17 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
   }
 
   @Override
-  public ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadData> blobs)
+  public ImmutableList<UploadResult> batchUpdateBlobs(ImmutableList<UploadDataSupplier> blobs)
       throws IOException {
-    long totalBlobSizeBytes = blobs.stream().mapToLong(blob -> blob.digest.getSize()).sum();
+    long totalBlobSizeBytes = blobs.stream().mapToLong(blob -> blob.getDigest().getSize()).sum();
     try (Scope unused =
         CasBlobUploadEvent.sendEvent(buckEventBus, blobs.size(), totalBlobSizeBytes)) {
       BatchUpdateBlobsRequest.Builder requestBuilder = BatchUpdateBlobsRequest.newBuilder();
-      for (UploadData blob : blobs) {
-        try (InputStream dataStream = blob.data.get()) {
+      for (UploadDataSupplier blob : blobs) {
+        try (InputStream dataStream = blob.get()) {
           requestBuilder.addRequests(
               BatchUpdateBlobsRequest.Request.newBuilder()
-                  .setDigest(GrpcProtocol.get(blob.digest))
+                  .setDigest(GrpcProtocol.get(blob.getDigest()))
                   .setData(ByteString.readFrom(dataStream)));
         }
       }
@@ -105,8 +106,8 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
       throw new BuckUncheckedExecutionException(
           e,
           "When uploading a batch of blobs: <%s>. Digests: %s.",
-          blobs.stream().map(b -> b.data.describe()).collect(Collectors.joining(">, <")),
-          blobs.stream().map(b -> b.digest.toString()).collect(Collectors.joining(" ")));
+          blobs.stream().map(b -> b.describe()).collect(Collectors.joining(">, <")),
+          blobs.stream().map(b -> b.getDigest().toString()).collect(Collectors.joining(" ")));
     }
   }
 }

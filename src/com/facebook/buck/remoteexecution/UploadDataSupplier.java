@@ -15,13 +15,13 @@
  */
 package com.facebook.buck.remoteexecution;
 
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.util.function.ThrowingSupplier;
 import java.io.IOException;
 import java.io.InputStream;
 
 /** Used for wrapping access to data for uploads. */
 public interface UploadDataSupplier {
-  InputStream get() throws IOException;
-
   /**
    * Describe what data is being uploaded. It may be helpful to include the size/hash/contents of
    * the data. If doing so, those values should be recomputed (one major use of including that data
@@ -29,5 +29,24 @@ public interface UploadDataSupplier {
    */
   default String describe() {
     return "???";
+  }
+
+  InputStream get() throws IOException;
+
+  Digest getDigest();
+
+  /** Create a simple UploadDataSupplier. */
+  static UploadDataSupplier of(Digest digest, ThrowingSupplier<InputStream, IOException> stream) {
+    return new UploadDataSupplier() {
+      @Override
+      public InputStream get() throws IOException {
+        return stream.get();
+      }
+
+      @Override
+      public Digest getDigest() {
+        return digest;
+      }
+    };
   }
 }
