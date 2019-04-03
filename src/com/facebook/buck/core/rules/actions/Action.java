@@ -36,6 +36,11 @@ public interface Action {
   ImmutableSet<BuildArtifact> getOutputs();
 
   /**
+   * @return a name for this action to be printed to console when executing and for logging purposes
+   */
+  String getShortName();
+
+  /**
    * Executes this action as part of the build
    *
    * @param executionContext a set of information the action can use for execution

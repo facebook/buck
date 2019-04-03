@@ -44,6 +44,11 @@ public class FakeAction extends AbstractAction {
   }
 
   @Override
+  public String getShortName() {
+    return "fake-action";
+  }
+
+  @Override
   public ActionExecutionResult execute(ActionExecutionContext executionContext) {
     return executeFunction.apply(inputs, outputs, executionContext);
   }
