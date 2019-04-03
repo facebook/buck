@@ -52,6 +52,7 @@ public class BuckGlobalStateLifecycleManager {
     REUSED,
     NEW,
     INVALIDATED_NO_WATCHMAN,
+    INVALIDATED_WATCHMAN_RESTARTED,
     INVALIDATED_FILESYSTEM_CHANGED,
     INVALIDATED_BUCK_CONFIG_CHANGED,
     INVALIDATED_TOOLCHAINS_INCOMPATIBLE;
@@ -64,6 +65,8 @@ public class BuckGlobalStateLifecycleManager {
           return "Initializing daemon state for the first time";
         case INVALIDATED_NO_WATCHMAN:
           return "Watchman failed to start";
+        case INVALIDATED_WATCHMAN_RESTARTED:
+          return "Watchman restarted";
         case INVALIDATED_FILESYSTEM_CHANGED:
           return "The project directory changed between invocations";
         case INVALIDATED_BUCK_CONFIG_CHANGED:
@@ -99,6 +102,8 @@ public class BuckGlobalStateLifecycleManager {
           return Optional.of("DaemonInitialized");
         case INVALIDATED_NO_WATCHMAN:
           return Optional.of("DaemonWatchmanInvalidated");
+        case INVALIDATED_WATCHMAN_RESTARTED:
+          return Optional.of("DaemonWatchmanRestarted");
         case INVALIDATED_FILESYSTEM_CHANGED:
           return Optional.of("DaemonFilesystemInvalidated");
         case INVALIDATED_BUCK_CONFIG_CHANGED:
@@ -142,6 +147,16 @@ public class BuckGlobalStateLifecycleManager {
       // TODO(buck_team): make Watchman a requirement
       LOG.info("Restarting daemon state because watchman failed to start");
       lifecycleStatus = LifecycleStatus.INVALIDATED_NO_WATCHMAN;
+      buckGlobalState = null;
+    }
+
+    // If the state was previously created without Watchman, but now Watchman becomes available,
+    // drop all caches. Ideally, Watchman should be a requirement.
+    if (buckGlobalState != null
+        && watchman != WatchmanFactory.NULL_WATCHMAN
+        && !buckGlobalState.getUsesWatchman()) {
+      LOG.info("Restarting daemon state because watchman was restarted");
+      lifecycleStatus = LifecycleStatus.INVALIDATED_WATCHMAN_RESTARTED;
       buckGlobalState = null;
     }
 

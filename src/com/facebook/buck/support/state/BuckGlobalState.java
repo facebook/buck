@@ -82,6 +82,7 @@ public final class BuckGlobalState implements Closeable {
   private final Clock clock;
   private final long startTime;
   private final Optional<DevspeedBuildListenerFactory> devspeedBuildListenerFactory;
+  private final boolean usesWatchman;
 
   private final BackgroundTaskManager bgTaskManager;
 
@@ -102,7 +103,8 @@ public final class BuckGlobalState implements Closeable {
       KnownRuleTypesProvider knownRuleTypesProvider,
       Clock clock,
       Optional<DevspeedBuildListenerFactory> devspeedBuildListenerFactory,
-      BackgroundTaskManager bgTaskManager) {
+      BackgroundTaskManager bgTaskManager,
+      boolean usesWatchman) {
     this.rootCell = rootCell;
     this.typeCoercerFactory = typeCoercerFactory;
     this.daemonicParserState = daemonicParserState;
@@ -120,6 +122,7 @@ public final class BuckGlobalState implements Closeable {
     this.clock = clock;
     this.devspeedBuildListenerFactory = devspeedBuildListenerFactory;
     this.bgTaskManager = bgTaskManager;
+    this.usesWatchman = usesWatchman;
 
     this.startTime = clock.currentTimeMillis();
   }
@@ -235,6 +238,11 @@ public final class BuckGlobalState implements Closeable {
 
   public ImmutableMap<Path, WatchmanCursor> getWatchmanCursor() {
     return cursor;
+  }
+
+  /** @return true if state was created with Watchman service initialized */
+  public boolean getUsesWatchman() {
+    return usesWatchman;
   }
 
   @Override

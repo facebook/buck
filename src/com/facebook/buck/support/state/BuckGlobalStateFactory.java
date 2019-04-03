@@ -34,6 +34,7 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanCursor;
+import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.DaemonicParserState;
 import com.facebook.buck.parser.ParserConfig;
@@ -180,7 +181,8 @@ public class BuckGlobalStateFactory {
         knownRuleTypesProvider,
         clock,
         devspeedBuildListenerFactory,
-        bgTaskManager);
+        bgTaskManager,
+        watchman != WatchmanFactory.NULL_WATCHMAN);
   }
 
   /** Create a number of instances of {@link DirectoryListCache}, one per each cell */
