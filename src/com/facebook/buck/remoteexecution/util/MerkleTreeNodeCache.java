@@ -48,7 +48,7 @@ import javax.annotation.Nullable;
  * (these values are cached once computed for a node).
  */
 public class MerkleTreeNodeCache {
-  private final Interner<MerkleTreeNode> nodeInterner = Interners.newStrongInterner();
+  private final Interner<MerkleTreeNode> nodeInterner = Interners.newWeakInterner();
 
   private final Protocol protocol;
 
