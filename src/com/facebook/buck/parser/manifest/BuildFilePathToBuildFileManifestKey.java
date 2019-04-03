@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.manifest;
 
-import com.facebook.buck.core.graph.transformation.ComputeKey;
+import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import java.nio.file.Path;
 import org.immutables.value.Value;

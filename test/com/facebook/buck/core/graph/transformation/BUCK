@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "standard_java_test")
 
 java_immutables_library(
     name = "testutil",

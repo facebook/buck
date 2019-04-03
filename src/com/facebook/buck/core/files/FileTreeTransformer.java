@@ -16,10 +16,10 @@
 
 package com.facebook.buck.core.files;
 
-import com.facebook.buck.core.graph.transformation.ComputeKey;
-import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.GraphTransformer;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

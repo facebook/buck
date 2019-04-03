@@ -21,7 +21,7 @@ import static org.junit.Assert.assertSame;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.graph.transformation.ComputeResult;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.BuildTarget;

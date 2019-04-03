@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.graph.transformation.ComputeResult;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.collect.ImmutableMap;

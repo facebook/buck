@@ -16,13 +16,13 @@
 
 package com.facebook.buck.versions;
 
-import com.facebook.buck.core.graph.transformation.ComputeKey;
-import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphTransformationStage;
 import com.facebook.buck.core.graph.transformation.GraphTransformer;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.BuildTarget;

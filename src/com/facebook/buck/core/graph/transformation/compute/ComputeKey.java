@@ -13,13 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.graph.transformation;
+package com.facebook.buck.core.graph.transformation.compute;
 
 /**
- * This is an interface for all keys to be used in {@link GraphTransformer}.
+ * This is an interface for all keys to be used in {@link
+ * com.facebook.buck.core.graph.transformation.GraphTransformer}.
  *
  * @param <ResultType> should be the corresponding result type of performing the transformation in
- *     the {@link GraphTransformer}
+ *     the {@link com.facebook.buck.core.graph.transformation.GraphTransformer}
  */
 public interface ComputeKey<ResultType extends ComputeResult> {
 

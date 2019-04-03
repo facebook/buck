@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.files;
 
-import com.facebook.buck.core.graph.transformation.ComputeResult;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import org.immutables.value.Value;

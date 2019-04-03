@@ -21,6 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.graph.transformation.ChildrenAdder.LongNode;
+import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;

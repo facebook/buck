@@ -18,6 +18,8 @@ package com.facebook.buck.core.graph.transformation;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
+import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.util.log.Logger;
@@ -45,9 +47,9 @@ import java.util.concurrent.Future;
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * GraphTransformer#discoverPreliminaryDeps(com.facebook.buck.core.graph.transformation.ComputeKey)}
- * and {@link GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}. The engine
- * guarantees that all dependencies are completed before performing the transformation.
+ * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} and {@link
+ * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}. The engine guarantees that
+ * all dependencies are completed before performing the transformation.
  *
  * <p>This engine allows for multiple stages of transformations via different {@link
  * GraphTransformer}s. These are specified during construction of the engine by supplying multiple

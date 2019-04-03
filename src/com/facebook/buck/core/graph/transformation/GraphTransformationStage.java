@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.graph.transformation;
 
+import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 

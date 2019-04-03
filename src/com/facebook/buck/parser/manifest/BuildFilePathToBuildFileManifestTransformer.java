@@ -16,10 +16,10 @@
 
 package com.facebook.buck.parser.manifest;
 
-import com.facebook.buck.core.graph.transformation.ComputeKey;
-import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.GraphTransformer;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.google.common.collect.ImmutableSet;

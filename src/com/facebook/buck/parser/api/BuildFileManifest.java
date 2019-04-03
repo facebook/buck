@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
-import com.facebook.buck.core.graph.transformation.ComputeResult;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

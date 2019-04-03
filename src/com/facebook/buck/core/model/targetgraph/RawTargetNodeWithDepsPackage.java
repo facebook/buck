@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.graph.transformation.ComputeResult;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 

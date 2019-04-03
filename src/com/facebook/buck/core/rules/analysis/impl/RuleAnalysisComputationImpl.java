@@ -15,11 +15,11 @@
  */
 package com.facebook.buck.core.rules.analysis.impl;
 
-import com.facebook.buck.core.graph.transformation.ComputeResult;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.GraphTransformationStage;
+import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
