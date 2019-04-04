@@ -21,6 +21,7 @@ import com.facebook.buck.log.TraceInfoProvider;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.proto.BuckInfo;
 import com.facebook.buck.remoteexecution.proto.CasClientInfo;
+import com.facebook.buck.remoteexecution.proto.ClientActionInfo;
 import com.facebook.buck.remoteexecution.proto.CreatorInfo;
 import com.facebook.buck.remoteexecution.proto.RESessionID;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -58,7 +59,12 @@ public class MetadataProviderFactory {
    * @return Metadata provider that provides minimal amount information that should be passed along
    *     remote execution requests.
    */
-  public static MetadataProvider minimalMetadataProviderForBuild(BuildId buildId, String username) {
+  public static MetadataProvider minimalMetadataProviderForBuild(
+      BuildId buildId,
+      String username,
+      String repository,
+      String scheduleType,
+      String reSessionLabel) {
     return new MetadataProvider() {
       final RemoteExecutionMetadata metadata;
       RemoteExecutionMetadata.Builder builder;
@@ -75,12 +81,19 @@ public class MetadataProviderFactory {
                 .setUsername(username)
                 .build();
         CasClientInfo casClientInfo = CasClientInfo.newBuilder().setName("buck").build();
+        ClientActionInfo clientActionInfo =
+            ClientActionInfo.newBuilder()
+                .setRepository(repository)
+                .setScheduleType(scheduleType)
+                .setReSessionLabel(reSessionLabel)
+                .build();
         builder =
             RemoteExecutionMetadata.newBuilder()
                 .setReSessionId(reSessionID)
                 .setBuckInfo(buckInfo)
                 .setCreatorInfo(creatorInfo)
-                .setCasClientInfo(casClientInfo);
+                .setCasClientInfo(casClientInfo)
+                .setClientActionInfo(clientActionInfo);
         metadata = builder.build();
       }
 

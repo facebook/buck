@@ -6,8 +6,8 @@ package com.facebook.buck.remoteexecution.proto;
 
 /**
  * <pre>
- * Data about the client that wants to start the session - will be ignored if
- * the RESessionID is already known.
+ * Data about the client that wants to start the session - may be ignored if
+ * the RESessionID (and associated CreatorInfo) is already known.
  * </pre>
  *
  * Protobuf type {@code facebook.remote_execution.CreatorInfo}
@@ -338,8 +338,8 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
-   * Data about the client that wants to start the session - will be ignored if
-   * the RESessionID is already known.
+   * Data about the client that wants to start the session - may be ignored if
+   * the RESessionID (and associated CreatorInfo) is already known.
    * </pre>
    *
    * Protobuf type {@code facebook.remote_execution.CreatorInfo}

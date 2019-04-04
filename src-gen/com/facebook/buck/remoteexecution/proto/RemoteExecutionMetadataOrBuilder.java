@@ -112,4 +112,29 @@ public interface RemoteExecutionMetadataOrBuilder extends
    * <code>.facebook.remote_execution.WorkerRequirements worker_requirements = 8;</code>
    */
   com.facebook.buck.remoteexecution.proto.WorkerRequirementsOrBuilder getWorkerRequirementsOrBuilder();
+
+  /**
+   * <pre>
+   * Do not use index 9 - reserved for server side.
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
+   */
+  boolean hasClientActionInfo();
+  /**
+   * <pre>
+   * Do not use index 9 - reserved for server side.
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ClientActionInfo getClientActionInfo();
+  /**
+   * <pre>
+   * Do not use index 9 - reserved for server side.
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ClientActionInfoOrBuilder getClientActionInfoOrBuilder();
 }

@@ -923,7 +923,11 @@ public final class MainRunner {
               : Optional.empty();
       MetadataProvider metadataProvider =
           MetadataProviderFactory.minimalMetadataProviderForBuild(
-              buildId, executionEnvironment.getUsername());
+              buildId,
+              executionEnvironment.getUsername(),
+              cacheBuckConfig.getRepository(),
+              cacheBuckConfig.getScheduleType(),
+              remoteExecutionConfig.getReSessionLabel());
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 

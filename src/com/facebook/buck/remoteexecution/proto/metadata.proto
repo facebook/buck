@@ -45,8 +45,8 @@ message BuckInfo {
   string rule_name = 2;
 }
 
-// Data about the client that wants to start the session - will be ignored if
-// the RESessionID is already known.
+// Data about the client that wants to start the session - may be ignored if
+// the RESessionID (and associated CreatorInfo) is already known.
 message CreatorInfo {
   string username = 1;
   // Freeform string that a client (e.g. an IDE, CI) may set to identify itself.
@@ -88,6 +88,17 @@ message WorkerRequirements {
   WorkerPlatformType platform_type = 2;
 }
 
+// Optional context for an Action. May change between Actions from same RE Session if multiple jobs
+// are associated with same Session.
+message ClientActionInfo {
+  // Name of repository.
+  string repository = 1;
+  // High-level schedule type (continuous, user etc.) of job that triggered sending the action.
+  string schedule_type = 2;
+  // Freeform label identifying groups of jobs triggering actions.
+  string re_session_label = 3;
+}
+
 // This is propagated in GRPC header "re-metadata-bin".
 message RemoteExecutionMetadata {
   RESessionID re_session_id = 1;
@@ -98,4 +109,6 @@ message RemoteExecutionMetadata {
   WorkerInfo worker_info = 6;
   CasClientInfo cas_client_info = 7;
   WorkerRequirements worker_requirements = 8;
+  // Do not use index 9 - reserved for server side.
+  ClientActionInfo client_action_info = 10;
 }
