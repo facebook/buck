@@ -117,10 +117,6 @@ public abstract class ActionGraphEvent extends AbstractBuckEvent
       return new MissWithEmptyCache();
     }
 
-    public static MissWithTargetGraphHashMatch missWithTargetGraphHashMatch() {
-      return new MissWithTargetGraphHashMatch();
-    }
-
     public static MissWithTargetGraphDifference missWithTargetGraphDifference() {
       return new MissWithTargetGraphDifference();
     }
