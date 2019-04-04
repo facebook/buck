@@ -24,9 +24,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.FileHashCacheEvent;
-import com.facebook.buck.event.listener.devspeed.DevspeedBuildListenerFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanCursor;
@@ -81,7 +79,6 @@ public final class BuckGlobalState implements Closeable {
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final Clock clock;
   private final long startTime;
-  private final Optional<DevspeedBuildListenerFactory> devspeedBuildListenerFactory;
   private final boolean usesWatchman;
 
   private final BackgroundTaskManager bgTaskManager;
@@ -102,7 +99,6 @@ public final class BuckGlobalState implements Closeable {
       ImmutableMap<Path, WatchmanCursor> cursor,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Clock clock,
-      Optional<DevspeedBuildListenerFactory> devspeedBuildListenerFactory,
       BackgroundTaskManager bgTaskManager,
       boolean usesWatchman) {
     this.rootCell = rootCell;
@@ -120,7 +116,6 @@ public final class BuckGlobalState implements Closeable {
     this.cursor = cursor;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.clock = clock;
-    this.devspeedBuildListenerFactory = devspeedBuildListenerFactory;
     this.bgTaskManager = bgTaskManager;
     this.usesWatchman = usesWatchman;
 
@@ -129,10 +124,6 @@ public final class BuckGlobalState implements Closeable {
 
   Cell getRootCell() {
     return rootCell;
-  }
-
-  public Optional<BuckEventListener> getDevspeedDaemonListener() {
-    return devspeedBuildListenerFactory.map(DevspeedBuildListenerFactory::newBuildListener);
   }
 
   public BackgroundTaskManager getBgTaskManager() {
@@ -250,7 +241,6 @@ public final class BuckGlobalState implements Closeable {
     bgTaskManager.shutdownNow();
     shutdownPersistentWorkerPools();
     shutdownWebServer();
-    devspeedBuildListenerFactory.ifPresent(DevspeedBuildListenerFactory::close);
   }
 
   private void shutdownPersistentWorkerPools() {

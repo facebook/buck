@@ -122,7 +122,6 @@ public class BuckGlobalStateLifecycleManagerTest {
             clock,
             unconfiguredBuildTargetFactory,
             targetConfigurationSerializer,
-            Optional::empty,
             Optional.empty());
 
     Pair<BuckGlobalState, LifecycleStatus> buckStateResult2 =
@@ -142,7 +141,6 @@ public class BuckGlobalStateLifecycleManagerTest {
             clock,
             unconfiguredBuildTargetFactory,
             targetConfigurationSerializer,
-            Optional::empty,
             Optional.empty());
 
     Pair<BuckGlobalState, LifecycleStatus> buckStateResult3 =
@@ -162,7 +160,6 @@ public class BuckGlobalStateLifecycleManagerTest {
             clock,
             unconfiguredBuildTargetFactory,
             targetConfigurationSerializer,
-            Optional::empty,
             Optional.empty());
 
     assertEquals(
@@ -202,7 +199,6 @@ public class BuckGlobalStateLifecycleManagerTest {
             clock,
             unconfiguredBuildTargetFactory,
             targetConfigurationSerializer,
-            Optional::empty,
             Optional.empty());
 
     assertNotEquals(
@@ -216,7 +212,6 @@ public class BuckGlobalStateLifecycleManagerTest {
             clock,
             unconfiguredBuildTargetFactory,
             targetConfigurationSerializer,
-            Optional::empty,
             Optional.empty()));
   }
 
@@ -237,7 +232,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -251,7 +245,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
     assertEquals("Apple SDK should still be not found", buckGlobalState1, buckGlobalState2);
@@ -277,7 +270,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
     assertNotEquals("Apple SDK should be found", buckGlobalState2, buckGlobalState3);
@@ -295,7 +287,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
     assertEquals("Apple SDK should still be found", buckGlobalState3, buckGlobalState4);
@@ -339,7 +330,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
     Object buckGlobalState2 =
@@ -352,7 +342,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
     assertEquals(
@@ -372,7 +361,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -387,7 +375,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -433,7 +420,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
     Object buckGlobalState2 =
@@ -446,7 +432,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
     assertEquals(
@@ -467,7 +452,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -482,7 +466,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -519,7 +502,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -536,7 +518,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -563,7 +544,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -580,7 +560,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -607,7 +586,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -624,7 +602,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -652,7 +629,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -667,7 +643,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 
@@ -693,7 +668,6 @@ public class BuckGlobalStateLifecycleManagerTest {
             clock,
             unconfiguredBuildTargetFactory,
             targetConfigurationSerializer,
-            Optional::empty,
             Optional.empty());
 
     cell = createCellWithAndroidSdk(androidSdkPath.resolve("some-other-dir"));
@@ -706,7 +680,6 @@ public class BuckGlobalStateLifecycleManagerTest {
             clock,
             unconfiguredBuildTargetFactory,
             targetConfigurationSerializer,
-            Optional::empty,
             Optional.empty());
 
     assertNotEquals(buckGlobalStateWithBrokenAndroidSdk1, buckGlobalStateWithBrokenAndroidSdk2);
@@ -726,7 +699,6 @@ public class BuckGlobalStateLifecycleManagerTest {
                 clock,
                 unconfiguredBuildTargetFactory,
                 targetConfigurationSerializer,
-                Optional::empty,
                 Optional.empty())
             .getFirst();
 

@@ -96,7 +96,6 @@ import com.facebook.buck.event.listener.SilentConsoleEventBusListener;
 import com.facebook.buck.event.listener.SimpleConsoleEventBusListener;
 import com.facebook.buck.event.listener.SuperConsoleConfig;
 import com.facebook.buck.event.listener.SuperConsoleEventBusListener;
-import com.facebook.buck.event.listener.devspeed.DevspeedTelemetryPlugin;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
 import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.httpserver.WebServer;
@@ -828,13 +827,6 @@ public final class MainRunner {
           new JsonTargetConfigurationSerializer(
               targetName -> buildTargetFactory.create(rootCell.getCellPathResolver(), targetName));
 
-      List<DevspeedTelemetryPlugin> telemetryPlugins;
-      if (context.isPresent() && (watchman != WatchmanFactory.NULL_WATCHMAN)) {
-        telemetryPlugins = pluginManager.getExtensions(DevspeedTelemetryPlugin.class);
-      } else {
-        telemetryPlugins = Lists.newArrayList();
-      }
-
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
               rootCell,
@@ -844,13 +836,6 @@ public final class MainRunner {
               clock,
               buildTargetFactory,
               targetConfigurationSerializer,
-              telemetryPlugins.isEmpty()
-                  ? Optional::empty
-                  : () ->
-                      telemetryPlugins
-                          .get(0)
-                          .newBuildListenerFactoryForDaemon(
-                              rootCell.getFilesystem(), System.getProperties()),
               context);
 
       BuckGlobalState buckGlobalState = buckGlobalStateRequest.getFirst();
@@ -1169,7 +1154,6 @@ public final class MainRunner {
 
           eventListeners =
               addEventListeners(
-                  buckGlobalState.getDevspeedDaemonListener(),
                   buildEventBus,
                   buckGlobalState.getFileEventBus(),
                   rootCell.getFilesystem(),
@@ -1889,7 +1873,6 @@ public final class MainRunner {
 
   @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
-      Optional<BuckEventListener> devspeedDaemonEventListener,
       BuckEventBus buckEventBus,
       EventBus fileEventBus,
       ProjectFilesystem projectFilesystem,
@@ -1925,8 +1908,6 @@ public final class MainRunner {
     webServer.map(WebServer::createListener).ifPresent(eventListenersBuilder::add);
 
     ArtifactCacheBuckConfig artifactCacheConfig = new ArtifactCacheBuckConfig(buckConfig);
-
-    devspeedDaemonEventListener.ifPresent(eventListenersBuilder::add);
 
 
     CommonThreadFactoryState commonThreadFactoryState =

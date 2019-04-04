@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.listener.devspeed.DevspeedBuildListenerFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
@@ -33,7 +32,6 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.nailgun.NGContext;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -135,7 +133,6 @@ public class BuckGlobalStateLifecycleManager {
       Clock clock,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
-      Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
       Optional<NGContext> context) {
 
     BuckGlobalState currentState = buckGlobalState;
@@ -216,7 +213,6 @@ public class BuckGlobalStateLifecycleManager {
               unconfiguredBuildTargetFactory,
               targetConfigurationSerializer,
               clock,
-              devspeedBuildListenerFactorySupplier,
               context);
     }
 

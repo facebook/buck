@@ -29,7 +29,6 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFa
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.event.listener.devspeed.DevspeedBuildListenerFactory;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.Watchman;
@@ -64,7 +63,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
 
 /** Factory for {@link BuckGlobalState}. */
 public class BuckGlobalStateFactory {
@@ -80,7 +78,6 @@ public class BuckGlobalStateFactory {
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       Clock clock,
-      Supplier<Optional<DevspeedBuildListenerFactory>> devspeedBuildListenerFactorySupplier,
       Optional<NGContext> context) { // TODO(bobyf): remove nailgun dependency
     EventBus fileEventBus = new EventBus("file-change-events");
 
@@ -160,10 +157,6 @@ public class BuckGlobalStateFactory {
             !context.isPresent()
                 || rootCell.getBuckConfig().getView(CliConfig.class).getFlushEventsBeforeExit());
 
-    // Create this last so that it won't leak if something else throws in the constructor
-    Optional<DevspeedBuildListenerFactory> devspeedBuildListenerFactory =
-        devspeedBuildListenerFactorySupplier.get();
-
     return new BuckGlobalState(
         rootCell,
         typeCoercerFactory,
@@ -180,7 +173,6 @@ public class BuckGlobalStateFactory {
         cursor,
         knownRuleTypesProvider,
         clock,
-        devspeedBuildListenerFactory,
         bgTaskManager,
         watchman != WatchmanFactory.NULL_WATCHMAN);
   }
