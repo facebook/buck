@@ -446,12 +446,6 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           result.getStderr().orElse("<empty>"),
           metadataProvider.toString(),
           actionDigest);
-      RemoteExecutionActionEvent.sendTerminalEvent(
-          eventBus,
-          State.ACTION_FAILED,
-          buildTarget,
-          Optional.of(actionDigest),
-          Optional.of(result.getActionMetadata()));
       throw StepFailedException.createForFailingStepWithExitCode(
           new AbstractExecutionStep("remote_execution") {
             @Override
