@@ -2102,7 +2102,7 @@ public class CachingBuildEngineTest {
               builder.get().build(strategyContext.getExecutorService(), rule, strategyContext);
           return new StrategyBuildResult() {
             @Override
-            public boolean cancelIfNotStarted(Throwable reason) {
+            public boolean cancelIfNotComplete(Throwable reason) {
               return false;
             }
 

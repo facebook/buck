@@ -126,9 +126,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     }
 
     @Override
-    public boolean cancelIfNotStarted(Throwable reason) {
+    public boolean cancelIfNotComplete(Throwable reason) {
       synchronized (lock) {
-        if (!isLocalBuildAlreadyRunning() && remoteStrategyBuildResult.cancelIfNotStarted(reason)) {
+        if (!isLocalBuildAlreadyRunning()
+            && remoteStrategyBuildResult.cancelIfNotComplete(reason)) {
           hasCancellationBeenRequested = true;
           return true;
         }

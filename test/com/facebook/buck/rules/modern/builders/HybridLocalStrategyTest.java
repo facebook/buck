@@ -170,7 +170,7 @@ public class HybridLocalStrategyTest {
                 public void cancel(Throwable cause) {}
 
                 @Override
-                public boolean cancelIfNotStarted(Throwable reason) {
+                public boolean cancelIfNotComplete(Throwable reason) {
                   System.err.println("Cancelling test strategy.");
                   cancelled.release();
                   future.set(Optional.of(strategyContext.createCancelledResult(reason)));
@@ -242,7 +242,7 @@ public class HybridLocalStrategyTest {
                 public void cancel(Throwable cause) {}
 
                 @Override
-                public boolean cancelIfNotStarted(Throwable reason) {
+                public boolean cancelIfNotComplete(Throwable reason) {
                   cancelled.release();
                   future.set(
                       Optional.of(

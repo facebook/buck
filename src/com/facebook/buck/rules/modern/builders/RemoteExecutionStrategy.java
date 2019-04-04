@@ -49,6 +49,7 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -61,7 +62,6 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -190,39 +190,24 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         pendingUploadsLimiter.schedule(
             service, () -> computeActionAndUpload(rule, strategyContext));
 
-    // guard should only be set once. The left value indicates that it has been cancelled and holds
-    // the reason, a right value indicates that it has passed the point of no return and can no
-    // longer be cancelled.
-    AtomicReference<Either<Throwable, Object>> guard = new AtomicReference<>();
-
+    GuardContext guardContext = new GuardContext();
     ListenableFuture<Optional<BuildResult>> buildResult =
         Futures.transformAsync(
             actionInfoFuture,
             actionInfo ->
-                handleActionInfo(
-                    rule,
-                    strategyContext,
-                    buildTarget,
-                    actionInfo,
-                    () -> {
-                      if (guard.compareAndSet(null, Either.ofRight(new Object()))) {
-                        return null;
-                      }
-                      return Objects.requireNonNull(guard.get()).getLeft();
-                    }),
+                handleActionInfo(rule, strategyContext, buildTarget, actionInfo, guardContext),
             service);
 
     return new StrategyBuildResult() {
       @Override
       public void cancel(Throwable cause) {
-        guard.compareAndSet(null, Either.ofLeft(cause));
+        guardContext.cancel(cause);
       }
 
       @Override
-      public boolean cancelIfNotStarted(Throwable reason) {
+      public boolean cancelIfNotComplete(Throwable reason) {
         cancel(reason);
-        // cancel() will have set the guard value if it weren't already set.
-        return Objects.requireNonNull(guard.get()).isLeft();
+        return guardContext.isCancelled();
       }
 
       @Override
@@ -278,7 +263,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       BuildStrategyContext strategyContext,
       BuildTarget buildTarget,
       RemoteExecutionActionInfo actionInfo,
-      Callable<Throwable> tryStart)
+      GuardContext guardContext)
       throws IOException {
     Objects.requireNonNull(actionInfo);
     // The actionInfo may be very large, so explicitly capture just the parts that we need and clear
@@ -301,7 +286,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               rule.getProjectFilesystem(),
               strategyContext,
               rule,
-              tryStart,
+              guardContext,
               actionDigest,
               actionOutputs,
               rule.getFullyQualifiedName());
@@ -330,7 +315,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       ProjectFilesystem filesystem,
       BuildStrategyContext strategyContext,
       BuildRule buildRule,
-      Callable<Throwable> tryStart,
+      GuardContext guardContext,
       Digest actionDigest,
       Iterable<? extends Path> actionOutputs,
       String ruleName) {
@@ -343,9 +328,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         executionLimiter.schedule(
             service,
             () -> {
-              cancelled.set(tryStart.call());
-              boolean isCancelled = cancelled.get() != null;
-              if (isCancelled) {
+              if (guardContext.isCancelled()) {
+                cancelled.set(guardContext.getCancelReason());
                 RemoteExecutionActionEvent.sendTerminalEvent(
                     eventBus,
                     State.ACTION_CANCELLED,
@@ -366,6 +350,16 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                       .execute(actionDigest, ruleName, metadataProvider),
                   result -> {
                     executingScope.close();
+                    if (!guardContext.tryStart()) {
+                      cancelled.set(guardContext.getCancelReason());
+                      RemoteExecutionActionEvent.sendTerminalEvent(
+                          eventBus,
+                          State.ACTION_CANCELLED,
+                          buildRule.getBuildTarget(),
+                          Optional.of(actionDigest),
+                          Optional.empty());
+                      return null;
+                    }
                     return result;
                   },
                   MoreExecutors.directExecutor());
@@ -505,5 +499,29 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           return Optional.of(strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
         },
         MoreExecutors.directExecutor());
+  }
+
+  private static class GuardContext {
+    // guard should only be set once. The left value indicates that it has been cancelled and holds
+    // the reason, a right value indicates that it has passed the point of no return and can no
+    // longer be cancelled.
+    AtomicReference<Either<Throwable, Object>> guard = new AtomicReference<>();
+
+    public boolean isCancelled() {
+      return guard.get() != null && guard.get().isLeft();
+    }
+
+    public Throwable getCancelReason() {
+      Verify.verify(isCancelled());
+      return guard.get().getLeft();
+    }
+
+    public void cancel(Throwable reason) {
+      guard.compareAndSet(null, Either.ofLeft(reason));
+    }
+
+    public boolean tryStart() {
+      return guard.compareAndSet(null, Either.ofRight(new Object()));
+    }
   }
 }

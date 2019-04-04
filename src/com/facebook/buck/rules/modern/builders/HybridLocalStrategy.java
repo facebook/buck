@@ -203,13 +203,13 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
         }
         advanceStage(JobStage.REQUEST_DELEGATE_CANCELLED);
         StrategyBuildResult delegateBuildResult = Objects.requireNonNull(delegateResult);
-        if (delegateBuildResult.cancelIfNotStarted(reason)) {
+        if (delegateBuildResult.cancelIfNotComplete(reason)) {
           advanceStage(JobStage.DELEGATE_CANCELLED);
           return true;
         }
         // Set the stage back to DELEGATE_SCHEDULED so that we accept its result.
         stage = JobStage.DELEGATE_SCHEDULED;
-        // It's possible that cancelIfNotStarted() (oddly) triggered successful completion of the
+        // It's possible that cancelIfNotComplete() (oddly) triggered successful completion of the
         // rule. In that case, we would've ignored the result in handleDelegateResult() and need to
         // set it here. (this currently only happens in tests)
         if (delegateBuildResult.getBuildResult().isDone()) {
@@ -228,7 +228,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     delegateLimiter.schedule(strategyContext.getExecutorService(), this::scheduleDelegated);
     return new StrategyBuildResult() {
       @Override
-      public boolean cancelIfNotStarted(Throwable reason) {
+      public boolean cancelIfNotComplete(Throwable reason) {
         // TODO(cjhopman): Should we implement this?
         return false;
       }

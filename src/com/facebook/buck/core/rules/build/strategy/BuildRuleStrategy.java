@@ -44,13 +44,13 @@ public interface BuildRuleStrategy extends Closeable {
     void cancel(Throwable cause);
 
     /**
-     * Tries to cancel the execution if work has not yet begun.
+     * Tries to cancel the execution if work has not yet past the point of no return.
      *
      * @return Whether cancellation was successful. If successful, the strategy might continue doing
      *     more work, but it must not make changes to any rule outputs. If cancellation is
      *     unsuccessful, the strategy should continue execution of the rule.
      */
-    boolean cancelIfNotStarted(Throwable reason);
+    boolean cancelIfNotComplete(Throwable reason);
 
     /** A ListenableFuture for the build result. */
     ListenableFuture<Optional<BuildResult>> getBuildResult();
@@ -64,7 +64,7 @@ public interface BuildRuleStrategy extends Closeable {
         }
 
         @Override
-        public boolean cancelIfNotStarted(Throwable reason) {
+        public boolean cancelIfNotComplete(Throwable reason) {
           return false;
         }
 
