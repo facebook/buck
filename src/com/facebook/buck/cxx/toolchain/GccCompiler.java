@@ -30,7 +30,7 @@ public class GccCompiler extends DefaultCompiler {
   @AddToRuleKey private final boolean useDependencyTree;
 
   @AddToRuleKey private final DependencyTrackingMode dependencyTrackingMode;
-  private final ToolType toolType;
+  @AddToRuleKey private final ToolType toolType;
 
   public GccCompiler(Tool tool, ToolType toolType, boolean useDependencyTree) {
     this(tool, toolType, useDependencyTree, true);
