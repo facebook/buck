@@ -70,26 +70,26 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
               statsProvider.getCasDownloads(),
               prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
       lines.add(casLine);
-
-      LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
-      if (localFallbackStats.getLocallyExecutedRules() > 0) {
-        float percentageRetry =
-            (100f * localFallbackStats.getLocallyExecutedRules())
-                / localFallbackStats.getTotalExecutedRules();
-        lines.add(
-            String.format(
-                "[RE] LocalFallback: [fallback_rate=%.2f%% remote=%d local=%d]",
-                percentageRetry,
-                localFallbackStats.getTotalExecutedRules()
-                    - localFallbackStats.getLocallyExecutedRules(),
-                localFallbackStats.getLocallySuccessfulRules()));
-      }
     } else if (statsProvider.getRemoteCpuTime() > 0) {
       lines.add(
           String.format(
-              "Building with Remote Execution: %d:%02d minutes spent building remotely",
+              "Building with Remote Execution [RE]. Used %d:%02d minutes of distributed CPU time.",
               statsProvider.getRemoteCpuTime() / 60, statsProvider.getRemoteCpuTime() % 60));
     }
+    LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
+    if (localFallbackStats.getLocallyExecutedRules() > 0) {
+      float percentageRetry =
+          (100f * localFallbackStats.getLocallyExecutedRules())
+              / localFallbackStats.getTotalExecutedRules();
+      lines.add(
+          String.format(
+              "[RE] Some actions failed remotely, retrying locally. LocalFallback: [fallback_rate=%.2f%% remote=%d local=%d]",
+              percentageRetry,
+              localFallbackStats.getTotalExecutedRules()
+                  - localFallbackStats.getLocallyExecutedRules(),
+              localFallbackStats.getLocallySuccessfulRules()));
+    }
+
     return lines.build();
   }
 

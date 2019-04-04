@@ -54,7 +54,8 @@ public class RemoteExecutionConsoleLineProviderTest {
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
     Assert.assertEquals(
-        "[RE] LocalFallback: [fallback_rate=50.00% remote=42 local=21]", lines.get(3));
+        "[RE] Some actions failed remotely, retrying locally. LocalFallback: [fallback_rate=50.00% remote=42 local=21]",
+        lines.get(3));
   }
 
   @Test
@@ -91,10 +92,10 @@ public class RemoteExecutionConsoleLineProviderTest {
     List<String> lines = provider.createConsoleLinesAtTime(0);
     Assert.assertEquals(1, lines.size());
     Assert.assertEquals(
-        lines.get(0), "Building with Remote Execution: 1:05 minutes spent building remotely");
+        lines.get(0),
+        "Building with Remote Execution [RE]. Used 1:05 minutes of distributed CPU time.");
     for (String line : lines) {
       Assert.assertFalse(line.contains("LocalFallback"));
-      Assert.assertFalse(line.contains("[RE]"));
     }
   }
 
@@ -116,7 +117,8 @@ public class RemoteExecutionConsoleLineProviderTest {
     Assert.assertEquals(
         "[RE] CAS: Upl=[Count:0 Size=0.00 bytes] Dwl=[Count:21 Size=42.00 bytes]", lines.get(2));
     Assert.assertEquals(
-        "[RE] LocalFallback: [fallback_rate=50.00% remote=42 local=21]", lines.get(3));
+        "[RE] Some actions failed remotely, retrying locally. LocalFallback: [fallback_rate=50.00% remote=42 local=21]",
+        lines.get(3));
   }
 
   private static final class TestStatsProvider implements RemoteExecutionStatsProvider {
