@@ -7,6 +7,7 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/plugin/impl:impl",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",

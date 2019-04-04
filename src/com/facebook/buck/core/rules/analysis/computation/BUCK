@@ -3,6 +3,7 @@ java_library(
     srcs = glob(["*.java"]),
     exported_deps = [
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/rules/actions:actions",
         "//src/com/facebook/buck/core/rules/providers:providers",
     ],

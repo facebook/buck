@@ -20,8 +20,8 @@ import com.facebook.buck.core.model.FakeRuleTypeForTests
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests
-import com.facebook.buck.core.model.targetgraph.RawAttributes
-import com.facebook.buck.core.model.targetgraph.RawTargetNode
+import com.facebook.buck.core.model.targetgraph.raw.RawAttributes
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.rules.visibility.VisibilityPattern
 import com.google.common.collect.ImmutableMap
 import com.google.common.collect.ImmutableSet
@@ -39,22 +39,22 @@ internal val BUILD_TARGET_PARSER: ((shortOrFullyQualifiedName: String) -> Unconf
 }
 internal val FAKE_RULE_TYPE = FakeRuleTypeForTests.createFakeBuildRuleType("java_library")
 
-internal fun createBuildTarget(shortName: String) : UnconfiguredBuildTarget {
+internal fun createBuildTarget(shortName: String): UnconfiguredBuildTarget {
     return BUILD_TARGET_PARSER(shortName)
 }
 
-internal fun createRule(shortName: String, deps: BuildTargetSet) : InternalRawBuildRule {
+internal fun createRule(shortName: String, deps: BuildTargetSet): InternalRawBuildRule {
     val buildTarget = createBuildTarget(shortName)
     val node = FakeRawTargetNode(buildTarget,
             FAKE_RULE_TYPE, RawAttributes(ImmutableMap.of()))
     return InternalRawBuildRule(node, deps)
 }
 
-internal fun createRawRule(shortName: String, deps: Set<String>) : RawBuildRule {
+internal fun createRawRule(shortName: String, deps: Set<String>): RawBuildRule {
     val buildTarget = createBuildTarget(shortName)
     val node = FakeRawTargetNode(buildTarget,
             FAKE_RULE_TYPE, RawAttributes(ImmutableMap.of()))
-    return RawBuildRule(node, deps.map { createBuildTarget(it)}.toSet())
+    return RawBuildRule(node, deps.map { createBuildTarget(it) }.toSet())
 }
 
 internal data class FakeRawTargetNode(private val buildTarget: UnconfiguredBuildTarget, private val ruleType: RuleType, private val attributes: RawAttributes) : RawTargetNode {

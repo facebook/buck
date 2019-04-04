@@ -39,6 +39,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/macros:macros",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/core/rules/tool:tool",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",

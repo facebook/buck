@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.targetgraph;
+package com.facebook.buck.core.model.targetgraph.raw;
 
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.RuleType;
@@ -24,10 +24,10 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * A target node with attributes kept in a map as oppose to in a structured object like in {@link
- * TargetNode}.
+ * com.facebook.buck.core.model.targetgraph.TargetNode}.
  *
  * <p>The attributes are coerced from raw data produced by build file parser, but they are not
- * stored in a structured object as in {@link TargetNode}.
+ * stored in a structured object as in {@link com.facebook.buck.core.model.targetgraph.TargetNode}.
  *
  * <p>The main purpose of having such nodes is to perform additional processing before storing them
  * in a structured constructor arguments.

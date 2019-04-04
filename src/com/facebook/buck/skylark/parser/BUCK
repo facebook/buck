@@ -18,6 +18,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/exceptions/handler:handler",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
