@@ -34,7 +34,7 @@ import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.ParamInfoException;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
-import com.facebook.buck.rules.visibility.VisibilityPatterns;
+import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;

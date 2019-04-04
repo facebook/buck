@@ -1,17 +1,11 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
-
-java_immutables_library(
+java_library(
     name = "visibility",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/cell:cell",
-    ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
         "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//third-party/java/guava:guava",
     ],
 )

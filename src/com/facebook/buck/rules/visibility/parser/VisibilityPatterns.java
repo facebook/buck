@@ -14,11 +14,12 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.visibility;
+package com.facebook.buck.rules.visibility.parser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
 import javax.annotation.Nullable;

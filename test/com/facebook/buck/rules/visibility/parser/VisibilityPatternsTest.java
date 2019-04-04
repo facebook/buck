@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.rules.visibility;
+package com.facebook.buck.rules.visibility.parser;
 
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 

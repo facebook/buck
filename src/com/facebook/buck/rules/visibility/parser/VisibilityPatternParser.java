@@ -13,12 +13,14 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.rules.visibility;
+package com.facebook.buck.rules.visibility.parser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.rules.visibility.ObeysVisibility;
+import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.annotations.VisibleForTesting;
 import org.immutables.value.Value;
 
