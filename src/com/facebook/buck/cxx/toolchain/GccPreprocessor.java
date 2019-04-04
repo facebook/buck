@@ -57,13 +57,6 @@ public class GccPreprocessor extends DelegatingTool implements Preprocessor {
   }
 
   @Override
-  public final Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
-    return MoreIterables.zipAndConcat(
-        Iterables.cycle("-iquote"),
-        Iterables.transform(includeRoots, MorePaths::pathWithUnixSeparators));
-  }
-
-  @Override
   public final Iterable<String> prefixHeaderArgs(Path prefixHeader) {
     Preconditions.checkArgument(
         !prefixHeader.toString().endsWith(".gch"),

@@ -67,14 +67,6 @@ public class CxxPreprocessables {
       }
     },
 
-    /** Headers should be included with `-iquote`. */
-    IQUOTE {
-      @Override
-      public Iterable<String> includeArgs(Preprocessor pp, Iterable<String> includeRoots) {
-        return pp.quoteIncludeArgs(includeRoots);
-      }
-    },
-
     /** Headers are not added by buck */
     RAW {
       @Override

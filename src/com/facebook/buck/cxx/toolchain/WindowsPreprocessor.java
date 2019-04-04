@@ -55,11 +55,6 @@ public class WindowsPreprocessor extends DelegatingTool implements Preprocessor 
   }
 
   @Override
-  public Iterable<String> quoteIncludeArgs(Iterable<String> includeRoots) {
-    return Iterables.transform(includeRoots, WindowsPreprocessor::prependIncludeFlag);
-  }
-
-  @Override
   public Iterable<String> prefixHeaderArgs(Path prefixHeader) {
     throw new UnsupportedOperationException("prefix header not supported by " + getClass());
     // TODO(steveo) Should be easy to add support; will try @ later time,
