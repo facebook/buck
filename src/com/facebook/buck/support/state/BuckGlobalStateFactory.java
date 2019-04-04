@@ -41,9 +41,7 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
-import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -51,7 +49,6 @@ import com.facebook.buck.util.cache.impl.WatchedFileHashCache;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.facebook.nailgun.NGContext;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -63,6 +60,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.Supplier;
 
 /** Factory for {@link BuckGlobalState}. */
 public class BuckGlobalStateFactory {
@@ -78,7 +76,7 @@ public class BuckGlobalStateFactory {
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       Clock clock,
-      Optional<NGContext> context) { // TODO(bobyf): remove nailgun dependency
+      Supplier<BackgroundTaskManager> bgTaskManagerFactory) {
     EventBus fileEventBus = new EventBus("file-change-events");
 
     ImmutableList<Cell> allCells = rootCell.getAllCells();
@@ -149,14 +147,6 @@ public class BuckGlobalStateFactory {
     LOG.debug("Using Watchman Cursor: %s", cursor);
     ConcurrentMap<String, WorkerProcessPool> persistentWorkerPools = new ConcurrentHashMap<>();
 
-    // When Nailgun context is not present it means the process will be finished immediately after
-    // the command. So, override task manager to be blocking one, i.e. execute background
-    // clean up tasks synchronously
-    BackgroundTaskManager bgTaskManager =
-        new AsyncBackgroundTaskManager(
-            !context.isPresent()
-                || rootCell.getBuckConfig().getView(CliConfig.class).getFlushEventsBeforeExit());
-
     return new BuckGlobalState(
         rootCell,
         typeCoercerFactory,
@@ -173,7 +163,7 @@ public class BuckGlobalStateFactory {
         cursor,
         knownRuleTypesProvider,
         clock,
-        bgTaskManager,
+        bgTaskManagerFactory.get(),
         watchman != WatchmanFactory.NULL_WATCHMAN);
   }
 

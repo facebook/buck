@@ -143,6 +143,8 @@ import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleStrategyConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
+import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.config.CliConfig;
@@ -827,6 +829,18 @@ public final class MainRunner {
           new JsonTargetConfigurationSerializer(
               targetName -> buildTargetFactory.create(rootCell.getCellPathResolver(), targetName));
 
+      // When Nailgun context is not present it means the process will be finished immediately after
+      // the command. So, override task manager to be blocking one, i.e. execute background
+      // clean up tasks synchronously
+      Supplier<BackgroundTaskManager> bgTaskManagerFactory =
+          () ->
+              new AsyncBackgroundTaskManager(
+                  !context.isPresent()
+                      || rootCell
+                          .getBuckConfig()
+                          .getView(CliConfig.class)
+                          .getFlushEventsBeforeExit());
+
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
               rootCell,
@@ -836,7 +850,7 @@ public final class MainRunner {
               clock,
               buildTargetFactory,
               targetConfigurationSerializer,
-              context);
+              bgTaskManagerFactory);
 
       BuckGlobalState buckGlobalState = buckGlobalStateRequest.getFirst();
       LifecycleStatus stateLifecycleStatus = buckGlobalStateRequest.getSecond();

@@ -8,7 +8,6 @@ prebuilt_jar(
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/cli/exceptions/handlers:handlers",
-        "//src/com/facebook/buck/support/state:state",
         "//test/...",
     ],
     deps = [

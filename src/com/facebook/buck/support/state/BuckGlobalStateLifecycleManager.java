@@ -25,13 +25,14 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.state.BuckGlobalStateCompatibilityCellChecker.IsCompatibleForCaching;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
-import com.facebook.nailgun.NGContext;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -133,7 +134,7 @@ public class BuckGlobalStateLifecycleManager {
       Clock clock,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
-      Optional<NGContext> context) {
+      Supplier<BackgroundTaskManager> backgroundTaskManagerFactory) {
 
     BuckGlobalState currentState = buckGlobalState;
     LifecycleStatus lifecycleStatus =
@@ -213,7 +214,7 @@ public class BuckGlobalStateLifecycleManager {
               unconfiguredBuildTargetFactory,
               targetConfigurationSerializer,
               clock,
-              context);
+              backgroundTaskManagerFactory);
     }
 
     return new Pair<>(buckGlobalState, lifecycleStatus);
