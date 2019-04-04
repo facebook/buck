@@ -17,6 +17,7 @@
 package com.facebook.buck.apple;
 
 import com.dd.plist.NSDictionary;
+import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
@@ -39,6 +40,42 @@ public class AppleInfoPlistParsing {
   /** Extracts the bundle ID (CFBundleIdentifier) from an Info.plist, returning it if present. */
   public static Optional<String> getBundleIdFromPlistStream(Path plistPath, InputStream inputStream)
       throws IOException {
+    NSObject bundleID =
+        getPropertyValueFromPlistStream(plistPath, inputStream, "CFBundleIdentifier");
+    if (bundleID == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(bundleID.toString());
+    }
+  }
+
+  /** Extracts the bundle type (CFBundlePackageType) from an Info.plist, returning it if present. */
+  public static Optional<String> getBundleTypeFromPlistStream(
+      Path plistPath, InputStream inputStream) throws IOException {
+    NSObject bundleType =
+        getPropertyValueFromPlistStream(plistPath, inputStream, "CFBundlePackageType");
+    if (bundleType == null) {
+      return Optional.empty();
+    } else {
+      return Optional.of(bundleType.toString());
+    }
+  }
+
+  /** Extracts the watchOS app flag (WKWatchKitApp) from an Info.plist, returning it if present. */
+  public static Optional<Boolean> isWatchOSAppFromPlistStream(
+      Path plistPath, InputStream inputStream) throws IOException {
+    NSNumber isWatchOSApp =
+        (NSNumber) getPropertyValueFromPlistStream(plistPath, inputStream, "WKWatchKitApp");
+    if (isWatchOSApp == null) {
+      return Optional.of(Boolean.FALSE);
+    } else {
+      return Optional.of(isWatchOSApp.boolValue());
+    }
+  }
+
+  /** Extracts a property value from an Info.plist, returning it if present. */
+  public static NSObject getPropertyValueFromPlistStream(
+      Path plistPath, InputStream inputStream, String propertyKey) throws IOException {
     NSDictionary infoPlist;
     try (BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream)) {
       try {
@@ -54,11 +91,6 @@ public class AppleInfoPlistParsing {
             plistPath + ": the content of the plist is invalid or empty.");
       }
     }
-    NSObject bundleId = infoPlist.objectForKey("CFBundleIdentifier");
-    if (bundleId == null) {
-      return Optional.empty();
-    } else {
-      return Optional.of(bundleId.toString());
-    }
+    return infoPlist.objectForKey(propertyKey);
   }
 }

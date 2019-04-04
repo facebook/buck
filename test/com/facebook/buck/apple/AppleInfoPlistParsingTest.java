@@ -60,6 +60,54 @@ public class AppleInfoPlistParsingTest {
   }
 
   @Test
+  public void infoPlistParsingReturnsBundleType() throws IOException {
+    Optional<String> bundleType;
+
+    try (InputStream in =
+        getClass().getResourceAsStream("testdata/simple_application_bundle_no_debug/Info.plist")) {
+      Preconditions.checkState(in != null);
+      bundleType = AppleInfoPlistParsing.getBundleTypeFromPlistStream(Paths.get("Test"), in);
+    }
+    assertThat(bundleType, is(equalTo(Optional.of("APPL"))));
+
+    try (InputStream in =
+        getClass()
+            .getResourceAsStream(
+                "testdata/apple_library_shared/Libraries/TestLibrary/Info.plist")) {
+      Preconditions.checkState(in != null);
+      bundleType = AppleInfoPlistParsing.getBundleTypeFromPlistStream(Paths.get("Test"), in);
+    }
+    assertThat(bundleType, is(equalTo(Optional.of("FMWK"))));
+  }
+
+  @Test
+  public void infoPlistParsingReturnsIsNotWatchOSApp() throws IOException {
+    Optional<Boolean> isWatchOSApp;
+
+    try (InputStream in =
+        getClass().getResourceAsStream("testdata/simple_application_bundle_no_debug/Info.plist")) {
+      Preconditions.checkState(in != null);
+      isWatchOSApp = AppleInfoPlistParsing.isWatchOSAppFromPlistStream(Paths.get("Test"), in);
+    }
+
+    assertThat(isWatchOSApp, is(equalTo(Optional.of(Boolean.FALSE))));
+  }
+
+  @Test
+  public void infoPlistParsingReturnsIsWatchOSApp() throws IOException {
+    Optional<Boolean> isWatchOSApp;
+
+    try (InputStream in =
+        getClass()
+            .getResourceAsStream("testdata/watch_application_bundle/WatchApplication/Info.plist")) {
+      Preconditions.checkState(in != null);
+      isWatchOSApp = AppleInfoPlistParsing.isWatchOSAppFromPlistStream(Paths.get("Test"), in);
+    }
+
+    assertThat(isWatchOSApp, is(equalTo(Optional.of(Boolean.TRUE))));
+  }
+
+  @Test
   public void testEmptyFileInfoPlist() throws IOException {
     InputStream in = getClass().getResourceAsStream("testdata/broken_info_plist/Broken-Info.plist");
     Preconditions.checkState(in != null);
