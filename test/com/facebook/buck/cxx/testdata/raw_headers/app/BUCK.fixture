@@ -31,3 +31,12 @@ cxx_binary(
         "//app/lib4:lib4-include",
     ],
 )
+
+cxx_binary(
+    name = "app5",
+    srcs = ["main5.c"],
+    deps = [
+        "//app/lib5:lib5-header",
+        "//app/lib5:lib5-include",
+    ],
+)

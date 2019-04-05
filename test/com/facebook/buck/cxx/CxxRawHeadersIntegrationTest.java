@@ -235,6 +235,7 @@ public class CxxRawHeadersIntegrationTest {
     runCommand("build", "//app:app2").assertSuccess();
     runCommand("build", "//app:app3").assertSuccess();
     runCommand("build", "//app:app4").assertSuccess();
+    runCommand("build", "//app:app5").assertSuccess();
   }
 
   private ProcessResult runCommand(String... args) throws IOException {

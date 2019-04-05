@@ -1,0 +1,11 @@
+cxx_library(
+    name = "lib5-include",
+    public_include_directories = ["../.."],
+    visibility = ["PUBLIC"],
+)
+
+cxx_library(
+    name = "lib5-header",
+    raw_headers = ["lib5.h"],
+    visibility = ["PUBLIC"],
+)
