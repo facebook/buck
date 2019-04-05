@@ -23,14 +23,12 @@ import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
-import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.RawTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.manifest.BuildFilePathToBuildFileManifestKey;
 import com.facebook.buck.parser.manifest.ImmutableBuildFilePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -77,13 +75,7 @@ public class BuildTargetToRawTargetNodeTransformer
       throw new NoSuchBuildTargetException(buildTarget);
     }
 
-    return rawTargetNodeFactory.create(
-        cell,
-        // TODO(sergeyb): this is expensive and involves filesystem access. Pass relative path along
-        // with manifest, then resolve it here, or may be include it with build target itself
-        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget),
-        buildTarget,
-        rawAttributes);
+    return rawTargetNodeFactory.create(cell, buildTarget.getBasePath(), buildTarget, rawAttributes);
   }
 
   @Override
@@ -103,12 +95,6 @@ public class BuildTargetToRawTargetNodeTransformer
   private BuildFilePathToBuildFileManifestKey getManifestKey(BuildTargetToRawTargetNodeKey key) {
     UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
 
-    // TODO(sergeyb): this is expensive and involves filesystem access, and happens twice for same
-    // raw target and multiple times per same manifest. The path should come from upstream as input.
-    Path absolutePath =
-        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
-    Path relativePath = cell.getRoot().relativize(absolutePath);
-
-    return ImmutableBuildFilePathToBuildFileManifestKey.of(relativePath);
+    return ImmutableBuildFilePathToBuildFileManifestKey.of(buildTarget.getBasePath());
   }
 }
