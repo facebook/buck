@@ -127,9 +127,9 @@
 
 buckFile ::= statement*
 
-function_definition ::= 'def' IDENTIFIER '(' parameter_list? ')' ':' suite
+function_definition ::= 'def' IDENTIFIER '(' parameter_list ')' ':' suite
 
-parameter_list ::= parameter (',' parameter)* ','?
+parameter_list ::= [parameter (',' parameter)* ','?]
 parameter ::= '**' IDENTIFIER | '*' IDENTIFIER | IDENTIFIER ['=' simple_expression]
 
 statement ::= simple_statement | compound_statement
@@ -210,11 +210,21 @@ listmaker ::= [expression_list_or_comprehension]
 
 expression_list_or_comprehension ::= expression ( comprehension_for | (',' expression)* [','] )
 
-expression_trailer ::= function_call_suffix | slice_suffix | dot_suffix
+expression_trailer ::= function_trailer | subscript_trailer | dot_trailer
+function_trailer ::= '(' [argument_list] ')'
+subscript_trailer ::= '[' subscript_list ']'
+dot_trailer ::= '.' IDENTIFIER
 
-function_call_suffix ::= '(' argument_list? ')'
-slice_suffix ::= '[' simple_expression? (':' simple_expression? (':' simple_expression?)?)? ']'
-dot_suffix ::= '.' IDENTIFIER
+// [Python2]: subscriptlist: subscript (',' subscript)* [',']
+subscript_list ::= subscript (',' subscript)* [',']
+
+// [Python2]: subscript: '.' '.' '.' | test | [test] ':' [test] [sliceop]
+// [Python2]: sliceop: ':' [test]
+subscript ::= proper_slice | expression
+proper_slice ::= [slice_lower] ':' [slice_upper] [':' [slice_stride]]
+slice_lower ::= expression
+slice_upper ::= expression
+slice_stride ::= expression
 
 // [Python2]: exprlist: expr (',' expr)* [',']
 simple_expression_list ::= simple_expression (',' simple_expression)* [',']

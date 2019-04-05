@@ -21,7 +21,7 @@ import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgumentList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCallSuffix;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
@@ -109,11 +109,11 @@ public final class BuckBuildUtil {
     PsiElement[] children = buckFile.getChildren();
     for (PsiElement child : children) {
       if (child.getNode().getElementType() == BuckTypes.STATEMENT) {
-        BuckFunctionCallSuffix functionCall =
-            PsiTreeUtil.findChildOfType(child, BuckFunctionCallSuffix.class);
+        BuckFunctionTrailer functionTrailer =
+            PsiTreeUtil.findChildOfType(child, BuckFunctionTrailer.class);
         // Find rule "project_config"
-        if (functionCall != null) {
-          return getPropertyValue(functionCall.getArgumentList(), SRC_TARGET_PROPERTY_NAME);
+        if (functionTrailer != null) {
+          return getPropertyValue(functionTrailer.getArgumentList(), SRC_TARGET_PROPERTY_NAME);
         }
       }
     }

@@ -20,7 +20,7 @@ Buck File
                                       BuckAtomicExpressionImpl(ATOMIC_EXPRESSION)
                                         PsiElement(BuckTokenType.IDENTIFIER)('what_library')
                                       BuckExpressionTrailerImpl(EXPRESSION_TRAILER)
-                                        BuckFunctionCallSuffixImpl(FUNCTION_CALL_SUFFIX)
+                                        BuckFunctionTrailerImpl(FUNCTION_TRAILER)
                                           PsiElement(BuckTokenType.()('(')
                                           BuckArgumentListImpl(ARGUMENT_LIST)
                                             BuckArgumentImpl(ARGUMENT)

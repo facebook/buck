@@ -28,8 +28,8 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFactorExpression;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCallSuffix;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionDefinition;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIfStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
@@ -274,9 +274,9 @@ public final class BuckPsiUtils {
    * if it cannot be found.
    */
   @Nullable
-  public static BuckFunctionCallSuffix findTargetInPsiTree(PsiElement root, String name) {
-    for (BuckFunctionCallSuffix buckRuleBody :
-        PsiTreeUtil.findChildrenOfType(root, BuckFunctionCallSuffix.class)) {
+  public static BuckFunctionTrailer findTargetInPsiTree(PsiElement root, String name) {
+    for (BuckFunctionTrailer buckRuleBody :
+        PsiTreeUtil.findChildrenOfType(root, BuckFunctionTrailer.class)) {
       for (BuckArgument buckProperty :
           PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckArgument.class)) {
         if (!Optional.ofNullable(buckProperty.getPropertyLvalue())
@@ -298,8 +298,8 @@ public final class BuckPsiUtils {
    */
   public static Map<String, PsiElement> findTargetsInPsiTree(PsiFile psiFile, String namePrefix) {
     Map<String, PsiElement> targetsByName = new HashMap<>();
-    for (BuckFunctionCallSuffix buckRuleBody :
-        PsiTreeUtil.findChildrenOfType(psiFile, BuckFunctionCallSuffix.class)) {
+    for (BuckFunctionTrailer buckRuleBody :
+        PsiTreeUtil.findChildrenOfType(psiFile, BuckFunctionTrailer.class)) {
       for (BuckArgument buckArgument :
           PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckArgument.class)) {
         BuckPropertyLvalue propertyLvalue = buckArgument.getPropertyLvalue();

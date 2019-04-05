@@ -18,7 +18,7 @@ package com.facebook.buck.intellij.ideabuck.navigation;
 import com.facebook.buck.intellij.ideabuck.config.BuckCell;
 import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.endtoend.BuckTestCase;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCallSuffix;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.openapi.project.Project;
@@ -94,7 +94,8 @@ public class BuckGotoProviderTest extends BuckTestCase {
   private PsiElement findStringInFile(String s, VirtualFile virtualFile) {
     PsiFile psiFile = toPsiFile(virtualFile);
     for (PsiElement candidate : PsiTreeUtil.findChildrenOfType(psiFile, BuckString.class)) {
-      String value = BuckPsiUtils.getStringValueFromBuckString(candidate);
+      BuckString buckString = (BuckString) candidate;
+      String value = BuckPsiUtils.getStringValueFromBuckString(buckString);
       if (s.equals(value)) {
         return candidate;
       }
@@ -145,7 +146,7 @@ public class BuckGotoProviderTest extends BuckTestCase {
     PsiElement sourceElement = findStringInFile(":b", sourceFile);
     PsiElement targetString = findStringInFile("b", sourceFile);
     PsiElement expectedTarget =
-        PsiTreeUtil.getParentOfType(targetString, BuckFunctionCallSuffix.class);
+        PsiTreeUtil.getParentOfType(targetString, BuckFunctionTrailer.class);
 
     PsiElement actualTarget = buckGotoProvider.getGotoDeclarationTarget(sourceElement);
     assertEquals(expectedTarget, actualTarget);
@@ -166,7 +167,7 @@ public class BuckGotoProviderTest extends BuckTestCase {
     PsiElement sourceElement = findStringInFile("//bar:b", sourceFile);
     PsiElement targetString = findStringInFile("b", targetFile);
     PsiElement expectedTarget =
-        PsiTreeUtil.getParentOfType(targetString, BuckFunctionCallSuffix.class);
+        PsiTreeUtil.getParentOfType(targetString, BuckFunctionTrailer.class);
 
     PsiElement actualTarget = buckGotoProvider.getGotoDeclarationTarget(sourceElement);
     assertEquals(expectedTarget, actualTarget);
@@ -187,7 +188,7 @@ public class BuckGotoProviderTest extends BuckTestCase {
     PsiElement sourceElement = findStringInFile("//bar:b", sourceFile);
     PsiElement targetString = findStringInFile("b", targetFile);
     PsiElement expectedTarget =
-        PsiTreeUtil.getParentOfType(targetString, BuckFunctionCallSuffix.class);
+        PsiTreeUtil.getParentOfType(targetString, BuckFunctionTrailer.class);
 
     PsiElement actualTarget = buckGotoProvider.getGotoDeclarationTarget(sourceElement);
     assertEquals(expectedTarget, actualTarget);
@@ -203,7 +204,7 @@ public class BuckGotoProviderTest extends BuckTestCase {
     PsiElement sourceElement = findStringInFile("other//a:b", sourceFile);
     PsiElement targetString = findStringInFile("b", targetFile);
     PsiElement expectedTarget =
-        PsiTreeUtil.getParentOfType(targetString, BuckFunctionCallSuffix.class);
+        PsiTreeUtil.getParentOfType(targetString, BuckFunctionTrailer.class);
 
     PsiElement actualTarget = buckGotoProvider.getGotoDeclarationTarget(sourceElement);
     assertEquals(expectedTarget, actualTarget);

@@ -188,11 +188,11 @@ public class BuckBlock implements ASTBlock {
     boolean ret = false;
     if (hasElementType(myNode, TokenSet.create(BuckTypes.LISTMAKER))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_BRACKET;
-    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.SLICE_SUFFIX))) {
+    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.SUBSCRIPT_TRAILER))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_BRACKET;
     } else if (hasElementType(myNode, TokenSet.create(BuckTypes.DICTMAKER))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_CURLY;
-    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.FUNCTION_CALL_SUFFIX))) {
+    } else if (hasElementType(myNode, TokenSet.create(BuckTypes.FUNCTION_TRAILER))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_PARENTHESES;
     } else if (hasElementType(myNode, TokenSet.create(BuckTypes.ARGUMENT_LIST))) {
       ret = lastChildNode != null && lastChildNode.getElementType() != BuckTypes.R_PARENTHESES;

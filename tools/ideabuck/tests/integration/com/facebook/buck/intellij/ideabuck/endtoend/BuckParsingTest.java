@@ -120,6 +120,10 @@ public class BuckParsingTest extends ParsingTestCase {
     doTest();
   }
 
+  public void testSlicing() {
+    doTest();
+  }
+
   public void testExpressions() {
     doTest();
   }
