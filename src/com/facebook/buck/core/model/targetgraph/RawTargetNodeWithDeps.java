@@ -17,7 +17,7 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
@@ -36,5 +36,5 @@ public abstract class RawTargetNodeWithDeps implements ComputeResult {
    * all possible configurations.
    */
   @Value.Parameter
-  public abstract ImmutableSet<UnconfiguredBuildTarget> getDeps();
+  public abstract ImmutableSet<UnconfiguredBuildTargetData> getDeps();
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.ImmutableRawTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.ImmutableRawTargetNodeWithDepsPackage;
@@ -110,11 +111,11 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
               rawTargetNode,
               id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
 
-      ImmutableSet<UnconfiguredBuildTarget> deps =
+      ImmutableSet<UnconfiguredBuildTargetData> deps =
           targetNode
               .getParseDeps()
               .stream()
-              .map(bt -> bt.getUnconfiguredBuildTarget())
+              .map(bt -> bt.getUnconfiguredBuildTarget().getData())
               .collect(ImmutableSet.toImmutableSet());
 
       // END TEMPORARY

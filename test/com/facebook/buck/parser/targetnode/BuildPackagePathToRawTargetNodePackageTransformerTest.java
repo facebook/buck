@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.FakeTransformationEnvironment;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDeps;
@@ -121,12 +122,11 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
     RawTargetNodeWithDeps target2 = allTargets.get("target2");
     assertNotNull(target2);
 
-    ImmutableSet<UnconfiguredBuildTarget> deps = target1.getDeps();
+    ImmutableSet<UnconfiguredBuildTargetData> deps = target1.getDeps();
     assertEquals(1, deps.size());
 
-    UnconfiguredBuildTarget dep = deps.iterator().next();
-    assertEquals("//", dep.getBaseName());
-    assertEquals("target2", dep.getShortName());
-    assertEquals(cell.getRoot(), dep.getCellPath());
+    UnconfiguredBuildTargetData dep = deps.iterator().next();
+    assertEquals("//", dep.getUnflavoredBuildTarget().getBaseName());
+    assertEquals("target2", dep.getUnflavoredBuildTarget().getName());
   }
 }
