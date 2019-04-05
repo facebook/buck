@@ -496,16 +496,9 @@ public class ProjectGeneratorTest {
     ImmutableList<Pair<Pattern, Iterable<SourcePath>>> platformHeadersIterable =
         platformHeadersIterableBuilder.build();
 
-    UserFlavor simulator =
-        UserFlavor.builder()
-            .setName("iphonesimulator11.4-i386")
-            .setDescription("buck boilerplate")
-            .build();
-    UserFlavor macOS =
-        UserFlavor.builder().setName("macosx10-x86_64").setDescription("buck boilerplate").build();
-    UserFlavor.Builder iOSBuilder =
-        UserFlavor.builder().setName("iphoneos-x86_64").setDescription("buck boilerplate");
-    UserFlavor iOS = iOSBuilder.build();
+    UserFlavor simulator = UserFlavor.of("iphonesimulator11.4-i386", "buck boilerplate");
+    UserFlavor macOS = UserFlavor.of("macosx10-x86_64", "buck boilerplate");
+    UserFlavor iOS = UserFlavor.of("iphoneos-x86_64", "buck boilerplate");
 
     ImmutableSet<Flavor> appleFlavors = ImmutableSet.of(simulator, iOS, macOS);
 
@@ -1125,11 +1118,7 @@ public class ProjectGeneratorTest {
                     .build())
             .build();
 
-    UserFlavor simulator =
-        UserFlavor.builder()
-            .setName("iphonesimulator11.4-i386")
-            .setDescription("Testing flavor")
-            .build();
+    UserFlavor simulator = UserFlavor.of("iphonesimulator11.4-i386", "Testing flavor");
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(
@@ -1259,11 +1248,7 @@ public class ProjectGeneratorTest {
                     .build())
             .build();
 
-    UserFlavor simulator =
-        UserFlavor.builder()
-            .setName("iphonesimulator11.4-i386")
-            .setDescription("Testing flavor")
-            .build();
+    UserFlavor simulator = UserFlavor.of("iphonesimulator11.4-i386", "Testing flavor");
 
     ProjectGenerator projectGenerator =
         createProjectGenerator(

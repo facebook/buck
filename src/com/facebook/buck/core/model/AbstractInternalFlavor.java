@@ -26,7 +26,7 @@ import org.immutables.value.Value;
  * irrelevant to the end user. Historically, all flavors were converted to internal, some need to be
  * moved to UserFlavor.
  */
-@Value.Immutable
+@Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
 @JsonDeserialize
 abstract class AbstractInternalFlavor implements Flavor {

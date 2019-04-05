@@ -26,7 +26,7 @@ import org.immutables.value.Value;
  * A {@link com.facebook.buck.core.model.Flavor} visible to the user, with which they can modify
  * output of a target.
  */
-@Value.Immutable
+@Value.Immutable(copy = false, builder = false)
 @BuckStyleImmutable
 @JsonDeserialize
 abstract class AbstractUserFlavor implements Flavor {
