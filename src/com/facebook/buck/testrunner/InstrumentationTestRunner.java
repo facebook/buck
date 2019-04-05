@@ -309,6 +309,7 @@ public class InstrumentationTestRunner {
       if (this.attemptUninstall) {
         // Best effort uninstall from the emulator/device.
         device.uninstallPackage(this.packageName);
+        device.uninstallPackage(this.targetPackageName);
       }
     }
   }
