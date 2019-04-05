@@ -121,18 +121,12 @@ class BuildTargetParser {
           String.format("When parsing %s: %s", buildTargetName, e.getHumanReadableErrorMessage()));
     }
 
-    ImmutableUnflavoredBuildTarget.Builder unflavoredBuilder =
-        ImmutableUnflavoredBuildTarget.builder()
-            .setBaseName(baseName)
-            .setShortName(shortName)
-            // Set the cell path correctly. Because the cellNames comes from the owning cell we can
-            // be sure that if this doesn't throw an exception the target cell is visible to the
-            // owning cell.
-            .setCellPath(cellPath)
-            // We are setting the cell name so we can print it later
-            .setCell(cellPathResolver.getCanonicalCellName(cellPath));
-
-    UnflavoredBuildTarget unflavoredBuildTarget = unflavoredBuilder.build();
+    // Set the cell path correctly. Because the cellNames comes from the owning cell we can
+    // be sure that if this doesn't throw an exception the target cell is visible to the
+    // owning cell.
+    UnflavoredBuildTarget unflavoredBuildTarget =
+        ImmutableUnflavoredBuildTarget.of(
+            cellPath, cellPathResolver.getCanonicalCellName(cellPath), baseName, shortName);
     return flavoredTargetCache.intern(
         ImmutableUnconfiguredBuildTarget.of(
             unflavoredBuildTarget,

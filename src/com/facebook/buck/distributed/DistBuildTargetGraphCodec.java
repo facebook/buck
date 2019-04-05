@@ -136,12 +136,11 @@ public class DistBuildTargetGraphCodec {
   public static BuildTarget decodeBuildTarget(BuildJobStateBuildTarget remoteTarget, Cell cell) {
 
     UnflavoredBuildTarget unflavoredBuildTarget =
-        ImmutableUnflavoredBuildTarget.builder()
-            .setShortName(remoteTarget.getShortName())
-            .setBaseName(remoteTarget.getBaseName())
-            .setCellPath(cell.getRoot())
-            .setCell(Optional.ofNullable(remoteTarget.getCellName()))
-            .build();
+        ImmutableUnflavoredBuildTarget.of(
+            cell.getRoot(),
+            Optional.ofNullable(remoteTarget.getCellName()),
+            remoteTarget.getBaseName(),
+            remoteTarget.getShortName());
 
     ImmutableSet<Flavor> flavors =
         remoteTarget

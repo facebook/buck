@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /** A pattern that matches only one build target. */
@@ -37,11 +38,11 @@ abstract class AbstractSingletonBuildTargetPattern implements BuildTargetPattern
     int buildTarget = fullyQualifiedName.indexOf("//");
     int colon = fullyQualifiedName.lastIndexOf(':');
     return SingletonBuildTargetPattern.of(
-        ImmutableUnflavoredBuildTarget.builder()
-            .setBaseName(fullyQualifiedName.substring(buildTarget, colon))
-            .setShortName(fullyQualifiedName.substring(colon + 1))
-            .setCellPath(cellPath)
-            .build());
+        ImmutableUnflavoredBuildTarget.of(
+            cellPath,
+            Optional.empty(),
+            fullyQualifiedName.substring(buildTarget, colon),
+            fullyQualifiedName.substring(colon + 1)));
   }
 
   /**

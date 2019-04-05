@@ -26,6 +26,8 @@ import javax.annotation.concurrent.ThreadSafe;
  * <pre>cell//path:rule</pre>
  *
  * .
+ *
+ * <p>If used as data class, consider {@link UnflavoredBuildTargetData} instead
  */
 @ThreadSafe
 public interface UnflavoredBuildTarget extends Comparable<UnflavoredBuildTarget> {

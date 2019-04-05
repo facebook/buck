@@ -51,11 +51,7 @@ public class UnflavoredBuildTargetFactory {
               "Raw data claims to come from [%s], but we tried rooting it at [%s].",
               basePath, otherBasePath));
     }
-    return ImmutableUnflavoredBuildTarget.builder()
-        .setBaseName(UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath)
-        .setShortName(name)
-        .setCellPath(cellRoot)
-        .setCell(cellName)
-        .build();
+    return ImmutableUnflavoredBuildTarget.of(
+        cellRoot, cellName, UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath, name);
   }
 }
