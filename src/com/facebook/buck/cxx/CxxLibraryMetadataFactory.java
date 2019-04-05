@@ -187,6 +187,15 @@ public class CxxLibraryMetadataFactory {
                           projectFilesystem,
                           buildTarget.getBasePath().resolve(publicInclude).normalize())));
             }
+
+            for (String publicSystemInclude : args.getPublicSystemIncludeDirectories()) {
+              cxxPreprocessorInputBuilder.addIncludes(
+                  CxxIncludes.of(
+                      IncludeType.SYSTEM,
+                      PathSourcePath.of(
+                          projectFilesystem,
+                          buildTarget.getBasePath().resolve(publicSystemInclude).normalize())));
+            }
           }
 
           CxxPreprocessorInput cxxPreprocessorInput = cxxPreprocessorInputBuilder.build();

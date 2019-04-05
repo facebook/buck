@@ -143,6 +143,8 @@ that the <code>cxx_library</code> depends on <em>might not be built</em>.
 
 {call cxx_common.public_include_directories_arg /}
 
+{call cxx_common.public_system_include_directories_arg /}
+
 {call buck.arg}
   {param name : 'soname' /}
   {param default : 'None' /}

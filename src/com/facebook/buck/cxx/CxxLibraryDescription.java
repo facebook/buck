@@ -495,6 +495,17 @@ public class CxxLibraryDescription
       return ImmutableSortedSet.of();
     }
 
+    /**
+     * A list of include directories to be added to the compile command for compiling this cxx
+     * target and every target that depends on it.
+     *
+     * @return a list of public (exported) include paths for this cxx target.
+     */
+    @Value.Default
+    default ImmutableSortedSet<String> getPublicSystemIncludeDirectories() {
+      return ImmutableSortedSet.of();
+    }
+
     /** @return C/C++ deps which are propagated to dependents. */
     @Value.Derived
     default CxxDeps getExportedCxxDeps() {

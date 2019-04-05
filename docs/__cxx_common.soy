@@ -570,11 +570,24 @@
 /***/
 {template .public_include_directories_arg}
   {call buck.arg}
-    {param name : 'public_include_directories_arg' /}
+    {param name : 'public_include_directories' /}
     {param default : '[]' /}
     {param desc}
       A list of include directories (with <code>raw_headers</code>) to be added to the compile command for compiling this target
       and every target that depends on it (via <code>-I</code>). An include directory is relative to the current package.
+    {/param}
+  {/call}
+{/template}
+
+/***/
+{template .public_system_include_directories_arg}
+  {call buck.arg}
+    {param name : 'public_system_include_directories' /}
+    {param default : '[]' /}
+    {param desc}
+      A list of include directories (with <code>raw_headers</code>) to be added to the compile command for compiling this target
+      and every target that depends on it (via <code>-isystem</code> if the compiler supports it of via <code>-I</code> otherwise).
+      An include directory is relative to the current package.
     {/param}
   {/call}
 {/template}
