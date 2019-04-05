@@ -411,7 +411,10 @@ public class WatchmanWatcher {
 
     // Post analogous Status events for logging/status.
     if (event instanceof WatchmanOverflowEvent) {
-      eventBus.post(WatchmanStatusEvent.overflow(((WatchmanOverflowEvent) event).getReason()));
+      WatchmanOverflowEvent overflowEvent = (WatchmanOverflowEvent) event;
+
+      eventBus.post(
+          WatchmanStatusEvent.overflow(overflowEvent.getReason(), overflowEvent.getCellPath()));
     } else if (event instanceof WatchmanPathEvent) {
       WatchmanPathEvent pathEvent = (WatchmanPathEvent) event;
       switch (pathEvent.getKind()) {

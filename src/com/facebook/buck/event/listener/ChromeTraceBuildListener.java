@@ -38,12 +38,12 @@ import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.StartActivityEvent;
 import com.facebook.buck.event.UninstallEvent;
+import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent.Phase;
 import com.facebook.buck.event.chrome_trace.ChromeTraceWriter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.GlobalStateManager;
@@ -825,7 +825,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void onWatchmanOverflow(WatchmanOverflowEvent event) {
+  public void onWatchmanOverflow(WatchmanStatusEvent.Overflow event) {
     writeChromeTraceMetadataEvent(
         "watchman_overflow",
         ImmutableMap.of("cellPath", event.getCellPath().toString(), "reason", event.getReason()));

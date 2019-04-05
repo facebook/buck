@@ -223,6 +223,7 @@ public final class BuckGlobalState implements Closeable {
     }
   }
 
+  /** Global event bus used to process file invalidation events. This event bus is synchronous. */
   public EventBus getFileEventBus() {
     return fileEventBus;
   }

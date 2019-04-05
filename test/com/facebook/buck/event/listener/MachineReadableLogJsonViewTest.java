@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -81,7 +82,8 @@ public class MachineReadableLogJsonViewTest {
   public void testWatchmanEvents() throws Exception {
     WatchmanStatusEvent createEvent = WatchmanStatusEvent.fileCreation("filename_new");
     WatchmanStatusEvent deleteEvent = WatchmanStatusEvent.fileDeletion("filename_del");
-    WatchmanStatusEvent overflowEvent = WatchmanStatusEvent.overflow("reason");
+    WatchmanStatusEvent overflowEvent =
+        WatchmanStatusEvent.overflow("reason", Paths.get("/some/path"));
 
     // Configure the events so timestamps etc are there.
     createEvent.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);

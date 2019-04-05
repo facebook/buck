@@ -18,6 +18,7 @@ package com.facebook.buck.event;
 
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;
+import java.nio.file.Path;
 
 public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements BuckEvent {
   private final String eventName;
@@ -45,8 +46,8 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
     return new Finished();
   }
 
-  public static Overflow overflow(String reason) {
-    return new Overflow(reason);
+  public static Overflow overflow(String reason, Path cellPath) {
+    return new Overflow(reason, cellPath);
   }
 
   public static FileCreation fileCreation(String filename) {
@@ -77,13 +78,21 @@ public abstract class WatchmanStatusEvent extends AbstractBuckEvent implements B
     @JsonView(JsonViews.MachineReadableLog.class)
     private String reason;
 
-    public Overflow(String reason) {
+    private Path cellPath;
+
+    public Overflow(String reason, Path cellPath) {
       super(EventKey.unique(), "WatchmanOverflow");
       this.reason = reason;
+      this.cellPath = cellPath;
     }
 
     public String getReason() {
       return reason;
+    }
+
+    /** @return Absolute path of the cell where watchman overflow happened */
+    public Path getCellPath() {
+      return cellPath;
     }
   }
 

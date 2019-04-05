@@ -215,7 +215,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sun.jna.Pointer;
@@ -1173,7 +1172,6 @@ public final class MainRunner {
           eventListeners =
               addEventListeners(
                   buildEventBus,
-                  buckGlobalState.getFileEventBus(),
                   rootCell.getFilesystem(),
                   invocationInfo,
                   rootCell.getBuckConfig(),
@@ -1272,6 +1270,9 @@ public final class MainRunner {
                   buckGlobalState.getDirectoryListCaches(),
                   buckGlobalState.getFileTreeCaches());
 
+          // This also queries watchman, posts events to global and local event buses and
+          // invalidates all related caches
+          // TODO (buck_team): extract invalidation from getParserAndCaches()
           ParserAndCaches parserAndCaches =
               getParserAndCaches(
                   context,
@@ -1584,9 +1585,8 @@ public final class MainRunner {
       } else {
         defaultRuleKeyFactoryCacheRecycler = Optional.empty();
       }
-
-      buckGlobalState.getFileEventBus().register(buckGlobalState.getDaemonicParserState());
     }
+
     return ParserAndCaches.of(
         ParserFactory.create(
             typeCoercerFactory,
@@ -1892,7 +1892,6 @@ public final class MainRunner {
   @SuppressWarnings("PMD.PrematureDeclaration")
   private ImmutableList<BuckEventListener> addEventListeners(
       BuckEventBus buckEventBus,
-      EventBus fileEventBus,
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       BuckConfig buckConfig,
@@ -1916,7 +1915,6 @@ public final class MainRunner {
             new ChromeTraceBuildListener(
                 projectFilesystem, invocationInfo, clock, chromeTraceConfig, managerScope);
         eventListenersBuilder.add(chromeTraceBuildListener);
-        fileEventBus.register(chromeTraceBuildListener);
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");
       }

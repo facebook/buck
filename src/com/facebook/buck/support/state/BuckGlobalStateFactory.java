@@ -109,6 +109,7 @@ public class BuckGlobalStateFactory {
     ParserConfig parserConfig = rootCell.getBuckConfig().getView(ParserConfig.class);
     DaemonicParserState daemonicParserState =
         new DaemonicParserState(parserConfig.getNumParsingThreads());
+    fileEventBus.register(daemonicParserState);
 
     // Build the the rule key cache recycler.
     RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler =
