@@ -1,0 +1,298 @@
+/*
+ * Copyright 2019-present Facebook, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License. You may obtain
+ * a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
+package com.facebook.buck.core.model.impl;
+
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.log.views.JsonViews;
+import com.facebook.buck.util.RichStream;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Stream;
+import javax.annotation.Nullable;
+
+/** An immutable implementation of {@link UnconfiguredBuildTarget}. */
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE)
+public class ImmutableUnconfiguredBuildTarget implements UnconfiguredBuildTarget {
+
+  private final UnconfiguredBuildTargetData data;
+  private final UnflavoredBuildTarget unflavoredBuildTarget;
+  private final int hash;
+
+  private ImmutableUnconfiguredBuildTarget(
+      UnflavoredBuildTarget unflavoredBuildTarget, ImmutableSortedSet<Flavor> flavors) {
+    this.data = ImmutableUnconfiguredBuildTargetData.of(unflavoredBuildTarget.getData(), flavors);
+    this.unflavoredBuildTarget = unflavoredBuildTarget;
+    this.hash = Objects.hash(this.data, this.unflavoredBuildTarget);
+  }
+
+  /**
+   * Create new immutable instance of {@link UnconfiguredBuildTarget}
+   *
+   * @param unflavoredBuildTarget Build target without flavors
+   * @param flavors Flavors that apply to this build target
+   */
+  public static ImmutableUnconfiguredBuildTarget of(
+      UnflavoredBuildTarget unflavoredBuildTarget, ImmutableSortedSet<Flavor> flavors) {
+    return new ImmutableUnconfiguredBuildTarget(unflavoredBuildTarget, flavors);
+  }
+
+  /**
+   * Create new immutable instance of {@link UnconfiguredBuildTarget}
+   *
+   * @param unflavoredBuildTarget Build target without flavors
+   * @param flavors Flavors that apply to this build target
+   */
+  public static ImmutableUnconfiguredBuildTarget of(
+      UnflavoredBuildTarget unflavoredBuildTarget, RichStream<Flavor> flavors) {
+    return of(
+        unflavoredBuildTarget,
+        flavors.toImmutableSortedSet(UnconfiguredBuildTargetData.FLAVOR_ORDERING));
+  }
+
+  /**
+   * Create new immutable instance of {@link UnconfiguredBuildTarget}
+   *
+   * @param unflavoredBuildTarget Build target without flavors
+   * @param flavors Flavors that apply to this build target
+   */
+  public static ImmutableUnconfiguredBuildTarget of(
+      UnflavoredBuildTarget unflavoredBuildTarget, Stream<Flavor> flavors) {
+    return of(unflavoredBuildTarget, RichStream.from(flavors));
+  }
+
+  /**
+   * Create new immutable instance of {@link UnconfiguredBuildTarget} that has no flavors
+   *
+   * @param unflavoredBuildTarget Build target without flavors
+   */
+  public static ImmutableUnconfiguredBuildTarget of(UnflavoredBuildTarget unflavoredBuildTarget) {
+    return of(unflavoredBuildTarget, ImmutableSortedSet.of());
+  }
+
+  /** Helper for creating a build target with no flavors and no cell name. */
+  public static ImmutableUnconfiguredBuildTarget of(
+      Path cellPath, String baseName, String shortName) {
+    return ImmutableUnconfiguredBuildTarget.of(
+        ImmutableUnflavoredBuildTarget.of(cellPath, Optional.empty(), baseName, shortName));
+  }
+
+  @JsonIgnore
+  @Override
+  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
+    return unflavoredBuildTarget;
+  }
+
+  @JsonIgnore
+  @Override
+  public ImmutableSortedSet<Flavor> getFlavors() {
+    return data.getFlavors();
+  }
+
+  @JsonProperty("cell")
+  @Override
+  public Optional<String> getCell() {
+    String cell = data.getUnflavoredBuildTarget().getCell();
+    return cell == "" ? Optional.empty() : Optional.of(cell);
+  }
+
+  @JsonIgnore
+  @Override
+  public Path getCellPath() {
+    return unflavoredBuildTarget.getCellPath();
+  }
+
+  @JsonProperty("baseName")
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @Override
+  public String getBaseName() {
+    return data.getUnflavoredBuildTarget().getBaseName();
+  }
+
+  @JsonIgnore
+  @Override
+  public Path getBasePath() {
+    return unflavoredBuildTarget.getBasePath();
+  }
+
+  @JsonProperty("shortName")
+  @JsonView(JsonViews.MachineReadableLog.class)
+  @Override
+  public String getShortName() {
+    return data.getUnflavoredBuildTarget().getName();
+  }
+
+  @JsonIgnore
+  @Override
+  public String getShortNameAndFlavorPostfix() {
+    return getShortName() + getFlavorPostfix();
+  }
+
+  @JsonProperty("flavor")
+  @JsonView(JsonViews.MachineReadableLog.class)
+  private String getFlavorsAsString() {
+    return Joiner.on(",").join(getFlavors());
+  }
+
+  private String getFlavorPostfix() {
+    if (getFlavors().isEmpty()) {
+      return "";
+    }
+    return "#" + getFlavorsAsString();
+  }
+
+  private @Nullable String fullyQualifiedName = null;
+
+  @JsonIgnore
+  @Override
+  public String getFullyQualifiedName() {
+    if (fullyQualifiedName == null) {
+      fullyQualifiedName = unflavoredBuildTarget.getFullyQualifiedName() + getFlavorPostfix();
+    }
+    return fullyQualifiedName;
+  }
+
+  @JsonIgnore
+  @Override
+  public boolean isFlavored() {
+    return !getFlavors().isEmpty();
+  }
+
+  @Override
+  public UnconfiguredBuildTarget assertUnflavored() {
+    Preconditions.checkState(!isFlavored(), "%s is flavored.", this);
+    return this;
+  }
+
+  @Override
+  public UnconfiguredBuildTarget withShortName(String shortName) {
+    return ImmutableUnconfiguredBuildTarget.of(
+        ImmutableUnflavoredBuildTarget.of(
+            getUnflavoredBuildTarget().getCellPath(),
+            getUnflavoredBuildTarget().getCell(),
+            getUnflavoredBuildTarget().getBaseName(),
+            shortName),
+        getFlavors());
+  }
+
+  @Override
+  public UnconfiguredBuildTarget withFlavors(Flavor... flavors) {
+    return withFlavors(Arrays.asList(flavors));
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public UnconfiguredBuildTarget withFlavors(Iterable<? extends Flavor> flavors) {
+    ImmutableSortedSet<Flavor> flavorsSet;
+    if (flavors instanceof ImmutableSortedSet
+        && ((ImmutableSortedSet<Flavor>) flavors)
+            .comparator()
+            .equals(UnconfiguredBuildTargetData.FLAVOR_ORDERING)) {
+      flavorsSet = (ImmutableSortedSet<Flavor>) flavors;
+    } else {
+      flavorsSet = ImmutableSortedSet.copyOf(UnconfiguredBuildTargetData.FLAVOR_ORDERING, flavors);
+    }
+
+    return ImmutableUnconfiguredBuildTarget.of(unflavoredBuildTarget, flavorsSet);
+  }
+
+  @Override
+  public UnconfiguredBuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
+    return ImmutableUnconfiguredBuildTarget.of(target, getFlavors());
+  }
+
+  @Override
+  public UnconfiguredBuildTarget withoutCell() {
+    return ImmutableUnconfiguredBuildTarget.of(
+        ImmutableUnflavoredBuildTarget.of(
+            getCellPath(), Optional.empty(), getBaseName(), getShortName()),
+        getFlavors());
+  }
+
+  @Override
+  public BuildTarget configure(TargetConfiguration targetConfiguration) {
+    return ImmutableBuildTarget.of(this, targetConfiguration);
+  }
+
+  @Override
+  public UnconfiguredBuildTargetData getData() {
+    return data;
+  }
+
+  /** @return {@link #getFullyQualifiedName()} */
+  @Override
+  public String toString() {
+    return getFullyQualifiedName();
+  }
+
+  @Override
+  public boolean equals(Object another) {
+    if (this == another) {
+      return true;
+    }
+    return another instanceof ImmutableUnconfiguredBuildTarget
+        && equalTo((ImmutableUnconfiguredBuildTarget) another);
+  }
+
+  private boolean equalTo(ImmutableUnconfiguredBuildTarget another) {
+    // Do not use 'unflavoredBuildTarget' - everything except cell path is in 'data'
+    // And we do not want to compare with absolute paths
+    return Objects.equals(data, another.data)
+        && Objects.equals(unflavoredBuildTarget, another.unflavoredBuildTarget);
+  }
+
+  @Override
+  public int hashCode() {
+    return hash;
+  }
+
+  @Override
+  public int compareTo(UnconfiguredBuildTarget o) {
+    if (this == o) {
+      return 0;
+    }
+
+    if (!(o instanceof ImmutableUnconfiguredBuildTarget)) {
+      return ImmutableUnconfiguredBuildTarget.class.getName().compareTo(o.getClass().getName());
+    }
+
+    ImmutableUnconfiguredBuildTarget other = (ImmutableUnconfiguredBuildTarget) o;
+
+    return ComparisonChain.start()
+        .compare(data, other.data)
+        .compare(unflavoredBuildTarget, other.unflavoredBuildTarget)
+        .result();
+  }
+}

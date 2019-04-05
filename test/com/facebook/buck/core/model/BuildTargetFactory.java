@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -63,7 +62,7 @@ public class BuildTargetFactory {
     String[] flavors = nameAndFlavor[1].split(",");
     return ImmutableUnconfiguredBuildTarget.of(
             ImmutableUnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]),
-            RichStream.from(flavors).map(InternalFlavor::of).toOnceIterable())
+            RichStream.from(flavors).map(InternalFlavor::of))
         .configure(EmptyTargetConfiguration.INSTANCE);
   }
 
@@ -81,7 +80,7 @@ public class BuildTargetFactory {
     return ImmutableUnconfiguredBuildTarget.of(
             ImmutableUnflavoredBuildTarget.of(
                 cellPath, arg.getCellName(), arg.getBasePath(), shortName),
-            ImmutableSet.copyOf(flavors))
+            RichStream.from(flavors))
         .configure(EmptyTargetConfiguration.INSTANCE);
   }
 }

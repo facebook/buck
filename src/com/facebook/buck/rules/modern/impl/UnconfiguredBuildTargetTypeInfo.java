@@ -25,12 +25,12 @@ import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** TypeInfo for BuildTarget values. */
 public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<UnconfiguredBuildTarget> {
@@ -70,12 +70,8 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
     Optional<String> cellName = Holder.cellNameTypeInfo.createNotNull(creator);
     String baseName = creator.createString();
     String shortName = creator.createString();
-    ImmutableList<Flavor> flavors =
-        Holder.flavorsTypeInfo
-            .createNotNull(creator)
-            .stream()
-            .map(InternalFlavor::of)
-            .collect(ImmutableList.toImmutableList());
+    Stream<Flavor> flavors =
+        Holder.flavorsTypeInfo.createNotNull(creator).stream().map(InternalFlavor::of);
     return ImmutableUnconfiguredBuildTarget.of(
         ImmutableUnflavoredBuildTarget.of(cellPath, cellName, baseName, shortName), flavors);
   }

@@ -129,8 +129,7 @@ class BuildTargetParser {
             cellPath, cellPathResolver.getCanonicalCellName(cellPath), baseName, shortName);
     return flavoredTargetCache.intern(
         ImmutableUnconfiguredBuildTarget.of(
-            unflavoredBuildTarget,
-            RichStream.from(flavorNames).map(InternalFlavor::of).toImmutableSet()));
+            unflavoredBuildTarget, RichStream.from(flavorNames).map(InternalFlavor::of)));
   }
 
   protected static void checkBaseName(String baseName, String buildTargetName) {

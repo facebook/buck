@@ -35,9 +35,8 @@ public class ImmutableUnflavoredBuildTarget extends AbstractUnflavoredBuildTarge
   private final Path cellPath;
   private final int hash;
 
-  private ImmutableUnflavoredBuildTarget(
-      Path cellPath, Optional<String> cellName, String baseName, String shortName) {
-    data = ImmutableUnflavoredBuildTargetData.of(cellName.orElse(""), baseName, shortName);
+  private ImmutableUnflavoredBuildTarget(Path cellPath, UnflavoredBuildTargetData data) {
+    this.data = data;
     this.cellPath = cellPath;
 
     // always precompute hash because we intern object anyways
@@ -47,6 +46,11 @@ public class ImmutableUnflavoredBuildTarget extends AbstractUnflavoredBuildTarge
   /** Interner for instances of UnflavoredBuildTarget. */
   private static final Interner<ImmutableUnflavoredBuildTarget> interner =
       Interners.newWeakInterner();
+
+  @Override
+  public UnflavoredBuildTargetData getData() {
+    return data;
+  }
 
   @Override
   public Path getCellPath() {
@@ -83,8 +87,19 @@ public class ImmutableUnflavoredBuildTarget extends AbstractUnflavoredBuildTarge
    */
   public static ImmutableUnflavoredBuildTarget of(
       Path cellPath, Optional<String> cellName, String baseName, String shortName) {
-    return interner.intern(
-        new ImmutableUnflavoredBuildTarget(cellPath, cellName, baseName, shortName));
+    return of(
+        cellPath, ImmutableUnflavoredBuildTargetData.of(cellName.orElse(""), baseName, shortName));
+  }
+
+  /**
+   * Create new instance of {@link UnflavoredBuildTarget}
+   *
+   * @param cellPath Absolute path to the cell root that owns this build target
+   * @param data {@link UnflavoredBuildTargetData which encapsulates build target data without
+   *     flavors}
+   */
+  public static ImmutableUnflavoredBuildTarget of(Path cellPath, UnflavoredBuildTargetData data) {
+    return interner.intern(new ImmutableUnflavoredBuildTarget(cellPath, data));
   }
 
   @Override

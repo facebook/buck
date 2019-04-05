@@ -19,7 +19,6 @@ package com.facebook.buck.core.model;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
@@ -27,6 +26,8 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * <p>This is indented to be used during early stages of parsing when information about
  * configuration is not available.
+ *
+ * <p>If to be used as data object, consider {@link UnconfiguredBuildTargetData} instead
  */
 @ThreadSafe
 public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTarget> {
@@ -119,28 +120,6 @@ public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTar
   UnconfiguredBuildTarget withShortName(String shortName);
 
   /**
-   * Creates a new build target by copying all of the information from this build target and
-   * removing the provided flavors from the set of flavors in the new build target.
-   *
-   * @param flavors flavors to remove when creating a new build target
-   */
-  UnconfiguredBuildTarget withoutFlavors(Set<Flavor> flavors);
-
-  /**
-   * Creates a new build target by copying all of the information from this build target and
-   * removing the provided flavors from the set of flavors in the new build target.
-   *
-   * @param flavors flavors to remove when creating a new build target
-   */
-  UnconfiguredBuildTarget withoutFlavors(Flavor... flavors);
-
-  /**
-   * Creates a new build target by copying all of the information from this build target excluding
-   * flavors.
-   */
-  UnconfiguredBuildTarget withoutFlavors();
-
-  /**
    * Creates a new build target by copying all of the information from this build target and using
    * the provided flavors as flavors in the new build target.
    *
@@ -155,22 +134,6 @@ public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTar
    * @param flavors flavors to use when creating a new build target
    */
   UnconfiguredBuildTarget withFlavors(Iterable<? extends Flavor> flavors);
-
-  /**
-   * Creates a new build target by copying all of the information from this build target and
-   * appending the provided flavors to the set of flavors in the new build target.
-   *
-   * @param flavors flavors to append when creating a new build target
-   */
-  UnconfiguredBuildTarget withAppendedFlavors(Set<Flavor> flavors);
-
-  /**
-   * Creates a new build target by copying all of the information from this build target and
-   * appending the provided flavors to the set of flavors in the new build target.
-   *
-   * @param flavors flavors to append when creating a new build target
-   */
-  UnconfiguredBuildTarget withAppendedFlavors(Flavor... flavors);
 
   /**
    * Creates a new build target by using the provided {@link UnflavoredBuildTarget} and flavors from
@@ -189,4 +152,7 @@ public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTar
    * target.
    */
   BuildTarget configure(TargetConfiguration targetConfiguration);
+
+  /** Return a data object that backs current view */
+  UnconfiguredBuildTargetData getData();
 }

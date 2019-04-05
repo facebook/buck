@@ -391,6 +391,7 @@ public class WorkspaceAndProjectGenerator {
         getRequiredBuildTargets()
             .stream()
             .map(Object::toString)
+            .sorted()
             .collect(ImmutableList.toImmutableList());
     ImmutableMap<String, Object> data =
         ImmutableMap.of(

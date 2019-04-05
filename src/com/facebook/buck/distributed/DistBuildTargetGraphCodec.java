@@ -19,7 +19,6 @@ package com.facebook.buck.distributed;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
@@ -41,7 +40,6 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -142,14 +140,8 @@ public class DistBuildTargetGraphCodec {
             remoteTarget.getBaseName(),
             remoteTarget.getShortName());
 
-    ImmutableSet<Flavor> flavors =
-        remoteTarget
-            .flavors
-            .stream()
-            .map(InternalFlavor::of)
-            .collect(ImmutableSet.toImmutableSet());
-
-    return ImmutableUnconfiguredBuildTarget.of(unflavoredBuildTarget, flavors)
+    return ImmutableUnconfiguredBuildTarget.of(
+            unflavoredBuildTarget, remoteTarget.flavors.stream().map(InternalFlavor::of))
         .configure(EmptyTargetConfiguration.INSTANCE);
   }
 
