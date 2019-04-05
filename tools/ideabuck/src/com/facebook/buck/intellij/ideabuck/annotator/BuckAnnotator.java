@@ -22,7 +22,6 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionName;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
@@ -47,27 +46,13 @@ public class BuckAnnotator implements Annotator {
 
   @Override
   public void annotate(@NotNull PsiElement psiElement, @NotNull AnnotationHolder annotationHolder) {
-    if (psiElement instanceof BuckFunctionName) {
-      annotateFunctionName((BuckFunctionName) psiElement, annotationHolder);
-    } else if (psiElement instanceof BuckPropertyLvalue) {
+    if (psiElement instanceof BuckPropertyLvalue) {
       annotateBuckPropertyLvalue((BuckPropertyLvalue) psiElement, annotationHolder);
     } else if (psiElement instanceof BuckLoadCall) {
       annotateLoadCall((BuckLoadCall) psiElement, annotationHolder);
     } else if (psiElement instanceof BuckSimpleExpression) {
       annotateSimpleExpression((BuckSimpleExpression) psiElement, annotationHolder);
     }
-  }
-
-  private void annotateFunctionName(
-      BuckFunctionName functionName, AnnotationHolder annotationHolder) {
-    Optional.of(functionName)
-        .map(BuckFunctionName::getIdentifier)
-        .ifPresent(
-            identifier -> {
-              annotationHolder
-                  .createInfoAnnotation(functionName.getIdentifier(), null)
-                  .setTextAttributes(BuckSyntaxHighlighter.BUCK_FUNCTION_NAME);
-            });
   }
 
   private void annotateBuckPropertyLvalue(
@@ -148,7 +133,7 @@ public class BuckAnnotator implements Annotator {
   private void annotateSimpleExpression(
       BuckSimpleExpression simpleExpression, AnnotationHolder annotationHolder) {
     Optional.of(simpleExpression)
-        .map(BuckPsiUtils::getStringValueFromExpression)
+        .map(BuckPsiUtils::getStringValueFromSimpleExpression)
         .filter(
             s ->
                 annotateStringAsTargetPattern(simpleExpression, s, annotationHolder)

@@ -38,8 +38,7 @@ a = (1,2)
 a += (3,4)
 a += 5,6
 a += (7,)
-# TODO:  Fix empty tuple
-# a += ()
+a += ()
 
 # List expressions
 b = [1,2]

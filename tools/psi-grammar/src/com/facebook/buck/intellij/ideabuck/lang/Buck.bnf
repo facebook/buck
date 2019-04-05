@@ -101,8 +101,6 @@
     WITH = 'with'
     YIELD = 'yield'
 
-    GLOB = 'glob'
-
     L_PARENTHESES = '('
     L_BRACKET = '['
     L_CURLY = '{'
@@ -151,42 +149,63 @@ break_statement ::= 'break'
 
 continue_statement ::= 'continue'
 
-return_statement ::= 'return' [expression]
+return_statement ::= 'return' [expression_list]
 
 assert_statement ::= 'assert' expression [',' expression]
 
 compound_statement ::= if_statement | for_statement | function_definition
 
-if_statement ::= 'if' simple_expression ':' suite ('elif' simple_expression ':' suite)* ['else' ':' suite]
+if_statement ::= 'if' expression ':' suite ('elif' expression ':' suite)* ['else' ':' suite]
 
-for_statement ::= 'for' loop_variable 'in' expression ':' suite
-loop_variable ::= primary_with_suffix (',' primary_with_suffix)*
+for_statement ::= 'for' simple_expression_list 'in' expression_list ':' suite
 
 suite ::= simple_statement | INDENT statement+ DEDENT
 
-expression ::= simple_expression (',' simple_expression)*
+expression ::= or_expression [ 'if' or_expression 'else' or_expression ]
 
-simple_expression ::= unary_op simple_expression
-                      | (primary_with_suffix [binary_op simple_expression]
-                      | 'lambda' [parameter_list] ':' simple_expression)
-                      ['if' simple_expression 'else' simple_expression]
-unary_op ::= 'not' | '+' | '-' | '~'
-binary_op ::=  'or' | 'and' | '==' | '!=' | '<' | '>' | '<=' | '>='
-                    | 'in' | 'not' 'in' | 'is' | 'not' 'is'
-                    | '|' | '^' | '&' | '-' | '+' | '*' | '%' | '/' | '//'
+or_expression ::= and_expression ( 'or' and_expression )*
 
+and_expression ::= not_expression ( 'and' not_expression )*
 
-primary_with_suffix ::= primary (dot_suffix | slice_suffix)*
+not_expression ::= 'not' not_expression | comparison_expression
 
-primary ::= NONE | BOOLEAN | NUMBER | function_call | IDENTIFIER | string | list | dict | '(' expression ','? ')' | unary_op primary_with_suffix
-function_call ::=  function_name function_call_suffix
-function_name ::= ('glob' | IDENTIFIER)
+comparison_expression ::= simple_expression [comparison_op simple_expression]
+comparison_op ::=  '<' | '>' | '==' | '>=' | '<=' | '<>' | '!=' | 'in' | 'not' 'in'
 
-list ::= '[' (simple_expression_list ']' | expression comprehension_suffix ']' | ']')
+simple_expression ::= xor_expression ('|' xor_expression)*
+
+xor_expression ::= bitwise_and_expression ('^' bitwise_and_expression)*
+
+bitwise_and_expression ::= shift_expression ('&' shift_expression)*
+
+shift_expression ::= arithmetic_expression (shift_op arithmetic_expression)*
+shift_op ::= '<<' | '>>'
+
+arithmetic_expression ::= term_expression (arithmetic_op term_expression)*
+arithmetic_op ::= '+' | '-'
+
+term_expression ::= factor_expression (term_op factor_expression)*
+term_op ::= '*' | '/' | '%' | '//'
+
+factor_expression ::= factor_unary_op factor_expression | power_expression
+factor_unary_op ::= '+' | '-' | '~'
+
+power_expression ::= atomic_expression expression_trailer* [ '**' factor_expression]
+
+atomic_expression ::= '(' [expression_list_or_comprehension] ')'
+            | list
+            | dict
+            | IDENTIFIER | BOOLEAN | NUMBER | NONE | string
+
+list ::= '[' [expression_list_or_comprehension] ']'
+
+expression_list_or_comprehension ::= expression ( comprehension_for | (',' expression)* [','] )
+
+expression_trailer ::= function_call_suffix | slice_suffix | dot_suffix
 
 function_call_suffix ::= '(' argument_list? ')'
 slice_suffix ::= '[' simple_expression? (':' simple_expression? (':' simple_expression?)?)? ']'
-dot_suffix ::= '.' (function_call | IDENTIFIER)
+dot_suffix ::= '.' IDENTIFIER
 
 // [Python2]: exprlist: expr (',' expr)* [',']
 simple_expression_list ::= simple_expression (',' simple_expression)* [',']
@@ -194,13 +213,15 @@ simple_expression_list ::= simple_expression (',' simple_expression)* [',']
 // [Python2]: testlist: test (',' test)* [',']
 expression_list ::= expression (',' expression)* [',']
 
-dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_suffix '}') | '}')
+dict ::= '{' (dict_entry ((',' dict_entry)* ','? '}' | comprehension_iter '}') | '}')
 dict_entry ::= simple_expression ':' simple_expression
 
 argument_list ::= argument (',' argument)* ','?
-argument ::= '**' simple_expression | '*' simple_expression | [property_lvalue '='] simple_expression
+argument ::= '**' expression | '*' expression | [property_lvalue '='] expression
 property_lvalue ::= IDENTIFIER
 
-comprehension_suffix ::= 'for' loop_variable 'in' simple_expression ['if' simple_expression] comprehension_suffix*
+comprehension_iter ::= comprehension_for | comprehension_if
+comprehension_for ::= 'for' simple_expression_list 'in' or_expression [comprehension_iter]
+comprehension_if ::= 'if' expression [comprehension_iter]
 
-string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_DOC_STRING | SINGLE_QUOTED_DOC_STRING) (PERCENT primary) ?
+string ::= (DOUBLE_QUOTED_STRING | SINGLE_QUOTED_STRING | DOUBLE_QUOTED_DOC_STRING | SINGLE_QUOTED_DOC_STRING)

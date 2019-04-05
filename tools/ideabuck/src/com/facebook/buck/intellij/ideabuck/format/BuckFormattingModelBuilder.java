@@ -75,7 +75,7 @@ public class BuckFormattingModelBuilder
 
   protected static SpacingBuilder createSpacingBuilder(CodeStyleSettings settings) {
     return new SpacingBuilder(settings, BuckLanguage.INSTANCE)
-        .between(BuckTypes.FUNCTION_CALL, BuckTypes.FUNCTION_CALL)
+        .between(BuckTypes.FUNCTION_DEFINITION, BuckTypes.FUNCTION_DEFINITION)
         .blankLines(1)
         .before(BuckTypes.L_BRACKET)
         .spacing(0, 0, 0, false, 0)

@@ -18,7 +18,7 @@ package com.facebook.buck.intellij.ideabuck.folding;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCall;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCallSuffix;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
@@ -42,8 +42,8 @@ import org.jetbrains.annotations.Nullable;
 /** Folds rules and arrays */
 public class BuckFoldingBuilder extends FoldingBuilderEx {
 
-  private final TokenSet arrayElements = TokenSet.create(BuckTypes.SIMPLE_EXPRESSION);
-  private final TokenSet values = TokenSet.create(BuckTypes.PRIMARY);
+  private final TokenSet arrayElements = TokenSet.create(BuckTypes.EXPRESSION);
+  private final TokenSet values = TokenSet.create(BuckTypes.ATOMIC_EXPRESSION);
 
   @NotNull
   @Override
@@ -51,10 +51,10 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
       @NotNull PsiElement root, @NotNull Document document, boolean quick) {
     List<FoldingDescriptor> descriptors = new ArrayList<>();
 
-    PsiTreeUtil.findChildrenOfAnyType(root, BuckFunctionCall.class, BuckList.class)
+    PsiTreeUtil.findChildrenOfAnyType(root, BuckFunctionCallSuffix.class, BuckList.class)
         .forEach(
             element -> {
-              int offset = element instanceof BuckFunctionCall ? 0 : 1;
+              int offset = element instanceof BuckFunctionCallSuffix ? 0 : 1;
               TextRange elementTextRange = element.getTextRange();
               TextRange foldingRange =
                   new TextRange(
@@ -80,7 +80,7 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
 
     if (type.equals(BuckTypes.LIST)) {
       return getArrayPlaceholderText(compositeElement);
-    } else if (type.equals(BuckTypes.FUNCTION_CALL)) {
+    } else if (type.equals(BuckTypes.FUNCTION_CALL_SUFFIX)) {
       return getRulePlaceholderText(compositeElement);
     } else {
       return null;

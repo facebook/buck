@@ -19,7 +19,6 @@ import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckParameter;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPrimary;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
@@ -106,13 +105,6 @@ public abstract class BuckCodeContexts {
   private static boolean isInsideString(PsiElement element) {
     BuckString buckString = PsiTreeUtil.getParentOfType(element, BuckString.class);
     if (buckString == null) {
-      return false;
-    }
-    // Currently, BuckString also includes the '%' formatting directive :-(
-    // This is wrong, but until that gets fixed, make sure this is in the
-    // quoted part of the string and not in some other part of the string.
-    BuckPrimary primary = buckString.getPrimary();
-    if (PsiTreeUtil.isAncestor(primary, element, false)) {
       return false;
     }
     return Stream.of(

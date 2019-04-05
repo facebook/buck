@@ -123,11 +123,6 @@ public class BuckBlock implements ASTBlock {
       if (childType == TokenType.WHITE_SPACE) {
         continue;
       }
-      if (childType == BuckTypes.FUNCTION_CALL
-          && child.getFirstChildNode().getElementType() == BuckTypes.FUNCTION_NAME
-          && child.getFirstChildNode().getFirstChildNode().getElementType() == BuckTypes.GLOB) {
-        continue;
-      }
       blocks.add(buildSubBlock(child));
     }
     return Collections.unmodifiableList(blocks);
