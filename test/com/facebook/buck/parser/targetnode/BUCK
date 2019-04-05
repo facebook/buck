@@ -1,0 +1,27 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "targetnode",
+    deps = [
+        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
+        "//src/com/facebook/buck/core/rules/config/impl:impl",
+        "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
+        "//src/com/facebook/buck/core/select/impl:impl",
+        "//src/com/facebook/buck/jvm/java:rules",
+        "//src/com/facebook/buck/jvm/java/toolchain/impl:impl",
+        "//src/com/facebook/buck/parser:parser",
+        "//src/com/facebook/buck/parser/manifest:manifest",
+        "//src/com/facebook/buck/parser/targetnode:targetnode",
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/graph/transformation:testutil",
+        "//test/com/facebook/buck/core/rules/knowntypes:testutil",
+        "//test/com/facebook/buck/core/rules/platform:testutil",
+        "//test/com/facebook/buck/core/select:testutil",
+        "//test/com/facebook/buck/io/filesystem:testutil",
+        "//test/com/facebook/buck/sandbox:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)

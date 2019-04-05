@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import java.io.IOException;
 import java.nio.file.Path;
 
-interface TargetNodeListener<T> {
+/** Callback which is called when target node is created */
+public interface TargetNodeListener<T> {
   void onCreate(Path buildFile, T node) throws IOException;
 }
