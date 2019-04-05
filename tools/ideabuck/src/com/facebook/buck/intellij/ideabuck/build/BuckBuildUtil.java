@@ -130,7 +130,7 @@ public final class BuckBuildUtil {
     }
     List<BuckArgument> arguments = argumentList.getArgumentList();
     for (BuckArgument arg : arguments) {
-      PsiElement lvalue = arg.getPropertyLvalue();
+      PsiElement lvalue = arg.getIdentifier();
       if (lvalue != null) {
         PsiElement propertyName = lvalue.getFirstChild();
         if (propertyName != null && propertyName.getText().equals(name)) {

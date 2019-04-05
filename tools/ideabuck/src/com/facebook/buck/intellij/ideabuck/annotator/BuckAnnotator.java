@@ -22,10 +22,11 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.highlight.BuckSyntaxHighlighter;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckParameter;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
@@ -46,8 +47,10 @@ public class BuckAnnotator implements Annotator {
 
   @Override
   public void annotate(@NotNull PsiElement psiElement, @NotNull AnnotationHolder annotationHolder) {
-    if (psiElement instanceof BuckPropertyLvalue) {
-      annotateBuckPropertyLvalue((BuckPropertyLvalue) psiElement, annotationHolder);
+    if (psiElement instanceof BuckArgument) {
+      annotateBuckArgument((BuckArgument) psiElement, annotationHolder);
+    } else if (psiElement instanceof BuckParameter) {
+      annotateBuckParameter((BuckParameter) psiElement, annotationHolder);
     } else if (psiElement instanceof BuckLoadCall) {
       annotateLoadCall((BuckLoadCall) psiElement, annotationHolder);
     } else if (psiElement instanceof BuckSimpleExpression) {
@@ -55,11 +58,24 @@ public class BuckAnnotator implements Annotator {
     }
   }
 
-  private void annotateBuckPropertyLvalue(
-      BuckPropertyLvalue propertyLvalue, AnnotationHolder annotationHolder) {
-    Annotation annotation =
-        annotationHolder.createInfoAnnotation(propertyLvalue.getIdentifier(), null);
-    annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_PROPERTY_LVALUE);
+  /** Colorize named arguments in function invocations. */
+  private void annotateBuckArgument(BuckArgument argument, AnnotationHolder annotationHolder) {
+    Optional.ofNullable(argument.getIdentifier())
+        .ifPresent(
+            identifier -> {
+              Annotation annotation = annotationHolder.createInfoAnnotation(identifier, null);
+              annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_PROPERTY_LVALUE);
+            });
+  }
+
+  /** Colorize named parameters in function definitions. */
+  private void annotateBuckParameter(BuckParameter parameter, AnnotationHolder annotationHolder) {
+    Optional.ofNullable(parameter.getIdentifier())
+        .ifPresent(
+            identifier -> {
+              Annotation annotation = annotationHolder.createInfoAnnotation(identifier, null);
+              annotation.setTextAttributes(BuckSyntaxHighlighter.BUCK_PROPERTY_LVALUE);
+            });
   }
 
   private void annotateLoadCall(BuckLoadCall loadCall, AnnotationHolder annotationHolder) {

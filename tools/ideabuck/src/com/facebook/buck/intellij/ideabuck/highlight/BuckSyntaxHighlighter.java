@@ -94,7 +94,6 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
     sKeys.put(BuckTypes.TRIPLE_QUOTED_RAW_STRING, BUCK_STRING);
     sKeys.put(BuckTypes.INTEGER, BUCK_NUMBER);
     sKeys.put(BuckTypes.LINE_COMMENT, BUCK_COMMENT);
-    sKeys.put(BuckTypes.PROPERTY_LVALUE, BUCK_PROPERTY_LVALUE);
     sKeys.put(BuckTypes.IDENTIFIER, BUCK_IDENTIFIER);
 
     sKeys.put(TokenType.BAD_CHARACTER, HighlighterColors.BAD_CHARACTER);

@@ -19,8 +19,7 @@ package com.facebook.buck.intellij.ideabuck.format;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionListOrComprehension;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListmaker;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListMaker;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckVisitor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Ordering;
@@ -107,19 +106,19 @@ public class DependenciesOptimizer {
 
     private class PropertyVisitor extends BuckVisitor {
       @Override
-      public void visitArgument(@NotNull BuckArgument property) {
-        BuckPropertyLvalue lValue = property.getPropertyLvalue();
+      public void visitArgument(@NotNull BuckArgument argument) {
+        PsiElement lValue = argument.getIdentifier();
         if (lValue == null
             || (!DEPENDENCIES_KEYWORD.equals(lValue.getText())
                 && !PROVIDED_DEPENDENCIES_KEYWORD.equals(lValue.getText())
                 && !EXPORTED_DEPENDENCIES_KEYWORD.equals(lValue.getText()))) {
           return;
         }
-        Optional.of(property.getExpression())
-            .map(e -> PsiTreeUtil.findChildrenOfType(e, BuckListmaker.class))
+        Optional.of(argument.getExpression())
+            .map(e -> PsiTreeUtil.findChildrenOfType(e, BuckListMaker.class))
             .filter(collection -> collection.size() == 1)
             .map(collection -> collection.iterator().next())
-            .map(BuckListmaker::getExpressionListOrComprehension)
+            .map(BuckListMaker::getExpressionListOrComprehension)
             .ifPresent(OptimizerInstance.this::uniqueSort);
       }
     }

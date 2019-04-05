@@ -12,7 +12,7 @@
   <change-notes><![CDATA[
 <h3>3.7.2</h3>
 <ul>
-  <li></li>
+  <li>Make grammar fully Starlark-compatible.</li>
 </ul>
 <h3>3.7.1</h3>
 <ul>
@@ -236,9 +236,6 @@
     <lang.syntaxHighlighterFactory
       language="Buckconfig"
       implementationClass="com.facebook.buck.intellij.ideabuck.highlight.BcfgSyntaxHighlighterFactory"/>
-    <lang.formatter
-      language="Buck"
-      implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckFormattingModelBuilder"/>
     <lang.importOptimizer
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckImportOptimizer"/>

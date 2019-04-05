@@ -76,7 +76,7 @@ DECIMAL_LITERAL = 0|([1-9][0-9]*)
 
 // TODO: Starlark says identifiers can be:
 // "unicode letters, digits, and underscores, not starting with a digit"
-IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
+IDENTIFIER_TOKEN=[a-zA-Z_]([a-zA-Z0-9_])*
 
 %x INDENTED
 
@@ -191,7 +191,7 @@ IDENTIFIER=[a-zA-Z_]([a-zA-Z0-9_])*
   {HEX_LITERAL}               { return HEX_LITERAL; }
   {OCTAL_LITERAL}             { return OCTAL_LITERAL; }
   {DECIMAL_LITERAL}           { return DECIMAL_LITERAL; }
-  {IDENTIFIER}                { return IDENTIFIER; }
+  {IDENTIFIER_TOKEN}          { return IDENTIFIER_TOKEN; }
 
   [^]                         { return BAD_CHARACTER; }
   <<EOF>>                     {

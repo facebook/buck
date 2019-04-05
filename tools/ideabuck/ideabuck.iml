@@ -13,10 +13,7 @@
     <orderEntry type="jdk" jdkName="IDEA SDK" jdkType="IDEA JDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="jetty" level="project" />
-    <orderEntry type="library" name="jackson-mrbean-2.9.7" level="project" />
-    <orderEntry type="library" name="jackson-datatype-guava-2.9.7" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="android" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="gson" level="project" />
+    <orderEntry type="library" name="ideabuck-lib" level="project" />
     <orderEntry type="library" scope="TEST" name="test-lib" level="project" />
     <orderEntry type="library" scope="TEST" name="guava-testlib" level="project" />
     <orderEntry type="module-library">

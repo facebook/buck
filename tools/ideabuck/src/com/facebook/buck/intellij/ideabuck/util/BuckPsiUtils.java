@@ -30,13 +30,13 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFactorExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionDefinition;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIfStatement;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckNotExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckOrExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPowerExpression;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckShiftExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleStatement;
@@ -277,15 +277,15 @@ public final class BuckPsiUtils {
   public static BuckFunctionTrailer findTargetInPsiTree(PsiElement root, String name) {
     for (BuckFunctionTrailer buckRuleBody :
         PsiTreeUtil.findChildrenOfType(root, BuckFunctionTrailer.class)) {
-      for (BuckArgument buckProperty :
+      for (BuckArgument buckArgument :
           PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckArgument.class)) {
-        if (!Optional.ofNullable(buckProperty.getPropertyLvalue())
-            .map(lvalue -> lvalue.getIdentifier().getText())
+        if (!Optional.ofNullable(buckArgument.getIdentifier())
+            .map(PsiElement::getText)
             .filter("name"::equals)
             .isPresent()) {
           continue;
         }
-        if (name.equals(getStringValueFromExpression(buckProperty.getExpression()))) {
+        if (name.equals(getStringValueFromExpression(buckArgument.getExpression()))) {
           return buckRuleBody;
         }
       }
@@ -302,8 +302,8 @@ public final class BuckPsiUtils {
         PsiTreeUtil.findChildrenOfType(psiFile, BuckFunctionTrailer.class)) {
       for (BuckArgument buckArgument :
           PsiTreeUtil.findChildrenOfType(buckRuleBody, BuckArgument.class)) {
-        BuckPropertyLvalue propertyLvalue = buckArgument.getPropertyLvalue();
-        if (propertyLvalue == null || !"name".equals(propertyLvalue.getText())) {
+        BuckIdentifier buckIdentifier = buckArgument.getIdentifier();
+        if (buckIdentifier == null || !"name".equals(buckIdentifier.getText())) {
           continue;
         }
         String name = BuckPsiUtils.getStringValueFromExpression(buckArgument.getExpression());
