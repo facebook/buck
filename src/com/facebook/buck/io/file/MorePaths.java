@@ -50,6 +50,7 @@ public class MorePaths {
   private MorePaths() {}
 
   public static final Path EMPTY_PATH = Paths.get("");
+  public static final Path CWD_PATH = Paths.get(".");
 
   public static String pathWithUnixSeparators(String path) {
     return pathWithUnixSeparators(Paths.get(path));
