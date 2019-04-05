@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.aether.AetherUtil;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.StandardSystemProperty;
@@ -42,6 +43,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import org.apache.maven.repository.internal.MavenRepositorySystemUtils;
 import org.eclipse.aether.DefaultRepositorySystemSession;
 import org.eclipse.aether.RepositorySystem;
@@ -72,6 +75,7 @@ public class Publisher {
 
   private final ServiceLocator locator;
   private final LocalRepository localRepo;
+  private final int concurrencyLimit;
   private final RemoteRepository remoteRepo;
   private final boolean dryRun;
 
@@ -86,9 +90,11 @@ public class Publisher {
       URL remoteRepoUrl,
       Optional<String> username,
       Optional<String> password,
+      int concurrencyLimit,
       boolean dryRun) {
     this.localRepo = new LocalRepository(localRepoPath.toFile());
     this.remoteRepo = AetherUtil.toRemoteRepository(remoteRepoUrl, username, password);
+    this.concurrencyLimit = concurrencyLimit;
     this.locator = AetherUtil.initServiceLocator();
     this.dryRun = dryRun;
   }
@@ -117,8 +123,35 @@ public class Publisher {
       throw new DeploymentException(sb.toString());
     }
 
-    ImmutableSet.Builder<DeployResult> deployResultBuilder = ImmutableSet.builder();
-    for (MavenPublishable publishable : publishables) {
+    try {
+      ForkJoinPool forkJoinPool = MostExecutors.forkJoinPoolWithThreadLimit(concurrencyLimit, 16);
+      return forkJoinPool
+          .submit(
+              () ->
+                  publishables
+                      .parallelStream()
+                      .flatMap(
+                          publishable -> deployPublishable(pathResolver, publishable).stream()))
+          .get()
+          .collect(ImmutableSet.toImmutableSet());
+    } catch (ExecutionException e) {
+      Throwable sourceException = e;
+      while (sourceException != null && sourceException != sourceException.getCause()) {
+        if (sourceException instanceof DeploymentException) {
+          throw new DeploymentException(sourceException.getMessage(), e);
+        }
+        sourceException = sourceException.getCause();
+      }
+      throw new RuntimeException(e);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  ImmutableSet<DeployResult> deployPublishable(
+      SourcePathResolver pathResolver, MavenPublishable publishable) {
+    try {
+      ImmutableSet.Builder<DeployResult> deployResultBuilder = ImmutableSet.builder();
       DefaultArtifact coords =
           new DefaultArtifact(
               Preconditions.checkNotNull(
@@ -145,8 +178,11 @@ public class Publisher {
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
+
+      return deployResultBuilder.build();
+    } catch (DeploymentException e) {
+      throw new RuntimeException(e);
     }
-    return deployResultBuilder.build();
   }
 
   /**

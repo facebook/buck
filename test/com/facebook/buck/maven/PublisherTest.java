@@ -60,6 +60,7 @@ public class PublisherTest {
             /* remoteRepoUrl */ Publisher.MAVEN_CENTRAL,
             /* username */ Optional.empty(),
             /* password */ Optional.empty(),
+            /* concurrencyLimit */ 4,
             /* dryRun */ true);
   }
 

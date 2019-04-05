@@ -57,6 +57,7 @@ public class TestPublisher extends Publisher implements AutoCloseable {
         httpd.getRootUri().toURL(),
         /* username */ Optional.empty(),
         /* password */ Optional.empty(),
+        /* concurrencyLimit */ 1,
         /* dryRun */ false);
     this.httpd = httpd;
     this.putRequestsHandler = putRequestsHandler;
