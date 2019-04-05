@@ -3,6 +3,7 @@ load("//tools/build_rules:java_rules.bzl", "java_test")
 java_test(
     name = "buckevents",
     srcs = glob(["*.java"]),
+    source = "1.8",
     target = "1.8",
     deps = [
         "//src/com/facebook/buck/event/external:external_lib",
