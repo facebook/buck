@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -67,12 +66,11 @@ public class RawTargetNodeToTargetNodeFactoryTest {
                         basepath.resolve("src2"),
                         basepath.resolve("BUCK"))))
             .build();
-    RawAttributes attributes =
-        new RawAttributes(
-            ImmutableMap.<String, Object>builder()
-                .put("name", "c")
-                .put("srcs", ImmutableList.of("src1", "src2"))
-                .build());
+    ImmutableMap<String, Object> attributes =
+        ImmutableMap.<String, Object>builder()
+            .put("name", "c")
+            .put("srcs", ImmutableList.of("src1", "src2"))
+            .build();
     RawTargetNode node =
         ImmutableRawTargetNode.of(
             buildTarget.getUnconfiguredBuildTarget(),

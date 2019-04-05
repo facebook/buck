@@ -21,7 +21,6 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -75,7 +74,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
     return ImmutableRawTargetNode.of(
         target,
         ruleType,
-        new RawAttributes(ImmutableMap.copyOf(rawAttributes)),
+        ImmutableMap.copyOf(rawAttributes),
         visibilityPatterns,
         withinViewPatterns);
   }

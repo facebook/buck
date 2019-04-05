@@ -100,7 +100,7 @@ public class RawTargetNodeToTargetNodeFactory implements ParserTargetNodeFactory
               target,
               description.getConstructorArgType(),
               declaredDeps,
-              rawTargetNode.getAttributes().getAll());
+              rawTargetNode.getAttributes());
     } catch (CoerceFailedException e) {
       throw new HumanReadableException(e, "%s: %s", target, e.getMessage());
     }

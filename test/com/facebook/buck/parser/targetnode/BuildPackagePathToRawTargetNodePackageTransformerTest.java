@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDepsPackage;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
-import com.facebook.buck.core.model.targetgraph.raw.RawAttributes;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -82,7 +81,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget1,
             RuleType.of("java_library", RuleType.Kind.BUILD),
-            new RawAttributes(rawAttributes1),
+            rawAttributes1,
             ImmutableSet.of(),
             ImmutableSet.of());
 
@@ -94,7 +93,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget2,
             RuleType.of("java_library", RuleType.Kind.BUILD),
-            new RawAttributes(rawAttributes2),
+            rawAttributes2,
             ImmutableSet.of(),
             ImmutableSet.of());
 

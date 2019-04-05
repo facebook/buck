@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.FakeRuleTypeForTests
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests
-import com.facebook.buck.core.model.targetgraph.raw.RawAttributes
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.rules.visibility.VisibilityPattern
 import com.google.common.collect.ImmutableMap
@@ -46,24 +45,24 @@ internal fun createBuildTarget(shortName: String): UnconfiguredBuildTarget {
 internal fun createRule(shortName: String, deps: BuildTargetSet): InternalRawBuildRule {
     val buildTarget = createBuildTarget(shortName)
     val node = FakeRawTargetNode(buildTarget,
-            FAKE_RULE_TYPE, RawAttributes(ImmutableMap.of()))
+            FAKE_RULE_TYPE, ImmutableMap.of())
     return InternalRawBuildRule(node, deps)
 }
 
 internal fun createRawRule(shortName: String, deps: Set<String>): RawBuildRule {
     val buildTarget = createBuildTarget(shortName)
     val node = FakeRawTargetNode(buildTarget,
-            FAKE_RULE_TYPE, RawAttributes(ImmutableMap.of()))
-    return RawBuildRule(node, deps.map { createBuildTarget(it) }.toSet())
+            FAKE_RULE_TYPE, ImmutableMap.of())
+    return RawBuildRule(node, deps.map { createBuildTarget(it)}.toSet())
 }
 
-internal data class FakeRawTargetNode(private val buildTarget: UnconfiguredBuildTarget, private val ruleType: RuleType, private val attributes: RawAttributes) : RawTargetNode {
+internal data class FakeRawTargetNode(private val buildTarget: UnconfiguredBuildTarget, private val ruleType: RuleType, private val attributes: ImmutableMap<String, Any>) : RawTargetNode {
 
     override fun getBuildTarget(): UnconfiguredBuildTarget = buildTarget
 
     override fun getRuleType(): RuleType = ruleType
 
-    override fun getAttributes(): RawAttributes = attributes
+    override fun getAttributes(): ImmutableMap<String, Any>? = attributes
 
     override fun getVisibilityPatterns(): ImmutableSet<VisibilityPattern> {
         return ImmutableSet.of()

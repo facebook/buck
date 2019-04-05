@@ -76,7 +76,7 @@ public class DefaultRawTargetNodeFactoryTest {
     assertEquals(RuleType.of("java_library", RuleType.Kind.BUILD), rawTargetNode.getRuleType());
     assertEquals(buildTarget, rawTargetNode.getBuildTarget());
 
-    assertEquals(attributes, rawTargetNode.getAttributes().getAll());
+    assertEquals(attributes, rawTargetNode.getAttributes());
 
     assertEquals(
         "//a/...",

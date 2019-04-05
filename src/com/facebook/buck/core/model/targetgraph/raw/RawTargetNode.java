@@ -20,6 +20,7 @@ import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -46,7 +47,7 @@ public interface RawTargetNode extends ComputeResult {
    * <p>Note that some of these attributes may require additional processing before they can be
    * stored in a constructor argument. For example, selectable arguments need to be resolved first.
    */
-  RawAttributes getAttributes();
+  ImmutableMap<String, Object> getAttributes();
 
   /** List of patterns from <code>visibility</code> attribute. */
   ImmutableSet<VisibilityPattern> getVisibilityPatterns();
