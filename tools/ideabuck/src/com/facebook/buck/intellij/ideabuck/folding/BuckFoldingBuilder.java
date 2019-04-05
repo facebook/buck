@@ -16,13 +16,13 @@
 
 package com.facebook.buck.intellij.ideabuck.folding;
 
-import static com.google.common.base.Strings.isNullOrEmpty;
-
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionCallSuffix;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckList;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgumentList;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionList;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionListOrComprehension;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckSimpleExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
+import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.lang.ASTNode;
 import com.intellij.lang.folding.FoldingBuilderEx;
 import com.intellij.lang.folding.FoldingDescriptor;
@@ -42,26 +42,22 @@ import org.jetbrains.annotations.Nullable;
 /** Folds rules and arrays */
 public class BuckFoldingBuilder extends FoldingBuilderEx {
 
-  private final TokenSet arrayElements = TokenSet.create(BuckTypes.EXPRESSION);
-  private final TokenSet values = TokenSet.create(BuckTypes.ATOMIC_EXPRESSION);
-
   @NotNull
   @Override
   public FoldingDescriptor[] buildFoldRegions(
       @NotNull PsiElement root, @NotNull Document document, boolean quick) {
     List<FoldingDescriptor> descriptors = new ArrayList<>();
 
-    PsiTreeUtil.findChildrenOfAnyType(root, BuckFunctionCallSuffix.class, BuckList.class)
+    PsiTreeUtil.findChildrenOfAnyType(
+            root,
+            BuckExpressionListOrComprehension.class,
+            BuckExpressionList.class,
+            BuckArgumentList.class)
         .forEach(
             element -> {
-              int offset = element instanceof BuckFunctionCallSuffix ? 0 : 1;
               TextRange elementTextRange = element.getTextRange();
-              TextRange foldingRange =
-                  new TextRange(
-                      elementTextRange.getStartOffset() + offset,
-                      elementTextRange.getEndOffset() - offset);
-              if (foldingRange.getLength() > 0) {
-                descriptors.add(new FoldingDescriptor(element.getNode(), foldingRange));
+              if (elementTextRange.getLength() > 0) {
+                descriptors.add(new FoldingDescriptor(element.getNode(), elementTextRange));
               }
             });
 
@@ -78,21 +74,25 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
     CompositeElement compositeElement = (CompositeElement) astNode;
     IElementType type = compositeElement.getElementType();
 
-    if (type.equals(BuckTypes.LIST)) {
-      return getArrayPlaceholderText(compositeElement);
-    } else if (type.equals(BuckTypes.FUNCTION_CALL_SUFFIX)) {
+    if (type.equals(BuckTypes.EXPRESSION_LIST_OR_COMPREHENSION)) {
+      return getArrayPlaceholderText(compositeElement, BuckTypes.EXPRESSION);
+    } else if (type.equals(BuckTypes.EXPRESSION_LIST)) {
+      return getArrayPlaceholderText(compositeElement, BuckTypes.EXPRESSION);
+    } else if (type.equals(BuckTypes.ARGUMENT_LIST)) {
       return getRulePlaceholderText(compositeElement);
     } else {
       return null;
     }
   }
 
-  private String getArrayPlaceholderText(CompositeElement compositeElement) {
-    int size = compositeElement.countChildren(arrayElements);
+  private String getArrayPlaceholderText(
+      CompositeElement compositeElement, IElementType elementType) {
+    int size = compositeElement.countChildren(TokenSet.create(elementType));
     // Return null (the default value) if countValues() returns an error code
-    return size < 0 ? null : Integer.toString(size);
+    return size < 2 ? null : String.format("%d entries", size);
   }
 
+  @Nullable
   private String getRulePlaceholderText(CompositeElement compositeElement) {
     PsiElement psiElement = compositeElement.getPsi();
     String name = null;
@@ -101,18 +101,17 @@ public class BuckFoldingBuilder extends FoldingBuilderEx {
     for (BuckPropertyLvalue lvalue : lvalues) {
       if (lvalue.getText().equals("name")) {
         PsiElement element = lvalue;
-        do {
+        while (element != null) {
           element = element.getNextSibling();
-        } while (!(element instanceof BuckSimpleExpression));
-        name = element.getText();
+          if (element instanceof BuckExpression) {
+            name = BuckPsiUtils.getStringValueFromExpression((BuckExpression) element);
+            break;
+          }
+        }
         break;
       }
     }
-
-    return String.format(
-        isNullOrEmpty(name) ? "%s" : "%s(%s)",
-        compositeElement.getPsi().getFirstChild().getText(),
-        name);
+    return name;
   }
 
   @Override

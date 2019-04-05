@@ -84,11 +84,15 @@ public class BuckSyntaxHighlighter extends SyntaxHighlighterBase {
         }) {
       sKeys.put(type, BUCK_KEYWORD);
     }
-    sKeys.put(BuckTypes.SINGLE_QUOTED_DOC_STRING, BUCK_STRING);
-    sKeys.put(BuckTypes.DOUBLE_QUOTED_DOC_STRING, BUCK_STRING);
-    sKeys.put(BuckTypes.DOUBLE_QUOTED_STRING, BUCK_STRING);
-    sKeys.put(BuckTypes.SINGLE_QUOTED_STRING, BUCK_STRING);
-    sKeys.put(BuckTypes.NUMBER, BUCK_NUMBER);
+    sKeys.put(BuckTypes.APOSTROPHED_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.APOSTROPHED_RAW_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.TRIPLE_APOSTROPHED_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.TRIPLE_APOSTROPHED_RAW_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.QUOTED_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.QUOTED_RAW_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.TRIPLE_QUOTED_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.TRIPLE_QUOTED_RAW_STRING, BUCK_STRING);
+    sKeys.put(BuckTypes.INTEGER, BUCK_NUMBER);
     sKeys.put(BuckTypes.LINE_COMMENT, BUCK_COMMENT);
     sKeys.put(BuckTypes.PROPERTY_LVALUE, BUCK_PROPERTY_LVALUE);
     sKeys.put(BuckTypes.IDENTIFIER, BUCK_IDENTIFIER);

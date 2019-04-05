@@ -19,7 +19,7 @@ package com.facebook.buck.intellij.ideabuck.format;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpressionListOrComprehension;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckList;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckListmaker;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckPropertyLvalue;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckVisitor;
 import com.google.common.annotations.VisibleForTesting;
@@ -116,10 +116,10 @@ public class DependenciesOptimizer {
           return;
         }
         Optional.of(property.getExpression())
-            .map(e -> PsiTreeUtil.findChildrenOfType(e, BuckList.class))
+            .map(e -> PsiTreeUtil.findChildrenOfType(e, BuckListmaker.class))
             .filter(collection -> collection.size() == 1)
             .map(collection -> collection.iterator().next())
-            .map(BuckList::getExpressionListOrComprehension)
+            .map(BuckListmaker::getExpressionListOrComprehension)
             .ifPresent(OptimizerInstance.this::uniqueSort);
       }
     }

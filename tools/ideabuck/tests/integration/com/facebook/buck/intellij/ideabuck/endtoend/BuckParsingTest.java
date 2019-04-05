@@ -100,6 +100,14 @@ public class BuckParsingTest extends ParsingTestCase {
     doTest();
   }
 
+  public void testStrings() {
+    doTest();
+  }
+
+  public void testIntegers() {
+    doTest();
+  }
+
   public void testAssignment() {
     doTest();
   }

@@ -58,15 +58,23 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       return;
     }
     PsiElement position = parameters.getPosition();
-    String quotes;
-    if (BuckPsiUtils.hasElementType(position, BuckTypes.SINGLE_QUOTED_STRING)) {
-      quotes = "'";
-    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.DOUBLE_QUOTED_STRING)) {
-      quotes = "\"";
-    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.SINGLE_QUOTED_DOC_STRING)) {
-      quotes = "'''";
-    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.DOUBLE_QUOTED_DOC_STRING)) {
-      quotes = "\"\"\"";
+    String openingQuote;
+    if (BuckPsiUtils.hasElementType(position, BuckTypes.APOSTROPHED_STRING)) {
+      openingQuote = "'";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.APOSTROPHED_RAW_STRING)) {
+      openingQuote = "r'";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.TRIPLE_APOSTROPHED_STRING)) {
+      openingQuote = "'''";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.TRIPLE_APOSTROPHED_RAW_STRING)) {
+      openingQuote = "r'''";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.QUOTED_STRING)) {
+      openingQuote = "\"";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.QUOTED_RAW_STRING)) {
+      openingQuote = "r\"";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.TRIPLE_QUOTED_STRING)) {
+      openingQuote = "\"\"\"";
+    } else if (BuckPsiUtils.hasElementType(position, BuckTypes.TRIPLE_QUOTED_RAW_STRING)) {
+      openingQuote = "r\"\"\"";
     } else {
       return;
     }
@@ -75,7 +83,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
     String positionStringWithQuotes = position.getText();
     String prefix =
         positionStringWithQuotes.substring(
-            quotes.length(), parameters.getOffset() - position.getTextOffset());
+            openingQuote.length(), parameters.getOffset() - position.getTextOffset());
     if (BuckPsiUtils.findAncestorWithType(position, BuckTypes.LOAD_TARGET_ARGUMENT) != null) {
       // Inside a load target, extension files are "@this//syntax/points:to/files.bzl"
       if (prefix.startsWith("@")) {

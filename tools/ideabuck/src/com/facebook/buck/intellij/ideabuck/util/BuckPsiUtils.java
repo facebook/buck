@@ -68,10 +68,14 @@ public final class BuckPsiUtils {
 
   public static final TokenSet STRING_LITERALS =
       TokenSet.create(
-          BuckTypes.SINGLE_QUOTED_STRING,
-          BuckTypes.DOUBLE_QUOTED_STRING,
-          BuckTypes.SINGLE_QUOTED_DOC_STRING,
-          BuckTypes.DOUBLE_QUOTED_DOC_STRING);
+          BuckTypes.APOSTROPHED_STRING,
+          BuckTypes.APOSTROPHED_RAW_STRING,
+          BuckTypes.TRIPLE_APOSTROPHED_STRING,
+          BuckTypes.TRIPLE_APOSTROPHED_RAW_STRING,
+          BuckTypes.QUOTED_STRING,
+          BuckTypes.QUOTED_RAW_STRING,
+          BuckTypes.TRIPLE_QUOTED_STRING,
+          BuckTypes.TRIPLE_QUOTED_RAW_STRING);
 
   private BuckPsiUtils() {}
 
@@ -223,27 +227,44 @@ public final class BuckPsiUtils {
   /**
    * Returns the text content of the given string (without the appropriate quoting).
    *
-   * <p>Note that this method is currently underdeveloped and hacky. It does not apply percent-style
-   * formatting (if such formatting is used, this method returns null), nor does it process escape
-   * sequences (these sequences currently appear in their raw form in the string).
+   * <p>Note that this method is currently underdeveloped and hacky. It does not process escape
+   * sequences correctly.
    */
   public static String getStringValueFromBuckString(BuckString buckString) {
-    PsiElement quotedElement = buckString.getSingleQuotedString();
+    PsiElement quotedElement = buckString.getApostrophedString();
     if (quotedElement == null) {
-      quotedElement = buckString.getDoubleQuotedString();
+      quotedElement = buckString.getQuotedString();
     }
     if (quotedElement != null) {
       String text = quotedElement.getText();
       return text.length() >= 2 ? text.substring(1, text.length() - 1) : null;
     }
 
-    PsiElement tripleQuotedElement = buckString.getSingleQuotedDocString();
-    if (tripleQuotedElement == null) {
-      tripleQuotedElement = buckString.getDoubleQuotedDocString();
+    quotedElement = buckString.getApostrophedRawString();
+    if (quotedElement == null) {
+      quotedElement = buckString.getQuotedRawString();
     }
-    if (tripleQuotedElement != null) {
-      String text = tripleQuotedElement.getText();
+    if (quotedElement != null) {
+      String text = quotedElement.getText();
+      return text.length() >= 3 ? text.substring(2, text.length() - 1) : null;
+    }
+
+    quotedElement = buckString.getTripleApostrophedString();
+    if (quotedElement == null) {
+      quotedElement = buckString.getTripleQuotedString();
+    }
+    if (quotedElement != null) {
+      String text = quotedElement.getText();
       return text.length() >= 6 ? text.substring(3, text.length() - 3) : null;
+    }
+
+    quotedElement = buckString.getTripleApostrophedRawString();
+    if (quotedElement == null) {
+      quotedElement = buckString.getTripleQuotedRawString();
+    }
+    if (quotedElement != null) {
+      String text = quotedElement.getText();
+      return text.length() >= 7 ? text.substring(4, text.length() - 3) : null;
     }
     return null;
   }
@@ -362,6 +383,7 @@ public final class BuckPsiUtils {
       ((BuckExpressionList) psiElement).getExpressionList().forEach(recurse);
     } else if (psiElement instanceof BuckExpression) {
       ((BuckExpression) psiElement).getOrExpressionList().forEach(recurse);
+      recurse.accept(((BuckExpression) psiElement).getExpression());
     } else if (psiElement instanceof BuckOrExpression) {
       ((BuckOrExpression) psiElement).getAndExpressionList().forEach(recurse);
     } else if (psiElement instanceof BuckAndExpression) {

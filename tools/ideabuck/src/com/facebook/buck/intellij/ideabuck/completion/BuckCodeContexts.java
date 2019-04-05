@@ -108,10 +108,14 @@ public abstract class BuckCodeContexts {
       return false;
     }
     return Stream.of(
-            buckString.getSingleQuotedString(),
-            buckString.getDoubleQuotedString(),
-            buckString.getSingleQuotedDocString(),
-            buckString.getDoubleQuotedDocString())
+            buckString.getApostrophedString(),
+            buckString.getApostrophedRawString(),
+            buckString.getTripleApostrophedString(),
+            buckString.getTripleApostrophedRawString(),
+            buckString.getQuotedString(),
+            buckString.getQuotedRawString(),
+            buckString.getTripleQuotedString(),
+            buckString.getTripleQuotedRawString())
         .filter(Objects::nonNull)
         .findAny()
         .filter(parent -> PsiTreeUtil.isAncestor(parent, element, false))

@@ -324,7 +324,7 @@ buck_file ::= statement*
 
 // [Python2]: funcdef: 'def' NAME parameters ':' suite
 // [Python2]: parameters: '(' [varargslist] ')'
-function_definition ::= 'def' IDENTIFIER '(' parameter_list ')' ':' suite
+function_definition ::= 'def' IDENTIFIER '(' [parameter_list] ')' ':' suite
 
 // [Python2]: varargslist: ((fpdef ['=' test] ',')*
 // [Python2]:               ('*' NAME [',' '**' NAME] | '**' NAME) |
@@ -457,7 +457,7 @@ suite ::= simple_statement | INDENT statement+ DEDENT
 
 // [Python2]: test: or_test ['if' or_test 'else' test] | lambdef
 // Starlark does not support lambda, see [StarLang:27].
-expression ::= or_expression [ 'if' or_expression 'else' or_expression ]
+expression ::= or_expression [ 'if' or_expression 'else' expression ]
 
 // [Python2]: or_test: and_test ('or' and_test)*
 or_expression ::= and_expression ( 'or' and_expression )*

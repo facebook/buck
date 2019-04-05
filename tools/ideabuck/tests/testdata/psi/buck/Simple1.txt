@@ -42,6 +42,6 @@ Buck File
                                                                       BuckPowerExpressionImpl(POWER_EXPRESSION)
                                                                         BuckAtomicExpressionImpl(ATOMIC_EXPRESSION)
                                                                           BuckStringImpl(STRING)
-                                                                            PsiElement(BuckTokenType.SINGLE_QUOTED_STRING)('':simple'')
+                                                                            PsiElement(BuckTokenType.APOSTROPHED_STRING)('':simple'')
                                             PsiElement(BuckTokenType.,)(',')
                                           PsiElement(BuckTokenType.))(')')

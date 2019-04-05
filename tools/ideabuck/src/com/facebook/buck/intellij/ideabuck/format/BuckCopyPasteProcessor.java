@@ -85,7 +85,7 @@ public class BuckCopyPasteProcessor implements CopyPastePreProcessor {
     // A simple test of the element type
     boolean isQuotedString =
         BuckPsiUtils.hasElementType(
-            elementNode, BuckTypes.SINGLE_QUOTED_STRING, BuckTypes.DOUBLE_QUOTED_STRING);
+            elementNode, BuckTypes.QUOTED_STRING, BuckTypes.APOSTROPHED_STRING);
     // isQuotedString will be true if the caret is under the left quote, the right quote,
     // or anywhere in between. But pasting with caret under the left quote acts differently than
     // pasting in other isQuotedString positions: Text will be inserted before the quotes, not
