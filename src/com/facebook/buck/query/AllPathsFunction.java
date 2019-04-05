@@ -47,7 +47,7 @@ import java.util.Set;
  *
  * <pre>expr ::= ALLPATHS '(' expr ',' expr ')'</pre>
  */
-public class AllPathsFunction implements QueryFunction {
+public class AllPathsFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION);
@@ -70,15 +70,16 @@ public class AllPathsFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<? extends QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryBuildTarget> eval(
+      QueryEvaluator<QueryBuildTarget> evaluator,
+      QueryEnvironment<QueryBuildTarget> env,
+      ImmutableList<Argument<QueryBuildTarget>> args)
       throws QueryException {
-    QueryExpression from = args.get(0).getExpression();
-    QueryExpression to = args.get(1).getExpression();
+    QueryExpression<QueryBuildTarget> from = args.get(0).getExpression();
+    QueryExpression<QueryBuildTarget> to = args.get(1).getExpression();
 
-    Set<QueryBuildTarget> fromSet =
-        QueryBuildTarget.filterQueryBuildTargets(evaluator.eval(from, env));
-    Set<QueryBuildTarget> toSet = QueryBuildTarget.filterQueryBuildTargets(evaluator.eval(to, env));
+    Set<QueryBuildTarget> fromSet = evaluator.eval(from, env);
+    Set<QueryBuildTarget> toSet = evaluator.eval(to, env);
 
     // Algorithm:
     // 1) compute "reachableFromX", the forward transitive closure of the "from" set;

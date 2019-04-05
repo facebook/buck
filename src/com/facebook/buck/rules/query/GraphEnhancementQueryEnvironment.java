@@ -77,7 +77,7 @@ import java.util.stream.StreamSupport;
  * aliases and other patterns (such as ...) will throw an exception. The $declared_deps macro will
  * evaluate to the declared dependencies passed into the constructor.
  */
-public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
+public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryBuildTarget> {
 
   private final Optional<ActionGraphBuilder> graphBuilder;
   private final Optional<TargetGraph> targetGraph;
@@ -200,7 +200,14 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
   }
 
   private TargetNode<?> getNode(QueryTarget target) {
-    return getNodeForQueryBuildTarget(QueryBuildTarget.asQueryBuildTarget(target));
+    if (!(target instanceof QueryBuildTarget)) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Expected %s to be a build target but it was an instance of %s",
+              target, target.getClass().getName()));
+    }
+
+    return getNodeForQueryBuildTarget((QueryBuildTarget) target);
   }
 
   private TargetNode<?> getNodeForQueryBuildTarget(QueryBuildTarget target) {
@@ -245,21 +252,23 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment {
         .map(dep -> QueryBuildTarget.of(dep.getBuildTarget()));
   }
 
-  public static final Iterable<QueryEnvironment.QueryFunction> QUERY_FUNCTIONS =
-      ImmutableList.of(
-          new AttrFilterFunction(),
-          new ClasspathFunction(),
-          new DepsFunction(),
-          new DepsFunction.FirstOrderDepsFunction(),
-          new DepsFunction.LookupFunction(),
-          new KindFunction(),
-          new FilterFunction(),
-          new LabelsFunction(),
-          new InputsFunction(),
-          new RdepsFunction());
+  public static final Iterable<
+          QueryEnvironment.QueryFunction<? extends QueryTarget, QueryBuildTarget>>
+      QUERY_FUNCTIONS =
+          ImmutableList.of(
+              new AttrFilterFunction(),
+              new ClasspathFunction(),
+              new DepsFunction(),
+              new DepsFunction.FirstOrderDepsFunction(),
+              new DepsFunction.LookupFunction<QueryBuildTarget, QueryBuildTarget>(),
+              new KindFunction(),
+              new FilterFunction<QueryBuildTarget>(),
+              new LabelsFunction(),
+              new InputsFunction(),
+              new RdepsFunction());
 
   @Override
-  public Iterable<QueryEnvironment.QueryFunction> getFunctions() {
+  public Iterable<QueryEnvironment.QueryFunction<?, QueryBuildTarget>> getFunctions() {
     return QUERY_FUNCTIONS;
   }
 

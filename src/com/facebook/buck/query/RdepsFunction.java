@@ -37,7 +37,6 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -50,7 +49,7 @@ import java.util.Set;
  *
  * <pre>       | RDEPS '(' expr ',' expr ',' WORD ')'</pre>
  */
-public class RdepsFunction implements QueryFunction {
+public class RdepsFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION, ArgumentType.INTEGER);
@@ -78,11 +77,12 @@ public class RdepsFunction implements QueryFunction {
    * reverse transitive closure or the maximum depth (if supplied) is reached.
    */
   @Override
-  public ImmutableSet<? extends QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryBuildTarget> eval(
+      QueryEvaluator<QueryBuildTarget> evaluator,
+      QueryEnvironment<QueryBuildTarget> env,
+      ImmutableList<Argument<QueryBuildTarget>> args)
       throws QueryException {
-    Set<QueryBuildTarget> universeSet =
-        QueryBuildTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
+    Set<QueryBuildTarget> universeSet = evaluator.eval(args.get(0).getExpression(), env);
     env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE);
     Predicate<QueryBuildTarget> inUniversePredicate =
         env.getTransitiveClosure(universeSet)::contains;
@@ -91,8 +91,7 @@ public class RdepsFunction implements QueryFunction {
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
     Set<QueryBuildTarget> visited = new LinkedHashSet<>();
-    ImmutableSet<QueryTarget> argumentSet = evaluator.eval(args.get(1).getExpression(), env);
-    Collection<QueryBuildTarget> current = QueryBuildTarget.asQueryBuildTargets(argumentSet);
+    Set<QueryBuildTarget> current = evaluator.eval(args.get(1).getExpression(), env);
     Predicate<QueryBuildTarget> notVisited = target -> !visited.contains(target);
 
     int depthBound = args.size() > 2 ? args.get(2).getInteger() : Integer.MAX_VALUE;
@@ -102,7 +101,7 @@ public class RdepsFunction implements QueryFunction {
       Iterable<QueryBuildTarget> currentInUniverse = Iterables.filter(current, inUniversePredicate);
 
       // Filter nodes visited before.
-      Collection<QueryBuildTarget> next =
+      Set<QueryBuildTarget> next =
           env.getReverseDeps(Iterables.filter(currentInUniverse, notVisited));
       Iterables.addAll(visited, currentInUniverse);
       if (next.isEmpty()) {

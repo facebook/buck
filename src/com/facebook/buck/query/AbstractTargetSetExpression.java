@@ -24,16 +24,18 @@ import org.immutables.value.Value;
 /** A set(word, ..., word) expression or literal set of targets precomputed at parse-time. */
 @Value.Immutable(prehash = true)
 @BuckStyleTuple
-abstract class AbstractTargetSetExpression extends QueryExpression {
+abstract class AbstractTargetSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
   abstract ImmutableSet<QueryTarget> getTargets();
 
   @Override
-  ImmutableSet<? extends QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env) {
-    return getTargets();
+  @SuppressWarnings("unchecked")
+  <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) {
+    return (ImmutableSet<OUTPUT_TYPE>) getTargets();
   }
 
   @Override
-  public void traverse(Visitor visitor) {
+  public void traverse(Visitor<NODE_TYPE> visitor) {
     visitor.visit(this);
   }
 

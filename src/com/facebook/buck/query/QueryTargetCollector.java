@@ -19,27 +19,28 @@ package com.facebook.buck.query;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.collect.ImmutableSet;
 
-class QueryTargetCollector implements QueryExpression.Visitor {
+class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV_NODE_TYPE> {
   private final ImmutableSet.Builder<QueryTarget> targets;
-  private final QueryEnvironment env;
+  private final QueryEnvironment<ENV_NODE_TYPE> env;
 
-  QueryTargetCollector(QueryEnvironment env) {
+  QueryTargetCollector(QueryEnvironment<ENV_NODE_TYPE> env) {
     this.targets = ImmutableSet.builder();
     this.env = env;
   }
 
   @Override
-  public QueryExpression.VisitResult visit(QueryExpression exp) {
+  public QueryExpression.VisitResult visit(QueryExpression<ENV_NODE_TYPE> exp) {
     if (exp instanceof TargetLiteral) {
       try {
-        targets.addAll(env.getTargetsMatchingPattern(((TargetLiteral) exp).getPattern()));
+        targets.addAll(
+            env.getTargetsMatchingPattern(((TargetLiteral<ENV_NODE_TYPE>) exp).getPattern()));
       } catch (QueryException e) {
         throw new HumanReadableException(e, "Error computing targets from literal [%s]", exp);
       }
     }
 
     if (exp instanceof TargetSetExpression) {
-      targets.addAll(((TargetSetExpression) exp).getTargets());
+      targets.addAll(((AbstractTargetSetExpression<ENV_NODE_TYPE>) exp).getTargets());
     }
 
     return QueryExpression.VisitResult.CONTINUE;

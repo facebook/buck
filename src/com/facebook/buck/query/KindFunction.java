@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableList;
  *
  * <pre>expr ::= KIND '(' WORD ',' expr ')'</pre>
  */
-public class KindFunction extends RegexFilterFunction {
+public class KindFunction extends RegexFilterFunction<QueryBuildTarget, QueryBuildTarget> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -63,19 +63,22 @@ public class KindFunction extends RegexFilterFunction {
   }
 
   @Override
-  protected QueryExpression getExpressionToEval(ImmutableList<Argument> args) {
+  protected QueryExpression<QueryBuildTarget> getExpressionToEval(
+      ImmutableList<Argument<QueryBuildTarget>> args) {
     return args.get(1).getExpression();
   }
 
   @Override
-  protected String getPattern(ImmutableList<Argument> args) {
+  protected String getPattern(ImmutableList<Argument<QueryBuildTarget>> args) {
     return args.get(0).getWord();
   }
 
   @Override
   protected String getStringToFilter(
-      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target)
+      QueryEnvironment<QueryBuildTarget> env,
+      ImmutableList<Argument<QueryBuildTarget>> args,
+      QueryBuildTarget target)
       throws QueryException {
-    return env.getTargetKind(QueryBuildTarget.asQueryBuildTarget(target));
+    return env.getTargetKind(target);
   }
 }

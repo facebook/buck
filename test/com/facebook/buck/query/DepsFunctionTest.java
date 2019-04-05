@@ -53,14 +53,15 @@ public class DepsFunctionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(a, b);
     QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
     assertThat(
-        DEPS_FUNCTION.eval(
-            new NoopQueryEvaluator(),
-            queryEnvironment,
-            ImmutableList.of(
-                QueryEnvironment.Argument.of(
-                    TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
-                DEPTH,
-                FIRST_ORDER_DEPS)),
+        (Iterable<QueryBuildTarget>)
+            DEPS_FUNCTION.eval(
+                new NoopQueryEvaluator(),
+                queryEnvironment,
+                ImmutableList.of(
+                    QueryEnvironment.Argument.of(
+                        TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
+                    DEPTH,
+                    FIRST_ORDER_DEPS)),
         Matchers.containsInAnyOrder(
             QueryBuildTarget.of(a.getBuildTarget()), QueryBuildTarget.of(b.getBuildTarget())));
   }
@@ -80,18 +81,19 @@ public class DepsFunctionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(a, b, c);
     QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
     assertThat(
-        DEPS_FUNCTION.eval(
-            new NoopQueryEvaluator(),
-            queryEnvironment,
-            ImmutableList.of(
-                QueryEnvironment.Argument.of(
-                    TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
-                DEPTH,
-                QueryEnvironment.Argument.of(
-                    FunctionExpression.of(
-                        new FilterFunction(),
-                        ImmutableList.of(
-                            QueryEnvironment.Argument.of("//foo.*"), FIRST_ORDER_DEPS))))),
+        (Iterable<QueryBuildTarget>)
+            DEPS_FUNCTION.eval(
+                new NoopQueryEvaluator(),
+                queryEnvironment,
+                ImmutableList.of(
+                    QueryEnvironment.Argument.of(
+                        TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
+                    DEPTH,
+                    QueryEnvironment.Argument.of(
+                        FunctionExpression.of(
+                            new FilterFunction(),
+                            ImmutableList.of(
+                                QueryEnvironment.Argument.of("//foo.*"), FIRST_ORDER_DEPS))))),
         Matchers.contains(QueryBuildTarget.of(a.getBuildTarget())));
   }
 

@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableSet;
  *
  * <pre>expr ::= BUILDFILE '(' expr ')'</pre>
  */
-public class BuildFileFunction implements QueryFunction {
+public class BuildFileFunction implements QueryFunction<QueryFileTarget, QueryBuildTarget> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION);
@@ -49,10 +49,12 @@ public class BuildFileFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<? extends QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryFileTarget> eval(
+      QueryEvaluator<QueryBuildTarget> evaluator,
+      QueryEnvironment<QueryBuildTarget> env,
+      ImmutableList<Argument<QueryBuildTarget>> args)
       throws QueryException {
-    ImmutableSet<QueryTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
-    return env.getBuildFiles(QueryBuildTarget.asQueryBuildTargets(argumentSet));
+    ImmutableSet<QueryBuildTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
+    return env.getBuildFiles(argumentSet);
   }
 }

@@ -56,9 +56,9 @@ public class QueryCoercer implements TypeCoercer<Query> {
             query.getBaseName().orElse(""),
             ImmutableSet.of(),
             query.getTargetConfiguration());
-    QueryExpression parsedExp;
+    QueryExpression<QueryBuildTarget> parsedExp;
     try {
-      parsedExp = QueryExpression.parse(query.getQuery(), env);
+      parsedExp = QueryExpression.<QueryBuildTarget>parse(query.getQuery(), env);
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing query: " + query.getQuery(), e);
     }

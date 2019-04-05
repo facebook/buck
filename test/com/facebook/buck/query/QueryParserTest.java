@@ -49,8 +49,9 @@ public class QueryParserTest {
 
   @Test
   public void testDeps() throws Exception {
-    ImmutableList<Argument> args = ImmutableList.of(Argument.of(TargetLiteral.of("//foo:bar")));
-    QueryExpression expected = FunctionExpression.of(new DepsFunction(), args);
+    ImmutableList<Argument<QueryBuildTarget>> args =
+        ImmutableList.of(Argument.of(TargetLiteral.of("//foo:bar")));
+    QueryExpression<QueryBuildTarget> expected = FunctionExpression.of(new DepsFunction(), args);
 
     String query = "deps('//foo:bar')";
     QueryExpression result = QueryParser.parse(query, queryEnvironment);
@@ -59,16 +60,16 @@ public class QueryParserTest {
 
   @Test
   public void testTestsOfDepsSet() throws Exception {
-    ImmutableList<TargetLiteral> args =
+    ImmutableList<TargetLiteral<QueryBuildTarget>> args =
         ImmutableList.of(TargetLiteral.of("//foo:bar"), TargetLiteral.of("//other:lib"));
-    QueryExpression depsExpr =
+    QueryExpression<QueryBuildTarget> depsExpr =
         FunctionExpression.of(
             new DepsFunction(), ImmutableList.of(Argument.of(SetExpression.of(args))));
-    QueryExpression testsofExpr =
+    QueryExpression<QueryBuildTarget> testsofExpr =
         FunctionExpression.of(new TestsOfFunction(), ImmutableList.of(Argument.of(depsExpr)));
 
     String query = "testsof(deps(set('//foo:bar' //other:lib)))";
-    QueryExpression result = QueryParser.parse(query, queryEnvironment);
+    QueryExpression<QueryBuildTarget> result = QueryParser.parse(query, queryEnvironment);
     assertThat(result, is(equalTo(testsofExpr)));
   }
 
@@ -131,7 +132,7 @@ public class QueryParserTest {
     }
   }
 
-  private static class TestQueryEnvironment implements QueryEnvironment {
+  private static class TestQueryEnvironment implements QueryEnvironment<QueryBuildTarget> {
 
     private final TargetEvaluator targetEvaluator;
 
@@ -145,7 +146,7 @@ public class QueryParserTest {
     }
 
     @Override
-    public Iterable<QueryFunction> getFunctions() {
+    public Iterable<QueryFunction<?, QueryBuildTarget>> getFunctions() {
       return ImmutableList.of(new DepsFunction(), new RdepsFunction(), new TestsOfFunction());
     }
 

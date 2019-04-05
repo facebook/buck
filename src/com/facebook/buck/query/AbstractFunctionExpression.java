@@ -44,21 +44,22 @@ import org.immutables.value.Value;
 /** A query expression for user-defined query functions. */
 @Value.Immutable(prehash = true)
 @BuckStyleTuple
-abstract class AbstractFunctionExpression extends QueryExpression {
-  abstract QueryFunction getFunction();
+abstract class AbstractFunctionExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
+  abstract QueryFunction<?, NODE_TYPE> getFunction();
 
-  abstract ImmutableList<Argument> getArgs();
+  abstract ImmutableList<Argument<NODE_TYPE>> getArgs();
 
   @Override
-  ImmutableSet<? extends QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
-      throws QueryException {
-    return getFunction().eval(evaluator, env, getArgs());
+  @SuppressWarnings("unchecked")
+  <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
+    return ((QueryFunction<OUTPUT_TYPE, NODE_TYPE>) getFunction()).eval(evaluator, env, getArgs());
   }
 
   @Override
-  public void traverse(QueryExpression.Visitor visitor) {
+  public void traverse(QueryExpression.Visitor<NODE_TYPE> visitor) {
     if (visitor.visit(this) == VisitResult.CONTINUE) {
-      for (Argument arg : getArgs()) {
+      for (Argument<NODE_TYPE> arg : getArgs()) {
         if (arg.getType() == ArgumentType.EXPRESSION) {
           arg.getExpression().traverse(visitor);
         }
@@ -75,11 +76,13 @@ abstract class AbstractFunctionExpression extends QueryExpression {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public boolean equals(Object other) {
-    return (other instanceof FunctionExpression) && equalTo((FunctionExpression) other);
+    return (other instanceof AbstractFunctionExpression)
+        && equalTo((AbstractFunctionExpression<NODE_TYPE>) other);
   }
 
-  private boolean equalTo(FunctionExpression other) {
+  private boolean equalTo(AbstractFunctionExpression<NODE_TYPE> other) {
     return getFunction().getClass().equals(other.getFunction().getClass())
         && getArgs().equals(other.getArgs());
   }

@@ -67,18 +67,20 @@ import javax.annotation.Nullable;
  *        | SET '(' WORD * ')'
  * </pre>
  */
-final class QueryParser {
+final class QueryParser<NODE_TYPE> {
 
   private Lexer.Token token; // current lookahead token
   private final List<Lexer.Token> tokens;
   private final Iterator<Lexer.Token> tokenIterator;
-  private final Map<String, QueryFunction> functions;
+  private final Map<String, QueryFunction<? extends QueryTarget, NODE_TYPE>> functions;
   private final QueryEnvironment.TargetEvaluator targetEvaluator;
 
   /** Scan and parse the specified query expression. */
-  static QueryExpression parse(String query, QueryEnvironment env) throws QueryException {
-    QueryParser parser = new QueryParser(Lexer.scan(query.toCharArray()), env);
-    QueryExpression expr = parser.parseExpression();
+  static <NODE_TYPE> QueryExpression<NODE_TYPE> parse(String query, QueryEnvironment<NODE_TYPE> env)
+      throws QueryException {
+    QueryParser<NODE_TYPE> parser =
+        new QueryParser<NODE_TYPE>(Lexer.scan(query.toCharArray()), env);
+    QueryExpression<NODE_TYPE> expr = parser.parseExpression();
     if (parser.token.kind != TokenKind.EOF) {
       throw new QueryException(
           "Unexpected token '%s' after query expression '%s'", parser.token, expr);
@@ -86,9 +88,9 @@ final class QueryParser {
     return expr;
   }
 
-  private QueryParser(List<Lexer.Token> tokens, QueryEnvironment env) {
+  private QueryParser(List<Lexer.Token> tokens, QueryEnvironment<NODE_TYPE> env) {
     this.functions = new HashMap<>();
-    for (QueryFunction queryFunction : env.getFunctions()) {
+    for (QueryFunction<? extends QueryTarget, NODE_TYPE> queryFunction : env.getFunctions()) {
       this.functions.put(queryFunction.getName(), queryFunction);
     }
     this.targetEvaluator = env.getTargetEvaluator();
@@ -116,7 +118,8 @@ final class QueryParser {
     return new QueryException(message);
   }
 
-  private QueryException syntaxError(QueryException cause, QueryFunction function) {
+  private QueryException syntaxError(
+      QueryException cause, QueryFunction<? extends QueryTarget, NODE_TYPE> function) {
     ImmutableList<ArgumentType> mandatoryArguments =
         function.getArgumentTypes().subList(0, function.getMandatoryArguments());
     ImmutableList<ArgumentType> optionalArguments =
@@ -179,7 +182,7 @@ final class QueryParser {
    * expr ::= primary | expr INTERSECT expr | expr '^' expr | expr UNION expr | expr '+' expr | expr
    * EXCEPT expr | expr '-' expr
    */
-  private QueryExpression parseExpression() throws QueryException {
+  private QueryExpression<NODE_TYPE> parseExpression() throws QueryException {
     // All operators are left-associative and of equal precedence.
     return parseBinaryOperatorTail(parsePrimary());
   }
@@ -188,12 +191,13 @@ final class QueryParser {
    * tail ::= ( <op> <primary> )* All operators have equal precedence. This factoring is required
    * for left-associative binary operators in LL(1).
    */
-  private QueryExpression parseBinaryOperatorTail(QueryExpression lhs) throws QueryException {
+  private QueryExpression<NODE_TYPE> parseBinaryOperatorTail(QueryExpression<NODE_TYPE> lhs)
+      throws QueryException {
     if (!BINARY_OPERATORS.contains(token.kind)) {
       return lhs;
     }
 
-    List<QueryExpression> operands = new ArrayList<>();
+    List<QueryExpression<NODE_TYPE>> operands = new ArrayList<>();
     operands.add(lhs);
     TokenKind lastOperator = token.kind;
 
@@ -206,7 +210,7 @@ final class QueryParser {
         operands.add(lhs);
         lastOperator = operator;
       }
-      QueryExpression rhs = parsePrimary();
+      QueryExpression<NODE_TYPE> rhs = parsePrimary();
       operands.add(rhs);
     }
     return BinaryOperatorExpression.of(lastOperator, operands);
@@ -217,17 +221,18 @@ final class QueryParser {
    * DEPS '(' expr ')' | DEPS '(' expr ',' WORD ')' | RDEPS '(' expr ',' expr ')' | RDEPS '(' expr
    * ',' expr ',' WORD ')' | SET '(' WORD * ')'
    */
-  private QueryExpression parsePrimary() throws QueryException {
+  @SuppressWarnings("unchecked")
+  private QueryExpression<NODE_TYPE> parsePrimary() throws QueryException {
     switch (token.kind) {
       case WORD:
         {
           String word = consume(TokenKind.WORD);
           if (token.kind == TokenKind.LPAREN) {
-            QueryFunction function = functions.get(word);
+            QueryFunction<? extends QueryTarget, NODE_TYPE> function = functions.get(word);
             if (function == null) {
               throw new QueryException(syntaxError(token), "Unknown function '%s'", word);
             }
-            ImmutableList.Builder<Argument> argsBuilder = ImmutableList.builder();
+            ImmutableList.Builder<Argument<NODE_TYPE>> argsBuilder = ImmutableList.builder();
             consume(TokenKind.LPAREN);
             int argsSeen = 0;
             for (ArgumentType type : function.getArgumentTypes()) {
@@ -245,11 +250,13 @@ final class QueryParser {
                     break;
 
                   case WORD:
-                    argsBuilder.add(Argument.of(Objects.requireNonNull(consume(TokenKind.WORD))));
+                    argsBuilder.add(
+                        (Argument<NODE_TYPE>)
+                            Argument.of(Objects.requireNonNull(consume(TokenKind.WORD))));
                     break;
 
                   case INTEGER:
-                    argsBuilder.add(Argument.of(consumeIntLiteral()));
+                    argsBuilder.add((Argument<NODE_TYPE>) Argument.of(consumeIntLiteral()));
                     break;
 
                   default:
@@ -282,7 +289,7 @@ final class QueryParser {
       case LPAREN:
         {
           consume(TokenKind.LPAREN);
-          QueryExpression expr = parseExpression();
+          QueryExpression<NODE_TYPE> expr = parseExpression();
           consume(TokenKind.RPAREN);
           return expr;
         }
@@ -297,8 +304,12 @@ final class QueryParser {
           consume(TokenKind.RPAREN);
 
           if (targetEvaluator.getType() == QueryEnvironment.TargetEvaluator.Type.LAZY) {
-            return SetExpression.of(
-                wordsBuilder.build().stream().map(TargetLiteral::of).collect(Collectors.toList()));
+            return SetExpression.<NODE_TYPE>of(
+                wordsBuilder
+                    .build()
+                    .stream()
+                    .map(TargetLiteral::<NODE_TYPE>of)
+                    .collect(Collectors.toList()));
           } else {
             ImmutableSet.Builder<QueryTarget> targets = ImmutableSet.builder();
             for (String word : wordsBuilder.build()) {

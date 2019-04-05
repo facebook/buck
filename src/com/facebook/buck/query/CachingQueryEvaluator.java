@@ -23,8 +23,8 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 
-public class CachingQueryEvaluator implements QueryEvaluator {
-  private final Cache<QueryExpression, ImmutableSet<QueryTarget>> cache;
+public class CachingQueryEvaluator<ENV_NODE_TYPE> implements QueryEvaluator<ENV_NODE_TYPE> {
+  private final Cache<QueryExpression<?>, ImmutableSet<?>> cache;
 
   public CachingQueryEvaluator() {
     this.cache = CacheBuilder.newBuilder().build();
@@ -32,17 +32,18 @@ public class CachingQueryEvaluator implements QueryEvaluator {
 
   @Override
   @SuppressWarnings("unchecked")
-  public ImmutableSet<QueryTarget> eval(QueryExpression exp, QueryEnvironment env)
+  public <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+      QueryExpression<ENV_NODE_TYPE> exp, QueryEnvironment<ENV_NODE_TYPE> env)
       throws QueryException {
     try {
-      return cache.get(exp, () -> (ImmutableSet<QueryTarget>) exp.eval(this, env));
+      return (ImmutableSet<OUTPUT_TYPE>) cache.get(exp, () -> exp.eval(this, env));
     } catch (ExecutionException e) {
       throw new QueryException(e, "Failed executing query [%s]", exp);
     }
   }
 
   @VisibleForTesting
-  public boolean isPresent(QueryExpression exp) {
+  public boolean isPresent(QueryExpression<?> exp) {
     return Objects.nonNull(cache.getIfPresent(exp));
   }
 }

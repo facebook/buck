@@ -29,7 +29,7 @@ import java.util.Set;
  *
  * <pre>expr ::= TESTSOF '(' expr ')'</pre>
  */
-public class TestsOfFunction implements QueryFunction {
+public class TestsOfFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION);
@@ -52,12 +52,13 @@ public class TestsOfFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<? extends QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryBuildTarget> eval(
+      QueryEvaluator<QueryBuildTarget> evaluator,
+      QueryEnvironment<QueryBuildTarget> env,
+      ImmutableList<Argument<QueryBuildTarget>> args)
       throws QueryException {
-    Set<QueryBuildTarget> targets =
-        QueryBuildTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
-    ImmutableSet.Builder<QueryTarget> tests = new ImmutableSet.Builder<>();
+    Set<QueryBuildTarget> targets = evaluator.eval(args.get(0).getExpression(), env);
+    ImmutableSet.Builder<QueryBuildTarget> tests = new ImmutableSet.Builder<>();
     for (QueryBuildTarget target : targets) {
       tests.addAll(env.getTestsForTarget(target));
     }

@@ -55,23 +55,23 @@ import org.immutables.value.Value;
  */
 @Value.Immutable(prehash = true)
 @BuckStyleTuple
-abstract class AbstractSetExpression extends QueryExpression {
-  abstract ImmutableList<TargetLiteral> getWords();
+abstract class AbstractSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
+  abstract ImmutableList<TargetLiteral<NODE_TYPE>> getWords();
 
   @Override
-  ImmutableSet<? extends QueryTarget> eval(QueryEvaluator evaluator, QueryEnvironment env)
-      throws QueryException {
-    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
-    for (TargetLiteral expr : getWords()) {
+  <OUTPUT_TYPE extends QueryTarget> ImmutableSet<OUTPUT_TYPE> eval(
+      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
+    ImmutableSet.Builder<OUTPUT_TYPE> result = new ImmutableSet.Builder<>();
+    for (TargetLiteral<NODE_TYPE> expr : getWords()) {
       result.addAll(evaluator.eval(expr, env));
     }
     return result.build();
   }
 
   @Override
-  public void traverse(QueryExpression.Visitor visitor) {
+  public void traverse(QueryExpression.Visitor<NODE_TYPE> visitor) {
     if (visitor.visit(this) == VisitResult.CONTINUE) {
-      for (TargetLiteral word : getWords()) {
+      for (TargetLiteral<NODE_TYPE> word : getWords()) {
         word.traverse(visitor);
       }
     }

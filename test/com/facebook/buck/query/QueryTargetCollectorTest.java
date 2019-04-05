@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
+import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +48,7 @@ public class QueryTargetCollectorTest {
           baseName,
           ImmutableSet.of(),
           EmptyTargetConfiguration.INSTANCE);
-  private QueryTargetCollector collector;
+  private QueryTargetCollector<QueryBuildTarget> collector;
 
   @Before
   public void setUp() {
@@ -64,13 +65,13 @@ public class QueryTargetCollectorTest {
   public void targetSet() {
     ImmutableSet<QueryTarget> targets =
         ImmutableSet.of(target("foo"), target("bar"), target("baz"));
-    TargetSetExpression.of(targets).traverse(collector);
+    TargetSetExpression.<QueryBuildTarget>of(targets).traverse(collector);
     assertThat(collector.getTargets(), Matchers.equalTo(targets));
   }
 
   @Test
   public void emptySet() {
-    SetExpression.of(ImmutableList.of()).traverse(collector);
+    SetExpression.of(ImmutableList.<TargetLiteral<QueryBuildTarget>>of()).traverse(collector);
     assertThat(collector.getTargets(), Matchers.empty());
   }
 
@@ -81,16 +82,17 @@ public class QueryTargetCollectorTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void complexExpression() {
+    ImmutableList<Argument<QueryBuildTarget>> args =
+        ImmutableList.of(
+            (Argument<QueryBuildTarget>)
+                Argument.of(SetExpression.of(ImmutableList.of(literal("foo"), literal("bar")))),
+            (Argument<QueryBuildTarget>) Argument.of(2));
     BinaryOperatorExpression.of(
             AbstractBinaryOperatorExpression.Operator.UNION,
             ImmutableList.of(
-                FunctionExpression.of(
-                    new DepsFunction(),
-                    ImmutableList.of(
-                        QueryEnvironment.Argument.of(
-                            SetExpression.of(ImmutableList.of(literal("foo"), literal("bar")))),
-                        QueryEnvironment.Argument.of(2))),
+                FunctionExpression.of(new DepsFunction(), args),
                 TargetSetExpression.of(ImmutableSet.of(target("bar"), target("baz")))))
         .traverse(collector);
     assertThat(

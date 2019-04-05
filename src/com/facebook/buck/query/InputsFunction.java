@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSet;
  *
  * <pre>expr ::= INPUTS '(' expr ')'</pre>
  */
-public class InputsFunction implements QueryFunction {
+public class InputsFunction implements QueryFunction<QueryFileTarget, QueryBuildTarget> {
 
   @Override
   public String getName() {
@@ -46,14 +46,15 @@ public class InputsFunction implements QueryFunction {
 
   /** Evaluates to the direct inputs of the argument. */
   @Override
-  public ImmutableSet<? extends QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryFileTarget> eval(
+      QueryEvaluator<QueryBuildTarget> evaluator,
+      QueryEnvironment<QueryBuildTarget> env,
+      ImmutableList<Argument<QueryBuildTarget>> args)
       throws QueryException {
-    ImmutableSet<QueryBuildTarget> argumentSet =
-        QueryBuildTarget.asQueryBuildTargets(evaluator.eval(args.get(0).getExpression(), env));
+    ImmutableSet<QueryBuildTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
     env.buildTransitiveClosure(argumentSet, 0);
 
-    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
+    ImmutableSet.Builder<QueryFileTarget> result = new ImmutableSet.Builder<>();
 
     for (QueryBuildTarget target : argumentSet) {
       result.addAll(env.getInputs(target));

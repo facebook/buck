@@ -26,7 +26,8 @@ import com.google.common.collect.ImmutableSet;
  *
  * <pre>expr ::= OWNER '(' WORD ')'</pre>
  */
-public class OwnerFunction implements QueryFunction {
+public class OwnerFunction<ENV_NODE_TYPE extends QueryTarget>
+    implements QueryFunction<ENV_NODE_TYPE, ENV_NODE_TYPE> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD);
@@ -49,8 +50,10 @@ public class OwnerFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<? extends QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<ENV_NODE_TYPE> eval(
+      QueryEvaluator<ENV_NODE_TYPE> evaluator,
+      QueryEnvironment<ENV_NODE_TYPE> env,
+      ImmutableList<Argument<ENV_NODE_TYPE>> args)
       throws QueryException {
     return env.getFileOwners(ImmutableList.of(args.get(0).getWord()));
   }

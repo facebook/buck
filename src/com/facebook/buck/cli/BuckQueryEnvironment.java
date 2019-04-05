@@ -99,22 +99,22 @@ import java.util.function.Predicate;
  *
  * <p>The query language is documented at docs/command/query.soy
  */
-public class BuckQueryEnvironment implements QueryEnvironment {
+public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> {
 
   /** List of the default query functions. */
-  private static final List<QueryFunction> QUERY_FUNCTIONS =
+  private static final List<QueryFunction<?, QueryBuildTarget>> QUERY_FUNCTIONS =
       ImmutableList.of(
           new AllPathsFunction(),
           new AttrFilterFunction(),
           new BuildFileFunction(),
           new DepsFunction(),
           new DepsFunction.FirstOrderDepsFunction(),
-          new DepsFunction.LookupFunction(),
+          new DepsFunction.LookupFunction<QueryTarget, QueryBuildTarget>(),
           new InputsFunction(),
-          new FilterFunction(),
+          new FilterFunction<QueryBuildTarget>(),
           new KindFunction(),
           new LabelsFunction(),
-          new OwnerFunction(),
+          new OwnerFunction<QueryBuildTarget>(),
           new RdepsFunction(),
           new TestsOfFunction());
 
@@ -230,12 +230,12 @@ public class BuckQueryEnvironment implements QueryEnvironment {
    * @return the resulting set of targets.
    * @throws QueryException if the evaluation failed.
    */
-  public ImmutableSet<QueryTarget> evaluateQuery(QueryExpression expr)
+  public ImmutableSet<QueryTarget> evaluateQuery(QueryExpression<QueryBuildTarget> expr)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
     preloadTargetPatterns(targetLiterals);
-    return new NoopQueryEvaluator().eval(expr, this);
+    return new NoopQueryEvaluator<QueryBuildTarget>().eval(expr, this);
   }
 
   public ImmutableSet<QueryTarget> evaluateQuery(String query)
@@ -558,7 +558,7 @@ public class BuckQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public Iterable<QueryFunction> getFunctions() {
+  public Iterable<QueryFunction<? extends QueryTarget, QueryBuildTarget>> getFunctions() {
     return QUERY_FUNCTIONS;
   }
 

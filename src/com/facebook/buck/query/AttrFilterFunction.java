@@ -32,7 +32,7 @@ import java.util.function.Predicate;
  *
  * <pre>expr ::= ATTRFILTER '(' WORD ',' WORD ',' expr ')'</pre>
  */
-public class AttrFilterFunction implements QueryFunction {
+public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -55,10 +55,12 @@ public class AttrFilterFunction implements QueryFunction {
   }
 
   @Override
-  public ImmutableSet<? extends QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<QueryBuildTarget> eval(
+      QueryEvaluator<QueryBuildTarget> evaluator,
+      QueryEnvironment<QueryBuildTarget> env,
+      ImmutableList<Argument<QueryBuildTarget>> args)
       throws QueryException {
-    QueryExpression argument = args.get(args.size() - 1).getExpression();
+    QueryExpression<QueryBuildTarget> argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
     String attrValue = args.get(1).getWord();
@@ -71,10 +73,10 @@ public class AttrFilterFunction implements QueryFunction {
             !(input instanceof Collection || input instanceof Map)
                 && attrValue.equals(input.toString());
 
-    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
-    for (QueryTarget target : evaluator.eval(argument, env)) {
-      ImmutableSet<Object> matchingObjects =
-          env.filterAttributeContents(QueryBuildTarget.asQueryBuildTarget(target), attr, predicate);
+    ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
+    ImmutableSet<QueryBuildTarget> targets = evaluator.eval(argument, env);
+    for (QueryBuildTarget target : targets) {
+      ImmutableSet<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);
       }

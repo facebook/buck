@@ -26,14 +26,14 @@ import java.util.function.Predicate;
  * Provides a view of an existing {@link QueryEnvironment} augmented with additional target
  * variables.
  */
-public class TargetVariablesQueryEnvironment implements QueryEnvironment {
+public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NODE_TYPE> {
 
-  private final ImmutableMap<String, ImmutableSet<QueryBuildTarget>> targetVariables;
-  private final QueryEnvironment delegate;
+  private final ImmutableMap<String, ImmutableSet<NODE_TYPE>> targetVariables;
+  private final QueryEnvironment<NODE_TYPE> delegate;
 
   public TargetVariablesQueryEnvironment(
-      ImmutableMap<String, ImmutableSet<QueryBuildTarget>> targetVariables,
-      QueryEnvironment delegate) {
+      ImmutableMap<String, ImmutableSet<NODE_TYPE>> targetVariables,
+      QueryEnvironment<NODE_TYPE> delegate) {
     this.targetVariables = targetVariables;
     this.delegate = delegate;
   }
@@ -44,25 +44,22 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> getFwdDeps(Iterable<QueryBuildTarget> targets)
-      throws QueryException {
+  public ImmutableSet<NODE_TYPE> getFwdDeps(Iterable<NODE_TYPE> targets) throws QueryException {
     return delegate.getFwdDeps(targets);
   }
 
   @Override
-  public Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets)
-      throws QueryException {
+  public Set<NODE_TYPE> getReverseDeps(Iterable<NODE_TYPE> targets) throws QueryException {
     return delegate.getReverseDeps(targets);
   }
 
   @Override
-  public Set<QueryFileTarget> getInputs(QueryBuildTarget target) throws QueryException {
+  public Set<QueryFileTarget> getInputs(NODE_TYPE target) throws QueryException {
     return delegate.getInputs(target);
   }
 
   @Override
-  public Set<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets)
-      throws QueryException {
+  public Set<NODE_TYPE> getTransitiveClosure(Set<NODE_TYPE> targets) throws QueryException {
     return delegate.getTransitiveClosure(targets);
   }
 
@@ -73,49 +70,45 @@ public class TargetVariablesQueryEnvironment implements QueryEnvironment {
   }
 
   @Override
-  public String getTargetKind(QueryBuildTarget target) throws QueryException {
+  public String getTargetKind(NODE_TYPE target) throws QueryException {
     return delegate.getTargetKind(target);
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target)
-      throws QueryException {
+  public ImmutableSet<NODE_TYPE> getTestsForTarget(NODE_TYPE target) throws QueryException {
     return delegate.getTestsForTarget(target);
   }
 
   @Override
-  public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets)
-      throws QueryException {
+  public ImmutableSet<QueryFileTarget> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException {
     return delegate.getBuildFiles(targets);
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files)
-      throws QueryException {
+  public ImmutableSet<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException {
     return delegate.getFileOwners(files);
   }
 
   @Override
   public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
-      QueryBuildTarget target, String attribute) throws QueryException {
+      NODE_TYPE target, String attribute) throws QueryException {
     return delegate.getTargetsInAttribute(target, attribute);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryBuildTarget target, String attribute, Predicate<Object> predicate)
-      throws QueryException {
+      NODE_TYPE target, String attribute, Predicate<Object> predicate) throws QueryException {
     return delegate.filterAttributeContents(target, attribute, predicate);
   }
 
   @Override
-  public Iterable<QueryFunction> getFunctions() {
+  public Iterable<QueryFunction<?, NODE_TYPE>> getFunctions() {
     return delegate.getFunctions();
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> resolveTargetVariable(String name) {
-    ImmutableSet<QueryBuildTarget> targets = targetVariables.get(name);
+  public ImmutableSet<NODE_TYPE> resolveTargetVariable(String name) {
+    ImmutableSet<NODE_TYPE> targets = targetVariables.get(name);
     if (targets != null) {
       return targets;
     }

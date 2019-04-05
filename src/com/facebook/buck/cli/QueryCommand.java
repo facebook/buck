@@ -352,7 +352,7 @@ public class QueryCommand extends AbstractCommand {
     Set<String> targetLiterals = new LinkedHashSet<>();
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
-      QueryExpression expr = QueryExpression.parse(query, env);
+      QueryExpression<QueryBuildTarget> expr = QueryExpression.parse(query, env);
       expr.collectTargetPatterns(targetLiterals);
     }
     env.preloadTargetPatterns(targetLiterals);
@@ -395,20 +395,17 @@ public class QueryCommand extends AbstractCommand {
       PrintStream printStream = printStreamWrapper.get();
 
       if (sortOutputFormat.needToSortByRank()) {
-        printRankOutput(
-            params, env, QueryBuildTarget.asQueryBuildTargets(queryResult), printStream);
+        printRankOutput(params, env, asQueryBuildTargets(queryResult), printStream);
         return;
       }
 
       switch (outputFormat) {
         case DOT:
-          printDotOutput(
-              params, env, QueryBuildTarget.asQueryBuildTargets(queryResult), false, printStream);
+          printDotOutput(params, env, asQueryBuildTargets(queryResult), false, printStream);
           break;
 
         case DOT_BFS:
-          printDotOutput(
-              params, env, QueryBuildTarget.asQueryBuildTargets(queryResult), true, printStream);
+          printDotOutput(params, env, asQueryBuildTargets(queryResult), true, printStream);
           break;
 
         case JSON:
@@ -416,8 +413,7 @@ public class QueryCommand extends AbstractCommand {
           break;
 
         case THRIFT:
-          printThriftOutput(
-              params, env, QueryBuildTarget.asQueryBuildTargets(queryResult), printStream);
+          printThriftOutput(params, env, asQueryBuildTargets(queryResult), printStream);
           break;
 
         case LIST:
@@ -425,6 +421,19 @@ public class QueryCommand extends AbstractCommand {
           printListOutput(params, env, queryResult, printStream);
       }
     }
+  }
+
+  /** @return set as {@link QueryBuildTarget}s or throw {@link IllegalArgumentException} */
+  @SuppressWarnings("unchecked")
+  public static ImmutableSet<QueryBuildTarget> asQueryBuildTargets(
+      ImmutableSet<? extends QueryTarget> set) {
+    // It is probably rare that there is a QueryTarget that is not a QueryBuildTarget.
+    boolean hasInvalidItem = set.stream().anyMatch(item -> !(item instanceof QueryBuildTarget));
+    if (hasInvalidItem) {
+      throw new IllegalArgumentException(
+          String.format("%s has elements that are not QueryBuildTarget", set));
+    }
+    return (ImmutableSet<QueryBuildTarget>) set;
   }
 
   private void printJsonOutput(

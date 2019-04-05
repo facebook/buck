@@ -27,18 +27,23 @@ import java.util.regex.Pattern;
  * An abstract class that provides generic regex filter functionality. The actual expressions to
  * filter are defined in the subclasses.
  */
-abstract class RegexFilterFunction implements QueryFunction {
+abstract class RegexFilterFunction<T extends QueryTarget, ENV_NODE_TYPE>
+    implements QueryFunction<T, ENV_NODE_TYPE> {
 
-  protected abstract QueryExpression getExpressionToEval(ImmutableList<Argument> args);
+  protected abstract QueryExpression<ENV_NODE_TYPE> getExpressionToEval(
+      ImmutableList<Argument<ENV_NODE_TYPE>> args);
 
-  protected abstract String getPattern(ImmutableList<Argument> args);
+  protected abstract String getPattern(ImmutableList<Argument<ENV_NODE_TYPE>> args);
 
   protected abstract String getStringToFilter(
-      QueryEnvironment env, ImmutableList<Argument> args, QueryTarget target) throws QueryException;
+      QueryEnvironment<ENV_NODE_TYPE> env, ImmutableList<Argument<ENV_NODE_TYPE>> args, T target)
+      throws QueryException;
 
   @Override
-  public ImmutableSet<? extends QueryTarget> eval(
-      QueryEvaluator evaluator, QueryEnvironment env, ImmutableList<Argument> args)
+  public ImmutableSet<T> eval(
+      QueryEvaluator<ENV_NODE_TYPE> evaluator,
+      QueryEnvironment<ENV_NODE_TYPE> env,
+      ImmutableList<Argument<ENV_NODE_TYPE>> args)
       throws QueryException {
     Pattern compiledPattern;
     try {
@@ -48,9 +53,9 @@ abstract class RegexFilterFunction implements QueryFunction {
           String.format("Illegal pattern regexp '%s': %s", getPattern(args), e.getMessage()));
     }
 
-    Set<QueryTarget> targets = evaluator.eval(getExpressionToEval(args), env);
-    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
-    for (QueryTarget target : targets) {
+    Set<T> targets = evaluator.eval(getExpressionToEval(args), env);
+    ImmutableSet.Builder<T> result = new ImmutableSet.Builder<>();
+    for (T target : targets) {
       String attributeValue = getStringToFilter(env, args, target);
       if (compiledPattern.matcher(attributeValue).find()) {
         result.add(target);

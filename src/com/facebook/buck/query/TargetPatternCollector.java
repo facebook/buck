@@ -18,7 +18,7 @@ package com.facebook.buck.query;
 
 import java.util.Collection;
 
-public class TargetPatternCollector implements QueryExpression.Visitor {
+public class TargetPatternCollector<NODE_TYPE> implements QueryExpression.Visitor<NODE_TYPE> {
   private final Collection<String> literals;
 
   TargetPatternCollector(Collection<String> literals) {
@@ -26,9 +26,9 @@ public class TargetPatternCollector implements QueryExpression.Visitor {
   }
 
   @Override
-  public QueryExpression.VisitResult visit(QueryExpression exp) {
+  public QueryExpression.VisitResult visit(QueryExpression<NODE_TYPE> exp) {
     if (exp instanceof TargetLiteral) {
-      literals.add(((TargetLiteral) exp).getPattern());
+      literals.add(((TargetLiteral<NODE_TYPE>) exp).getPattern());
     }
 
     return QueryExpression.VisitResult.CONTINUE;
