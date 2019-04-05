@@ -305,6 +305,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         actionInfo =
             mbrHelper.prepareRemoteExecution(
                 (ModernBuildRule<?>) rule,
+                digest -> !executionClients.getContentAddressedStorage().containsDigest(digest),
                 requirementsProvider.resolveRequirements(rule.getBuildTarget()));
       }
       return actionInfo;

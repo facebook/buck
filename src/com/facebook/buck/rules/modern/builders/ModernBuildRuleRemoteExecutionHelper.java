@@ -81,6 +81,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -365,7 +366,10 @@ public class ModernBuildRuleRemoteExecutionHelper {
    * action and digest, outputs).
    */
   public RemoteExecutionActionInfo prepareRemoteExecution(
-      ModernBuildRule<?> rule, WorkerRequirements workerRequirements) throws IOException {
+      ModernBuildRule<?> rule,
+      Predicate<Digest> requiredDataPredicate,
+      WorkerRequirements workerRequirements)
+      throws IOException {
     Set<Path> outputs;
     HashCode hash;
 
@@ -383,14 +387,15 @@ public class ModernBuildRuleRemoteExecutionHelper {
     ImmutableList.Builder<UploadDataSupplier> requiredDataBuilder = ImmutableList.builder();
 
     try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
-      addSharedFilesData(requiredDataBuilder::add);
+      getSharedFilesData(requiredDataPredicate).forEach(requiredDataBuilder::add);
 
-      allNodes.add(getSerializationTreeAndInputs(hash, requiredDataBuilder::add));
+      allNodes.add(
+          getSerializationTreeAndInputs(hash, requiredDataPredicate, requiredDataBuilder::add));
 
       MerkleTreeNode inputsMerkleTree = resolveInputs(inputsMapBuilder.getInputs(rule));
 
       allNodes.add(inputsMerkleTree);
-      addFileInputs(inputsMerkleTree, requiredDataBuilder::add);
+      getFileInputs(inputsMerkleTree, requiredDataPredicate, requiredDataBuilder::add);
 
       outputs = new HashSet<>();
       rule.recordOutputs(
@@ -411,13 +416,16 @@ public class ModernBuildRuleRemoteExecutionHelper {
 
       nodeCache.forAllData(
           mergedMerkleTree,
-          childData ->
+          childData -> {
+            if (requiredDataPredicate.test(childData.getDigest())) {
               requiredDataBuilder.add(
                   UploadDataSupplier.of(
                       childData.getDigest(),
                       () ->
                           new ByteArrayInputStream(
-                              protocol.toByteArray(childData.getDirectory())))));
+                              protocol.toByteArray(childData.getDirectory()))));
+            }
+          });
 
       NodeData data = nodeCache.getData(mergedMerkleTree);
       Digest inputsRootDigest = data.getDigest();
@@ -438,11 +446,14 @@ public class ModernBuildRuleRemoteExecutionHelper {
     }
   }
 
-  private void addFileInputs(
-      MerkleTreeNode inputsMerkleTree, Consumer<UploadDataSupplier> requiredDataBuilder) {
+  private void getFileInputs(
+      MerkleTreeNode inputsMerkleTree,
+      Predicate<Digest> requiredDataPredicate,
+      Consumer<UploadDataSupplier> dataConsumer) {
     inputsMerkleTree.forAllFiles(
-        (path, fileNode) ->
-            requiredDataBuilder.accept(
+        (path, fileNode) -> {
+          if (requiredDataPredicate.test(fileNode.getDigest())) {
+            dataConsumer.accept(
                 new UploadDataSupplier() {
                   @Override
                   public Digest getDigest() {
@@ -462,13 +473,18 @@ public class ModernBuildRuleRemoteExecutionHelper {
                       return String.format("failed to describe (%s)", e.getMessage());
                     }
                   }
-                }));
+                });
+          }
+        });
   }
 
-  private void addSharedFilesData(Consumer<UploadDataSupplier> requiredDataBuilder)
+  private Stream<UploadDataSupplier> getSharedFilesData(Predicate<Digest> requiredDataPredicate)
       throws IOException {
     ImmutableList<RequiredFile> requiredFiles = sharedRequiredFiles.get();
-    requiredFiles.forEach(r -> requiredDataBuilder.accept(r.dataSupplier));
+    return requiredFiles
+        .stream()
+        .map(requiredFile -> requiredFile.dataSupplier)
+        .filter(dataSupplier -> requiredDataPredicate.test(dataSupplier.getDigest()));
   }
 
   private ConcurrentHashMap<Data, MerkleTreeNode> resolvedInputsCache = new ConcurrentHashMap<>();
@@ -648,7 +664,10 @@ public class ModernBuildRuleRemoteExecutionHelper {
   }
 
   private MerkleTreeNode getSerializationTreeAndInputs(
-      HashCode hash, Consumer<UploadDataSupplier> requiredDataBuilder) throws IOException {
+      HashCode hash,
+      Predicate<Digest> requiredDataPredicate,
+      Consumer<UploadDataSupplier> dataBuilder)
+      throws IOException {
     Map<Path, FileNode> fileNodes = new HashMap<>();
     class DataAdder {
       void addData(Path root, Node node) throws IOException {
@@ -656,26 +675,30 @@ public class ModernBuildRuleRemoteExecutionHelper {
         Path valuePath = root.resolve(node.hash).resolve(fileName);
         Digest digest = protocol.newDigest(node.hash, node.dataLength);
         fileNodes.put(valuePath, protocol.newFileNode(digest, fileName, false));
-        byte[] data = node.acquireData(serializer, hasher);
-        requiredDataBuilder.accept(
-            new UploadDataSupplier() {
-              @Override
-              public InputStream get() {
-                return new ByteArrayInputStream(data);
-              }
+        if (!requiredDataPredicate.test(digest)) {
+          node.dropData();
+        } else {
+          byte[] data = node.acquireData(serializer, hasher);
+          dataBuilder.accept(
+              new UploadDataSupplier() {
+                @Override
+                public InputStream get() {
+                  return new ByteArrayInputStream(data);
+                }
 
-              @Override
-              public Digest getDigest() {
-                return digest;
-              }
+                @Override
+                public Digest getDigest() {
+                  return digest;
+                }
 
-              @Override
-              public String describe() {
-                return String.format(
-                    "Serialized java object (class:%s, size:%s).",
-                    node.instance.getClass().getName(), node.dataLength);
-              }
-            });
+                @Override
+                public String describe() {
+                  return String.format(
+                      "Serialized java object (class:%s, size:%s).",
+                      node.instance.getClass().getName(), node.dataLength);
+                }
+              });
+        }
 
         for (Node value : node.children) {
           addData(root, value);

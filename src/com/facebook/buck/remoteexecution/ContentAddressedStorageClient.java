@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution;
 
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -32,4 +33,6 @@ public interface ContentAddressedStorageClient {
   ListenableFuture<Void> materializeOutputs(
       List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
       throws IOException;
+
+  boolean containsDigest(Digest digest);
 }

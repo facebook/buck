@@ -141,6 +141,8 @@ public class PerfMbrPrepareRemoteExecutionCommand
         new LinkedBlockingQueue<>();
     int count = 0;
 
+    Set<Digest> containedHashes = Sets.newConcurrentHashSet();
+
     for (BuildRule buildRule : state.rulesInGraph) {
       if (buildRule instanceof ModernBuildRule) {
         count++;
@@ -152,7 +154,9 @@ public class PerfMbrPrepareRemoteExecutionCommand
                         () -> {
                           try {
                             return helper.prepareRemoteExecution(
-                                (ModernBuildRule<?>) buildRule, WorkerRequirementsProvider.DEFAULT);
+                                (ModernBuildRule<?>) buildRule,
+                                digest -> !containedHashes.contains(digest),
+                                WorkerRequirementsProvider.DEFAULT);
                           } catch (Exception e) {
                             // Ignore. Hopefully this is just a serialization failure. In normal
                             // builds, those rules just fall back to non-RE.
@@ -167,8 +171,8 @@ public class PerfMbrPrepareRemoteExecutionCommand
       }
     }
 
-    // Sort of simulate the way that we upload things as we get to them.
-    Set<Digest> containedHashes = Sets.newConcurrentHashSet();
+    // Sort of simulate the way that we upload things as we get to them. There's optimizations in
+    // the helper that depend on this.
     int finished = 0;
     int wantedPendingUploads = maxPendingUploads / 2;
     while (finished < count) {

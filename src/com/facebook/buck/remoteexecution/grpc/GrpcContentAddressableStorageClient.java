@@ -21,6 +21,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.facebook.buck.remoteexecution.proto.RemoteExecutionMetadata;
@@ -69,5 +70,10 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
       List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
       throws IOException {
     return outputsMaterializer.materialize(outputDirectories, outputFiles, root);
+  }
+
+  @Override
+  public boolean containsDigest(Digest digest) {
+    return uploader.containsDigest(digest);
   }
 }

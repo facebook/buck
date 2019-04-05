@@ -192,6 +192,11 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
     return uploader.addMissing(data.stream());
   }
 
+  @Override
+  public boolean containsDigest(Digest digest) {
+    return uploader.containsDigest(digest);
+  }
+
   /**
    * Materializes the outputs into the build root. All required data must be present (or inlined).
    */

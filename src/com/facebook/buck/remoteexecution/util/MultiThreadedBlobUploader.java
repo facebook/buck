@@ -92,7 +92,7 @@ public class MultiThreadedBlobUploader {
     this.asyncBlobUploader = delegate;
   }
 
-  private boolean containsDigest(Digest digest) {
+  public boolean containsDigest(Digest digest) {
     return containedHashes.contains(digest.getHash());
   }
 
