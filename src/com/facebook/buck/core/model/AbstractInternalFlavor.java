@@ -17,6 +17,8 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.immutables.value.Value;
 
 /**
@@ -26,10 +28,12 @@ import org.immutables.value.Value;
  */
 @Value.Immutable
 @BuckStyleImmutable
+@JsonDeserialize
 abstract class AbstractInternalFlavor implements Flavor {
 
   @Override
   @Value.Parameter
+  @JsonProperty("name")
   public abstract String getName();
 
   @Override
