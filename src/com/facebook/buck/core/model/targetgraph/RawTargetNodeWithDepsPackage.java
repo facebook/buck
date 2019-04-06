@@ -17,11 +17,14 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableMap;
 import org.immutables.value.Value;
 
 /** Represents all {@link RawTargetNodeWithDeps} that result from parsing a single build file */
 @Value.Immutable(builder = false, copy = false)
+@JsonDeserialize
 public abstract class RawTargetNodeWithDepsPackage implements ComputeResult {
 
   /**
@@ -30,5 +33,6 @@ public abstract class RawTargetNodeWithDepsPackage implements ComputeResult {
    * the name after the colon) and value is corresponding target.
    */
   @Value.Parameter
+  @JsonProperty("nodes")
   public abstract ImmutableMap<String, RawTargetNodeWithDeps> getRawTargetNodesWithDeps();
 }

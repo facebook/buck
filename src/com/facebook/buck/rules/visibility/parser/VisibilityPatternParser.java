@@ -21,6 +21,9 @@ import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.annotations.VisibleForTesting;
 import org.immutables.value.Value;
 
@@ -42,16 +45,20 @@ public class VisibilityPatternParser {
   @Value.Immutable
   @BuckStyleTuple
   @VisibleForTesting
+  @JsonDeserialize
   abstract static class AbstractBuildTargetVisibilityPattern implements VisibilityPattern {
 
+    @JsonProperty("pattern")
     abstract BuildTargetPattern getViewerPattern();
 
     @Override
+    @JsonIgnore
     public boolean checkVisibility(ObeysVisibility viewer) {
       return getViewerPattern().matches(viewer.getBuildTarget());
     }
 
     @Override
+    @JsonIgnore
     public String getRepresentation() {
       return getViewerPattern().getCellFreeRepresentation();
     }
@@ -59,14 +66,17 @@ public class VisibilityPatternParser {
 
   @Value.Immutable
   @BuckStyleTuple
+  @JsonDeserialize
   static class AbstractPublicVisibilityPattern implements VisibilityPattern {
 
     @Override
+    @JsonIgnore
     public boolean checkVisibility(ObeysVisibility viewer) {
       return true;
     }
 
     @Override
+    @JsonProperty("representation")
     public String getRepresentation() {
       return VISIBILITY_PUBLIC;
     }

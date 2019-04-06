@@ -19,15 +19,19 @@ package com.facebook.buck.core.model.targetgraph;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 /** A pair of {@link RawTargetNode} and its dependencies */
 @Value.Immutable(builder = false, copy = false)
+@JsonSerialize
 public abstract class RawTargetNodeWithDeps implements ComputeResult {
 
   /** Raw target node, i.e. a target node with partially resolved attributes */
   @Value.Parameter
+  @JsonProperty("node")
   public abstract RawTargetNode getRawTargetNode();
 
   /**
@@ -36,5 +40,6 @@ public abstract class RawTargetNodeWithDeps implements ComputeResult {
    * all possible configurations.
    */
   @Value.Parameter
+  @JsonProperty("deps")
   public abstract ImmutableSet<UnconfiguredBuildTargetData> getDeps();
 }
