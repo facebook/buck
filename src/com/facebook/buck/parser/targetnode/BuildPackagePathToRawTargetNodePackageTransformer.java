@@ -40,7 +40,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.RawTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.manifest.ImmutableBuildFilePathToBuildFileManifestKey;
+import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -142,7 +142,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
       BuildPackagePathToRawTargetNodePackageKey key, TransformationEnvironment env) {
 
     BuildFileManifest buildFileManifest =
-        env.getDep(ImmutableBuildFilePathToBuildFileManifestKey.of(key.getPath()));
+        env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
     String baseName = "//" + MorePaths.pathWithUnixSeparators(key.getPath());
 
     ImmutableSet.Builder<BuildTargetToRawTargetNodeKey> builder =
@@ -165,6 +165,6 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
       BuildPackagePathToRawTargetNodePackageKey key) {
     // To construct raw target node, we first need to parse a build file and obtain corresponding
     // manifest, so require it as a dependency
-    return ImmutableSet.of(ImmutableBuildFilePathToBuildFileManifestKey.of(key.getPath()));
+    return ImmutableSet.of(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
   }
 }

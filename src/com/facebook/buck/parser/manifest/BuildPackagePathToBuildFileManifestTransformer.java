@@ -26,48 +26,48 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 
 /** Parses build file to {@link BuildFileManifest} structure */
-public class BuildFilePathToBuildFileManifestTransformer
-    implements GraphTransformer<BuildFilePathToBuildFileManifestKey, BuildFileManifest> {
+public class BuildPackagePathToBuildFileManifestTransformer
+    implements GraphTransformer<BuildPackagePathToBuildFileManifestKey, BuildFileManifest> {
 
   private final ProjectBuildFileParser parser;
   private final Path buildFileName;
 
-  private BuildFilePathToBuildFileManifestTransformer(
+  private BuildPackagePathToBuildFileManifestTransformer(
       ProjectBuildFileParser parser, Path buildFileName) {
     this.parser = parser;
     this.buildFileName = buildFileName;
   }
 
   /**
-   * Create new instance of {@link BuildFilePathToBuildFileManifestTransformer}
+   * Create new instance of {@link BuildPackagePathToBuildFileManifestTransformer}
    *
    * @param parser Parser used to parse build file. This parser should be thread-safe.
    */
-  public static BuildFilePathToBuildFileManifestTransformer of(
+  public static BuildPackagePathToBuildFileManifestTransformer of(
       ProjectBuildFileParser parser, Path buildFileName) {
-    return new BuildFilePathToBuildFileManifestTransformer(parser, buildFileName);
+    return new BuildPackagePathToBuildFileManifestTransformer(parser, buildFileName);
   }
 
   @Override
-  public Class<BuildFilePathToBuildFileManifestKey> getKeyClass() {
-    return BuildFilePathToBuildFileManifestKey.class;
+  public Class<BuildPackagePathToBuildFileManifestKey> getKeyClass() {
+    return BuildPackagePathToBuildFileManifestKey.class;
   }
 
   @Override
   public BuildFileManifest transform(
-      BuildFilePathToBuildFileManifestKey key, TransformationEnvironment env) throws Exception {
+      BuildPackagePathToBuildFileManifestKey key, TransformationEnvironment env) throws Exception {
     return parser.getBuildFileManifest(key.getPath().resolve(buildFileName));
   }
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      BuildFilePathToBuildFileManifestKey key, TransformationEnvironment env) {
+      BuildPackagePathToBuildFileManifestKey key, TransformationEnvironment env) {
     return ImmutableSet.of();
   }
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
-      BuildFilePathToBuildFileManifestKey key) {
+      BuildPackagePathToBuildFileManifestKey key) {
     return ImmutableSet.of();
   }
 }

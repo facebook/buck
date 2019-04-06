@@ -34,7 +34,7 @@ import javax.annotation.Nullable;
 
 /** Stores {@link BuildFileManifest} for each parsed build file */
 public class BuildFileManifestCache
-    implements GraphEngineCache<BuildFilePathToBuildFileManifestKey, BuildFileManifest> {
+    implements GraphEngineCache<BuildPackagePathToBuildFileManifestKey, BuildFileManifest> {
 
   /**
    * Main cache storage. Key is a path to a folder that is a package root (i.e. a folder that has
@@ -69,12 +69,12 @@ public class BuildFileManifestCache
   }
 
   @Override
-  public Optional<BuildFileManifest> get(BuildFilePathToBuildFileManifestKey key) {
+  public Optional<BuildFileManifest> get(BuildPackagePathToBuildFileManifestKey key) {
     return Optional.ofNullable(cache.get(key.getPath()));
   }
 
   @Override
-  public void put(BuildFilePathToBuildFileManifestKey key, BuildFileManifest buildFileManifest) {
+  public void put(BuildPackagePathToBuildFileManifestKey key, BuildFileManifest buildFileManifest) {
     @Nullable BuildFileManifest prevManifest = cache.put(key.getPath(), buildFileManifest);
 
     if (buildFileManifest.equals(prevManifest)) {

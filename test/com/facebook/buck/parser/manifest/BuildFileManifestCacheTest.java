@@ -117,7 +117,7 @@ public class BuildFileManifestCacheTest {
     manifestCell1Root =
         ImmutableBuildFileManifest.of(targets, includes, configs, Optional.empty(), globManifest);
 
-    cache.put(ImmutableBuildFilePathToBuildFileManifestKey.of(Paths.get("")), manifestCell1Root);
+    cache.put(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")), manifestCell1Root);
 
     includes =
         ImmutableSortedSet.of(
@@ -127,29 +127,29 @@ public class BuildFileManifestCacheTest {
         ImmutableBuildFileManifest.of(targets, includes, configs, Optional.empty(), globManifest);
 
     cache.put(
-        ImmutableBuildFilePathToBuildFileManifestKey.of(Paths.get("folder1/folder2")),
+        ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("folder1/folder2")),
         manifestCell1Folder);
   }
 
   @Test
   public void canReadAndWrite() {
     Optional<BuildFileManifest> fetchedManifest =
-        cache.get(ImmutableBuildFilePathToBuildFileManifestKey.of(Paths.get("")));
+        cache.get(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")));
     assertTrue(fetchedManifest.isPresent());
     assertEquals(manifestCell1Root, fetchedManifest.get());
 
     Optional<BuildFileManifest> fetchedEmpty =
-        cache.get(ImmutableBuildFilePathToBuildFileManifestKey.of(Paths.get("nonexisting")));
+        cache.get(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("nonexisting")));
     assertFalse(fetchedEmpty.isPresent());
   }
 
   private void assertPackages(boolean rootPackageExists, boolean subPackageExists) {
     Optional<BuildFileManifest> fetchedManifest =
-        cache.get(ImmutableBuildFilePathToBuildFileManifestKey.of(Paths.get("")));
+        cache.get(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("")));
     assertEquals(rootPackageExists, fetchedManifest.isPresent());
 
     fetchedManifest =
-        cache.get(ImmutableBuildFilePathToBuildFileManifestKey.of(Paths.get("folder1/folder2")));
+        cache.get(ImmutableBuildPackagePathToBuildFileManifestKey.of(Paths.get("folder1/folder2")));
     assertEquals(subPackageExists, fetchedManifest.isPresent());
   }
 

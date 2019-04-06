@@ -23,7 +23,8 @@ import org.immutables.value.Value;
 
 /** Transformation key containing path to a build file to parse */
 @Value.Immutable(builder = false, copy = false, prehash = true)
-public abstract class BuildFilePathToBuildFileManifestKey implements ComputeKey<BuildFileManifest> {
+public abstract class BuildPackagePathToBuildFileManifestKey
+    implements ComputeKey<BuildFileManifest> {
 
   @Value.Parameter
   /**
@@ -34,6 +35,6 @@ public abstract class BuildFilePathToBuildFileManifestKey implements ComputeKey<
 
   @Override
   public Class<? extends ComputeKey<?>> getKeyClass() {
-    return BuildFilePathToBuildFileManifestKey.class;
+    return BuildPackagePathToBuildFileManifestKey.class;
   }
 }

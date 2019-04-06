@@ -28,8 +28,8 @@ import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.parser.RawTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
-import com.facebook.buck.parser.manifest.BuildFilePathToBuildFileManifestKey;
-import com.facebook.buck.parser.manifest.ImmutableBuildFilePathToBuildFileManifestKey;
+import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
+import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -103,14 +103,14 @@ public class BuildTargetToRawTargetNodeTransformer
     return ImmutableSet.of(getManifestKey(key));
   }
 
-  private BuildFilePathToBuildFileManifestKey getManifestKey(BuildTargetToRawTargetNodeKey key) {
+  private BuildPackagePathToBuildFileManifestKey getManifestKey(BuildTargetToRawTargetNodeKey key) {
     UnconfiguredBuildTargetData buildTarget = key.getBuildTarget();
 
     /** TODO: do it directly not using {@link UnconfiguredBuildTarget} */
     UnconfiguredBuildTarget unconfiguredBuildTargetView =
         ImmutableUnconfiguredBuildTarget.of(cell.getRoot(), buildTarget);
 
-    return ImmutableBuildFilePathToBuildFileManifestKey.of(
+    return ImmutableBuildPackagePathToBuildFileManifestKey.of(
         unconfiguredBuildTargetView.getBasePath());
   }
 }
