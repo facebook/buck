@@ -62,5 +62,5 @@ internal fun diffRules(oldRules: Set<InternalRawBuildRule>, newRules: Set<Intern
 }
 
 private fun toPair(rule: InternalRawBuildRule) : Pair<String, InternalRawBuildRule> {
-    return Pair(rule.targetNode.buildTarget.shortName, rule)
+    return Pair(rule.targetNode.buildTarget.unflavoredBuildTarget.name, rule)
 }

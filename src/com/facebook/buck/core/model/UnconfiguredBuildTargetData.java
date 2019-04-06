@@ -16,8 +16,10 @@
 
 package com.facebook.buck.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSortedSet;
@@ -52,6 +54,34 @@ public abstract class UnconfiguredBuildTargetData
     Preconditions.checkArgument(
         getFlavors().comparator() == FLAVOR_ORDERING,
         "Flavors must be ordered using natural ordering.");
+  }
+
+  /**
+   * Fully qualified name of unconfigured build target, for example
+   * cell//some/target:name#flavor1,flavor2 *
+   */
+  @Value.Lazy
+  @JsonIgnore
+  public String getFullyQualifiedName() {
+    return getUnflavoredBuildTarget() + getFlavorPostfix();
+  }
+
+  @JsonIgnore
+  private String getFlavorPostfix() {
+    if (getFlavors().isEmpty()) {
+      return "";
+    }
+    return "#" + getFlavorsAsString();
+  }
+
+  @JsonIgnore
+  private String getFlavorsAsString() {
+    return Joiner.on(",").join(getFlavors());
+  }
+
+  @Override
+  public String toString() {
+    return getFullyQualifiedName();
   }
 
   @Override

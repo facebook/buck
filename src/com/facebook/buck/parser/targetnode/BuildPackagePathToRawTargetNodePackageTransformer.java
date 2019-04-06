@@ -23,6 +23,8 @@ import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
@@ -41,6 +43,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.manifest.ImmutableBuildFilePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -90,7 +93,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
         ImmutableMap.builderWithExpectedSize(rawTargetNodes.size());
 
     for (Entry<BuildTargetToRawTargetNodeKey, RawTargetNode> entry : rawTargetNodes.entrySet()) {
-      UnconfiguredBuildTarget unconfiguredBuildTarget = entry.getKey().getBuildTarget();
+      UnconfiguredBuildTargetData unconfiguredBuildTarget = entry.getKey().getBuildTarget();
       RawTargetNode rawTargetNode = entry.getValue();
 
       // To discover dependencies, we coerce RawTargetNode to TargetNode, get dependencies out of
@@ -98,8 +101,13 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
       // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have to resolve
       // configuration for Target Node (we use default configuration at this point)
 
+      // Create short living UnconfiguredBuildTarget
+      // TODO: configure data object directly
+      UnconfiguredBuildTarget unconfiguredBuildTargetView =
+          ImmutableUnconfiguredBuildTarget.of(cell.getRoot(), unconfiguredBuildTarget);
+
       BuildTarget buildTarget =
-          unconfiguredBuildTarget.configure(EmptyTargetConfiguration.INSTANCE);
+          unconfiguredBuildTargetView.configure(EmptyTargetConfiguration.INSTANCE);
 
       // All target nodes are created sequentially from raw target nodes
       // TODO: use RawTargetNodeToTargetNode transformation
@@ -122,7 +130,8 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
 
       RawTargetNodeWithDeps rawTargetNodeWithDeps =
           ImmutableRawTargetNodeWithDeps.of(rawTargetNode, deps);
-      builder.put(unconfiguredBuildTarget.getShortName(), rawTargetNodeWithDeps);
+      builder.put(
+          unconfiguredBuildTarget.getUnflavoredBuildTarget().getName(), rawTargetNodeWithDeps);
     }
 
     return ImmutableRawTargetNodeWithDepsPackage.of(builder.build());
@@ -142,7 +151,10 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
     for (String target : buildFileManifest.getTargets().keySet()) {
       BuildTargetToRawTargetNodeKey depkey =
           ImmutableBuildTargetToRawTargetNodeKey.of(
-              ImmutableUnconfiguredBuildTarget.of(cell.getRoot(), baseName, target));
+              ImmutableUnconfiguredBuildTargetData.of(
+                  ImmutableUnflavoredBuildTargetData.of(
+                      cell.getCanonicalName().orElse(""), baseName, target),
+                  ImmutableSortedSet.of()));
       builder.add(depkey);
     }
     return builder.build();

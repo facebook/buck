@@ -58,6 +58,24 @@ public class ImmutableUnconfiguredBuildTarget implements UnconfiguredBuildTarget
     this.hash = Objects.hash(this.data, this.unflavoredBuildTarget);
   }
 
+  private ImmutableUnconfiguredBuildTarget(Path cellPath, UnconfiguredBuildTargetData data) {
+    this.data = data;
+    this.unflavoredBuildTarget =
+        ImmutableUnflavoredBuildTarget.of(cellPath, data.getUnflavoredBuildTarget());
+    this.hash = Objects.hash(this.data, this.unflavoredBuildTarget);
+  }
+
+  /**
+   * Create new immutable instance of {@link UnconfiguredBuildTarget}
+   *
+   * @param cellPath Absolute path to a cell containing this target
+   * @param data Data object that backs this view
+   */
+  public static ImmutableUnconfiguredBuildTarget of(
+      Path cellPath, UnconfiguredBuildTargetData data) {
+    return new ImmutableUnconfiguredBuildTarget(cellPath, data);
+  }
+
   /**
    * Create new immutable instance of {@link UnconfiguredBuildTarget}
    *

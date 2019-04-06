@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.util.log.Logger;
@@ -72,7 +73,8 @@ public class RawTargetNodeToTargetNodeParsePipeline
       Path buildFile,
       TargetConfiguration targetConfiguration,
       RawTargetNode from) {
-    return from.getBuildTarget().configure(targetConfiguration);
+    return ImmutableUnconfiguredBuildTarget.of(root, from.getBuildTarget())
+        .configure(targetConfiguration);
   }
 
   @Override

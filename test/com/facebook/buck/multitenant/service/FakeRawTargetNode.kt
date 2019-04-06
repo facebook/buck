@@ -17,8 +17,11 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.FakeRuleTypeForTests
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData
+import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData
 import com.facebook.buck.core.model.RuleType
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.model.UnconfiguredBuildTargetData
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import com.facebook.buck.rules.visibility.VisibilityPattern
@@ -28,17 +31,17 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 internal val BUILD_FILE_DIRECTORY: Path = Paths.get("foo")
-internal val BUILD_TARGET_PARSER: ((shortOrFullyQualifiedName: String) -> UnconfiguredBuildTarget) = {
+internal val BUILD_TARGET_PARSER: ((shortOrFullyQualifiedName: String) -> UnconfiguredBuildTargetData) = {
     if (it.contains(':')) {
         // Argument must already by a fully-qualified build target.
-        UnconfiguredBuildTargetFactoryForTests.newInstance(it)
+        UnconfiguredBuildTargetFactoryForTests.newInstance(it).data
     } else {
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//%s:%s".format(BUILD_FILE_DIRECTORY, it))
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//%s:%s".format(BUILD_FILE_DIRECTORY, it)).data
     }
 }
 internal val FAKE_RULE_TYPE = FakeRuleTypeForTests.createFakeBuildRuleType("java_library")
 
-internal fun createBuildTarget(shortName: String): UnconfiguredBuildTarget {
+internal fun createBuildTarget(shortName: String): UnconfiguredBuildTargetData {
     return BUILD_TARGET_PARSER(shortName)
 }
 
@@ -56,9 +59,9 @@ internal fun createRawRule(shortName: String, deps: Set<String>): RawBuildRule {
     return RawBuildRule(node, deps.map { createBuildTarget(it)}.toSet())
 }
 
-internal data class FakeRawTargetNode(private val buildTarget: UnconfiguredBuildTarget, private val ruleType: RuleType, private val attributes: ImmutableMap<String, Any>) : RawTargetNode {
+internal data class FakeRawTargetNode(private val buildTarget: UnconfiguredBuildTargetData, private val ruleType: RuleType, private val attributes: ImmutableMap<String, Any>) : RawTargetNode {
 
-    override fun getBuildTarget(): UnconfiguredBuildTarget = buildTarget
+    override fun getBuildTarget(): UnconfiguredBuildTargetData = buildTarget
 
     override fun getRuleType(): RuleType = ruleType
 

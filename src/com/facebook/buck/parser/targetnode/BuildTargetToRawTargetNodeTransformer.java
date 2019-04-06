@@ -22,6 +22,8 @@ import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.parser.RawTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -66,16 +68,25 @@ public class BuildTargetToRawTargetNodeTransformer
 
   @Override
   public RawTargetNode transform(BuildTargetToRawTargetNodeKey key, TransformationEnvironment env) {
-    UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
+    UnconfiguredBuildTargetData buildTarget = key.getBuildTarget();
 
     BuildFileManifest manifest = env.getDep(getManifestKey(key));
     @Nullable
-    Map<String, Object> rawAttributes = manifest.getTargets().get(buildTarget.getShortName());
+    Map<String, Object> rawAttributes =
+        manifest.getTargets().get(buildTarget.getUnflavoredBuildTarget().getName());
     if (rawAttributes == null) {
       throw new NoSuchBuildTargetException(buildTarget);
     }
 
-    return rawTargetNodeFactory.create(cell, buildTarget.getBasePath(), buildTarget, rawAttributes);
+    /** TODO: do it directly not using {@link UnconfiguredBuildTarget} */
+    UnconfiguredBuildTarget unconfiguredBuildTargetView =
+        ImmutableUnconfiguredBuildTarget.of(cell.getRoot(), buildTarget);
+
+    return rawTargetNodeFactory.create(
+        cell,
+        unconfiguredBuildTargetView.getBasePath(),
+        unconfiguredBuildTargetView,
+        rawAttributes);
   }
 
   @Override
@@ -93,8 +104,13 @@ public class BuildTargetToRawTargetNodeTransformer
   }
 
   private BuildFilePathToBuildFileManifestKey getManifestKey(BuildTargetToRawTargetNodeKey key) {
-    UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
+    UnconfiguredBuildTargetData buildTarget = key.getBuildTarget();
 
-    return ImmutableBuildFilePathToBuildFileManifestKey.of(buildTarget.getBasePath());
+    /** TODO: do it directly not using {@link UnconfiguredBuildTarget} */
+    UnconfiguredBuildTarget unconfiguredBuildTargetView =
+        ImmutableUnconfiguredBuildTarget.of(cell.getRoot(), buildTarget);
+
+    return ImmutableBuildFilePathToBuildFileManifestKey.of(
+        unconfiguredBuildTargetView.getBasePath());
   }
 }

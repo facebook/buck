@@ -18,7 +18,7 @@ package com.facebook.buck.rules.visibility.parser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableSet;
 import java.util.List;
@@ -35,7 +35,7 @@ public class VisibilityPatterns {
       CellPathResolver cellNames,
       String paramName,
       @Nullable Object value,
-      UnconfiguredBuildTarget target) {
+      UnconfiguredBuildTargetData target) {
     if (value == null) {
       return ImmutableSet.of();
     }

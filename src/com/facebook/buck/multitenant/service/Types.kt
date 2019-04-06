@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.model.UnconfiguredBuildTargetData
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode
 import java.nio.file.Path
 import java.util.*
@@ -35,7 +36,7 @@ internal typealias BuildTargetSet = IntArray
  * This is a RawTargetNode paired with its deps as determined by configuring the RawTargetNode with
  * the empty configuration.
  */
-data class RawBuildRule(val targetNode: RawTargetNode, val deps: Set<UnconfiguredBuildTarget>)
+data class RawBuildRule(val targetNode: RawTargetNode, val deps: Set<UnconfiguredBuildTargetData>)
 
 /**
  * @param[deps] must be sorted in ascending order!!!

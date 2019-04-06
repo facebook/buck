@@ -74,7 +74,7 @@ public class DefaultRawTargetNodeFactoryTest {
         factory.create(cell, cell.getRoot().resolve("a/b/BUCK"), buildTarget, attributes);
 
     assertEquals(RuleType.of("java_library", RuleType.Kind.BUILD), rawTargetNode.getRuleType());
-    assertEquals(buildTarget, rawTargetNode.getBuildTarget());
+    assertEquals(buildTarget.getData(), rawTargetNode.getBuildTarget());
 
     assertEquals(attributes, rawTargetNode.getAttributes());
 

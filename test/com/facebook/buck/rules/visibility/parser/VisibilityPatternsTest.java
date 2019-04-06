@@ -31,6 +31,6 @@ public class VisibilityPatternsTest {
         createCellRoots(new FakeProjectFilesystem()),
         "visibility",
         ImmutableList.of(":marmosets"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//example/path:three"));
+        UnconfiguredBuildTargetFactoryForTests.newInstance("//example/path:three").getData());
   }
 }

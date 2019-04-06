@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Preconditions;
@@ -52,6 +53,18 @@ public abstract class UnflavoredBuildTargetData implements Comparable<Unflavored
   @Value.Parameter
   @JsonProperty("name")
   public abstract String getName();
+
+  /** Fully qualified name of unconfigured build target, for example cell//some/target:name */
+  @Value.Lazy
+  @JsonIgnore
+  public String getFullyQualifiedName() {
+    return getCell() + getBaseName() + ":" + getName();
+  }
+
+  @Override
+  public String toString() {
+    return getFullyQualifiedName();
+  }
 
   /** Performs validation of input data */
   @Value.Check

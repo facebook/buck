@@ -140,13 +140,13 @@ public class DefaultParserTargetNodeFactory
                 cell.getCellPathResolver(),
                 "visibility",
                 rawNode.get("visibility"),
-                target.getUnconfiguredBuildTarget());
+                target.getUnconfiguredBuildTarget().getData());
         withinViewPatterns =
             VisibilityPatterns.createFromStringList(
                 cell.getCellPathResolver(),
                 "within_view",
                 rawNode.get("within_view"),
-                target.getUnconfiguredBuildTarget());
+                target.getUnconfiguredBuildTarget().getData());
       }
 
       return createTargetNodeFromObject(

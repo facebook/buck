@@ -21,10 +21,10 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.FakeTransformationEnvironment;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDepsPackage;
@@ -75,8 +75,11 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             "",
             "deps",
             ImmutableSortedSet.of(":target2"));
-    UnconfiguredBuildTarget unconfiguredBuildTarget1 =
-        ImmutableUnconfiguredBuildTarget.of(cell.getRoot(), "//", "target1");
+    UnconfiguredBuildTargetData unconfiguredBuildTarget1 =
+        ImmutableUnconfiguredBuildTargetData.of(
+            ImmutableUnflavoredBuildTargetData.of(
+                cell.getCanonicalName().orElse(""), "//", "target1"),
+            ImmutableSortedSet.of());
     RawTargetNode rawTargetNode1 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget1,
@@ -87,8 +90,11 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
 
     ImmutableMap<String, Object> rawAttributes2 =
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
-    UnconfiguredBuildTarget unconfiguredBuildTarget2 =
-        ImmutableUnconfiguredBuildTarget.of(cell.getRoot(), "//", "target2");
+    UnconfiguredBuildTargetData unconfiguredBuildTarget2 =
+        ImmutableUnconfiguredBuildTargetData.of(
+            ImmutableUnflavoredBuildTargetData.of(
+                cell.getCanonicalName().orElse(""), "//", "target2"),
+            ImmutableSortedSet.of());
     RawTargetNode rawTargetNode2 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget2,

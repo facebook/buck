@@ -66,13 +66,19 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
 
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(
-            cell.getCellPathResolver(), "visibility", rawAttributes.get("visibility"), target);
+            cell.getCellPathResolver(),
+            "visibility",
+            rawAttributes.get("visibility"),
+            target.getData());
     ImmutableSet<VisibilityPattern> withinViewPatterns =
         VisibilityPatterns.createFromStringList(
-            cell.getCellPathResolver(), "within_view", rawAttributes.get("within_view"), target);
+            cell.getCellPathResolver(),
+            "within_view",
+            rawAttributes.get("within_view"),
+            target.getData());
 
     return ImmutableRawTargetNode.of(
-        target,
+        target.getData(),
         ruleType,
         ImmutableMap.copyOf(rawAttributes),
         visibilityPatterns,
