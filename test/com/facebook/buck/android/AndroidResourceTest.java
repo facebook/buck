@@ -117,6 +117,7 @@ public class AndroidResourceTest {
             params,
             ruleFinder,
             /* deps */ ImmutableSortedSet.of(),
+            /* exported_deps */ ImmutableSortedSet.of(),
             FakeSourcePath.of("foo/res"),
             ImmutableSortedMap.of(
                 Paths.get("values/strings.xml"), FakeSourcePath.of("foo/res/values/strings.xml")),
@@ -146,6 +147,7 @@ public class AndroidResourceTest {
             params,
             ruleFinder,
             /* deps */ ImmutableSortedSet.of(),
+            /* exported_deps */ ImmutableSortedSet.of(),
             FakeSourcePath.of("foo/res"),
             ImmutableSortedMap.of(
                 Paths.get("values/strings.xml"), FakeSourcePath.of("foo/res/values/strings.xml")),

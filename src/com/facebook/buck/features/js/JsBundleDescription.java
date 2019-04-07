@@ -310,6 +310,7 @@ public class JsBundleDescription
         params,
         graphBuilder,
         ImmutableSortedSet.of(), // deps
+        ImmutableSortedSet.of(), // exported_deps
         jsBundle.getSourcePathToResources(),
         ImmutableSortedMap.of(), // resSrcs
         rDotJavaPackage,

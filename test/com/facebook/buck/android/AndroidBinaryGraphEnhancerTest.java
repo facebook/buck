@@ -778,6 +778,7 @@ public class AndroidBinaryGraphEnhancerTest {
                     .copyAppendingExtraDeps(ImmutableSortedSet.of(resourcesDep)),
                 graphBuilder,
                 ImmutableSortedSet.of(),
+                ImmutableSortedSet.of(),
                 resourcesDep.getSourcePathToOutput(),
                 ImmutableSortedMap.of(),
                 null,

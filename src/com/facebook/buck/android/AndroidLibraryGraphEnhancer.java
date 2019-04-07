@@ -29,7 +29,6 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
 import com.facebook.buck.util.DependencyMode;
-import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -101,10 +100,7 @@ public class AndroidLibraryGraphEnhancer {
     switch (resourceDependencyMode) {
       case FIRST_ORDER:
         androidResourceDeps =
-            RichStream.from(originalDeps)
-                .filter(HasAndroidResourceDeps.class)
-                .filter(input -> input.getRes() != null)
-                .toImmutableSet();
+            HasAndroidResourceDeps.getTransitiveExportedResourceDeps(originalDeps);
         break;
       case TRANSITIVE:
         androidResourceDeps =

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import com.facebook.buck.android.packageable.AndroidPackageable;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -34,9 +35,12 @@ import com.facebook.buck.jvm.java.PrebuiltJar;
 import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.jvm.java.ResourcesParameters;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class AndroidPrebuiltAar extends AndroidLibrary
@@ -46,6 +50,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   private final SourcePath nativeLibsDirectory;
   private final boolean useSystemLibraryLoader;
   private final PrebuiltJar prebuiltJar;
+  private final Iterable<AndroidPrebuiltAar> exportedAarDeps;
 
   // TODO(cjhopman): It's silly that this is pretending to be a java library.
   public AndroidPrebuiltAar(
@@ -58,7 +63,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       PrebuiltJar prebuiltJar,
       UnzipAar unzipAar,
       CompileToJarStepFactory configuredCompiler,
-      Iterable<PrebuiltJar> exportedDeps,
+      Iterable<PrebuiltJar> exportedJavaDeps,
+      Iterable<AndroidPrebuiltAar> exportedAarDeps,
       boolean requiredForSourceAbi,
       Optional<String> mavenCoords,
       boolean useSystemLibraryLoader) {
@@ -85,7 +91,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
         /* firstOrderPackageableDeps */ androidLibraryParams.getDeclaredDeps().get(),
         /* exportedDeps */ ImmutableSortedSet.<BuildRule>naturalOrder()
             .add(prebuiltJar)
-            .addAll(exportedDeps)
+            .addAll(exportedJavaDeps)
             .build(),
         /* providedDeps */ ImmutableSortedSet.of(),
         ImmutableSortedSet.of(),
@@ -109,6 +115,7 @@ public class AndroidPrebuiltAar extends AndroidLibrary
     this.prebuiltJar = prebuiltJar;
     this.nativeLibsDirectory = nativeLibsDirectory;
     this.useSystemLibraryLoader = useSystemLibraryLoader;
+    this.exportedAarDeps = exportedAarDeps;
   }
 
   @Override
@@ -141,6 +148,34 @@ public class AndroidPrebuiltAar extends AndroidLibrary
   @Override
   public SourcePath getAssets() {
     return unzipAar.getAssetsDirectory();
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getResourceDeps() {
+    return ImmutableSet.of();
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getExportedResourceDeps() {
+    return ImmutableSet.<BuildRule>builder().addAll(exportedAarDeps).build();
+  }
+
+  @Override
+  public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
+    return ImmutableSortedSet.<BuildRule>naturalOrder()
+        .addAll(getResourceDeps())
+        .addAll(getExportedResourceDeps())
+        .addAll(super.getDepsForTransitiveClasspathEntries())
+        .build();
+  }
+
+  @Override
+  public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
+    return FluentIterable.concat(
+            this.getResourceDeps(),
+            this.getExportedResourceDeps(),
+            super.getRequiredPackageables(ruleResolver))
+        .filter(AndroidPackageable.class);
   }
 
   @Override

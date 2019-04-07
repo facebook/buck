@@ -177,6 +177,7 @@ public class AndroidAarDescription
                 .add(assembleResourceDirectories)
                 .addAll(originalBuildRuleParams.getDeclaredDeps().get())
                 .build(),
+            /* exportedDeps */ ImmutableSortedSet.of(),
             assembleResourceDirectories.getSourcePathToOutput(),
             /* resSrcs */ ImmutableSortedMap.of(),
             /* rDotJavaPackage */ null,

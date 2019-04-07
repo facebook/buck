@@ -199,6 +199,7 @@ public class AndroidResourceDescription
             AndroidResourceHelper.androidResOnly(params.getDeclaredDeps().get())),
         graphBuilder,
         graphBuilder.getAllRules(args.getDeps()),
+        graphBuilder.getAllRules(args.getExportedDeps()),
         resInputs.getSecond().orElse(null),
         resInputs.getFirst().map(MappedSymlinkTree::getLinks).orElse(ImmutableSortedMap.of()),
         args.getPackage().orElse(null),
@@ -381,6 +382,9 @@ public class AndroidResourceDescription
     Optional<String> getPackage();
 
     Optional<SourcePath> getManifest();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<BuildTarget> getExportedDeps();
 
     @Value.Default
     default boolean getResourceUnion() {

@@ -48,11 +48,13 @@ import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreMaps;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
+import com.google.common.collect.Streams;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Set;
@@ -110,6 +112,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean isGrayscaleImageProcessingEnabled;
 
   private final ImmutableSortedSet<BuildRule> deps;
+  private final ImmutableSortedSet<BuildRule> exportedDeps;
 
   private final BuildOutputInitializer<String> buildOutputInitializer;
 
@@ -133,12 +136,13 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final AtomicReference<String> rDotJavaPackage;
 
-  public AndroidResource(
+  private AndroidResource(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<BuildRule> exportedDeps,
       @Nullable SourcePath res,
       ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
@@ -167,6 +171,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.assetsSrcs = MoreMaps.transformKeysAndSort(assetsSrcs, Path::toString);
     this.manifestFile = manifestFile;
     this.symbolsOfDeps = symbolFilesFromDeps;
+
     this.hasWhitelistedStrings = hasWhitelistedStrings;
     this.resourceUnion = resourceUnion;
 
@@ -176,6 +181,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.pathToRDotJavaPackageFile = pathToTextSymbolsDir.resolve("RDotJavaPackage.txt");
 
     this.deps = deps;
+    this.exportedDeps = exportedDeps;
 
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
 
@@ -203,6 +209,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<BuildRule> exportedDeps,
       @Nullable SourcePath res,
       ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
@@ -216,6 +223,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         buildRuleParams,
         ruleFinder,
         deps,
+        exportedDeps,
         res,
         resSrcs,
         rDotJavaPackageArgument,
@@ -233,6 +241,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableSortedSet<BuildRule> deps,
+      ImmutableSortedSet<BuildRule> exportedDeps,
       @Nullable SourcePath res,
       ImmutableSortedMap<Path, SourcePath> resSrcs,
       @Nullable String rDotJavaPackageArgument,
@@ -248,21 +257,23 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
         buildRuleParams,
         ruleFinder,
         deps,
+        exportedDeps,
         res,
         resSrcs,
         rDotJavaPackageArgument,
         assets,
         assetsSrcs,
         manifestFile,
-        () ->
-            RichStream.from(buildRuleParams.getBuildDeps())
-                .filter(HasAndroidResourceDeps.class)
-                .filter(input -> input.getRes() != null)
-                .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
-                .toImmutableSortedSet(Ordering.natural()),
+        () -> getPathToTextSymbols(buildRuleParams.getBuildDeps()),
         hasWhitelistedStrings,
         resourceUnion,
         isGrayscaleImageProcessingEnabled);
+  }
+
+  private static ImmutableSortedSet<SourcePath> getPathToTextSymbols(Set<BuildRule> deps) {
+    return RichStream.from(HasAndroidResourceDeps.getTransitiveExportedResourceDeps(deps))
+        .map(HasAndroidResourceDeps::getPathToTextSymbolsFile)
+        .toImmutableSortedSet(Ordering.natural());
   }
 
   @Override
@@ -275,6 +286,16 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Nullable
   public SourcePath getAssets() {
     return assets;
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getResourceDeps() {
+    return ImmutableSet.<BuildRule>builder().addAll(deps).build();
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> getExportedResourceDeps() {
+    return ImmutableSet.<BuildRule>builder().addAll(exportedDeps).build();
   }
 
   @Nullable
@@ -391,7 +412,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Iterable<AndroidPackageable> getRequiredPackageables(BuildRuleResolver ruleResolver) {
-    return AndroidPackageableCollector.getPackageableRules(deps);
+    return FluentIterable.concat(this.getResourceDeps(), this.getExportedResourceDeps())
+        .filter(AndroidPackageable.class);
   }
 
   @Override
@@ -413,8 +435,8 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Set<BuildRule> getDepsForTransitiveClasspathEntries() {
-    return deps.stream()
+    return Streams.concat(deps.stream(), exportedDeps.stream())
         .filter(rule -> rule instanceof HasClasspathEntries)
-        .collect(ImmutableSet.toImmutableSet());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 }

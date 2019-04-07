@@ -145,6 +145,9 @@ public class AndroidPrebuiltAarDescription
                     graphBuilder.getAllRules(args.getDeps()), AndroidPrebuiltAar.class),
                 AndroidPrebuiltAar::getPrebuiltJar));
 
+    Iterable<AndroidPrebuiltAar> androidPrebuiltAarDeps =
+        Iterables.filter(graphBuilder.getAllRules(args.getDeps()), AndroidPrebuiltAar.class);
+
     if (flavors.contains(AAR_PREBUILT_JAR_FLAVOR)) {
       Preconditions.checkState(
           flavors.size() == 1,
@@ -231,6 +234,7 @@ public class AndroidPrebuiltAarDescription
                 .getJavacOptions(),
             ExtraClasspathProvider.EMPTY),
         /* exportedDeps */ javaDeps,
+        androidPrebuiltAarDeps,
         args.getRequiredForSourceOnlyAbi(),
         args.getMavenCoords(),
         args.isUseSystemLibraryLoader());

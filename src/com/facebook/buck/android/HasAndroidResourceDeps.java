@@ -17,7 +17,12 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 /** Indicates that this class may have android resources that should be packaged into an APK. */
@@ -41,4 +46,36 @@ public interface HasAndroidResourceDeps {
   /** @return path to a directory containing Android assets. */
   @Nullable
   SourcePath getAssets();
+
+  ImmutableSet<BuildRule> getResourceDeps();
+
+  ImmutableSet<BuildRule> getExportedResourceDeps();
+
+  static ImmutableSet<HasAndroidResourceDeps> getTransitiveExportedResourceDeps(
+      Collection<BuildRule> rules) {
+
+    ImmutableSet.Builder<HasAndroidResourceDeps> androidResources = ImmutableSet.builder();
+
+    AbstractBreadthFirstTraversal<BuildRule> visitor =
+        new AbstractBreadthFirstTraversal<BuildRule>(rules) {
+
+          @Override
+          public Iterable<BuildRule> visit(BuildRule rule) {
+
+            if (rule instanceof HasAndroidResourceDeps) {
+              HasAndroidResourceDeps androidResourceRule = (HasAndroidResourceDeps) rule;
+              if (androidResourceRule.getRes() != null) {
+                androidResources.add(androidResourceRule);
+              }
+
+              return androidResourceRule.getExportedResourceDeps();
+            } else {
+              return ImmutableSortedSet.of();
+            }
+          }
+        };
+    visitor.start();
+
+    return androidResources.build();
+  }
 }

@@ -90,6 +90,16 @@ public class RobolectricTestRuleTest {
     }
 
     @Override
+    public ImmutableSet<BuildRule> getResourceDeps() {
+      return ImmutableSet.of();
+    }
+
+    @Override
+    public ImmutableSet<BuildRule> getExportedResourceDeps() {
+      return ImmutableSet.of();
+    }
+
+    @Override
     public BuildTarget getBuildTarget() {
       return null;
     }

@@ -43,6 +43,7 @@ public class AndroidResourceRuleBuilder {
     private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     private BuildTarget buildTarget;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
+    private ImmutableSortedSet<BuildRule> exportedDeps = ImmutableSortedSet.of();
     private SourcePath res;
     private ImmutableSortedMap<Path, SourcePath> resSrcs = ImmutableSortedMap.of();
     private String rDotJavaPackage;
@@ -58,6 +59,7 @@ public class AndroidResourceRuleBuilder {
           TestBuildRuleParams.create(),
           ruleFinder,
           deps,
+          exportedDeps,
           res,
           resSrcs,
           rDotJavaPackage,
@@ -79,6 +81,11 @@ public class AndroidResourceRuleBuilder {
 
     public Builder setDeps(ImmutableSortedSet<BuildRule> deps) {
       this.deps = deps;
+      return this;
+    }
+
+    public Builder setExportedDeps(ImmutableSortedSet<BuildRule> exportedDeps) {
+      this.exportedDeps = exportedDeps;
       return this;
     }
 
