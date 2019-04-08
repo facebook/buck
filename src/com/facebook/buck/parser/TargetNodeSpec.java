@@ -28,14 +28,18 @@ public interface TargetNodeSpec {
     MULTIPLE_TARGETS
   }
 
+  /**
+   * @return whether spec is a single target requested by a name or a list of targets requested with
+   *     recursive spec (i.e. ... )
+   */
   TargetType getTargetType();
 
   /** @return the targets which should be built according to this spec */
   ImmutableMap<BuildTarget, TargetNode<?>> filter(Iterable<TargetNode<?>> nodes);
 
   /**
-   * @return a {@link BuildFileSpec} representing the build files to parse to search for explicit
-   *     {@link TargetNode}.
+   * @return a {@link BuildFileSpec} representing the build files to parse to search for specific
+   *     build target.
    */
   BuildFileSpec getBuildFileSpec();
 }

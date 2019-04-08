@@ -23,10 +23,11 @@ import com.google.common.collect.ImmutableMap;
 import java.util.stream.StreamSupport;
 import org.immutables.value.Value;
 
-/** Matches a {@link TargetNode} name by a specific {@link BuildTarget}. */
-@Value.Immutable(builder = false)
+/** Matches a {@link TargetNode} that corresponds to a single build target */
+@Value.Immutable(builder = false, copy = false)
 public abstract class BuildTargetSpec implements TargetNodeSpec {
 
+  /** @return Build target to match with this spec */
   @Value.Parameter
   public abstract UnconfiguredBuildTarget getUnconfiguredBuildTarget();
 
@@ -34,7 +35,14 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   @Value.Parameter
   public abstract BuildFileSpec getBuildFileSpec();
 
+  /**
+   * Create new instance of {@link BuildTargetSpec} and automatically resolve {@link BuildFileSpec}
+   * based on {@link UnconfiguredBuildTarget} properties
+   *
+   * @param target Build target to match
+   */
   public static BuildTargetSpec from(UnconfiguredBuildTarget target) {
+    // TODO(buck_team): use factory to create specs
     return ImmutableBuildTargetSpec.of(target, BuildFileSpec.fromUnconfiguredBuildTarget(target));
   }
 

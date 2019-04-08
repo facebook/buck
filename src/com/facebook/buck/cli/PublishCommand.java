@@ -29,7 +29,6 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.jvm.java.MavenPublishable;
 import com.facebook.buck.maven.Publisher;
 import com.facebook.buck.parser.BuildTargetSpec;
-import com.facebook.buck.parser.ImmutableBuildTargetSpec;
 import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
@@ -219,24 +218,23 @@ public class PublishCommand extends BuildCommand {
             "Need to specify build targets explicitly when publishing. " + "Cannot modify " + spec);
       }
 
-      // TODO(buck_team): remove upcast, use abstract BuildTargetSpec
-      ImmutableBuildTargetSpec targetSpec = (ImmutableBuildTargetSpec) spec;
+      BuildTargetSpec targetSpec = (BuildTargetSpec) spec;
       Objects.requireNonNull(targetSpec.getUnconfiguredBuildTarget());
 
       UnconfiguredBuildTarget mavenTarget =
           targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR);
-      uniqueSpecs.put(mavenTarget, targetSpec.withUnconfiguredBuildTarget(mavenTarget));
+      uniqueSpecs.put(mavenTarget, BuildTargetSpec.from(mavenTarget));
 
       if (includeSource) {
         UnconfiguredBuildTarget sourceTarget =
             targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR, SRC_JAR);
-        uniqueSpecs.put(sourceTarget, targetSpec.withUnconfiguredBuildTarget(sourceTarget));
+        uniqueSpecs.put(sourceTarget, BuildTargetSpec.from(sourceTarget));
       }
 
       if (includeDocs) {
         UnconfiguredBuildTarget docsTarget =
             targetSpec.getUnconfiguredBuildTarget().withFlavors(MAVEN_JAR, DOC_JAR);
-        uniqueSpecs.put(docsTarget, targetSpec.withUnconfiguredBuildTarget(docsTarget));
+        uniqueSpecs.put(docsTarget, BuildTargetSpec.from(docsTarget));
       }
     }
 
