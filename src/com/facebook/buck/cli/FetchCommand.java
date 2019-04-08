@@ -85,9 +85,7 @@ public class FetchCommand extends BuildCommand {
                         .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     parseArgumentsAsTargetNodeSpecs(
-                        params.getCell().getCellPathResolver(),
-                        params.getBuckConfig(),
-                        getArguments()),
+                        params.getCell(), params.getBuckConfig(), getArguments()),
                     params.getTargetConfiguration());
         if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
           result = toVersionedTargetGraph(params, result);

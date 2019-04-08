@@ -144,7 +144,7 @@ class TargetPatternEvaluator {
     // The returned list of nodes maintains the spec list ordering.
     List<TargetNodeSpec> specs = new ArrayList<>();
     for (String pattern : patterns) {
-      specs.addAll(targetNodeSpecParser.parse(rootCell.getCellPathResolver(), pattern));
+      specs.addAll(targetNodeSpecParser.parse(rootCell, pattern));
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         parser.resolveTargetSpecs(parsingContext, specs, targetConfiguration);

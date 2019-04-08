@@ -20,7 +20,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -304,12 +303,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   }
 
   ImmutableList<TargetNodeSpec> parseArgumentsAsTargetNodeSpecs(
-      CellPathResolver cellPathResolver, BuckConfig config, Iterable<String> targetsAsArgs) {
+      Cell owningCell, BuckConfig config, Iterable<String> targetsAsArgs) {
     ImmutableList.Builder<TargetNodeSpec> specs = ImmutableList.builder();
     CommandLineTargetNodeSpecParser parser =
         new CommandLineTargetNodeSpecParser(config, new BuildTargetPatternTargetNodeParser());
     for (String arg : targetsAsArgs) {
-      specs.addAll(parser.parse(cellPathResolver, arg));
+      specs.addAll(parser.parse(owningCell, arg));
     }
     return specs.build();
   }

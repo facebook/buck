@@ -105,9 +105,7 @@ public class UninstallCommand extends AbstractCommand {
                       .withExcludeUnsupportedTargets(false)
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell().getCellPathResolver(),
-                      params.getBuckConfig(),
-                      getArguments()),
+                      params.getCell(), params.getBuckConfig(), getArguments()),
                   params.getTargetConfiguration());
       buildTargets = result.getBuildTargets();
       graphBuilder =

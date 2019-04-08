@@ -507,9 +507,7 @@ public class TestCommand extends BuildCommand {
                   .buildTargetGraphWithoutConfigurationTargets(
                       parsingContext,
                       parseArgumentsAsTargetNodeSpecs(
-                          params.getCell().getCellPathResolver(),
-                          params.getBuckConfig(),
-                          getArguments()),
+                          params.getCell(), params.getBuckConfig(), getArguments()),
                       params.getTargetConfiguration());
 
           LOG.debug("Got explicit build targets %s", targetGraphAndBuildTargets.getBuildTargets());

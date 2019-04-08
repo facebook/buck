@@ -350,8 +350,7 @@ public class InstallCommand extends BuildCommand {
     for (int index = 0; index < getArguments().size(); index++) {
       // TODO(markwang): Cache argument parsing
       TargetNodeSpec spec =
-          parseArgumentsAsTargetNodeSpecs(
-                  params.getCell().getCellPathResolver(), params.getBuckConfig(), getArguments())
+          parseArgumentsAsTargetNodeSpecs(params.getCell(), params.getBuckConfig(), getArguments())
               .get(index);
 
       BuildTarget target =

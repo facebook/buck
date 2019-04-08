@@ -16,7 +16,7 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -25,10 +25,13 @@ import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 
+/**
+ * A helper wrapper over {@link BuildTargetPatternTargetNodeParser} to normalize user input before
+ * parsing, resolve aliases and validate that base path exists
+ */
 public class CommandLineTargetNodeSpecParser {
 
   private final BuckConfig config;
@@ -85,16 +88,22 @@ public class CommandLineTargetNodeSpecParser {
    * but others, especially those that require filesystem interactions, are too expensive to carry
    * for every single build target.
    */
-  private void validateTargetSpec(TargetNodeSpec spec, String buildTarget) {
+  private void validateTargetSpec(TargetNodeSpec spec, String arg, Cell owningCell) {
     Path cellPath = spec.getBuildFileSpec().getCellPath();
     Path basePath = spec.getBuildFileSpec().getBasePath();
-    if (!Files.exists(cellPath.resolve(basePath))) {
-      throw new HumanReadableException(
-          "%s references non-existent directory %s", buildTarget, basePath);
+    Cell realCell = owningCell.getCell(cellPath);
+    if (!realCell.getFilesystem().exists(basePath)) {
+      throw new HumanReadableException("%s references non-existent directory %s", arg, basePath);
     }
   }
 
-  public ImmutableSet<TargetNodeSpec> parse(CellPathResolver cellNames, String arg) {
+  /**
+   * Parse command line argument provided by user into a set of {@link TargetNodeSpec}s
+   *
+   * @param owningCell Cell that owns the resolution of a spec
+   * @param arg Unresolved command line argument, can be alias or target name or recursive spec
+   */
+  public ImmutableSet<TargetNodeSpec> parse(Cell owningCell, String arg) {
     ImmutableSet<String> resolvedArgs =
         AliasConfig.from(config).getBuildTargetForAliasAsString(arg);
     if (resolvedArgs.isEmpty()) {
@@ -103,8 +112,8 @@ public class CommandLineTargetNodeSpecParser {
     ImmutableSet.Builder<TargetNodeSpec> specs = new ImmutableSet.Builder<>();
     for (String resolvedArg : resolvedArgs) {
       String buildTarget = normalizeBuildTargetString(resolvedArg);
-      TargetNodeSpec spec = parser.parse(cellNames, buildTarget);
-      validateTargetSpec(spec, resolvedArg);
+      TargetNodeSpec spec = parser.parse(owningCell.getCellPathResolver(), buildTarget);
+      validateTargetSpec(spec, resolvedArg, owningCell);
       specs.add(spec);
     }
     return specs.build();
