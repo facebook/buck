@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
@@ -147,7 +147,7 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
   }
 
   @Override
-  public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
+  public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTargetView target) {
     return ImmutableBuildTarget.of(
         getUnconfiguredBuildTarget().withUnflavoredBuildTarget(target), getTargetConfiguration());
   }

@@ -16,8 +16,8 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -28,7 +28,7 @@ import org.immutables.value.Value;
 @BuckStylePackageVisibleTuple
 abstract class AbstractSingletonBuildTargetPattern implements BuildTargetPattern {
 
-  protected abstract UnflavoredBuildTarget getTarget();
+  protected abstract UnflavoredBuildTargetView getTarget();
 
   /**
    * @param fullyQualifiedName The fully qualified name of valid target. It is expected to match the
@@ -38,7 +38,7 @@ abstract class AbstractSingletonBuildTargetPattern implements BuildTargetPattern
     int buildTarget = fullyQualifiedName.indexOf("//");
     int colon = fullyQualifiedName.lastIndexOf(':');
     return SingletonBuildTargetPattern.of(
-        ImmutableUnflavoredBuildTarget.of(
+        ImmutableUnflavoredBuildTargetView.of(
             cellPath,
             Optional.empty(),
             fullyQualifiedName.substring(buildTarget, colon),

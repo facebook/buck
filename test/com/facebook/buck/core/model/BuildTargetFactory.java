@@ -17,7 +17,7 @@
 package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.support.cli.args.BuckCellArg;
@@ -56,12 +56,12 @@ public class BuildTargetFactory {
     String[] nameAndFlavor = parts[1].split("#");
     if (nameAndFlavor.length != 2) {
       return ImmutableUnconfiguredBuildTarget.of(
-              ImmutableUnflavoredBuildTarget.of(root, cellName, parts[0], parts[1]))
+              ImmutableUnflavoredBuildTargetView.of(root, cellName, parts[0], parts[1]))
           .configure(EmptyTargetConfiguration.INSTANCE);
     }
     String[] flavors = nameAndFlavor[1].split(",");
     return ImmutableUnconfiguredBuildTarget.of(
-            ImmutableUnflavoredBuildTarget.of(root, cellName, parts[0], nameAndFlavor[0]),
+            ImmutableUnflavoredBuildTargetView.of(root, cellName, parts[0], nameAndFlavor[0]),
             RichStream.from(flavors).map(InternalFlavor::of))
         .configure(EmptyTargetConfiguration.INSTANCE);
   }
@@ -69,7 +69,7 @@ public class BuildTargetFactory {
   public static BuildTarget newInstance(Path cellPath, String baseName, String shortName) {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTarget.of(
-            ImmutableUnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTargetView.of(
                 cellPath, arg.getCellName(), arg.getBasePath(), shortName))
         .configure(EmptyTargetConfiguration.INSTANCE);
   }
@@ -78,7 +78,7 @@ public class BuildTargetFactory {
       Path cellPath, String baseName, String shortName, Flavor... flavors) {
     BuckCellArg arg = BuckCellArg.of(baseName);
     return ImmutableUnconfiguredBuildTarget.of(
-            ImmutableUnflavoredBuildTarget.of(
+            ImmutableUnflavoredBuildTargetView.of(
                 cellPath, arg.getCellName(), arg.getBasePath(), shortName),
             RichStream.from(flavors))
         .configure(EmptyTargetConfiguration.INSTANCE);

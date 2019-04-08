@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -158,7 +158,7 @@ public class SwiftLibraryDescription
         LinkerMapMode.FLAVOR_DOMAIN.getValue(buildTarget);
     buildTarget =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(buildTarget, flavoredLinkerMapMode);
-    UnflavoredBuildTarget unflavoredBuildTarget = buildTarget.getUnflavoredBuildTarget();
+    UnflavoredBuildTargetView unflavoredBuildTargetView = buildTarget.getUnflavoredBuildTarget();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -175,7 +175,7 @@ public class SwiftLibraryDescription
                     !input
                         .getBuildTarget()
                         .getUnflavoredBuildTarget()
-                        .equals(unflavoredBuildTarget))
+                        .equals(unflavoredBuildTargetView))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     params = params.withExtraDeps(filteredExtraDeps);
 

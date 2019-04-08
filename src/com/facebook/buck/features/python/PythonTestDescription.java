@@ -27,7 +27,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
@@ -420,7 +420,7 @@ public class PythonTestDescription
                 Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
 
     // Additional CXX Targets used to generate CXX coverage.
-    ImmutableSet<UnflavoredBuildTarget> additionalCoverageTargets =
+    ImmutableSet<UnflavoredBuildTargetView> additionalCoverageTargets =
         RichStream.from(args.getAdditionalCoverageTargets())
             .map(target -> target.getUnflavoredBuildTarget())
             .collect(ImmutableSet.toImmutableSet());

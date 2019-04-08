@@ -19,7 +19,7 @@ package com.facebook.buck.core.model.actiongraph.computation;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -63,13 +63,13 @@ public class IncrementalActionGraphGenerator {
 
       // We first walk the new target graph to find new nodes. A new node will invalidate all nodes
       // with the same unflavored target.
-      Set<UnflavoredBuildTarget> unflavoredTargetsForNewNodes =
+      Set<UnflavoredBuildTargetView> unflavoredTargetsForNewNodes =
           findUnflavoredTargetsForNewNodes(targetGraph);
 
       // We figure out which build rules we can reuse from the last action graph by performing an
       // invalidation walk over the new target graph.
-      Set<UnflavoredBuildTarget> invalidUnflavoredTargets = new HashSet<>();
-      Set<UnflavoredBuildTarget> allUnflavoredTargetsInNewGraph = new HashSet<>();
+      Set<UnflavoredBuildTargetView> invalidUnflavoredTargets = new HashSet<>();
+      Set<UnflavoredBuildTargetView> allUnflavoredTargetsInNewGraph = new HashSet<>();
       invalidateChangedTargets(
           targetGraph,
           allUnflavoredTargetsInNewGraph,
@@ -92,8 +92,8 @@ public class IncrementalActionGraphGenerator {
     eventBus.post(new ActionGraphEvent.IncrementalLoad(reusedRuleCount));
   }
 
-  private Set<UnflavoredBuildTarget> findUnflavoredTargetsForNewNodes(TargetGraph targetGraph) {
-    ImmutableSet.Builder<UnflavoredBuildTarget> unflavoredTargetsForNewNodes =
+  private Set<UnflavoredBuildTargetView> findUnflavoredTargetsForNewNodes(TargetGraph targetGraph) {
+    ImmutableSet.Builder<UnflavoredBuildTargetView> unflavoredTargetsForNewNodes =
         new ImmutableSet.Builder<>();
     Set<BuildTarget> explored = new HashSet<>();
     for (TargetNode<?> root : targetGraph.getNodesWithNoIncomingEdges()) {
@@ -106,7 +106,7 @@ public class IncrementalActionGraphGenerator {
       TargetNode<?> node,
       TargetGraph targetGraph,
       Set<BuildTarget> explored,
-      ImmutableSet.Builder<UnflavoredBuildTarget> unflavoredTargetsForNewNodes) {
+      ImmutableSet.Builder<UnflavoredBuildTargetView> unflavoredTargetsForNewNodes) {
     if (explored.contains(node.getBuildTarget())) {
       return;
     }
@@ -123,13 +123,13 @@ public class IncrementalActionGraphGenerator {
 
   private int addValidRulesToActionGraphBuilder(
       ActionGraphBuilder graphBuilder,
-      Set<UnflavoredBuildTarget> allUnflavoredTargetsInNewGraph,
-      Set<UnflavoredBuildTarget> invalidUnflavoredTargets) {
+      Set<UnflavoredBuildTargetView> allUnflavoredTargetsInNewGraph,
+      Set<UnflavoredBuildTargetView> invalidUnflavoredTargets) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     int totalRuleCount = 0;
     int reusedRuleCount = 0;
     for (BuildRule buildRule : lastActionGraphBuilder.getBuildRules()) {
-      UnflavoredBuildTarget unflavoredTarget =
+      UnflavoredBuildTargetView unflavoredTarget =
           buildRule.getBuildTarget().getUnflavoredBuildTarget();
       if (!invalidUnflavoredTargets.contains(unflavoredTarget)
           && allUnflavoredTargetsInNewGraph.contains(unflavoredTarget)) {
@@ -151,9 +151,9 @@ public class IncrementalActionGraphGenerator {
 
   private void invalidateChangedTargets(
       TargetGraph targetGraph,
-      Set<UnflavoredBuildTarget> allUnflavoredTargetsInNewGraph,
-      Set<UnflavoredBuildTarget> invalidUnflavoredTargets,
-      Set<UnflavoredBuildTarget> unflavoredTargetsForNewNodes) {
+      Set<UnflavoredBuildTargetView> allUnflavoredTargetsInNewGraph,
+      Set<UnflavoredBuildTargetView> invalidUnflavoredTargets,
+      Set<UnflavoredBuildTargetView> unflavoredTargetsForNewNodes) {
     Map<BuildTarget, Boolean> explored = new HashMap<>();
     for (TargetNode<?> root : targetGraph.getNodesWithNoIncomingEdges()) {
       invalidateChangedTargets(
@@ -170,9 +170,9 @@ public class IncrementalActionGraphGenerator {
       TargetNode<?> node,
       TargetGraph targetGraph,
       Map<BuildTarget, Boolean> explored,
-      Set<UnflavoredBuildTarget> allUnflavoredTargetsInNewGraph,
-      Set<UnflavoredBuildTarget> invalidUnflavoredTargets,
-      Set<UnflavoredBuildTarget> unflavoredTargetsForNewNodes) {
+      Set<UnflavoredBuildTargetView> allUnflavoredTargetsInNewGraph,
+      Set<UnflavoredBuildTargetView> invalidUnflavoredTargets,
+      Set<UnflavoredBuildTargetView> unflavoredTargetsForNewNodes) {
     if (explored.containsKey(node.getBuildTarget())) {
       return explored.get(node.getBuildTarget());
     }
@@ -210,7 +210,7 @@ public class IncrementalActionGraphGenerator {
   }
 
   private boolean shouldInvalidateParentChain(
-      TargetNode<?> targetNode, Set<UnflavoredBuildTarget> unflavoredTargetsForNewNodes) {
+      TargetNode<?> targetNode, Set<UnflavoredBuildTargetView> unflavoredTargetsForNewNodes) {
     if (unflavoredTargetsForNewNodes.contains(
         targetNode.getBuildTarget().getUnflavoredBuildTarget())) {
       // If this node wasn't present in the previous graph, we need to invalidate, as flavored

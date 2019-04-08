@@ -17,7 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.rules.coercer.BuildConfigFields.Field;
@@ -134,7 +134,7 @@ abstract class AbstractBuildConfigFields implements Iterable<Field> {
    *     non-constant-expression that is guaranteed to evaluate to the literal value.
    */
   public String generateBuildConfigDotJava(
-      UnflavoredBuildTarget source, String javaPackage, boolean useConstantExpressions) {
+      UnflavoredBuildTargetView source, String javaPackage, boolean useConstantExpressions) {
 
     StringBuilder builder = new StringBuilder();
     // By design, we drop the flavor from the BuildTarget (if present), so this debug text makes

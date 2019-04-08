@@ -17,7 +17,7 @@
 package com.facebook.buck.features.apple.project;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.google.common.collect.ImmutableSet;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -25,9 +25,10 @@ import javax.annotation.Nullable;
 public final class FocusedModuleTargetMatcher {
   private static final FocusedModuleTargetMatcher NO_FOCUS = new FocusedModuleTargetMatcher(null);
 
-  private final @Nullable ImmutableSet<UnflavoredBuildTarget> focusedTargets;
+  private final @Nullable ImmutableSet<UnflavoredBuildTargetView> focusedTargets;
 
-  private FocusedModuleTargetMatcher(@Nullable ImmutableSet<UnflavoredBuildTarget> focusedTargets) {
+  private FocusedModuleTargetMatcher(
+      @Nullable ImmutableSet<UnflavoredBuildTargetView> focusedTargets) {
     this.focusedTargets = focusedTargets;
   }
 
@@ -37,7 +38,8 @@ public final class FocusedModuleTargetMatcher {
   }
 
   /** Returns a matcher that specifies a set of targets to focus on. */
-  public static FocusedModuleTargetMatcher focusedOn(ImmutableSet<UnflavoredBuildTarget> targets) {
+  public static FocusedModuleTargetMatcher focusedOn(
+      ImmutableSet<UnflavoredBuildTargetView> targets) {
     return new FocusedModuleTargetMatcher(targets);
   }
 
@@ -63,7 +65,8 @@ public final class FocusedModuleTargetMatcher {
    * Apply a mapper to the focused targets held in this object. If no focus is set, this is a no-op.
    */
   public FocusedModuleTargetMatcher map(
-      Function<ImmutableSet<UnflavoredBuildTarget>, ImmutableSet<UnflavoredBuildTarget>> mapper) {
+      Function<ImmutableSet<UnflavoredBuildTargetView>, ImmutableSet<UnflavoredBuildTargetView>>
+          mapper) {
     if (focusedTargets != null) {
       return FocusedModuleTargetMatcher.focusedOn(mapper.apply(focusedTargets));
     } else {

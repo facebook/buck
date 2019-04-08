@@ -27,7 +27,7 @@ public interface BuildTarget extends Comparable<BuildTarget> {
 
   UnconfiguredBuildTarget getUnconfiguredBuildTarget();
 
-  UnflavoredBuildTarget getUnflavoredBuildTarget();
+  UnflavoredBuildTargetView getUnflavoredBuildTarget();
 
   ImmutableSortedSet<Flavor> getFlavors();
 
@@ -83,7 +83,7 @@ public interface BuildTarget extends Comparable<BuildTarget> {
 
   BuildTarget withAppendedFlavors(Flavor... flavors);
 
-  BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target);
+  BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTargetView target);
 
   BuildTarget withoutCell();
 }

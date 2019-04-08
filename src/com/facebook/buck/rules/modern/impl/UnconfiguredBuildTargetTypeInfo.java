@@ -19,9 +19,9 @@ package com.facebook.buck.rules.modern.impl;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
@@ -50,7 +50,7 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   @Override
   public <E extends Exception> void visit(UnconfiguredBuildTarget value, ValueVisitor<E> visitor)
       throws E {
-    UnflavoredBuildTarget unflavored = value.getUnflavoredBuildTarget();
+    UnflavoredBuildTargetView unflavored = value.getUnflavoredBuildTargetView();
     visitor.visitPath(unflavored.getCellPath());
     Holder.cellNameTypeInfo.visit(unflavored.getCell(), visitor);
     visitor.visitString(unflavored.getBaseName());
@@ -73,6 +73,6 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
     Stream<Flavor> flavors =
         Holder.flavorsTypeInfo.createNotNull(creator).stream().map(InternalFlavor::of);
     return ImmutableUnconfiguredBuildTarget.of(
-        ImmutableUnflavoredBuildTarget.of(cellPath, cellName, baseName, shortName), flavors);
+        ImmutableUnflavoredBuildTargetView.of(cellPath, cellName, baseName, shortName), flavors);
   }
 }

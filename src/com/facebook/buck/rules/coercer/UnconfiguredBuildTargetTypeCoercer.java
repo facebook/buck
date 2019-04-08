@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -56,7 +56,7 @@ public class UnconfiguredBuildTargetTypeCoercer extends LeafTypeCoercer<Unconfig
 
     try {
       String baseName =
-          UnflavoredBuildTarget.BUILD_TARGET_PREFIX
+          UnflavoredBuildTargetView.BUILD_TARGET_PREFIX
               + MorePaths.pathWithUnixSeparators(pathRelativeToProjectRoot);
 
       return unconfiguredBuildTargetFactory.createForBaseName(cellRoots, baseName, param);

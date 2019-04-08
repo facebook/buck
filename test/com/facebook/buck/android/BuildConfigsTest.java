@@ -19,7 +19,7 @@ package com.facebook.buck.android;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 import org.junit.Test;
@@ -38,7 +38,7 @@ public class BuildConfigsTest {
             + "  public static final boolean IS_EXOPACKAGE = Boolean.parseBoolean(null);\n"
             + "  public static final int EXOPACKAGE_FLAGS = !Boolean.parseBoolean(null) ? 0 : 0;\n"
             + "}\n";
-    UnflavoredBuildTarget source =
+    UnflavoredBuildTargetView source =
         BuildTargetFactory.newInstance("//java/com/example:build_config")
             .getUnflavoredBuildTarget();
     String observedJavaCode = BuildConfigs.generateBuildConfigDotJava(source, "com.example.buck");
@@ -78,7 +78,7 @@ public class BuildConfigsTest {
             + "  public static final boolean IS_EXOPACKAGE = !Boolean.parseBoolean(null);\n"
             + "  public static final int EXOPACKAGE_FLAGS = !Boolean.parseBoolean(null) ? 0 : 0;\n"
             + "}\n";
-    UnflavoredBuildTarget source =
+    UnflavoredBuildTargetView source =
         BuildTargetFactory.newInstance("//java/com/example:build_config")
             .getUnflavoredBuildTarget();
     String observedJavaCode =
@@ -111,7 +111,7 @@ public class BuildConfigsTest {
             + "  public static final int EXOPACKAGE_FLAGS = 0;\n"
             + "  public static final boolean IS_EXOPACKAGE = false;\n"
             + "}\n";
-    UnflavoredBuildTarget source =
+    UnflavoredBuildTargetView source =
         BuildTargetFactory.newInstance("//java/com/example:build_config")
             .getUnflavoredBuildTarget();
     String observedJavaCode =

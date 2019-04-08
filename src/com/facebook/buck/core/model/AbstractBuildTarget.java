@@ -28,8 +28,8 @@ public abstract class AbstractBuildTarget implements BuildTarget {
   public abstract UnconfiguredBuildTarget getUnconfiguredBuildTarget();
 
   @Override
-  public UnflavoredBuildTarget getUnflavoredBuildTarget() {
-    return getUnconfiguredBuildTarget().getUnflavoredBuildTarget();
+  public UnflavoredBuildTargetView getUnflavoredBuildTarget() {
+    return getUnconfiguredBuildTarget().getUnflavoredBuildTargetView();
   }
 
   @Override

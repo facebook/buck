@@ -18,7 +18,7 @@ package com.facebook.buck.core.model;
 
 import java.nio.file.Path;
 
-public abstract class AbstractUnflavoredBuildTarget implements UnflavoredBuildTarget {
+public abstract class AbstractUnflavoredBuildTargetView implements UnflavoredBuildTargetView {
 
   @Override
   public String getFullyQualifiedName() {

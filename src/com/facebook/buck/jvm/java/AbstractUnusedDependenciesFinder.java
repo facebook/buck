@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -137,18 +137,18 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
       ImmutableSet<Path> usedJars,
       Iterable<BuildTarget> targets,
       String dependencyType) {
-    ImmutableSet<UnflavoredBuildTarget> unusedDependencies =
+    ImmutableSet<UnflavoredBuildTargetView> unusedDependencies =
         findUnusedDependencies(usedJars, targets);
     if (!unusedDependencies.isEmpty()) {
       processUnusedDependencies(messageHandler, dependencyType, unusedDependencies);
     }
   }
 
-  private ImmutableSet<UnflavoredBuildTarget> findUnusedDependencies(
+  private ImmutableSet<UnflavoredBuildTargetView> findUnusedDependencies(
       ImmutableSet<Path> usedJars, Iterable<BuildTarget> targets) {
     BuildRuleResolver buildRuleResolver = getBuildRuleResolver();
     SourcePathResolver sourcePathResolver = getSourcePathResolver();
-    ImmutableSet.Builder<UnflavoredBuildTarget> unusedDependencies = ImmutableSet.builder();
+    ImmutableSet.Builder<UnflavoredBuildTargetView> unusedDependencies = ImmutableSet.builder();
 
     for (BuildRule dependency : buildRuleResolver.getAllRules(targets)) {
       SourcePath dependencyOutput = dependency.getSourcePathToOutput();
@@ -200,7 +200,7 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
   private void processUnusedDependencies(
       MessageHandler messageHandler,
       String dependencyType,
-      ImmutableSet<UnflavoredBuildTarget> unusedDependencies) {
+      ImmutableSet<UnflavoredBuildTargetView> unusedDependencies) {
     BuildTarget buildTarget = getBuildTarget();
     String commandTemplate = "buildozer 'remove %s %s' %s";
     String commands =

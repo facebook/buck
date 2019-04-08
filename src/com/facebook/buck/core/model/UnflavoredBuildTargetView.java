@@ -30,7 +30,7 @@ import javax.annotation.concurrent.ThreadSafe;
  * <p>If used as data class, consider {@link UnflavoredBuildTargetData} instead
  */
 @ThreadSafe
-public interface UnflavoredBuildTarget extends Comparable<UnflavoredBuildTarget> {
+public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTargetView> {
 
   String BUILD_TARGET_PREFIX = "//";
 

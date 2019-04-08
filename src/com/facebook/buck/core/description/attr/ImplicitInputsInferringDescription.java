@@ -14,10 +14,9 @@
  * under the License.
  */
 
-
 package com.facebook.buck.core.description.attr;
 
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import java.nio.file.Path;
 
 /**
@@ -28,5 +27,5 @@ import java.nio.file.Path;
 public interface ImplicitInputsInferringDescription<T> {
 
   Iterable<Path> inferInputsFromConstructorArgs(
-      UnflavoredBuildTarget buildTarget, T constructorArg);
+      UnflavoredBuildTargetView buildTarget, T constructorArg);
 }

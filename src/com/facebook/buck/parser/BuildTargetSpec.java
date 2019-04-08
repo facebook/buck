@@ -60,7 +60,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
                     input
                         .getBuildTarget()
                         .getUnflavoredBuildTarget()
-                        .equals(getUnconfiguredBuildTarget().getUnflavoredBuildTarget()))
+                        .equals(getUnconfiguredBuildTarget().getUnflavoredBuildTargetView()))
             .findFirst()
             .orElseThrow(
                 () ->

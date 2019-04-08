@@ -18,7 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.step.Step;
@@ -32,7 +32,7 @@ import java.util.function.Supplier;
 public class GenerateBuildConfigStep implements Step {
 
   private final ProjectFilesystem filesystem;
-  private final UnflavoredBuildTarget source;
+  private final UnflavoredBuildTargetView source;
   private final String javaPackage;
   private final boolean useConstantExpressions;
   private final Supplier<BuildConfigFields> fields;
@@ -40,7 +40,7 @@ public class GenerateBuildConfigStep implements Step {
 
   public GenerateBuildConfigStep(
       ProjectFilesystem filesystem,
-      UnflavoredBuildTarget source,
+      UnflavoredBuildTargetView source,
       String javaPackage,
       boolean useConstantExpressions,
       Supplier<BuildConfigFields> fields,

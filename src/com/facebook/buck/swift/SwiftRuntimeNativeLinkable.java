@@ -16,7 +16,7 @@
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.core.model.UnflavoredBuildTarget.BUILD_TARGET_PREFIX;
+import static com.facebook.buck.core.model.UnflavoredBuildTargetView.BUILD_TARGET_PREFIX;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.core.model.BuildTarget;

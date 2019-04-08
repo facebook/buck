@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.base.Joiner;
 import java.nio.file.Path;
@@ -34,7 +34,7 @@ public class UnflavoredBuildTargetFactory {
    * @param rulePathForDebug path to the build file the rule is defined in, only used for debugging.
    * @return the build target defined by the rule.
    */
-  public static UnflavoredBuildTarget createFromRawNode(
+  public static UnflavoredBuildTargetView createFromRawNode(
       Path cellRoot, Optional<String> cellName, Map<String, Object> map, Path rulePathForDebug) {
     @Nullable String basePath = (String) map.get(InternalTargetAttributeNames.BASE_PATH);
     @Nullable String name = (String) map.get("name");
@@ -51,7 +51,7 @@ public class UnflavoredBuildTargetFactory {
               "Raw data claims to come from [%s], but we tried rooting it at [%s].",
               basePath, otherBasePath));
     }
-    return ImmutableUnflavoredBuildTarget.of(
-        cellRoot, cellName, UnflavoredBuildTarget.BUILD_TARGET_PREFIX + basePath, name);
+    return ImmutableUnflavoredBuildTargetView.of(
+        cellRoot, cellName, UnflavoredBuildTargetView.BUILD_TARGET_PREFIX + basePath, name);
   }
 }

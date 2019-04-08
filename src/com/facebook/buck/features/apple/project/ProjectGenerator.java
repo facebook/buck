@@ -83,7 +83,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
@@ -3358,7 +3358,7 @@ public class ProjectGenerator {
   private PBXCopyFilesBuildPhase getSingleCopyFilesBuildPhase(
       CopyFilePhaseDestinationSpec destinationSpec, Iterable<TargetNode<?>> targetNodes) {
     PBXCopyFilesBuildPhase copyFilesBuildPhase = new PBXCopyFilesBuildPhase(destinationSpec);
-    HashSet<UnflavoredBuildTarget> frameworkTargets = new HashSet<UnflavoredBuildTarget>();
+    HashSet<UnflavoredBuildTargetView> frameworkTargets = new HashSet<UnflavoredBuildTargetView>();
 
     for (TargetNode<?> targetNode : targetNodes) {
       /*
@@ -3370,7 +3370,8 @@ public class ProjectGenerator {
       PBXFileReference fileReference = getLibraryFileReference(targetNode);
       PBXBuildFile buildFile = new PBXBuildFile(fileReference);
       if (fileReference.getExplicitFileType().equals(Optional.of("wrapper.framework"))) {
-        UnflavoredBuildTarget buildTarget = targetNode.getBuildTarget().getUnflavoredBuildTarget();
+        UnflavoredBuildTargetView buildTarget =
+            targetNode.getBuildTarget().getUnflavoredBuildTarget();
         if (frameworkTargets.contains(buildTarget)) {
           continue;
         }

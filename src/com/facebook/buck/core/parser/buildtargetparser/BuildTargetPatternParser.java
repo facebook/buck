@@ -135,7 +135,7 @@ public abstract class BuildTargetPatternParser<T> {
     @Override
     public BuildTargetPattern createForSingleton(UnconfiguredBuildTarget target) {
       return SingletonBuildTargetPattern.of(
-          target.getUnflavoredBuildTarget().getCellPath(), target.getFullyQualifiedName());
+          target.getUnflavoredBuildTargetView().getCellPath(), target.getFullyQualifiedName());
     }
   }
 }

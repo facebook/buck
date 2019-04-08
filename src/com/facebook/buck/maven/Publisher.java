@@ -16,7 +16,7 @@
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.log.Logger;
@@ -96,8 +96,8 @@ public class Publisher {
   public ImmutableSet<DeployResult> publish(
       SourcePathResolver pathResolver, ImmutableSet<MavenPublishable> publishables)
       throws DeploymentException {
-    ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget> duplicateBuiltinBuileRules =
-        checkForDuplicatePackagedDeps(publishables);
+    ImmutableListMultimap<UnflavoredBuildTargetView, UnflavoredBuildTargetView>
+        duplicateBuiltinBuileRules = checkForDuplicatePackagedDeps(publishables);
     if (duplicateBuiltinBuileRules.size() > 0) {
       StringBuilder sb = new StringBuilder();
       sb.append("Duplicate transitive dependencies for publishable libraries found!  This means");
@@ -107,11 +107,12 @@ public class Publisher {
       sb.append("used together.  The can be resolved by adding a maven URL to each target listed");
       sb.append(StandardSystemProperty.LINE_SEPARATOR);
       sb.append("below:");
-      for (UnflavoredBuildTarget unflavoredBuildTarget : duplicateBuiltinBuileRules.keySet()) {
+      for (UnflavoredBuildTargetView unflavoredBuildTargetView :
+          duplicateBuiltinBuileRules.keySet()) {
         sb.append(StandardSystemProperty.LINE_SEPARATOR);
-        sb.append(unflavoredBuildTarget.getFullyQualifiedName());
+        sb.append(unflavoredBuildTargetView.getFullyQualifiedName());
         sb.append(" (referenced by these build targets: ");
-        Joiner.on(", ").appendTo(sb, duplicateBuiltinBuileRules.get(unflavoredBuildTarget));
+        Joiner.on(", ").appendTo(sb, duplicateBuiltinBuileRules.get(unflavoredBuildTargetView));
         sb.append(")");
       }
       throw new DeploymentException(sb.toString());
@@ -156,11 +157,12 @@ public class Publisher {
    * @return A multimap of dependency build targets and the publishable build targets that have them
    *     included in the final package that will be uploaded.
    */
-  private ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget>
+  private ImmutableListMultimap<UnflavoredBuildTargetView, UnflavoredBuildTargetView>
       checkForDuplicatePackagedDeps(ImmutableSet<MavenPublishable> publishables) {
     // First build the multimap of the builtin dependencies and the publishable targets that use
     // them.
-    Multimap<UnflavoredBuildTarget, UnflavoredBuildTarget> builtinDeps = HashMultimap.create();
+    Multimap<UnflavoredBuildTargetView, UnflavoredBuildTargetView> builtinDeps =
+        HashMultimap.create();
     for (MavenPublishable publishable : publishables) {
       for (BuildRule buildRule : publishable.getPackagedDependencies()) {
         builtinDeps.put(
@@ -169,10 +171,11 @@ public class Publisher {
       }
     }
     // Now, check for any duplicate uses, and if found, return them.
-    ImmutableListMultimap.Builder<UnflavoredBuildTarget, UnflavoredBuildTarget> builder =
+    ImmutableListMultimap.Builder<UnflavoredBuildTargetView, UnflavoredBuildTargetView> builder =
         ImmutableListMultimap.builder();
-    for (UnflavoredBuildTarget buildTarget : builtinDeps.keySet()) {
-      Collection<UnflavoredBuildTarget> publishablesUsingBuildTarget = builtinDeps.get(buildTarget);
+    for (UnflavoredBuildTargetView buildTarget : builtinDeps.keySet()) {
+      Collection<UnflavoredBuildTargetView> publishablesUsingBuildTarget =
+          builtinDeps.get(buildTarget);
       if (publishablesUsingBuildTarget.size() > 1) {
         builder.putAll(buildTarget, publishablesUsingBuildTarget);
       }

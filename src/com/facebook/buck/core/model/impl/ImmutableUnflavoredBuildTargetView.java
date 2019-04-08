@@ -16,10 +16,10 @@
 
 package com.facebook.buck.core.model.impl;
 
-import com.facebook.buck.core.model.AbstractUnflavoredBuildTarget;
+import com.facebook.buck.core.model.AbstractUnflavoredBuildTargetView;
 import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetData;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
@@ -28,14 +28,14 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Immutable implementation of {@link UnflavoredBuildTarget} */
-public class ImmutableUnflavoredBuildTarget extends AbstractUnflavoredBuildTarget {
+/** Immutable implementation of {@link UnflavoredBuildTargetView} */
+public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildTargetView {
 
   private final UnflavoredBuildTargetData data;
   private final Path cellPath;
   private final int hash;
 
-  private ImmutableUnflavoredBuildTarget(Path cellPath, UnflavoredBuildTargetData data) {
+  private ImmutableUnflavoredBuildTargetView(Path cellPath, UnflavoredBuildTargetData data) {
     this.data = data;
     this.cellPath = cellPath;
 
@@ -43,8 +43,8 @@ public class ImmutableUnflavoredBuildTarget extends AbstractUnflavoredBuildTarge
     hash = Objects.hash(cellPath, data);
   }
 
-  /** Interner for instances of UnflavoredBuildTarget. */
-  private static final Interner<ImmutableUnflavoredBuildTarget> interner =
+  /** Interner for instances of UnflavoredBuildTargetView. */
+  private static final Interner<ImmutableUnflavoredBuildTargetView> interner =
       Interners.newWeakInterner();
 
   @Override
@@ -78,32 +78,33 @@ public class ImmutableUnflavoredBuildTarget extends AbstractUnflavoredBuildTarge
   }
 
   /**
-   * Create new instance of {@link UnflavoredBuildTarget}
+   * Create new instance of {@link UnflavoredBuildTargetView}
    *
    * @param cellPath Absolute path to the cell root that owns this build target
    * @param cellName Name of the cell that owns this build target
    * @param baseName Base part of build target name, like "//some/target"
    * @param shortName Last part of build target name after colon
    */
-  public static ImmutableUnflavoredBuildTarget of(
+  public static ImmutableUnflavoredBuildTargetView of(
       Path cellPath, Optional<String> cellName, String baseName, String shortName) {
     return of(
         cellPath, ImmutableUnflavoredBuildTargetData.of(cellName.orElse(""), baseName, shortName));
   }
 
   /**
-   * Create new instance of {@link UnflavoredBuildTarget}
+   * Create new instance of {@link UnflavoredBuildTargetView}
    *
    * @param cellPath Absolute path to the cell root that owns this build target
    * @param data {@link UnflavoredBuildTargetData which encapsulates build target data without
    *     flavors}
    */
-  public static ImmutableUnflavoredBuildTarget of(Path cellPath, UnflavoredBuildTargetData data) {
-    return interner.intern(new ImmutableUnflavoredBuildTarget(cellPath, data));
+  public static ImmutableUnflavoredBuildTargetView of(
+      Path cellPath, UnflavoredBuildTargetData data) {
+    return interner.intern(new ImmutableUnflavoredBuildTargetView(cellPath, data));
   }
 
   @Override
-  public int compareTo(UnflavoredBuildTarget o) {
+  public int compareTo(UnflavoredBuildTargetView o) {
     if (this == o) {
       return 0;
     }
@@ -129,11 +130,11 @@ public class ImmutableUnflavoredBuildTarget extends AbstractUnflavoredBuildTarge
     if (this == another) {
       return true;
     }
-    return another instanceof ImmutableUnflavoredBuildTarget
-        && equalTo((ImmutableUnflavoredBuildTarget) another);
+    return another instanceof ImmutableUnflavoredBuildTargetView
+        && equalTo((ImmutableUnflavoredBuildTargetView) another);
   }
 
-  private boolean equalTo(ImmutableUnflavoredBuildTarget another) {
+  private boolean equalTo(ImmutableUnflavoredBuildTargetView another) {
     return cellPath.equals(another.cellPath) && Objects.equals(data, another.data);
   }
 

@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -87,7 +87,7 @@ class DaemonicCellState {
   private final SetMultimap<Path, Path> buildFileDependents;
 
   @GuardedBy("rawAndComputedNodesLock")
-  private final SetMultimap<UnflavoredBuildTarget, BuildTarget> targetsCornucopia;
+  private final SetMultimap<UnflavoredBuildTargetView, BuildTarget> targetsCornucopia;
 
   @GuardedBy("rawAndComputedNodesLock")
   private final Map<Path, ImmutableMap<String, Optional<String>>> buildFileEnv;
@@ -97,7 +97,7 @@ class DaemonicCellState {
   // Tracks all targets in `allRawNodes`.  Used to verify that every target in `allComputedNodes`
   // is also in `allRawNodes`, as we use the latter for bookkeeping invalidations.
   @GuardedBy("rawAndComputedNodesLock")
-  private final Set<UnflavoredBuildTarget> allRawNodeTargets;
+  private final Set<UnflavoredBuildTargetView> allRawNodeTargets;
 
   @GuardedBy("rawAndComputedNodesLock")
   private final ConcurrentMap<Class<?>, Cache<?>> typedNodeCaches;
@@ -188,7 +188,7 @@ class DaemonicCellState {
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();
         for (Map<String, Object> rawNode : rawNodes.values()) {
-          UnflavoredBuildTarget target =
+          UnflavoredBuildTargetView target =
               UnflavoredBuildTargetFactory.createFromRawNode(
                   cellRoot, cellCanonicalName, rawNode, path);
           LOG.debug("Invalidating target for path %s: %s", path, target);

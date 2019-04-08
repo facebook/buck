@@ -33,7 +33,7 @@ import javax.annotation.concurrent.ThreadSafe;
 public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTarget> {
 
   /** A build target without flavors. */
-  UnflavoredBuildTarget getUnflavoredBuildTarget();
+  UnflavoredBuildTargetView getUnflavoredBuildTargetView();
 
   /** Set of flavors used with that build target. */
   ImmutableSortedSet<Flavor> getFlavors();
@@ -136,10 +136,10 @@ public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTar
   UnconfiguredBuildTarget withFlavors(Iterable<? extends Flavor> flavors);
 
   /**
-   * Creates a new build target by using the provided {@link UnflavoredBuildTarget} and flavors from
-   * this build target.
+   * Creates a new build target by using the provided {@link UnflavoredBuildTargetView} and flavors
+   * from this build target.
    */
-  UnconfiguredBuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target);
+  UnconfiguredBuildTarget withUnflavoredBuildTarget(UnflavoredBuildTargetView target);
 
   /**
    * Creates a new build target by copying all of the information from this build target and
