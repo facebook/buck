@@ -16,7 +16,7 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData
+import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.collect.GenerationMap
 import java.io.Closeable
 import java.nio.file.Path
@@ -46,13 +46,13 @@ class IndexReadLock internal constructor(internal val readLock: ReentrantReadWri
     }
 }
 
-class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuildTargetData) {
+class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) {
     /**
      * To save space, we pass around ints instead of references to BuildTargets.
      * AppendOnlyBidirectionalCache does its own synchronization, so it does not need to be guarded
      * by rwLock.
      */
-    private val buildTargetCache = AppendOnlyBidirectionalCache<UnconfiguredBuildTargetData>()
+    private val buildTargetCache = AppendOnlyBidirectionalCache<UnconfiguredBuildTarget>()
 
     /**
      * Access to all of the fields after this one must be guarded by the rwLock.
@@ -95,7 +95,7 @@ class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuild
      * @param indexReadLock caller is responsible for ensuring this lock is still held, i.e., that
      * `close()` has not been invoked.
      */
-    fun getTransitiveDeps(indexReadLock: IndexReadLock, commit: Commit, target: UnconfiguredBuildTargetData): Set<UnconfiguredBuildTargetData> {
+    fun getTransitiveDeps(indexReadLock: IndexReadLock, commit: Commit, target: UnconfiguredBuildTarget): Set<UnconfiguredBuildTarget> {
         checkReadLock(indexReadLock)
         val generation = commitToGeneration.getValue(commit)
         val rootBuildTargetId = buildTargetCache.get(target)
@@ -128,7 +128,7 @@ class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuild
      * `close()` has not been invoked.
      * @param commit at which to enumerate all build targets
      */
-    fun getTargets(indexReadLock: IndexReadLock, commit: Commit): List<UnconfiguredBuildTargetData> {
+    fun getTargets(indexReadLock: IndexReadLock, commit: Commit): List<UnconfiguredBuildTarget> {
         checkReadLock(indexReadLock)
         val targetIds: MutableList<BuildTargetId> = mutableListOf()
 
@@ -190,7 +190,7 @@ class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuild
             }
 
             for (delta in deltas.ruleDeltas) {
-                val buildTarget: UnconfiguredBuildTargetData
+                val buildTarget: UnconfiguredBuildTarget
                 val newNodeAndDeps: InternalRawBuildRule?
                 when (delta) {
                     is RuleDelta.Updated -> {
@@ -210,7 +210,7 @@ class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuild
         }
     }
 
-    private fun createBuildTarget(buildFileDirectory: Path, name: String): UnconfiguredBuildTargetData {
+    private fun createBuildTarget(buildFileDirectory: Path, name: String): UnconfiguredBuildTarget {
         return buildTargetParser(String.format("//%s:%s", buildFileDirectory, name))
     }
 
@@ -291,7 +291,7 @@ class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuild
         return InternalRawBuildRule(rawBuildRule.targetNode, toBuildTargetSet(rawBuildRule.deps))
     }
 
-    private fun toBuildTargetSet(targets: Set<UnconfiguredBuildTargetData>): BuildTargetSet {
+    private fun toBuildTargetSet(targets: Set<UnconfiguredBuildTarget>): BuildTargetSet {
         val ids = targets.map { buildTargetCache.get(it) }.toIntArray()
         ids.sort()
         return ids

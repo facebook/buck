@@ -18,10 +18,10 @@ package com.facebook.buck.core.model.targetgraph;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -47,8 +47,8 @@ public class RawTargetNodeWithDepsPackageTest {
             "deps",
             ImmutableSet.of(":target2"));
 
-    UnconfiguredBuildTargetData unconfiguredBuildTarget1 =
-        ImmutableUnconfiguredBuildTargetData.of(
+    UnconfiguredBuildTarget unconfiguredBuildTarget1 =
+        ImmutableUnconfiguredBuildTarget.of(
             ImmutableUnflavoredBuildTarget.of("", "//base", "target1"), ImmutableSortedSet.of());
     RawTargetNode rawTargetNode1 =
         ImmutableRawTargetNode.of(
@@ -61,8 +61,8 @@ public class RawTargetNodeWithDepsPackageTest {
     ImmutableMap<String, Object> rawAttributes2 =
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "base");
 
-    UnconfiguredBuildTargetData unconfiguredBuildTarget2 =
-        ImmutableUnconfiguredBuildTargetData.of(
+    UnconfiguredBuildTarget unconfiguredBuildTarget2 =
+        ImmutableUnconfiguredBuildTarget.of(
             ImmutableUnflavoredBuildTarget.of("", "//base", "target2"), ImmutableSortedSet.of());
     RawTargetNode rawTargetNode2 =
         ImmutableRawTargetNode.of(

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.multitenant.service
 
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData
+import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import java.nio.file.Path
 
 /**
@@ -38,5 +38,5 @@ internal sealed class RuleDelta {
     /** Note that this is an "added" or "modified" rule. */
     data class Updated(val rule: InternalRawBuildRule) : RuleDelta()
 
-    data class Removed(val buildTarget: UnconfiguredBuildTargetData) : RuleDelta()
+    data class Removed(val buildTarget: UnconfiguredBuildTarget) : RuleDelta()
 }

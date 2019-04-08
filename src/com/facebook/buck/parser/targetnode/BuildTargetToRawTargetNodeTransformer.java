@@ -21,7 +21,7 @@ import com.facebook.buck.core.graph.transformation.GraphTransformer;
 import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
@@ -68,7 +68,7 @@ public class BuildTargetToRawTargetNodeTransformer
 
   @Override
   public RawTargetNode transform(BuildTargetToRawTargetNodeKey key, TransformationEnvironment env) {
-    UnconfiguredBuildTargetData buildTarget = key.getBuildTarget();
+    UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
 
     BuildFileManifest manifest = env.getDep(getManifestKey(key));
     @Nullable
@@ -104,7 +104,7 @@ public class BuildTargetToRawTargetNodeTransformer
   }
 
   private BuildPackagePathToBuildFileManifestKey getManifestKey(BuildTargetToRawTargetNodeKey key) {
-    UnconfiguredBuildTargetData buildTarget = key.getBuildTarget();
+    UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
 
     /** TODO: do it directly not using {@link UnconfiguredBuildTargetView} */
     UnconfiguredBuildTargetView unconfiguredBuildTargetView =

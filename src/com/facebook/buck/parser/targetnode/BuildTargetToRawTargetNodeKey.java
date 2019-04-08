@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import org.immutables.value.Value;
 
@@ -27,7 +27,7 @@ public abstract class BuildTargetToRawTargetNodeKey implements ComputeKey<RawTar
 
   /** Build target that uniquely identifies {@link RawTargetNode} */
   @Value.Parameter
-  public abstract UnconfiguredBuildTargetData getBuildTarget();
+  public abstract UnconfiguredBuildTarget getBuildTarget();
 
   @Override
   public Class<? extends ComputeKey<?>> getKeyClass() {

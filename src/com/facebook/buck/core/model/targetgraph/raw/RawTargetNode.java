@@ -18,7 +18,7 @@ package com.facebook.buck.core.model.targetgraph.raw;
 
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableSet;
 public interface RawTargetNode extends ComputeResult {
 
   /** Build target of this node. */
-  UnconfiguredBuildTargetData getBuildTarget();
+  UnconfiguredBuildTarget getBuildTarget();
 
   /** The type of a rule. */
   RuleType getRuleType();

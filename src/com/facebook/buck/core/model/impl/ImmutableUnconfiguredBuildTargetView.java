@@ -18,9 +18,9 @@ package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.log.views.JsonViews;
@@ -47,19 +47,18 @@ import javax.annotation.Nullable;
     setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTargetView {
 
-  private final UnconfiguredBuildTargetData data;
+  private final UnconfiguredBuildTarget data;
   private final UnflavoredBuildTargetView unflavoredBuildTargetView;
   private final int hash;
 
   private ImmutableUnconfiguredBuildTargetView(
       UnflavoredBuildTargetView unflavoredBuildTargetView, ImmutableSortedSet<Flavor> flavors) {
-    this.data =
-        ImmutableUnconfiguredBuildTargetData.of(unflavoredBuildTargetView.getData(), flavors);
+    this.data = ImmutableUnconfiguredBuildTarget.of(unflavoredBuildTargetView.getData(), flavors);
     this.unflavoredBuildTargetView = unflavoredBuildTargetView;
     this.hash = Objects.hash(this.data, this.unflavoredBuildTargetView);
   }
 
-  private ImmutableUnconfiguredBuildTargetView(Path cellPath, UnconfiguredBuildTargetData data) {
+  private ImmutableUnconfiguredBuildTargetView(Path cellPath, UnconfiguredBuildTarget data) {
     this.data = data;
     this.unflavoredBuildTargetView =
         ImmutableUnflavoredBuildTargetView.of(cellPath, data.getUnflavoredBuildTarget());
@@ -73,7 +72,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
    * @param data Data object that backs this view
    */
   public static ImmutableUnconfiguredBuildTargetView of(
-      Path cellPath, UnconfiguredBuildTargetData data) {
+      Path cellPath, UnconfiguredBuildTarget data) {
     return new ImmutableUnconfiguredBuildTargetView(cellPath, data);
   }
 
@@ -98,7 +97,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
       UnflavoredBuildTargetView unflavoredBuildTargetView, RichStream<Flavor> flavors) {
     return of(
         unflavoredBuildTargetView,
-        flavors.toImmutableSortedSet(UnconfiguredBuildTargetData.FLAVOR_ORDERING));
+        flavors.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
   }
 
   /**
@@ -239,10 +238,10 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
     if (flavors instanceof ImmutableSortedSet
         && ((ImmutableSortedSet<Flavor>) flavors)
             .comparator()
-            .equals(UnconfiguredBuildTargetData.FLAVOR_ORDERING)) {
+            .equals(UnconfiguredBuildTarget.FLAVOR_ORDERING)) {
       flavorsSet = (ImmutableSortedSet<Flavor>) flavors;
     } else {
-      flavorsSet = ImmutableSortedSet.copyOf(UnconfiguredBuildTargetData.FLAVOR_ORDERING, flavors);
+      flavorsSet = ImmutableSortedSet.copyOf(UnconfiguredBuildTarget.FLAVOR_ORDERING, flavors);
     }
 
     return ImmutableUnconfiguredBuildTargetView.of(unflavoredBuildTargetView, flavorsSet);
@@ -267,7 +266,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   }
 
   @Override
-  public UnconfiguredBuildTargetData getData() {
+  public UnconfiguredBuildTarget getData() {
     return data;
   }
 

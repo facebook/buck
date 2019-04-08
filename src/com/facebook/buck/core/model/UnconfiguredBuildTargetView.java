@@ -22,14 +22,14 @@ import java.util.Optional;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Represents a view over {@link UnconfiguredBuildTargetData}.
+ * Represents a view over {@link UnconfiguredBuildTarget}.
  *
- * <p>This view adds runtime context information to {@link UnconfiguredBuildTargetData}, like
- * absolute cell path where build target belongs to. Because of that, this class should not be used
- * as a long-living data class with the lifetime exceeding the lifetime of running command.
+ * <p>This view adds runtime context information to {@link UnconfiguredBuildTarget}, like absolute
+ * cell path where build target belongs to. Because of that, this class should not be used as a
+ * long-living data class with the lifetime exceeding the lifetime of running command.
  *
  * <p>This class represents a legacy data structure. In most of the cases you will want to use
- * {@link UnconfiguredBuildTargetData} directly.
+ * {@link UnconfiguredBuildTarget} directly.
  */
 @ThreadSafe
 public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuildTargetView> {
@@ -156,5 +156,5 @@ public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuil
   BuildTarget configure(TargetConfiguration targetConfiguration);
 
   /** Return a data object that backs current view */
-  UnconfiguredBuildTargetData getData();
+  UnconfiguredBuildTarget getData();
 }

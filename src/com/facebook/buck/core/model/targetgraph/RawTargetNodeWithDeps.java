@@ -17,7 +17,7 @@
 package com.facebook.buck.core.model.targetgraph;
 
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -41,5 +41,5 @@ public abstract class RawTargetNodeWithDeps implements ComputeResult {
    */
   @Value.Parameter
   @JsonProperty("deps")
-  public abstract ImmutableSet<UnconfiguredBuildTargetData> getDeps();
+  public abstract ImmutableSet<UnconfiguredBuildTarget> getDeps();
 }

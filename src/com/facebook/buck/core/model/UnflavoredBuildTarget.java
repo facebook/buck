@@ -33,7 +33,7 @@ import org.immutables.value.Value;
  * name, `//path/to` as a base name that corresponds to the real path to the build file that
  * contains a target and `target` is a target name found in that build file
  *
- * <p>This class is rarely used along, but usually as a part of {@link UnconfiguredBuildTargetData}
+ * <p>This class is rarely used along, but usually as a part of {@link UnconfiguredBuildTarget}
  * which adds flavors to it. In the future both of them will be probably merged into one.
  */
 @Value.Immutable(builder = false, copy = false, prehash = true)

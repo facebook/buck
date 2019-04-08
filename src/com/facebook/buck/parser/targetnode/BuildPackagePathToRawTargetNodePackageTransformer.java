@@ -23,9 +23,9 @@ import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.ImmutableRawTargetNodeWithDeps;
@@ -93,7 +93,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
         ImmutableMap.builderWithExpectedSize(rawTargetNodes.size());
 
     for (Entry<BuildTargetToRawTargetNodeKey, RawTargetNode> entry : rawTargetNodes.entrySet()) {
-      UnconfiguredBuildTargetData unconfiguredBuildTarget = entry.getKey().getBuildTarget();
+      UnconfiguredBuildTarget unconfiguredBuildTarget = entry.getKey().getBuildTarget();
       RawTargetNode rawTargetNode = entry.getValue();
 
       // To discover dependencies, we coerce RawTargetNode to TargetNode, get dependencies out of
@@ -119,7 +119,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
               rawTargetNode,
               id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
 
-      ImmutableSet<UnconfiguredBuildTargetData> deps =
+      ImmutableSet<UnconfiguredBuildTarget> deps =
           targetNode
               .getParseDeps()
               .stream()
@@ -151,7 +151,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
     for (String target : buildFileManifest.getTargets().keySet()) {
       BuildTargetToRawTargetNodeKey depkey =
           ImmutableBuildTargetToRawTargetNodeKey.of(
-              ImmutableUnconfiguredBuildTargetData.of(
+              ImmutableUnconfiguredBuildTarget.of(
                   ImmutableUnflavoredBuildTarget.of(
                       cell.getCanonicalName().orElse(""), baseName, target),
                   ImmutableSortedSet.of()));

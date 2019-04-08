@@ -26,11 +26,25 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import org.immutables.value.Value;
 
-/** Data object that holds properties to uniquely identify a build target with flavors */
+/**
+ * Data object that holds properties to uniquely identify a build target with flavors
+ *
+ * <p>In other words, this represents a parsed representation of a build target with flavors but
+ * without configuration.
+ *
+ * <p>For example, a fully qualified target name like `cell//path/to:target#flavor1,flavor2` parses
+ * `cell` as a cell name, `//path/to` as a base name that corresponds to the real path to the build
+ * file that contains a target, `target` is a target name found in that build file and `flavor1` and
+ * 'flavor2' as flavors as applied to this build target.
+ *
+ * <p>Flavors are a legacy way to configure a build target so it can mutate its behavior based on
+ * user-provided input or client settings, like target or running platforms. Flavors should not be
+ * used anymore, instead you want to use a {@link BuildTarget} along with passed {@link
+ * TargetConfiguration}.
+ */
 @Value.Immutable(builder = false, copy = false, prehash = true)
 @JsonDeserialize
-public abstract class UnconfiguredBuildTargetData
-    implements Comparable<UnconfiguredBuildTargetData> {
+public abstract class UnconfiguredBuildTarget implements Comparable<UnconfiguredBuildTarget> {
 
   private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
       Ordering.<Flavor>natural().lexicographical();
@@ -85,7 +99,7 @@ public abstract class UnconfiguredBuildTargetData
   }
 
   @Override
-  public int compareTo(UnconfiguredBuildTargetData o) {
+  public int compareTo(UnconfiguredBuildTarget o) {
     if (this == o) {
       return 0;
     }

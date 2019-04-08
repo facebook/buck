@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.exceptions;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import java.nio.file.Path;
 
@@ -28,7 +28,7 @@ public class NoSuchBuildTargetException extends BuildTargetException {
     this(String.format("No such target: '%s'", target));
   }
 
-  public NoSuchBuildTargetException(UnconfiguredBuildTargetData target) {
+  public NoSuchBuildTargetException(UnconfiguredBuildTarget target) {
     this(String.format("No such target: '%s'", target));
   }
 

@@ -21,10 +21,10 @@ import static org.junit.Assert.assertNotNull;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.FakeTransformationEnvironment;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDepsPackage;
@@ -75,8 +75,8 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             "",
             "deps",
             ImmutableSortedSet.of(":target2"));
-    UnconfiguredBuildTargetData unconfiguredBuildTarget1 =
-        ImmutableUnconfiguredBuildTargetData.of(
+    UnconfiguredBuildTarget unconfiguredBuildTarget1 =
+        ImmutableUnconfiguredBuildTarget.of(
             ImmutableUnflavoredBuildTarget.of(cell.getCanonicalName().orElse(""), "//", "target1"),
             ImmutableSortedSet.of());
     RawTargetNode rawTargetNode1 =
@@ -89,8 +89,8 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
 
     ImmutableMap<String, Object> rawAttributes2 =
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
-    UnconfiguredBuildTargetData unconfiguredBuildTarget2 =
-        ImmutableUnconfiguredBuildTargetData.of(
+    UnconfiguredBuildTarget unconfiguredBuildTarget2 =
+        ImmutableUnconfiguredBuildTarget.of(
             ImmutableUnflavoredBuildTarget.of(cell.getCanonicalName().orElse(""), "//", "target2"),
             ImmutableSortedSet.of());
     RawTargetNode rawTargetNode2 =
@@ -125,10 +125,10 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
     RawTargetNodeWithDeps target2 = allTargets.get("target2");
     assertNotNull(target2);
 
-    ImmutableSet<UnconfiguredBuildTargetData> deps = target1.getDeps();
+    ImmutableSet<UnconfiguredBuildTarget> deps = target1.getDeps();
     assertEquals(1, deps.size());
 
-    UnconfiguredBuildTargetData dep = deps.iterator().next();
+    UnconfiguredBuildTarget dep = deps.iterator().next();
     assertEquals("//", dep.getUnflavoredBuildTarget().getBaseName());
     assertEquals("target2", dep.getUnflavoredBuildTarget().getName());
   }
