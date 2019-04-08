@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -31,11 +31,11 @@ public abstract class AbstractArtifactCacheEventFactory implements ArtifactCache
   private static final String TARGET_KEY = "TARGET";
   private static final String CONFIGURATION_KEY = "CONFIGURATION";
 
-  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private final Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
 
   protected AbstractArtifactCacheEventFactory(
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer) {
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.targetConfigurationSerializer = targetConfigurationSerializer;
@@ -46,7 +46,7 @@ public abstract class AbstractArtifactCacheEventFactory implements ArtifactCache
   }
 
   public static Optional<BuildTarget> getTarget(
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ImmutableMap<String, String> metadata) {
     return metadata.containsKey(TARGET_KEY)
@@ -68,7 +68,7 @@ public abstract class AbstractArtifactCacheEventFactory implements ArtifactCache
   }
 
   public static Optional<BuildTarget> getTarget(
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       @Nullable String target,
       TargetConfiguration targetConfiguration) {
     if (target == null) {

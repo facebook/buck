@@ -19,7 +19,7 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
@@ -417,7 +417,7 @@ public class Deserializer {
       if (stream.readBoolean()) {
         return EmptyTargetConfiguration.INSTANCE;
       }
-      UnconfiguredBuildTarget targetPlatform =
+      UnconfiguredBuildTargetView targetPlatform =
           UnconfiguredBuildTargetTypeInfo.INSTANCE.createNotNull(this);
       return ImmutableDefaultTargetConfiguration.of(targetPlatform);
     }

@@ -17,7 +17,7 @@
 package com.facebook.buck.core.rules.platform;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -53,7 +53,7 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
   public ConfigurationRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       Cell cell,
-      UnconfiguredBuildTarget buildTarget,
+      UnconfiguredBuildTargetView buildTarget,
       PlatformArg arg) {
     return PlatformRule.of(buildTarget, arg.getName(), arg.getConstraintValues());
   }
@@ -63,7 +63,7 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
   interface AbstractPlatformArg {
     String getName();
 
-    ImmutableList<UnconfiguredBuildTarget> getConstraintValues();
+    ImmutableList<UnconfiguredBuildTargetView> getConstraintValues();
   }
 
   /** {@code platform} rule. */
@@ -72,12 +72,12 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
   interface AbstractPlatformRule extends ConfigurationRule {
     @Value.Parameter
     @Override
-    UnconfiguredBuildTarget getBuildTarget();
+    UnconfiguredBuildTargetView getBuildTarget();
 
     @Value.Parameter
     String getName();
 
     @Value.Parameter
-    ImmutableList<UnconfiguredBuildTarget> getConstrainValues();
+    ImmutableList<UnconfiguredBuildTargetView> getConstrainValues();
   }
 }

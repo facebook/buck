@@ -73,7 +73,7 @@ public class RawTargetNodeToTargetNodeFactoryTest {
             .build();
     RawTargetNode node =
         ImmutableRawTargetNode.of(
-            buildTarget.getUnconfiguredBuildTarget().getData(),
+            buildTarget.getUnconfiguredBuildTargetView().getData(),
             RuleType.of("java_library", RuleType.Kind.BUILD),
             attributes,
             ImmutableSet.of(),

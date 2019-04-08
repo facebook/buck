@@ -18,8 +18,8 @@ package com.facebook.buck.core.rules.platform;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -36,7 +36,7 @@ public class RuleBasedTargetPlatformResolverTest {
   @Test
   public void requestingPlatformForWrongTypeThrowsException() {
 
-    UnconfiguredBuildTarget constraint =
+    UnconfiguredBuildTargetView constraint =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
     RuleBasedTargetPlatformResolver resolver =
         new RuleBasedTargetPlatformResolver(
@@ -53,11 +53,11 @@ public class RuleBasedTargetPlatformResolverTest {
   @Test
   public void requestingPlatformForPlatformRuleCreatesPlatform() {
 
-    UnconfiguredBuildTarget platformTarget =
+    UnconfiguredBuildTargetView platformTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
-    UnconfiguredBuildTarget constraintValue =
+    UnconfiguredBuildTargetView constraintValue =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:value");
-    UnconfiguredBuildTarget constraintSetting =
+    UnconfiguredBuildTargetView constraintSetting =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =

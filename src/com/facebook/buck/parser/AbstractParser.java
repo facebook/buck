@@ -136,7 +136,7 @@ abstract class AbstractParser implements Parser {
             owningCell,
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(
-                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTarget()));
+                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTargetView()));
     return getTargetFromManifest(targetNode, buildFileManifest);
   }
 
@@ -149,7 +149,7 @@ abstract class AbstractParser implements Parser {
             owningCell,
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(
-                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTarget()));
+                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTargetView()));
     return Futures.transform(
         buildFileManifestFuture,
         buildFileManifest -> getTargetFromManifest(targetNode, buildFileManifest),

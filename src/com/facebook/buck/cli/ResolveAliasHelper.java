@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.PerBuildState;
@@ -72,7 +72,7 @@ public class ResolveAliasHelper {
   static String validateBuildTargetForFullyQualifiedTarget(
       CommandRunnerParams params, String target, PerBuildState parserState) {
 
-    UnconfiguredBuildTarget buildTarget =
+    UnconfiguredBuildTargetView buildTarget =
         params.getBuckConfig().getUnconfiguredBuildTargetForFullyQualifiedTarget(target);
 
     Cell owningCell = params.getCell().getCell(buildTarget);
@@ -94,7 +94,7 @@ public class ResolveAliasHelper {
 
     // Check that the given target is a valid target.
     for (TargetNode<?> candidate : targetNodes) {
-      if (candidate.getBuildTarget().getUnconfiguredBuildTarget().equals(buildTarget)) {
+      if (candidate.getBuildTarget().getUnconfiguredBuildTargetView().equals(buildTarget)) {
         return buildTarget.getFullyQualifiedName();
       }
     }

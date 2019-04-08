@@ -25,9 +25,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
 import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.ImmutableRawTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.ImmutableRawTargetNodeWithDepsPackage;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDeps;
@@ -101,10 +101,10 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
       // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have to resolve
       // configuration for Target Node (we use default configuration at this point)
 
-      // Create short living UnconfiguredBuildTarget
+      // Create short living UnconfiguredBuildTargetView
       // TODO: configure data object directly
-      UnconfiguredBuildTarget unconfiguredBuildTargetView =
-          ImmutableUnconfiguredBuildTarget.of(cell.getRoot(), unconfiguredBuildTarget);
+      UnconfiguredBuildTargetView unconfiguredBuildTargetView =
+          ImmutableUnconfiguredBuildTargetView.of(cell.getRoot(), unconfiguredBuildTarget);
 
       BuildTarget buildTarget =
           unconfiguredBuildTargetView.configure(EmptyTargetConfiguration.INSTANCE);
@@ -123,7 +123,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
           targetNode
               .getParseDeps()
               .stream()
-              .map(bt -> bt.getUnconfiguredBuildTarget().getData())
+              .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
               .collect(ImmutableSet.toImmutableSet());
 
       // END TEMPORARY

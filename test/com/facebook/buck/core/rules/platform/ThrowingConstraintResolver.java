@@ -15,19 +15,19 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 
 public class ThrowingConstraintResolver implements ConstraintResolver {
   @Override
-  public ConstraintSetting getConstraintSetting(UnconfiguredBuildTarget buildTarget) {
+  public ConstraintSetting getConstraintSetting(UnconfiguredBuildTargetView buildTarget) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public ConstraintValue getConstraintValue(UnconfiguredBuildTarget buildTarget) {
+  public ConstraintValue getConstraintValue(UnconfiguredBuildTargetView buildTarget) {
     throw new UnsupportedOperationException();
   }
 }

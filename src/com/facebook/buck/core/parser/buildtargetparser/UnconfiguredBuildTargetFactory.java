@@ -16,14 +16,14 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import java.nio.file.Path;
 
-/** Creates {@link UnconfiguredBuildTarget} from a raw string. */
+/** Creates {@link UnconfiguredBuildTargetView} from a raw string. */
 public interface UnconfiguredBuildTargetFactory {
 
   /**
-   * Given a fully-qualified target name returns {@link UnconfiguredBuildTarget}.
+   * Given a fully-qualified target name returns {@link UnconfiguredBuildTargetView}.
    *
    * <p>A fully-qualified target name is the target name that uniquely identifies the target.
    *
@@ -34,10 +34,10 @@ public interface UnconfiguredBuildTargetFactory {
    * @see #createForBaseName(CellPathResolver, String, String) for more information about other
    *     types of target names.
    */
-  UnconfiguredBuildTarget create(CellPathResolver cellPathResolver, String buildTargetName);
+  UnconfiguredBuildTargetView create(CellPathResolver cellPathResolver, String buildTargetName);
 
   /**
-   * Given a target base name and a target name returns {@link UnconfiguredBuildTarget}.
+   * Given a target base name and a target name returns {@link UnconfiguredBuildTargetView}.
    *
    * <p>The target name may either be a fully-qualified name or a relative name. {@code baseName} is
    * used when a relative name is given to correctly resolve the name of the target.
@@ -49,11 +49,11 @@ public interface UnconfiguredBuildTargetFactory {
    * specified in the target name. The build target contains a {@link
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
-  UnconfiguredBuildTarget createForBaseName(
+  UnconfiguredBuildTargetView createForBaseName(
       CellPathResolver cellPathResolver, String baseName, String buildTargetName);
 
   /**
-   * Given a target base name and a target name returns {@link UnconfiguredBuildTarget} with
+   * Given a target base name and a target name returns {@link UnconfiguredBuildTargetView} with
    * optionally allowing the short name to be empty.
    *
    * <p>The target name may either be a fully-qualified name or a target name pattern.
@@ -65,6 +65,6 @@ public interface UnconfiguredBuildTargetFactory {
    * specified in the target name. The build target contains a {@link
    * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
-  UnconfiguredBuildTarget createWithWildcard(
+  UnconfiguredBuildTargetView createWithWildcard(
       CellPathResolver cellPathResolver, String buildTargetName);
 }

@@ -15,29 +15,30 @@
  */
 package com.facebook.buck.core.model.impl;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
 
 /**
- * JSON serializer of {@link UnconfiguredBuildTarget} that uses fully qualified name to represent a
- * target.
+ * JSON serializer of {@link UnconfiguredBuildTargetView} that uses fully qualified name to
+ * represent a target.
  */
 public class UnconfiguredBuildTargetSimpleSerializer
-    extends StdSerializer<UnconfiguredBuildTarget> {
+    extends StdSerializer<UnconfiguredBuildTargetView> {
 
-  protected UnconfiguredBuildTargetSimpleSerializer(Class<UnconfiguredBuildTarget> instanceClass) {
+  protected UnconfiguredBuildTargetSimpleSerializer(
+      Class<UnconfiguredBuildTargetView> instanceClass) {
     super(instanceClass);
   }
 
   @Override
   public void serialize(
-      UnconfiguredBuildTarget unconfiguredBuildTarget,
+      UnconfiguredBuildTargetView unconfiguredBuildTargetView,
       JsonGenerator gen,
       SerializerProvider provider)
       throws IOException {
-    gen.writeString(unconfiguredBuildTarget.getFullyQualifiedName());
+    gen.writeString(unconfiguredBuildTargetView.getFullyQualifiedName());
   }
 }

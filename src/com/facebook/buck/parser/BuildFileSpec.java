@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -46,7 +46,7 @@ public abstract class BuildFileSpec {
     return ImmutableBuildFileSpec.of(basePath, /* recursive */ false, cellPath);
   }
 
-  public static BuildFileSpec fromUnconfiguredBuildTarget(UnconfiguredBuildTarget target) {
+  public static BuildFileSpec fromUnconfiguredBuildTarget(UnconfiguredBuildTargetView target) {
     return fromPath(target.getBasePath(), target.getCellPath());
   }
 }

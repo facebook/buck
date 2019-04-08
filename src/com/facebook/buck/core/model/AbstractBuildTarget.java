@@ -25,46 +25,46 @@ import java.util.Optional;
 public abstract class AbstractBuildTarget implements BuildTarget {
 
   @Override
-  public abstract UnconfiguredBuildTarget getUnconfiguredBuildTarget();
+  public abstract UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
 
   @Override
   public UnflavoredBuildTargetView getUnflavoredBuildTarget() {
-    return getUnconfiguredBuildTarget().getUnflavoredBuildTargetView();
+    return getUnconfiguredBuildTargetView().getUnflavoredBuildTargetView();
   }
 
   @Override
   public ImmutableSortedSet<Flavor> getFlavors() {
-    return getUnconfiguredBuildTarget().getFlavors();
+    return getUnconfiguredBuildTargetView().getFlavors();
   }
 
   @Override
   public Optional<String> getCell() {
-    return getUnconfiguredBuildTarget().getCell();
+    return getUnconfiguredBuildTargetView().getCell();
   }
 
   @Override
   public Path getCellPath() {
-    return getUnconfiguredBuildTarget().getCellPath();
+    return getUnconfiguredBuildTargetView().getCellPath();
   }
 
   @Override
   public String getBaseName() {
-    return getUnconfiguredBuildTarget().getBaseName();
+    return getUnconfiguredBuildTargetView().getBaseName();
   }
 
   @Override
   public Path getBasePath() {
-    return getUnconfiguredBuildTarget().getBasePath();
+    return getUnconfiguredBuildTargetView().getBasePath();
   }
 
   @Override
   public String getShortName() {
-    return getUnconfiguredBuildTarget().getShortName();
+    return getUnconfiguredBuildTargetView().getShortName();
   }
 
   @Override
   public String getShortNameAndFlavorPostfix() {
-    return getUnconfiguredBuildTarget().getShortNameAndFlavorPostfix();
+    return getUnconfiguredBuildTargetView().getShortNameAndFlavorPostfix();
   }
 
   @Override
@@ -81,17 +81,17 @@ public abstract class AbstractBuildTarget implements BuildTarget {
 
   @Override
   public String getFullyQualifiedName() {
-    return getUnconfiguredBuildTarget().getFullyQualifiedName();
+    return getUnconfiguredBuildTargetView().getFullyQualifiedName();
   }
 
   @Override
   public boolean isFlavored() {
-    return getUnconfiguredBuildTarget().isFlavored();
+    return getUnconfiguredBuildTargetView().isFlavored();
   }
 
   @Override
   public BuildTarget assertUnflavored() {
-    getUnconfiguredBuildTarget().assertUnflavored();
+    getUnconfiguredBuildTargetView().assertUnflavored();
     return this;
   }
 
@@ -102,7 +102,7 @@ public abstract class AbstractBuildTarget implements BuildTarget {
     }
 
     return ComparisonChain.start()
-        .compare(getUnconfiguredBuildTarget(), o.getUnconfiguredBuildTarget())
+        .compare(getUnconfiguredBuildTargetView(), o.getUnconfiguredBuildTargetView())
         .result();
   }
 }

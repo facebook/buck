@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.google.common.collect.ImmutableMap;
 import java.util.stream.StreamSupport;
@@ -29,7 +29,7 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
 
   /** @return Build target to match with this spec */
   @Value.Parameter
-  public abstract UnconfiguredBuildTarget getUnconfiguredBuildTarget();
+  public abstract UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
 
   @Override
   @Value.Parameter
@@ -37,11 +37,11 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
 
   /**
    * Create new instance of {@link BuildTargetSpec} and automatically resolve {@link BuildFileSpec}
-   * based on {@link UnconfiguredBuildTarget} properties
+   * based on {@link UnconfiguredBuildTargetView} properties
    *
    * @param target Build target to match
    */
-  public static BuildTargetSpec from(UnconfiguredBuildTarget target) {
+  public static BuildTargetSpec from(UnconfiguredBuildTargetView target) {
     // TODO(buck_team): use factory to create specs
     return ImmutableBuildTargetSpec.of(target, BuildFileSpec.fromUnconfiguredBuildTarget(target));
   }
@@ -60,18 +60,18 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
                     input
                         .getBuildTarget()
                         .getUnflavoredBuildTarget()
-                        .equals(getUnconfiguredBuildTarget().getUnflavoredBuildTargetView()))
+                        .equals(getUnconfiguredBuildTargetView().getUnflavoredBuildTargetView()))
             .findFirst()
             .orElseThrow(
                 () ->
                     new IllegalStateException(
                         "Cannot find target node for build target "
-                            + getUnconfiguredBuildTarget()));
+                            + getUnconfiguredBuildTargetView()));
     return ImmutableMap.of(firstMatchingNode.getBuildTarget(), firstMatchingNode);
   }
 
   @Override
   public String toString() {
-    return getUnconfiguredBuildTarget().getFullyQualifiedName();
+    return getUnconfiguredBuildTargetView().getFullyQualifiedName();
   }
 }

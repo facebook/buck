@@ -27,8 +27,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorFactory;
@@ -110,6 +110,6 @@ public class SelectorListCoercerTest {
     assertThat(traversedObjects, hasItem(InternalFlavor.of("test2")));
     assertThat(traversedObjects, hasItem(InternalFlavor.of("test3")));
     assertEquals(
-        1, traversedObjects.stream().filter(UnconfiguredBuildTarget.class::isInstance).count());
+        1, traversedObjects.stream().filter(UnconfiguredBuildTargetView.class::isInstance).count());
   }
 }

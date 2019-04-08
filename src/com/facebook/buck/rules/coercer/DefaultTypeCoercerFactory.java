@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
@@ -84,7 +84,7 @@ import java.util.regex.Pattern;
  */
 public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
-  private final TypeCoercer<UnconfiguredBuildTarget> unconfiguredBuildTargetTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTargetView> unconfiguredBuildTargetTypeCoercer;
   private final PathTypeCoercer.PathExistenceVerificationMode pathExistenceVerificationMode;
 
   private final TypeCoercer<Pattern> patternTypeCoercer = new PatternTypeCoercer();

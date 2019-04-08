@@ -17,10 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.FakeRuleTypeForTests
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData
-import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData
 import com.facebook.buck.core.model.RuleType
-import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.core.model.UnconfiguredBuildTargetData
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode

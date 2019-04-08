@@ -231,7 +231,9 @@ public abstract class AbstractValueVisitorTest {
   public static class WithBuildTargetWithEmptyConfiguration implements FakeBuildable {
     @AddToRuleKey
     final BuildTarget target =
-        someBuildTarget.getUnconfiguredBuildTarget().configure(EmptyTargetConfiguration.INSTANCE);
+        someBuildTarget
+            .getUnconfiguredBuildTargetView()
+            .configure(EmptyTargetConfiguration.INSTANCE);
   }
 
   public static class WithOutputPath implements FakeBuildable {

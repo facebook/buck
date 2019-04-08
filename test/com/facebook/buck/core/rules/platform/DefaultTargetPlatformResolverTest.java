@@ -20,8 +20,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.Platform;
@@ -54,11 +54,11 @@ public class DefaultTargetPlatformResolverTest {
   public void returnCorrectPlatformForDefaultTargetConfiguration() {
     Platform emptyTargetConfigurationPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
 
-    UnconfiguredBuildTarget platformTarget =
+    UnconfiguredBuildTargetView platformTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//platform:platform");
-    UnconfiguredBuildTarget constraintValue =
+    UnconfiguredBuildTargetView constraintValue =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:value");
-    UnconfiguredBuildTarget constraintSetting =
+    UnconfiguredBuildTargetView constraintSetting =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
 
     ConfigurationRuleResolver configurationRuleResolver =

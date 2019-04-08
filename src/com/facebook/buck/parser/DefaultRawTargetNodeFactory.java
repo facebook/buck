@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
@@ -53,7 +53,7 @@ class DefaultRawTargetNodeFactory implements RawTargetNodeFactory<Map<String, Ob
   public RawTargetNode create(
       Cell cell,
       Path buildFile,
-      UnconfiguredBuildTarget target,
+      UnconfiguredBuildTargetView target,
       Map<String, Object> rawAttributes) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleType ruleType = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);

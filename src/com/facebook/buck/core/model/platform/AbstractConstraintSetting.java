@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.platform;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import org.immutables.value.Value;
 
@@ -25,5 +25,5 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false, prehash = true)
 public abstract class AbstractConstraintSetting {
   @Value.Parameter
-  public abstract UnconfiguredBuildTarget getBuildTarget();
+  public abstract UnconfiguredBuildTargetView getBuildTarget();
 }

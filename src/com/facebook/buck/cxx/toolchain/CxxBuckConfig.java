@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -328,7 +328,7 @@ public class CxxBuckConfig {
       return Optional.empty();
     }
     String source = String.format("[%s] %s", cxxSection, toolType.key);
-    Optional<UnconfiguredBuildTarget> target =
+    Optional<UnconfiguredBuildTargetView> target =
         delegate.getMaybeUnconfiguredBuildTarget(cxxSection, toolType.key);
     Optional<CxxToolProvider.Type> type =
         delegate.getEnum(cxxSection, toolType.key + "_type", CxxToolProvider.Type.class);
@@ -661,7 +661,7 @@ public class CxxBuckConfig {
 
     public abstract String getSource();
 
-    public abstract Optional<UnconfiguredBuildTarget> getBuildTarget();
+    public abstract Optional<UnconfiguredBuildTargetView> getBuildTarget();
 
     public abstract Optional<PathSourcePath> getPath();
 

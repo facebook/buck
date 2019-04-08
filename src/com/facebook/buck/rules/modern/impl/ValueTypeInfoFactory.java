@@ -18,7 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -141,7 +141,7 @@ public class ValueTypeInfoFactory {
         return new NonHashableSourcePathContainerValueTypeInfo();
       } else if (BuildTarget.class.isAssignableFrom(rawClass)) {
         return BuildTargetTypeInfo.INSTANCE;
-      } else if (UnconfiguredBuildTarget.class.isAssignableFrom(rawClass)) {
+      } else if (UnconfiguredBuildTargetView.class.isAssignableFrom(rawClass)) {
         return UnconfiguredBuildTargetTypeInfo.INSTANCE;
       } else if (TargetConfiguration.class.isAssignableFrom(rawClass)) {
         return TargetConfigurationTypeInfo.INSTANCE;

@@ -19,7 +19,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -36,16 +36,16 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
 
   private final ObjectWriter objectWriter;
   private final ObjectReader objectReader;
-  private final Function<String, UnconfiguredBuildTarget> buildTargetProvider;
+  private final Function<String, UnconfiguredBuildTargetView> buildTargetProvider;
 
   public JsonTargetConfigurationSerializer(
-      Function<String, UnconfiguredBuildTarget> buildTargetProvider) {
+      Function<String, UnconfiguredBuildTargetView> buildTargetProvider) {
     this.buildTargetProvider = buildTargetProvider;
     ObjectMapper objectMapper = ObjectMappers.createWithEmptyBeansPermitted();
     SimpleModule targetConfigurationModule = new SimpleModule();
     targetConfigurationModule.addSerializer(
-        UnconfiguredBuildTarget.class,
-        new UnconfiguredBuildTargetSimpleSerializer(UnconfiguredBuildTarget.class));
+        UnconfiguredBuildTargetView.class,
+        new UnconfiguredBuildTargetSimpleSerializer(UnconfiguredBuildTargetView.class));
     objectMapper.registerModule(targetConfigurationModule);
 
     objectReader = objectMapper.reader();
@@ -76,7 +76,8 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     JsonNode targetPlatformNode =
         Preconditions.checkNotNull(
             node.get("targetPlatform"), "Cannot find targetPlatform in %s", rawValue);
-    UnconfiguredBuildTarget platform = buildTargetProvider.apply(targetPlatformNode.textValue());
+    UnconfiguredBuildTargetView platform =
+        buildTargetProvider.apply(targetPlatformNode.textValue());
     return ImmutableDefaultTargetConfiguration.of(platform);
   }
 }

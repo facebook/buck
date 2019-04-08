@@ -19,7 +19,7 @@ package com.facebook.buck.core.toolchain.toolprovider.impl;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -34,10 +34,10 @@ import java.util.Optional;
  */
 public class BinaryBuildRuleToolProvider implements ToolProvider {
 
-  private final UnconfiguredBuildTarget target;
+  private final UnconfiguredBuildTargetView target;
   private final String source;
 
-  public BinaryBuildRuleToolProvider(UnconfiguredBuildTarget target, String source) {
+  public BinaryBuildRuleToolProvider(UnconfiguredBuildTargetView target, String source) {
     this.target = target;
     this.source = source;
   }

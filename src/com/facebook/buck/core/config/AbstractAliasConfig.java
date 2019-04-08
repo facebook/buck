@@ -18,7 +18,7 @@ package com.facebook.buck.core.config;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
@@ -55,14 +55,15 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public ImmutableSetMultimap<String, UnconfiguredBuildTarget> getAliases() {
+  public ImmutableSetMultimap<String, UnconfiguredBuildTargetView> getAliases() {
     return createAliasToBuildTargetMap(getEntries());
   }
 
   public ImmutableSet<String> getBuildTargetForAliasAsString(String possiblyFlavoredAlias) {
     String[] parts = possiblyFlavoredAlias.split("#", 2);
     String unflavoredAlias = parts[0];
-    ImmutableSet<UnconfiguredBuildTarget> buildTargets = getBuildTargetsForAlias(unflavoredAlias);
+    ImmutableSet<UnconfiguredBuildTargetView> buildTargets =
+        getBuildTargetsForAlias(unflavoredAlias);
     if (buildTargets.isEmpty()) {
       return ImmutableSet.of();
     }
@@ -73,7 +74,7 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  public ImmutableSet<UnconfiguredBuildTarget> getBuildTargetsForAlias(String unflavoredAlias) {
+  public ImmutableSet<UnconfiguredBuildTargetView> getBuildTargetsForAlias(String unflavoredAlias) {
     return getAliases().get(unflavoredAlias);
   }
 
@@ -98,9 +99,9 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
     // Build up the Map with an ordinary HashMap because we need to be able to check whether the Map
     // already contains the key before inserting.
     Map<Path, String> basePathToAlias = new HashMap<>();
-    for (Map.Entry<String, UnconfiguredBuildTarget> entry : getAliases().entries()) {
+    for (Map.Entry<String, UnconfiguredBuildTargetView> entry : getAliases().entries()) {
       String alias = entry.getKey();
-      UnconfiguredBuildTarget buildTarget = entry.getValue();
+      UnconfiguredBuildTargetView buildTarget = entry.getValue();
 
       Path basePath = buildTarget.getBasePath();
       if (!basePathToAlias.containsKey(basePath)) {
@@ -115,11 +116,12 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
    * alias defined earlier in the {@code alias} section. The mapping produced by this method
    * reflects the result of resolving all aliases as values in the {@code alias} section.
    */
-  private ImmutableSetMultimap<String, UnconfiguredBuildTarget> createAliasToBuildTargetMap(
+  private ImmutableSetMultimap<String, UnconfiguredBuildTargetView> createAliasToBuildTargetMap(
       ImmutableMap<String, String> rawAliasMap) {
     // We use a LinkedHashMap rather than an ImmutableMap.Builder because we want both (1) order to
     // be preserved, and (2) the ability to inspect the Map while building it up.
-    SetMultimap<String, UnconfiguredBuildTarget> aliasToBuildTarget = LinkedHashMultimap.create();
+    SetMultimap<String, UnconfiguredBuildTargetView> aliasToBuildTarget =
+        LinkedHashMultimap.create();
     for (Map.Entry<String, String> aliasEntry : rawAliasMap.entrySet()) {
       String alias = aliasEntry.getKey();
       validateAliasName(alias);
@@ -127,7 +129,7 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
       // Determine whether the mapping is to a build target or to an alias.
       List<String> values = Splitter.on(' ').splitToList(aliasEntry.getValue());
       for (String value : values) {
-        Set<UnconfiguredBuildTarget> buildTargets;
+        Set<UnconfiguredBuildTargetView> buildTargets;
         if (isValidAliasName(value)) {
           buildTargets = aliasToBuildTarget.get(value);
           if (buildTargets.isEmpty()) {

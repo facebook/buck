@@ -43,7 +43,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
@@ -1421,7 +1421,7 @@ public final class MainRunner {
     if (command.getTargetPlatforms().isEmpty()) {
       return EmptyTargetConfiguration.INSTANCE;
     }
-    UnconfiguredBuildTarget targetPlatform =
+    UnconfiguredBuildTargetView targetPlatform =
         unconfiguredBuildTargetFactory.create(
             cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms()));
     return ImmutableDefaultTargetConfiguration.of(targetPlatform);

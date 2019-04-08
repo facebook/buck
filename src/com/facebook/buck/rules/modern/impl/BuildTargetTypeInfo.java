@@ -18,7 +18,7 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
@@ -29,15 +29,15 @@ public class BuildTargetTypeInfo implements ValueTypeInfo<BuildTarget> {
 
   @Override
   public <E extends Exception> void visit(BuildTarget value, ValueVisitor<E> visitor) throws E {
-    UnconfiguredBuildTargetTypeInfo.INSTANCE.visit(value.getUnconfiguredBuildTarget(), visitor);
+    UnconfiguredBuildTargetTypeInfo.INSTANCE.visit(value.getUnconfiguredBuildTargetView(), visitor);
     TargetConfigurationTypeInfo.INSTANCE.visit(value.getTargetConfiguration(), visitor);
   }
 
   @Override
   public <E extends Exception> BuildTarget create(ValueCreator<E> creator) throws E {
-    UnconfiguredBuildTarget unconfiguredBuildTarget =
+    UnconfiguredBuildTargetView unconfiguredBuildTargetView =
         UnconfiguredBuildTargetTypeInfo.INSTANCE.createNotNull(creator);
     TargetConfiguration targetConfiguration = creator.createTargetConfiguration();
-    return unconfiguredBuildTarget.configure(targetConfiguration);
+    return unconfiguredBuildTargetView.configure(targetConfiguration);
   }
 }

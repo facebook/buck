@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -101,7 +101,7 @@ public class TargetNodeParsePipeline
       Path buildFile,
       TargetConfiguration targetConfiguration,
       Map<String, Object> from) {
-    return ImmutableUnconfiguredBuildTarget.of(
+    return ImmutableUnconfiguredBuildTargetView.of(
             UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile))
         // This pipeline doesn't support configured targets, explicitly erase this information
         .configure(EmptyTargetConfiguration.INSTANCE);
@@ -119,7 +119,7 @@ public class TargetNodeParsePipeline
         delegate.createTargetNode(
             cell,
             cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTarget()),
+                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTargetView()),
             buildTarget,
             rawNode,
             perfEventScopeFunction);
@@ -158,6 +158,6 @@ public class TargetNodeParsePipeline
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
       Cell cell, BuildTarget buildTarget) throws BuildTargetException {
     return buildTargetRawNodeParsePipeline.getNodeJob(
-        cell, buildTarget.getUnconfiguredBuildTarget());
+        cell, buildTarget.getUnconfiguredBuildTargetView());
   }
 }

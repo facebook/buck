@@ -17,7 +17,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.google.common.util.concurrent.Futures;
@@ -41,7 +41,7 @@ public class BuildTargetRawNodeParsePipeline
 
   @Override
   public ListenableFuture<Map<String, Object>> getNodeJob(
-      Cell cell, UnconfiguredBuildTarget buildTarget) throws BuildTargetException {
+      Cell cell, UnconfiguredBuildTargetView buildTarget) throws BuildTargetException {
     return Futures.transformAsync(
         buildFileRawNodeParsePipeline.getAllNodesJob(
             cell,

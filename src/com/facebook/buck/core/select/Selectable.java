@@ -16,13 +16,13 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 
 /**
  * A condition in <code>select</code> statements.
  *
  * <p>Such condition is referenced from keys in a <code>select</code> statement by a {@link
- * UnconfiguredBuildTarget} which should point to an instance that implements {@link
+ * UnconfiguredBuildTargetView} which should point to an instance that implements {@link
  * ProvidesSelectable} which is used to obtain the {@link Selectable}.
  */
 public interface Selectable {
@@ -34,5 +34,5 @@ public interface Selectable {
   boolean refines(Selectable other);
 
   /** @return build target of this condition */
-  UnconfiguredBuildTarget getBuildTarget();
+  UnconfiguredBuildTargetView getBuildTarget();
 }

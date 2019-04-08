@@ -22,15 +22,17 @@ import java.util.Optional;
 import javax.annotation.concurrent.ThreadSafe;
 
 /**
- * Represents a build target without configuration.
+ * Represents a view over {@link UnconfiguredBuildTargetData}.
  *
- * <p>This is indented to be used during early stages of parsing when information about
- * configuration is not available.
+ * <p>This view adds runtime context information to {@link UnconfiguredBuildTargetData}, like
+ * absolute cell path where build target belongs to. Because of that, this class should not be used
+ * as a long-living data class with the lifetime exceeding the lifetime of running command.
  *
- * <p>If to be used as data object, consider {@link UnconfiguredBuildTargetData} instead
+ * <p>This class represents a legacy data structure. In most of the cases you will want to use
+ * {@link UnconfiguredBuildTargetData} directly.
  */
 @ThreadSafe
-public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTarget> {
+public interface UnconfiguredBuildTargetView extends Comparable<UnconfiguredBuildTargetView> {
 
   /** A build target without flavors. */
   UnflavoredBuildTargetView getUnflavoredBuildTargetView();
@@ -109,7 +111,7 @@ public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTar
    * @return this build target
    * @throws IllegalStateException if a build target has flavors
    */
-  UnconfiguredBuildTarget assertUnflavored();
+  UnconfiguredBuildTargetView assertUnflavored();
 
   /**
    * Creates a new build target by copying all of the information from this build target and
@@ -117,7 +119,7 @@ public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTar
    *
    * @param shortName short name of the new build target
    */
-  UnconfiguredBuildTarget withShortName(String shortName);
+  UnconfiguredBuildTargetView withShortName(String shortName);
 
   /**
    * Creates a new build target by copying all of the information from this build target and using
@@ -125,7 +127,7 @@ public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTar
    *
    * @param flavors flavors to use when creating a new build target
    */
-  UnconfiguredBuildTarget withFlavors(Flavor... flavors);
+  UnconfiguredBuildTargetView withFlavors(Flavor... flavors);
 
   /**
    * Creates a new build target by copying all of the information from this build target and using
@@ -133,19 +135,19 @@ public interface UnconfiguredBuildTarget extends Comparable<UnconfiguredBuildTar
    *
    * @param flavors flavors to use when creating a new build target
    */
-  UnconfiguredBuildTarget withFlavors(Iterable<? extends Flavor> flavors);
+  UnconfiguredBuildTargetView withFlavors(Iterable<? extends Flavor> flavors);
 
   /**
    * Creates a new build target by using the provided {@link UnflavoredBuildTargetView} and flavors
    * from this build target.
    */
-  UnconfiguredBuildTarget withUnflavoredBuildTarget(UnflavoredBuildTargetView target);
+  UnconfiguredBuildTargetView withUnflavoredBuildTarget(UnflavoredBuildTargetView target);
 
   /**
    * Creates a new build target by copying all of the information from this build target and
    * removing the name of the cell.
    */
-  UnconfiguredBuildTarget withoutCell();
+  UnconfiguredBuildTargetView withoutCell();
 
   /**
    * Creates {@link BuildTarget} by attaching {@link TargetConfiguration} to this unconfigured build

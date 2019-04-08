@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -44,7 +44,7 @@ class CellManager {
     }
   }
 
-  Cell getCell(UnconfiguredBuildTarget target) {
+  Cell getCell(UnconfiguredBuildTargetView target) {
     Cell cell = cells.get(target.getCellPath());
     if (cell != null) {
       return cell;
@@ -62,7 +62,7 @@ class CellManager {
   }
 
   Cell getCell(BuildTarget target) {
-    return getCell(target.getUnconfiguredBuildTarget());
+    return getCell(target.getUnconfiguredBuildTargetView());
   }
 
   void registerInputsUnderSymlinks(Path buildFile, TargetNode<?> node) throws IOException {

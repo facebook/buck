@@ -16,14 +16,16 @@
 
 package com.facebook.buck.core.model.platform;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 
-/** An interface to access constraints using {@link UnconfiguredBuildTarget}. */
+/** An interface to access constraints using {@link UnconfiguredBuildTargetView}. */
 public interface ConstraintResolver {
 
-  /** @return {@link ConstraintSetting} identified by a given {@link UnconfiguredBuildTarget}. */
-  ConstraintSetting getConstraintSetting(UnconfiguredBuildTarget buildTarget);
+  /**
+   * @return {@link ConstraintSetting} identified by a given {@link UnconfiguredBuildTargetView}.
+   */
+  ConstraintSetting getConstraintSetting(UnconfiguredBuildTargetView buildTarget);
 
-  /** @return {@link ConstraintValue} identified by a given {@link UnconfiguredBuildTarget}. */
-  ConstraintValue getConstraintValue(UnconfiguredBuildTarget buildTarget);
+  /** @return {@link ConstraintValue} identified by a given {@link UnconfiguredBuildTargetView}. */
+  ConstraintValue getConstraintValue(UnconfiguredBuildTargetView buildTarget);
 }

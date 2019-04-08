@@ -20,7 +20,7 @@ import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -62,7 +62,7 @@ public class BuckConfig {
   private final ConfigViewCache<BuckConfig> viewCache =
       new ConfigViewCache<>(this, BuckConfig.class);
 
-  private final Function<String, UnconfiguredBuildTarget> buildTargetParser;
+  private final Function<String, UnconfiguredBuildTargetView> buildTargetParser;
 
   private final int hashCode;
 
@@ -72,7 +72,7 @@ public class BuckConfig {
       Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment,
-      Function<String, UnconfiguredBuildTarget> buildTargetParser) {
+      Function<String, UnconfiguredBuildTargetView> buildTargetParser) {
     this.config = config;
     this.projectFilesystem = projectFilesystem;
     this.architecture = architecture;
@@ -86,7 +86,7 @@ public class BuckConfig {
 
   /** Returns a clone of the current config with a the argument CellPathResolver. */
   public BuckConfig withBuildTargetParser(
-      Function<String, UnconfiguredBuildTarget> buildTargetParser) {
+      Function<String, UnconfiguredBuildTargetView> buildTargetParser) {
     return new BuckConfig(
         config, projectFilesystem, architecture, platform, environment, buildTargetParser);
   }
@@ -151,7 +151,8 @@ public class BuckConfig {
     return Optional.of(paths.collect(ImmutableList.toImmutableList()));
   }
 
-  public UnconfiguredBuildTarget getUnconfiguredBuildTargetForFullyQualifiedTarget(String target) {
+  public UnconfiguredBuildTargetView getUnconfiguredBuildTargetForFullyQualifiedTarget(
+      String target) {
     return buildTargetParser.apply(target);
   }
 
@@ -197,12 +198,12 @@ public class BuckConfig {
   }
 
   /**
-   * @return the parsed UnconfiguredBuildTarget in the given section and field, if set and a valid
-   *     build target.
+   * @return the parsed UnconfiguredBuildTargetView in the given section and field, if set and a
+   *     valid build target.
    *     <p>This is useful if you use getTool to get the target, if any, but allow filesystem
    *     references.
    */
-  public Optional<UnconfiguredBuildTarget> getMaybeUnconfiguredBuildTarget(
+  public Optional<UnconfiguredBuildTargetView> getMaybeUnconfiguredBuildTarget(
       String section, String field) {
     Optional<String> value = getValue(section, field);
     if (!value.isPresent()) {

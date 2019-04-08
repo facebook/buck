@@ -17,8 +17,8 @@ package com.facebook.buck.core.rules.platform;
 
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import org.junit.Rule;
@@ -55,9 +55,9 @@ public class RuleBasedConstraintResolverTest {
 
   @Test
   public void testGettingConstraintValueThrowsWithWrongConstraintSettingRuleType() {
-    UnconfiguredBuildTarget constraintSettingTarget =
+    UnconfiguredBuildTargetView constraintSettingTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//:setting");
-    UnconfiguredBuildTarget constraintValueTarget =
+    UnconfiguredBuildTargetView constraintValueTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//:value");
 
     RuleBasedConstraintResolver ruleBasedConstraintResolver =
@@ -79,9 +79,9 @@ public class RuleBasedConstraintResolverTest {
 
   @Test
   public void testGettingConstraintsReturnCorrectObject() {
-    UnconfiguredBuildTarget constraintSettingTarget =
+    UnconfiguredBuildTargetView constraintSettingTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//:setting");
-    UnconfiguredBuildTarget constraintValueTarget =
+    UnconfiguredBuildTargetView constraintValueTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//:value");
 
     RuleBasedConstraintResolver ruleBasedConstraintResolver =

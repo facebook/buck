@@ -20,7 +20,7 @@ import static com.google.common.base.Throwables.throwIfInstanceOf;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
@@ -45,7 +45,7 @@ public interface BuildTargetParsePipeline<T> extends AutoCloseable {
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
    */
-  default T getNode(Cell cell, UnconfiguredBuildTarget buildTarget)
+  default T getNode(Cell cell, UnconfiguredBuildTargetView buildTarget)
       throws BuildFileParseException, BuildTargetException {
     try {
       return getNodeJob(cell, buildTarget).get();
@@ -70,6 +70,6 @@ public interface BuildTargetParsePipeline<T> extends AutoCloseable {
    * @return future.
    * @throws BuildTargetException when the buildTarget is malformed.
    */
-  ListenableFuture<T> getNodeJob(Cell cell, UnconfiguredBuildTarget buildTarget)
+  ListenableFuture<T> getNodeJob(Cell cell, UnconfiguredBuildTargetView buildTarget)
       throws BuildTargetException;
 }

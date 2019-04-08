@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.PerfEventId;
@@ -70,7 +70,7 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
       Path buildFile,
       TargetConfiguration targetConfiguration,
       Map<String, Object> from) {
-    return ImmutableUnconfiguredBuildTarget.of(
+    return ImmutableUnconfiguredBuildTargetView.of(
             UnflavoredBuildTargetFactory.createFromRawNode(root, cellName, from, buildFile))
         // This pipeline provides access to RawTargetNode which doesn't know about target
         // configuration. Using empty configuration here to make sure raw target nodes are not
@@ -89,8 +89,8 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
     return rawTargetNodeFactory.create(
         cell,
         cell.getBuckConfigView(ParserConfig.class)
-            .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTarget()),
-        buildTarget.getUnconfiguredBuildTarget(),
+            .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTargetView()),
+        buildTarget.getUnconfiguredBuildTargetView(),
         rawNode);
   }
 
@@ -107,6 +107,6 @@ public class RawTargetNodePipeline extends ConvertingPipeline<Map<String, Object
   protected ListenableFuture<Map<String, Object>> getItemToConvert(
       Cell cell, BuildTarget buildTarget) throws BuildTargetException {
     return buildTargetRawNodeParsePipeline.getNodeJob(
-        cell, buildTarget.getUnconfiguredBuildTarget());
+        cell, buildTarget.getUnconfiguredBuildTargetView());
   }
 }

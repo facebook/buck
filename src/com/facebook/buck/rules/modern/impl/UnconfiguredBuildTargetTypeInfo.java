@@ -18,9 +18,9 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /** TypeInfo for BuildTarget values. */
-public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<UnconfiguredBuildTarget> {
+public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<UnconfiguredBuildTargetView> {
   public static final UnconfiguredBuildTargetTypeInfo INSTANCE =
       new UnconfiguredBuildTargetTypeInfo();
 
@@ -48,8 +48,8 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   }
 
   @Override
-  public <E extends Exception> void visit(UnconfiguredBuildTarget value, ValueVisitor<E> visitor)
-      throws E {
+  public <E extends Exception> void visit(
+      UnconfiguredBuildTargetView value, ValueVisitor<E> visitor) throws E {
     UnflavoredBuildTargetView unflavored = value.getUnflavoredBuildTargetView();
     visitor.visitPath(unflavored.getCellPath());
     Holder.cellNameTypeInfo.visit(unflavored.getCell(), visitor);
@@ -65,14 +65,15 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
   }
 
   @Override
-  public <E extends Exception> UnconfiguredBuildTarget create(ValueCreator<E> creator) throws E {
+  public <E extends Exception> UnconfiguredBuildTargetView create(ValueCreator<E> creator)
+      throws E {
     Path cellPath = creator.createPath();
     Optional<String> cellName = Holder.cellNameTypeInfo.createNotNull(creator);
     String baseName = creator.createString();
     String shortName = creator.createString();
     Stream<Flavor> flavors =
         Holder.flavorsTypeInfo.createNotNull(creator).stream().map(InternalFlavor::of);
-    return ImmutableUnconfiguredBuildTarget.of(
+    return ImmutableUnconfiguredBuildTargetView.of(
         ImmutableUnflavoredBuildTargetView.of(cellPath, cellName, baseName, shortName), flavors);
   }
 }

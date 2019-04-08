@@ -21,7 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTarget;
+import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
@@ -140,7 +140,7 @@ public class DistBuildTargetGraphCodec {
             remoteTarget.getBaseName(),
             remoteTarget.getShortName());
 
-    return ImmutableUnconfiguredBuildTarget.of(
+    return ImmutableUnconfiguredBuildTargetView.of(
             unflavoredBuildTargetView, remoteTarget.flavors.stream().map(InternalFlavor::of))
         .configure(EmptyTargetConfiguration.INSTANCE);
   }

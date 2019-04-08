@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
@@ -46,7 +46,7 @@ public class DefaultRawTargetNodeFactoryTest {
 
     Cell cell = new TestCellBuilder().build();
 
-    UnconfiguredBuildTarget buildTarget =
+    UnconfiguredBuildTargetView buildTarget =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c");
 
     ImmutableMap<String, Object> attributes =

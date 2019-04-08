@@ -23,7 +23,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -112,7 +112,7 @@ abstract class AbstractImmutableCell implements Cell {
   }
 
   @Override
-  public Cell getCell(UnconfiguredBuildTarget target) {
+  public Cell getCell(UnconfiguredBuildTargetView target) {
     return getCell(target.getCellPath());
   }
 
@@ -123,11 +123,11 @@ abstract class AbstractImmutableCell implements Cell {
 
   @Override
   public Optional<Cell> getCellIfKnown(BuildTarget target) {
-    return getCellIfKnown(target.getUnconfiguredBuildTarget());
+    return getCellIfKnown(target.getUnconfiguredBuildTargetView());
   }
 
   @Override
-  public Optional<Cell> getCellIfKnown(UnconfiguredBuildTarget target) {
+  public Optional<Cell> getCellIfKnown(UnconfiguredBuildTargetView target) {
     if (getKnownRoots().contains(target.getCellPath())) {
       return Optional.of(getCell(target));
     }

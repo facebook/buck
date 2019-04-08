@@ -19,7 +19,7 @@ package com.facebook.buck.core.parser.buildtargetparser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.UnknownCellException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -53,7 +53,7 @@ public abstract class BuildTargetPatternParser<T> {
       return createWildCardPattern(cellNames, buildTargetPattern);
     }
 
-    UnconfiguredBuildTarget target =
+    UnconfiguredBuildTargetView target =
         unconfiguredBuildTargetFactory.createWithWildcard(cellNames, buildTargetPattern);
     if (target.getShortNameAndFlavorPostfix().isEmpty()) {
       return createForChildren(target.getCellPath(), target.getBasePath());
@@ -118,7 +118,7 @@ public abstract class BuildTargetPatternParser<T> {
 
   protected abstract T createForChildren(Path cellPath, Path basePath);
 
-  protected abstract T createForSingleton(UnconfiguredBuildTarget target);
+  protected abstract T createForSingleton(UnconfiguredBuildTargetView target);
 
   private static class VisibilityContext extends BuildTargetPatternParser<BuildTargetPattern> {
 
@@ -133,7 +133,7 @@ public abstract class BuildTargetPatternParser<T> {
     }
 
     @Override
-    public BuildTargetPattern createForSingleton(UnconfiguredBuildTarget target) {
+    public BuildTargetPattern createForSingleton(UnconfiguredBuildTargetView target) {
       return SingletonBuildTargetPattern.of(
           target.getUnflavoredBuildTargetView().getCellPath(), target.getFullyQualifiedName());
     }

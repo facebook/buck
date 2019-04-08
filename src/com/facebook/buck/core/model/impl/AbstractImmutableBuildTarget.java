@@ -20,7 +20,7 @@ import com.facebook.buck.core.model.AbstractBuildTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
 import com.facebook.buck.log.views.JsonViews;
@@ -45,7 +45,7 @@ import org.immutables.value.Value;
 abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
 
   @Override
-  public abstract UnconfiguredBuildTarget getUnconfiguredBuildTarget();
+  public abstract UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
 
   @Override
   public abstract TargetConfiguration getTargetConfiguration();
@@ -106,7 +106,7 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
   @Override
   public BuildTarget withShortName(String shortName) {
     return ImmutableBuildTarget.of(
-        getUnconfiguredBuildTarget().withShortName(shortName), getTargetConfiguration());
+        getUnconfiguredBuildTargetView().withShortName(shortName), getTargetConfiguration());
   }
 
   @Override
@@ -122,7 +122,8 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
   @Override
   public BuildTarget withoutFlavors() {
     return ImmutableBuildTarget.of(
-        ImmutableUnconfiguredBuildTarget.of(getUnflavoredBuildTarget()), getTargetConfiguration());
+        ImmutableUnconfiguredBuildTargetView.of(getUnflavoredBuildTarget()),
+        getTargetConfiguration());
   }
 
   @Override
@@ -133,7 +134,7 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
   @Override
   public BuildTarget withFlavors(Iterable<? extends Flavor> flavors) {
     return ImmutableBuildTarget.of(
-        getUnconfiguredBuildTarget().withFlavors(flavors), getTargetConfiguration());
+        getUnconfiguredBuildTargetView().withFlavors(flavors), getTargetConfiguration());
   }
 
   @Override
@@ -149,12 +150,13 @@ abstract class AbstractImmutableBuildTarget extends AbstractBuildTarget {
   @Override
   public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTargetView target) {
     return ImmutableBuildTarget.of(
-        getUnconfiguredBuildTarget().withUnflavoredBuildTarget(target), getTargetConfiguration());
+        getUnconfiguredBuildTargetView().withUnflavoredBuildTarget(target),
+        getTargetConfiguration());
   }
 
   @Override
   public BuildTarget withoutCell() {
     return ImmutableBuildTarget.of(
-        getUnconfiguredBuildTarget().withoutCell(), getTargetConfiguration());
+        getUnconfiguredBuildTargetView().withoutCell(), getTargetConfiguration());
   }
 }

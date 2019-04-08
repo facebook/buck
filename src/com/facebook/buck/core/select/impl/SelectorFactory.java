@@ -19,7 +19,7 @@ package com.facebook.buck.core.select.impl;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -39,9 +39,9 @@ import java.util.Set;
 /** Factory to create {@link Selector} using raw (non-coerced) data. */
 public class SelectorFactory {
 
-  private final TypeCoercer<UnconfiguredBuildTarget> buildTargetTypeCoercer;
+  private final TypeCoercer<UnconfiguredBuildTargetView> buildTargetTypeCoercer;
 
-  public SelectorFactory(TypeCoercer<UnconfiguredBuildTarget> buildTargetTypeCoercer) {
+  public SelectorFactory(TypeCoercer<UnconfiguredBuildTargetView> buildTargetTypeCoercer) {
     this.buildTargetTypeCoercer = buildTargetTypeCoercer;
   }
 

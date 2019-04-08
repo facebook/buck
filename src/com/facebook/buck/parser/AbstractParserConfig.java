@@ -19,7 +19,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
@@ -317,7 +317,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
    * @param target target to look up
    * @return path which may or may not exist.
    */
-  public Path getAbsolutePathToBuildFileUnsafe(Cell cell, UnconfiguredBuildTarget target) {
+  public Path getAbsolutePathToBuildFileUnsafe(Cell cell, UnconfiguredBuildTargetView target) {
     Cell targetCell = cell.getCell(target);
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
     return targetFilesystem
@@ -330,7 +330,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
    * @param target target to look up
    * @return an absolute path to a build file that contains the definition of the given target.
    */
-  public Path getAbsolutePathToBuildFile(Cell cell, UnconfiguredBuildTarget target)
+  public Path getAbsolutePathToBuildFile(Cell cell, UnconfiguredBuildTargetView target)
       throws MissingBuildFileException {
     Path buildFile = getAbsolutePathToBuildFileUnsafe(cell, target);
     Cell targetCell = cell.getCell(target);

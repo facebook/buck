@@ -29,7 +29,7 @@ import com.facebook.buck.artifact_cache.config.SQLiteCacheEntry;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -87,7 +87,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   private final ArtifactCacheBuckConfig buckConfig;
   private final BuckEventBus buckEventBus;
-  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
+  private final Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final ProjectFilesystem projectFilesystem;
   private final Optional<String> wifiSsid;
@@ -151,7 +151,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   public ArtifactCaches(
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
@@ -281,7 +281,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    */
   public static Optional<ArtifactCache> newServedCache(
       ArtifactCacheBuckConfig buckConfig,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem) {
     return buckConfig
@@ -300,7 +300,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache newInstanceInternal(
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
@@ -418,7 +418,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static void initializeDirCaches(
       ArtifactCacheEntries artifactCacheEntries,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<ArtifactCache> builder,
@@ -439,7 +439,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ArtifactCacheEntries artifactCacheEntries,
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
@@ -480,7 +480,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static void initializeSQLiteCaches(
       ArtifactCacheEntries artifactCacheEntries,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<ArtifactCache> builder) {
@@ -500,7 +500,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache createDirArtifactCache(
       Optional<BuckEventBus> buckEventBus,
       DirCacheEntry dirCacheConfig,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService storeExecutorService) {
@@ -535,7 +535,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       HttpCacheEntry cacheDescription,
       String hostToReportToRemote,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
@@ -565,7 +565,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       HttpCacheEntry cacheDescription,
       String hostToReportToRemote,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
@@ -712,7 +712,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache createSQLiteArtifactCache(
       BuckEventBus buckEventBus,
       SQLiteCacheEntry cacheConfig,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem) {
     Path cacheDir = cacheConfig.getCacheDir();

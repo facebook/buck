@@ -415,13 +415,13 @@ public class CxxSourceRuleFactoryTest {
               .withCxxpp(
                   new PreprocessorProvider(
                       new BinaryBuildRuleToolProvider(
-                          cxxpp.getBuildTarget().getUnconfiguredBuildTarget(), ""),
+                          cxxpp.getBuildTarget().getUnconfiguredBuildTargetView(), ""),
                       CxxToolProvider.Type.GCC,
                       ToolType.CXXPP))
               .withCxx(
                   new CompilerProvider(
                       new BinaryBuildRuleToolProvider(
-                          cxx.getBuildTarget().getUnconfiguredBuildTarget(), ""),
+                          cxx.getBuildTarget().getUnconfiguredBuildTargetView(), ""),
                       CxxToolProvider.Type.GCC,
                       ToolType.CXX,
                       false));

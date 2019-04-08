@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.rules.config;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 
 /**
  * A rule that can be used to configure a build graph.
@@ -26,6 +26,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
  */
 public interface ConfigurationRule {
 
-  /** {@link UnconfiguredBuildTarget} that identifies this rule in a graph. */
-  UnconfiguredBuildTarget getBuildTarget();
+  /** {@link UnconfiguredBuildTargetView} that identifies this rule in a graph. */
+  UnconfiguredBuildTargetView getBuildTarget();
 }

@@ -42,7 +42,7 @@ class TargetCompatibilityChecker {
         argWithTargetCompatible
             .getTargetCompatibleWith()
             .stream()
-            .map(BuildTarget::getUnconfiguredBuildTarget)
+            .map(BuildTarget::getUnconfiguredBuildTargetView)
             .map(constraintResolver::getConstraintValue)
             .collect(Collectors.toList()));
   }

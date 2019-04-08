@@ -16,7 +16,7 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 
 /** A factory that parses a given build target name using the provided {@link BuildTargetParser}. */
 public class ParsingUnconfiguredBuildTargetFactory implements UnconfiguredBuildTargetFactory {
@@ -24,18 +24,19 @@ public class ParsingUnconfiguredBuildTargetFactory implements UnconfiguredBuildT
   private final BuildTargetParser buildTargetParser = BuildTargetParser.INSTANCE;
 
   @Override
-  public UnconfiguredBuildTarget create(CellPathResolver cellPathResolver, String buildTargetName) {
+  public UnconfiguredBuildTargetView create(
+      CellPathResolver cellPathResolver, String buildTargetName) {
     return buildTargetParser.parse(cellPathResolver, buildTargetName, "", false);
   }
 
   @Override
-  public UnconfiguredBuildTarget createForBaseName(
+  public UnconfiguredBuildTargetView createForBaseName(
       CellPathResolver cellPathResolver, String baseName, String buildTargetName) {
     return buildTargetParser.parse(cellPathResolver, buildTargetName, baseName, false);
   }
 
   @Override
-  public UnconfiguredBuildTarget createWithWildcard(
+  public UnconfiguredBuildTargetView createWithWildcard(
       CellPathResolver cellPathResolver, String buildTargetName) {
     return buildTargetParser.parse(cellPathResolver, buildTargetName, "", true);
   }

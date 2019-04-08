@@ -117,7 +117,12 @@ public class DefaultParserTargetNodeFactory
     BaseDescription<?> description = knownRuleTypes.getDescription(buildRuleType);
 
     builtTargetVerifier.verifyBuildTarget(
-        cell, buildRuleType, buildFile, target.getUnconfiguredBuildTarget(), description, rawNode);
+        cell,
+        buildRuleType,
+        buildFile,
+        target.getUnconfiguredBuildTargetView(),
+        description,
+        rawNode);
 
     Preconditions.checkState(cell.equals(cell.getCell(target)));
     Object constructorArg;
@@ -140,13 +145,13 @@ public class DefaultParserTargetNodeFactory
                 cell.getCellPathResolver(),
                 "visibility",
                 rawNode.get("visibility"),
-                target.getUnconfiguredBuildTarget().getData());
+                target.getUnconfiguredBuildTargetView().getData());
         withinViewPatterns =
             VisibilityPatterns.createFromStringList(
                 cell.getCellPathResolver(),
                 "within_view",
                 rawNode.get("within_view"),
-                target.getUnconfiguredBuildTarget().getData());
+                target.getUnconfiguredBuildTargetView().getData());
       }
 
       return createTargetNodeFromObject(

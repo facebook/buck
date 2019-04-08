@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternParser;
 import java.nio.file.Path;
 
@@ -35,7 +35,7 @@ public class BuildTargetPatternTargetNodeParser extends BuildTargetPatternParser
   }
 
   @Override
-  public TargetNodeSpec createForSingleton(UnconfiguredBuildTarget target) {
+  public TargetNodeSpec createForSingleton(UnconfiguredBuildTargetView target) {
     return BuildTargetSpec.from(target);
   }
 }

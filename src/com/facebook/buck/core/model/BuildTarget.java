@@ -25,7 +25,7 @@ import javax.annotation.concurrent.ThreadSafe;
 @ThreadSafe
 public interface BuildTarget extends Comparable<BuildTarget> {
 
-  UnconfiguredBuildTarget getUnconfiguredBuildTarget();
+  UnconfiguredBuildTargetView getUnconfiguredBuildTargetView();
 
   UnflavoredBuildTargetView getUnflavoredBuildTarget();
 

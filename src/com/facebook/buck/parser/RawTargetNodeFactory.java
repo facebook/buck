@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import java.nio.file.Path;
 
@@ -34,5 +34,6 @@ public interface RawTargetNodeFactory<T> {
    * @param rawNode Raw attributes that forms the node, usually a Map where a key is attribute name
    *     as string and value is attribute value as object.
    */
-  RawTargetNode create(Cell cell, Path buildFile, UnconfiguredBuildTarget buildTarget, T rawNode);
+  RawTargetNode create(
+      Cell cell, Path buildFile, UnconfiguredBuildTargetView buildTarget, T rawNode);
 }
