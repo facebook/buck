@@ -21,6 +21,7 @@ import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -42,7 +43,7 @@ abstract class AbstractParseResult {
    * current build file.
    */
   @Value.Parameter
-  public abstract ImmutableList<String> getLoadedPaths();
+  public abstract ImmutableSet<String> getLoadedPaths();
 
   /**
    * Returns all configuration options accessed during parsing of the build file.

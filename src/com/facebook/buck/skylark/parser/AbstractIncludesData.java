@@ -17,7 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import org.immutables.value.Value;
 
 /**
@@ -32,11 +32,11 @@ abstract class AbstractIncludesData {
   @Value.Parameter
   public abstract com.google.devtools.build.lib.vfs.Path getPath();
 
-  /** @return a list of dependencies that were required to evaluate this extension */
+  /** @return a set of dependencies that were required to evaluate this extension */
   @Value.Parameter
-  public abstract ImmutableList<IncludesData> getDependencies();
+  public abstract ImmutableSet<IncludesData> getDependencies();
 
-  /** @return the list of files loaded in order to parse this extension. */
+  /** @return the set of files loaded in order to parse this extension. */
   @Value.Parameter
-  public abstract ImmutableList<String> getLoadTransitiveClosure();
+  public abstract ImmutableSet<String> getLoadTransitiveClosure();
 }
