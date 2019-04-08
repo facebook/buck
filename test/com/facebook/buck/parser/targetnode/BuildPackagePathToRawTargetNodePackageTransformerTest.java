@@ -22,7 +22,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.FakeTransformationEnvironment;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
-import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
@@ -77,8 +77,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTargetData unconfiguredBuildTarget1 =
         ImmutableUnconfiguredBuildTargetData.of(
-            ImmutableUnflavoredBuildTargetData.of(
-                cell.getCanonicalName().orElse(""), "//", "target1"),
+            ImmutableUnflavoredBuildTarget.of(cell.getCanonicalName().orElse(""), "//", "target1"),
             ImmutableSortedSet.of());
     RawTargetNode rawTargetNode1 =
         ImmutableRawTargetNode.of(
@@ -92,8 +91,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
     UnconfiguredBuildTargetData unconfiguredBuildTarget2 =
         ImmutableUnconfiguredBuildTargetData.of(
-            ImmutableUnflavoredBuildTargetData.of(
-                cell.getCanonicalName().orElse(""), "//", "target2"),
+            ImmutableUnflavoredBuildTarget.of(cell.getCanonicalName().orElse(""), "//", "target2"),
             ImmutableSortedSet.of());
     RawTargetNode rawTargetNode2 =
         ImmutableRawTargetNode.of(

@@ -17,8 +17,8 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.AbstractUnflavoredBuildTargetView;
-import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData;
-import com.facebook.buck.core.model.UnflavoredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.Interner;
@@ -31,11 +31,11 @@ import java.util.Optional;
 /** Immutable implementation of {@link UnflavoredBuildTargetView} */
 public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildTargetView {
 
-  private final UnflavoredBuildTargetData data;
+  private final UnflavoredBuildTarget data;
   private final Path cellPath;
   private final int hash;
 
-  private ImmutableUnflavoredBuildTargetView(Path cellPath, UnflavoredBuildTargetData data) {
+  private ImmutableUnflavoredBuildTargetView(Path cellPath, UnflavoredBuildTarget data) {
     this.data = data;
     this.cellPath = cellPath;
 
@@ -48,7 +48,7 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
       Interners.newWeakInterner();
 
   @Override
-  public UnflavoredBuildTargetData getData() {
+  public UnflavoredBuildTarget getData() {
     return data;
   }
 
@@ -88,18 +88,16 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   public static ImmutableUnflavoredBuildTargetView of(
       Path cellPath, Optional<String> cellName, String baseName, String shortName) {
     return of(
-        cellPath, ImmutableUnflavoredBuildTargetData.of(cellName.orElse(""), baseName, shortName));
+        cellPath, ImmutableUnflavoredBuildTarget.of(cellName.orElse(""), baseName, shortName));
   }
 
   /**
    * Create new instance of {@link UnflavoredBuildTargetView}
    *
    * @param cellPath Absolute path to the cell root that owns this build target
-   * @param data {@link UnflavoredBuildTargetData which encapsulates build target data without
-   *     flavors}
+* @param data {@link UnflavoredBuildTarget} which encapsulates build target data without flavors
    */
-  public static ImmutableUnflavoredBuildTargetView of(
-      Path cellPath, UnflavoredBuildTargetData data) {
+  public static ImmutableUnflavoredBuildTargetView of(Path cellPath, UnflavoredBuildTarget data) {
     return interner.intern(new ImmutableUnflavoredBuildTargetView(cellPath, data));
   }
 

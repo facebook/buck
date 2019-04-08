@@ -41,7 +41,7 @@ public abstract class UnconfiguredBuildTargetData
   /** Build target without flavors */
   @Value.Parameter
   @JsonProperty("unflavoredBuildTarget")
-  public abstract UnflavoredBuildTargetData getUnflavoredBuildTarget();
+  public abstract UnflavoredBuildTarget getUnflavoredBuildTarget();
 
   /** Set of flavors used with that build target. */
   @Value.Parameter

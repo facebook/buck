@@ -24,7 +24,7 @@ import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTargetData;
-import com.facebook.buck.core.model.ImmutableUnflavoredBuildTargetData;
+import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetData;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
@@ -152,7 +152,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
       BuildTargetToRawTargetNodeKey depkey =
           ImmutableBuildTargetToRawTargetNodeKey.of(
               ImmutableUnconfiguredBuildTargetData.of(
-                  ImmutableUnflavoredBuildTargetData.of(
+                  ImmutableUnflavoredBuildTarget.of(
                       cell.getCanonicalName().orElse(""), baseName, target),
                   ImmutableSortedSet.of()));
       builder.add(depkey);

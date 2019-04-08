@@ -25,10 +25,20 @@ import org.immutables.value.Value;
 
 /**
  * Data object that holds properties to uniquely identify a build target when no flavors are used
+ *
+ * <p>In other words, this represents a parsed representation of a build target without flavors or
+ * configuration.
+ *
+ * <p>For example, a fully qualified target name like `cell//path/to:target` parses `cell` as a cell
+ * name, `//path/to` as a base name that corresponds to the real path to the build file that
+ * contains a target and `target` is a target name found in that build file
+ *
+ * <p>This class is rarely used along, but usually as a part of {@link UnconfiguredBuildTargetData}
+ * which adds flavors to it. In the future both of them will be probably merged into one.
  */
 @Value.Immutable(builder = false, copy = false, prehash = true)
 @JsonDeserialize
-public abstract class UnflavoredBuildTargetData implements Comparable<UnflavoredBuildTargetData> {
+public abstract class UnflavoredBuildTarget implements Comparable<UnflavoredBuildTarget> {
 
   private static final String BUILD_TARGET_PREFIX = "//";
 
@@ -69,6 +79,10 @@ public abstract class UnflavoredBuildTargetData implements Comparable<Unflavored
   /** Performs validation of input data */
   @Value.Check
   protected void check() {
+
+    // this check is not always required but may be expensive
+    // TODO(buck_team): only validate data if provided as a user input
+
     Preconditions.checkArgument(
         getBaseName().startsWith(BUILD_TARGET_PREFIX),
         "baseName must start with %s but was %s",
@@ -84,7 +98,7 @@ public abstract class UnflavoredBuildTargetData implements Comparable<Unflavored
   }
 
   @Override
-  public int compareTo(UnflavoredBuildTargetData o) {
+  public int compareTo(UnflavoredBuildTarget o) {
     return ComparisonChain.start()
         .compare(getCell(), o.getCell())
         .compare(getBaseName(), o.getBaseName())
