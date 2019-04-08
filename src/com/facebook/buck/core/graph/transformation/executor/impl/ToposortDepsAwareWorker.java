@@ -64,7 +64,7 @@ class ToposortDepsAwareWorker<T> extends AbstractDepsAwareWorker<ToposortBasedDe
     ImmutableSet<? extends ToposortBasedDepsAwareTask<T>> prereqs;
     try {
       prereqs = task.getPrereqs();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       task.getFuture().completeExceptionally(e);
       return true;
     }
@@ -72,8 +72,8 @@ class ToposortDepsAwareWorker<T> extends AbstractDepsAwareWorker<ToposortBasedDe
     ImmutableList<ToposortBasedDepsAwareTask<T>> notDoneTasks;
     try {
       notDoneTasks = checkTasksReadyOrReschedule(prereqs);
-    } catch (ExecutionException e) {
-      completeWithException(task, e.getCause());
+    } catch (Throwable e) {
+      completeWithException(task, e);
       return true;
     }
 
@@ -91,15 +91,15 @@ class ToposortDepsAwareWorker<T> extends AbstractDepsAwareWorker<ToposortBasedDe
     ImmutableSet<? extends ToposortBasedDepsAwareTask<T>> deps;
     try {
       deps = task.getDependencies();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       task.getFuture().completeExceptionally(e);
       return true;
     }
 
     try {
       notDoneTasks = checkTasksReadyOrReschedule(deps);
-    } catch (ExecutionException e) {
-      completeWithException(task, e.getCause());
+    } catch (Throwable e) {
+      completeWithException(task, e);
       return true;
     }
 

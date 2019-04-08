@@ -50,6 +50,8 @@ abstract class AbstractDepsAwareExecutor<T, TaskType extends AbstractDepsAwareTa
       worker.loopForever();
     } catch (InterruptedException e) {
       LOG.info("Worker was interrupted");
+    } catch (Throwable e) {
+      LOG.error(e, "Unexpected Error occurred in DepsAwareExecutor");
     }
   }
 

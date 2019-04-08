@@ -70,15 +70,15 @@ class DefaultDepsAwareWorkerWithLocalStack<T>
     ImmutableSet<DefaultDepsAwareTask<T>> prereqs;
     try {
       prereqs = task.getPrereqs();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       completeWithException(task, e);
       return true;
     }
     boolean prereqsDone;
     try {
       prereqsDone = checkTasksReadyOrSchedule(prereqs);
-    } catch (ExecutionException e) {
-      completeWithException(task, e.getCause());
+    } catch (Throwable e) {
+      completeWithException(task, e);
       return true;
     }
 
@@ -92,7 +92,7 @@ class DefaultDepsAwareWorkerWithLocalStack<T>
     ImmutableSet<DefaultDepsAwareTask<T>> deps;
     try {
       deps = task.getDependencies();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       completeWithException(task, e);
       return true;
     }
@@ -100,8 +100,8 @@ class DefaultDepsAwareWorkerWithLocalStack<T>
     boolean depsDone;
     try {
       depsDone = checkTasksReadyOrSchedule(deps);
-    } catch (ExecutionException e) {
-      completeWithException(task, e.getCause());
+    } catch (Throwable e) {
+      completeWithException(task, e);
       return true;
     }
 

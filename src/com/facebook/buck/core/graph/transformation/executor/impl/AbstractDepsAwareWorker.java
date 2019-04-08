@@ -66,6 +66,9 @@ abstract class AbstractDepsAwareWorker<TaskType extends AbstractDepsAwareTask<?,
   }
 
   protected void completeWithException(TaskType task, Throwable e) {
+    if (e instanceof ExecutionException) {
+      e = e.getCause();
+    }
     task.getFuture().completeExceptionally(e);
     Verify.verify(task.compareAndSetStatus(TaskStatus.STARTED, TaskStatus.DONE));
   }

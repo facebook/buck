@@ -46,7 +46,7 @@ abstract class AbstractDepsAwareTask<T, TaskType extends AbstractDepsAwareTask<T
     try {
       Preconditions.checkState(status.get() == TaskStatus.STARTED);
       result.complete(getCallable().call());
-    } catch (Exception e) {
+    } catch (Throwable e) {
       result.completeExceptionally(e);
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
