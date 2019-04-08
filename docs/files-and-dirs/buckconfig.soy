@@ -1355,31 +1355,6 @@ artifact_cache_size_limit = 52428800
 
 {call buckconfig.entry}
   {param section: 'cache' /}
-  {param name: 'dir_max_size' /}
-  {param example_value: '10GB' /}
-  {param description}
-    The maximum cache size for directory-based caching.  The default size is unlimited.
-    <p>
-      {call buckconfig.cache_mode /} must contain <code>dir</code>.
-    </p>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'dir_mode' /}
-  {param example_value: 'readwrite' /}
-  {param description}
-    Dictates if the cache is <code>readonly</code>, <code>passthrough</code>, or
-    {sp}<code>readwrite</code> (default) when using directory-based caching.
-    <p>
-      {call buckconfig.cache_mode /} must contain <code>dir</code>.
-    </p>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
   {param name: 'dir_cache_names' /}
   {param description}
     A comma-separated list of names used to configure multiple dir caches.  The caches will be used{sp}
@@ -1407,6 +1382,57 @@ artifact_cache_size_limit = 52428800
     dir = ~/buck_cache
     dir_mode = readwrite
 </pre>{/literal}
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'dir_max_size' /}
+  {param example_value: '10GB' /}
+  {param description}
+    The maximum cache size for directory-based caching.  The default size is unlimited.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'dir_mode' /}
+  {param example_value: 'readwrite' /}
+  {param description}
+    Dictates if the cache is <code>readonly</code>, <code>passthrough</code>, or
+    {sp}<code>readwrite</code> (default) when using directory-based caching.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'serve_local_cache' /}
+  {param example_value: 'false' /}
+  {param description}
+    Make the directory-based cache available to other hosts on the network 
+    via Buck's HTTP server (enabled under{sp} {call buckconfig.httpserver /}).
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'cache' /}
+  {param name: 'served_local_cache_mode' /}
+  {param example_value: 'readwrite' /}
+  {param description}
+    Dictates if the cache is <code>readonly</code> (default) or <code>readwrite</code> when{sp}
+    {call buckconfig.cache_serve_local_cache /} is enabled.
+    <p>
+      {call buckconfig.cache_mode /} must contain <code>dir</code>.
+    </p>
   {/param}
 {/call}
 
@@ -1667,32 +1693,6 @@ artifact_cache_size_limit = 52428800
   The HTTP endpoint to call if using {call buck.concept_link}{param page:'http_cache_api' /}{param name:'Thrift over HTTP Cache API' /}{param navid:'thrift_http' /}{/call}. 
     <p>
       {call buckconfig.cache_mode /} must contain <code>thrift_over_http</code>.
-    </p>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'serve_local_cache' /}
-  {param example_value: 'false' /}
-  {param description}
-    Make the directory-based cache available to other hosts on the network 
-    via Buck's HTTP server (enabled under{sp} {call buckconfig.httpserver /}).
-    <p>
-      {call buckconfig.cache_mode /} must contain <code>dir</code>.
-    </p>
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'cache' /}
-  {param name: 'served_local_cache_mode' /}
-  {param example_value: 'readwrite' /}
-  {param description}
-    Dictates if the cache is <code>readonly</code> (default) or <code>readwrite</code> when{sp}
-    {call buckconfig.cache_serve_local_cache /} is enabled.
-    <p>
-      {call buckconfig.cache_mode /} must contain <code>dir</code>.
     </p>
   {/param}
 {/call}
