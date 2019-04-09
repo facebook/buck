@@ -89,6 +89,7 @@ import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
+import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -116,7 +117,8 @@ public class AppleLibraryDescription
             AppleLibraryDescription.AbstractAppleLibraryDescriptionArg>,
         ImplicitFlavorsInferringDescription,
         MetadataProvidingDescription<AppleLibraryDescriptionArg>,
-        CxxLibraryDescriptionDelegate {
+        CxxLibraryDescriptionDelegate,
+        VersionPropagator<AppleLibraryDescriptionArg> {
 
   @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS =
@@ -1042,7 +1044,8 @@ public class AppleLibraryDescription
   // CxxLibraryDescriptionDelegate
 
   private static boolean targetContainsSwift(BuildTarget target, ActionGraphBuilder graphBuilder) {
-    BuildTarget metadataTarget = target.withFlavors(MetadataType.APPLE_SWIFT_METADATA.getFlavor());
+    BuildTarget metadataTarget =
+        target.withAppendedFlavors(MetadataType.APPLE_SWIFT_METADATA.getFlavor());
     Optional<AppleLibrarySwiftMetadata> metadata =
         graphBuilder.requireMetadata(metadataTarget, AppleLibrarySwiftMetadata.class);
     return metadata.map(m -> !m.getSwiftSources().isEmpty()).orElse(false);
