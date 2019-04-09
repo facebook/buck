@@ -311,8 +311,10 @@ public class AppleCxxPlatforms {
 
     // https://github.com/facebook/buck/pull/1168: add the root cell's absolute path to the quote
     // include path, and also force it to be sanitized by all user rule keys.
-    sanitizerPaths.put(filesystem.getRootPath(), ".");
-    cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
+    if (appleConfig.addCellPathToIquotePath()) {
+      sanitizerPaths.put(filesystem.getRootPath(), ".");
+      cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
+    }
 
     DebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(
