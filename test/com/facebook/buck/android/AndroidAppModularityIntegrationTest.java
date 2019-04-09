@@ -16,7 +16,6 @@
 
 package com.facebook.buck.android;
 
-
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
@@ -24,6 +23,7 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,6 +65,31 @@ public class AndroidAppModularityIntegrationTest extends AbiCompilationModeTest 
     String actual = workspace.getFileContents(result);
 
     Assert.assertEquals(expected, actual);
+    Path jar =
+        workspace
+            .getDestPath()
+            .resolve(
+                "buck-out/gen/java/com/sample/small/lib__small_with_no_resource_deps__output/small_with_no_resource_deps.jar");
+    Assert.assertTrue(Files.exists(jar));
+  }
+
+  @Test
+  public void testAppModularityMetadataNoClasses() throws IOException {
+    String target = "//apps/multidex:modularity-metadata-no-classes";
+    Path result = workspace.buildAndReturnOutput(target);
+
+    String expected =
+        workspace.getFileContents(testdataDir.resolve("testAppModularityMetadataNoClasses.txt"));
+
+    String actual = workspace.getFileContents(result);
+    Assert.assertEquals(expected, actual);
+
+    Path jar =
+        workspace
+            .getDestPath()
+            .resolve(
+                "buck-out/gen/java/com/sample/small/lib__small_with_no_resource_deps__output/small_with_no_resource_deps.jar");
+    Assert.assertFalse(Files.exists(jar));
   }
 
   @Test
