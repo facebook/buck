@@ -57,11 +57,14 @@ public class SwiftPlatformFactory {
     ApplePlatformType platformType = ApplePlatformType.of(platformName);
     if (platformType == ApplePlatformType.MAC) {
       return ImmutableList.of(
+          Paths.get("/usr/lib/swift"),
           Paths.get("@executable_path", "..", "Frameworks"),
           Paths.get("@loader_path", "..", "Frameworks"));
     }
 
     return ImmutableList.of(
-        Paths.get("@executable_path", "Frameworks"), Paths.get("@loader_path", "Frameworks"));
+        Paths.get("/usr/lib/swift"),
+        Paths.get("@executable_path", "Frameworks"),
+        Paths.get("@loader_path", "Frameworks"));
   }
 }

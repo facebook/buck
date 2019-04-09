@@ -6060,13 +6060,14 @@ public class ProjectGeneratorTest {
     ImmutableMap<String, String> buildSettings = getBuildSettings(binBuildTarget, target, "Debug");
     assertThat(
         buildSettings.get("LD_RUNPATH_SEARCH_PATHS[sdk=iphoneos*]"),
-        equalTo("$(inherited) @executable_path/Frameworks @loader_path/Frameworks"));
+        equalTo("$(inherited) /usr/lib/swift @executable_path/Frameworks @loader_path/Frameworks"));
     assertThat(
         buildSettings.get("LD_RUNPATH_SEARCH_PATHS[sdk=iphonesimulator*]"),
-        equalTo("$(inherited) @executable_path/Frameworks @loader_path/Frameworks"));
+        equalTo("$(inherited) /usr/lib/swift @executable_path/Frameworks @loader_path/Frameworks"));
     assertThat(
         buildSettings.get("LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]"),
-        equalTo("$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks"));
+        equalTo(
+            "$(inherited) /usr/lib/swift @executable_path/../Frameworks @loader_path/../Frameworks"));
   }
 
   @Test
@@ -6098,13 +6099,14 @@ public class ProjectGeneratorTest {
         containsString("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME"));
     assertThat(
         buildSettings.get("LD_RUNPATH_SEARCH_PATHS[sdk=iphoneos*]"),
-        equalTo("$(inherited) @executable_path/Frameworks @loader_path/Frameworks"));
+        equalTo("$(inherited) /usr/lib/swift @executable_path/Frameworks @loader_path/Frameworks"));
     assertThat(
         buildSettings.get("LD_RUNPATH_SEARCH_PATHS[sdk=iphonesimulator*]"),
-        equalTo("$(inherited) @executable_path/Frameworks @loader_path/Frameworks"));
+        equalTo("$(inherited) /usr/lib/swift @executable_path/Frameworks @loader_path/Frameworks"));
     assertThat(
         buildSettings.get("LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]"),
-        equalTo("$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks"));
+        equalTo(
+            "$(inherited) /usr/lib/swift @executable_path/../Frameworks @loader_path/../Frameworks"));
   }
 
   @Test

@@ -77,6 +77,10 @@ public class SwiftNativeLinkableTest {
             "-Xlinker",
             "-rpath",
             "-Xlinker",
+            "/usr/lib/swift",
+            "-Xlinker",
+            "-rpath",
+            "-Xlinker",
             "@executable_path/Frameworks",
             "-Xlinker",
             "-rpath",
@@ -98,6 +102,10 @@ public class SwiftNativeLinkableTest {
     assertEquals(
         Arg.stringify(sharedArgs, sourcePathResolver),
         ImmutableList.of(
+            "-Xlinker",
+            "-rpath",
+            "-Xlinker",
+            "/usr/lib/swift",
             "-Xlinker",
             "-rpath",
             "-Xlinker",
