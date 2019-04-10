@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 /** Provides output lines to the console about the current state of Remote Execution. */
 public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLineProvider {
@@ -70,11 +71,14 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
               statsProvider.getCasDownloads(),
               prettyPrintSize(statsProvider.getCasDownloadSizeBytes()));
       lines.add(casLine);
-    } else if (statsProvider.getRemoteCpuTime() > 0) {
+    } else if (statsProvider.getRemoteCpuTimeMs() > 0) {
+      long remoteMs = statsProvider.getRemoteCpuTimeMs();
+      long minutes = TimeUnit.MILLISECONDS.toMinutes(remoteMs);
       lines.add(
           String.format(
               "Building with Remote Execution [RE]. Used %d:%02d minutes of distributed CPU time.",
-              statsProvider.getRemoteCpuTime() / 60, statsProvider.getRemoteCpuTime() % 60));
+              minutes,
+              TimeUnit.MILLISECONDS.toSeconds(remoteMs) - TimeUnit.MINUTES.toSeconds(minutes)));
     }
     LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
     if (localFallbackStats.getLocallyExecutedRules() > 0) {

@@ -174,8 +174,8 @@ public class RemoteExecutionConsoleLineProviderTest {
     }
 
     @Override
-    public long getRemoteCpuTime() {
-      return 65;
+    public long getRemoteCpuTimeMs() {
+      return 65 * 1000;
     }
   }
 }

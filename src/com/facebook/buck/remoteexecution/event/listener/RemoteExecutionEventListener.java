@@ -29,9 +29,12 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
+import com.google.protobuf.Duration;
+import com.google.protobuf.util.Timestamps;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
@@ -111,9 +114,13 @@ public class RemoteExecutionEventListener
     getStateCount(State.WAITING).decrement();
     getStateCount(event.getState()).increment();
     if (event.getExecutedActionMetadata().isPresent()) {
+      Duration duration =
+          Timestamps.between(
+              event.getExecutedActionMetadata().get().getExecutionStartTimestamp(),
+              event.getExecutedActionMetadata().get().getExecutionCompletedTimestamp());
       remoteCpuTime.add(
-          event.getExecutedActionMetadata().get().getExecutionCompletedTimestamp().getSeconds()
-              - event.getExecutedActionMetadata().get().getExecutionStartTimestamp().getSeconds());
+          TimeUnit.SECONDS.toMillis(duration.getSeconds())
+              + TimeUnit.NANOSECONDS.toMillis(duration.getNanos()));
     }
   }
 
@@ -195,7 +202,7 @@ public class RemoteExecutionEventListener
   }
 
   @Override
-  public long getRemoteCpuTime() {
+  public long getRemoteCpuTimeMs() {
     return remoteCpuTime.sum();
   }
 }
