@@ -86,7 +86,7 @@ Buck File
                                             BuckPowerExpressionImpl(POWER_EXPRESSION)
                                               BuckAtomicExpressionImpl(ATOMIC_EXPRESSION)
                                                 BuckIdentifierImpl(IDENTIFIER)
-                                                  PsiElement(BuckTokenType.IDENTIFIER_TOKEN)('    qux')
+                                                  PsiElement(BuckTokenType.IDENTIFIER_TOKEN)('qux')
                   PsiElement(BuckTokenType.=)('=')
                   BuckExpressionListImpl(EXPRESSION_LIST)
                     BuckExpressionImpl(EXPRESSION)

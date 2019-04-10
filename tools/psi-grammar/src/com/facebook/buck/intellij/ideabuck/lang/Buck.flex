@@ -220,6 +220,7 @@ IDENTIFIER_TOKEN=[a-zA-Z_]([a-zA-Z0-9_])*
                                   return DEDENT;
                                 } else {
                                   yybegin(YYINITIAL);
+                                  return WHITE_SPACE;
                                 }
                               }
   <<EOF>>                     {
