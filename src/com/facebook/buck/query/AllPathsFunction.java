@@ -33,11 +33,12 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
-import com.facebook.buck.util.MoreSets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -90,7 +91,7 @@ public class AllPathsFunction implements QueryFunction<QueryBuildTarget, QueryBu
     env.buildTransitiveClosure(fromSet, Integer.MAX_VALUE);
 
     Set<QueryBuildTarget> reachableFromX = env.getTransitiveClosure(fromSet);
-    Set<QueryBuildTarget> result = MoreSets.intersection(reachableFromX, toSet);
+    Set<QueryBuildTarget> result = intersection(reachableFromX, toSet);
     Collection<QueryBuildTarget> worklist = result;
     while (!worklist.isEmpty()) {
       Collection<QueryBuildTarget> reverseDeps = env.getReverseDeps(worklist);
@@ -102,5 +103,19 @@ public class AllPathsFunction implements QueryFunction<QueryBuildTarget, QueryBu
       }
     }
     return ImmutableSet.copyOf(result);
+  }
+
+  /**
+   * Returns a new and mutable set containing the intersection of the two specified sets. Using the
+   * smaller of the two sets as the base for finding the intersection for performance reasons.
+   */
+  private static <T> Set<T> intersection(Set<T> x, Set<T> y) {
+    Set<T> result = new LinkedHashSet<>();
+    if (x.size() > y.size()) {
+      Sets.intersection(y, x).copyInto(result);
+    } else {
+      Sets.intersection(x, y).copyInto(result);
+    }
+    return result;
   }
 }
