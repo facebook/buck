@@ -123,8 +123,7 @@ public class InstallTriggerIntegrationTest {
         super(buildTarget, projectFilesystem);
         trigger = new InstallTrigger(projectFilesystem);
         inputs =
-            buildDeps
-                .stream()
+            buildDeps.stream()
                 .map(BuildRule::getSourcePathToOutput)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
         this.buildDeps = buildDeps;

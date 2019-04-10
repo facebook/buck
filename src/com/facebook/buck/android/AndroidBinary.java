@@ -367,9 +367,7 @@ public class AndroidBinary extends AbstractBuildRule
   @Override
   public ImmutableSet<JavaLibrary> getTransitiveClasspathDeps() {
     return JavaLibraryClasspathProvider.getClasspathDeps(
-        enhancementResult
-            .getClasspathEntriesToDex()
-            .stream()
+        enhancementResult.getClasspathEntriesToDex().stream()
             .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
             .collect(ImmutableSet.toImmutableSet()));
   }

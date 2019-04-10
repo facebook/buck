@@ -119,8 +119,7 @@ public class CgoLibraryDescription
       Preconditions.checkState(platform.isPresent());
 
       ImmutableList<BuildTarget> nonCxxDeps =
-          args.getDeps()
-              .stream()
+          args.getDeps().stream()
               .filter(target -> !(graphBuilder.requireRule(target) instanceof NativeLinkable))
               .collect(ImmutableList.toImmutableList());
 
@@ -154,10 +153,7 @@ public class CgoLibraryDescription
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
       ImmutableList<BuildTarget> cxxDeps =
-          params
-              .getDeclaredDeps()
-              .get()
-              .stream()
+          params.getDeclaredDeps().get().stream()
               .filter(rule -> rule instanceof NativeLinkable)
               .map(BuildRule::getBuildTarget)
               .collect(ImmutableList.toImmutableList());
@@ -179,10 +175,7 @@ public class CgoLibraryDescription
                   platform.get().getCGo());
 
       ImmutableList<BuildTarget> nonCxxDeps =
-          params
-              .getDeclaredDeps()
-              .get()
-              .stream()
+          params.getDeclaredDeps().get().stream()
               .filter(rule -> !(rule instanceof NativeLinkable))
               .map(BuildRule::getBuildTarget)
               .collect(ImmutableList.toImmutableList());
@@ -256,8 +249,7 @@ public class CgoLibraryDescription
   }
 
   private static ImmutableList<StringWithMacros> wrapFlags(ImmutableList<String> flags) {
-    return flags
-        .stream()
+    return flags.stream()
         .map(flag -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag))))
         .collect(ImmutableList.toImmutableList());
   }

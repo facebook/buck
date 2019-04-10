@@ -228,9 +228,7 @@ public class AppleCxxPlatforms {
     versions.add(targetSdk.getVersion());
 
     ImmutableList<String> toolchainVersions =
-        targetSdk
-            .getToolchains()
-            .stream()
+        targetSdk.getToolchains().stream()
             .map(AppleToolchain::getVersion)
             .flatMap(Optionals::toStream)
             .collect(ImmutableList.toImmutableList());

@@ -54,8 +54,7 @@ public class BuildLogHelperIntegrationTest {
   public void testBuildCommand() throws Exception {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
     ImmutableMap<BuildId, String> buildIdToCommandMap =
-        buildLogs
-            .stream()
+        buildLogs.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     e -> e.getBuildId().get(), e -> Joiner.on(" ").join(e.getCommandArgs().get())));
@@ -72,8 +71,7 @@ public class BuildLogHelperIntegrationTest {
   public void testBuildDuration() throws Exception {
     ImmutableList<BuildLogEntry> buildLogs = buildLogHelper.getBuildLogs();
     ImmutableMap<BuildId, OptionalInt> buildIdToCommandMap =
-        buildLogs
-            .stream()
+        buildLogs.stream()
             .collect(
                 ImmutableMap.toImmutableMap(e -> e.getBuildId().get(), e -> e.getBuildTimeMs()));
 

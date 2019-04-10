@@ -76,10 +76,7 @@ public class CGoGenSource extends AbstractBuildRule {
     this.platform = platform;
     this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen/");
     this.headerLinkTreeMap =
-        headerSymlinkTree
-            .getLinks()
-            .entrySet()
-            .stream()
+        headerSymlinkTree.getLinks().entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     e -> e.getKey().toString(),
@@ -136,8 +133,7 @@ public class CGoGenSource extends AbstractBuildRule {
             cgo.getEnvironment(context.getSourcePathResolver()),
             cgo.getCommandPrefix(context.getSourcePathResolver()),
             cgoCompilerFlags,
-            cgoSrcs
-                .stream()
+            cgoSrcs.stream()
                 .map(context.getSourcePathResolver()::getRelativePath)
                 .collect(ImmutableList.toImmutableList()),
             includeDirs,

@@ -65,15 +65,11 @@ public class AuditRuleTypeCommand extends AbstractCommand {
             typeCoercerFactory, description.getConstructorArgType());
     String name = DescriptionCache.getRuleType(description).getName();
     printStream.println("def " + name + " (");
-    allParamInfo
-        .values()
-        .stream()
+    allParamInfo.values().stream()
         .filter(param -> !param.isOptional())
         .sorted()
         .forEach(formatPythonFunction(printStream));
-    allParamInfo
-        .values()
-        .stream()
+    allParamInfo.values().stream()
         .filter(ParamInfo::isOptional)
         .sorted()
         .forEach(formatPythonFunction(printStream));

@@ -174,8 +174,7 @@ abstract class GoDescriptors {
         getPackageImportMap(
             goBuckConfig.getVendorPaths(),
             buildTarget.getBasePath(),
-            linkables
-                .stream()
+            linkables.stream()
                 .flatMap(input -> input.getGoLinkInput().keySet().stream())
                 .collect(ImmutableList.toImmutableList())),
         srcs,
@@ -329,10 +328,7 @@ abstract class GoDescriptors {
             compilerFlags,
             assemblerFlags,
             platform,
-            params
-                .getDeclaredDeps()
-                .get()
-                .stream()
+            params.getDeclaredDeps().get().stream()
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
             ImmutableList.of(),
@@ -353,10 +349,7 @@ abstract class GoDescriptors {
                 buildTarget,
                 graphBuilder,
                 platform,
-                params
-                    .getDeclaredDeps()
-                    .get()
-                    .stream()
+                params.getDeclaredDeps().get().stream()
                     .map(BuildRule::getBuildTarget)
                     .collect(ImmutableList.toImmutableList()),
                 /* includeSelf */ false));
@@ -587,8 +580,7 @@ abstract class GoDescriptors {
     ImmutableMap<Path, SourcePath> treeMap;
     try {
       treeMap =
-          linkables
-              .stream()
+          linkables.stream()
               .flatMap(linkable -> linkable.getGoLinkInput().entrySet().stream())
               .collect(
                   ImmutableMap.toImmutableMap(

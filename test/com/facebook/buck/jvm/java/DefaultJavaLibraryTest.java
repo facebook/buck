@@ -1356,8 +1356,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .orElse(DEFAULT_JAVAC_OPTIONS);
 
     JavaLibraryDeps.Builder depsBuilder = new JavaLibraryDeps.Builder(graphBuilder);
-    exportedDeps
-        .stream()
+    exportedDeps.stream()
         .peek(graphBuilder::addToIndex)
         .map(BuildRule::getBuildTarget)
         .forEach(depsBuilder::addExportedDepTargets);

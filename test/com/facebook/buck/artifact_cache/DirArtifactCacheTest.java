@@ -338,8 +338,7 @@ public class DirArtifactCacheTest {
     assertEquals(6, cachedFiles.size());
 
     ImmutableSet<String> filenames =
-        cachedFiles
-            .stream()
+        cachedFiles.stream()
             .map(input -> input.getFileName().toString())
             .collect(ImmutableSet.toImmutableSet());
 
@@ -444,8 +443,7 @@ public class DirArtifactCacheTest {
     assertEquals(6, cachedFiles.size());
 
     ImmutableSet<String> filenames =
-        cachedFiles
-            .stream()
+        cachedFiles.stream()
             .map(input -> input.getFileName().toString())
             .collect(ImmutableSet.toImmutableSet());
 
@@ -499,8 +497,7 @@ public class DirArtifactCacheTest {
         ImmutableList.of(CacheResultType.MISS, CacheResultType.MISS, CacheResultType.MISS),
         Futures.getUnchecked(
                 dirArtifactCache.multiContainsAsync(ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)))
-            .values()
-            .stream()
+            .values().stream()
             .map(CacheResult::getType)
             .collect(ImmutableList.toImmutableList()));
 
@@ -523,8 +520,7 @@ public class DirArtifactCacheTest {
             CacheResultType.CONTAINS, CacheResultType.CONTAINS, CacheResultType.CONTAINS),
         Futures.getUnchecked(
                 dirArtifactCache.multiContainsAsync(ImmutableSet.of(ruleKeyX, ruleKeyY, ruleKeyZ)))
-            .values()
-            .stream()
+            .values().stream()
             .map(CacheResult::getType)
             .collect(ImmutableList.toImmutableList()));
   }

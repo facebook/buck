@@ -69,11 +69,8 @@ public class NativeGlobber implements Globber {
    */
   private static ImmutableSet<String> resolvePathsMatchingGlobPatterns(
       Collection<String> patterns, Path basePath, boolean excludeDirectories) throws IOException {
-    return UnixGlob.forPath(basePath)
-        .addPatterns(patterns)
-        .setExcludeDirectories(excludeDirectories)
-        .glob()
-        .stream()
+    return UnixGlob.forPath(basePath).addPatterns(patterns)
+        .setExcludeDirectories(excludeDirectories).glob().stream()
         .map(includePath -> includePath.relativeTo(basePath).getPathString())
         .collect(ImmutableSet.toImmutableSet());
   }

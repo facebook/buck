@@ -295,9 +295,7 @@ class TreeBackedElements extends ElementsExtendedImpl {
   @Override
   public List<? extends Element> getAllMembers(TypeElement type) {
     if (type instanceof TreeBackedTypeElement) {
-      return javacElements
-          .getAllMembers(getJavacElement(type))
-          .stream()
+      return javacElements.getAllMembers(getJavacElement(type)).stream()
           .map(this::getCanonicalElement)
           .collect(Collectors.toList());
     }

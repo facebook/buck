@@ -155,8 +155,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
             .build();
 
     Set<File> compilerIdPaths =
-        compilerClassPath
-            .stream()
+        compilerClassPath.stream()
             .map(p -> ((PathSourcePath) p).getRelativePath())
             .map(Path::toFile)
             .collect(Collectors.toSet());
@@ -196,8 +195,7 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
           classLoaderCache.getClassLoaderForClassPath(
               SynchronizedToolProvider.getSystemToolClassLoader(),
               ImmutableList.copyOf(
-                  compilerClassPath
-                      .stream()
+                  compilerClassPath.stream()
                       .map(p -> ((PathSourcePath) p).getRelativePath())
                       .map(PATH_TO_URL)
                       .iterator()));

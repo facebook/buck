@@ -153,9 +153,7 @@ public class TreeBackedProcessorWrapperTest {
         });
 
     assertThat(
-        testCompiler
-            .getDiagnosticMessages()
-            .stream()
+        testCompiler.getDiagnosticMessages().stream()
             .map(message -> message.substring(message.indexOf("Foo.java")))
             .collect(Collectors.toList()),
         Matchers.contains(

@@ -148,8 +148,7 @@ public class WatchmanGlobber {
         ImmutableList.builder()
             .add("anyof")
             .addAll(
-                exclude
-                    .stream()
+                exclude.stream()
                     .map(e -> ImmutableList.of("match", e, "wholename"))
                     .collect(Collectors.toList()))
             .build());

@@ -111,10 +111,7 @@ public class AndroidResourceDescription
 
     // Only allow android resource and library rules as dependencies.
     Optional<BuildRule> invalidDep =
-        params
-            .getDeclaredDeps()
-            .get()
-            .stream()
+        params.getDeclaredDeps().get().stream()
             .filter(rule -> !(rule instanceof AndroidResource || rule instanceof AndroidLibrary))
             .findFirst();
     if (invalidDep.isPresent()) {

@@ -196,16 +196,14 @@ public class ResourcesFilter extends AbstractBuildRule
 
     ImmutableList.Builder<Path> filteredResDirectoriesBuilder = ImmutableList.builder();
     ImmutableSet<Path> whitelistedStringPaths =
-        whitelistedStringDirs
-            .stream()
+        whitelistedStringDirs.stream()
             .map(
                 sourcePath ->
                     getProjectFilesystem()
                         .relativize(context.getSourcePathResolver().getAbsolutePath(sourcePath)))
             .collect(ImmutableSet.toImmutableSet());
     ImmutableList<Path> resPaths =
-        resDirectories
-            .stream()
+        resDirectories.stream()
             .map(
                 sourcePath ->
                     getProjectFilesystem()
@@ -376,9 +374,7 @@ public class ResourcesFilter extends AbstractBuildRule
   @Override
   public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
     ImmutableList<Path> stringFiles =
-        getProjectFilesystem()
-            .readLines(getStringFilesPath())
-            .stream()
+        getProjectFilesystem().readLines(getStringFilesPath()).stream()
             .map(Paths::get)
             .collect(ImmutableList.toImmutableList());
     return new BuildOutput(stringFiles);

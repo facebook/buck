@@ -85,9 +85,7 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
                     .runAction(
                         command.getCommand(),
                         command.getEnvironment(),
-                        command
-                            .getOutputDirectories()
-                            .stream()
+                        command.getOutputDirectories().stream()
                             .map(Paths::get)
                             .collect(ImmutableSet.toImmutableSet()),
                         buildDir);

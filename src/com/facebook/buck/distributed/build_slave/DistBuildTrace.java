@@ -81,9 +81,7 @@ public class DistBuildTrace {
     // Collect all RuleTrace(s) into a map by name, picking the entries that finished later,
     // if there are multiple entries for the same name.
     Map<String, RuleTrace> traceMap =
-        rulesByMinionId
-            .values()
-            .stream()
+        rulesByMinionId.values().stream()
             .flatMap(List::stream)
             .collect(
                 Collectors.toMap(
@@ -167,8 +165,7 @@ public class DistBuildTrace {
     }
 
     void recordItems(List<RuleTrace> rules) {
-      rules
-          .stream()
+      rules.stream()
           .sorted(Comparator.comparingLong(rule -> rule.startEpochMillis))
           .sequential()
           .forEach(

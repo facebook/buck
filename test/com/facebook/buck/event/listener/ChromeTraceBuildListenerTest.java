@@ -321,9 +321,7 @@ public class ChromeTraceBuildListenerTest {
     managerScope.close();
 
     ImmutableList<String> files =
-        projectFilesystem
-            .getDirectoryContents(invocationInfo.getLogDirectoryPath())
-            .stream()
+        projectFilesystem.getDirectoryContents(invocationInfo.getLogDirectoryPath()).stream()
             .filter(i -> i.toString().endsWith(".trace"))
             .map(path -> path.getFileName().toString())
             .collect(ImmutableList.toImmutableList());

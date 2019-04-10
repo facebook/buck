@@ -143,8 +143,7 @@ public class ExopackageSymlinkTree {
     // so we extract the set of parent folder names for all the objects.
     return ExopackageInstaller.parseExopackageInfoMetadata(
             metadataPath, MorePaths.EMPTY_PATH, filesystem)
-        .values()
-        .stream()
+        .values().stream()
         .map(path -> path.getParent().getFileName().toString())
         .collect(ImmutableSet.toImmutableSet())
         .asList();

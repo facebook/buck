@@ -88,8 +88,7 @@ public interface Kotlinc extends Tool {
                     projectFilesystem.resolve(workingDirectory.orElse(path)),
                     ExistingFileMode.OVERWRITE);
         sources.addAll(
-            zipPaths
-                .stream()
+            zipPaths.stream()
                 .filter(
                     input ->
                         input.toString().endsWith(".kt")

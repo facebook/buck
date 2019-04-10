@@ -98,8 +98,7 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
         .addArray("entryPoints", entryPoints.stream().collect(JsonBuilder.toArrayOfStrings()))
         .addArray(
             "libraries",
-            libraries
-                .stream()
+            libraries.stream()
                 .map(sourcePathResolver::getAbsolutePath)
                 .map(Path::toString)
                 .collect(JsonBuilder.toArrayOfStrings()))

@@ -52,18 +52,15 @@ abstract class AbstractCxxDeps {
       getPlatformDeps();
 
   private Stream<BuildTarget> getSpecificPlatformDeps(CxxPlatform cxxPlatform) {
-    return getPlatformDeps()
-        .stream()
+    return getPlatformDeps().stream()
         .flatMap(
             p ->
-                p.getMatchingValues(cxxPlatform.getFlavor().toString())
-                    .stream()
+                p.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
                     .flatMap(Collection::stream));
   }
 
   private Stream<BuildTarget> getAllPlatformDeps() {
-    return getPlatformDeps()
-        .stream()
+    return getPlatformDeps().stream()
         .flatMap(p -> p.getValues().stream().flatMap(Collection::stream));
   }
 

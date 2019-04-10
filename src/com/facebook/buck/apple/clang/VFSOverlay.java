@@ -54,16 +54,12 @@ public class VFSOverlay {
         (virtual, real) -> {
           byParent.put(virtual.getParent(), new Pair<>(virtual.getFileName(), real));
         });
-    return byParent
-        .asMap()
-        .entrySet()
-        .stream()
+    return byParent.asMap().entrySet().stream()
         .map(
             e ->
                 new VirtualDirectory(
                     e.getKey(),
-                    e.getValue()
-                        .stream()
+                    e.getValue().stream()
                         .map(x -> new VirtualFile(x.getFirst(), x.getSecond()))
                         .collect(ImmutableList.toImmutableList())))
         .collect(ImmutableList.toImmutableList());

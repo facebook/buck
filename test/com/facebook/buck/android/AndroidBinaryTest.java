@@ -124,9 +124,7 @@ public class AndroidBinaryTest {
         .getDexMergeRule()
         .getRight()
         .addProguardCommands(
-            packageableCollection
-                .getClasspathEntriesToDex()
-                .stream()
+            packageableCollection.getClasspathEntriesToDex().stream()
                 .map(pathResolver::getRelativePath)
                 .collect(ImmutableSet.toImmutableSet()),
             pathResolver.getAllAbsolutePaths(packageableCollection.getProguardConfigs()),
@@ -315,8 +313,7 @@ public class AndroidBinaryTest {
 
   private void assertCommandsInOrder(List<Step> steps, List<Class<?>> expectedCommands) {
     List<Class<?>> filteredObservedCommands =
-        steps
-            .stream()
+        steps.stream()
             .map(((Function<Step, Class<?>>) Step::getClass))
             .filter(Sets.newHashSet(expectedCommands)::contains)
             .collect(Collectors.toList());

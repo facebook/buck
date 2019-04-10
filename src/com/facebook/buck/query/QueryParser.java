@@ -305,9 +305,7 @@ final class QueryParser<NODE_TYPE> {
 
           if (targetEvaluator.getType() == QueryEnvironment.TargetEvaluator.Type.LAZY) {
             return SetExpression.<NODE_TYPE>of(
-                wordsBuilder
-                    .build()
-                    .stream()
+                wordsBuilder.build().stream()
                     .map(TargetLiteral::<NODE_TYPE>of)
                     .collect(Collectors.toList()));
           } else {

@@ -206,8 +206,7 @@ public abstract class AbstractUnusedDependenciesFinder implements Step {
     String commands =
         Joiner.on('\n')
             .join(
-                unusedDependencies
-                    .stream()
+                unusedDependencies.stream()
                     .map(dep -> String.format(commandTemplate, dependencyType, dep, buildTarget))
                     .collect(Collectors.toList()));
     String messageTemplate =

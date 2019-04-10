@@ -216,9 +216,7 @@ public class SplitZipStep implements Step {
               secondaryMetaInfoWriter,
               SECONDARY_DEX_ID,
               ImmutableSet.of(),
-              outputFiles
-                  .get(dexStore)
-                  .stream()
+              outputFiles.get(dexStore).stream()
                   .map(filesystem::resolve)
                   .collect(Collectors.toList()),
               dexSplitMode.getDexStore());
@@ -236,9 +234,7 @@ public class SplitZipStep implements Step {
               secondaryMetaInfoWriter,
               dexStore.getName(),
               Objects.requireNonNull(apkModuleMap.get(dexStore)),
-              outputFiles
-                  .get(dexStore)
-                  .stream()
+              outputFiles.get(dexStore).stream()
                   .map(filesystem::resolve)
                   .collect(Collectors.toList()),
               dexSplitMode.getDexStore());
@@ -285,9 +281,7 @@ public class SplitZipStep implements Step {
 
     if (primaryDexClassesFile.isPresent()) {
       Iterable<String> classes =
-          filesystem
-              .readLines(primaryDexClassesFile.get())
-              .stream()
+          filesystem.readLines(primaryDexClassesFile.get()).stream()
               .map(String::trim)
               .filter(SplitZipStep::isNeitherEmptyNorComment)
               .collect(Collectors.toList());
@@ -315,9 +309,7 @@ public class SplitZipStep implements Step {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (secondaryDexHeadClassesFile.isPresent()) {
-      filesystem
-          .readLines(secondaryDexHeadClassesFile.get())
-          .stream()
+      filesystem.readLines(secondaryDexHeadClassesFile.get()).stream()
           .map(String::trim)
           .filter(SplitZipStep::isNeitherEmptyNorComment)
           .map(translatorFactory.createObfuscationFunction())
@@ -339,9 +331,7 @@ public class SplitZipStep implements Step {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
     if (secondaryDexTailClassesFile.isPresent()) {
-      filesystem
-          .readLines(secondaryDexTailClassesFile.get())
-          .stream()
+      filesystem.readLines(secondaryDexTailClassesFile.get()).stream()
           .map(String::trim)
           .filter(SplitZipStep::isNeitherEmptyNorComment)
           .map(translatorFactory.createObfuscationFunction())
@@ -371,9 +361,7 @@ public class SplitZipStep implements Step {
       addScenarioClasses(translatorFactory, classesSupplier, builder, primaryDexScenarioFile.get());
     }
 
-    return builder
-        .build()
-        .stream()
+    return builder.build().stream()
         .map(input -> input + ".class")
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -398,9 +386,7 @@ public class SplitZipStep implements Step {
         translatorFactory.createDeobfuscationFunction();
 
     ImmutableList<Type> scenarioClasses =
-        filesystem
-            .readLines(scenarioFile)
-            .stream()
+        filesystem.readLines(scenarioFile).stream()
             .map(String::trim)
             .filter(SplitZipStep::isNeitherEmptyNorComment)
             .map(obfuscationFunction)

@@ -120,9 +120,7 @@ class TreeBackedAnnotationMirror implements ArtificialAnnotationMirror {
     if (!elementValues.isEmpty()) {
       result.append("(");
       result.append(
-          elementValues
-              .entrySet()
-              .stream()
+          elementValues.entrySet().stream()
               .map(
                   entry -> {
                     Name key = entry.getKey().getSimpleName();

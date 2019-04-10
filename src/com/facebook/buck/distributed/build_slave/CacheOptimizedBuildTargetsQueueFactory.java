@@ -125,9 +125,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
   private boolean hasMissingCachableRuntimeDeps(BuildRule rule) {
     prewarmRemoteCache(ruleDepsCache.getRuntimeDeps(rule));
     Stream<BuildRule> missingCachableRuntimeDeps =
-        ruleDepsCache
-            .getRuntimeDeps(rule)
-            .stream()
+        ruleDepsCache.getRuntimeDeps(rule).stream()
             .filter(
                 dependency ->
                     dependency.isCacheable()
@@ -322,9 +320,7 @@ public class CacheOptimizedBuildTargetsQueueFactory {
     // pruned (as they will never be built remotely)
     ImmutableList<String> prunedTargets =
         ImmutableList.copyOf(
-            results
-                .prunedRules
-                .stream()
+            results.prunedRules.stream()
                 .filter(BuildRule::isCacheable) // Client always skips uncacheables
                 .map(BuildRule::getFullyQualifiedName)
                 .collect(Collectors.toList()));

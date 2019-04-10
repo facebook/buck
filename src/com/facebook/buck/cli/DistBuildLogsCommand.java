@@ -63,9 +63,7 @@ public class DistBuildLogsCommand extends AbstractDistBuildCommand {
 
       stopwatch.reset().start();
       List<BuildSlaveRunId> buildSlaves =
-          buildJob
-              .getBuildSlaves()
-              .stream()
+          buildJob.getBuildSlaves().stream()
               .map(x -> x.getBuildSlaveRunId())
               .collect(Collectors.toList());
       stdout.println(

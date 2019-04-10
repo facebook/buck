@@ -44,8 +44,7 @@ class ZipFileJarEntryContainer implements JarEntryContainer {
 
   @Override
   public Stream<JarEntrySupplier> stream() throws IOException {
-    return getJarFile()
-        .stream()
+    return getJarFile().stream()
         .map(
             entry ->
                 new JarEntrySupplier(

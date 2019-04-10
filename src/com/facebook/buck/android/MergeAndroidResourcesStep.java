@@ -226,9 +226,7 @@ public class MergeAndroidResourcesStep implements Step {
             });
         uberRDotTxtIds =
             Optional.of(
-                uberRdotTxtEntries
-                    .build()
-                    .stream()
+                uberRdotTxtEntries.build().stream()
                     .collect(ImmutableMap.toImmutableMap(input -> input, input -> input.idValue)));
       }
       ImmutableMap<Path, String> symbolsFileToRDotJavaPackage = rDotTxtToPackage.build();
@@ -448,9 +446,7 @@ public class MergeAndroidResourcesStep implements Step {
       List<RDotTxtEntry> linesInSymbolsFile;
       try {
         linesInSymbolsFile =
-            filesystem
-                .readLines(symbolsFile)
-                .stream()
+            filesystem.readLines(symbolsFile).stream()
                 .filter(input -> !Strings.isNullOrEmpty(input))
                 .map(MergeAndroidResourcesStep::parseEntryOrThrow)
                 .collect(Collectors.toList());
@@ -676,8 +672,7 @@ public class MergeAndroidResourcesStep implements Step {
   @Override
   public String getDescription(ExecutionContext context) {
     List<String> resources =
-        androidResourceDeps
-            .stream()
+        androidResourceDeps.stream()
             .map(Object::toString)
             .sorted(natural())
             .collect(Collectors.toList());

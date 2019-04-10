@@ -72,9 +72,7 @@ class CxxInferComputeReport extends AbstractBuildRule implements HasPostBuildSte
       BuildContext context, BuildableContext buildableContext) {
     buildableContext.recordArtifact(reportOutput);
     ImmutableSortedSet<Path> reportsToMergeFromDeps =
-        analysisToReport
-            .getTransitiveAnalyzeRules()
-            .stream()
+        analysisToReport.getTransitiveAnalyzeRules().stream()
             .map(CxxInferAnalyze::getSourcePathToOutput)
             .map(context.getSourcePathResolver()::getAbsolutePath)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

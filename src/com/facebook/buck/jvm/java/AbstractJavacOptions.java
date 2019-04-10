@@ -184,8 +184,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
           getSourceToBootclasspath().get(getLanguageLevelOptions().getSourceLevel());
       if (bootclasspath != null) {
         String bcp =
-            bootclasspath
-                .stream()
+            bootclasspath.stream()
                 .map(pathResolver::getAbsolutePath)
                 .map(filesystem::relativize)
                 .map(Path::toString)
@@ -206,8 +205,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       // Specify names of processors.
       optionsConsumer.addOptionValue(
           "processor",
-          annotationProcessors
-              .stream()
+          annotationProcessors.stream()
               .map(ResolvedJavacPluginProperties::getProcessorNames)
               .flatMap(Collection::stream)
               .collect(Collectors.joining(",")));

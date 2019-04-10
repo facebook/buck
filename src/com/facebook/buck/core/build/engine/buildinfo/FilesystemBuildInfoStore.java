@@ -38,9 +38,7 @@ public class FilesystemBuildInfoStore implements BuildInfoStore {
 
   @Override
   public ImmutableMap<String, String> getAllMetadata(BuildTarget buildTarget) throws IOException {
-    return filesystem
-        .getDirectoryContents(pathToMetadata(buildTarget))
-        .stream()
+    return filesystem.getDirectoryContents(pathToMetadata(buildTarget)).stream()
         .map(path -> path.getFileName().toString())
         .collect(
             ImmutableMap.toImmutableMap(key -> key, key -> readMetadata(buildTarget, key).get()));

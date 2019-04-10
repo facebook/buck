@@ -118,9 +118,7 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
 
   @Value.Lazy
   public ImmutableMap<String, ImplicitInclude> getPackageImplicitIncludes() {
-    return getDelegate()
-        .getMap(BUILDFILE_SECTION_NAME, PACKAGE_INCLUDES_PROPERTY_NAME)
-        .entrySet()
+    return getDelegate().getMap(BUILDFILE_SECTION_NAME, PACKAGE_INCLUDES_PROPERTY_NAME).entrySet()
         .stream()
         .collect(
             ImmutableMap.toImmutableMap(

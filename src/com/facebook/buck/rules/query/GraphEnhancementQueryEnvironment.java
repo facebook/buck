@@ -138,8 +138,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   @Override
   public Set<QueryFileTarget> getInputs(QueryBuildTarget target) {
     TargetNode<?> node = getNode(target);
-    return node.getInputs()
-        .stream()
+    return node.getInputs().stream()
         .map(path -> PathSourcePath.of(node.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(Collectors.toSet());
@@ -148,12 +147,10 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   @Override
   public Set<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets) {
     Preconditions.checkState(targetGraph.isPresent());
-    return targetGraph
-        .get()
+    return targetGraph.get()
         .getSubgraph(
             targets.stream().map(this::getNodeForQueryBuildTarget).collect(Collectors.toList()))
-        .getNodes()
-        .stream()
+        .getNodes().stream()
         .map(TargetNode::getBuildTarget)
         .map(QueryBuildTarget::of)
         .collect(Collectors.toSet());
@@ -221,8 +218,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
    */
   protected Stream<QueryTarget> restrictToInstancesOf(Set<QueryTarget> targets, Class<?> clazz) {
     Preconditions.checkArgument(graphBuilder.isPresent());
-    return targets
-        .stream()
+    return targets.stream()
         .map(
             queryTarget -> {
               Preconditions.checkArgument(queryTarget instanceof QueryBuildTarget);
@@ -237,8 +233,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
 
   public Stream<QueryTarget> getFirstOrderClasspath(Set<QueryTarget> targets) {
     Preconditions.checkArgument(graphBuilder.isPresent());
-    return targets
-        .stream()
+    return targets.stream()
         .map(
             queryTarget -> {
               Preconditions.checkArgument(queryTarget instanceof QueryBuildTarget);
@@ -294,8 +289,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
     @Override
     public ImmutableSet<QueryTarget> evaluateTarget(String target) throws QueryException {
       if ("$declared_deps".equals(target) || "$declared".equals(target)) {
-        return declaredDeps
-            .stream()
+        return declaredDeps.stream()
             .map(QueryBuildTarget::of)
             .collect(ImmutableSet.toImmutableSet());
       }

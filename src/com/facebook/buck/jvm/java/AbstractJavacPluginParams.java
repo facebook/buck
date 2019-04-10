@@ -71,8 +71,7 @@ abstract class AbstractJavacPluginParams implements AddsToRuleKey {
   public JavacPluginParams withAbiProcessorsOnly() {
     return JavacPluginParams.builder()
         .setPluginProperties(
-            getPluginProperties()
-                .stream()
+            getPluginProperties().stream()
                 .filter(properties -> !properties.getDoesNotAffectAbi())
                 .collect(ImmutableList.toImmutableList()))
         .setParameters(getParameters())
@@ -91,8 +90,7 @@ abstract class AbstractJavacPluginParams implements AddsToRuleKey {
         return ImmutableList.of();
       }
 
-      return getLegacyProcessors()
-          .stream()
+      return getLegacyProcessors().stream()
           .map(AbstractJavacPluginProperties::resolve)
           .collect(ImmutableList.toImmutableList());
     }

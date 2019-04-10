@@ -70,8 +70,7 @@ public class AndroidBinaryFilesInfo {
       nativeLibsDirs =
           copyNativeLibraries.map(
               cnl ->
-                  cnl.entrySet()
-                      .stream()
+                  cnl.entrySet().stream()
                       .collect(
                           ImmutableSortedMap.toImmutableSortedMap(
                               Ordering.natural(),
@@ -82,8 +81,7 @@ public class AndroidBinaryFilesInfo {
     Optional<ImmutableSortedMap<APKModule, SourcePath>> nativeLibsAssetsDirs =
         copyNativeLibraries.map(
             cnl ->
-                cnl.entrySet()
-                    .stream()
+                cnl.entrySet().stream()
                     .filter(
                         entry ->
                             !exopackageForNativeEnabled

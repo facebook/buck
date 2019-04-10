@@ -124,8 +124,7 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
   }
 
   private String prettyPrintChain(List<Path> chain) {
-    return chain
-        .stream()
+    return chain.stream()
         .map((file) -> prettyPrintFileName(file, false))
         .collect(Collectors.joining(CHAIN_SEPARATOR));
   }

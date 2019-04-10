@@ -153,9 +153,7 @@ public class JsLibraryDescriptionTest {
 
     BuildRule library = scenario.graphBuilder.requireRule(withFlavors);
     BuildRule filesRule =
-        library
-            .getBuildDeps()
-            .stream()
+        library.getBuildDeps().stream()
             .filter(rule -> rule instanceof JsLibrary.Files)
             .findAny()
             .get();
@@ -520,9 +518,7 @@ public class JsLibraryDescriptionTest {
   }
 
   private static ImmutableList<BuildTarget> getBuildDepsAsTargets(BuildRule buildRule) {
-    return buildRule
-        .getBuildDeps()
-        .stream()
+    return buildRule.getBuildDeps().stream()
         .map(BuildRule::getBuildTarget)
         .collect(ImmutableList.toImmutableList());
   }

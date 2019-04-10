@@ -149,10 +149,7 @@ public class AndroidAarDescription
     aarExtraDepsBuilder.add(graphBuilder.addToIndex(assembleAssetsDirectories));
 
     ImmutableCollection<SourcePath> resDirectories =
-        packageableCollection
-            .getResourceDetails()
-            .values()
-            .stream()
+        packageableCollection.getResourceDetails().values().stream()
             .flatMap(resourceDetails -> resourceDetails.getResourceDirectories().stream())
             .collect(ImmutableList.toImmutableList());
     MergeAndroidResourceSources assembleResourceDirectories =
@@ -224,8 +221,7 @@ public class AndroidAarDescription
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(
-          buildConfigRules
-              .stream()
+          buildConfigRules.stream()
               .map(BuildRule::getSourcePathToOutput)
               .collect(Collectors.toList()));
     }

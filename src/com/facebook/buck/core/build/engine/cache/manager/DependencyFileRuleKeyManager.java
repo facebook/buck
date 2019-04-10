@@ -104,9 +104,7 @@ public class DependencyFileRuleKeyManager {
     // Build the dep-file rule key.  If any inputs are no longer on disk, this means something
     // changed and a dep-file based rule key can't be calculated.
     ImmutableList<DependencyFileEntry> inputs =
-        depFile
-            .get()
-            .stream()
+        depFile.get().stream()
             .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
             .collect(ImmutableList.toImmutableList());
 

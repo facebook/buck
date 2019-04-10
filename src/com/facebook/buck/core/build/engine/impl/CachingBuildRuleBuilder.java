@@ -685,8 +685,7 @@ class CachingBuildRuleBuilder {
       // TODO(#9117006): We don't support a way to serlialize `SourcePath`s to the cache,
       // so need to use DependencyFileEntry's instead and recover them on deserialization.
       ImmutableList<String> inputStrings =
-          inputs
-              .stream()
+          inputs.stream()
               .map(inputString -> DependencyFileEntry.fromSourcePath(inputString, pathResolver))
               .map(ObjectMappers.toJsonFunction())
               .collect(ImmutableList.toImmutableList());
@@ -748,9 +747,7 @@ class CachingBuildRuleBuilder {
     getBuildInfoRecorder()
         .addMetadata(
             BuildInfo.MetadataKey.RECORDED_PATHS,
-            getBuildInfoRecorder()
-                .getRecordedPaths()
-                .stream()
+            getBuildInfoRecorder().getRecordedPaths().stream()
                 .map(Object::toString)
                 .collect(ImmutableList.toImmutableList()));
     if (success.shouldWriteRecordedMetadataToDiskAfterBuilding()) {

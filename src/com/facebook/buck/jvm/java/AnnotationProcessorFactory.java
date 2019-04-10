@@ -52,8 +52,7 @@ class AnnotationProcessorFactory implements AutoCloseable {
   }
 
   public List<Processor> createProcessors(ImmutableList<JavacPluginJsr199Fields> fields) {
-    return fields
-        .stream()
+    return fields.stream()
         .map(this::createProcessorsWithCommonClasspath)
         .flatMap(Function.identity())
         .collect(Collectors.toList());

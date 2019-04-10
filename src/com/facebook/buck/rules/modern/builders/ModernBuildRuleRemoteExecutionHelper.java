@@ -113,8 +113,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   public static Path getCellPathPrefix(
       CellPathResolver cellResolver, ImmutableSet<Optional<String>> cellNames) {
     return MorePaths.splitOnCommonPrefix(
-            cellNames
-                .stream()
+            cellNames.stream()
                 .map(name -> cellResolver.getCellPath(name).get())
                 .collect(ImmutableList.toImmutableList()))
         .get()
@@ -123,11 +122,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
 
   /** Gets all the canonical cell names. */
   public static ImmutableSet<Optional<String>> getCellNames(Cell rootCell) {
-    return rootCell
-        .getCellProvider()
-        .getLoadedCells()
-        .values()
-        .stream()
+    return rootCell.getCellProvider().getLoadedCells().values().stream()
         .map(Cell::getCanonicalName)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -218,8 +213,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
                   instance,
                   data,
                   hash,
-                  children
-                      .stream()
+                  children.stream()
                       .map(nodeMap::get)
                       .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
           nodeMap.put(hash, node);
@@ -481,8 +475,7 @@ public class ModernBuildRuleRemoteExecutionHelper {
   private Stream<UploadDataSupplier> getSharedFilesData(Predicate<Digest> requiredDataPredicate)
       throws IOException {
     ImmutableList<RequiredFile> requiredFiles = sharedRequiredFiles.get();
-    return requiredFiles
-        .stream()
+    return requiredFiles.stream()
         .map(requiredFile -> requiredFile.dataSupplier)
         .filter(dataSupplier -> requiredDataPredicate.test(dataSupplier.getDigest()));
   }

@@ -147,9 +147,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .addAll(
-                prefixMap
-                    .entrySet()
-                    .stream()
+                prefixMap.entrySet().stream()
                     .map(e -> String.format("-fdebug-prefix-map=%s=%s", e.getKey(), e.getValue()))
                     .collect(Collectors.toList()))
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
@@ -229,9 +227,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             .addAll(getExtraFlagsForHeaderMaps(filesystem))
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .addAll(
-                prefixMap
-                    .entrySet()
-                    .stream()
+                prefixMap.entrySet().stream()
                     .map(
                         e ->
                             String.format(

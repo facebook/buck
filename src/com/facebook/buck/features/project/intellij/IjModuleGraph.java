@@ -44,16 +44,14 @@ public class IjModuleGraph {
   }
 
   public ImmutableSet<IjModule> getModules() {
-    return deps.keySet()
-        .stream()
+    return deps.keySet().stream()
         .filter(dep -> dep instanceof IjModule)
         .map(IjModule.class::cast)
         .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<IjLibrary> getLibraries() {
-    return deps.keySet()
-        .stream()
+    return deps.keySet().stream()
         .filter(node -> node instanceof IjLibrary)
         .map(IjLibrary.class::cast)
         .collect(ImmutableSet.toImmutableSet());
@@ -65,8 +63,7 @@ public class IjModuleGraph {
 
   public ImmutableMap<IjModule, DependencyType> getDependentModulesFor(IjModule source) {
     ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
-    return deps.keySet()
-        .stream()
+    return deps.keySet().stream()
         .filter(dep -> dep instanceof IjModule)
         .map(module -> (IjModule) module)
         .collect(
@@ -75,8 +72,7 @@ public class IjModuleGraph {
 
   public ImmutableMap<IjLibrary, DependencyType> getDependentLibrariesFor(IjModule source) {
     ImmutableMap<IjProjectElement, DependencyType> deps = getDepsFor(source);
-    return deps.keySet()
-        .stream()
+    return deps.keySet().stream()
         .filter(dep -> dep instanceof IjLibrary)
         .map(library -> (IjLibrary) library)
         .collect(

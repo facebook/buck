@@ -142,9 +142,7 @@ public class GoProjectCommandHelper {
     ImmutableSet<BuildTarget> graphRoots;
     if (passedInTargetsSet.isEmpty()) {
       graphRoots =
-          projectGraph
-              .getNodes()
-              .stream()
+          projectGraph.getNodes().stream()
               .map(TargetNode::getBuildTarget)
               .collect(ImmutableSet.toImmutableSet());
     } else {
@@ -208,9 +206,7 @@ public class GoProjectCommandHelper {
     // Run code generation targets
     ExitCode exitCode =
         runBuild(
-            generatedPackages
-                .keySet()
-                .stream()
+            generatedPackages.keySet().stream()
                 .map(BuildTargetSourcePath::getTarget)
                 .collect(ImmutableSet.toImmutableSet()));
     if (exitCode != ExitCode.SUCCESS) {
@@ -306,10 +302,7 @@ public class GoProjectCommandHelper {
         generatedPackages.putAll(getSrcsMap(getSrcAndHeaderTargets(cgoArgs), pkgName));
         generatedPackages.putAll(getSrcsMap(filterBuildTargets(cgoArgs.getGoSrcs()), pkgName));
         List<CxxConstructorArg> cxxLibs =
-            cgoArgs
-                .getCxxDeps()
-                .getDeps()
-                .stream()
+            cgoArgs.getCxxDeps().getDeps().stream()
                 .filter(
                     target ->
                         targetGraphAndTargets.getTargetGraph().get(target).getConstructorArg()
@@ -339,9 +332,7 @@ public class GoProjectCommandHelper {
     List<BuildTargetSourcePath> targets = new ArrayList<>();
     targets.addAll(
         filterBuildTargets(
-                constructorArg
-                    .getSrcs()
-                    .stream()
+                constructorArg.getSrcs().stream()
                     .map(srcWithFlags -> srcWithFlags.getSourcePath())
                     .collect(Collectors.toSet()))
             .collect(Collectors.toList()));
@@ -355,8 +346,7 @@ public class GoProjectCommandHelper {
 
   @Nonnull
   private Stream<BuildTargetSourcePath> filterBuildTargets(Set<SourcePath> paths) {
-    return paths
-        .stream()
+    return paths.stream()
         .filter(srcPath -> srcPath instanceof BuildTargetSourcePath)
         .map(src -> (BuildTargetSourcePath) src);
   }

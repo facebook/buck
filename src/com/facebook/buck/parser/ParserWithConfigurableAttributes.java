@@ -128,9 +128,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     convertedAttributes.put(
         InternalTargetAttributeNames.DIRECT_DEPENDENCIES,
-        targetNode
-            .getParseDeps()
-            .stream()
+        targetNode.getParseDeps().stream()
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()));
     return convertedAttributes;
@@ -268,8 +266,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       if (!state.getParsingContext().excludeUnsupportedTargets()) {
         return buildTargets;
       }
-      return buildTargets
-          .stream()
+      return buildTargets.stream()
           .map(
               targets ->
                   filterIncompatibleTargetNodes(state, targets.stream().map(state::getTargetNode))
@@ -350,9 +347,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
           (HasTargetCompatibleWith) targetNode.getConstructorArg();
 
       String constraints =
-          argWithTargetCompatible
-              .getTargetCompatibleWith()
-              .stream()
+          argWithTargetCompatible.getTargetCompatibleWith().stream()
               .map(BuildTarget::getFullyQualifiedName)
               .collect(Collectors.joining(System.lineSeparator()));
 

@@ -103,9 +103,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   @Override
   public Iterable<BuildRule> getBuildRules() {
     Preconditions.checkState(isValid);
-    return buildRuleIndex
-        .values()
-        .stream()
+    return buildRuleIndex.values().stream()
         .map(Futures::getUnchecked)
         .collect(ImmutableList.toImmutableList());
   }

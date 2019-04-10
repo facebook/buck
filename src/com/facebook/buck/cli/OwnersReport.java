@@ -197,8 +197,7 @@ final class OwnersReport {
                   throw new HumanReadableException(e);
                 }
               });
-      return targetNodes
-          .stream()
+      return targetNodes.stream()
           .map(targetNode -> generateOwnersReport(cell, targetNode, cellRelativePath.toString()))
           .reduce(OwnersReport.emptyReport(), OwnersReport::updatedWith);
     }
@@ -296,8 +295,7 @@ final class OwnersReport {
             continue;
           }
           report =
-              basePaths
-                  .stream()
+              basePaths.stream()
                   .map(basePath -> getReportForBasePath(map, cell, basePath, cellRelativePath))
                   .reduce(report, OwnersReport::updatedWith);
         }

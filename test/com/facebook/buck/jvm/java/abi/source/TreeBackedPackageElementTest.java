@@ -156,9 +156,7 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
 
     PackageElement fooPackage = elements.getPackageElement("foo");
     assertThat(
-        fooPackage
-            .getAnnotationMirrors()
-            .stream()
+        fooPackage.getAnnotationMirrors().stream()
             .map(it -> it.getAnnotationType().asElement().getSimpleName().toString())
             .collect(Collectors.toList()),
         Matchers.contains("Deprecated"));
@@ -168,9 +166,7 @@ public class TreeBackedPackageElementTest extends CompilerTreeApiParameterizedTe
     // We compare strings because there's some funkiness around built-in types, and they can
     // end up having multiple Elements for them depending on how you arrive at them.
     Set<String> enclosedElements =
-        packageElement
-            .getEnclosedElements()
-            .stream()
+        packageElement.getEnclosedElements().stream()
             .map(Object::toString)
             .collect(Collectors.toSet());
 

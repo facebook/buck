@@ -411,8 +411,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       CommandRunnerParams params, List<String> arguments) {
     UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory =
         params.getUnconfiguredBuildTargetFactory();
-    return getCommandLineBuildTargetNormalizer(params.getBuckConfig())
-        .normalizeAll(arguments)
+    return getCommandLineBuildTargetNormalizer(params.getBuckConfig()).normalizeAll(arguments)
         .stream()
         .map(
             input ->

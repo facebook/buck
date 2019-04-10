@@ -49,9 +49,7 @@ public class DistributedCellProviderFactory {
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       Supplier<TargetConfiguration> targetConfiguration) {
     Map<String, Path> cellPaths =
-        cellParams
-            .values()
-            .stream()
+        cellParams.values().stream()
             .filter(p -> p.getCanonicalName().isPresent())
             .collect(
                 Collectors.toMap(

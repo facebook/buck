@@ -288,9 +288,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   }
 
   private Iterable<String> getSourceArguments(SourcePathResolver resolver) {
-    return sources
-        .getSourcePaths()
-        .stream()
+    return sources.getSourcePaths().stream()
         .map(resolver::getAbsolutePath)
         .map(Object::toString)
         .collect(Collectors.toList());
@@ -318,8 +316,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add("-stubdir", getProjectFilesystem().resolve(getStubDir()).toString())
         .add(
             "-i"
-                + includes
-                    .stream()
+                + includes.stream()
                     .map(resolver::getAbsolutePath)
                     .map(Object::toString)
                     .collect(Collectors.joining(":")))

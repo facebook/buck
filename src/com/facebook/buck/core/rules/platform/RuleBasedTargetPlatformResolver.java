@@ -67,9 +67,7 @@ public class RuleBasedTargetPlatformResolver implements TargetPlatformResolver {
     PlatformRule platformRule = (PlatformRule) configurationRule;
 
     ImmutableSet<ConstraintValue> constraintValues =
-        platformRule
-            .getConstrainValues()
-            .stream()
+        platformRule.getConstrainValues().stream()
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 

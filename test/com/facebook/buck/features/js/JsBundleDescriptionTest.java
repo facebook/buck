@@ -280,8 +280,7 @@ public class JsBundleDescriptionTest {
           RichStream.from(rule.getBuildDeps()).filter(JsBundle.class).findFirst().get();
       return dependencyTargets(jsBundle);
     } else {
-      return rule.getBuildDeps()
-          .stream()
+      return rule.getBuildDeps().stream()
           .map(BuildRule::getBuildTarget)
           .collect(Collectors.toSet());
     }

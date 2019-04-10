@@ -165,9 +165,7 @@ public class GoDescriptorsTest {
             Collections.singletonList(ListType.GoFiles));
 
     Assert.assertTrue(
-        compile
-            .getBuildDeps()
-            .stream()
+        compile.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList())
             .contains(srcTarget));
@@ -213,9 +211,7 @@ public class GoDescriptorsTest {
 
     System.out.println(binary.getBuildDeps());
     GoCompile compile =
-        binary
-            .getBuildDeps()
-            .stream()
+        binary.getBuildDeps().stream()
             .filter(
                 dep ->
                     dep.getBuildTarget()
@@ -226,9 +222,7 @@ public class GoDescriptorsTest {
             .get();
 
     Assert.assertTrue(
-        compile
-            .getBuildDeps()
-            .stream()
+        compile.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList())
             .contains(srcTarget));

@@ -27,8 +27,7 @@ public class XCodeDescriptionsFactory {
         pluginManager.getExtensions(XCodeDescriptionClassSupplier.class);
 
     return new XCodeDescriptions(
-        xcodeDescriptionClassSuppliers
-            .stream()
+        xcodeDescriptionClassSuppliers.stream()
             .flatMap(supplier -> supplier.getXCodeDescriptions().stream())
             .collect(ImmutableSet.toImmutableSet()));
   }

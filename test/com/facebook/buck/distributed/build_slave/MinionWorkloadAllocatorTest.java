@@ -390,8 +390,7 @@ public class MinionWorkloadAllocatorTest {
       boolean release,
       List<WorkUnit> units) {
     ImmutableList<ImmutableList<String>> expectedWorkUnits =
-        units
-            .stream()
+        units.stream()
             .map(unit -> ImmutableList.copyOf(unit.getBuildTargets()))
             .collect(ImmutableList.toImmutableList());
     allocateWorkAndAssert(
@@ -411,8 +410,7 @@ public class MinionWorkloadAllocatorTest {
   }
 
   private static List<String> getAllTargets(List<WorkUnit> units) {
-    return units
-        .stream()
+    return units.stream()
         .flatMap(unit -> unit.getBuildTargets().stream())
         .collect(Collectors.toList());
   }

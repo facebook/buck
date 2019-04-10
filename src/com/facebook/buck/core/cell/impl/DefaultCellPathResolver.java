@@ -51,9 +51,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   @Value.Lazy
   public ImmutableMap<Path, String> getCanonicalNames() {
-    return getCellPaths()
-        .entrySet()
-        .stream()
+    return getCellPaths().entrySet().stream()
         .collect(
             Collectors.collectingAndThen(
                 Collectors.toMap(
@@ -76,9 +74,7 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
 
   private static ImmutableMap<String, ? extends Path> sortCellPaths(
       Map<String, ? extends Path> cellPaths) {
-    return cellPaths
-        .entrySet()
-        .stream()
+    return cellPaths.entrySet().stream()
         .sorted(Comparator.comparing(Map.Entry::getValue))
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }

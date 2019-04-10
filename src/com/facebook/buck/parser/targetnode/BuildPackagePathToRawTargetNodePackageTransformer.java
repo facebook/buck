@@ -120,9 +120,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
               id -> SimplePerfEvent.scope(Optional.empty(), PerfEventId.of("raw_to_targetnode")));
 
       ImmutableSet<UnconfiguredBuildTarget> deps =
-          targetNode
-              .getParseDeps()
-              .stream()
+          targetNode.getParseDeps().stream()
               .map(bt -> bt.getUnconfiguredBuildTargetView().getData())
               .collect(ImmutableSet.toImmutableSet());
 

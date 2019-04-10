@@ -97,9 +97,7 @@ public class GenerateStringResourcesIntegrationTest {
     // verify <output_dir>/<hex_res_dir>/values/strings.xml files
     assertTrue(filesystem.exists(output));
     assertThat(
-        filesystem
-            .getFilesUnderPath(filesystem.relativize(output))
-            .stream()
+        filesystem.getFilesUnderPath(filesystem.relativize(output)).stream()
             .map(path -> MorePaths.relativize(filesystem.relativize(output), path).toString())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
         is(expectedFilePaths));

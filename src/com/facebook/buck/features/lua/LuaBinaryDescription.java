@@ -643,15 +643,13 @@ public class LuaBinaryDescription
 
       @AddToRuleKey
       private final List<NonHashableSourcePathContainer> toolNativeLibsLinkTree =
-          nativeLibsLinktree
-              .stream()
+          nativeLibsLinktree.stream()
               .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
               .collect(ImmutableList.toImmutableList());
 
       @AddToRuleKey
       private final List<NonHashableSourcePathContainer> toolPythonModulesLinktree =
-          pythonModulesLinktree
-              .stream()
+          pythonModulesLinktree.stream()
               .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
               .collect(ImmutableList.toImmutableList());
 

@@ -118,8 +118,7 @@ public final class QueryUtils {
       QueryExpression<QueryBuildTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
       Set<QueryBuildTarget> queryTargets =
           cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
-      return queryTargets
-          .stream()
+      return queryTargets.stream()
           .map(queryTarget -> queryTarget.getBuildTarget())
           .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     } catch (QueryException e) {
@@ -143,9 +142,7 @@ public final class QueryUtils {
             ImmutableSet.of(),
             query.getTargetConfiguration());
     QueryExpression<QueryBuildTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
-    return parsedExp
-        .getTargets(env)
-        .stream()
+    return parsedExp.getTargets(env).stream()
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

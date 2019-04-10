@@ -24,9 +24,7 @@ public class EnvVariablesProvider {
   @SuppressWarnings("PMD.BlacklistedSystemGetenv")
   public static ImmutableMap<String, String> getSystemEnv() {
     if (Platform.detect().getType() == PlatformType.WINDOWS) {
-      return System.getenv()
-          .entrySet()
-          .stream()
+      return System.getenv().entrySet().stream()
           .collect(ImmutableMap.toImmutableMap(e -> e.getKey().toUpperCase(), Map.Entry::getValue));
     } else {
       return ImmutableMap.copyOf(System.getenv());

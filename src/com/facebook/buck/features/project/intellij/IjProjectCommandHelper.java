@@ -179,9 +179,7 @@ public class IjProjectCommandHelper {
     ImmutableSet<BuildTarget> graphRoots;
     if (passedInTargetsSet.isEmpty()) {
       graphRoots =
-          projectGraph
-              .getNodes()
-              .stream()
+          projectGraph.getNodes().stream()
               .map(TargetNode::getBuildTarget)
               .collect(ImmutableSet.toImmutableSet());
     } else {
@@ -327,8 +325,7 @@ public class IjProjectCommandHelper {
 
   private ImmutableSet<BuildTarget> getTargetsWithAnnotations(
       TargetGraph targetGraph, ImmutableSet<BuildTarget> buildTargets) {
-    return buildTargets
-        .stream()
+    return buildTargets.stream()
         .filter(
             input -> {
               TargetNode<?> targetNode = targetGraph.get(input);

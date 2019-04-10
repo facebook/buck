@@ -93,9 +93,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     }
 
     builder.addInputs(
-        params
-            .getBuildDeps()
-            .stream()
+        params.getBuildDeps().stream()
             .map(BuildRule::getSourcePathToOutput)
             .filter(Objects::nonNull)
             .collect(ImmutableList.toImmutableList()));

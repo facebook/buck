@@ -310,10 +310,7 @@ public class SmartDexingStep implements Step {
     ImmutableMap<Path, Sha1HashCode> dexInputHashes = dexInputHashesProvider.getDexInputHashes();
     ImmutableSet<Path> allDexInputPaths = ImmutableSet.copyOf(outputToInputs.values());
 
-    return outputToInputs
-        .asMap()
-        .entrySet()
-        .stream()
+    return outputToInputs.asMap().entrySet().stream()
         .map(
             outputInputsPair ->
                 new DxPseudoRule(

@@ -67,9 +67,7 @@ public class AggregationTreeTest {
             Paths.get("a/c"),
             Paths.get("a/d/e"),
             Paths.get("")),
-        aggregationTree
-            .getModules()
-            .stream()
+        aggregationTree.getModules().stream()
             .map(AggregationModule::getModuleBasePath)
             .collect(ImmutableSet.toImmutableSet()));
   }

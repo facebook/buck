@@ -39,8 +39,7 @@ public class ZipArchiveDependencySupplier implements ArchiveDependencySupplier {
   @Override
   public Stream<SourcePath> getArchiveMembers(
       SourcePathResolver resolver, SourcePathRuleFinder ruleFinder) {
-    return zipFiles
-        .stream()
+    return zipFiles.stream()
         .flatMap(
             zipSourcePath -> {
               BuildRule rule = ruleFinder.getRule((BuildTargetSourcePath) zipSourcePath);

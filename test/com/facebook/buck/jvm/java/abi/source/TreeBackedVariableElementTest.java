@@ -116,9 +116,7 @@ public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedT
 
     VariableElement variable = findField("field", elements.getTypeElement("Foo"));
     assertThat(
-        variable
-            .getAnnotationMirrors()
-            .stream()
+        variable.getAnnotationMirrors().stream()
             .map(AnnotationMirror::toString)
             .collect(Collectors.toList()),
         Matchers.contains("@java.lang.Deprecated"));
@@ -133,9 +131,7 @@ public class TreeBackedVariableElementTest extends CompilerTreeApiParameterizedT
     VariableElement variable =
         findParameter("parameter", findMethod("foo", elements.getTypeElement("Foo")));
     assertThat(
-        variable
-            .getAnnotationMirrors()
-            .stream()
+        variable.getAnnotationMirrors().stream()
             .map(AnnotationMirror::toString)
             .collect(Collectors.toList()),
         Matchers.contains("@java.lang.Deprecated"));

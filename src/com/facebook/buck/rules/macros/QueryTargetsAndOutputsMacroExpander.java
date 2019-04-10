@@ -73,9 +73,7 @@ public class QueryTargetsAndOutputsMacroExpander
       QueryTargetsAndOutputsMacro input,
       QueryResults precomputedWork) {
     return new QueriedTargestAndOutputsArg(
-        precomputedWork
-            .results
-            .stream()
+        precomputedWork.results.stream()
             .map(
                 queryTarget -> {
                   Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

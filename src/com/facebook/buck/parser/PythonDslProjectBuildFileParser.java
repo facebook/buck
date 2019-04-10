@@ -165,9 +165,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                     new BufferedOutputStream(Files.newOutputStream(ignorePathsJson1))) {
                   ObjectMappers.WRITER.writeValue(
                       output,
-                      options
-                          .getIgnorePaths()
-                          .stream()
+                      options.getIgnorePaths().stream()
                           .map(PathMatcher::getPathOrGlob)
                           .collect(ImmutableList.toImmutableList()));
                 }

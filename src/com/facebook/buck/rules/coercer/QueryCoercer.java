@@ -62,9 +62,7 @@ public class QueryCoercer implements TypeCoercer<Query> {
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing query: " + query.getQuery(), e);
     }
-    return parsedExp
-        .getTargets(env)
-        .stream()
+    return parsedExp.getTargets(env).stream()
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

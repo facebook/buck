@@ -66,9 +66,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
   public URL[] getClasspath(SourcePathResolver resolver, ProjectFilesystem filesystem) {
     return classpathSupplier.get(
         () ->
-            inner
-                .getClasspathEntries()
-                .stream()
+            inner.getClasspathEntries().stream()
                 .map(resolver::getAbsolutePath)
                 .map(filesystem::resolve)
                 .map(Path::toUri)
@@ -106,8 +104,7 @@ public class ResolvedJavacPluginProperties implements AddsToRuleKey {
       SourcePathResolver resolver,
       ProjectFilesystem filesystem,
       ImmutableList<ResolvedJavacPluginProperties> resolvedProperties) {
-    return resolvedProperties
-        .stream()
+    return resolvedProperties.stream()
         .map(properties -> properties.getClasspath(resolver, filesystem))
         .flatMap(Arrays::stream)
         .distinct()

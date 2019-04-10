@@ -39,9 +39,7 @@ class TargetCompatibilityChecker {
     HasTargetCompatibleWith argWithTargetCompatible = (HasTargetCompatibleWith) targetNodeArg;
 
     return platform.matchesAll(
-        argWithTargetCompatible
-            .getTargetCompatibleWith()
-            .stream()
+        argWithTargetCompatible.getTargetCompatibleWith().stream()
             .map(BuildTarget::getUnconfiguredBuildTargetView)
             .map(constraintResolver::getConstraintValue)
             .collect(Collectors.toList()));

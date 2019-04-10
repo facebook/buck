@@ -207,8 +207,7 @@ public class AndroidInstrumentationApkDescription
             /* shouldBuildStringSourceMap */ false,
             /* shouldPreDex */ false,
             DexSplitMode.NO_SPLIT,
-            rulesToExcludeFromDex
-                .stream()
+            rulesToExcludeFromDex.stream()
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableSet.toImmutableSet()),
             resourcesToExclude,

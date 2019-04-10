@@ -84,9 +84,7 @@ class CompletionSimulator {
       if (transitive) {
         superclass = complete(element.getSuperclass(), transitive);
         interfaces =
-            element
-                .getInterfaces()
-                .stream()
+            element.getInterfaces().stream()
                 .map(it -> complete(it, transitive))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

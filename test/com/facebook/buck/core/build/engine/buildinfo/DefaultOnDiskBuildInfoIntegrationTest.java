@@ -114,9 +114,7 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
 
     recorder.addMetadata(
         BuildInfo.MetadataKey.RECORDED_PATHS,
-        recorder
-            .getRecordedPaths()
-            .stream()
+        recorder.getRecordedPaths().stream()
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()));
     recorder.addBuildMetadata(MetadataKey.ORIGIN_BUILD_ID, "build-id");

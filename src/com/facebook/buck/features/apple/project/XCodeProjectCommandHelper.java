@@ -449,9 +449,7 @@ public class XCodeProjectCommandHelper {
     ImmutableSet<BuildTarget> targets;
     if (passedInTargetsSet.isEmpty()) {
       targets =
-          targetGraphAndTargets
-              .getProjectRoots()
-              .stream()
+          targetGraphAndTargets.getProjectRoots().stream()
               .map(TargetNode::getBuildTarget)
               .collect(ImmutableSet.toImmutableSet());
     } else {
@@ -679,9 +677,7 @@ public class XCodeProjectCommandHelper {
   @VisibleForTesting
   static ImmutableSet<BuildTarget> getRootsFromPredicate(
       TargetGraph projectGraph, Predicate<TargetNode<?>> rootsPredicate) {
-    return projectGraph
-        .getNodes()
-        .stream()
+    return projectGraph.getNodes().stream()
         .filter(rootsPredicate)
         .map(TargetNode::getBuildTarget)
         .collect(ImmutableSet.toImmutableSet());
@@ -730,9 +726,7 @@ public class XCodeProjectCommandHelper {
             parser.buildTargetGraph(
                 parsingContext,
                 Sets.union(
-                    projectGraph
-                        .getNodes()
-                        .stream()
+                    projectGraph.getNodes().stream()
                         .map(TargetNode::getBuildTarget)
                         .collect(ImmutableSet.toImmutableSet()),
                     explicitTestTargets));

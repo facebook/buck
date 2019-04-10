@@ -234,8 +234,7 @@ public class CxxTestDescription
             Maps.transformValues(args.getEnv(), x -> macrosConverter.convert(x, graphBuilder)));
 
     ImmutableList<Arg> testArgs =
-        args.getArgs()
-            .stream()
+        args.getArgs().stream()
             .map(x -> macrosConverter.convert(x, graphBuilder))
             .collect(ImmutableList.toImmutableList());
 

@@ -90,8 +90,7 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
                       device.mkDirP(ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.toString());
                       contents.put(
                           device.getSerialNumber(),
-                          device
-                              .listDirRecursive(ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT)
+                          device.listDirRecursive(ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT)
                               .stream()
                               .map(Path::toString)
                               .collect(
@@ -124,17 +123,13 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
     String json = filesystem.readFileIfItExists(contentsPath).get();
     Path packagePath = Paths.get(packageName);
     Map<String, SortedSet<String>> parsedJson = new ObjectMapper().readValue(json, typeRef);
-    return parsedJson
-        .entrySet()
-        .stream()
+    return parsedJson.entrySet().stream()
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
                 Ordering.natural(),
                 Map.Entry::getKey,
                 entry ->
-                    entry
-                        .getValue()
-                        .stream()
+                    entry.getValue().stream()
                         .map(Paths::get)
                         .filter(p -> p.startsWith(packagePath))
                         .map(packagePath::relativize)

@@ -1119,8 +1119,7 @@ public class SkylarkProjectBuildFileParserTest {
     ImmutableSortedSet<String> includes = parser.getIncludedFiles(buildFile);
     assertThat(includes, Matchers.hasSize(2));
     assertThat(
-        includes
-            .stream()
+        includes.stream()
             .map(projectFilesystem::resolve)
             .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
             .map(Object::toString)
@@ -1147,8 +1146,7 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
     ImmutableSortedSet<String> includes = buildFileManifest.getIncludes();
     assertThat(
-        includes
-            .stream()
+        includes.stream()
             .map(projectFilesystem::resolve)
             .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
             .map(Object::toString)
@@ -1479,9 +1477,7 @@ public class SkylarkProjectBuildFileParserTest {
       Path buildFile = projectFilesystem.resolve(kvp.getKey());
       String expectedName = kvp.getValue();
       ImmutableList expectedIncludes =
-          expectedIncludesPaths
-              .get(kvp.getKey())
-              .stream()
+          expectedIncludesPaths.get(kvp.getKey()).stream()
               .map(projectFilesystem::resolve)
               .collect(ImmutableList.toImmutableList());
 
@@ -1512,18 +1508,14 @@ public class SkylarkProjectBuildFileParserTest {
           String.format(
               "Expected file at %s to parse and have manifest includes %s",
               kvp.getKey(), buildFileManifest.getIncludes()),
-          buildFileManifest
-              .getIncludes()
-              .stream()
+          buildFileManifest.getIncludes().stream()
               .map(Paths::get)
               .collect(ImmutableList.toImmutableList()),
           Matchers.containsInAnyOrder(expectedIncludes.toArray()));
       assertThat(
           String.format(
               "Expected file at %s to parse and have includes %s", kvp.getKey(), expectedIncludes),
-          parser
-              .getIncludedFiles(projectFilesystem.resolve(kvp.getKey()))
-              .stream()
+          parser.getIncludedFiles(projectFilesystem.resolve(kvp.getKey())).stream()
               .map(Paths::get)
               .collect(ImmutableList.toImmutableList()),
           Matchers.containsInAnyOrder(expectedIncludes.toArray()));

@@ -282,9 +282,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       BuildContext buildContext, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ImmutableSet<Path> classpathEntriesToDex =
-        classpathEntriesToDexSourcePaths
-            .get()
-            .stream()
+        classpathEntriesToDexSourcePaths.get().stream()
             .map(
                 input ->
                     getProjectFilesystem()
@@ -304,15 +302,10 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
                 getSecondaryDexRoot())));
 
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
-        moduleMappedClasspathEntriesToDex
-            .get()
-            .entrySet()
-            .stream()
+        moduleMappedClasspathEntriesToDex.get().entrySet().stream()
             .flatMap(
                 entry ->
-                    entry
-                        .getValue()
-                        .stream()
+                    entry.getValue().stream()
                         .map(
                             v ->
                                 new AbstractMap.SimpleEntry<>(
@@ -417,8 +410,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       classpathEntriesToDex =
           addProguardCommands(
               classpathEntriesToDex,
-              proguardConfigs
-                  .stream()
+              proguardConfigs.stream()
                   .map(buildContext.getSourcePathResolver()::getAbsolutePath)
                   .collect(ImmutableSet.toImmutableSet()),
               skipProguard,
@@ -575,8 +567,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     // TODO(devjasta): the output path we choose is the result of a slicing function against
     // input classpath. This is fragile and should be replaced with knowledge of the BuildTarget.
     ImmutableMap<Path, Path> inputOutputEntries =
-        classpathEntriesToDex
-            .stream()
+        classpathEntriesToDex.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     java.util.function.Function.identity(),
@@ -883,8 +874,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             desugarInterfaceMethods,
             true,
             Optional.of(
-                additionalJarsForProguardAndDesugar
-                    .stream()
+                additionalJarsForProguardAndDesugar.stream()
                     .map(input -> buildContext.getSourcePathResolver().getAbsolutePath(input))
                     .collect(ImmutableSet.toImmutableSet())));
     steps.add(smartDexingCommand);

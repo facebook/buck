@@ -245,9 +245,7 @@ public class NdkLibraryDescription
       // We add any dependencies from the native linkable input to this rule, even though
       // it technically should be added to the top-level rule.
       deps.addAll(
-          nativeLinkableInput
-              .getArgs()
-              .stream()
+          nativeLinkableInput.getArgs().stream()
               .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
               .iterator());
 
@@ -401,8 +399,7 @@ public class NdkLibraryDescription
             .build();
 
     ImmutableList<Arg> flags =
-        args.getFlags()
-            .stream()
+        args.getFlags().stream()
             .map(flag -> macrosConverter.convert(flag, graphBuilder))
             .collect(ImmutableList.toImmutableList());
 

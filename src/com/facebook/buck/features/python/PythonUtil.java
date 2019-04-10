@@ -84,14 +84,10 @@ public class PythonUtil {
     return RichStream.<BuildTarget>empty()
         .concat(deps.stream())
         .concat(
-            platformDeps
-                .getMatchingValues(pythonPlatform.getFlavor().toString())
-                .stream()
+            platformDeps.getMatchingValues(pythonPlatform.getFlavor().toString()).stream()
                 .flatMap(Collection::stream))
         .concat(
-            platformDeps
-                .getMatchingValues(cxxPlatform.getFlavor().toString())
-                .stream()
+            platformDeps.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
                 .flatMap(Collection::stream))
         .toImmutableList();
   }

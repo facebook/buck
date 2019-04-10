@@ -40,9 +40,7 @@ public class VersionedTargetGraph extends TargetGraph {
       MutableDirectedGraph<TargetNode<?>> graph, FlavorSearchTargetNodeFinder nodeFinder) {
     super(
         graph,
-        graph
-            .getNodes()
-            .stream()
+        graph.getNodes().stream()
             .collect(ImmutableMap.toImmutableMap(TargetNode::getBuildTarget, n -> n)));
     for (TargetNode<?> node : graph.getNodes()) {
       Preconditions.checkArgument(
@@ -100,8 +98,7 @@ public class VersionedTargetGraph extends TargetGraph {
         trace.add(n);
       }
       msg +=
-          trace
-              .stream()
+          trace.stream()
               .map(n -> String.format("    %s (%s)", n, n.getRuleType()))
               .collect(Collectors.joining(" depended on by" + System.lineSeparator()));
       return new HumanReadableException(msg);

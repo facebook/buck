@@ -67,10 +67,7 @@ public class ExopackageDeviceDirectoryListerTest {
             device2, new TreeSet<>());
     for (String packageName : contentsByPackageAndDevice.keySet()) {
       for (String device : contentsByPackageAndDevice.get(packageName).keySet()) {
-        contentsByPackageAndDevice
-            .get(packageName)
-            .get(device)
-            .stream()
+        contentsByPackageAndDevice.get(packageName).get(device).stream()
             .map(f -> Paths.get(packageName).resolve(f).toString())
             .forEach(f -> contents.get(device).add(f));
       }

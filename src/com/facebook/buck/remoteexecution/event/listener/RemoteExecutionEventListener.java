@@ -161,9 +161,7 @@ public class RemoteExecutionEventListener
   @Override
   public ImmutableMap<State, Integer> getActionsPerState() {
     return ImmutableMap.copyOf(
-        actionStateCount
-            .entrySet()
-            .stream()
+        actionStateCount.entrySet().stream()
             .collect(Collectors.toMap(Entry::getKey, entry -> entry.getValue().intValue())));
   }
 

@@ -96,8 +96,7 @@ public class CoercedTypeCacheTest {
             "required"),
         CoercedTypeCache.extractForImmutableBuilder(
                 Dto.Builder.class, new DefaultTypeCoercerFactory())
-            .values()
-            .stream()
+            .values().stream()
             .map(ParamInfo::getPythonName)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }

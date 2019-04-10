@@ -347,8 +347,7 @@ public class PythonBinaryDescription
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
-            args.getLinkerFlags()
-                .stream()
+            args.getLinkerFlags().stream()
                 .map(x -> macrosConverter.convert(x, graphBuilder))
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),

@@ -55,9 +55,7 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
       QueryPathsMacro input,
       QueryResults precomputedWork) {
     return new QueriedPathsArg(
-        precomputedWork
-            .results
-            .stream()
+        precomputedWork.results.stream()
             .map(
                 queryTarget -> {
                   // What we do depends on the input.
@@ -86,8 +84,7 @@ public class QueryPathsMacroExpander extends QueryMacroExpander<QueryPathsMacro>
       // TODO(cjhopman): The sorted() call could feasibly (though unlikely) return different
       // ordering in different contexts.
       consumer.accept(
-          queriedPaths
-              .stream()
+          queriedPaths.stream()
               .map(pathResolver::getAbsolutePath)
               .map(Object::toString)
               .map(Escaper::escapeAsShellString)

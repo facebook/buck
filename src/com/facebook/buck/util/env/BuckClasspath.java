@@ -134,8 +134,7 @@ public class BuckClasspath {
   }
 
   private static ImmutableList<Path> filterAntClasspaths(ImmutableList<Path> classpaths) {
-    return classpaths
-        .stream()
+    return classpaths.stream()
         .filter(
             path ->
                 !path.startsWith("src") && !path.startsWith("src-gen") && !path.startsWith("build"))
@@ -143,8 +142,7 @@ public class BuckClasspath {
   }
 
   private static ImmutableList<Path> readClasspaths(Path classpathsFile) throws IOException {
-    return Files.readAllLines(classpathsFile)
-        .stream()
+    return Files.readAllLines(classpathsFile).stream()
         .filter(line -> !line.startsWith("#"))
         .map(Paths::get)
         .map(Path::toAbsolutePath)

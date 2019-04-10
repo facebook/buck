@@ -364,8 +364,7 @@ public class OcamlRuleBuilder {
                             .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .iterator())
                     .addAll(
-                        argFlags
-                            .stream()
+                        argFlags.stream()
                             .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .iterator())
                     .addAll(
@@ -455,8 +454,7 @@ public class OcamlRuleBuilder {
 
   private static ImmutableList<SourcePath> getCInput(
       SourcePathResolver resolver, ImmutableList<SourcePath> input) {
-    return input
-        .stream()
+    return input.stream()
         .filter(OcamlUtil.sourcePathExt(resolver, OcamlCompilables.OCAML_C))
         .collect(ImmutableList.toImmutableList());
   }

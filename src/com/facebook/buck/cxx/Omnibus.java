@@ -228,9 +228,7 @@ public class Omnibus {
         .graph(graph)
         .roots(roots)
         .body(
-            graph
-                .getNodes()
-                .stream()
+            graph.getNodes().stream()
                 .filter(n -> !roots.containsKey(n))
                 .collect(ImmutableMap.toImmutableMap(k -> k, Functions.forMap(nativeLinkables))))
         .deps(Maps.asMap(deps, Functions.forMap(nativeLinkables)))

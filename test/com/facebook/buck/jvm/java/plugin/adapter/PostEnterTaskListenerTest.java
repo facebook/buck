@@ -140,8 +140,7 @@ public class PostEnterTaskListenerTest {
                 String.format(
                     "%s: %s",
                     name,
-                    topLevelElements
-                        .stream()
+                    topLevelElements.stream()
                         .map(Element::getSimpleName)
                         .collect(Collectors.joining(", ")))));
   }

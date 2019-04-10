@@ -258,8 +258,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Iterable<CxxPreprocessorDep> getCxxPreprocessorDeps(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
-    return getBuildDeps()
-        .stream()
+    return getBuildDeps().stream()
         .filter(CxxPreprocessorDep.class::isInstance)
         .map(CxxPreprocessorDep.class::cast)
         .collect(ImmutableSet.toImmutableSet());

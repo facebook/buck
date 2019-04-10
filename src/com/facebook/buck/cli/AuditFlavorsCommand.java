@@ -172,8 +172,7 @@ public class AuditFlavorsCommand extends AbstractCommand {
               continue;
             }
             SortedMap<String, String> flavorsJson =
-                userFlavors
-                    .stream()
+                userFlavors.stream()
                     .collect(
                         ImmutableSortedMap.toImmutableSortedMap(
                             Ordering.natural(), UserFlavor::getName, UserFlavor::getDescription));

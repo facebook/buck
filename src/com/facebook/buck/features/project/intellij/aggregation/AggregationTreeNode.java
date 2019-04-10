@@ -225,9 +225,7 @@ class AggregationTreeNode {
   }
 
   public ImmutableSet<Path> getChildrenPathsByModuleType(IjModuleType moduleType) {
-    return children
-        .entrySet()
-        .stream()
+    return children.entrySet().stream()
         .filter(
             e ->
                 e.getValue().getModule() != null
@@ -238,9 +236,7 @@ class AggregationTreeNode {
 
   public ImmutableSet<Path> getChildrenPathsByModuleTypeOrTag(
       IjModuleType moduleType, String aggregationTag) {
-    return children
-        .entrySet()
-        .stream()
+    return children.entrySet().stream()
         .filter(e -> e.getValue().getModule() != null)
         .filter(
             e -> {

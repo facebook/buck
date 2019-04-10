@@ -166,10 +166,7 @@ public class SwiftLibraryDescription
         getCxxPlatforms().getFlavorAndValue(buildTarget);
     ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
-        params
-            .getExtraDeps()
-            .get()
-            .stream()
+        params.getExtraDeps().get().stream()
             .filter(
                 input ->
                     !input

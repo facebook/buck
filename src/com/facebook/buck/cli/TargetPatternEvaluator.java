@@ -130,8 +130,7 @@ class TargetPatternEvaluator {
         PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, ImmutableList.of(pattern))
             .relativePathsUnderProjectRoot;
 
-    return filePaths
-        .stream()
+    return filePaths.stream()
         .map(path -> PathSourcePath.of(rootCell.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

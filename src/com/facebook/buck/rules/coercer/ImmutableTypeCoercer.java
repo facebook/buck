@@ -50,8 +50,7 @@ public class ImmutableTypeCoercer<T> implements TypeCoercer<T> {
     }
     // Translate keys from lowerCamel to lower_hyphen
     this.paramInfos =
-        paramInfos
-            .stream()
+        paramInfos.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     paramInfo -> paramInfo.getPythonName(), paramInfo -> paramInfo));

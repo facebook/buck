@@ -69,8 +69,7 @@ public final class BuckDaemon {
       Executors.newSingleThreadScheduledExecutor();
 
   private static final boolean isCMS =
-      ManagementFactory.getGarbageCollectorMXBeans()
-          .stream()
+      ManagementFactory.getGarbageCollectorMXBeans().stream()
           .filter(GarbageCollectorMXBean::isValid)
           .map(GarbageCollectorMXBean::getName)
           .anyMatch(Predicate.isEqual("ConcurrentMarkSweep"));

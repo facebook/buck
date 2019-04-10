@@ -232,8 +232,7 @@ public class InnerClassesTable {
       }
     }
 
-    referencesToInners
-        .stream()
+    referencesToInners.stream()
         .filter(reported::add)
         .sorted(Comparator.comparing(e -> e.getQualifiedName().toString()))
         .forEach(

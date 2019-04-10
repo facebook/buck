@@ -128,8 +128,7 @@ public class FileClassPathRunner {
 
   // VisibleForTesting (can not use guava as dependency)
   static List<Path> getTestClassPath(Path classpathFile) throws IOException {
-    return Files.readAllLines(classpathFile)
-        .stream()
+    return Files.readAllLines(classpathFile).stream()
         .map(Paths::get)
         .filter(Files::exists)
         .collect(Collectors.toList());

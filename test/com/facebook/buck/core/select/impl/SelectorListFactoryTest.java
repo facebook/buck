@@ -127,9 +127,7 @@ public class SelectorListFactoryTest {
 
     assertEquals(
         Lists.newArrayList(InternalFlavor.of(flavorName1), InternalFlavor.of(flavorName2)),
-        selectors
-            .getSelectors()
-            .stream()
+        selectors.getSelectors().stream()
             .map(Selector::getDefaultConditionValue)
             .flatMap(ImmutableList::stream)
             .collect(Collectors.toList()));
@@ -158,9 +156,7 @@ public class SelectorListFactoryTest {
 
     assertEquals(
         Lists.newArrayList(InternalFlavor.of(flavorName1), InternalFlavor.of(flavorName2)),
-        selectors
-            .getSelectors()
-            .stream()
+        selectors.getSelectors().stream()
             .map(Selector::getDefaultConditionValue)
             .flatMap(ImmutableList::stream)
             .collect(Collectors.toList()));

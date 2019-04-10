@@ -88,9 +88,7 @@ public class ModuleExoHelper {
     }
     // Top level metadata.txt containing the list of jars
     String fileListing =
-        getFilesToInstall()
-            .entrySet()
-            .stream()
+        getFilesToInstall().entrySet().stream()
             .map(
                 entry -> {
                   String moduleName = entry.getValue().getParent().getFileName().toString();

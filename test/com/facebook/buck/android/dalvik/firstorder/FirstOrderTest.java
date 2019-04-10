@@ -45,8 +45,7 @@ public class FirstOrderTest {
           Derived.class);
 
   private static final ImmutableList<ClassNode> KNOWN_CLASS_NODES =
-      KNOWN_TYPES
-          .stream()
+      KNOWN_TYPES.stream()
           .map(FirstOrderTest::loadClassNode)
           .collect(ImmutableList.toImmutableList());
 

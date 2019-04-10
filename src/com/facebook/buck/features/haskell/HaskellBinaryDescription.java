@@ -181,8 +181,7 @@ public class HaskellBinaryDescription
         args.getDepsQuery()
             .map(
                 query ->
-                    Objects.requireNonNull(query.getResolvedQuery())
-                        .stream()
+                    Objects.requireNonNull(query.getResolvedQuery()).stream()
                         .map(graphBuilder::getRule)
                         .filter(NativeLinkable.class::isInstance))
             .orElse(Stream.of())

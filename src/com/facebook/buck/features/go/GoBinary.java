@@ -103,8 +103,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
         "go_binary",
         getProjectFilesystem(),
         outputDirectory,
-        resources
-            .stream()
+        resources.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     input ->

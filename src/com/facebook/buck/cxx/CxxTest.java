@@ -262,9 +262,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return additionalDeps
-        .get(() -> additionalDepsSupplier.apply(ruleFinder))
-        .stream()
+    return additionalDeps.get(() -> additionalDepsSupplier.apply(ruleFinder)).stream()
         .map(BuildRule::getBuildTarget);
   }
 

@@ -39,9 +39,7 @@ public abstract class SelectorValue {
 
   @Override
   public String toString() {
-    return getDictionary()
-        .entrySet()
-        .stream()
+    return getDictionary().entrySet().stream()
         .map(e -> "\"" + e.getKey() + "\": \"" + e.getValue() + "\"")
         .collect(Collectors.joining(", ", "select({", "})"));
   }

@@ -261,8 +261,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
           STEP_CATEGORY,
           projectFilesystem,
           buildCellRootPath,
-          resources
-              .stream()
+          resources.stream()
               .collect(
                   ImmutableMap.toImmutableMap(
                       input -> getSymlinkPath(resolver, input),

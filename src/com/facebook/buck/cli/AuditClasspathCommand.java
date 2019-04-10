@@ -238,9 +238,7 @@ public class AuditClasspathCommand extends AbstractCommand {
       }
       targetClasspaths.putAll(
           target.getFullyQualifiedName(),
-          hasClasspathEntries
-              .getTransitiveClasspaths()
-              .stream()
+          hasClasspathEntries.getTransitiveClasspaths().stream()
               .map(pathResolver::getAbsolutePath)
               .map(Object::toString)
               .collect(ImmutableList.toImmutableList()));

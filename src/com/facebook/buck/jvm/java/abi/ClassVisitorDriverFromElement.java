@@ -137,8 +137,7 @@ class ClassVisitorDriverFromElement {
           descriptorFactory.getInternalName(e),
           signatureFactory.getSignature(e),
           descriptorFactory.getInternalName(superclass),
-          e.getInterfaces()
-              .stream()
+          e.getInterfaces().stream()
               .map(descriptorFactory::getInternalName)
               .toArray(size -> new String[size]));
       classVisitorStarted = true;
@@ -227,9 +226,7 @@ class ClassVisitorDriverFromElement {
         innerClassesTable.addTypeReferences(toErasure);
 
         String[] exceptions =
-            toErasure
-                .getThrownTypes()
-                .stream()
+            toErasure.getThrownTypes().stream()
                 .map(descriptorFactory::getInternalName)
                 .toArray(String[]::new);
 
@@ -278,8 +275,7 @@ class ClassVisitorDriverFromElement {
       }
 
       String[] exceptions =
-          e.getThrownTypes()
-              .stream()
+          e.getThrownTypes().stream()
               .map(descriptorFactory::getInternalName)
               .toArray(count -> new String[count]);
 

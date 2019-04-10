@@ -187,8 +187,7 @@ public class PublishCommandIntegrationTest {
   }
 
   private static ImmutableSortedSet<ZipEntry> getZipFilesFiltered(File zipFile) throws IOException {
-    return getZipContents(zipFile)
-        .stream()
+    return getZipContents(zipFile).stream()
         .filter(zipEntry -> !zipEntry.isDirectory())
         .filter(zipEntry -> !zipEntry.getName().startsWith("META-INF"))
         .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(ZipEntry::getName)));

@@ -54,9 +54,7 @@ class LocalBackedCasServer extends ContentAddressableStorageImplBase {
     try {
       Stream<Digest> missing =
           storage.findMissing(
-              request
-                  .getBlobDigestsList()
-                  .stream()
+              request.getBlobDigestsList().stream()
                   .map(GrpcDigest::new)
                   .collect(Collectors.toList()));
       responseObserver.onNext(
@@ -76,9 +74,7 @@ class LocalBackedCasServer extends ContentAddressableStorageImplBase {
     try {
       ImmutableList<UploadResult> uploadResults =
           storage.batchUpdateBlobs(
-              request
-                  .getRequestsList()
-                  .stream()
+              request.getRequestsList().stream()
                   .map(
                       blobRequest ->
                           UploadDataSupplier.of(

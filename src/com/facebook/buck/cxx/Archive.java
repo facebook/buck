@@ -167,8 +167,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                   archiverFlags,
                   archiver.getArchiveOptions(contents == ArchiveContents.THIN),
                   outputPath,
-                  inputs
-                      .stream()
+                  inputs.stream()
                       .map(resolver::getRelativePath)
                       .collect(ImmutableList.toImmutableList()),
                   archiver,

@@ -128,15 +128,13 @@ public class JarBuildStepsFactory
 
     public ZipArchiveDependencySupplier getAbiClasspath() {
       return new ZipArchiveDependencySupplier(
-          this.infos
-              .stream()
+          this.infos.stream()
               .map(i -> i.abiJar)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     }
 
     public ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
-      return infos
-          .stream()
+      return infos.stream()
           .map(info -> info.compileTimeJar)
           .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     }

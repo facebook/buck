@@ -695,8 +695,7 @@ class NewNativeTargetProjectMutator {
         shellScriptBuildPhase
             .getInputPaths()
             .addAll(
-                arg.getSrcs()
-                    .stream()
+                arg.getSrcs().stream()
                     .map(sourcePathResolver)
                     .map(pathRelativizer::outputDirToRootRelative)
                     .map(Object::toString)

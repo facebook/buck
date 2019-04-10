@@ -372,10 +372,7 @@ class AndroidBinaryResourcesGraphEnhancer {
               createGenerateRDotJava(
                   pathToRDotTxtFiles.build(),
                   getTargetsAsRules(
-                      packageableCollection
-                          .getResourceDetails()
-                          .values()
-                          .stream()
+                      packageableCollection.getResourceDetails().values().stream()
                           .flatMap(r -> r.getResourcesWithNonEmptyResDir().stream())
                           .collect(ImmutableList.toImmutableList())),
                   allFilteredResourceProviders.values()));
@@ -669,8 +666,7 @@ class AndroidBinaryResourcesGraphEnhancer {
 
   private ImmutableList<HasAndroidResourceDeps> getTargetsAsResourceDeps(
       Collection<BuildTarget> targets) {
-    return getTargetsAsRules(targets)
-        .stream()
+    return getTargetsAsRules(targets).stream()
         .map(
             input -> {
               Preconditions.checkState(input instanceof HasAndroidResourceDeps);

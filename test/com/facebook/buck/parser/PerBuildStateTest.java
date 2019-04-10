@@ -138,8 +138,7 @@ public class PerBuildStateTest {
         perBuildState.getAllTargetNodes(cell, testFooBuckFile, EmptyTargetConfiguration.INSTANCE);
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
-        targetNodes
-            .stream()
+        targetNodes.stream()
             .map(TargetNode::getBuildTarget)
             .collect(ImmutableList.toImmutableList()),
         hasItems(fooLib1Target, fooLib2Target));

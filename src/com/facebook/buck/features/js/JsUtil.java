@@ -92,9 +92,7 @@ public class JsUtil {
         jobArgs
             .addArray(
                 "flavors",
-                buildTarget
-                    .getFlavors()
-                    .stream()
+                buildTarget.getFlavors().stream()
                     .filter(JsFlavors::shouldBePassedToWorker)
                     .map(Flavor::getName)
                     .collect(JsonBuilder.toArrayOfStrings()))

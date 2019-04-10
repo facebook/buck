@@ -93,9 +93,7 @@ public class DistBuildClientEventListener implements BuckEventListener {
     List<DistBuildClientCacheResult> cacheResults =
         new HashSet<>(
                 cacheResultsByKey.values()) // deduplicate builders pointed to by multiple keys
-            .stream()
-            .map(Builder::build)
-            .collect(Collectors.toList());
+            .stream().map(Builder::build).collect(Collectors.toList());
 
     return new DistBuildClientCacheResultEvent(cacheResults);
   }

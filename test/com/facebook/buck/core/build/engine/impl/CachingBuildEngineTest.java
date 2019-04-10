@@ -3424,9 +3424,7 @@ public class CachingBuildEngineTest {
               .putMetadata(
                   BuildInfo.MetadataKey.DEP_FILE,
                   ObjectMappers.WRITER.writeValueAsString(
-                      depFileKey
-                          .getInputs()
-                          .stream()
+                      depFileKey.getInputs().stream()
                           .map(pathResolver::getRelativePath)
                           .collect(ImmutableList.toImmutableList())))
               .build(),
@@ -3457,9 +3455,7 @@ public class CachingBuildEngineTest {
             cacheResult.getMetadata().get(BuildInfo.MetadataKey.DEP_FILE),
             equalTo(
                 ObjectMappers.WRITER.writeValueAsString(
-                    depFileKey
-                        .getInputs()
-                        .stream()
+                    depFileKey.getInputs().stream()
                         .map(pathResolver::getRelativePath)
                         .collect(ImmutableList.toImmutableList()))));
         Files.delete(fetchedArtifact.get());
@@ -3546,9 +3542,7 @@ public class CachingBuildEngineTest {
               .get();
       assertThat(getSuccess(result), equalTo(BuildRuleSuccessType.BUILT_LOCALLY));
       assertManifestLoaded(
-          listener
-              .getEvents()
-              .stream()
+          listener.getEvents().stream()
               .filter(BuildRuleEvent.Finished.class::isInstance)
               .map(BuildRuleEvent.Finished.class::cast)
               .collect(Collectors.toList()));
@@ -3994,8 +3988,7 @@ public class CachingBuildEngineTest {
       for (List<BuildRuleEvent> queue : grouped.values()) {
         queue.sort(Comparator.comparingLong(BuildRuleEvent::getNanoTime));
         ImmutableList<String> queueDescription =
-            queue
-                .stream()
+            queue.stream()
                 .map(event -> String.format("%s@%s", event, event.getNanoTime()))
                 .collect(ImmutableList.toImmutableList());
         Iterator<BuildRuleEvent> itr = queue.iterator();

@@ -225,8 +225,7 @@ public class Build implements Closeable {
 
     ImmutableList<BuildRule> rulesToBuild =
         ImmutableList.copyOf(
-            targetsToBuild
-                .stream()
+            targetsToBuild.stream()
                 .map(buildTarget -> getGraphBuilder().requireRule(buildTarget))
                 .collect(ImmutableSet.toImmutableSet()));
 
@@ -264,8 +263,7 @@ public class Build implements Closeable {
 
       return BuildExecutionResult.builder()
           .setFailures(
-              buildResults
-                  .stream()
+              buildResults.stream()
                   .filter(input -> !input.isSuccess())
                   .collect(Collectors.toList()))
           .setResults(resultBuilder)
@@ -303,8 +301,7 @@ public class Build implements Closeable {
 
     setupBuildSymlinks();
 
-    return rulesToBuild
-        .stream()
+    return rulesToBuild.stream()
         .map(rule -> buildEngine.build(buildContext, executionContext, rule))
         .collect(ImmutableList.toImmutableList());
   }

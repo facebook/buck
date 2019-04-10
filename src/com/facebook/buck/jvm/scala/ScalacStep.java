@@ -78,8 +78,7 @@ public class ScalacStep extends ShellStep {
     commandBuilder.add("-d").add(filesystem.resolve(outputDirectory).toString());
 
     String classpath =
-        classpathEntries
-            .stream()
+        classpathEntries.stream()
             .map(filesystem::resolve)
             .map(Path::toString)
             .collect(Collectors.joining(File.pathSeparator));

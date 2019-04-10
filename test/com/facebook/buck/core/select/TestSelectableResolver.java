@@ -28,8 +28,7 @@ public class TestSelectableResolver implements SelectableResolver {
 
   public TestSelectableResolver(List<Selectable> selectables) {
     this.selectables =
-        selectables
-            .stream()
+        selectables.stream()
             .collect(ImmutableMap.toImmutableMap(Selectable::getBuildTarget, Functions.identity()));
   }
 

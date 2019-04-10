@@ -145,9 +145,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       this.linker = linker;
       this.output = new PublicOutputPath(output);
       this.extraOutputs =
-          extraOutputs
-              .values()
-              .stream()
+          extraOutputs.values().stream()
               .map(PublicOutputPath::new)
               .collect(ImmutableList.toImmutableList());
       Optional<Path> linkerMapPath = getLinkerMapPath(linker, output);
@@ -168,8 +166,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       this.thinLto = thinLto;
       this.fatLto = fatLto;
       this.relativeCellRoots =
-          relativeCellRoots
-              .stream()
+          relativeCellRoots.stream()
               .map(Object::toString)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     }
@@ -190,8 +187,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       Path linkOutput = requiresPostprocessing ? scratchDir.resolve("link-output") : outputPath;
 
       ImmutableMap<Path, Path> cellRootMap =
-          this.relativeCellRoots
-              .stream()
+          this.relativeCellRoots.stream()
               .collect(
                   ImmutableSortedMap.toImmutableSortedMap(
                       Ordering.natural(),
@@ -241,8 +237,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
 
   @Override
   public Stream<BuildRule> getAppleDebugSymbolDeps() {
-    return getBuildDeps()
-        .stream()
+    return getBuildDeps().stream()
         .filter(x -> x instanceof Archive || x instanceof CxxPreprocessAndCompile);
   }
 

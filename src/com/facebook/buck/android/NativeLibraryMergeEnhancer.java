@@ -573,9 +573,7 @@ class NativeLibraryMergeEnhancer {
       }
     }
     // Sort here to ensure consistent ordering, because the build target depends on the order.
-    return structuralDeps
-        .keySet()
-        .stream()
+    return structuralDeps.keySet().stream()
         .sorted(Comparator.comparing(MergedLibNativeLinkable::getBuildTarget))
         .collect(ImmutableList.toImmutableList());
   }

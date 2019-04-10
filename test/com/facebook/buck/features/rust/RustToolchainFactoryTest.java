@@ -80,11 +80,7 @@ public class RustToolchainFactoryTest {
         Matchers.equalTo(
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(new TestActionGraphBuilder())));
     assertThat(
-        toolchain
-            .get()
-            .getRustPlatforms()
-            .getValues()
-            .stream()
+        toolchain.get().getRustPlatforms().getValues().stream()
             .map(RustPlatform::getCxxPlatform)
             .collect(ImmutableList.toImmutableList()),
         Matchers.contains(

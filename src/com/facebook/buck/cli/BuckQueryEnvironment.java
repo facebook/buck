@@ -150,9 +150,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     this.rootCell = rootCell;
     this.ownersReportBuilder = ownersReportBuilder;
     this.buildFileTrees =
-        rootCell
-            .getAllCells()
-            .stream()
+        rootCell.getAllCells().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     Function.identity(),
@@ -318,8 +316,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     TargetNode<?> node = getNode(target);
     BuildTarget buildTarget = target.getBuildTarget();
     Cell cell = rootCell.getCell(buildTarget);
-    return node.getInputs()
-        .stream()
+    return node.getInputs().stream()
         .map(
             path ->
                 PathSourcePath.of(
@@ -344,8 +341,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
       @Override
       public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
         result.add(getOrCreateQueryBuildTarget(node.getBuildTarget()));
-        return node.getParseDeps()
-            .stream()
+        return node.getParseDeps().stream()
             .map(targetsToNodes::get)
             .collect(ImmutableSet.toImmutableSet());
       }
@@ -359,8 +355,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
       throws QueryException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     ImmutableSet<BuildTarget> newBuildTargets =
-        targets
-            .stream()
+        targets.stream()
             .filter(target -> target instanceof QueryBuildTarget)
             .map(target -> ((QueryBuildTarget) target).getBuildTarget())
             .filter(buildTarget -> !targetsToNodes.containsKey(buildTarget))

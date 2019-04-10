@@ -156,9 +156,7 @@ public class AuditRulesCommand extends AbstractCommand {
       PrintStream stdOut,
       ImmutableMap<String, Map<String, Object>> rawRules,
       Predicate<String> includeType) {
-    rawRules
-        .entrySet()
-        .stream()
+    rawRules.entrySet().stream()
         .filter(
             rawRule -> {
               String type = (String) rawRule.getValue().get(BuckPyFunction.TYPE_PROPERTY_NAME);

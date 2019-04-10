@@ -161,17 +161,14 @@ public class AppleDescriptions {
             .putAll(
                 Stream.of(
                         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                                buildTarget, pathResolver, arg.getHeaders())
-                            .entrySet()
-                            .stream(),
+                            buildTarget, pathResolver, arg.getHeaders())
+                            .entrySet().stream(),
                         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                                buildTarget, pathResolver, arg.getExportedHeaders())
-                            .entrySet()
-                            .stream(),
+                            buildTarget, pathResolver, arg.getExportedHeaders())
+                            .entrySet().stream(),
                         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-                                buildTarget, pathResolver, headerPathPrefix, arg.getHeaders())
-                            .entrySet()
-                            .stream())
+                            buildTarget, pathResolver, headerPathPrefix, arg.getHeaders())
+                            .entrySet().stream())
                     .reduce(Stream::concat)
                     .orElse(Stream.empty())
                     .distinct() // allow duplicate entries as long as they map to the same path
@@ -197,17 +194,14 @@ public class AppleDescriptions {
             .putAll(
                 Stream.of(
                         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                                buildTarget, pathResolver, privateSourceSet)
-                            .entrySet()
-                            .stream(),
+                            buildTarget, pathResolver, privateSourceSet)
+                            .entrySet().stream(),
                         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
-                                buildTarget, pathResolver, publicSourceSet)
-                            .entrySet()
-                            .stream(),
+                            buildTarget, pathResolver, publicSourceSet)
+                            .entrySet().stream(),
                         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
-                                buildTarget, pathResolver, headerPathPrefix, privateSourceSet)
-                            .entrySet()
-                            .stream())
+                            buildTarget, pathResolver, headerPathPrefix, privateSourceSet)
+                            .entrySet().stream())
                     .reduce(Stream::concat)
                     .orElse(Stream.empty())
                     .distinct() // allow duplicate entries as long as they map to the same path
@@ -300,13 +294,11 @@ public class AppleDescriptions {
             .putAll(
                 Stream.concat(
                         convertAppleHeadersToPublicCxxHeaders(
-                                buildTarget, resolver::getRelativePath, headerPathPrefix, arg)
-                            .entrySet()
-                            .stream(),
+                            buildTarget, resolver::getRelativePath, headerPathPrefix, arg)
+                            .entrySet().stream(),
                         convertAppleHeadersToPrivateCxxHeaders(
-                                buildTarget, resolver::getRelativePath, headerPathPrefix, arg)
-                            .entrySet()
-                            .stream())
+                            buildTarget, resolver::getRelativePath, headerPathPrefix, arg)
+                            .entrySet().stream())
                     .distinct() // allow duplicate entries as long as they map to the same path
                     .collect(
                         ImmutableSortedMap.toImmutableSortedMap(
@@ -491,8 +483,7 @@ public class AppleDescriptions {
               params.withoutDeclaredDeps().withoutExtraDeps(),
               appleCxxPlatform,
               moduleName,
-              coreDataModelArgs
-                  .stream()
+              coreDataModelArgs.stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
                   .collect(ImmutableSet.toImmutableSet())));
     }
@@ -527,8 +518,7 @@ public class AppleDescriptions {
               projectFilesystem,
               params.withoutDeclaredDeps().withoutExtraDeps(),
               appleCxxPlatform,
-              sceneKitAssetsArgs
-                  .stream()
+              sceneKitAssetsArgs.stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
                   .collect(ImmutableSet.toImmutableSet())));
     }
@@ -1015,10 +1005,7 @@ public class AppleDescriptions {
                 .append(newDeps)
                 .toSortedSet(Ordering.natural()))
         .withExtraDeps(
-            params
-                .getExtraDeps()
-                .get()
-                .stream()
+            params.getExtraDeps().get().stream()
                 .filter(notOriginalBinaryRule)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }

@@ -84,9 +84,7 @@ public class DeterministicManifest extends Manifest {
 
   private void writeAttributes(Attributes attributes, OutputStream out) throws IOException {
     List<Attributes.Name> sortedNames =
-        attributes
-            .keySet()
-            .stream()
+        attributes.keySet().stream()
             .map(a -> (Attributes.Name) a)
             .sorted(Comparator.comparing(Attributes.Name::toString))
             .collect(Collectors.toList());

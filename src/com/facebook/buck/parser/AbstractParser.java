@@ -169,9 +169,7 @@ abstract class AbstractParser implements Parser {
         new TreeMap<>(buildFileManifest.getTargets().get(shortName));
     attributes.put(
         InternalTargetAttributeNames.DIRECT_DEPENDENCIES,
-        targetNode
-            .getParseDeps()
-            .stream()
+        targetNode.getParseDeps().stream()
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()));
     return attributes;

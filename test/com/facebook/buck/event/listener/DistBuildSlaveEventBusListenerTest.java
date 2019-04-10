@@ -324,9 +324,7 @@ public class DistBuildSlaveEventBusListenerTest {
     verify(distBuildServiceMock);
 
     List<BuildSlaveEvent> progressEvents =
-        capturedBuildSlaveEvents
-            .getValues()
-            .stream()
+        capturedBuildSlaveEvents.getValues().stream()
             .flatMap(List::stream)
             .filter(
                 event ->
@@ -686,9 +684,7 @@ public class DistBuildSlaveEventBusListenerTest {
 
     verify(distBuildServiceMock);
     List<String> capturedEventsTargets =
-        capturedEventsLists
-            .getValues()
-            .stream()
+        capturedEventsLists.getValues().stream()
             .flatMap(List::stream)
             .filter(event -> event.eventType.equals(BuildSlaveEventType.BUILD_RULE_UNLOCKED_EVENT))
             .map(event -> event.getBuildRuleUnlockedEvent().getBuildTarget())

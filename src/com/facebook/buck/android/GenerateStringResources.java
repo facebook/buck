@@ -68,8 +68,7 @@ public class GenerateStringResources extends AbstractBuildRule {
     this.ruleFinder = ruleFinder;
     this.filteredResourcesProviders = filteredResourcesProviders;
     this.filteredResources =
-        filteredResourcesProviders
-            .stream()
+        filteredResourcesProviders.stream()
             .flatMap(provider -> provider.getResDirectories().stream())
             .collect(ImmutableList.toImmutableList());
   }
@@ -99,8 +98,7 @@ public class GenerateStringResources extends AbstractBuildRule {
             ProjectFilesystem fileSystem = getProjectFilesystem();
             int i = 0;
             for (Path resDir :
-                filteredResourcesProviders
-                    .stream()
+                filteredResourcesProviders.stream()
                     .flatMap(
                         provider ->
                             provider

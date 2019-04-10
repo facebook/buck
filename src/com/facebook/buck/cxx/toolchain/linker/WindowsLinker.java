@@ -50,8 +50,7 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
           // Buck realistically only support /DEBUG, which is the same as /DEBUG:FULL, but lld-link
           // has other options including /DEBUG:GHASH, so we have to be more careful checking here.
           boolean isPdbGenerated =
-              linkerArgs
-                  .stream()
+              linkerArgs.stream()
                   .anyMatch(arg -> arg.startsWith("/DEBUG") && !arg.equals("/DEBUG:NONE"));
           if (isPdbGenerated) {
             String pdbFilename = MorePaths.getNameWithoutExtension(output) + ".pdb";

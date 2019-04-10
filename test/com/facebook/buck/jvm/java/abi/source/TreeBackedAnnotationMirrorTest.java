@@ -121,9 +121,7 @@ public class TreeBackedAnnotationMirrorTest extends CompilerTreeApiParameterized
     AnnotationMirror a = elements.getTypeElement("Foo").getAnnotationMirrors().get(0);
 
     assertThat(
-        a.getElementValues()
-            .entrySet()
-            .stream()
+        a.getElementValues().entrySet().stream()
             .flatMap(
                 entry ->
                     Stream.of(

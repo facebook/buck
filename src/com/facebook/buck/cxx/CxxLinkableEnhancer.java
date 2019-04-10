@@ -395,8 +395,7 @@ public class CxxLinkableEnhancer {
     @Override
     public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
       ImmutableSortedSet<Path> searchPaths =
-          frameworkPaths
-              .stream()
+          frameworkPaths.stream()
               .map(frameworkPathToSearchPath)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       for (Path searchPath : searchPaths) {
@@ -457,8 +456,7 @@ public class CxxLinkableEnhancer {
     @Override
     public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver resolver) {
       ImmutableSortedSet<Path> searchPaths =
-          frameworkPaths
-              .stream()
+          frameworkPaths.stream()
               .map(frameworkPathToSearchPath)
               .filter(Objects::nonNull)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

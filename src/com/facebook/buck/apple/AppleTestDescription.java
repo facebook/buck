@@ -594,8 +594,7 @@ public class AppleTestDescription
     for (CxxPlatform platform : cxxPlatforms) {
       ImmutableSet<BuildTarget> blacklistables =
           NativeLinkables.getTransitiveNativeLinkables(platform, graphBuilder, roots.values())
-              .entrySet()
-              .stream()
+              .entrySet().stream()
               .filter(x -> !(x.getValue() instanceof SwiftRuntimeNativeLinkable))
               .map(x -> x.getKey())
               .collect(ImmutableSet.toImmutableSet());

@@ -158,10 +158,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             .build();
 
     Map<ID, ActionAnalysisData> actionAnalysisDataMap =
-        actionAnalysisRegistry
-            .getRegistered()
-            .entrySet()
-            .stream()
+        actionAnalysisRegistry.getRegistered().entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     entry -> entry.getKey().getID(), entry -> entry.getValue()));

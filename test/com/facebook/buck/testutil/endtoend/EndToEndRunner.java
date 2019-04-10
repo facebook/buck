@@ -179,9 +179,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     List<FrameworkMethod> environmentForMethods =
         getTestClass().getAnnotatedMethods(EnvironmentFor.class);
     Set<String> testMethodNames =
-        getTestClass()
-            .getAnnotatedMethods(Test.class)
-            .stream()
+        getTestClass().getAnnotatedMethods(Test.class).stream()
             .map(m -> m.getName())
             .collect(Collectors.toSet());
     for (FrameworkMethod environmentForMethod : environmentForMethods) {

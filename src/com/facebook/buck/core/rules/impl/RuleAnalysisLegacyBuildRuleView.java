@@ -81,9 +81,7 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule {
 
   private SortedSet<BuildRule> getBuildDepsSupplier() {
     return ruleResolver.getAllRules(
-        action
-            .getInputs()
-            .stream()
+        action.getInputs().stream()
             .filter(artifact -> artifact instanceof BuildArtifact)
             .map(artifact -> ((BuildArtifact) artifact).getActionDataKey().getBuildTarget())
             .collect(ImmutableList.toImmutableList()));

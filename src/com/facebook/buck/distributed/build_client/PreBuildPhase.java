@@ -111,8 +111,7 @@ public class PreBuildPhase {
 
     distBuildClientStats.startTimer(CREATE_DISTRIBUTED_BUILD);
     List<String> buildTargets =
-        topLevelTargets
-            .stream()
+        topLevelTargets.stream()
             .map(BuildTarget::getFullyQualifiedName)
             .sorted()
             .collect(Collectors.toList());

@@ -50,8 +50,7 @@ public class JsonConcatenateStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ImmutableSortedSet<Path> filesToConcatenate =
-        inputs
-            .stream()
+        inputs.stream()
             .map(input -> filesystem.getRootPath().resolve(input))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     Path destination = filesystem.getRootPath().resolve(output);

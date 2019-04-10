@@ -1189,9 +1189,7 @@ public final class MainRunner {
           if (logBuckConfig.isBuckConfigLocalWarningEnabled()
               && !console.getVerbosity().isSilent()) {
             ImmutableList<Path> localConfigFiles =
-                rootCell
-                    .getAllCells()
-                    .stream()
+                rootCell.getAllCells().stream()
                     .map(
                         cell ->
                             cell.getRoot().resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME))
@@ -1842,9 +1840,7 @@ public final class MainRunner {
       ImmutableMap.Builder<String, String> builder =
           ImmutableMap.builderWithExpectedSize(systemEnv.size());
 
-      systemEnv
-          .entrySet()
-          .stream()
+      systemEnv.entrySet().stream()
           .filter(
               e ->
                   !NAILGUN_STDOUT_ISTTY_ENV.equals(e.getKey())

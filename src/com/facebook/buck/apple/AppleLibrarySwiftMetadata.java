@@ -47,22 +47,17 @@ public class AppleLibrarySwiftMetadata {
   public static AppleLibrarySwiftMetadata from(
       ImmutableSortedSet<SourceWithFlags> allSources, SourcePathResolver pathResolver) {
     Map<Boolean, List<SourceWithFlags>> swiftAndNonSwiftSources =
-        allSources
-            .stream()
+        allSources.stream()
             .collect(
                 Collectors.partitioningBy(
                     src -> SwiftDescriptions.isSwiftSource(src, pathResolver)));
 
     ImmutableSet<SourceWithFlags> swiftSources =
-        swiftAndNonSwiftSources
-            .getOrDefault(true, Collections.emptyList())
-            .stream()
+        swiftAndNonSwiftSources.getOrDefault(true, Collections.emptyList()).stream()
             .collect(ImmutableSet.toImmutableSet());
 
     ImmutableSet<SourceWithFlags> nonSwiftSources =
-        swiftAndNonSwiftSources
-            .getOrDefault(false, Collections.emptyList())
-            .stream()
+        swiftAndNonSwiftSources.getOrDefault(false, Collections.emptyList()).stream()
             .collect(ImmutableSet.toImmutableSet());
 
     return new AppleLibrarySwiftMetadata(swiftSources, nonSwiftSources);

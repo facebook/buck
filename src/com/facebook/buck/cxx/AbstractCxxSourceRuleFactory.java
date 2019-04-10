@@ -179,16 +179,14 @@ abstract class AbstractCxxSourceRuleFactory {
 
   @Value.Lazy
   protected ImmutableSet<FrameworkPath> getFrameworks() {
-    return getCxxPreprocessorInput()
-        .stream()
+    return getCxxPreprocessorInput().stream()
         .flatMap(input -> input.getFrameworks().stream())
         .collect(ImmutableSet.toImmutableSet());
   }
 
   @Value.Lazy
   protected ImmutableList<CxxHeaders> getIncludes() {
-    return getCxxPreprocessorInput()
-        .stream()
+    return getCxxPreprocessorInput().stream()
         .flatMap(input -> input.getIncludes().stream())
         .collect(ImmutableList.toImmutableList());
   }
@@ -196,8 +194,7 @@ abstract class AbstractCxxSourceRuleFactory {
   private final Function<CxxSource.Type, ImmutableList<Arg>> rulePreprocessorFlags =
       memoize(
           type ->
-              getCxxPreprocessorInput()
-                  .stream()
+              getCxxPreprocessorInput().stream()
                   .flatMap(input -> input.getPreprocessorFlags().get(type).stream())
                   .collect(ImmutableList.toImmutableList()));
 
@@ -659,9 +656,7 @@ abstract class AbstractCxxSourceRuleFactory {
   public ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       ImmutableMap<String, CxxSource> sources) {
 
-    return sources
-        .entrySet()
-        .stream()
+    return sources.entrySet().stream()
         .map(
             entry -> {
               String name = entry.getKey();

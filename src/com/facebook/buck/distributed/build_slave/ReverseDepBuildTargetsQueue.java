@@ -56,15 +56,11 @@ public class ReverseDepBuildTargetsQueue implements BuildTargetsQueue {
     this.mostBuildRulesFinishedPercentageThreshold = mostBuildRulesFinishedPercentageThreshold;
 
     this.zeroDependencyTargets =
-        distributableBuildGraph
-            .leafNodes
-            .stream()
+        distributableBuildGraph.leafNodes.stream()
             .map(DistributableNode::getTargetName)
             .collect(Collectors.toList());
     this.uncachableZeroDependencyTargets =
-        distributableBuildGraph
-            .leafNodes
-            .stream()
+        distributableBuildGraph.leafNodes.stream()
             .filter(DistributableNode::isUncacheable)
             .map(DistributableNode::getTargetName)
             .collect(Collectors.toSet());

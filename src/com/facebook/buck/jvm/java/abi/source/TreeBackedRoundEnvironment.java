@@ -47,17 +47,14 @@ class TreeBackedRoundEnvironment implements RoundEnvironment {
 
   @Override
   public Set<? extends Element> getRootElements() {
-    return javacRoundEnvironment
-        .getRootElements()
-        .stream()
+    return javacRoundEnvironment.getRootElements().stream()
         .map(task.getElements()::getCanonicalElement)
         .collect(toSet());
   }
 
   @Override
   public Set<? extends Element> getElementsAnnotatedWith(TypeElement a) {
-    return javacRoundEnvironment
-        .getElementsAnnotatedWith(task.getElements().getJavacElement(a))
+    return javacRoundEnvironment.getElementsAnnotatedWith(task.getElements().getJavacElement(a))
         .stream()
         .map(task.getElements()::getCanonicalElement)
         .collect(toSet());
@@ -65,9 +62,7 @@ class TreeBackedRoundEnvironment implements RoundEnvironment {
 
   @Override
   public Set<? extends Element> getElementsAnnotatedWith(Class<? extends Annotation> a) {
-    return javacRoundEnvironment
-        .getElementsAnnotatedWith(a)
-        .stream()
+    return javacRoundEnvironment.getElementsAnnotatedWith(a).stream()
         .map(task.getElements()::getCanonicalElement)
         .collect(toSet());
   }

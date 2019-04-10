@@ -112,9 +112,7 @@ public class JavaLibraryDescription
 
       JarShape.Summary summary = shape.gatherDeps(baseLibrary);
       ImmutableSet<SourcePath> sources =
-          summary
-              .getPackagedRules()
-              .stream()
+          summary.getPackagedRules().stream()
               .filter(HasSources.class::isInstance)
               .map(rule -> ((HasSources) rule).getSources())
               .flatMap(Collection::stream)
@@ -131,9 +129,7 @@ public class JavaLibraryDescription
       // Classpath deps
       deps.add(baseLibrary);
       deps.addAll(
-          summary
-              .getClasspath()
-              .stream()
+          summary.getClasspath().stream()
               .filter(rule -> HasClasspathEntries.class.isAssignableFrom(rule.getClass()))
               .flatMap(rule -> rule.getTransitiveClasspathDeps().stream())
               .iterator());

@@ -98,8 +98,7 @@ public class BuildSlaveLogsMaterializer {
       StampedeId stampedeId, List<BuildSlaveRunId> toMaterialize) {
     List<LogDir> logDirs = fetchBuildSlaveLogDirs(stampedeId, toMaterialize);
     materializeLogDirs(logDirs);
-    return logDirs
-        .stream()
+    return logDirs.stream()
         .filter(x -> x.isSetErrorMessage())
         .map(x -> x.getBuildSlaveRunId())
         .collect(Collectors.toList());

@@ -558,8 +558,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Set<String> sourceClassNames = Sets.newHashSetWithExpectedSize(sources.size());
       try {
         JavaPaths.getExpandedSourcePaths(
-                sources
-                    .stream()
+                sources.stream()
                     .map(resolver::getAbsolutePath)
                     .collect(ImmutableList.toImmutableList()))
             .stream()
@@ -699,9 +698,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             builder.add(buildContext.getSourcePathResolver().getAbsolutePath(sourcePath)));
     return builder
         .addAll(
-            compiledTestsLibrary
-                .getTransitiveClasspaths()
-                .stream()
+            compiledTestsLibrary.getTransitiveClasspaths().stream()
                 .map(buildContext.getSourcePathResolver()::getAbsolutePath)
                 .collect(ImmutableSet.toImmutableSet()))
         .addAll(

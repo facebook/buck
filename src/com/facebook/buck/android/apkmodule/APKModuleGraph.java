@@ -188,8 +188,7 @@ public class APKModuleGraph implements AddsToRuleKey {
   }
 
   public ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> toOutgoingEdgesMap() {
-    return getAPKModules()
-        .stream()
+    return getAPKModules().stream()
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
                 Ordering.natural(),

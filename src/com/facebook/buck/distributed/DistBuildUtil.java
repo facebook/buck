@@ -110,9 +110,7 @@ public class DistBuildUtil {
       return 0;
     }
 
-    return minionRequirements
-        .getRequirements()
-        .stream()
+    return minionRequirements.getRequirements().stream()
         .mapToInt(req -> req.getRequiredCount())
         .sum();
   }

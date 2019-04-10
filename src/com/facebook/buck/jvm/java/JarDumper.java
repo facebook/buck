@@ -60,8 +60,7 @@ public class JarDumper {
 
       result.add("");
       result.add("Contents:");
-      abiJar
-          .stream()
+      abiJar.stream()
           .flatMap(
               entry ->
                   Stream.concat(

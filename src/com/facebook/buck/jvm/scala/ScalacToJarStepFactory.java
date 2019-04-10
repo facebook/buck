@@ -68,8 +68,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
     this.configCompilerFlags = configCompilerFlags;
     this.extraArguments = extraArguments;
     this.compilerPlugins =
-        compilerPlugins
-            .stream()
+        compilerPlugins.stream()
             .map(BuildRule::getSourcePathToOutput)
             .collect(ImmutableSet.toImmutableSet());
     this.javac = javac;
@@ -118,8 +117,7 @@ public class ScalacToJarStepFactory extends CompileToJarStepFactory implements A
 
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
-            sourceFilePaths
-                .stream()
+            sourceFilePaths.stream()
                 .filter(JAVA_PATH_MATCHER::matches)
                 .collect(Collectors.toSet()));
 

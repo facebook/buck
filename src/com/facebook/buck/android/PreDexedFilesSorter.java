@@ -223,8 +223,7 @@ public class PreDexedFilesSorter {
       }
 
       ImmutableSet<SourcePath> primaryDexInputs =
-          primaryDexContents
-              .stream()
+          primaryDexContents.stream()
               .map(DexWithClasses::getSourcePathToDexFile)
               .collect(ImmutableSet.toImmutableSet());
 

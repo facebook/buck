@@ -145,8 +145,7 @@ public class Aapt2Link extends AbstractBuildRule {
     // Need to reverse the order of the rules because aapt2 allows later resources
     // to override earlier ones, but aapt gives the earlier ones precedence.
     Iterable<Path> compiledResourcePaths =
-        Lists.reverse(compileRules)
-                .stream()
+        Lists.reverse(compileRules).stream()
                 .map(Aapt2Compile::getSourcePathToOutput)
                 .map(context.getSourcePathResolver()::getAbsolutePath)
             ::iterator;
@@ -173,8 +172,7 @@ public class Aapt2Link extends AbstractBuildRule {
             context.getSourcePathResolver(),
             getProjectFilesystem().resolve(linkTreePath),
             symlinkPaths.build(),
-            dependencyResourceApks
-                .stream()
+            dependencyResourceApks.stream()
                 .map(context.getSourcePathResolver()::getRelativePath)
                 .collect(Collectors.toList())));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));

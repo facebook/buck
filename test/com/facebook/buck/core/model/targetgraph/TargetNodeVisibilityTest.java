@@ -245,12 +245,10 @@ public class TargetNodeVisibilityTest {
             filesystem,
             buildTarget,
             ImmutableSet.of(),
-            visibilities
-                .stream()
+            visibilities.stream()
                 .map(s -> VisibilityPatternParser.parse(cellNames, s))
                 .collect(ImmutableSet.toImmutableSet()),
-            withinView
-                .stream()
+            withinView.stream()
                 .map(s -> VisibilityPatternParser.parse(cellNames, s))
                 .collect(ImmutableSet.toImmutableSet()),
             createCellRoots(filesystem));

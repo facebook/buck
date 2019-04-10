@@ -244,10 +244,9 @@ public class MavenUberJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Preconditions.checkState(root instanceof HasClasspathEntries);
         candidates.addAll(
             ((HasClasspathEntries) root)
-                .getTransitiveClasspathDeps()
-                .stream()
-                .filter(buildRule -> !(alwaysPackageRoots && root.equals(buildRule)))
-                .iterator());
+                .getTransitiveClasspathDeps().stream()
+                    .filter(buildRule -> !(alwaysPackageRoots && root.equals(buildRule)))
+                    .iterator());
       }
       ImmutableSortedSet.Builder<JavaLibrary> removals = ImmutableSortedSet.naturalOrder();
       for (JavaLibrary javaLibrary : candidates.build()) {

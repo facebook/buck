@@ -139,9 +139,7 @@ class AndroidBinaryInstallGraphEnhancer {
     // and so we don't want a single rule to generate a bunch of resource files and then take up a
     // bunch of build threads all waiting on each other.
     Multimap<BuildRule, ExopackagePathAndHash> creatorMappedPaths =
-        resourcesInfo
-            .getResourcesPaths()
-            .stream()
+        resourcesInfo.getResourcesPaths().stream()
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(
                     (ExopackagePathAndHash pathAndHash) ->

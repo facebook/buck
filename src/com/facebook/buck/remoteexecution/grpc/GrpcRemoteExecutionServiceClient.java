@@ -154,18 +154,14 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
     return new ExecutionResult() {
       @Override
       public List<OutputDirectory> getOutputDirectories() {
-        return actionResult
-            .getOutputDirectoriesList()
-            .stream()
+        return actionResult.getOutputDirectoriesList().stream()
             .map(GrpcOutputDirectory::new)
             .collect(Collectors.toList());
       }
 
       @Override
       public List<OutputFile> getOutputFiles() {
-        return actionResult
-            .getOutputFilesList()
-            .stream()
+        return actionResult.getOutputFilesList().stream()
             .map(GrpcOutputFile::new)
             .collect(Collectors.toList());
       }

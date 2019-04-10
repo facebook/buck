@@ -105,8 +105,7 @@ public class LogStateTrackerTest {
 
     // Request runOne/stdErr from batch 1
     assertTrue(
-        requestsOne
-            .stream()
+        requestsOne.stream()
             .anyMatch(
                 r ->
                     r.slaveStream.buildSlaveRunId.equals(runOneId)
@@ -114,8 +113,7 @@ public class LogStateTrackerTest {
                         && r.batchNumber == 0));
     // Request runTwo/stdOut from batch 1
     assertTrue(
-        requestsOne
-            .stream()
+        requestsOne.stream()
             .anyMatch(
                 r ->
                     r.slaveStream.buildSlaveRunId.equals(runTwoId)
@@ -197,8 +195,7 @@ public class LogStateTrackerTest {
 
     // Request runOne/stdErr from batch 1
     assertTrue(
-        requestTwo
-            .stream()
+        requestTwo.stream()
             .anyMatch(
                 r ->
                     r.slaveStream.buildSlaveRunId.equals(runOneId)
@@ -206,8 +203,7 @@ public class LogStateTrackerTest {
                         && r.batchNumber == 1));
     // Request runOne/stdOut from batch 1
     assertTrue(
-        requestTwo
-            .stream()
+        requestTwo.stream()
             .anyMatch(
                 r ->
                     r.slaveStream.buildSlaveRunId.equals(runOneId)
@@ -215,8 +211,7 @@ public class LogStateTrackerTest {
                         && r.batchNumber == 0));
     // Request runTwo/stdOut from batch 2
     assertTrue(
-        requestTwo
-            .stream()
+        requestTwo.stream()
             .anyMatch(
                 r ->
                     r.slaveStream.buildSlaveRunId.equals(runTwoId)

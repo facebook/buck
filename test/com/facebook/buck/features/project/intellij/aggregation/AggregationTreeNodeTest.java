@@ -147,8 +147,7 @@ public class AggregationTreeNodeTest {
 
     assertEquals(
         ImmutableSet.of(Paths.get("a/b"), Paths.get("a/c"), Paths.get("a/d"), Paths.get("a/e")),
-        node.collectNodes(2)
-            .stream()
+        node.collectNodes(2).stream()
             .map(AggregationTreeNode::getModuleBasePath)
             .collect(ImmutableSet.toImmutableSet()));
   }

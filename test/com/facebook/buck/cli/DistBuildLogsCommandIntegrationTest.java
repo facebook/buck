@@ -84,9 +84,7 @@ public class DistBuildLogsCommandIntegrationTest {
       Files.walkFileTree(tmp.getRoot(), filesLister);
 
       List<String> helloWorldFiles =
-          filesLister
-              .getAbsPaths()
-              .stream()
+          filesLister.getAbsPaths().stream()
               .filter(x -> x.contains("hello_world.txt"))
               .sorted()
               .collect(Collectors.toList());

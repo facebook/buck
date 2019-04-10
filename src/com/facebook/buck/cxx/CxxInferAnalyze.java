@@ -81,8 +81,7 @@ class CxxInferAnalyze extends AbstractBuildRule {
   }
 
   private ImmutableSortedSet<SourcePath> getSpecsOfAllDeps() {
-    return transitiveAnalyzeRules
-        .stream()
+    return transitiveAnalyzeRules.stream()
         .map(rule -> ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), rule.getSpecsDir()))
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
@@ -134,8 +133,7 @@ class CxxInferAnalyze extends AbstractBuildRule {
         .add(
             new SymCopyStep(
                 getProjectFilesystem(),
-                captureRules
-                    .stream()
+                captureRules.stream()
                     .map(CxxInferCapture::getSourcePathToOutput)
                     .map(context.getSourcePathResolver()::getRelativePath)
                     .collect(ImmutableList.toImmutableList()),
@@ -146,8 +144,7 @@ class CxxInferAnalyze extends AbstractBuildRule {
               public StepExecutionResult execute(ExecutionContext executionContext)
                   throws IOException {
                 ImmutableList<String> specsDirsWithAbsolutePath =
-                    getSpecsOfAllDeps()
-                        .stream()
+                    getSpecsOfAllDeps().stream()
                         .map(
                             input ->
                                 context.getSourcePathResolver().getAbsolutePath(input).toString())

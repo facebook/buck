@@ -137,8 +137,7 @@ public class WorkerProcessPoolTest {
         pool,
         1,
         () -> {
-          createdWorkers
-              .stream()
+          createdWorkers.stream()
               .findFirst()
               .orElseThrow(IllegalStateException::new)
               // closing a worker process will trigger removal from the pool

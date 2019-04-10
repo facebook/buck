@@ -270,9 +270,7 @@ public class OwnersReportTest {
   }
 
   private ImmutableMap<Cell, BuildFileTree> getBuildFileTrees(Cell rootCell) {
-    return rootCell
-        .getAllCells()
-        .stream()
+    return rootCell.getAllCells().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 Function.identity(),

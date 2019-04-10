@@ -97,9 +97,7 @@ public class GenruleDescriptionTest {
     assertEquals(
         "SourcePaths and targets from cmd string should be extracted as extra deps.",
         ImmutableSet.of("//foo:baz", "//biz:baz", "//bin:executable", "//foo:arg"),
-        targetNode
-            .getExtraDeps()
-            .stream()
+        targetNode.getExtraDeps().stream()
             .map(Object::toString)
             .collect(ImmutableSet.toImmutableSet()));
   }

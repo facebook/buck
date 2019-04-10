@@ -132,8 +132,7 @@ public class DummyRDotJava extends AbstractBuildRule
 
     // Sort the input so that we get a stable ABI for the same set of resources.
     this.androidResourceDeps =
-        androidResourceDeps
-            .stream()
+        androidResourceDeps.stream()
             .sorted(Comparator.comparing(HasAndroidResourceDeps::getBuildTarget))
             .collect(ImmutableList.toImmutableList());
     this.useOldStyleableFormat = useOldStyleableFormat;

@@ -64,8 +64,7 @@ public class DefaultFileHashCacheTest {
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
-    return EnumSet.allOf(FileHashCacheMode.class)
-        .stream()
+    return EnumSet.allOf(FileHashCacheMode.class).stream()
         .map(v -> new Object[] {v})
         .collect(ImmutableList.toImmutableList());
   }

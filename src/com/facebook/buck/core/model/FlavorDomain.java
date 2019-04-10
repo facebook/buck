@@ -81,9 +81,7 @@ public class FlavorDomain<T> {
       String name, Function<? super T, U> mapper) {
     return new FlavorDomain<>(
         name,
-        translation
-            .values()
-            .stream()
+        translation.values().stream()
             .map(mapper)
             .collect(ImmutableMap.toImmutableMap(FlavorConvertible::getFlavor, v -> v)));
   }
@@ -136,8 +134,7 @@ public class FlavorDomain<T> {
    *     ignored.
    */
   private ImmutableList<T> getValues(Set<Flavor> flavors) {
-    return flavors
-        .stream()
+    return flavors.stream()
         .filter(translation::containsKey)
         .map(translation::get)
         .collect(ImmutableList.toImmutableList());

@@ -77,8 +77,7 @@ public class TargetNodeTest {
     ImmutableList<String> depsStrings =
         ImmutableList.of("//example/path:one", "//example/path:two");
     ImmutableSet<BuildTarget> depsTargets =
-        depsStrings
-            .stream()
+        depsStrings.stream()
             .map(BuildTargetFactory::newInstance)
             .collect(ImmutableSet.toImmutableSet());
     ImmutableMap<String, Object> rawNode =

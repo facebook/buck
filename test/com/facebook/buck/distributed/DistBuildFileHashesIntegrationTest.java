@@ -170,8 +170,7 @@ public class DistBuildFileHashesIntegrationTest {
     assertNotNull(dump);
     assertEquals(2, dump.getFileHashesSize());
     List<BuildJobStateFileHashes> sortedHashes =
-        dump.getFileHashes()
-            .stream()
+        dump.getFileHashes().stream()
             .sorted(Comparator.comparingInt(BuildJobStateFileHashes::getCellIndex))
             .collect(Collectors.toList());
 

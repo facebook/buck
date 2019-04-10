@@ -375,10 +375,7 @@ public final class BuckPsiUtils {
       ((BuckSuite) psiElement).getStatementList().forEach(recurse);
     } else if (psiElement instanceof BuckExpressionStatement) {
       ((BuckExpressionStatement) psiElement)
-          .getExpressionListList()
-          .stream()
-          .findFirst()
-          .ifPresent(recurse);
+          .getExpressionListList().stream().findFirst().ifPresent(recurse);
     } else if (psiElement instanceof BuckExpressionList) {
       ((BuckExpressionList) psiElement).getExpressionList().forEach(recurse);
     } else if (psiElement instanceof BuckExpression) {

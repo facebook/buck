@@ -124,8 +124,7 @@ public class InMemoryBuildFileTree implements BuildFileTree {
     if (node.children == null) {
       return ImmutableList.of();
     } else {
-      return node.children
-          .stream()
+      return node.children.stream()
           .map(child -> MorePaths.relativize(path, child.basePath))
           .collect(ImmutableList.toImmutableList());
     }

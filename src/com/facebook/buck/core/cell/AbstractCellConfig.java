@@ -138,9 +138,7 @@ abstract class AbstractCellConfig {
     }
 
     public CellConfig build() {
-      return values
-          .entrySet()
-          .stream()
+      return values.entrySet().stream()
           .collect(
               Collectors.collectingAndThen(
                   ImmutableMap.toImmutableMap(e -> e.getKey(), entry -> entry.getValue().build()),

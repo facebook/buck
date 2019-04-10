@@ -332,8 +332,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         "go_test",
         getProjectFilesystem(),
         outputDirectory,
-        resources
-            .stream()
+        resources.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     input ->
@@ -356,8 +355,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
     return Stream.concat(
         Stream.of((testMain.getBuildTarget())),
-        resources
-            .stream()
+        resources.stream()
             .map(ruleFinder::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
             .map(BuildRule::getBuildTarget));

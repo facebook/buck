@@ -92,9 +92,7 @@ public class ParseContext {
 
   public ImmutableMap<String, ImmutableMap<String, Optional<String>>>
       getAccessedConfigurationOptions() {
-    return readConfigOptions
-        .entrySet()
-        .stream()
+    return readConfigOptions.entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(Entry::getKey, e -> ImmutableMap.copyOf(e.getValue())));
   }

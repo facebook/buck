@@ -56,9 +56,7 @@ public class UnconfiguredBuildTargetTypeInfo implements ValueTypeInfo<Unconfigur
     visitor.visitString(unflavored.getBaseName());
     visitor.visitString(unflavored.getShortName());
     Holder.flavorsTypeInfo.visit(
-        value
-            .getFlavors()
-            .stream()
+        value.getFlavors().stream()
             .map(Flavor::getName)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder())),
         visitor);

@@ -109,8 +109,7 @@ public class ElementsExtendedImpl extends DelegatingElements implements Elements
       List<BridgeMethod> bridgeMethods = this.bridgeMethods.getBridgeMethodsNoCreate(type, name);
 
       Optional<ExecutableElement> result =
-          bridgeMethods
-              .stream()
+          bridgeMethods.stream()
               .map(it -> it.to)
               .filter(it -> binarySignaturesMatch(it, method))
               .findFirst();

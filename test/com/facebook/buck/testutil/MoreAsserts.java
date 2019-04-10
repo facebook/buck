@@ -211,8 +211,7 @@ public final class MoreAsserts {
       List<Step> observedSteps,
       ExecutionContext executionContext) {
     ImmutableList<String> commands =
-        observedSteps
-            .stream()
+        observedSteps.stream()
             .map(step -> step.getDescription(executionContext))
             .collect(ImmutableList.toImmutableList());
     assertListEquals(userMessage, expectedStepDescriptions, commands);
@@ -225,8 +224,7 @@ public final class MoreAsserts {
   public static void assertStepsNames(
       String userMessage, List<String> expectedStepDescriptions, List<Step> observedSteps) {
     ImmutableList<String> commands =
-        observedSteps
-            .stream()
+        observedSteps.stream()
             .map(step -> step.getShortName())
             .collect(ImmutableList.toImmutableList());
     assertListEquals(userMessage, expectedStepDescriptions, commands);

@@ -106,16 +106,14 @@ public class DefaultJavaAbiInfo implements JavaAbiInfo {
       } else {
         SourcePath nonNullJarSourcePath = Assertions.assertNotNull(jarSourcePath);
         contents =
-            Unzip.getZipMembers(jarAbsolutePath)
-                .stream()
+            Unzip.getZipMembers(jarAbsolutePath).stream()
                 .filter(path -> !path.endsWith(JarFile.MANIFEST_NAME))
                 .map(path -> ArchiveMemberSourcePath.of(nonNullJarSourcePath, path))
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
       }
       return new JarContents(
           contents,
-          contents
-              .stream()
+          contents.stream()
               .map(
                   sourcePath -> {
                     if (sourcePath instanceof ExplicitBuildTargetSourcePath) {

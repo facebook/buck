@@ -52,8 +52,7 @@ public class TestAndroidDevice implements AndroidDevice {
   private final ApkInfoReader apkInfoReader;
 
   public Map<String, Path> getInstalledApks() throws Exception {
-    return listDirRecursive(APK_INSTALL_DIR)
-        .stream()
+    return listDirRecursive(APK_INSTALL_DIR).stream()
         .filter(p -> p.getFileName().equals(APK_FILE_NAME))
         .collect(
             ImmutableMap.toImmutableMap(

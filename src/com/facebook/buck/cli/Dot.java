@@ -224,9 +224,7 @@ public class Dot<T> {
     if (!nodeAttributes.isEmpty()) {
       extraAttributes =
           ","
-              + nodeAttributes
-                  .entrySet()
-                  .stream()
+              + nodeAttributes.entrySet().stream()
                   .map(entry -> escape("buck_" + entry.getKey()) + "=" + escape(entry.getValue()))
                   .collect(Collectors.joining(","));
     }

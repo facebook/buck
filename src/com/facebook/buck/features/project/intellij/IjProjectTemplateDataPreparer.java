@@ -147,9 +147,7 @@ public class IjProjectTemplateDataPreparer {
           continue;
         }
         Optional<Path> firstJavaFile =
-            folder
-                .getInputs()
-                .stream()
+            folder.getInputs().stream()
                 .filter(input -> input.getFileName().toString().endsWith(".java"))
                 .findFirst();
         if (firstJavaFile.isPresent()) {
@@ -164,9 +162,7 @@ public class IjProjectTemplateDataPreparer {
   private ImmutableSet<IjModule> createModulesToBeWritten(IjModuleGraph graph) {
     Path rootModuleBasePath = Paths.get(projectConfig.getProjectRoot());
     boolean hasRootModule =
-        graph
-            .getModules()
-            .stream()
+        graph.getModules().stream()
             .anyMatch(module -> rootModuleBasePath.equals(module.getModuleBasePath()));
 
     ImmutableSet<IjModule> supplementalModules = ImmutableSet.of();
@@ -211,8 +207,7 @@ public class IjProjectTemplateDataPreparer {
         .forEach(
             (contentRoot, contentRootFolders) -> {
               List<IjSourceFolder> sourceFolders =
-                  contentRootFolders
-                      .stream()
+                  contentRootFolders.stream()
                       .map(transformToFolder)
                       .sorted()
                       .collect(ImmutableList.toImmutableList());
@@ -298,9 +293,7 @@ public class IjProjectTemplateDataPreparer {
   }
 
   public ImmutableSet<IjSourceFolder> getGeneratedSourceFolders(IjModule module) {
-    return module
-        .getGeneratedSourceCodeFolders()
-        .stream()
+    return module.getGeneratedSourceCodeFolders().stream()
         .map(new IjFolderToIjSourceFolderTransform(module))
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
@@ -334,8 +327,7 @@ public class IjProjectTemplateDataPreparer {
   public ImmutableSortedSet<ModuleIndexEntry> getModuleIndexEntries() {
     String moduleGroupName = projectConfig.getModuleGroupName();
     boolean needToPutModuleToGroup = !moduleGroupName.isEmpty();
-    return modulesToBeWritten
-        .stream()
+    return modulesToBeWritten.stream()
         .map(
             module -> {
               Path moduleOutputFilePath = projectPaths.getModuleImlFilePath(module);

@@ -60,10 +60,7 @@ public class GrpcCasBlobUploader implements CasBlobUploader {
     try {
       FindMissingBlobsRequest.Builder requestBuilder = FindMissingBlobsRequest.newBuilder();
       requiredDigests.forEach(digest -> requestBuilder.addBlobDigests((GrpcProtocol.get(digest))));
-      return storageStub
-          .findMissingBlobs(requestBuilder.build())
-          .get()
-          .getMissingBlobDigestsList()
+      return storageStub.findMissingBlobs(requestBuilder.build()).get().getMissingBlobDigestsList()
           .stream()
           .map(build.bazel.remote.execution.v2.Digest::getHash)
           .collect(ImmutableSet.toImmutableSet());

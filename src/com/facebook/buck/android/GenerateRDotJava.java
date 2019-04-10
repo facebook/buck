@@ -73,14 +73,12 @@ public class GenerateRDotJava extends AbstractBuildRule {
     this.resourceUnionPackage = resourceUnionPackage;
     this.allResourceDeps = resourceDeps;
     this.resourceDeps =
-        resourceDeps
-            .stream()
+        resourceDeps.stream()
             .map(HasAndroidResourceDeps.class::cast)
             .collect(ImmutableList.toImmutableList());
     this.resourcesProviders = resourcesProviders;
     this.pathToOverrideSymbolsFile =
-        resourcesProviders
-            .stream()
+        resourcesProviders.stream()
             .filter(provider -> provider.getOverrideSymbolsPath().isPresent())
             .map(provider -> provider.getOverrideSymbolsPath().get())
             .collect(ImmutableList.toImmutableList());
@@ -125,15 +123,13 @@ public class GenerateRDotJava extends AbstractBuildRule {
             getProjectFilesystem(),
             buildContext.getSourcePathResolver(),
             resourceDeps,
-            pathToRDotTxtFiles
-                .stream()
+            pathToRDotTxtFiles.stream()
                 .map(p -> pathResolver.getAbsolutePath(p))
                 .collect(ImmutableList.toImmutableList()),
             rDotJavaSrc,
             bannedDuplicateResourceTypes,
             duplicateResourceWhitelistPath.map(pathResolver::getAbsolutePath),
-            pathToOverrideSymbolsFile
-                .stream()
+            pathToOverrideSymbolsFile.stream()
                 .map(p -> pathResolver.getAbsolutePath(p))
                 .collect(ImmutableList.toImmutableList()),
             resourceUnionPackage);

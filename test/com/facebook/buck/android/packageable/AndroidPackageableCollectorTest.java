@@ -216,10 +216,7 @@ public class AndroidPackageableCollectorTest {
             + "substantial regression in the startup time for the fb4a app.",
         pathResolver,
         ImmutableSet.of(graphBuilder.getRule(jsr305Target).getSourcePathToOutput()),
-        packageableCollection
-            .getPathsToThirdPartyJars()
-            .values()
-            .stream()
+        packageableCollection.getPathsToThirdPartyJars().values().stream()
             .collect(ImmutableSet.toImmutableSet()));
     assertResolvedEquals(
         "Because assets directory was passed an AndroidResourceRule it should be added to the "
@@ -229,10 +226,7 @@ public class AndroidPackageableCollectorTest {
             DefaultBuildTargetSourcePath.of(
                 manifestTarget.withAppendedFlavors(
                     AndroidResourceDescription.ASSETS_SYMLINK_TREE_FLAVOR))),
-        packageableCollection
-            .getAssetsDirectories()
-            .values()
-            .stream()
+        packageableCollection.getAssetsDirectories().values().stream()
             .collect(ImmutableSet.toImmutableSet()));
     assertResolvedEquals(
         "Because a native library was declared as a dependency, it should be added to the "
@@ -322,8 +316,7 @@ public class AndroidPackageableCollectorTest {
     // Note that a topological sort for a DAG is not guaranteed to be unique, but we order nodes
     // within the same depth of the search.
     ImmutableList<BuildTarget> result =
-        ImmutableList.of(a, d, b, c)
-            .stream()
+        ImmutableList.of(a, d, b, c).stream()
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableList.toImmutableList());
 
@@ -466,9 +459,7 @@ public class AndroidPackageableCollectorTest {
             BuildTargetPaths.getGenPath(
                     androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output/")
                 .resolve(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
-        packageableCollection
-            .getClasspathEntriesToDex()
-            .stream()
+        packageableCollection.getClasspathEntriesToDex().stream()
             .map(pathResolver::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));
   }

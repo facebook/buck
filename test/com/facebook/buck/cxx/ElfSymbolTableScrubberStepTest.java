@@ -100,9 +100,7 @@ public class ElfSymbolTableScrubberStepTest {
     Elf elf = ElfFile.mapReadOnly(step.getFilesystem().resolve(step.getPath()));
     ElfSection section = elf.getMandatorySectionByName("libfoo.so", SECTION).getSection();
     ElfSymbolTable table = ElfSymbolTable.parse(elf.header.ei_class, section.body);
-    table
-        .entries
-        .stream()
+    table.entries.stream()
         .skip(1)
         .forEach(entry -> assertThat(entry.st_shndx, Matchers.not(Matchers.equalTo(0))));
   }

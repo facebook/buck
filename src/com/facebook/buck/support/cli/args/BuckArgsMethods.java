@@ -49,8 +49,7 @@ public class BuckArgsMethods {
   }
 
   private static Iterable<String> getArgsFromTextFile(Path argsPath) throws IOException {
-    return Files.readAllLines(argsPath, Charsets.UTF_8)
-        .stream()
+    return Files.readAllLines(argsPath, Charsets.UTF_8).stream()
         .filter(line -> !line.isEmpty())
         .collect(ImmutableList.toImmutableList());
   }

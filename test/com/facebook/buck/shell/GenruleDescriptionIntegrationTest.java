@@ -247,8 +247,7 @@ public class GenruleDescriptionIntegrationTest {
       throws Exception {
     expectGenruleOutput(
         genrule,
-        expectedOutputs
-            .stream()
+        expectedOutputs.stream()
             .map(this::getOutputFile)
             .map(Path::toString)
             .collect(Collectors.toList()));

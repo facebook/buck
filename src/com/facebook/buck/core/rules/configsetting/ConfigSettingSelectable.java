@@ -114,8 +114,7 @@ public class ConfigSettingSelectable implements Selectable {
       }
     }
     ImmutableList<ConstraintValue> constraintValues =
-        constraintValuesTargets
-            .stream()
+        constraintValuesTargets.stream()
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableList.toImmutableList());
     return targetPlatform.matchesAll(constraintValues);

@@ -72,8 +72,7 @@ class TreeBackedPackageElement extends TreeBackedElement implements ArtificialPa
 
       List<? extends Element> treeBackedEnclosedElements = super.getEnclosedElements();
       Set<Name> enclosedElementNames =
-          treeBackedEnclosedElements
-              .stream()
+          treeBackedEnclosedElements.stream()
               .map(Element::getSimpleName)
               .collect(Collectors.toSet());
 

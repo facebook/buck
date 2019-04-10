@@ -47,8 +47,7 @@ public enum JarShape {
 
       Set<JavaLibrary> toPackage = new HashSet<>(classpathDeps);
       Set<HasMavenCoordinates> mavenDeps =
-          toPackage
-              .stream()
+          toPackage.stream()
               .filter(HasMavenCoordinates::isMavenCoordsPresent)
               .filter(lib -> !lib.equals(root))
               .collect(Collectors.toSet());

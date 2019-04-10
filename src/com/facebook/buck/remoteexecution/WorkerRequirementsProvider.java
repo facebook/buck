@@ -87,9 +87,7 @@ public final class WorkerRequirementsProvider {
 
                 Map<String, Requirements> requirements =
                     MAPPER.readValue(filepath.toFile(), MAP_TYPE);
-                return requirements
-                    .entrySet()
-                    .stream()
+                return requirements.entrySet().stream()
                     .collect(
                         Collectors.toMap(
                             Entry::getKey,

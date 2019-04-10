@@ -76,9 +76,7 @@ public class LuaUtil {
     return RichStream.<BuildTarget>empty()
         .concat(deps.stream())
         .concat(
-            platformDeps
-                .getMatchingValues(cxxPlatform.getFlavor().toString())
-                .stream()
+            platformDeps.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
                 .flatMap(Collection::stream))
         .toImmutableList();
   }

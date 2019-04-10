@@ -85,9 +85,7 @@ class DexFilesInfo implements AddsToRuleKey {
         ProjectFilesystem filesystem, SourcePathResolver resolver) {
       try {
         Path resolvedRootDirectory = resolver.getRelativePath(rootDirectory);
-        return filesystem
-            .readLines(resolver.getRelativePath(subDirListing))
-            .stream()
+        return filesystem.readLines(resolver.getRelativePath(subDirListing)).stream()
             .map(resolvedRootDirectory::resolve)
             .collect(ImmutableSet.toImmutableSet());
       } catch (IOException e) {

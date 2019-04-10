@@ -140,8 +140,7 @@ public class JavaTestRuleTest {
 
   private JavaTest newRule(ImmutableList<String> vmArgs) throws NoSuchBuildTargetException {
     ImmutableList<StringWithMacros> vmArgMacros =
-        vmArgs
-            .stream()
+        vmArgs.stream()
             .map(arg -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(arg))))
             .collect(ImmutableList.toImmutableList());
     return JavaTestBuilder.createBuilder(BuildTargetFactory.newInstance("//example:test"))

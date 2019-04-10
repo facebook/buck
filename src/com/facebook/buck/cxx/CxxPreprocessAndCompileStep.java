@@ -263,8 +263,7 @@ class CxxPreprocessAndCompileStep implements Step {
       List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
 
       includeLines =
-          includeLines
-              .stream()
+          includeLines.stream()
               .map(CxxPreprocessAndCompileStep::parseShowIncludeLine)
               .collect(Collectors.toList());
       writeSrcAndIncludes(includeLines, depFile.get());
@@ -278,8 +277,7 @@ class CxxPreprocessAndCompileStep implements Step {
       List<String> errorLines = includesAndErrors.getOrDefault(false, Collections.emptyList());
 
       includeLines =
-          includeLines
-              .stream()
+          includeLines.stream()
               .map(CxxPreprocessAndCompileStep::parseShowHeadersLine)
               .collect(Collectors.toList());
       writeSrcAndIncludes(includeLines, depFile.get());

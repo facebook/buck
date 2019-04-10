@@ -372,9 +372,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
     }
 
     private boolean buildSuccessful() {
-      return diagnostics
-          .getDiagnostics()
-          .stream()
+      return diagnostics.getDiagnostics().stream()
           .noneMatch(diag -> diag.getKind() == Diagnostic.Kind.ERROR);
     }
 
@@ -580,9 +578,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                     javacTask,
                     ruleInfoFactory.create(fileManager),
                     () ->
-                        diagnostics
-                            .getDiagnostics()
-                            .stream()
+                        diagnostics.getDiagnostics().stream()
                             .anyMatch(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR),
                     abiGenerationMode.getDiagnosticKindForSourceOnlyAbiCompatibility());
           }

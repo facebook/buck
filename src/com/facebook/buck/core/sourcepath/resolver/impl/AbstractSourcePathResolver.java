@@ -115,8 +115,7 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
   @Override
   public ImmutableSortedSet<Path> getAllAbsolutePaths(
       Collection<? extends SourcePath> sourcePaths) {
-    return sourcePaths
-        .stream()
+    return sourcePaths.stream()
         .map(this::getAbsolutePath)
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }

@@ -71,8 +71,7 @@ public class GoListStep extends ShellStep {
       commandBuilder.add("{{ ." + listTypes.get(0).name() + "}}");
     } else {
       commandBuilder.add(
-          listTypes
-              .stream()
+          listTypes.stream()
               .map(fileType -> "{{join ." + fileType.name() + " \":\"}}")
               .collect(Collectors.joining(":")));
     }

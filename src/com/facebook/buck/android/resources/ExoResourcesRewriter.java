@@ -268,8 +268,7 @@ public class ExoResourcesRewriter {
     public ApkZip(Path inputPath) throws IOException {
       this.zipFile = new ZipFile(inputPath.toFile());
       this.entries =
-          Collections.list(zipFile.entries())
-              .stream()
+          Collections.list(zipFile.entries()).stream()
               .collect(
                   ImmutableSortedMap.toImmutableSortedMap(
                       Ordering.natural(), ZipEntry::getName, e -> e));
@@ -309,9 +308,7 @@ public class ExoResourcesRewriter {
     }
 
     Iterable<ResourcesXml> getResourcesXmls() {
-      return entries
-          .keySet()
-          .stream()
+      return entries.keySet().stream()
           .filter(
               name ->
                   name.equals("AndroidManifest.xml")

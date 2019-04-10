@@ -59,9 +59,7 @@ public class QueryTargetsMacroExpander extends QueryMacroExpander<QueryTargetsMa
       QueryTargetsMacro input,
       QueryResults precomputedQueryResults) {
     return new QueriedTargetsArg(
-        precomputedQueryResults
-            .results
-            .stream()
+        precomputedQueryResults.results.stream()
             .map(
                 queryTarget -> {
                   Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

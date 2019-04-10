@@ -1161,9 +1161,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
     assertEquals(
         0,
-        target
-            .getBuildPhases()
-            .stream()
+        target.getBuildPhases().stream()
             .filter(input -> input instanceof PBXHeadersBuildPhase)
             .count());
 
@@ -1297,9 +1295,7 @@ public class ProjectGeneratorTest {
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
     assertEquals(
         0,
-        target
-            .getBuildPhases()
-            .stream()
+        target.getBuildPhases().stream()
             .filter(input -> input instanceof PBXHeadersBuildPhase)
             .count());
 
@@ -5091,11 +5087,7 @@ public class ProjectGeneratorTest {
 
     Function<PBXTarget, Set<String>> getLinkedLibsForTarget =
         pbxTarget ->
-            pbxTarget
-                .getBuildPhases()
-                .get(0)
-                .getFiles()
-                .stream()
+            pbxTarget.getBuildPhases().get(0).getFiles().stream()
                 .map(PBXBuildFile::getFileRef)
                 .map(PBXReference::getName)
                 .collect(Collectors.toSet());
@@ -5175,11 +5167,7 @@ public class ProjectGeneratorTest {
 
     Function<PBXTarget, Set<String>> getLinkedLibsForTarget =
         pbxTarget ->
-            pbxTarget
-                .getBuildPhases()
-                .get(0)
-                .getFiles()
-                .stream()
+            pbxTarget.getBuildPhases().get(0).getFiles().stream()
                 .map(PBXBuildFile::getFileRef)
                 .map(PBXReference::getName)
                 .collect(Collectors.toSet());
@@ -6803,8 +6791,7 @@ public class ProjectGeneratorTest {
       Function<? super TargetNode<?>, ActionGraphBuilder> actionGraphBuilderForNode,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibrariesToBundles) {
     ImmutableSet<BuildTarget> initialBuildTargets =
-        initialTargetNodes
-            .stream()
+        initialTargetNodes.stream()
             .map(TargetNode::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
 

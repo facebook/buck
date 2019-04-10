@@ -78,10 +78,7 @@ public class AndroidAppModularity extends AbstractBuildRule {
         ImmutableMultimap.builder();
     if (result != null) {
       additionalDexStoreToJarPathMapBuilder.putAll(
-          result
-              .getPackageableCollection()
-              .getModuleMappedClasspathEntriesToDex()
-              .entries()
+          result.getPackageableCollection().getModuleMappedClasspathEntriesToDex().entries()
               .stream()
               .map(
                   input ->

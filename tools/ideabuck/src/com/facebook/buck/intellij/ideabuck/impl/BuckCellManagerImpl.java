@@ -63,18 +63,14 @@ public class BuckCellManagerImpl implements BuckCellManager {
 
   @Override
   public List<CellImpl> getCells() {
-    return mBuckCellSettingsProvider
-        .getCells()
-        .stream()
+    return mBuckCellSettingsProvider.getCells().stream()
         .map(CellImpl::new)
         .collect(Collectors.toList());
   }
 
   @Override
   public Optional<CellImpl> findCellByName(String name) {
-    return mBuckCellSettingsProvider
-        .getCells()
-        .stream()
+    return mBuckCellSettingsProvider.getCells().stream()
         .filter(cell -> name.equals(cell.getName()))
         .findFirst()
         .map(CellImpl::new);
@@ -99,9 +95,7 @@ public class BuckCellManagerImpl implements BuckCellManager {
     if (canonicalPath == null) {
       return Optional.empty();
     }
-    return mBuckCellSettingsProvider
-        .getCells()
-        .stream()
+    return mBuckCellSettingsProvider.getCells().stream()
         .filter(
             cell -> {
               String root = mPathMacroManager.expandPath(cell.getRoot());

@@ -291,8 +291,7 @@ public class AndroidPackageableCollector {
     collectionBuilder.setBuildConfigs(ImmutableMap.copyOf(buildConfigs));
     ImmutableSet<HasJavaClassHashes> javaClassProviders = javaClassHashesProviders.build();
     collectionBuilder.addAllJavaLibrariesToDex(
-        javaClassProviders
-            .stream()
+        javaClassProviders.stream()
             .map(HasJavaClassHashes::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));
     collectionBuilder.setClassNamesToHashesSupplier(

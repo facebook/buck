@@ -244,8 +244,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
         targetMetadata.visibility = null; //
       } else {
         targetMetadata.visibility =
-            optionalVisibility
-                .stream()
+            optionalVisibility.stream()
                 .map(p -> BuckTargetPattern.parse(p).map(buckTargetLocator::resolve).orElse(null))
                 .collect(Collectors.toList());
       }

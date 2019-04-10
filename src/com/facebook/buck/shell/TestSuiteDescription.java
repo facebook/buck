@@ -56,9 +56,7 @@ public class TestSuiteDescription implements DescriptionWithTargetGraph<TestSuit
   private void validateTestDepsAreTestRules(BuildTarget buildTarget, BuildRuleParams params) {
     // "tests" are added to build deps via reflection
     ImmutableList<String> invalidTargets =
-        params
-            .getBuildDeps()
-            .stream()
+        params.getBuildDeps().stream()
             .filter(r -> !(r instanceof TestRule || r instanceof TestSuite))
             .limit(5) // Too much more and it gets hard to read....
             .map(r -> r.getBuildTarget().getFullyQualifiedName())

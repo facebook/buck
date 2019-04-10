@@ -518,8 +518,7 @@ public class DistBuildFileHashesTest {
       List<BuildJobStateFileHashes> recordedHashes, int index) {
     Preconditions.checkArgument(index >= 0);
     Preconditions.checkArgument(index < recordedHashes.size());
-    return recordedHashes
-        .stream()
+    return recordedHashes.stream()
         .filter(hashes -> hashes.getCellIndex() == index)
         .findFirst()
         .get();
@@ -533,8 +532,7 @@ public class DistBuildFileHashesTest {
   private static String toDebugStringForAssert(List<BuildJobStateFileHashes> recordedHashes) {
     return Joiner.on("\n")
         .join(
-            recordedHashes
-                .stream()
+            recordedHashes.stream()
                 .map(ThriftUtil::thriftToDebugJson)
                 .collect(ImmutableList.toImmutableList()));
   }

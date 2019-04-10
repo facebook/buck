@@ -219,8 +219,7 @@ public class AggregationTree implements GraphTraversable<AggregationTreeNode> {
       ImmutableSet<Path> modulePathsToAggregate) {
     int aggregationLimit = rootModuleType.getAggregationLimit(projectConfig);
     ImmutableMap<Path, AggregationModule> modules =
-        modulePathsToAggregate
-            .stream()
+        modulePathsToAggregate.stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     path -> path, path -> parentNode.getChild(path).getModule()));

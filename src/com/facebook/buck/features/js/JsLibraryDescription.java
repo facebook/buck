@@ -134,10 +134,7 @@ public class JsLibraryDescription
             .map(macroTargets -> isWorker.or(macroTargets::contains))
             .orElse(isWorker);
     ImmutableSortedSet<BuildRule> workerAndMacrosExtraDeps =
-        params
-            .getExtraDeps()
-            .get()
-            .stream()
+        params.getExtraDeps().get().stream()
             .filter(x -> extraDepsFilter.test(x.getBuildTarget()))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     BuildRuleParams baseParams =
@@ -167,9 +164,7 @@ public class JsLibraryDescription
       // all targets that don't refer to a JsLibrary rule.
       // That prevents users from having to wrap every query into "kind(js_library, ...)".
       Stream<BuildTarget> queryDeps =
-          args.getDepsQuery()
-              .map(Query::getResolvedQuery)
-              .orElseGet(ImmutableSortedSet::of)
+          args.getDepsQuery().map(Query::getResolvedQuery).orElseGet(ImmutableSortedSet::of)
               .stream()
               .filter(target -> JsUtil.isJsLibraryTarget(target, context.getTargetGraph()));
       Stream<BuildTarget> declaredDeps = args.getDeps().stream();
@@ -266,8 +261,7 @@ public class JsLibraryDescription
           baseTarget.withAppendedFlavors(JsFlavors.LIBRARY_FILES),
           projectFileSystem,
           baseParams.copyAppendingExtraDeps(jsFileRules),
-          jsFileRules
-              .stream()
+          jsFileRules.stream()
               .map(JsFile::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
           worker);
@@ -315,8 +309,7 @@ public class JsLibraryDescription
           baseParams.copyAppendingExtraDeps(
               Iterables.concat(ImmutableList.of(filesRule), libraryDependencies)),
           graphBuilder.getRuleWithType(filesTarget, JsLibrary.Files.class).getSourcePathToOutput(),
-          libraryDependencies
-              .stream()
+          libraryDependencies.stream()
               .map(JsLibrary::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
           worker);

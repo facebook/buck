@@ -128,8 +128,7 @@ public class MinionWorkloadAllocator {
 
     int maxParallelWorkUnitsLeft = queue.getSafeApproxOfRemainingWorkUnitsCount();
     int capacityAvailableOnOtherMinions =
-        minionsAvailableForAllocation
-            .stream()
+        minionsAvailableForAllocation.stream()
             .filter(minionId -> !minionId.equals(candidateMinionId))
             .mapToInt(minionId -> Objects.requireNonNull(minionFreeCapacities.get(minionId)))
             .sum();
@@ -218,8 +217,7 @@ public class MinionWorkloadAllocator {
     Set<WorkUnit> workUnitsAllocatedToMinion = workUnitsAssignedToMinions.get(minionId);
 
     Set<String> allocatedTargets =
-        workUnitsAllocatedToMinion
-            .stream()
+        workUnitsAllocatedToMinion.stream()
             .map(workUnit -> workUnit.getBuildTargets())
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());

@@ -313,8 +313,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         }
       }
       if (selectedTypeCoercer == null
-          && Types.getSupertypes(rawClass)
-              .stream()
+          && Types.getSupertypes(rawClass).stream()
               .anyMatch(c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
         selectedTypeCoercer =
             new ImmutableTypeCoercer<>(

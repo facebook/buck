@@ -412,8 +412,7 @@ public class AdbHelperTest {
         ImmutableList.of()) {
       @Override
       public ImmutableList<AndroidDevice> getDevices(boolean quiet) {
-        return deviceList
-            .stream()
+        return deviceList.stream()
             .map(
                 id ->
                     (AndroidDevice)

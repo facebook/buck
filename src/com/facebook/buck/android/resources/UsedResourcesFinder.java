@@ -46,9 +46,7 @@ public class UsedResourcesFinder {
     State state = new State(apkContentProvider, rootFiles, rootIds);
     state.process();
     return new ResourceClosure(
-        state
-            .processedFiles
-            .stream()
+        state.processedFiles.stream()
             .filter(apkContentProvider::hasFile)
             .collect(ImmutableSet.toImmutableSet()),
         state.processedIds);

@@ -66,9 +66,7 @@ public final class IjModuleGraphFactory {
       ImmutableSet<String> ignoredTargetLabels) {
 
     Stream<TargetNode<?>> nodes =
-        targetGraph
-            .getNodes()
-            .stream()
+        targetGraph.getNodes().stream()
             .filter(
                 input ->
                     SupportedTargetTypeRegistry.isTargetTypeSupported(
@@ -136,10 +134,7 @@ public final class IjModuleGraphFactory {
       AggregationModuleFactory aggregationModuleFactory,
       ImmutableListMultimap<Path, TargetNode<?>> targetNodesByBasePath) {
     Map<Path, AggregationModule> pathToAggregationModuleMap =
-        targetNodesByBasePath
-            .asMap()
-            .entrySet()
-            .stream()
+        targetNodesByBasePath.asMap().entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     Map.Entry::getKey,
@@ -158,9 +153,7 @@ public final class IjModuleGraphFactory {
 
     AggregationTree aggregationTree = new AggregationTree(projectConfig, rootAggregationModule);
 
-    pathToAggregationModuleMap
-        .entrySet()
-        .stream()
+    pathToAggregationModuleMap.entrySet().stream()
         .filter(e -> !rootPath.equals(e.getKey()))
         .forEach(e -> aggregationTree.addModule(e.getKey(), e.getValue()));
 
@@ -295,8 +288,7 @@ public final class IjModuleGraphFactory {
                     rulesToModules,
                     module,
                     Stream.concat(
-                        transitiveDepsClosureResolver
-                            .getTransitiveDepsClosure(depBuildTarget)
+                        transitiveDepsClosureResolver.getTransitiveDepsClosure(depBuildTarget)
                             .stream(),
                         Stream.of(depBuildTarget)));
           }
@@ -312,9 +304,7 @@ public final class IjModuleGraphFactory {
         }
       }
 
-      moduleDeps
-          .keySet()
-          .stream()
+      moduleDeps.keySet().stream()
           .filter(dep -> dep instanceof IjLibrary)
           .map(library -> (IjLibrary) library)
           .forEach(referencedLibraries::add);

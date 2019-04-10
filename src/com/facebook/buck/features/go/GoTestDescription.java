@@ -449,10 +449,7 @@ public class GoTestDescription
                   .addAll(args.getAssemblerFlags())
                   .build(),
               platform,
-              testTargetParams
-                  .getDeclaredDeps()
-                  .get()
-                  .stream()
+              testTargetParams.getDeclaredDeps().get().stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
               ImmutableList.of(),
@@ -470,10 +467,7 @@ public class GoTestDescription
               args.getCompilerFlags(),
               args.getAssemblerFlags(),
               platform,
-              params
-                  .getDeclaredDeps()
-                  .get()
-                  .stream()
+              params.getDeclaredDeps().get().stream()
                   .map(BuildRule::getBuildTarget)
                   .collect(ImmutableList.toImmutableList()),
               ImmutableList.of(),

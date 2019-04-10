@@ -76,8 +76,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
   protected static ImmutableMultimap<Path, Path> getSourceFoldersToInputsIndex(
       ImmutableCollection<Path> paths) {
     Path defaultParent = Paths.get("");
-    return paths
-        .stream()
+    return paths.stream()
         .collect(
             ImmutableListMultimap.toImmutableListMultimap(
                 path -> {
@@ -132,17 +131,13 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
       ImmutableSet<Path> resourcePaths) {
     ImmutableMultimap<Path, Path> foldersToInputsIndex =
         getSourceFoldersToInputsIndex(
-            targetNode
-                .getInputs()
-                .stream()
+            targetNode.getInputs().stream()
                 .map(path -> projectFilesystem.relativize(targetNode.getFilesystem().resolve(path)))
                 .collect(ImmutableList.toImmutableList()));
 
     if (!resourcePaths.isEmpty()) {
       foldersToInputsIndex =
-          foldersToInputsIndex
-              .entries()
-              .stream()
+          foldersToInputsIndex.entries().stream()
               .filter(entry -> !resourcePaths.contains(entry.getValue()))
               .collect(
                   ImmutableListMultimap.toImmutableListMultimap(
@@ -210,8 +205,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
   }
 
   protected ImmutableSet<Path> getResourcePaths(Collection<SourcePath> resources) {
-    return resources
-        .stream()
+    return resources.stream()
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
         .map(path -> projectFilesystem.relativize(Paths.get(path.toString())))
@@ -220,8 +214,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
 
   protected ImmutableSet<Path> getResourcePaths(
       Collection<SourcePath> resources, Path resourcesRoot) {
-    return resources
-        .stream()
+    return resources.stream()
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
         .map(path -> projectFilesystem.relativize(Paths.get(path.toString())))
@@ -231,8 +224,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
 
   protected ImmutableMultimap<Path, Path> getResourcesRootsToResources(
       JavaPackageFinder packageFinder, ImmutableSet<Path> resourcePaths) {
-    return resourcePaths
-        .stream()
+    return resourcePaths.stream()
         .collect(
             ImmutableListMultimap.toImmutableListMultimap(
                 path ->
@@ -313,10 +305,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     ImmutableMap<String, String> labelToGeneratedSourcesMap =
         projectConfig.getLabelToGeneratedSourcesMap();
 
-    return targetNode
-        .getConstructorArg()
-        .getLabels()
-        .stream()
+    return targetNode.getConstructorArg().getLabels().stream()
         .map(labelToGeneratedSourcesMap::get)
         .filter(Objects::nonNull)
         .map(pattern -> pattern.replaceAll("%name%", buildTarget.getShortNameAndFlavorPostfix()))

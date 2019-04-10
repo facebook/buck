@@ -69,8 +69,7 @@ public class CxxPrepareForLinkStep {
         CxxWriteArgsToFileStep.create(
             argFilePath,
             hasLinkArgsToSupportFileList
-                ? allArgs
-                    .stream()
+                ? allArgs.stream()
                     .filter(input -> !(input instanceof FileListableLinkerInputArg))
                     .collect(ImmutableList.toImmutableList())
                 : allArgs,
@@ -87,8 +86,7 @@ public class CxxPrepareForLinkStep {
     CxxWriteArgsToFileStep createFileListStep =
         CxxWriteArgsToFileStep.create(
             fileListPath,
-            allArgs
-                .stream()
+            allArgs.stream()
                 .filter(input -> input instanceof FileListableLinkerInputArg)
                 .collect(ImmutableList.toImmutableList()),
             Optional.empty(),

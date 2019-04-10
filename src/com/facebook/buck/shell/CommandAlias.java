@@ -120,9 +120,7 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
   @Override
   public Tool getExecutableCommand() {
     ImmutableSortedMap<Platform, Tool> platformTools =
-        platformDelegates
-            .entrySet()
-            .stream()
+        platformDelegates.entrySet().stream()
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
                     Ordering.natural(), Entry::getKey, e -> buildRuleAsTool(e.getValue())));

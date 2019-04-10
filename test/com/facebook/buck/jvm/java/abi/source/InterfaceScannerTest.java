@@ -715,8 +715,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     findTypeReferences("@interface Foo {", "  @interface Inner { }", "}", "@interface Bar { }");
 
     assertThat(
-        declaredTypes
-            .stream()
+        declaredTypes.stream()
             .map(TypeElement::getQualifiedName)
             .map(Name::toString)
             .collect(Collectors.toList()),
@@ -728,8 +727,7 @@ public class InterfaceScannerTest extends CompilerTreeApiTest {
     findTypeReferences("public class Foo {", "  private class Inner { }", "}", "class Bar { }");
 
     assertThat(
-        declaredTypes
-            .stream()
+        declaredTypes.stream()
             .map(TypeElement::getQualifiedName)
             .map(Name::toString)
             .collect(Collectors.toList()),

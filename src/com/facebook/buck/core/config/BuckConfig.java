@@ -167,8 +167,7 @@ public class BuckConfig {
     if (buildTargets.isEmpty()) {
       return ImmutableList.of();
     }
-    return buildTargets
-        .stream()
+    return buildTargets.stream()
         .map(buildTarget -> getBuildTargetForFullyQualifiedTarget(buildTarget, targetConfiguration))
         .collect(ImmutableList.toImmutableList());
   }
@@ -352,9 +351,7 @@ public class BuckConfig {
   /** Returns the probabilities for each group in an experiment. */
   public <T extends Enum<T>> Map<T, Double> getExperimentGroups(
       String section, String field, Class<T> enumClass) {
-    return getMap(section, field)
-        .entrySet()
-        .stream()
+    return getMap(section, field).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 x -> Enum.valueOf(enumClass, x.getKey().toUpperCase(Locale.ROOT)),

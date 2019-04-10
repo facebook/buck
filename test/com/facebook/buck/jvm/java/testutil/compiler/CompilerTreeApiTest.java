@@ -136,8 +136,7 @@ public abstract class CompilerTreeApiTest {
   }
 
   protected ExecutableElement findDefaultConstructor(TypeElement typeElement) {
-    return ElementFilter.constructorsIn(typeElement.getEnclosedElements())
-        .stream()
+    return ElementFilter.constructorsIn(typeElement.getEnclosedElements()).stream()
         .filter(element -> element.getParameters().isEmpty())
         .findFirst()
         .get();
@@ -231,9 +230,7 @@ public abstract class CompilerTreeApiTest {
 
   protected void assertErrors(String... messages) {
     assertThat(
-        testCompiler
-            .getDiagnosticMessages()
-            .stream()
+        testCompiler.getDiagnosticMessages().stream()
             .map(ERROR_LINE::matcher)
             .filter(matcher -> matcher.matches())
             .map(matcher -> matcher.group("message"))

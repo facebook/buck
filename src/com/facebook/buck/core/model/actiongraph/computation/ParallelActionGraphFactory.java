@@ -67,9 +67,7 @@ public class ParallelActionGraphFactory implements ActionGraphFactoryDelegate {
         // If we're loading this node from cache, we don't need to wait on our children, as the
         // entire subgraph will be loaded from cache.
         CompletableFuture<BuildRule>[] depFutures =
-            targetGraph
-                .getOutgoingNodesFor(node)
-                .stream()
+            targetGraph.getOutgoingNodesFor(node).stream()
                 .map(dep -> Objects.requireNonNull(futures.get(dep.getBuildTarget())))
                 .<CompletableFuture<BuildRule>>toArray(CompletableFuture[]::new);
         futures.put(

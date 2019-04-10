@@ -78,12 +78,10 @@ class LimitedFileHashCacheEngine implements FileHashCacheEngine {
     private ImmutableMap<Path, HashCode> loadJarContentsHashes() {
       try {
         return new DefaultJarContentHasher(filesystem, path)
-            .getContentHashes()
-            .entrySet()
-            .stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    entry -> entry.getKey(), entry -> entry.getValue().getHashCode()));
+            .getContentHashes().entrySet().stream()
+                .collect(
+                    ImmutableMap.toImmutableMap(
+                        entry -> entry.getKey(), entry -> entry.getValue().getHashCode()));
       } catch (IOException e) {
         throw new RuntimeException(e);
       }

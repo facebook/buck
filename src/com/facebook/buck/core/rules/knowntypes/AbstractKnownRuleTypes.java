@@ -45,8 +45,7 @@ public abstract class AbstractKnownRuleTypes {
 
   @Value.Lazy
   public ImmutableMap<String, RuleType> getTypesByName() {
-    return getDescriptions()
-        .stream()
+    return getDescriptions().stream()
         .map(DescriptionCache::getRuleType)
         .collect(ImmutableMap.toImmutableMap(RuleType::getName, t -> t));
   }
@@ -75,8 +74,7 @@ public abstract class AbstractKnownRuleTypes {
   /** @return all descriptions organized by their {@link RuleType}. */
   @Value.Lazy
   protected ImmutableMap<RuleType, BaseDescription<?>> getDescriptionsByRule() {
-    return getDescriptions()
-        .stream()
+    return getDescriptions().stream()
         .collect(ImmutableMap.toImmutableMap(DescriptionCache::getRuleType, Function.identity()));
   }
 

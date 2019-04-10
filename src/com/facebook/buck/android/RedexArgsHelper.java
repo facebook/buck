@@ -54,8 +54,7 @@ public class RedexArgsHelper {
             .setExpanders(MacroExpandersForAndroidRules.MACRO_EXPANDERS)
             .build();
     List<Arg> redexExtraArgsList =
-        redexExtraArgs
-            .stream()
+        redexExtraArgs.stream()
             .map(x -> macrosConverter.convert(x, graphBuilder))
             .collect(Collectors.toList());
 

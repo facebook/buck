@@ -650,8 +650,7 @@ public class PrebuiltCxxLibraryDescription
 
       @Override
       public Iterable<NativeLinkable> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
-        return getDeclaredDeps()
-            .stream()
+        return getDeclaredDeps().stream()
             .filter(r -> r instanceof NativeLinkable)
             .map(r -> (NativeLinkable) r)
             .collect(ImmutableList.toImmutableList());
@@ -669,8 +668,7 @@ public class PrebuiltCxxLibraryDescription
       @Override
       public Iterable<? extends NativeLinkable> getNativeLinkableExportedDeps(
           BuildRuleResolver ruleResolver) {
-        return args.getExportedDeps()
-            .stream()
+        return args.getExportedDeps().stream()
             .map(ruleResolver::getRule)
             .filter(r -> r instanceof NativeLinkable)
             .map(r -> (NativeLinkable) r)

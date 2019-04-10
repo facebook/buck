@@ -559,9 +559,7 @@ public class ConstructorArgMarshallerImmutableTest {
                 "srcs", ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
 
     ImmutableSet<String> observedValues =
-        built
-            .getSrcs()
-            .stream()
+        built.getSrcs().stream()
             .map(input -> ((PathSourcePath) input).getRelativePath().toString())
             .collect(ImmutableSet.toImmutableSet());
     assertEquals(

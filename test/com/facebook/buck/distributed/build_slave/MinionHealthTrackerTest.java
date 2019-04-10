@@ -208,10 +208,7 @@ public class MinionHealthTrackerTest {
   }
 
   private final List<String> getDeadMinions() {
-    return tracker
-        .checkMinionHealth()
-        .getDeadMinions()
-        .stream()
+    return tracker.checkMinionHealth().getDeadMinions().stream()
         .map(m -> m.getMinionId())
         .collect(Collectors.toList());
   }

@@ -259,8 +259,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   private Iterable<String> getSourceArguments(SourcePathResolver resolver) {
-    return srcs.getSourcePaths()
-        .stream()
+    return srcs.getSourcePaths().stream()
         .map(resolver::getAbsolutePath)
         .map(Object::toString)
         .collect(Collectors.toList());

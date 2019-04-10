@@ -343,10 +343,7 @@ public class DoctorCommandIntegrationTest {
         reporter.getDefectReport().getExtraInfo(),
         Matchers.equalTo(Optional.of("Extra" + System.lineSeparator())));
     assertThat(
-        reporter
-            .getDefectReport()
-            .getIncludedPaths()
-            .stream()
+        reporter.getDefectReport().getIncludedPaths().stream()
             .map(Object::toString)
             .collect(Collectors.toList()),
         Matchers.hasItem(Matchers.endsWith("extra.txt")));

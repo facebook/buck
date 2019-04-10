@@ -80,8 +80,7 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
               @Override
               public StepExecutionResult execute(ExecutionContext context) throws IOException {
                 List<String> lines =
-                    inputs
-                        .stream()
+                    inputs.stream()
                         .map(
                             sp ->
                                 getProjectFilesystem()
@@ -108,8 +107,7 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return inputs
-        .stream()
+    return inputs.stream()
         .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
         .map(BuildRule::getBuildTarget);
   }

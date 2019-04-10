@@ -55,9 +55,7 @@ class BuiltTargetVerifier {
                 + "before we can check if it supports flavors: %s",
             unflavoredBuildTargetView, buildRuleType, target.getFlavors());
         ImmutableSet<String> invalidFlavorsStr =
-            target
-                .getFlavors()
-                .stream()
+            target.getFlavors().stream()
                 .map(Flavor::toString)
                 .collect(ImmutableSet.toImmutableSet());
         String invalidFlavorsDisplayStr = String.join(", ", invalidFlavorsStr);

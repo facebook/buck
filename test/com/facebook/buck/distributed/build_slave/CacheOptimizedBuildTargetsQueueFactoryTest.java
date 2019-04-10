@@ -275,9 +275,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
     Assert.assertEquals(
         ImmutableSet.copyOf(localHitTargets),
-        artifactCache
-            .getAllUploadRuleFutures()
-            .stream()
+        artifactCache.getAllUploadRuleFutures().stream()
             .map(Futures::getUnchecked)
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));
@@ -325,9 +323,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
 
     Assert.assertEquals(
         ImmutableSet.of(leftTarget, rightTarget),
-        artifactCache
-            .getAllUploadRuleFutures()
-            .stream()
+        artifactCache.getAllUploadRuleFutures().stream()
             .map(Futures::getUnchecked)
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));
@@ -375,9 +371,7 @@ public class CacheOptimizedBuildTargetsQueueFactoryTest {
     // trigger a build of c.
     Assert.assertEquals(
         ImmutableSet.of(leftTarget, rightTarget, cachableTargetC),
-        artifactCache
-            .getAllUploadRuleFutures()
-            .stream()
+        artifactCache.getAllUploadRuleFutures().stream()
             .map(Futures::getUnchecked)
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));

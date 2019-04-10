@@ -177,8 +177,7 @@ public class ExecutableFinder {
       if (Files.exists(osXPaths)) {
         try {
           paths.addAll(
-              Files.readAllLines(osXPaths, Charset.defaultCharset())
-                  .stream()
+              Files.readAllLines(osXPaths, Charset.defaultCharset()).stream()
                   .map(Paths::get)
                   .iterator());
         } catch (IOException e) {

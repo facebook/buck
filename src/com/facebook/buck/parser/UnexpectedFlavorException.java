@@ -90,18 +90,14 @@ public class UnexpectedFlavorException extends HumanReadableException {
 
   private static ImmutableSet<Flavor> getInvalidFlavors(
       Flavored flavored, UnconfiguredBuildTargetView target) {
-    return target
-        .getFlavors()
-        .stream()
+    return target.getFlavors().stream()
         .filter(flavor -> !flavored.hasFlavors(ImmutableSet.of(flavor)))
         .collect(ImmutableSet.toImmutableSet());
   }
 
   private static ImmutableSet<Flavor> getValidFlavors(
       Flavored flavored, UnconfiguredBuildTargetView target) {
-    return target
-        .getFlavors()
-        .stream()
+    return target.getFlavors().stream()
         .filter(flavor -> flavored.hasFlavors(ImmutableSet.of(flavor)))
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -111,14 +107,12 @@ public class UnexpectedFlavorException extends HumanReadableException {
       ImmutableSet<Flavor> invalidFlavors,
       ImmutableSet<Flavor> validFlavors) {
     String invalidFlavorsStr =
-        invalidFlavors
-            .stream()
+        invalidFlavors.stream()
             .map(Flavor::toString)
             .collect(Collectors.joining(System.lineSeparator()));
 
     String validFlavorsStr =
-        validFlavors
-            .stream()
+        validFlavors.stream()
             .map(Flavor::getName)
             .collect(Collectors.joining(System.lineSeparator()));
 

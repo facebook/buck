@@ -431,13 +431,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     Optional<Path> apkUnderTestSymlinkTreePath =
         getApkUnderTest(apkInstance)
             .flatMap(AndroidInstrumentationTest::getExopackageSymlinkTreePathIfNeeded);
-    return ImmutableList.<Optional<Path>>builder()
-        .add(apkUnderTestPath)
-        .add(instrumentationApkPath)
-        .add(exopackageSymlinkTreePath)
-        .add(apkUnderTestSymlinkTreePath)
-        .build()
-        .stream()
+    return ImmutableList.<Optional<Path>>builder().add(apkUnderTestPath).add(instrumentationApkPath)
+        .add(exopackageSymlinkTreePath).add(apkUnderTestSymlinkTreePath).build().stream()
         .filter(Optional::isPresent)
         .map(Optional::get)
         .collect(ImmutableList.toImmutableList());

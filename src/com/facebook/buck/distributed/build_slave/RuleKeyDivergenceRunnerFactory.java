@@ -105,8 +105,7 @@ public class RuleKeyDivergenceRunnerFactory {
                     eventBus);
 
             List<BuildSlaveEvent> ruleKeyCalculatedEvents =
-                rulesAndKeys
-                    .stream()
+                rulesAndKeys.stream()
                     .map(
                         rk -> {
                           RuleKeyCalculatedEvent event = new RuleKeyCalculatedEvent();
@@ -193,10 +192,7 @@ public class RuleKeyDivergenceRunnerFactory {
       DistBuildState state,
       Cell rootCell,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
-    return state
-        .getRemoteState()
-        .getTopLevelTargets()
-        .stream()
+    return state.getRemoteState().getTopLevelTargets().stream()
         .map(
             target ->
                 unconfiguredBuildTargetFactory

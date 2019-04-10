@@ -292,9 +292,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSet.of(
             cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName)),
-        archiveRule
-            .getBuildDeps()
-            .stream()
+        archiveRule.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));
 
@@ -564,9 +562,7 @@ public class CxxLibraryDescriptionTest {
         ImmutableSet.of(
             cxxSourceRuleFactoryPDC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPDC.createCompileBuildTarget(genSourceName)),
-        staticRule
-            .getBuildDeps()
-            .stream()
+        staticRule.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));
 
@@ -623,9 +619,7 @@ public class CxxLibraryDescriptionTest {
             sharedLibraryDepTarget,
             cxxSourceRuleFactoryPIC.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactoryPIC.createCompileBuildTarget(genSourceName)),
-        sharedRule
-            .getBuildDeps()
-            .stream()
+        sharedRule.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));
 

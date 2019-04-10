@@ -331,10 +331,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   @Override
   public Stream<Entry<Path, HashCode>> debugDump() {
-    return fileHashCacheEngine
-        .asMap()
-        .entrySet()
-        .stream()
+    return fileHashCacheEngine.asMap().entrySet().stream()
         .map(
             entry ->
                 new AbstractMap.SimpleEntry<>(

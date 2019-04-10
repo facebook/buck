@@ -215,9 +215,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
   @Override
   public void prewarmRemoteContainsForAllKnownRules() {
     prewarmRemoteContains(
-        ruleKeyCalculator
-            .getAllKnownTargets()
-            .stream()
+        ruleKeyCalculator.getAllKnownTargets().stream()
             .map(graphBuilder::requireRule)
             .collect(ImmutableSet.toImmutableSet()));
   }
@@ -227,8 +225,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
     @SuppressWarnings("PMD.PrematureDeclaration")
     Stopwatch stopwatch = Stopwatch.createStarted();
     Set<BuildRule> unseenRules =
-        rulesToBeChecked
-            .stream()
+        rulesToBeChecked.stream()
             .filter(rule -> !remoteCacheContainsFutures.containsKey(rule))
             .collect(Collectors.toSet());
 

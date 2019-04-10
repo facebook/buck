@@ -474,8 +474,7 @@ public class CxxDescriptionEnhancer {
         pathResolver.getSourcePathNames(
             buildTarget,
             "srcs",
-            sourcesWithFlags
-                .stream()
+            sourcesWithFlags.stream()
                 .map(
                     s ->
                         s.withSourcePath(
@@ -762,10 +761,8 @@ public class CxxDescriptionEnhancer {
     args.getCxxDeps().get(graphBuilder, cxxPlatform).forEach(depsBuilder::add);
     // Add in deps found via deps query.
     ImmutableList<BuildRule> depQueryDeps =
-        args.getDepsQuery()
-            .map(query -> Objects.requireNonNull(query.getResolvedQuery()))
-            .orElse(ImmutableSortedSet.of())
-            .stream()
+        args.getDepsQuery().map(query -> Objects.requireNonNull(query.getResolvedQuery()))
+            .orElse(ImmutableSortedSet.of()).stream()
             .map(graphBuilder::getRule)
             .collect(ImmutableList.toImmutableList());
     depsBuilder.addAll(depQueryDeps);
@@ -1002,8 +999,7 @@ public class CxxDescriptionEnhancer {
 
     // Add object files into the args.
     ImmutableList<SourcePathArg> objectArgs =
-        SourcePathArg.from(objects.values())
-            .stream()
+        SourcePathArg.from(objects.values()).stream()
             .map(
                 input -> {
                   Preconditions.checkArgument(input instanceof SourcePathArg);

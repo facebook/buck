@@ -261,17 +261,11 @@ public class OcamlBuildRulesGenerator {
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(ruleFinder.filterBuildRuleInputs(allInputs))
                     .addAll(
-                        ocamlContext
-                            .getNativeLinkableInput()
-                            .getArgs()
-                            .stream()
+                        ocamlContext.getNativeLinkableInput().getArgs().stream()
                             .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .iterator())
                     .addAll(
-                        ocamlContext
-                            .getCLinkableInput()
-                            .getArgs()
-                            .stream()
+                        ocamlContext.getCLinkableInput().getArgs().stream()
                             .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
                             .iterator())
                     .addAll(BuildableSupport.getDepsCollection(cxxCompiler, ruleFinder))

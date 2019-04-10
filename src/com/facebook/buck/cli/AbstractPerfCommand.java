@@ -252,10 +252,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
     return new StackedFileHashCache(
         ImmutableList.<ProjectFileHashCache>builder()
             .addAll(
-                params
-                    .getCell()
-                    .getAllCells()
-                    .stream()
+                params.getCell().getAllCells().stream()
                     .flatMap(this::createFileHashCaches)
                     .collect(Collectors.toList()))
             .addAll(

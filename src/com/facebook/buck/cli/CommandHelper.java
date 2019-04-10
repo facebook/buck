@@ -60,8 +60,7 @@ public final class CommandHelper {
   public static void printJsonOutput(Set<QueryTarget> targets, PrintStream printStream)
       throws IOException {
     Set<String> targetsNames =
-        targets
-            .stream()
+        targets.stream()
             .peek(Objects::requireNonNull)
             .map(CommandHelper::stringify)
             .collect(ImmutableSet.toImmutableSet());
@@ -77,8 +76,7 @@ public final class CommandHelper {
    */
   public static void print(
       Multimap<String, QueryTarget> targetsAndDependencies, PrintStream printStream) {
-    ImmutableSortedSet.copyOf(targetsAndDependencies.values())
-        .stream()
+    ImmutableSortedSet.copyOf(targetsAndDependencies.values()).stream()
         .map(CommandHelper::stringify)
         .forEach(printStream::println);
   }

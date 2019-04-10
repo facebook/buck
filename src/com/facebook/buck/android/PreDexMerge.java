@@ -354,9 +354,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem(),
             primaryDexPath,
             Suppliers.ofInstance(
-                rootApkModuleResult
-                    .primaryDexInputs
-                    .stream()
+                rootApkModuleResult.primaryDexInputs.stream()
                     .map(path -> sourcePathResolver.getRelativePath(getProjectFilesystem(), path))
                     .collect(ImmutableSet.toImmutableSet())),
             Optional.of(paths.jarfilesSubdir),
@@ -452,9 +450,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // For single-dex apps with pre-dexing, we just add the steps directly.
 
     Stream<SourcePath> sourcePathsToDex =
-        preDexDeps
-            .values()
-            .stream()
+        preDexDeps.values().stream()
             .filter(DexProducedFromJavaLibrary::hasOutput)
             .map(DexProducedFromJavaLibrary::getSourcePathToDex);
 
@@ -497,9 +493,7 @@ public class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   /** @return the output directories for modular dex files */
   Stream<Path> getModuleDexPaths() {
     SplitDexPaths paths = new SplitDexPaths();
-    return apkModuleGraph
-        .getAPKModules()
-        .stream()
+    return apkModuleGraph.getAPKModules().stream()
         .filter(module -> !module.isRootModule())
         .map(module -> paths.additionalJarfilesSubdir.resolve(module.getName()));
   }

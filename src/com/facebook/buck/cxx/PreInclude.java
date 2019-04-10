@@ -201,16 +201,14 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableList<CxxHeaders> getIncludes(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return getCxxPreprocessorInputs(cxxPlatform, graphBuilder)
-        .stream()
+    return getCxxPreprocessorInputs(cxxPlatform, graphBuilder).stream()
         .flatMap(input -> input.getIncludes().stream())
         .collect(ImmutableList.toImmutableList());
   }
 
   private ImmutableSet<FrameworkPath> getFrameworks(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return getCxxPreprocessorInputs(cxxPlatform, graphBuilder)
-        .stream()
+    return getCxxPreprocessorInputs(cxxPlatform, graphBuilder).stream()
         .flatMap(input -> input.getFrameworks().stream())
         .collect(ImmutableSet.toImmutableSet());
   }

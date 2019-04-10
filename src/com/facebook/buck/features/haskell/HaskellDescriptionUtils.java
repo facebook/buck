@@ -543,9 +543,7 @@ public class HaskellDescriptionUtils {
     ImmutableMap<BuildTarget, NativeLinkable> transitiveDeps =
         NativeLinkables.getTransitiveNativeLinkables(
             platform.getCxxPlatform(), graphBuilder, omnibusSpec.getDeps().values());
-    transitiveDeps
-        .values()
-        .stream()
+    transitiveDeps.values().stream()
         // Skip statically linked libraries.
         .filter(l -> l.getPreferredLinkage(platform.getCxxPlatform()) != Linkage.STATIC)
         .forEach(l -> sharedLibsBuilder.add(platform.getCxxPlatform(), l, graphBuilder));
@@ -554,10 +552,7 @@ public class HaskellDescriptionUtils {
     // Build up a set of all transitive preload libs, which are the ones that have been "excluded"
     // from the omnibus link.  These are the ones we need to LD_PRELOAD.
     SharedLibrariesBuilder preloadLibsBuilder = new SharedLibrariesBuilder();
-    omnibusSpec
-        .getExcludedTransitiveDeps()
-        .values()
-        .stream()
+    omnibusSpec.getExcludedTransitiveDeps().values().stream()
         // Don't include shared libs for static libraries -- except for preload roots, which we
         // always link dynamically.
         .filter(

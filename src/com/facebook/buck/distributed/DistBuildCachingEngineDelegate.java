@@ -63,9 +63,7 @@ public class DistBuildCachingEngineDelegate implements CachingBuildEngineDelegat
             ruleKeyConfiguration);
 
     this.materializerFileHashCaches =
-        materializingStackedFileHashCache
-            .getCaches()
-            .stream()
+        materializingStackedFileHashCache.getCaches().stream()
             .filter(cache -> cache instanceof MaterializerDummyFileHashCache)
             .map(cache -> (MaterializerDummyFileHashCache) cache)
             .collect(ImmutableList.toImmutableList());

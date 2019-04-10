@@ -124,9 +124,7 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
   private static void updateConditions(
       Map<Selectable, Object> matchingConditions, Selectable newCondition, Object value) {
     // Skip the new condition if some existing condition refines it
-    if (matchingConditions
-        .keySet()
-        .stream()
+    if (matchingConditions.keySet().stream()
         .anyMatch(condition -> condition.refines(newCondition))) {
       return;
     }
@@ -159,10 +157,7 @@ public class DefaultSelectorListResolver implements SelectorListResolver {
             + " match the configuration";
     if (selector.getNoMatchMessage().isEmpty()) {
       Iterable<?> keys =
-          selector
-              .getConditions()
-              .keySet()
-              .stream()
+          selector.getConditions().keySet().stream()
               .filter(key -> !key.isReserved())
               .map(SelectorKey::getBuildTarget)
               .collect(Collectors.toList());

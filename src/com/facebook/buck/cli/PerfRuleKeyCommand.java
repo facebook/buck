@@ -288,8 +288,7 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
 
                 usedInputs.put(
                     rule,
-                    depFile
-                        .stream()
+                    depFile.stream()
                         .map(ObjectMappers.fromJsonFunction(DependencyFileEntry.class))
                         .collect(ImmutableList.toImmutableList()));
               } catch (Exception e) {

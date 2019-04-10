@@ -92,9 +92,7 @@ public class IsolationChecker {
     this.pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
     this.cellMap =
-        cellResolver
-            .getKnownRoots()
-            .stream()
+        cellResolver.getKnownRoots().stream()
             .collect(ImmutableMap.toImmutableMap(root -> root, cellResolver::getCanonicalCellName));
     this.reporter = reporter;
   }

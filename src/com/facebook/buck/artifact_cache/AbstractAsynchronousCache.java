@@ -175,28 +175,23 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     boolean gotNonError = false;
     try (CacheEventListener.MultiFetchRequestEvents requestEvents =
         eventListener.multiFetchStarted(
-            requests
-                .stream()
+            requests.stream()
                 .map(r -> r.getRequest().getBuildTarget())
                 .filter(Objects::nonNull)
                 .collect(ImmutableList.toImmutableList()),
-            requests
-                .stream()
+            requests.stream()
                 .map(r -> r.getRequest().getRuleKey())
                 .collect(ImmutableList.toImmutableList()))) {
       try {
         MultiFetchResult result =
             multiFetchImpl(
-                requests
-                    .stream()
+                requests.stream()
                     .map(ClaimedFetchRequest::getRequest)
                     .collect(ImmutableList.toImmutableList()));
         Preconditions.checkState(result.getResults().size() == requests.size());
         // MultiFetch must return a non-skipped result for at least one of the requested keys.
         Preconditions.checkState(
-            result
-                .getResults()
-                .stream()
+            result.getResults().stream()
                 .anyMatch(
                     fetchResult ->
                         fetchResult.getCacheResult().getType() != CacheResultType.SKIPPED));
@@ -212,15 +207,12 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
           }
         }
         gotNonError =
-            result
-                .getResults()
-                .stream()
+            result.getResults().stream()
                 .anyMatch(
                     fetchResult -> fetchResult.getCacheResult().getType() != CacheResultType.ERROR);
       } catch (IOException e) {
         ImmutableList<RuleKey> keys =
-            requests
-                .stream()
+            requests.stream()
                 .map(r -> r.getRequest().getRuleKey())
                 .collect(ImmutableList.toImmutableList());
         String msg =

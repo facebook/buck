@@ -40,10 +40,7 @@ class TargetNodeFilterForSpecResolverWithNodeFiltering<T extends HasBuildTarget>
 
   @Override
   public ImmutableMap<BuildTarget, T> filter(TargetNodeSpec spec, Iterable<T> nodes) {
-    return filter
-        .filter(spec, nodes)
-        .entrySet()
-        .stream()
+    return filter.filter(spec, nodes).entrySet().stream()
         .filter(entry -> nodeFilter.test(entry.getValue()))
         .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
   }

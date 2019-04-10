@@ -93,14 +93,10 @@ public class AndroidAppModularityVerification extends AbstractBuildRule {
     Optional<Path> proguardMappingFile = proguardConfigDir.map(p -> p.resolve("mapping.txt"));
 
     ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
-        moduleMappedClasspathEntriesForConsistency
-            .entrySet()
-            .stream()
+        moduleMappedClasspathEntriesForConsistency.entrySet().stream()
             .flatMap(
                 entry ->
-                    entry
-                        .getValue()
-                        .stream()
+                    entry.getValue().stream()
                         .map(
                             v ->
                                 new AbstractMap.SimpleEntry<>(

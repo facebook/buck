@@ -59,9 +59,7 @@ public class ImmutableTypeCoercerTest {
 
     assertEquals(
         Sets.newHashSet("//a:b", "//a:c", "//a:d"),
-        collectedTargets
-            .build()
-            .stream()
+        collectedTargets.build().stream()
             .map(BuildTarget::getFullyQualifiedName)
             .collect(Collectors.toSet()));
   }

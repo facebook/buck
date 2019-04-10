@@ -101,9 +101,7 @@ public class SymlinkTree extends AbstractBuildRule
     this.directoriesToMerge = directoriesToMerge;
 
     this.buildDeps =
-        directoriesToMerge
-            .values()
-            .stream()
+        directoriesToMerge.values().stream()
             .map(ruleFinder::getRule)
             .filter(Optional::isPresent)
             .map(Optional::get)
@@ -127,9 +125,7 @@ public class SymlinkTree extends AbstractBuildRule
     sink.setReflectively(
         "merge_dirs",
         // Turn our multimap into something properly ordered by path with the multimap values sorted
-        directoriesToMerge
-            .keySet()
-            .stream()
+        directoriesToMerge.keySet().stream()
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
                     String::compareTo,
@@ -231,9 +227,7 @@ public class SymlinkTree extends AbstractBuildRule
                 category,
                 getProjectFilesystem(),
                 root,
-                directoriesToMerge
-                    .entries()
-                    .stream()
+                directoriesToMerge.entries().stream()
                     .collect(
                         ImmutableSetMultimap.toImmutableSetMultimap(
                             Entry::getKey,
@@ -296,9 +290,7 @@ public class SymlinkTree extends AbstractBuildRule
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return links
-        .values()
-        .stream()
+    return links.values().stream()
         .map(ruleFinder::filterBuildRuleInputs)
         .flatMap(ImmutableSet::stream)
         .map(BuildRule::getBuildTarget);

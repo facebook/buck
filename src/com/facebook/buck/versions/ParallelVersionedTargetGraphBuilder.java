@@ -192,9 +192,7 @@ public class ParallelVersionedTargetGraphBuilder extends AbstractVersionedTarget
 
     // Walk through explicit built targets, separating them into root and non-root nodes.
     ImmutableList<RootAction> actions =
-        unversionedTargetGraphAndBuildTargets
-            .getBuildTargets()
-            .stream()
+        unversionedTargetGraphAndBuildTargets.getBuildTargets().stream()
             .map(this::getNode)
             .map(RootAction::new)
             .collect(ImmutableList.toImmutableList());

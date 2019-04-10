@@ -154,8 +154,7 @@ public final class MoreStrings {
    */
   public static List<String> getSpellingSuggestions(
       String input, Collection<String> options, int maxDistance) {
-    return options
-        .stream()
+    return options.stream()
         .map(option -> new Pair<>(option, MoreStrings.getLevenshteinDistance(input, option)))
         .filter(pair -> pair.getSecond() <= maxDistance)
         .sorted(Comparator.comparing(Pair::getSecond))

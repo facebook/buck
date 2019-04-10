@@ -160,8 +160,7 @@ public class TargetGraphHashing {
     private ListenableFuture<List<Pair<BuildTarget, HashCode>>> getDepPairsFuture(
         TargetNode<?> node) {
       return Futures.allAsList(
-          node.getParseDeps()
-              .stream()
+          node.getParseDeps().stream()
               .map(
                   dep ->
                       Futures.transform(

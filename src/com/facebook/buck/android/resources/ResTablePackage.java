@@ -70,9 +70,7 @@ public class ResTablePackage extends ResChunk {
     byte[] nameData = Arrays.copyOf(resPackage.nameData, NAME_DATA_LENGTH);
 
     List<ResTableTypeSpec> newSpecs =
-        resPackage
-            .getTypeSpecs()
-            .stream()
+        resPackage.getTypeSpecs().stream()
             .map(
                 spec ->
                     ResTableTypeSpec.slice(

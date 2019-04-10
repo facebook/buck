@@ -113,9 +113,7 @@ public class AsyncJobStateFactory {
                           .build(),
                       input);
             },
-            targetGraphAndBuildTargets
-                .getBuildTargets()
-                .stream()
+            targetGraphAndBuildTargets.getBuildTargets().stream()
                 .map(t -> t.getFullyQualifiedName())
                 .collect(Collectors.toSet()));
 

@@ -1164,8 +1164,7 @@ public class ProjectGenerator {
     result.put(
         "EXCLUDED_SOURCE_FILE_NAMES",
         ImmutableSortedSet.copyOf(
-            allPlatformSpecificSources
-                .stream()
+            allPlatformSpecificSources.stream()
                 .map(s -> "'" + s + "'")
                 .collect(Collectors.toSet())));
 
@@ -1191,8 +1190,7 @@ public class ProjectGenerator {
           Set<String> sourcesMatchingPlatform = includedSourcesByPlatform.get(platformMatcher);
           if (sourcesMatchingPlatform != null) {
             Set<String> quotedSources =
-                sourcesMatchingPlatform
-                    .stream()
+                sourcesMatchingPlatform.stream()
                     .map(s -> "'" + s + "'")
                     .collect(Collectors.toSet());
             // They may have different matchers for similar things in which case the key will
@@ -2364,16 +2362,16 @@ public class ProjectGenerator {
             Stream.of(node),
             // ... And recursive dependencies that gets linked in
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
-                    xcodeDescriptions,
-                    targetGraph,
-                    Optional.of(dependenciesCache),
-                    AppleBuildRules.RecursiveDependenciesMode.LINKING,
-                    node,
-                    ImmutableSet.of(
-                        AppleLibraryDescription.class,
-                        CxxLibraryDescription.class,
-                        PrebuiltAppleFrameworkDescription.class,
-                        PrebuiltCxxLibraryDescription.class))
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                AppleBuildRules.RecursiveDependenciesMode.LINKING,
+                node,
+                ImmutableSet.of(
+                    AppleLibraryDescription.class,
+                    CxxLibraryDescription.class,
+                    PrebuiltAppleFrameworkDescription.class,
+                    PrebuiltCxxLibraryDescription.class))
                 .stream())
         .map(
             castedNode -> {
@@ -2405,10 +2403,7 @@ public class ProjectGenerator {
         .forEach(
             castedNode -> {
               // ... Add the framework path strings.
-              castedNode
-                  .getConstructorArg()
-                  .getFrameworks()
-                  .stream()
+              castedNode.getConstructorArg().getFrameworks().stream()
                   .filter(x -> !x.isSDKROOTFrameworkPath())
                   .map(
                       frameworkPath ->
@@ -2420,10 +2415,7 @@ public class ProjectGenerator {
                   .forEach(frameworkSearchPaths::add);
 
               // ... And do the same for libraries.
-              castedNode
-                  .getConstructorArg()
-                  .getLibraries()
-                  .stream()
+              castedNode.getConstructorArg().getLibraries().stream()
                   .map(
                       libraryPath ->
                           FrameworkPath.getUnexpandedSearchPath(
@@ -3107,8 +3099,7 @@ public class ProjectGenerator {
       String moduleName, ImmutableSortedSet<Path> headerPaths, Path headerSymlinkTreeRoot)
       throws IOException {
     ImmutableList<String> headerPathStrings =
-        headerPaths
-            .stream()
+        headerPaths.stream()
             .map(Path::getFileName)
             .map(Path::toString)
             .collect(ImmutableList.toImmutableList());

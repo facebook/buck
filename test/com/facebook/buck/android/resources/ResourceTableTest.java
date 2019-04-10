@@ -99,8 +99,7 @@ public class ResourceTableTest {
       String expected =
           Joiner.on("\n")
               .join(
-                  Files.readAllLines(resourcesOutput)
-                      .stream()
+                  Files.readAllLines(resourcesOutput).stream()
                       .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
                       .iterator());
       MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
@@ -130,8 +129,7 @@ public class ResourceTableTest {
       String expected =
           Joiner.on("\n")
               .join(
-                  Files.readAllLines(resourcesOutput)
-                      .stream()
+                  Files.readAllLines(resourcesOutput).stream()
                       .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
                       .iterator());
       MoreAsserts.assertLargeStringsEqual(expected + "\n", content);
@@ -161,8 +159,7 @@ public class ResourceTableTest {
       String expected =
           Joiner.on("\n")
               .join(
-                  Files.readAllLines(resourcesOutput)
-                      .stream()
+                  Files.readAllLines(resourcesOutput).stream()
                       .map((s) -> re.matcher(s).matches() ? "      config (unknown):" : s)
                       .iterator());
       MoreAsserts.assertLargeStringsEqual(expected + "\n", content);

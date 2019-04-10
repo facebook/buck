@@ -120,9 +120,7 @@ public class ServerHealthManager {
               "No servers available. High latency/errors reported: [%s]",
               Joiner.on(", ")
                   .join(
-                      servers
-                          .entrySet()
-                          .stream()
+                      servers.entrySet().stream()
                           .map(
                               e ->
                                   String.format(

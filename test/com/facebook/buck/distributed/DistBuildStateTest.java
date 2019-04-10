@@ -288,17 +288,14 @@ public class DistBuildStateTest {
     TargetGraph reconstructedGraph =
         distributedBuildState.createTargetGraph(targetGraphCodec).getTargetGraph();
     assertEquals(
-        reconstructedGraph
-            .getNodes()
-            .stream()
+        reconstructedGraph.getNodes().stream()
             .map(
                 targetNode ->
                     TargetNodes.castArg(targetNode, JavaLibraryDescriptionArg.class).get())
             .sorted()
             .map(targetNode -> targetNode.getConstructorArg().getSrcs())
             .collect(Collectors.toList()),
-        Lists.newArrayList("A.java", "B.java", "C.java")
-            .stream()
+        Lists.newArrayList("A.java", "B.java", "C.java").stream()
             .map(f -> reconstructedCellFilesystem.getPath(f))
             .map(p -> PathSourcePath.of(reconstructedCellFilesystem, p))
             .map(ImmutableSortedSet::of)

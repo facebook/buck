@@ -66,8 +66,7 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
     // A pattern matching all of the build targets in the query string.
     Pattern targetsPattern =
         Pattern.compile(
-            targets
-                .stream()
+            targets.stream()
                 .map(Object::toString)
                 .map(Pattern::quote)
                 .collect(Collectors.joining("|")));

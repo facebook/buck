@@ -149,8 +149,7 @@ public class CacheCommand extends AbstractCommand {
         arguments.stream().map(RuleKey::new).collect(ImmutableList.toImmutableList());
 
     ImmutableList<Pair<BuildTarget, RuleKey>> pairedRuleKeys =
-        targetsWithRuleKeys
-            .stream()
+        targetsWithRuleKeys.stream()
             .map(pair -> parseTargetRuleKeyPair(params, pair))
             .collect(ImmutableList.toImmutableList());
 

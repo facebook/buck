@@ -168,9 +168,7 @@ public class SkylarkNativeModule {
     try {
       return SkylarkList.MutableList.copyOf(
           env,
-          parseContext
-              .getPackageContext()
-              .getGlobber()
+          parseContext.getPackageContext().getGlobber()
               .run(
                   Type.STRING_LIST.convert(include, "'glob' include"),
                   Type.STRING_LIST.convert(exclude, "'glob' exclude"),

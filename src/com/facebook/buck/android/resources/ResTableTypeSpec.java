@@ -45,8 +45,7 @@ public class ResTableTypeSpec extends ResChunk {
 
   public static ResTableTypeSpec slice(ResTableTypeSpec spec, int count) {
     ImmutableList<ResTableType> configs =
-        spec.getConfigs()
-            .stream()
+        spec.getConfigs().stream()
             .map(config -> ResTableType.slice(config, count))
             .filter(Objects::nonNull)
             .collect(ImmutableList.toImmutableList());

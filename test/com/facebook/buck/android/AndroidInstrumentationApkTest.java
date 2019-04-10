@@ -146,10 +146,7 @@ public class AndroidInstrumentationApkTest {
                 javaLibrary2.getProjectFilesystem(), javaLibrary2.getBuildTarget(), "%s.jar"),
             BuildTargetPaths.getGenPath(
                 javaLibrary3.getProjectFilesystem(), javaLibrary3.getBuildTarget(), "%s.jar")),
-        androidBinary
-            .getAndroidPackageableCollection()
-            .getClasspathEntriesToDex()
-            .stream()
+        androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex().stream()
             .map(pathResolver::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));
     assertEquals(
@@ -157,9 +154,7 @@ public class AndroidInstrumentationApkTest {
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
                 javaLibrary4.getProjectFilesystem(), javaLibrary4.getBuildTarget(), "%s.jar")),
-        androidInstrumentationApk
-            .getAndroidPackageableCollection()
-            .getClasspathEntriesToDex()
+        androidInstrumentationApk.getAndroidPackageableCollection().getClasspathEntriesToDex()
             .stream()
             .map(pathResolver::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));

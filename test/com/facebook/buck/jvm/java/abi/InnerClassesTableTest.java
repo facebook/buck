@@ -586,9 +586,7 @@ public class InnerClassesTableTest {
 
       assertEquals(
           Arrays.asList(innerClassesEntries),
-          classNode
-              .innerClasses
-              .stream()
+          classNode.innerClasses.stream()
               .map(innerClass -> innerClass.name)
               .collect(Collectors.toList()));
       return this;

@@ -279,8 +279,7 @@ public class DuplicateResourcesTest {
                         new FakeBuildableContext()))
             .map(
                 steps ->
-                    steps
-                        .stream()
+                    steps.stream()
                         .filter(step -> step instanceof AaptStep)
                         .collect(ImmutableList.toImmutableList()))
             .filter(steps -> !steps.isEmpty())

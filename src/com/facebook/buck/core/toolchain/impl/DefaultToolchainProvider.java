@@ -103,9 +103,7 @@ public class DefaultToolchainProvider extends BaseToolchainProvider {
 
   private Stream<ToolchainDescriptor<?>> loadToolchainDescriptorsFromPlugins(
       PluginManager pluginManager) {
-    return pluginManager
-        .getExtensions(ToolchainSupplier.class)
-        .stream()
+    return pluginManager.getExtensions(ToolchainSupplier.class).stream()
         .flatMap(supplier -> supplier.getToolchainDescriptor().stream());
   }
 

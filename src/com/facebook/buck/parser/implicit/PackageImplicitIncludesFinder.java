@@ -86,9 +86,7 @@ public class PackageImplicitIncludesFinder {
 
     IncludeNode build() {
       return new IncludeNode(
-          nodes
-              .entrySet()
-              .stream()
+          nodes.entrySet().stream()
               .collect(ImmutableMap.toImmutableMap(Entry::getKey, e -> e.getValue().build())),
           include);
     }

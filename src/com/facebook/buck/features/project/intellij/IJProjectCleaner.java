@@ -69,8 +69,7 @@ public class IJProjectCleaner {
   public void writeFilesToKeepToFile(String filename) throws IOException {
     Files.write(
         projectFilesystem.resolve(filename),
-        filesToKeep
-            .stream()
+        filesToKeep.stream()
             .map(File::getAbsolutePath)
             .map(Paths::get)
             .map(projectFilesystem::relativize)

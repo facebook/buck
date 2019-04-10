@@ -38,9 +38,7 @@ public class PluginBasedCommandHelpPrinter {
     printShortDescription(command, stream);
     CmdLineParserWithPrintInformation parser = new CmdLineParserWithPrintInformation(command);
     ImmutableSortedMap<PluginBasedSubCommand, CmdLineParserWithPrintInformation> subCommands =
-        command
-            .getSubCommands()
-            .stream()
+        command.getSubCommands().stream()
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
                     Comparator.comparing(PluginBasedSubCommand::getOptionValue),

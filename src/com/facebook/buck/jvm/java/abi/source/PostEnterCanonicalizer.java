@@ -252,9 +252,7 @@ class PostEnterCanonicalizer {
         {
           ParameterizedTypeTree parameterizedTypeTree = (ParameterizedTypeTree) tree;
           TypeMirror[] typeArguments =
-              parameterizedTypeTree
-                  .getTypeArguments()
-                  .stream()
+              parameterizedTypeTree.getTypeArguments().stream()
                   .map(
                       arg -> {
                         TreePath argPath = new TreePath(treePath, arg);

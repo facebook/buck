@@ -70,8 +70,7 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
       for (Path resourceFolder : resourceFolders) {
         context.addSourceFolder(new AndroidResourceFolder(resourceFolder));
 
-        excludedResourcePaths
-            .stream()
+        excludedResourcePaths.stream()
             .map((file) -> resourceFolder.resolve(file))
             .forEach((folder) -> context.addSourceFolder(new ExcludeFolder(folder)));
       }

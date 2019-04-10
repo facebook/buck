@@ -154,10 +154,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
             resolver.getMappedPaths(getComponents().getModules()),
             resolver.getMappedPaths(getComponents().getResources()),
             resolver.getMappedPaths(getComponents().getNativeLibraries()),
-            getComponents()
-                .getModuleDirs()
-                .entries()
-                .stream()
+            getComponents().getModuleDirs().entries().stream()
                 .collect(
                     ImmutableSetMultimap.toImmutableSetMultimap(
                         Entry::getKey, e -> resolver.getAbsolutePath(e.getValue()))),

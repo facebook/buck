@@ -374,9 +374,7 @@ public class DxStep extends ShellStep {
             ConsoleEvent.severe(
                 String.join(
                     System.lineSeparator(),
-                    diagnosticsHandler
-                        .diagnostics
-                        .stream()
+                    diagnosticsHandler.diagnostics.stream()
                         .map(Diagnostic::getDiagnosticMessage)
                         .collect(ImmutableList.toImmutableList()))));
         e.printStackTrace(context.getStdErr());

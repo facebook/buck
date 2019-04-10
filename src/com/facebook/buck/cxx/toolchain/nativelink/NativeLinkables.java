@@ -309,9 +309,7 @@ public class NativeLinkables {
         getTransitiveNativeLinkables(cxxPlatform, graphBuilder, roots.values());
 
     SharedLibrariesBuilder builder = new SharedLibrariesBuilder();
-    nativeLinkables
-        .entrySet()
-        .stream()
+    nativeLinkables.entrySet().stream()
         .filter(
             e ->
                 e.getValue().getPreferredLinkage(cxxPlatform) != NativeLinkable.Linkage.STATIC

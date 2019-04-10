@@ -152,8 +152,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
 
   private static ImmutableMap<SupportsDependencyFileRuleKey, RuleKeyAndInputs> computeManifestKeys(
       ImmutableList<BuildRule> rulesInGraph, RuleKeyFactories factories) {
-    return rulesInGraph
-        .stream()
+    return rulesInGraph.stream()
         .filter(rule -> rule instanceof SupportsDependencyFileRuleKey)
         .map(SupportsDependencyFileRuleKey.class::cast)
         .filter(SupportsDependencyFileRuleKey::useDependencyFileRuleKeys)

@@ -174,8 +174,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
 
     VersionStringComparator versionComparator = new VersionStringComparator();
     List<Pair<Path, Optional<String>>> availableNdks =
-        repositoryContents
-            .stream()
+        repositoryContents.stream()
             .filter(Files::isDirectory)
             // Pair of path to version number
             .map(p -> new Pair<>(p, findNdkVersion(p)))
@@ -204,8 +203,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
       }
 
       Optional<Path> targetNdkPath =
-          availableNdks
-              .stream()
+          availableNdks.stream()
               .filter(p -> versionEquals(targetNdkVersion.get(), p.getSecond().get()))
               .map(Pair::getFirst)
               .findFirst();
@@ -213,8 +211,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
         return targetNdkPath;
       }
       targetNdkPath =
-          availableNdks
-              .stream()
+          availableNdks.stream()
               .filter(p -> versionStartsWith(targetNdkVersion.get(), p.getSecond().get()))
               .map(Pair::getFirst)
               .findFirst();
@@ -227,8 +224,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
                   + targetNdkVersion.get()
                   + " is not "
                   + "available. The following versions are available: "
-                  + availableNdks
-                      .stream()
+                  + availableNdks.stream()
                       .map(Pair::getSecond)
                       .map(Optional::get)
                       .collect(Collectors.joining(", ")));

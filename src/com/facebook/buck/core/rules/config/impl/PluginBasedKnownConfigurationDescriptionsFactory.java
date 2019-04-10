@@ -36,8 +36,7 @@ public class PluginBasedKnownConfigurationDescriptionsFactory {
     List<ConfigurationRuleDescriptionProvider> descriptionProviders =
         pluginManager.getExtensions(ConfigurationRuleDescriptionProvider.class);
 
-    return descriptionProviders
-        .stream()
+    return descriptionProviders.stream()
         .map(ConfigurationRuleDescriptionProvider::getDescriptions)
         .flatMap(Collection::stream)
         .collect(ImmutableList.toImmutableList());

@@ -57,8 +57,7 @@ public final class MoreElements {
   }
 
   public static Stream<TypeElement> getInterfaces(TypeElement type) {
-    return type.getInterfaces()
-        .stream()
+    return type.getInterfaces().stream()
         .filter(it -> it.getKind() == TypeKind.DECLARED || it.getKind() == TypeKind.ERROR)
         .map(it -> (TypeElement) ((DeclaredType) it).asElement());
   }

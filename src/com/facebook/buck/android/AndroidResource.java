@@ -329,9 +329,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     ImmutableSet<Path> pathsToSymbolsOfDeps =
-        symbolsOfDeps
-            .get()
-            .stream()
+        symbolsOfDeps.get().stream()
             .map(context.getSourcePathResolver()::getAbsolutePath)
             .collect(ImmutableSet.toImmutableSet());
     steps.add(

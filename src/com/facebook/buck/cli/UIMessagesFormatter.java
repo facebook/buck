@@ -78,8 +78,7 @@ class UIMessagesFormatter {
 
     Path mainConfigPath = Configs.getMainConfigurationFile(root);
     String userSpecifiedOverrides =
-        Configs.getDefaultConfigurationFiles(root)
-            .stream()
+        Configs.getDefaultConfigurationFiles(root).stream()
             .filter(path -> isValidPath(path, overridesToIgnore, mainConfigPath))
             .map(path -> path.startsWith(root) ? root.relativize(path) : path)
             .map(Objects::toString)

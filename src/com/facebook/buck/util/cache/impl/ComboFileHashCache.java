@@ -79,8 +79,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   @Override
   public HashCode get(Path path) {
     List<HashCode> hashes =
-        fileHashCacheEngines
-            .stream()
+        fileHashCacheEngines.stream()
             .map(
                 fhc -> {
                   try {
@@ -100,8 +99,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   @Override
   public HashCode get(ArchiveMemberPath archiveMemberPath) {
     List<HashCode> hashes =
-        fileHashCacheEngines
-            .stream()
+        fileHashCacheEngines.stream()
             .map(
                 fhc -> {
                   try {
@@ -121,8 +119,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   @Override
   public HashCodeAndFileType getIfPresent(Path path) {
     List<HashCodeAndFileType> hashes =
-        fileHashCacheEngines
-            .stream()
+        fileHashCacheEngines.stream()
             .map(fhc -> fhc.getIfPresent(path))
             .distinct()
             .collect(Collectors.toList());
@@ -135,8 +132,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   @Override
   public Long getSizeIfPresent(Path path) {
     List<Long> hashes =
-        fileHashCacheEngines
-            .stream()
+        fileHashCacheEngines.stream()
             .map(fhc -> fhc.getSizeIfPresent(path))
             .distinct()
             .collect(Collectors.toList());
@@ -149,8 +145,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   @Override
   public long getSize(Path relativePath) {
     List<Long> sizes =
-        fileHashCacheEngines
-            .stream()
+        fileHashCacheEngines.stream()
             .map(
                 fhc -> {
                   try {
@@ -184,8 +179,7 @@ class ComboFileHashCache implements FileHashCacheEngine {
   @Override
   public List<AbstractBuckEvent> getStatsEvents() {
     List<AbstractBuckEvent> events =
-        fileHashCacheEngines
-            .stream()
+        fileHashCacheEngines.stream()
             .map(FileHashCacheEngine::getStatsEvents)
             .flatMap(List::stream)
             .collect(Collectors.toList());

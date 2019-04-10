@@ -77,8 +77,7 @@ public class AuditModulesCommandTest {
   public void testBuildInfoPrintedInPlainFormat() throws IOException {
     AuditModulesCommand.collectAndDumpModuleInformation(console, moduleManager, false);
     List<String> output =
-        MoreStrings.lines(console.getTextWrittenToStdOut())
-            .stream()
+        MoreStrings.lines(console.getTextWrittenToStdOut()).stream()
             .map(String::trim)
             .map(MoreStringsForTests::normalizeNewlines)
             .collect(Collectors.toList());

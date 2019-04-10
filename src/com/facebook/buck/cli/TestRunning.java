@@ -526,9 +526,7 @@ public class TestRunning {
                                     "",
                                     "")))),
                     testRule.getContacts(),
-                    testRule
-                        .getLabels()
-                        .stream()
+                    testRule.getLabels().stream()
                         .map(Object::toString)
                         .collect(ImmutableSet.toImmutableSet()));
             TestResults newTestResults = postTestResults(testResults);

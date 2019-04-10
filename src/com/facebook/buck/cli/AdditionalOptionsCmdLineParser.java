@@ -122,9 +122,7 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
     if (f.isAnnotationPresent(PluginBasedSubCommands.class)) {
       PluginBasedSubCommands optionAnnotation = f.getAnnotation(PluginBasedSubCommands.class);
       ImmutableList<Object> commands =
-          pluginManager
-              .getExtensions(optionAnnotation.factoryClass())
-              .stream()
+          pluginManager.getExtensions(optionAnnotation.factoryClass()).stream()
               .map(PluginBasedSubCommandFactory::createSubCommand)
               .collect(ImmutableList.toImmutableList());
 

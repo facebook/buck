@@ -237,8 +237,7 @@ public class HttpdForTests implements AutoCloseable {
       }
       if (iface.isLoopback()) {
         candidateLoopbacks.addAll(
-            getInetAddresses(iface)
-                .stream()
+            getInetAddresses(iface).stream()
                 .filter(i -> allowScopedLinkLocal || !i.getHostAddress().contains("%"))
                 .collect(ImmutableSet.toImmutableSet()));
       } else {

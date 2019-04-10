@@ -88,8 +88,7 @@ class TreeBackedExecutableElement extends TreeBackedParameterizable
       typeMirror =
           new StandaloneExecutableType(
               getReturnType(),
-              getTypeParameters()
-                  .stream()
+              getTypeParameters().stream()
                   .map(TypeParameterElement::asType)
                   .map(type -> (TypeVariable) type)
                   .collect(Collectors.toList()),

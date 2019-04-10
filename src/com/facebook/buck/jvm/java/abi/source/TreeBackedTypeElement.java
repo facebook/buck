@@ -113,8 +113,7 @@ class TreeBackedTypeElement extends TreeBackedParameterizable implements Artific
           (StandaloneDeclaredType)
               types.getDeclaredType(
                   this,
-                  getTypeParameters()
-                      .stream()
+                  getTypeParameters().stream()
                       .map(TypeParameterElement::asType)
                       .toArray(TypeMirror[]::new));
     }

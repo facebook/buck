@@ -131,24 +131,21 @@ abstract class AbstractOcamlBuildContext implements AddsToRuleKey {
   protected abstract Preprocessor getCPreprocessor();
 
   public ImmutableList<SourcePath> getCInput() {
-    return getInput()
-        .stream()
+    return getInput().stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_C))
         .distinct()
         .collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getLexInput() {
-    return getInput()
-        .stream()
+    return getInput().stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_MLL))
         .distinct()
         .collect(ImmutableList.toImmutableList());
   }
 
   public ImmutableList<SourcePath> getYaccInput() {
-    return getInput()
-        .stream()
+    return getInput().stream()
         .filter(OcamlUtil.sourcePathExt(getSourcePathResolver(), OcamlCompilables.OCAML_MLY))
         .distinct()
         .collect(ImmutableList.toImmutableList());

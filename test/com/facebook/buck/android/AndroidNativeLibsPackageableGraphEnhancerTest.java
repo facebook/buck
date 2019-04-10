@@ -113,9 +113,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
 
     assertThat(copyNativeLibraries.getStrippedObjectDescriptions(), Matchers.empty());
     assertThat(
-        copyNativeLibraries
-            .getNativeLibDirectories()
-            .stream()
+        copyNativeLibraries.getNativeLibDirectories().stream()
             .map(sourcePathResolver::getRelativePath)
             .collect(ImmutableList.toImmutableList()),
         Matchers.contains(ndkLibrary.getLibraryPath()));
@@ -202,9 +200,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     assertThat(copyNativeLibraries.getNativeLibDirectories(), Matchers.empty());
     ImmutableCollection<BuildRule> stripRules =
         ruleFinder.filterBuildRuleInputs(
-            copyNativeLibraries
-                .getStrippedObjectDescriptions()
-                .stream()
+            copyNativeLibraries.getStrippedObjectDescriptions().stream()
                 .map(StrippedObjectDescription::getSourcePath)
                 .collect(ImmutableSet.toImmutableSet()));
     assertThat(

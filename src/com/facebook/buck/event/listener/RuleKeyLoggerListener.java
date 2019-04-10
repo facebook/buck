@@ -98,9 +98,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     }
 
     List<String> newLogLines =
-        event
-            .getRuleKeys()
-            .stream()
+        event.getRuleKeys().stream()
             .map(key -> String.format("http\t%s\t%s", key.toString(), cacheResultType.toString()))
             .collect(Collectors.toList());
     synchronized (lock) {

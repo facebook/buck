@@ -89,19 +89,14 @@ public class GrpcProtocol implements Protocol {
 
     @Override
     public ImmutableList<String> getCommand() {
-      return command
-          .getArgumentsList()
-          .asByteStringList()
-          .stream()
+      return command.getArgumentsList().asByteStringList().stream()
           .map(ByteString::toStringUtf8)
           .collect(ImmutableList.toImmutableList());
     }
 
     @Override
     public ImmutableMap<String, String> getEnvironment() {
-      return command
-          .getEnvironmentVariablesList()
-          .stream()
+      return command.getEnvironmentVariablesList().stream()
           .collect(
               ImmutableMap.toImmutableMap(
                   EnvironmentVariable::getName, EnvironmentVariable::getValue));
@@ -109,20 +104,14 @@ public class GrpcProtocol implements Protocol {
 
     @Override
     public ImmutableList<String> getOutputFiles() {
-      return command
-          .getOutputFilesList()
-          .asByteStringList()
-          .stream()
+      return command.getOutputFilesList().asByteStringList().stream()
           .map(ByteString::toStringUtf8)
           .collect(ImmutableList.toImmutableList());
     }
 
     @Override
     public ImmutableList<String> getOutputDirectories() {
-      return command
-          .getOutputDirectoriesList()
-          .asByteStringList()
-          .stream()
+      return command.getOutputDirectoriesList().asByteStringList().stream()
           .map(ByteString::toStringUtf8)
           .collect(ImmutableList.toImmutableList());
     }
@@ -196,18 +185,14 @@ public class GrpcProtocol implements Protocol {
 
     @Override
     public Collection<DirectoryNode> getDirectoriesList() {
-      return directory
-          .getDirectoriesList()
-          .stream()
+      return directory.getDirectoriesList().stream()
           .map(GrpcDirectoryNode::new)
           .collect(Collectors.toList());
     }
 
     @Override
     public Collection<SymlinkNode> getSymlinksList() {
-      return directory
-          .getSymlinksList()
-          .stream()
+      return directory.getSymlinksList().stream()
           .map(GrpcSymlinkNode::new)
           .collect(Collectors.toList());
     }
@@ -372,9 +357,7 @@ public class GrpcProtocol implements Protocol {
         build.bazel.remote.execution.v2.Command.newBuilder()
             .addAllArguments(command)
             .addAllEnvironmentVariables(
-                commandEnvironment
-                    .entrySet()
-                    .stream()
+                commandEnvironment.entrySet().stream()
                     .map(
                         entry ->
                             EnvironmentVariable.newBuilder()

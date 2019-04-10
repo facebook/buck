@@ -319,8 +319,7 @@ public class BuildPhaseTest {
     createBuildPhase();
     BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
-        job.getBuildSlaves()
-            .stream()
+        job.getBuildSlaves().stream()
             .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
 
@@ -436,8 +435,7 @@ public class BuildPhaseTest {
     createBuildPhase();
     BuildJob job = PostBuildPhaseTest.createBuildJobWithSlaves(stampedeId);
     List<BuildSlaveRunId> buildSlaveRunIds =
-        job.getBuildSlaves()
-            .stream()
+        job.getBuildSlaves().stream()
             .map(BuildSlaveInfo::getBuildSlaveRunId)
             .collect(Collectors.toList());
 

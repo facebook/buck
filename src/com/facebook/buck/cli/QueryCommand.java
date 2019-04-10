@@ -371,10 +371,7 @@ public class QueryCommand extends AbstractCommand {
       collectAndPrintAttributesAsJson(
           params,
           env,
-          queryResultMap
-              .asMap()
-              .values()
-              .stream()
+          queryResultMap.asMap().values().stream()
               .flatMap(Collection::stream)
               .collect(ImmutableSet.toImmutableSet()),
           attributesFilter,
@@ -491,9 +488,7 @@ public class QueryCommand extends AbstractCommand {
         getAttributes(params, env, patternsMatcher, node)
             .map(
                 attrs ->
-                    attrs
-                        .entrySet()
-                        .stream()
+                    attrs.entrySet().stream()
                         .collect(
                             ImmutableSortedMap.toImmutableSortedMap(
                                 Comparator.naturalOrder(),
@@ -522,9 +517,7 @@ public class QueryCommand extends AbstractCommand {
 
   private void printRankOutputAsPlainText(
       Map<TargetNode<?>, Integer> ranks, PrintStream printStream) {
-    ranks
-        .entrySet()
-        .stream()
+    ranks.entrySet().stream()
         // sort by rank and target nodes to break ties in order to make output deterministic
         .sorted(
             Comparator.comparing(Entry<TargetNode<?>, Integer>::getValue)
@@ -576,13 +569,11 @@ public class QueryCommand extends AbstractCommand {
     // since some nodes differ in their flavors but ultimately have the same attributes, immutable
     // resulting map is created only after duplicates are merged by using regular HashMap
     Map<String, Integer> rankIndex =
-        rankEntries
-            .stream()
+        rankEntries.stream()
             .collect(
                 Collectors.toMap(entry -> toPresentationForm(entry.getKey()), Entry::getValue));
     return ImmutableSortedMap.copyOf(
-        rankEntries
-            .stream()
+        rankEntries.stream()
             .collect(
                 Collectors.toMap(
                     entry -> toPresentationForm(entry.getKey()),

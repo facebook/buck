@@ -193,9 +193,7 @@ public class DistBuildFileHashes {
   public List<BuildJobStateFileHashes> getFileHashes() throws IOException, InterruptedException {
     try {
       ImmutableList<BuildJobStateFileHashes> hashes =
-          fileHashes
-              .get()
-              .stream()
+          fileHashes.get().stream()
               .map(recordedHash -> recordedHash.getRemoteFileHashes())
               .filter(x -> x.getEntriesSize() > 0)
               .collect(ImmutableList.toImmutableList());

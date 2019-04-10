@@ -28,8 +28,7 @@ public class UmbrellaHeader {
   }
 
   public String render() {
-    return headerNames
-        .stream()
+    return headerNames.stream()
         .map(x -> String.format("#import <%s/%s>\n", targetName, x))
         .reduce("", String::concat);
   }

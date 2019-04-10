@@ -66,9 +66,7 @@ public class BuildLogHelper {
         logEntries.add(newBuildLogEntry(logFile));
       }
     }
-    return logEntries
-        .build()
-        .stream()
+    return logEntries.build().stream()
         .sorted(Comparator.comparing(BuildLogEntry::getLastModifiedTime).reversed())
         .collect(ImmutableList.toImmutableList());
   }
@@ -130,9 +128,7 @@ public class BuildLogHelper {
     }
 
     Optional<Path> traceFile =
-        projectFilesystem
-            .getFilesUnderPath(logFile.getParent())
-            .stream()
+        projectFilesystem.getFilesUnderPath(logFile.getParent()).stream()
             .filter(input -> input.toString().endsWith(".trace"))
             .findFirst();
 

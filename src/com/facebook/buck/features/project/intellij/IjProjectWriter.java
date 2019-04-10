@@ -252,23 +252,17 @@ public class IjProjectWriter {
     contents.add("name", library.getName());
     contents.add(
         "binaryJars",
-        library
-            .getBinaryJars()
-            .stream()
+        library.getBinaryJars().stream()
             .map(projectPaths::getProjectRelativePath)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add(
         "classPaths",
-        library
-            .getClassPaths()
-            .stream()
+        library.getClassPaths().stream()
             .map(projectPaths::getProjectRelativePath)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add(
         "sourceJars",
-        library
-            .getSourceJars()
-            .stream()
+        library.getSourceJars().stream()
             .map(projectPaths::getProjectRelativePath)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     contents.add("javadocUrls", library.getJavadocUrls());
@@ -336,15 +330,13 @@ public class IjProjectWriter {
         modulesParser.getAllModules(
             projectFilesystem.newFileInputStream(getIdeaConfigDir().resolve("modules.xml")));
     final Set<Path> existingModuleFilepaths =
-        existingModules
-            .stream()
+        existingModules.stream()
             .map(ModuleIndexEntry::getFilePath)
             .map(MorePaths::pathWithUnixSeparators)
             .map(Paths::get)
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<Path> remainingModuleFilepaths =
-        modulesEdited
-            .stream()
+        modulesEdited.stream()
             .map(projectPaths::getModuleImlFilePath)
             .map(MorePaths::pathWithUnixSeparators)
             .map(Paths::get)

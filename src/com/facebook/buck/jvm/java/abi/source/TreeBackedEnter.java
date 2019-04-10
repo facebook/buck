@@ -215,17 +215,17 @@ class TreeBackedEnter {
       // elements.
       List<? extends Element> fromTree =
           ((ClassTree) path.getLeaf())
-              .getMembers()
-              .stream()
-              // Top level blocks (static initializers and anonymous blocks) are only used at
-              // runtime, so we can safely skip them for ABI generation purposes. In Java 9 and
-              // later, it's actually necessary to skip them, as getElement will attempt to
-              // attribute the parent class node when given block nodes, effectively doing an
-              // analyze compiler phase, which we need to avoid. In Java 8 and earlier, getElement
-              // just returns null in these cases.
-              .filter(tree -> tree.getKind() != Kind.BLOCK)
-              .map(tree -> javacTrees.getElement(new TreePath(path, tree)))
-              .collect(Collectors.toList());
+              .getMembers().stream()
+                  // Top level blocks (static initializers and anonymous blocks) are only used at
+                  // runtime, so we can safely skip them for ABI generation purposes. In Java 9 and
+                  // later, it's actually necessary to skip them, as getElement will attempt to
+                  // attribute the parent class node when given block nodes, effectively doing an
+                  // analyze compiler phase, which we need to avoid. In Java 8 and earlier,
+                  // getElement
+                  // just returns null in these cases.
+                  .filter(tree -> tree.getKind() != Kind.BLOCK)
+                  .map(tree -> javacTrees.getElement(new TreePath(path, tree)))
+                  .collect(Collectors.toList());
       Set<? extends Element> fromTreeSet = new HashSet<>(fromTree);
 
       List<Element> result = new ArrayList<>();

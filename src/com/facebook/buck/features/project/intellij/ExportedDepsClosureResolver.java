@@ -63,8 +63,7 @@ public class ExportedDepsClosureResolver {
     }
 
     ImmutableSet<BuildTarget> exportedDepsClosure =
-        exportedDeps
-            .stream()
+        exportedDeps.stream()
             .filter(
                 target -> {
                   CommonDescriptionArg arg =

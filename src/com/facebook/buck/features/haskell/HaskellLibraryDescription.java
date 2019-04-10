@@ -1024,8 +1024,7 @@ public class HaskellLibraryDescription
     HADDOCK(InternalFlavor.of("haddock"));
 
     public static final ImmutableSet<Flavor> FLAVOR_VALUES =
-        ImmutableList.copyOf(Type.values())
-            .stream()
+        ImmutableList.copyOf(Type.values()).stream()
             .map(Type::getFlavor)
             .collect(ImmutableSet.toImmutableSet());
 

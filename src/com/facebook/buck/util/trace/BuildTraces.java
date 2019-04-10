@@ -206,8 +206,7 @@ public class BuildTraces {
   private Collection<Path> getPathsToTraces(String id) throws IOException {
     Preconditions.checkArgument(TRACE_ID_PATTERN.matcher(id).matches());
     List<Path> traces =
-        listTraceFilesByLastModified()
-            .stream()
+        listTraceFilesByLastModified().stream()
             .filter(input -> input.getFileName().toString().contains(id))
             .collect(Collectors.toList());
 

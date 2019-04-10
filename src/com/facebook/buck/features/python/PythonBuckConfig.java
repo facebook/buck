@@ -114,9 +114,7 @@ public class PythonBuckConfig {
   }
 
   public Stream<String> getPythonPlatformSections() {
-    return delegate
-        .getSections()
-        .stream()
+    return delegate.getSections().stream()
         .filter(section -> section.startsWith(PYTHON_PLATFORM_SECTION_PREFIX));
   }
 

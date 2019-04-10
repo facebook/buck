@@ -251,9 +251,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         getKeystorePropertiesSupplier(resolver, pathToKeystore);
 
     ImmutableSet<Path> thirdPartyJars =
-        resourceFilesInfo
-            .pathsToThirdPartyJars
-            .stream()
+        resourceFilesInfo.pathsToThirdPartyJars.stream()
             .map(resolver::getAbsolutePath)
             .collect(ImmutableSet.toImmutableSet());
     if (isApk) {

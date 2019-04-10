@@ -479,10 +479,7 @@ public class RustLibraryDescription
     // Add parse-time deps for *all* platforms, as we don't know which platform will be
     // selected by a top-level binary rule (e.g. a Python binary transitively depending on
     // this library may choose platform "foo").
-    getRustToolchain()
-        .getRustPlatforms()
-        .getValues()
-        .stream()
+    getRustToolchain().getRustPlatforms().getValues().stream()
         .flatMap(
             p ->
                 RichStream.from(

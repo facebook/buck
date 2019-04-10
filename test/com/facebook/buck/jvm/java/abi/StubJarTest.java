@@ -5529,9 +5529,7 @@ public class StubJarTest {
             jarBuilder.createJarFile(stubJar);
           } else {
             List<String> actualCompileErrors =
-                testCompiler
-                    .getErrorMessages()
-                    .stream()
+                testCompiler.getErrorMessages().stream()
                     .map(
                         diagnostic ->
                             diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))
@@ -5604,9 +5602,7 @@ public class StubJarTest {
         compiler.compile();
         if (!expectedCompileErrors.isEmpty()) {
           List<String> actualCompileErrors =
-              compiler
-                  .getErrorMessages()
-                  .stream()
+              compiler.getErrorMessages().stream()
                   .map(
                       diagnostic ->
                           diagnostic.substring(diagnostic.lastIndexOf(File.separatorChar) + 1))

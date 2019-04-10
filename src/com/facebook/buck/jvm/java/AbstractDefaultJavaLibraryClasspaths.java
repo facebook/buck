@@ -77,8 +77,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   protected ImmutableSortedSet<SourcePath> getCompileTimeClasspathSourcePaths() {
-    return getCompileTimeClasspathDeps()
-        .stream()
+    return getCompileTimeClasspathDeps().stream()
         .map(BuildRule::getSourcePathToOutput)
         .filter(Objects::nonNull)
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
@@ -103,8 +102,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   protected ImmutableSortedSet<BuildRule> getCompileTimeClasspathFullDeps() {
-    return getCompileTimeClasspathUnfilteredFullDeps()
-        .stream()
+    return getCompileTimeClasspathUnfilteredFullDeps().stream()
         .filter(dep -> dep instanceof HasJavaAbi)
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }

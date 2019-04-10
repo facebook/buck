@@ -129,8 +129,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
             getProjectFilesystem(),
             Joiner.on("\n")
                 .join(
-                    sources
-                        .stream()
+                    sources.stream()
                         .map(context.getSourcePathResolver()::getAbsolutePath)
                         .map(Path::toString)
                         .iterator()),
@@ -143,8 +142,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
     Joiner.on(File.pathSeparator)
         .appendTo(
             argsBuilder,
-            getBuildDeps()
-                .stream()
+            getBuildDeps().stream()
                 .filter(HasClasspathEntries.class::isInstance)
                 .flatMap(rule -> ((HasClasspathEntries) rule).getTransitiveClasspaths().stream())
                 .map(context.getSourcePathResolver()::getAbsolutePath)

@@ -275,8 +275,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         .map(Map::keySet)
         .ifPresent(
             symbols ->
-                symbols
-                    .stream()
+                symbols.stream()
                     .filter(symbol -> !symbol.startsWith("_")) // do not show private symbols
                     .forEach(symbol -> addResultForTarget(result, symbol)));
   }

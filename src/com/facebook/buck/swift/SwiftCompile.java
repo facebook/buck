@@ -205,8 +205,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     compilerCommand.addAll(
         MoreIterables.zipAndConcat(
             Iterables.cycle(INCLUDE_FLAG),
-            getBuildDeps()
-                .stream()
+            getBuildDeps().stream()
                 .filter(SwiftCompile.class::isInstance)
                 .map(BuildRule::getSourcePathToOutput)
                 .map(input -> resolver.getAbsolutePath(input).toString())
@@ -426,8 +425,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   ImmutableList<Arg> getFileListLinkArg() {
     return FileListableLinkerInputArg.from(
-        objectPaths
-            .stream()
+        objectPaths.stream()
             .map(
                 objectPath ->
                     SourcePathArg.of(
@@ -443,8 +441,7 @@ public class SwiftCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   /** @return List of {@link SourcePath} to the output object file(s) (i.e., .o file) */
   public ImmutableList<SourcePath> getObjectPaths() {
     // Ensures that users of the object path can depend on this build target
-    return objectPaths
-        .stream()
+    return objectPaths.stream()
         .map(objectPath -> ExplicitBuildTargetSourcePath.of(getBuildTarget(), objectPath))
         .collect(ImmutableList.toImmutableList());
   }

@@ -277,9 +277,7 @@ public class ExopackageInstaller {
       String filesType)
       throws Exception {
     ImmutableSortedMap<Path, Path> filesToInstall =
-        wantedFilesToInstall
-            .entrySet()
-            .stream()
+        wantedFilesToInstall.entrySet().stream()
             .filter(entry -> !presentFiles.contains(entry.getKey()))
             .collect(
                 ImmutableSortedMap.toImmutableSortedMap(
@@ -291,16 +289,14 @@ public class ExopackageInstaller {
   private void deleteUnwantedFiles(
       ImmutableSortedSet<Path> presentFiles, ImmutableSet<Path> wantedFiles) {
     ImmutableSortedSet<Path> filesToDelete =
-        presentFiles
-            .stream()
+        presentFiles.stream()
             .filter(p -> !p.getFileName().toString().equals("lock") && !wantedFiles.contains(p))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     deleteFiles(filesToDelete);
   }
 
   private void deleteFiles(ImmutableSortedSet<Path> filesToDelete) {
-    filesToDelete
-        .stream()
+    filesToDelete.stream()
         .collect(
             ImmutableListMultimap.toImmutableListMultimap(
                 path -> dataRoot.resolve(path).getParent(), path -> path.getFileName().toString()))
@@ -317,9 +313,7 @@ public class ExopackageInstaller {
             SimplePerfEvent.scope(eventBus, "multi_install_" + filesType);
         AutoCloseable ignored1 = device.createForward()) {
       // Make sure all the directories exist.
-      filesToInstall
-          .keySet()
-          .stream()
+      filesToInstall.keySet().stream()
           .map(p -> dataRoot.resolve(p).getParent())
           .distinct()
           .forEach(
@@ -332,9 +326,7 @@ public class ExopackageInstaller {
               });
       // Plan the installation.
       Map<Path, Path> installPaths =
-          filesToInstall
-              .entrySet()
-              .stream()
+          filesToInstall.entrySet().stream()
               .collect(
                   Collectors.toMap(
                       entry -> dataRoot.resolve(entry.getKey()),

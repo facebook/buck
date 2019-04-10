@@ -778,9 +778,7 @@ public class TestCommand extends BuildCommand {
     @Override
     public int parseArguments(Parameters params) throws CmdLineException {
       Set<String> parsed =
-          Splitter.on(",")
-              .splitToList(params.getParameter(0))
-              .stream()
+          Splitter.on(",").splitToList(params.getParameter(0)).stream()
               .map(s -> s.replaceAll("-", "_").toLowerCase())
               .collect(Collectors.toSet());
       List<CoverageReportFormat> formats = new ArrayList<>();

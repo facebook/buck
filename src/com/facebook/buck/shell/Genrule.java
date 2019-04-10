@@ -233,8 +233,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePathResolver pathResolver, Builder<String, String> environmentVariablesBuilder) {
     environmentVariablesBuilder.put(
         "SRCS",
-        srcs.getPaths()
-            .stream()
+        srcs.getPaths().stream()
             .map(pathResolver::getAbsolutePath)
             .map(Object::toString)
             .collect(Collectors.joining(this.environmentExpansionSeparator)));
@@ -339,8 +338,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     SandboxProperties.Builder builder = SandboxProperties.builder();
     return builder
         .addAllAllowedToReadPaths(
-            srcs.getPaths()
-                .stream()
+            srcs.getPaths().stream()
                 .map(sourcePathResolver::getAbsolutePath)
                 .map(Object::toString)
                 .collect(Collectors.toList()))

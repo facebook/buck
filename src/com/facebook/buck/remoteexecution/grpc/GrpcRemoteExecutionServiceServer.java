@@ -101,9 +101,7 @@ public class GrpcRemoteExecutionServiceServer {
                   .runAction(
                       command.getCommand(),
                       command.getEnvironment(),
-                      command
-                          .getOutputDirectories()
-                          .stream()
+                      command.getOutputDirectories().stream()
                           .map(Paths::get)
                           .collect(ImmutableSet.toImmutableSet()),
                       buildDir);
@@ -116,15 +114,11 @@ public class GrpcRemoteExecutionServiceServer {
               .setStdoutRaw(ByteString.copyFromUtf8(actionResult.stdout))
               .setStderrRaw(ByteString.copyFromUtf8(actionResult.stderr))
               .addAllOutputFiles(
-                  actionResult
-                      .outputFiles
-                      .stream()
+                  actionResult.outputFiles.stream()
                       .map(GrpcProtocol::get)
                       .collect(Collectors.toList()))
               .addAllOutputDirectories(
-                  actionResult
-                      .outputDirectories
-                      .stream()
+                  actionResult.outputDirectories.stream()
                       .map(GrpcProtocol::get)
                       .collect(Collectors.toList()));
 

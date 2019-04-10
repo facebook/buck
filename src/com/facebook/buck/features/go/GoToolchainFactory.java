@@ -59,10 +59,7 @@ public class GoToolchainFactory implements ToolchainFactory<GoToolchain> {
                 .add(platformFactory.getPlatform(GoBuckConfig.SECTION, DefaultCxxPlatforms.FLAVOR))
                 // Add custom platforms.
                 .addAll(
-                    context
-                        .getBuckConfig()
-                        .getSections()
-                        .stream()
+                    context.getBuckConfig().getSections().stream()
                         .flatMap(
                             section ->
                                 RichStream.from(

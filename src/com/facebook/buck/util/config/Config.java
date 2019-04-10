@@ -369,8 +369,7 @@ public class Config {
    */
   public ImmutableMap<String, String> getMap(
       String section, String field, char pairSeparatorChar, String keyValueSeparator) {
-    return getListWithoutComments(section, field, pairSeparatorChar)
-        .stream()
+    return getListWithoutComments(section, field, pairSeparatorChar).stream()
         .map(kvp -> Splitter.on(keyValueSeparator).trimResults().splitToList(kvp))
         .peek(
             kvp -> {

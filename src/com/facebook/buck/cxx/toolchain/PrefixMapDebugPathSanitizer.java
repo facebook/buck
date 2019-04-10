@@ -98,9 +98,7 @@ public class PrefixMapDebugPathSanitizer extends DebugPathSanitizer {
         .concat(
             compiler instanceof GccCompiler
                 ? Stream.empty()
-                : prefixMap
-                    .entrySet()
-                    .stream()
+                : prefixMap.entrySet().stream()
                     .map(
                         e ->
                             new AbstractMap.SimpleEntry<>(

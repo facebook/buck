@@ -166,8 +166,7 @@ public class CxxBinaryDescriptionTest {
             cxxSourceRuleFactory.createCompileBuildTarget("test/bar.cpp"),
             cxxSourceRuleFactory.createCompileBuildTarget(genSourceName),
             archiveTarget),
-        rule.getBuildDeps()
-            .stream()
+        rule.getBuildDeps().stream()
             .map(BuildRule::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet()));
 

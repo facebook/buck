@@ -722,10 +722,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
                 "time_spent_in_gc_sec",
                 Long.toString(TimeUnit.MILLISECONDS.toSeconds(memory.getTimeSpentInGcMs())))
             .putAll(
-                memory
-                    .getCurrentMemoryBytesUsageByPool()
-                    .entrySet()
-                    .stream()
+                memory.getCurrentMemoryBytesUsageByPool().entrySet().stream()
                     .map(
                         e ->
                             Maps.immutableEntry(

@@ -87,8 +87,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         .addString("outputPath", outputPath.toString())
         .addArray(
             "dependencyLibraryFilePaths",
-            libraryDependencies
-                .stream()
+            libraryDependencies.stream()
                 .map(resolver::getAbsolutePath)
                 .map(Path::toString)
                 .collect(JsonBuilder.toArrayOfStrings()))
@@ -162,8 +161,7 @@ public class JsLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           .addString("outputFilePath", outputPath.toString())
           .addArray(
               "sourceFilePaths",
-              sources
-                  .stream()
+              sources.stream()
                   .map(resolver::getAbsolutePath)
                   .map(Path::toString)
                   .collect(JsonBuilder.toArrayOfStrings()));

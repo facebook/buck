@@ -47,11 +47,9 @@ public class OcamlDependencyGraphGenerator {
     // Two copies of dependencies as .cmo can map to .ml or .re
 
     return Stream.concat(
-            sortedDeps
-                .stream()
+            sortedDeps.stream()
                 .map(input -> replaceObjExtWithSourceExt(input, false /* isReason */)),
-            sortedDeps
-                .stream()
+            sortedDeps.stream()
                 .map(input -> replaceObjExtWithSourceExt(input, true /* isReason */)))
         .collect(ImmutableList.toImmutableList());
   }
@@ -79,9 +77,7 @@ public class OcamlDependencyGraphGenerator {
 
           // Two copies of dependencies as .cmo can map to .ml or .re
           ImmutableList<Path> dependencies =
-              Splitter.on(OCAML_DEPS_SEPARATOR)
-                  .trimResults()
-                  .splitToList(sourceAndDeps.get(1))
+              Splitter.on(OCAML_DEPS_SEPARATOR).trimResults().splitToList(sourceAndDeps.get(1))
                   .stream()
                   .filter(input -> !input.isEmpty())
                   .flatMap(

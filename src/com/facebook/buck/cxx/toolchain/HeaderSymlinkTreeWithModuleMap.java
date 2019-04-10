@@ -98,9 +98,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                     getProjectFilesystem(),
                     new UmbrellaHeader(
                             moduleName,
-                            getLinks()
-                                .keySet()
-                                .stream()
+                            getLinks().keySet().stream()
                                 .map(x -> x.getFileName().toString())
                                 .collect(ImmutableList.toImmutableList()))
                         .render(),

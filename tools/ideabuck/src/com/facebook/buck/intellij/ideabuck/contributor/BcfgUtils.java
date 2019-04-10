@@ -43,8 +43,7 @@ public class BcfgUtils {
     PsiManager psiManager = PsiManager.getInstance(project);
     GlobalSearchScope searchScope = GlobalSearchScope.allScope(project);
     return FileBasedIndex.getInstance()
-        .getContainingFiles(FileTypeIndex.NAME, BcfgFileType.INSTANCE, searchScope)
-        .stream()
+        .getContainingFiles(FileTypeIndex.NAME, BcfgFileType.INSTANCE, searchScope).stream()
         .map(psiManager::findFile)
         .map(BcfgFile.class::cast)
         .filter(Objects::nonNull);

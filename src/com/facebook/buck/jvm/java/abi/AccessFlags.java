@@ -118,8 +118,7 @@ public final class AccessFlags {
   private boolean isAbstractEnum(TypeElement typeElement) {
     List<ExecutableElement> methods = ElementFilter.methodsIn(elements.getAllMembers(typeElement));
 
-    return methods
-        .stream()
+    return methods.stream()
         .filter(
             it ->
                 !isOverridden(

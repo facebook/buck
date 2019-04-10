@@ -250,8 +250,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public boolean hasAtLeastOneWriteableRemoteCache() {
-    return getHttpCacheEntries()
-        .stream()
+    return getHttpCacheEntries().stream()
         .anyMatch(entry -> entry.getCacheReadMode().equals(CacheReadMode.READWRITE));
   }
 
@@ -269,8 +268,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   public ImmutableSet<ArtifactCacheMode> getArtifactCacheModes() {
-    return getArtifactCacheModesRaw()
-        .stream()
+    return getArtifactCacheModesRaw().stream()
         .map(
             input -> {
               try {
@@ -300,8 +298,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
     // Enforce some sanity checks on the config:
     //  - we don't want multiple writeable dir caches pointing to the same directory
-    dirCacheEntries
-        .stream()
+    dirCacheEntries.stream()
         .filter(isDirCacheEntryWriteable)
         .collect(Collectors.groupingBy(DirCacheEntry::getCacheDir))
         .forEach(

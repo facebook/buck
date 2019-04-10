@@ -44,9 +44,7 @@ public class VersionedTargetGraphAndTargets {
         TargetGraphAndBuildTargets.of(
             targetGraphAndTargets.getTargetGraph(),
             Sets.union(
-                targetGraphAndTargets
-                    .getProjectRoots()
-                    .stream()
+                targetGraphAndTargets.getProjectRoots().stream()
                     .map(root -> root.getBuildTarget())
                     .collect(Collectors.toSet()),
                 explicitTestTargets));

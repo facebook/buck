@@ -366,10 +366,7 @@ public class CxxLibraryFactory {
     // Since we don't have context on the top-level rules using this C/C++ library (e.g. it may be
     // a `python_binary`), we eagerly add the deps for all possible platforms to guarantee that the
     // correct ones are included.
-    return getCxxPlatformsProvider()
-        .getUnresolvedCxxPlatforms()
-        .getValues()
-        .stream()
+    return getCxxPlatformsProvider().getUnresolvedCxxPlatforms().getValues().stream()
         .flatMap(p -> RichStream.from(p.getParseTimeDeps(targetConfiguration)))
         .collect(ImmutableList.toImmutableList());
   }

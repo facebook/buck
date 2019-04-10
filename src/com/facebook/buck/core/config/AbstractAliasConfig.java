@@ -68,8 +68,7 @@ abstract class AbstractAliasConfig implements ConfigView<BuckConfig> {
       return ImmutableSet.of();
     }
     String suffix = parts.length == 2 ? "#" + parts[1] : "";
-    return buildTargets
-        .stream()
+    return buildTargets.stream()
         .map(buildTarget -> buildTarget.getFullyQualifiedName() + suffix)
         .collect(ImmutableSet.toImmutableSet());
   }

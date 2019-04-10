@@ -154,10 +154,7 @@ public class AndroidLibraryGraphEnhancerTest {
     assertEquals(
         "DummyRDotJava must depend on the two AndroidResourceRules.",
         ImmutableSet.of("//android_res/com/example:res1", "//android_res/com/example:res2"),
-        dummyRDotJava
-            .get()
-            .getBuildDeps()
-            .stream()
+        dummyRDotJava.get().getBuildDeps().stream()
             .map(Object::toString)
             .collect(ImmutableSet.toImmutableSet()));
   }

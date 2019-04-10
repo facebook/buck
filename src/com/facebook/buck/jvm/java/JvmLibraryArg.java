@@ -140,8 +140,7 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
 
   default List<BuildRule> getPluginsOf(
       BuildRuleResolver resolver, final AbstractJavacPluginProperties.Type type) {
-    return getPlugins()
-        .stream()
+    return getPlugins().stream()
         .map(pluginTarget -> resolver.getRule(pluginTarget))
         .filter(
             pluginRule -> ((JavacPlugin) pluginRule).getUnresolvedProperties().getType() == type)

@@ -130,9 +130,7 @@ public class OcamlLibraryDescription
                 .add(result.getBytecodeLink())
                 .addAll(ruleFinder.filterBuildRuleInputs(result.getObjectFiles()))
                 .build(),
-            result
-                .getRules()
-                .stream()
+            result.getRules().stream()
                 .map(BuildRule::getBuildTarget)
                 .collect(ImmutableList.toImmutableList()));
 

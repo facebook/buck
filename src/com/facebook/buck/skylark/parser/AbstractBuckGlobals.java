@@ -96,8 +96,7 @@ abstract class AbstractBuckGlobals {
    */
   @Lazy
   ImmutableMap<String, BuiltinFunction> getBuckRuleFunctions() {
-    return getDescriptions()
-        .stream()
+    return getDescriptions().stream()
         .map(getRuleFunctionFactory()::create)
         .collect(ImmutableMap.toImmutableMap(BaseFunction::getName, r -> r));
   }

@@ -157,10 +157,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
 
   private static List<Entry<String, Collection<String>>> asSortedEntries(
       Multimap<String, String> failure) {
-    return failure
-        .asMap()
-        .entrySet()
-        .stream()
+    return failure.asMap().entrySet().stream()
         .sorted(Comparator.comparing(e -> -e.getValue().size()))
         .collect(Collectors.toList());
   }
@@ -252,9 +249,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
         builder.addLine("There's no failures for rules migrated to ModernBuildRule.");
       } else {
         for (Map.Entry<String, Multimap<String, String>> failure :
-            failuresByRuleType
-                .entrySet()
-                .stream()
+            failuresByRuleType.entrySet().stream()
                 .sorted(Comparator.comparing(entry -> -entry.getValue().size()))
                 .collect(Collectors.toList())) {
           builder.addLine(
@@ -282,9 +277,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
         builder.addLine("Didn't find any references to absolute paths.");
       } else {
         for (Map.Entry<String, Multimap<String, String>> requiredPath :
-            absolutePathsRequired
-                .entrySet()
-                .stream()
+            absolutePathsRequired.entrySet().stream()
                 .sorted(Comparator.comparing(entry -> -entry.getValue().size()))
                 .collect(Collectors.toList())) {
           builder.addLine(

@@ -55,9 +55,7 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
   protected Arg expand(SourcePathResolver resolver, ClasspathMacro ignored, BuildRule rule)
       throws MacroException {
     return new ClasspathArg(
-        getHasClasspathEntries(rule)
-            .getTransitiveClasspathDeps()
-            .stream()
+        getHasClasspathEntries(rule).getTransitiveClasspathDeps().stream()
             .map(BuildRule::getSourcePathToOutput)
             .filter(Objects::nonNull)
             .sorted()
@@ -74,8 +72,7 @@ public class ClasspathMacroExpander extends BuildTargetMacroExpander<ClasspathMa
     @Override
     public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
       consumer.accept(
-          classpath
-              .stream()
+          classpath.stream()
               .map(dep -> pathResolver.getAbsolutePath(dep))
               .map(Object::toString)
               .sorted(Ordering.natural())

@@ -44,9 +44,7 @@ public class JarBackedJavac extends Jsr199Javac {
     ClassLoader compilerClassLoader =
         classLoaderCache.getClassLoaderForClassPath(
             ClassLoader.getSystemClassLoader(),
-            resolver
-                .getAllAbsolutePaths(classpath)
-                .stream()
+            resolver.getAllAbsolutePaths(classpath).stream()
                 .map(JarBackedJavac::pathToUrl)
                 // Use "toString" since URL.equals does DNS lookups.
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.usingToString()))

@@ -851,8 +851,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
   @Override
   protected CacheDeleteResult deleteImpl(List<RuleKey> ruleKeys) throws IOException {
     List<com.facebook.buck.artifact_cache.thrift.RuleKey> ruleKeysThrift =
-        ruleKeys
-            .stream()
+        ruleKeys.stream()
             .map(
                 r ->
                     new com.facebook.buck.artifact_cache.thrift.RuleKey()

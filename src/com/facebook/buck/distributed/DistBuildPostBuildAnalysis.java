@@ -108,8 +108,7 @@ public class DistBuildPostBuildAnalysis {
   static Map<String, BuildRuleMachineLogEntry> extractBuildRules(List<String> lines)
       throws IOException {
     List<String> ruleFinishedEvents =
-        lines
-            .stream()
+        lines.stream()
             .filter(line -> line.startsWith(PREFIX_BUILD_RULE_FINISHED))
             .map(line -> line.substring(PREFIX_BUILD_RULE_FINISHED.length()))
             .collect(Collectors.toList());
@@ -179,9 +178,7 @@ public class DistBuildPostBuildAnalysis {
 
   /** @return List of rule name/type pairs for all rule keys that mismatched */
   public List<RuleKeyNameAndType> getMismatchingDefaultRuleKeys(AnalysisResults results) {
-    return results
-        .perRuleStats()
-        .stream()
+    return results.perRuleStats().stream()
         .filter(result -> result.wasDefaultRuleKeyMismatch())
         .map(
             result ->

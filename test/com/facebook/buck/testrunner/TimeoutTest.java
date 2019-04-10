@@ -85,9 +85,7 @@ public class TimeoutTest {
     // The order in which the tests were run doesn't matter. What matters is that we see our
     // expected messages.
     Set<String> messages =
-        result
-            .getFailures()
-            .stream()
+        result.getFailures().stream()
             .map(Failure::getMessage)
             .collect(ImmutableSet.toImmutableSet());
     assertEquals(

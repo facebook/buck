@@ -626,9 +626,7 @@ public class MiniAapt implements Step {
     definitionsBuilder.addAll(castResourceCollector.getResources());
     for (Path depRTxt : pathsToSymbolsOfDeps) {
       Iterable<String> lines =
-          filesystem
-              .readLines(depRTxt)
-              .stream()
+          filesystem.readLines(depRTxt).stream()
               .filter(input -> !Strings.isNullOrEmpty(input))
               .collect(Collectors.toList());
       for (String line : lines) {

@@ -126,8 +126,7 @@ public class CoercedTypeCache {
                               @Override
                               public ImmutableMap<String, ParamInfo> load(Class<?> coercableType) {
 
-                                if (Types.getSupertypes(coercableType)
-                                    .stream()
+                                if (Types.getSupertypes(coercableType).stream()
                                     .noneMatch(
                                         c -> c.getAnnotation(BuckStyleImmutable.class) != null)) {
                                   // Sniff for @BuckStyleImmutable not @Value.Immutable because the

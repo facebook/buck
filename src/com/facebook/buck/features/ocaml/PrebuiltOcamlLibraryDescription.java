@@ -74,20 +74,17 @@ public class PrebuiltOcamlLibraryDescription
     SourcePath staticBytecodeLibraryPath =
         PathSourcePath.of(projectFilesystem, libPath.resolve(bytecodeLib));
     ImmutableList<SourcePath> staticCLibraryPaths =
-        cLibs
-            .stream()
+        cLibs.stream()
             .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
             .collect(ImmutableList.toImmutableList());
 
     ImmutableList<SourcePath> staticNativeCLibraryPaths =
-        nativeCLibs
-            .stream()
+        nativeCLibs.stream()
             .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
             .collect(ImmutableList.toImmutableList());
 
     ImmutableList<SourcePath> staticBytecodeCLibraryPaths =
-        bytecodeCLibs
-            .stream()
+        bytecodeCLibs.stream()
             .map(input -> PathSourcePath.of(projectFilesystem, libPath.resolve(input)))
             .collect(ImmutableList.toImmutableList());
 

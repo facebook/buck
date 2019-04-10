@@ -264,8 +264,7 @@ public class BuildEndToEndTest {
 
     assertEquals(2, helper.size());
     Optional<BuildLogEntry> buildCommand =
-        helper
-            .stream()
+        helper.stream()
             .filter(
                 log -> {
                   Optional<List<String>> args = log.getCommandArgs();
@@ -274,8 +273,7 @@ public class BuildEndToEndTest {
                 })
             .findFirst();
     Optional<BuildLogEntry> queryCommand =
-        helper
-            .stream()
+        helper.stream()
             .filter(
                 log -> {
                   Optional<List<String>> args = log.getCommandArgs();

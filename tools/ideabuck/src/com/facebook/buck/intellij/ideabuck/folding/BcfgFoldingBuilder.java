@@ -72,12 +72,10 @@ public class BcfgFoldingBuilder extends CustomFoldingBuilder {
       @NotNull PsiElement root,
       @NotNull Document document,
       boolean quick) {
-    PsiTreeUtil.findChildrenOfType(root, BcfgSection.class)
-        .stream()
+    PsiTreeUtil.findChildrenOfType(root, BcfgSection.class).stream()
         .map(BcfgFoldingBuilder::sectionFoldingDescriptor)
         .forEach(descriptors::add);
-    PsiTreeUtil.findChildrenOfType(root, BcfgProperty.class)
-        .stream()
+    PsiTreeUtil.findChildrenOfType(root, BcfgProperty.class).stream()
         .map(BcfgFoldingBuilder::propertyFoldingDescriptor)
         .filter(Objects::nonNull)
         .forEach(descriptors::add);

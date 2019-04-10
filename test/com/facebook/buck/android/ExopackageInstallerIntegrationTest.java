@@ -709,10 +709,7 @@ public class ExopackageInstallerIntegrationTest {
             }));
     assertEquals(expectedState.expectedApkState, installedApks);
     Map<String, String> installedFiles =
-        testDevice
-            .getInstalledFiles()
-            .entrySet()
-            .stream()
+        testDevice.getInstalledFiles().entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
                     entry -> entry.getKey().toString(),

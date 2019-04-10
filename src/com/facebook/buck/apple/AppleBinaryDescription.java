@@ -165,8 +165,7 @@ public class AppleBinaryDescription
 
     // Drop StripStyle because it's overridden by AppleDebugFormat
     result =
-        result
-            .stream()
+        result.stream()
             .filter(domain -> !domain.equals(StripStyle.FLAVOR_DOMAIN))
             .collect(ImmutableSet.toImmutableSet());
 

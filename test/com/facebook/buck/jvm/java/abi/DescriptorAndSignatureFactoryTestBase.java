@@ -210,18 +210,14 @@ public class DescriptorAndSignatureFactoryTestBase {
   }
 
   private FieldNode getFieldNode(ClassNode classNode, Name name) {
-    return classNode
-        .fields
-        .stream()
+    return classNode.fields.stream()
         .filter(field -> name.contentEquals(field.name))
         .findFirst()
         .orElse(null);
   }
 
   private MethodNode getMethodNode(ClassNode classNode, Name name) {
-    return classNode
-        .methods
-        .stream()
+    return classNode.methods.stream()
         .filter(field -> name.contentEquals(field.name))
         .findFirst()
         .orElse(null);

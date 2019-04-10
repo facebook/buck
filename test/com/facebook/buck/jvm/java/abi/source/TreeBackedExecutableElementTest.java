@@ -234,9 +234,7 @@ public class TreeBackedExecutableElementTest extends CompilerTreeApiParameterize
     compile(Joiner.on('\n').join("class Foo {", "  public <T, U> void foo(T t, U u) { }", "}"));
 
     assertThat(
-        findMethod("foo", elements.getTypeElement("Foo"))
-            .getTypeParameters()
-            .stream()
+        findMethod("foo", elements.getTypeElement("Foo")).getTypeParameters().stream()
             .map(TypeParameterElement::getSimpleName)
             .map(Name::toString)
             .collect(Collectors.toList()),

@@ -86,8 +86,7 @@ public class DefaultIjModuleFactory implements IjModuleFactory {
               IjAndroidHelper.createAndroidGenPath(projectFilesystem, moduleBasePath));
     }
 
-    excludes
-        .stream()
+    excludes.stream()
         .map(moduleBasePath::resolve)
         .map(ExcludeFolder::new)
         .forEach(context::addSourceFolder);

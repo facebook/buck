@@ -281,8 +281,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     // Note that this filters out only .kt files, so this keeps both .java and .src.zip files.
     ImmutableSortedSet<Path> javaSourceFiles =
         ImmutableSortedSet.copyOf(
-            sources
-                .stream()
+            sources.stream()
                 .filter(input -> !KOTLIN_PATH_MATCHER.matches(input))
                 .collect(Collectors.toSet()));
 
@@ -331,10 +330,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     ImmutableList<String> annotationProcessors =
         ImmutableList.copyOf(
-            javacOptions
-                .getJavaAnnotationProcessorParams()
-                .getPluginProperties()
-                .stream()
+            javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
                 .map(
                     resolvedJavacPluginProperties ->
                         resolvedJavacPluginProperties.getJavacPluginJsr199Fields(
@@ -473,8 +469,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     // https://youtrack.jetbrains.com/issue/KT-29933
     ImmutableSortedSet<String> absoluteFriendPaths =
         ImmutableSortedSet.copyOf(
-            friendPathsSourcePaths
-                .stream()
+            friendPathsSourcePaths.stream()
                 .map(path -> sourcePathResolver.getAbsolutePath(path).toString())
                 .collect(Collectors.toSet()));
 

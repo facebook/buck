@@ -253,9 +253,7 @@ public class RDotTxtEntry implements Comparable<RDotTxtEntry> {
    */
   public static List<RDotTxtEntry> readResources(ProjectFilesystem owningFilesystem, Path rDotTxt)
       throws IOException {
-    return owningFilesystem
-        .readLines(rDotTxt)
-        .stream()
+    return owningFilesystem.readLines(rDotTxt).stream()
         .filter(input -> !Strings.isNullOrEmpty(input))
         .map(RDotTxtEntry.TO_ENTRY)
         .collect(Collectors.toList());

@@ -326,10 +326,7 @@ public class AndroidBinaryGraphEnhancer {
     if (nativeLibraryProguardConfigGenerator.isPresent()) {
       NativeLibraryProguardGenerator nativeLibraryProguardGenerator =
           createNativeLibraryProguardGenerator(
-              copyNativeLibraries
-                  .get()
-                  .values()
-                  .stream()
+              copyNativeLibraries.get().values().stream()
                   .map(CopyNativeLibraries::getSourcePathToAllLibsDir)
                   .collect(ImmutableList.toImmutableList()));
 
@@ -393,10 +390,7 @@ public class AndroidBinaryGraphEnhancer {
               .setDeps(
                   new JavaLibraryDeps.Builder(graphBuilder)
                       .addAllDepTargets(
-                          paramsForCompileGenCode
-                              .getDeclaredDeps()
-                              .get()
-                              .stream()
+                          paramsForCompileGenCode.getDeclaredDeps().get().stream()
                               .map(BuildRule::getBuildTarget)
                               .collect(Collectors.toList()))
                       .build())
@@ -450,8 +444,7 @@ public class AndroidBinaryGraphEnhancer {
         ImmutableSet.<SourcePath>builder()
             .addAll(packageableCollection.getClasspathEntriesToDex())
             .addAll(
-                additionalJavaLibraries
-                    .stream()
+                additionalJavaLibraries.stream()
                     .map(BuildRule::getSourcePathToOutput)
                     .collect(ImmutableList.toImmutableList()))
             .build();
@@ -542,10 +535,7 @@ public class AndroidBinaryGraphEnhancer {
             .setDeps(
                 new JavaLibraryDeps.Builder(graphBuilder)
                     .addAllDepTargets(
-                        paramsForCompileUberRDotJava
-                            .getDeclaredDeps()
-                            .get()
-                            .stream()
+                        paramsForCompileUberRDotJava.getDeclaredDeps().get().stream()
                             .map(BuildRule::getBuildTarget)
                             .collect(Collectors.toList()))
                     .build())
@@ -819,8 +809,7 @@ public class AndroidBinaryGraphEnhancer {
     APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
 
     ImmutableSortedSet<SourcePath> additionalJarsForProguardandDesugar =
-        rulesToExcludeFromDex
-            .stream()
+        rulesToExcludeFromDex.stream()
             .flatMap((javaLibrary) -> javaLibrary.getImmediateClasspaths().stream())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 

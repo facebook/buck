@@ -47,9 +47,7 @@ public class CxxLibraryModuleRule extends BaseIjModuleRule<CxxLibraryDescription
     addSourceFolders(
         SourceFolder.FACTORY,
         getSourceFoldersToInputsIndex(
-            target
-                .getInputs()
-                .stream()
+            target.getInputs().stream()
                 .map(path -> projectFilesystem.relativize(target.getFilesystem().resolve(path)))
                 .collect(ImmutableList.toImmutableList())),
         false /* wantsPackagePrefix */,

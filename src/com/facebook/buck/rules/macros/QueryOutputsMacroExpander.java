@@ -63,9 +63,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       QueryOutputsMacro input,
       QueryResults precomputedWork) {
     return new QueriedOutputsArg(
-        precomputedWork
-            .results
-            .stream()
+        precomputedWork.results.stream()
             .map(
                 queryTarget -> {
                   Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
@@ -89,8 +87,7 @@ public class QueryOutputsMacroExpander extends QueryMacroExpander<QueryOutputsMa
       // TODO(cjhopman): The sorted() call could feasibly (though unlikely) return different
       // ordering in different contexts.
       consumer.accept(
-          queriedOutputs
-              .stream()
+          queriedOutputs.stream()
               .map(pathResolver::getAbsolutePath)
               .map(Path::toString)
               .sorted()

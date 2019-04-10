@@ -73,9 +73,7 @@ public final class ImmutableMapWithNullValues<K, V> extends AbstractMap<K, V> {
   @Override
   @SuppressWarnings("unchecked")
   public Collection<V> values() {
-    return delegate
-        .values()
-        .stream()
+    return delegate.values().stream()
         .map(v -> v == NULL ? null : (V) v)
         .collect(Collectors.toList());
   }

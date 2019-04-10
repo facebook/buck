@@ -308,9 +308,7 @@ public class TargetsCommand extends AbstractCommand {
    *     --assume-modified-files} or {@code --assume-no-modified-files} is used, absent otherwise.
    */
   public ImmutableSet<Path> getTargetHashModifiedPaths() {
-    return targetHashModifiedPaths
-        .get()
-        .stream()
+    return targetHashModifiedPaths.get().stream()
         .map(Paths::get)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -456,9 +454,7 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private boolean hasConfigurationRules(TargetGraph targetGraph) {
-    return targetGraph
-        .getNodesWithNoIncomingEdges()
-        .stream()
+    return targetGraph.getNodesWithNoIncomingEdges().stream()
         .anyMatch(node -> node.getRuleType().getKind() == RuleType.Kind.CONFIGURATION);
   }
 
@@ -578,9 +574,7 @@ public class TargetsCommand extends AbstractCommand {
     TargetGraph targetGraph = targetGraphAndBuildTargets.getTargetGraph();
     return TargetGraphAndBuildTargets.of(
         targetGraph,
-        targetGraphAndBuildTargets
-            .getBuildTargets()
-            .stream()
+        targetGraphAndBuildTargets.getBuildTargets().stream()
             .filter(
                 f ->
                     descriptionClasses
@@ -743,15 +737,11 @@ public class TargetsCommand extends AbstractCommand {
     if (referencedFiles.isPresent()) {
       BuildFileTree buildFileTree =
           new InMemoryBuildFileTree(
-              graph
-                  .getNodes()
-                  .stream()
+              graph.getNodes().stream()
                   .map(TargetNode::getBuildTarget)
                   .collect(ImmutableSet.toImmutableSet()));
       directOwners =
-          graph
-              .getNodes()
-              .stream()
+          graph.getNodes().stream()
               .filter(new DirectOwnerPredicate(buildFileTree, referencedFiles.get(), buildFileName))
               .collect(ImmutableSet.toImmutableSet());
     } else {
@@ -896,9 +886,7 @@ public class TargetsCommand extends AbstractCommand {
 
         if (jsonAttributeFormat != JsonAttributeFormat.LEGACY) {
           targetNodeAttributes =
-              targetNodeAttributes
-                  .entrySet()
-                  .stream()
+              targetNodeAttributes.entrySet().stream()
                   .collect(
                       ImmutableSortedMap.toImmutableSortedMap(
                           Comparator.naturalOrder(),

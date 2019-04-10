@@ -368,8 +368,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
     }
 
     private List<String> getErrorMessages() {
-      return diagnostics
-          .stream()
+      return diagnostics.stream()
           .filter(d -> d.getKind() == Diagnostic.Kind.ERROR)
           .map(Diagnostic::toString)
           .collect(Collectors.toList());

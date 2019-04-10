@@ -35,10 +35,7 @@ public abstract class AbstractErrorHandlingBuckConfig implements ConfigView<Buck
   /** List of error message replacements to make things more friendly for humans */
   @Value.Lazy
   public Map<Pattern, String> getErrorMessageAugmentations() throws HumanReadableException {
-    return getDelegate()
-        .getMap("ui", "error_message_augmentations")
-        .entrySet()
-        .stream()
+    return getDelegate().getMap("ui", "error_message_augmentations").entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 e -> {

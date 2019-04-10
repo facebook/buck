@@ -141,9 +141,7 @@ public class WorkerProcessPoolFactory {
     return ImmutableList.<String>builder()
         .addAll(executionArgs)
         .add(
-            paramsToUse
-                .getStartupCommand()
-                .stream()
+            paramsToUse.getStartupCommand().stream()
                 .map(Escaper::escapeAsShellString)
                 .collect(Collectors.joining(" ")))
         .build();

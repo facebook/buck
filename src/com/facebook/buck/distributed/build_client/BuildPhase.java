@@ -541,8 +541,7 @@ public class BuildPhase {
               // might
               // be an ImmutableList, hence we make it a stream.
               events =
-                  events
-                      .stream()
+                  events.stream()
                       .sorted(
                           (w1, w2) -> {
                             BuildSlaveRunId runId1 = w1.getBuildSlaveRunId();
@@ -748,8 +747,7 @@ public class BuildPhase {
     return Futures.transform(
         Futures.allAsList(slaveStatusFutures),
         slaveStatusList ->
-            slaveStatusList
-                .stream()
+            slaveStatusList.stream()
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toList()),

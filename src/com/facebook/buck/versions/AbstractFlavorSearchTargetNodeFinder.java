@@ -68,9 +68,7 @@ abstract class AbstractFlavorSearchTargetNodeFinder {
    */
   @Value.Derived
   ImmutableMap<BuildTarget, TargetNode> getBuildTargetIndex() {
-    return getBaseTargetIndex()
-        .values()
-        .stream()
+    return getBaseTargetIndex().values().stream()
         .collect(ImmutableMap.toImmutableMap(TargetNode::getBuildTarget, n -> n));
   }
 

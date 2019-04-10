@@ -574,9 +574,7 @@ public class CxxBuckConfig {
 
   /** @return the list of flavors that buck will consider valid when building the target graph. */
   public ImmutableSet<Flavor> getDeclaredPlatforms() {
-    return delegate
-        .getListWithoutComments(cxxSection, DECLARED_PLATFORMS)
-        .stream()
+    return delegate.getListWithoutComments(cxxSection, DECLARED_PLATFORMS).stream()
         .map(s -> UserFlavor.of(s, String.format("Declared platform: %s", s)))
         .collect(ImmutableSet.toImmutableSet());
   }

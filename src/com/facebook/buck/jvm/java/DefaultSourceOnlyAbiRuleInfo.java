@@ -60,14 +60,12 @@ class DefaultSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
     this.fileManager = fileManager;
 
     fullJarInfos =
-        classPathInfo
-            .stream()
+        classPathInfo.stream()
             .map(info -> new DefaultJavaAbiInfo(info.compileTimeJar))
             .collect(ImmutableList.toImmutableList());
 
     abiJarInfos =
-        classPathInfo
-            .stream()
+        classPathInfo.stream()
             .filter(info -> info.isRequiredForSourceOnlyAbi)
             .map(info -> new DefaultJavaAbiInfo(info.compileTimeJar))
             .collect(ImmutableList.toImmutableList());

@@ -357,8 +357,7 @@ class Depfiles {
       String errorMessage =
           String.format(
               "%s%n%n%s",
-              errors
-                  .stream()
+              errors.stream()
                   .collect(Collectors.joining(System.lineSeparator() + System.lineSeparator())),
               UNTRACKED_HEADER_ERROR_TIPS);
       if (!untrackedHeaderReporter.isDetailed()) {

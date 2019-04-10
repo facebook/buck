@@ -97,10 +97,7 @@ public class MoreMaps {
   public static <K extends Comparable<?>, V>
       ImmutableSortedMap<K, ImmutableList<V>> convertMultimapToMapOfLists(
           ImmutableMultimap<K, V> multimap) {
-    return multimap
-        .asMap()
-        .entrySet()
-        .stream()
+    return multimap.asMap().entrySet().stream()
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
                 Ordering.natural(), e -> e.getKey(), e -> ImmutableList.copyOf(e.getValue())));

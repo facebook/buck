@@ -207,9 +207,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
       invalidateAll(statsTracker);
     } else {
       invalidateInputs(
-          inputsIndex
-              .keySet()
-              .stream()
+          inputsIndex.keySet().stream()
               .filter(input -> !filesystems.contains(input.getFilesystem()))
               .collect(Collectors.toList()),
           statsTracker);
@@ -222,9 +220,7 @@ public class DefaultRuleKeyCache<V> implements TrackableRuleKeyCache<V> {
   @Override
   public void invalidateFilesystem(ProjectFilesystem filesystem, CacheStatsTracker statsTracker) {
     invalidateInputs(
-        inputsIndex
-            .keySet()
-            .stream()
+        inputsIndex.keySet().stream()
             .filter(input -> filesystem.equals(input.getFilesystem()))
             .collect(Collectors.toList()),
         statsTracker);

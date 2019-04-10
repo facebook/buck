@@ -220,8 +220,7 @@ public class BuckJavacTask extends JavacTaskWrapper {
           Queue<Diagnostic<JavaFileObject>> deferredDiagnostics =
               getDiagnostics(deferredDiagnosticHandler);
 
-          if (deferredDiagnostics
-              .stream()
+          if (deferredDiagnostics.stream()
               .anyMatch(diagnostic -> diagnostic.getKind() == Diagnostic.Kind.ERROR)) {
             // The queue gets nulled out after reporting, so only report when we know the build will
             // be failing

@@ -94,9 +94,7 @@ public class StubJar {
 
   private void writeTo(LibraryReader input, StubJarWriter writer) throws IOException {
     List<Path> paths =
-        input
-            .getRelativePaths()
-            .stream()
+        input.getRelativePaths().stream()
             .sorted(Comparator.comparing(MorePaths::pathWithUnixSeparators))
             .collect(Collectors.toList());
 

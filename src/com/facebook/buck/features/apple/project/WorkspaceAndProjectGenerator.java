@@ -334,9 +334,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget) {
     ImmutableSetMultimap<String, PBXTarget> schemeToPBXProject =
         ImmutableSetMultimap.copyOf(
-            schemeToTargetNodes
-                .entries()
-                .stream()
+            schemeToTargetNodes.entries().stream()
                 .map(
                     stringTargetNodeEntry ->
                         Maps.immutableEntry(
@@ -364,9 +362,7 @@ public class WorkspaceAndProjectGenerator {
     // filter out map entries that are null
     ImmutableSetMultimap<String, TargetNode<?>> schemeToTargetNodes =
         ImmutableSetMultimap.copyOf(
-            schemeToOptionalTargetNodes
-                .entries()
-                .stream()
+            schemeToOptionalTargetNodes.entries().stream()
                 .filter(
                     stringOptionalEntry -> { // removes scheme mapped to null
                       return stringOptionalEntry.getValue().isPresent();
@@ -388,8 +384,7 @@ public class WorkspaceAndProjectGenerator {
         combinedProject ? outputDirectory : outputDirectory.resolve(workspaceName + ".xcworkspace");
     rootCell.getFilesystem().mkdirs(path);
     ImmutableList<String> requiredTargetsStrings =
-        getRequiredBuildTargets()
-            .stream()
+        getRequiredBuildTargets().stream()
             .map(Object::toString)
             .sorted()
             .collect(ImmutableList.toImmutableList());
@@ -534,9 +529,7 @@ public class WorkspaceAndProjectGenerator {
       GenerationResult result) {
     requiredBuildTargetsBuilder.addAll(result.getRequiredBuildTargets());
     ImmutableSortedSet<Path> relativeXcconfigPaths =
-        result
-            .getXcconfigPaths()
-            .stream()
+        result.getXcconfigPaths().stream()
             .map((Path p) -> rootCell.getFilesystem().relativize(p))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     xcconfigPathsBuilder.addAll(relativeXcconfigPaths);
@@ -813,8 +806,7 @@ public class WorkspaceAndProjectGenerator {
     // Filter all of the source target's deps to find the bundled extensions that get an implicit
     // scheme.
     ImmutableSet<BuildTarget> implicitSchemeBuildTargets =
-        sourceTargetBuildDeps
-            .stream()
+        sourceTargetBuildDeps.stream()
             .filter(t -> shouldIncludeImplicitExtensionSchemeForTargetNode(projectGraph.get(t)))
             .collect(ImmutableSet.toImmutableSet());
 
@@ -976,10 +968,9 @@ public class WorkspaceAndProjectGenerator {
           }
           ImmutableList<BuildTarget> focusedTests =
               ((HasTests) node.getConstructorArg())
-                  .getTests()
-                  .stream()
-                  .filter(t -> focusModules.isFocusedOn(t))
-                  .collect(ImmutableList.toImmutableList());
+                  .getTests().stream()
+                      .filter(t -> focusModules.isFocusedOn(t))
+                      .collect(ImmutableList.toImmutableList());
           // Show a warning if the target is not focused but the tests are.
           if (focusedTests.size() > 0 && !focusModules.isFocusedOn(node.getBuildTarget())) {
             buckEventBus.post(
@@ -1075,9 +1066,7 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSetMultimap.Builder<String, TargetNode<?>> buildForTestNodesBuilder) {
     for (String schemeName : schemeNameToSrcTargetNode.keySet()) {
       ImmutableSet<TargetNode<?>> targetNodes =
-          schemeNameToSrcTargetNode
-              .get(schemeName)
-              .stream()
+          schemeNameToSrcTargetNode.get(schemeName).stream()
               .flatMap(Optionals::toStream)
               .collect(ImmutableSet.toImmutableSet());
       ImmutableSet<TargetNode<AppleTestDescriptionArg>> testNodes =
@@ -1133,21 +1122,18 @@ public class WorkspaceAndProjectGenerator {
       ImmutableSet<PBXTarget> projectTargets = generatedProjectToPbxTargets.get(project);
 
       ImmutableSet<PBXTarget> orderedBuildTestTargets =
-          projectTargets
-              .stream()
+          projectTargets.stream()
               .filter(pbxTarget -> buildForTestTargets.values().contains(pbxTarget))
               .collect(ImmutableSet.toImmutableSet());
 
       ImmutableSet<PBXTarget> orderedRunTestTargets =
-          projectTargets
-              .stream()
+          projectTargets.stream()
               .filter(pbxTarget -> ungroupedTestTargets.values().contains(pbxTarget))
               .collect(ImmutableSet.toImmutableSet());
 
       // add all non-test targets as full build targets
       ImmutableSet<PBXTarget> orderedBuildTargets =
-          projectTargets
-              .stream()
+          projectTargets.stream()
               .filter(pbxTarget -> schemeTargets.contains(pbxTarget))
               .filter(pbxTarget -> !orderedBuildTestTargets.contains(pbxTarget))
               .collect(ImmutableSet.toImmutableSet());
@@ -1197,9 +1183,7 @@ public class WorkspaceAndProjectGenerator {
       }
 
       ImmutableSet<PBXTarget> orderedBuildTargets =
-          schemeNameToSrcTargetNode
-              .get(schemeName)
-              .stream()
+          schemeNameToSrcTargetNode.get(schemeName).stream()
               .distinct()
               .flatMap(Optionals::toStream)
               .map(TargetNode::getBuildTarget)

@@ -120,9 +120,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                 ImmutableSortedSet.<BuildRule>naturalOrder()
                     .addAll(BuildableSupport.getDepsCollection(ghcPkg, ruleFinder))
                     .addAll(
-                        depPackages
-                            .values()
-                            .stream()
+                        depPackages.values().stream()
                             .flatMap(pkg -> pkg.getDeps(ruleFinder))
                             .iterator())
                     .addAll(
@@ -197,9 +195,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     return new WriteFileStep(
         getProjectFilesystem(),
-        entries
-            .entrySet()
-            .stream()
+        entries.entrySet().stream()
             .map(input -> input.getKey() + ": " + input.getValue())
             .collect(Collectors.joining(System.lineSeparator())),
         registrationFile,
@@ -258,9 +254,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
             ghcPkgCmd,
             ImmutableMap.of(
                 "GHC_PACKAGE_PATH",
-                depPackages
-                    .values()
-                    .stream()
+                depPackages.values().stream()
                     .map(
                         input ->
                             context

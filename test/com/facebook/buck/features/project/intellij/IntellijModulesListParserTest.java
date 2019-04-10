@@ -142,9 +142,7 @@ public class IntellijModulesListParserTest {
     Files.write(modulesPath, xml.getBytes(Charset.forName("UTF-8")));
     IntellijModulesListParser parser = new IntellijModulesListParser();
     final ImmutableSortedSet<String> parsedModulePaths =
-        parser
-            .getAllModules(new FileInputStream(modulesPath.toFile()))
-            .stream()
+        parser.getAllModules(new FileInputStream(modulesPath.toFile())).stream()
             .map(ModuleIndexEntry::getFilePath)
             .map(Path::toString)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

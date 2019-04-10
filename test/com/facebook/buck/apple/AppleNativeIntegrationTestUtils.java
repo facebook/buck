@@ -59,9 +59,7 @@ public class AppleNativeIntegrationTestUtils {
 
   private static Optional<AppleSdk> anySdkForPlatform(
       ApplePlatform platform, ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths) {
-    return sdkPaths
-        .keySet()
-        .stream()
+    return sdkPaths.keySet().stream()
         .filter(sdk -> sdk.getApplePlatform().equals(platform))
         .findFirst();
   }

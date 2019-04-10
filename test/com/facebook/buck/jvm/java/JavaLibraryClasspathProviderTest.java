@@ -178,8 +178,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
             .add(getFullOutput(e)) // c exports e
             // b is non-java so b and d do not appear
             .build(),
-        aLib.getTransitiveClasspaths()
-            .stream()
+        aLib.getTransitiveClasspaths().stream()
             .map(resolver::getAbsolutePath)
             .collect(ImmutableSet.toImmutableSet()));
   }
