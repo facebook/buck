@@ -2501,6 +2501,22 @@ public class CxxBinaryIntegrationTest {
     }
   }
 
+  @Test
+  public void testRunFlavors() throws IOException {
+    assumeThat(Platform.detect(), Matchers.not(Platform.WINDOWS));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cxx_flavors", tmp);
+    workspace.setUp();
+
+    workspace.runBuckCommand("build", "//bin:bin").assertSuccess("build //bin:bin1");
+    workspace.runBuckCommand("run", "//bin:bin").assertSuccess("run //bin:bin1");
+    workspace.runBuckCommand("build", "//bin:bin#default").assertSuccess("build //bin:bin#default");
+    workspace.runBuckCommand("run", "//bin:bin#default").assertSuccess("run //bin:bin#default");
+    workspace.runBuckCommand("build", "//bin:bin1").assertSuccess("build //bin:bin1");
+    workspace.runBuckCommand("run", "//bin:bin1").assertSuccess("run //bin:bin1");
+  }
+
   private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {
     ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
     Files.walkFileTree(

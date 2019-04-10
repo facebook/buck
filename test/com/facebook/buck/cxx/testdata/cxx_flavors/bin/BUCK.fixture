@@ -1,0 +1,14 @@
+cxx_binary(
+    name = "bin",
+    srcs = ["bin.cpp"],
+    include_directories = ["."],
+    raw_headers = ["bin.h"],
+)
+
+cxx_binary(
+    name = "bin1",
+    srcs = ["bin.cpp"],
+    defaults = {"platform": "default"},
+    include_directories = ["."],
+    raw_headers = ["bin.h"],
+)

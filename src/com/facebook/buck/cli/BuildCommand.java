@@ -324,6 +324,10 @@ public class BuildCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+    return runWithoutHelpInternal(params).getExitCode();
+  }
+
+  BuildRunResult runWithoutHelpInternal(CommandRunnerParams params) throws Exception {
     assertArguments(params);
 
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
@@ -338,7 +342,7 @@ public class BuildCommand extends AbstractCommand {
                 params.getEnvironment(),
                 getArguments())) {
       prehook.startPrehookScript();
-      return run(params, pool, Function.identity(), ImmutableSet.of()).getExitCode();
+      return run(params, pool, Function.identity(), ImmutableSet.of());
     }
   }
 
