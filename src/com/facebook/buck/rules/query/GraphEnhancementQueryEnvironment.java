@@ -38,7 +38,6 @@ import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.query.QueryTargetAccessor;
 import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.RichStream;
