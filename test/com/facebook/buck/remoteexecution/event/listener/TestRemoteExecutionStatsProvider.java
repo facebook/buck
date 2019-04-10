@@ -76,6 +76,35 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
   }
 
   @Override
+  public ImmutableMap<String, String> exportFieldsToMap() {
+    ImmutableMap.Builder<String, String> retval = ImmutableMap.builderWithExpectedSize(16);
+
+    retval
+        .put("cas_downloads_count", Integer.toString(getCasDownloads()))
+        .put("cas_downloads_bytes", Long.toString(getCasDownloadSizeBytes()))
+        .put("cas_uploads_count", Integer.toString(getCasUploads()))
+        .put("cas_uploads_bytes", Long.toString(getCasUploadSizeBytes()))
+        .put(
+            "localfallback_totally_executed_rules",
+            Integer.toString(localFallbackStats.getTotalExecutedRules()))
+        .put(
+            "localfallback_locally_executed_rules",
+            Integer.toString(localFallbackStats.getLocallyExecutedRules()))
+        .put(
+            "localfallback_locally_successful_executed_rules",
+            Integer.toString(localFallbackStats.getLocallySuccessfulRules()))
+        .put("remote_cpu_time_sec", Long.toString(getRemoteCpuTimeMs()));
+
+    for (ImmutableMap.Entry<State, Integer> entry : getActionsPerState().entrySet()) {
+      retval.put(
+          String.format("remote_state_%s_count", entry.getKey().getAbbreviateName()),
+          Integer.toString(entry.getValue()));
+    }
+
+    return retval.build();
+  }
+
+  @Override
   public long getRemoteCpuTimeMs() {
     return TimeUnit.SECONDS.toMillis(65);
   }

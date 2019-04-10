@@ -37,6 +37,7 @@ import com.facebook.buck.remoteexecution.WorkerRequirementsProvider;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionStrategyConfig;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.rules.modern.ModernBuildRule;
@@ -94,6 +95,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   private final WorkerRequirementsProvider requirementsProvider;
   private final MetadataProvider metadataProvider;
 
+  private Optional<RemoteExecutionSessionEvent.Started> remoteExecutionSessionStartedEvent;
+
   RemoteExecutionStrategy(
       BuckEventBus eventBus,
       RemoteExecutionStrategyConfig strategyConfig,
@@ -136,6 +139,12 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         new WorkerRequirementsProvider(
             strategyConfig.getWorkerRequirementsFilename(),
             WORKER_REQUIREMENTS_PROVIDER_MAX_CACHE_SIZE);
+
+    this.remoteExecutionSessionStartedEvent = Optional.empty();
+    if (!remoteExecutionSessionStartedEvent.isPresent()) {
+      remoteExecutionSessionStartedEvent = Optional.of(RemoteExecutionSessionEvent.started());
+      eventBus.post(remoteExecutionSessionStartedEvent.get());
+    }
   }
 
   /** Creates a BuildRuleStrategy for a particular */
@@ -177,6 +186,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
   @Override
   public void close() throws IOException {
     executionClients.close();
+    if (remoteExecutionSessionStartedEvent.isPresent()) {
+      eventBus.post(RemoteExecutionSessionEvent.finished(remoteExecutionSessionStartedEvent.get()));
+    }
   }
 
   @Override

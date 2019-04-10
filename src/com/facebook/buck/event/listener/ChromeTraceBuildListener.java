@@ -50,6 +50,8 @@ import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
@@ -128,12 +130,15 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   private final BuildId buildId;
 
+  private final Optional<RemoteExecutionStatsProvider> reStatsProvider;
+
   public ChromeTraceBuildListener(
       ProjectFilesystem projectFilesystem,
       InvocationInfo invocationInfo,
       Clock clock,
       ChromeTraceBuckConfig config,
-      TaskManagerScope managerScope)
+      TaskManagerScope managerScope,
+      Optional<RemoteExecutionStatsProvider> reStatsProvider)
       throws IOException {
     this(
         projectFilesystem,
@@ -143,7 +148,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         TimeZone.getDefault(),
         ManagementFactory.getThreadMXBean(),
         config,
-        managerScope);
+        managerScope,
+        reStatsProvider);
   }
 
   @VisibleForTesting
@@ -155,12 +161,14 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       TimeZone timeZone,
       ThreadMXBean threadMXBean,
       ChromeTraceBuckConfig config,
-      TaskManagerScope managerScope)
+      TaskManagerScope managerScope,
+      Optional<RemoteExecutionStatsProvider> reStatsProvider)
       throws IOException {
     this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
     this.projectFilesystem = projectFilesystem;
     this.clock = clock;
     this.buildId = invocationInfo.getBuildId();
+    this.reStatsProvider = reStatsProvider;
     this.dateFormat =
         new ThreadLocal<SimpleDateFormat>() {
           @Override
@@ -829,6 +837,23 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceMetadataEvent(
         "watchman_overflow",
         ImmutableMap.of("cellPath", event.getCellPath().toString(), "reason", event.getReason()));
+  }
+
+  /** Mark the start of a Remote Execution session */
+  @Subscribe
+  public void onRemoteExecutionSessionStarted(RemoteExecutionSessionEvent.Started event) {
+    writeChromeTraceEvent("buck", event.getCategory(), Phase.BEGIN, ImmutableMap.of(), event);
+  }
+
+  /** Mark the end of a Remote Execution session and write down the related telemetry. */
+  @Subscribe
+  public void onRemoteExecutionSessionFinished(RemoteExecutionSessionEvent.Finished event) {
+    writeChromeTraceEvent(
+        "buck",
+        event.getCategory(),
+        Phase.END,
+        reStatsProvider.isPresent() ? reStatsProvider.get().exportFieldsToMap() : ImmutableMap.of(),
+        event);
   }
 
   @VisibleForTesting

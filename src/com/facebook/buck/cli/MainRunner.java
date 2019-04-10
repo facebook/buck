@@ -130,6 +130,7 @@ import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.TargetSpecResolver;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionConsoleLineProvider;
 import com.facebook.buck.remoteexecution.event.listener.RemoteExecutionEventListener;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
@@ -1179,6 +1180,9 @@ public final class MainRunner {
                   clock,
                   counterRegistry,
                   commandEventListeners,
+                  remoteExecutionListener.isPresent()
+                      ? Optional.of((RemoteExecutionStatsProvider) remoteExecutionListener.get())
+                      : Optional.empty(),
                   managerScope);
           consoleListener.register(buildEventBus);
 
@@ -1913,6 +1917,7 @@ public final class MainRunner {
       Clock clock,
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
+      Optional<RemoteExecutionStatsProvider> reStatsProvider,
       TaskManagerScope managerScope) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder().add(new LoggingBuildListener());
@@ -1927,7 +1932,12 @@ public final class MainRunner {
       try {
         ChromeTraceBuildListener chromeTraceBuildListener =
             new ChromeTraceBuildListener(
-                projectFilesystem, invocationInfo, clock, chromeTraceConfig, managerScope);
+                projectFilesystem,
+                invocationInfo,
+                clock,
+                chromeTraceConfig,
+                managerScope,
+                reStatsProvider);
         eventListenersBuilder.add(chromeTraceBuildListener);
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");

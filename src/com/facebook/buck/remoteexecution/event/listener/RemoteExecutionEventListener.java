@@ -205,4 +205,29 @@ public class RemoteExecutionEventListener
   public long getRemoteCpuTimeMs() {
     return remoteCpuTime.sum();
   }
+
+  @Override
+  public ImmutableMap<String, String> exportFieldsToMap() {
+    ImmutableMap.Builder<String, String> retval = ImmutableMap.builderWithExpectedSize(16);
+
+    retval
+        .put("cas_downloads_count", Integer.toString(getCasDownloads()))
+        .put("cas_downloads_bytes", Long.toString(getCasDownloadSizeBytes()))
+        .put("cas_uploads_count", Integer.toString(getCasUploads()))
+        .put("cas_uploads_bytes", Long.toString(getCasUploadSizeBytes()))
+        .put("localfallback_totally_executed_rules", localFallbackTotalExecutions.toString())
+        .put("localfallback_locally_executed_rules", localFallbackLocalExecutions.toString())
+        .put(
+            "localfallback_locally_successful_executed_rules",
+            localFallbackSuccessfulLocalExecutions.toString())
+        .put("remote_cpu_time_ms", Long.toString(getRemoteCpuTimeMs()));
+
+    for (ImmutableMap.Entry<State, Integer> entry : getActionsPerState().entrySet()) {
+      retval.put(
+          String.format("remote_state_%s_count", entry.getKey().getAbbreviateName()),
+          Integer.toString(entry.getValue()));
+    }
+
+    return retval.build();
+  }
 }
