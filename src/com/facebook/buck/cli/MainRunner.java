@@ -791,7 +791,7 @@ public final class MainRunner {
           DefaultCellPathResolver.of(filesystem.getRootPath(), buckConfig.getConfig());
 
       Supplier<TargetConfiguration> targetConfigurationSupplier =
-          () -> createTargetConfiguration(command, buildTargetFactory, rootCellCellPathResolver);
+          createTargetConfigurationSupplier(command, buildTargetFactory, rootCellCellPathResolver);
 
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
@@ -1414,17 +1414,31 @@ public final class MainRunner {
     return exitCode;
   }
 
-  private TargetConfiguration createTargetConfiguration(
+  private Supplier<TargetConfiguration> createTargetConfigurationSupplier(
       Command command,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       CellPathResolver cellPathResolver) {
-    if (command.getTargetPlatforms().isEmpty()) {
-      return EmptyTargetConfiguration.INSTANCE;
+    // TODO(buck_team): we really shouldn't create suppliers like this. Fix it once we refactor how
+    // toolchains work together.
+    // Note that some commands do not implement getTargetPlatforms(), so they throw. This means that
+    // we cannot eagerly resolve TargetConfiguration properly. Instead, we have to return a supplier
+    // that either throw when called improperly, or returns the target configuration. Since this
+    // supplier is cached in the BuckGlobalState, we cannot keep reference to any other objects, so
+    // we attempt to resolve the TargetConfiguration, returning a supplier either of the resolved
+    // configuration or the exception thrown.
+    try {
+      if (command.getTargetPlatforms().isEmpty()) {
+        return () -> EmptyTargetConfiguration.INSTANCE;
+      }
+      UnconfiguredBuildTargetView targetPlatform =
+          unconfiguredBuildTargetFactory.create(
+              cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms()));
+      return () -> ImmutableDefaultTargetConfiguration.of(targetPlatform);
+    } catch (Throwable e) {
+      return () -> {
+        throw e;
+      };
     }
-    UnconfiguredBuildTargetView targetPlatform =
-        unconfiguredBuildTargetFactory.create(
-            cellPathResolver, Iterables.getOnlyElement(command.getTargetPlatforms()));
-    return ImmutableDefaultTargetConfiguration.of(targetPlatform);
   }
 
   private boolean isReuseCurrentConfigPropertySet(AbstractContainerCommand command) {
