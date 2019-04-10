@@ -2,7 +2,7 @@
 
 REPO_ROOT_DIR="$(git rev-parse --show-toplevel)"
 
-FORMAT_JAR_LOCATION="<<PATH_TO_JAR>>/google-java-format-1.6-all-deps.jar"
+FORMAT_JAR_LOCATION="<<PATH_TO_JAR>>/google-java-format-1.7-all-deps.jar"
 
 for staged_file in $(git diff --cached --name-only); do
   [ -f "${staged_file}" ] || continue
