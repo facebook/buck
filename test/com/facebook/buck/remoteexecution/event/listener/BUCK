@@ -1,12 +1,28 @@
 load("//tools/build_rules:java_rules.bzl", "java_test")
 
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/remoteexecution/event:event",
+        "//src/com/facebook/buck/util:util",
+    ],
+)
+
 java_test(
     name = "listener",
     srcs = glob([
-        "*.java",
+        "RemoteExecutionConsoleLineProviderTest.java",
     ]),
     has_immutable_types = True,
     deps = [
+        ":testutil",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/listener/interfaces:interfaces",
