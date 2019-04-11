@@ -23,6 +23,7 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.MetadataProvidingDescription;
+import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
@@ -698,7 +699,7 @@ public class AppleBinaryDescription
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractAppleBinaryDescriptionArg
-      extends AppleNativeTargetDescriptionArg, HasEntitlementsFile {
+      extends AppleNativeTargetDescriptionArg, HasContacts, HasEntitlementsFile {
     Optional<SourcePath> getInfoPlist();
 
     ImmutableMap<String, String> getInfoPlistSubstitutions();
