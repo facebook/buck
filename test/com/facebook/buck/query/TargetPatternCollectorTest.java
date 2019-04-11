@@ -18,6 +18,7 @@ package com.facebook.buck.query;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -57,9 +58,8 @@ public class TargetPatternCollectorTest {
     BinaryOperatorExpression.of(
             AbstractBinaryOperatorExpression.Operator.UNION,
             ImmutableList.of(
-                FunctionExpression.of(
-                    new DepsFunction(),
-                    ImmutableList.of(QueryEnvironment.Argument.of(TargetLiteral.of("foo")))),
+                new ImmutableFunctionExpression<>(
+                    new DepsFunction(), ImmutableList.of(Argument.of(TargetLiteral.of("foo")))),
                 SetExpression.of(
                     ImmutableList.of(TargetLiteral.of("bar"), TargetLiteral.of("baz")))))
         .traverse(collector);

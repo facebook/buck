@@ -15,6 +15,7 @@ java_library(
     exported_deps = [
         ":builder",
         ":value",
+        "//src/com/facebook/buck/core/util/immutables/resources:resources",
     ],
     visibility = [
         "PUBLIC",

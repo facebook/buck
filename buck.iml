@@ -18,6 +18,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/plugin/adapter/java8" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.plugin.adapter" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/android/annotations/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/aosp/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/core/util/immutables/resources" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/ant-out" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />

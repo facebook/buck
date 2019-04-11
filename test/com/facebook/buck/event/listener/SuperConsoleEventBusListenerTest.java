@@ -47,9 +47,9 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
-import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
 import com.facebook.buck.distributed.DistributedExitCode;
+import com.facebook.buck.distributed.ImmutableDistBuildStatus;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.DistBuildRemoteProgressEvent;
 import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
@@ -1091,7 +1091,9 @@ public class SuperConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
-                job, DistBuildStatus.builder().setStatus(BuildStatus.QUEUED.toString()).build()),
+                job,
+                new ImmutableDistBuildStatus(
+                    Optional.of(BuildStatus.QUEUED.toString()), ImmutableList.of())),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1122,7 +1124,8 @@ public class SuperConsoleEventBusListenerTest {
     timeMillis += 100;
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            new DistBuildStatusEvent(job, DistBuildStatus.builder().build()),
+            new DistBuildStatusEvent(
+                job, new ImmutableDistBuildStatus(Optional.empty(), ImmutableList.of())),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1169,10 +1172,9 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 job,
-                DistBuildStatus.builder()
-                    .setStatus(BuildStatus.BUILDING.toString())
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
-                    .build()),
+                new ImmutableDistBuildStatus(
+                    Optional.of(BuildStatus.BUILDING.toString()),
+                    ImmutableList.of(slave1, slave2, slave3))),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1227,10 +1229,9 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 job,
-                DistBuildStatus.builder()
-                    .setStatus(BuildStatus.BUILDING.toString())
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
-                    .build()),
+                new ImmutableDistBuildStatus(
+                    Optional.of(BuildStatus.BUILDING.toString()),
+                    ImmutableList.of(slave1, slave2, slave3))),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1285,10 +1286,8 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 job,
-                DistBuildStatus.builder()
-                    .setStatus("custom")
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
-                    .build()),
+                new ImmutableDistBuildStatus(
+                    Optional.of("custom"), ImmutableList.of(slave1, slave2, slave3))),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1363,10 +1362,8 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 job,
-                DistBuildStatus.builder()
-                    .setStatus("custom")
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
-                    .build()),
+                new ImmutableDistBuildStatus(
+                    Optional.of("custom"), ImmutableList.of(slave1, slave2, slave3))),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -1395,10 +1392,9 @@ public class SuperConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 job,
-                DistBuildStatus.builder()
-                    .setStatus(BuildStatus.FINISHED_SUCCESSFULLY.toString())
-                    .setSlaveStatuses(ImmutableList.of(slave1, slave2, slave3))
-                    .build()),
+                new ImmutableDistBuildStatus(
+                    Optional.of(BuildStatus.FINISHED_SUCCESSFULLY.toString()),
+                    ImmutableList.of(slave1, slave2, slave3))),
             timeMillis,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

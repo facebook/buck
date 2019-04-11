@@ -276,7 +276,7 @@ final class QueryParser<NODE_TYPE> {
             }
 
             consume(TokenKind.RPAREN);
-            return FunctionExpression.of(function, argsBuilder.build());
+            return new ImmutableFunctionExpression<>(function, argsBuilder.build());
           } else {
             Objects.requireNonNull(word);
             if (targetEvaluator.getType() == QueryEnvironment.TargetEvaluator.Type.LAZY) {

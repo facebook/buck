@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.distributed.build_client;
 
-import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.ImmutableDistBuildStatus;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.distributed.thrift.BuildStatus;
@@ -56,8 +56,7 @@ public class ConsoleEventsDispatcher {
       stage = Optional.of(job.getStatus().toString());
     }
 
-    DistBuildStatus status =
-        DistBuildStatus.builder().setStatus(stage).setSlaveStatuses(slaveStatuses).build();
+    ImmutableDistBuildStatus status = new ImmutableDistBuildStatus(stage, slaveStatuses);
     buckEventBus.post(new DistBuildStatusEvent(job, status));
   }
 

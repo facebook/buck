@@ -34,8 +34,8 @@ import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.distributed.DistBuildCreatedEvent;
-import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.ImmutableDistBuildStatus;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
 import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
@@ -423,7 +423,9 @@ public class SimpleConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
-                job, DistBuildStatus.builder().setStatus(BuildStatus.QUEUED.toString()).build()),
+                job,
+                new ImmutableDistBuildStatus(
+                    Optional.of(BuildStatus.QUEUED.toString()), ImmutableList.of())),
             0,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -446,7 +448,9 @@ public class SimpleConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
-                job, DistBuildStatus.builder().setStatus(BuildStatus.BUILDING.toString()).build()),
+                job,
+                new ImmutableDistBuildStatus(
+                    Optional.of(BuildStatus.BUILDING.toString()), ImmutableList.of())),
             1,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -461,7 +465,9 @@ public class SimpleConsoleEventBusListenerTest {
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
             new DistBuildStatusEvent(
-                job, DistBuildStatus.builder().setStatus(BuildStatus.BUILDING.toString()).build()),
+                job,
+                new ImmutableDistBuildStatus(
+                    Optional.of(BuildStatus.BUILDING.toString()), ImmutableList.of())),
             2,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -477,9 +483,8 @@ public class SimpleConsoleEventBusListenerTest {
         configureTestEventAtTime(
             new DistBuildStatusEvent(
                 job,
-                DistBuildStatus.builder()
-                    .setStatus(BuildStatus.FINISHED_SUCCESSFULLY.toString())
-                    .build()),
+                new ImmutableDistBuildStatus(
+                    Optional.of(BuildStatus.FINISHED_SUCCESSFULLY.toString()), ImmutableList.of())),
             3,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));

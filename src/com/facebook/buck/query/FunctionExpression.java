@@ -30,7 +30,7 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
@@ -38,16 +38,22 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import java.util.Objects;
 import org.immutables.value.Value;
 
 /** A query expression for user-defined query functions. */
-@Value.Immutable(prehash = true)
-@BuckStyleTuple
-abstract class AbstractFunctionExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
-  abstract QueryFunction<?, NODE_TYPE> getFunction();
+@Value.Immutable(prehash = true, builder = false, copy = false)
+@BuckStyleValue
+public abstract class FunctionExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
+  @Value.Auxiliary
+  public abstract QueryFunction<?, NODE_TYPE> getFunction();
 
-  abstract ImmutableList<Argument<NODE_TYPE>> getArgs();
+  // Use the function's class for equals/hashcode.
+  @Value.Derived
+  Class<?> getFunctionClass() {
+    return getFunction().getClass();
+  }
+
+  public abstract ImmutableList<Argument<NODE_TYPE>> getArgs();
 
   @Override
   @SuppressWarnings("unchecked")
@@ -73,22 +79,5 @@ abstract class AbstractFunctionExpression<NODE_TYPE> extends QueryExpression<NOD
         + "("
         + Joiner.on(", ").join(Iterables.transform(getArgs(), Object::toString))
         + ")";
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public boolean equals(Object other) {
-    return (other instanceof AbstractFunctionExpression)
-        && equalTo((AbstractFunctionExpression<NODE_TYPE>) other);
-  }
-
-  private boolean equalTo(AbstractFunctionExpression<NODE_TYPE> other) {
-    return getFunction().getClass().equals(other.getFunction().getClass())
-        && getArgs().equals(other.getArgs());
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(getFunction().getClass(), getArgs());
   }
 }

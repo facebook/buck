@@ -1,0 +1,12 @@
+java_library(
+    name = "resources",
+    srcs = [
+    ],
+    resources = [
+        "META-INF/annotations/org.immutables.value.immutable",
+    ],
+    resources_root = ".",
+    visibility = [
+        "PUBLIC",
+    ],
+)

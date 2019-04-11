@@ -51,7 +51,8 @@ public class QueryParserTest {
   public void testDeps() throws Exception {
     ImmutableList<Argument<QueryBuildTarget>> args =
         ImmutableList.of(Argument.of(TargetLiteral.of("//foo:bar")));
-    QueryExpression<QueryBuildTarget> expected = FunctionExpression.of(new DepsFunction(), args);
+    QueryExpression<QueryBuildTarget> expected =
+        new ImmutableFunctionExpression<>(new DepsFunction(), args);
 
     String query = "deps('//foo:bar')";
     QueryExpression result = QueryParser.parse(query, queryEnvironment);
@@ -63,10 +64,11 @@ public class QueryParserTest {
     ImmutableList<TargetLiteral<QueryBuildTarget>> args =
         ImmutableList.of(TargetLiteral.of("//foo:bar"), TargetLiteral.of("//other:lib"));
     QueryExpression<QueryBuildTarget> depsExpr =
-        FunctionExpression.of(
+        new ImmutableFunctionExpression<>(
             new DepsFunction(), ImmutableList.of(Argument.of(SetExpression.of(args))));
     QueryExpression<QueryBuildTarget> testsofExpr =
-        FunctionExpression.of(new TestsOfFunction(), ImmutableList.of(Argument.of(depsExpr)));
+        new ImmutableFunctionExpression<>(
+            new TestsOfFunction(), ImmutableList.of(Argument.of(depsExpr)));
 
     String query = "testsof(deps(set('//foo:bar' //other:lib)))";
     QueryExpression<QueryBuildTarget> result = QueryParser.parse(query, queryEnvironment);

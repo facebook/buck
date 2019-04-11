@@ -92,7 +92,7 @@ public class QueryTargetCollectorTest {
     BinaryOperatorExpression.of(
             AbstractBinaryOperatorExpression.Operator.UNION,
             ImmutableList.of(
-                FunctionExpression.of(new DepsFunction(), args),
+                new ImmutableFunctionExpression<>(new DepsFunction(), args),
                 TargetSetExpression.of(ImmutableSet.of(target("bar"), target("baz")))))
         .traverse(collector);
     assertThat(

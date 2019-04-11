@@ -15,8 +15,8 @@
  */
 package com.facebook.buck.event.listener.stats.stampede;
 
-import com.facebook.buck.distributed.DistBuildStatus;
 import com.facebook.buck.distributed.DistBuildStatusEvent;
+import com.facebook.buck.distributed.DistBuildStatusEvent.DistBuildStatus;
 import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
 import com.facebook.buck.distributed.build_client.DistBuildRemoteProgressEvent;
 import com.facebook.buck.distributed.thrift.BuildSlaveInfo;

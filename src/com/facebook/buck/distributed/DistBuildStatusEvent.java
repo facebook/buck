@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.distributed;
 
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.distributed.thrift.BuildJob;
 import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
 import com.facebook.buck.event.AbstractBuckEvent;
@@ -24,7 +24,6 @@ import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.event.WorkAdvanceEvent;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent, WorkAdvanceEvent {
 
@@ -61,13 +60,12 @@ public class DistBuildStatusEvent extends AbstractBuckEvent implements LeafEvent
   }
 
   // TODO(ruibm): This will be replaced with whatever thrift message the server returns.
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDistBuildStatus {
+  @BuckStyleValue
+  public abstract static class DistBuildStatus {
     /** @return dist-build status */
-    abstract Optional<String> getStatus();
+    public abstract Optional<String> getStatus();
 
     /** @return the status of each build slave */
-    abstract ImmutableList<BuildSlaveStatus> getSlaveStatuses();
+    public abstract ImmutableList<BuildSlaveStatus> getSlaveStatuses();
   }
 }

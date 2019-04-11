@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
+import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -39,7 +40,8 @@ public class DepsFunctionTest {
   private static final DepsFunction DEPS_FUNCTION = new DepsFunction();
   private static final QueryEnvironment.Argument FIRST_ORDER_DEPS =
       QueryEnvironment.Argument.of(
-          FunctionExpression.of(new DepsFunction.FirstOrderDepsFunction(), ImmutableList.of()));
+          new ImmutableFunctionExpression<>(
+              new DepsFunction.FirstOrderDepsFunction(), ImmutableList.of()));
   private static final QueryEnvironment.Argument DEPTH = QueryEnvironment.Argument.of(10);
 
   @Test
@@ -52,16 +54,16 @@ public class DepsFunctionTest {
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(a, b);
     QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
+    ImmutableSet<?> result =
+        DEPS_FUNCTION.eval(
+            new NoopQueryEvaluator(),
+            queryEnvironment,
+            ImmutableList.of(
+                Argument.of(TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
+                DEPTH,
+                FIRST_ORDER_DEPS));
     assertThat(
-        (Iterable<QueryBuildTarget>)
-            DEPS_FUNCTION.eval(
-                new NoopQueryEvaluator(),
-                queryEnvironment,
-                ImmutableList.of(
-                    QueryEnvironment.Argument.of(
-                        TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
-                    DEPTH,
-                    FIRST_ORDER_DEPS)),
+        result,
         Matchers.containsInAnyOrder(
             QueryBuildTarget.of(a.getBuildTarget()), QueryBuildTarget.of(b.getBuildTarget())));
   }
@@ -80,6 +82,9 @@ public class DepsFunctionTest {
             .build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(a, b, c);
     QueryEnvironment queryEnvironment = makeFakeQueryEnvironment(targetGraph);
+    FunctionExpression expression =
+        new ImmutableFunctionExpression(
+            new FilterFunction(), ImmutableList.of(Argument.of("//foo.*"), FIRST_ORDER_DEPS));
     assertThat(
         (Iterable<QueryBuildTarget>)
             DEPS_FUNCTION.eval(
@@ -89,15 +94,12 @@ public class DepsFunctionTest {
                     QueryEnvironment.Argument.of(
                         TargetLiteral.of(a.getBuildTarget().getFullyQualifiedName())),
                     DEPTH,
-                    QueryEnvironment.Argument.of(
-                        FunctionExpression.of(
-                            new FilterFunction(),
-                            ImmutableList.of(
-                                QueryEnvironment.Argument.of("//foo.*"), FIRST_ORDER_DEPS))))),
+                    QueryEnvironment.Argument.of(expression))),
         Matchers.contains(QueryBuildTarget.of(a.getBuildTarget())));
   }
 
-  private QueryEnvironment makeFakeQueryEnvironment(TargetGraph targetGraph) throws Exception {
+  private QueryEnvironment<QueryBuildTarget> makeFakeQueryEnvironment(TargetGraph targetGraph)
+      throws Exception {
     QueryEnvironment env = createNiceMock(QueryEnvironment.class);
 
     Capture<String> stringCapture = Capture.newInstance();
