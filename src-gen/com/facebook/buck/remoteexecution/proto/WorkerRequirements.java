@@ -24,6 +24,7 @@ private static final long serialVersionUID = 0L;
   private WorkerRequirements() {
     workerSize_ = 0;
     platformType_ = 0;
+    shouldTryLargerWorkerOnOom_ = false;
   }
 
   @java.lang.Override
@@ -60,6 +61,11 @@ private static final long serialVersionUID = 0L;
             int rawValue = input.readEnum();
 
             platformType_ = rawValue;
+            break;
+          }
+          case 24: {
+
+            shouldTryLargerWorkerOnOom_ = input.readBool();
             break;
           }
           default: {
@@ -333,6 +339,19 @@ private static final long serialVersionUID = 0L;
     return result == null ? com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.UNRECOGNIZED : result;
   }
 
+  public static final int SHOULD_TRY_LARGER_WORKER_ON_OOM_FIELD_NUMBER = 3;
+  private boolean shouldTryLargerWorkerOnOom_;
+  /**
+   * <pre>
+   * Indicates if execution engine should try to execute current action with more powerful requirements
+   * </pre>
+   *
+   * <code>bool should_try_larger_worker_on_oom = 3;</code>
+   */
+  public boolean getShouldTryLargerWorkerOnOom() {
+    return shouldTryLargerWorkerOnOom_;
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -353,6 +372,9 @@ private static final long serialVersionUID = 0L;
     if (platformType_ != com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.LINUX.getNumber()) {
       output.writeEnum(2, platformType_);
     }
+    if (shouldTryLargerWorkerOnOom_ != false) {
+      output.writeBool(3, shouldTryLargerWorkerOnOom_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -369,6 +391,10 @@ private static final long serialVersionUID = 0L;
     if (platformType_ != com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType.LINUX.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
         .computeEnumSize(2, platformType_);
+    }
+    if (shouldTryLargerWorkerOnOom_ != false) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeBoolSize(3, shouldTryLargerWorkerOnOom_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -388,6 +414,8 @@ private static final long serialVersionUID = 0L;
     boolean result = true;
     result = result && workerSize_ == other.workerSize_;
     result = result && platformType_ == other.platformType_;
+    result = result && (getShouldTryLargerWorkerOnOom()
+        == other.getShouldTryLargerWorkerOnOom());
     result = result && unknownFields.equals(other.unknownFields);
     return result;
   }
@@ -403,6 +431,9 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + workerSize_;
     hash = (37 * hash) + PLATFORM_TYPE_FIELD_NUMBER;
     hash = (53 * hash) + platformType_;
+    hash = (37 * hash) + SHOULD_TRY_LARGER_WORKER_ON_OOM_FIELD_NUMBER;
+    hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+        getShouldTryLargerWorkerOnOom());
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -544,6 +575,8 @@ private static final long serialVersionUID = 0L;
 
       platformType_ = 0;
 
+      shouldTryLargerWorkerOnOom_ = false;
+
       return this;
     }
 
@@ -572,6 +605,7 @@ private static final long serialVersionUID = 0L;
       com.facebook.buck.remoteexecution.proto.WorkerRequirements result = new com.facebook.buck.remoteexecution.proto.WorkerRequirements(this);
       result.workerSize_ = workerSize_;
       result.platformType_ = platformType_;
+      result.shouldTryLargerWorkerOnOom_ = shouldTryLargerWorkerOnOom_;
       onBuilt();
       return result;
     }
@@ -625,6 +659,9 @@ private static final long serialVersionUID = 0L;
       }
       if (other.platformType_ != 0) {
         setPlatformTypeValue(other.getPlatformTypeValue());
+      }
+      if (other.getShouldTryLargerWorkerOnOom() != false) {
+        setShouldTryLargerWorkerOnOom(other.getShouldTryLargerWorkerOnOom());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -741,6 +778,44 @@ private static final long serialVersionUID = 0L;
     public Builder clearPlatformType() {
       
       platformType_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private boolean shouldTryLargerWorkerOnOom_ ;
+    /**
+     * <pre>
+     * Indicates if execution engine should try to execute current action with more powerful requirements
+     * </pre>
+     *
+     * <code>bool should_try_larger_worker_on_oom = 3;</code>
+     */
+    public boolean getShouldTryLargerWorkerOnOom() {
+      return shouldTryLargerWorkerOnOom_;
+    }
+    /**
+     * <pre>
+     * Indicates if execution engine should try to execute current action with more powerful requirements
+     * </pre>
+     *
+     * <code>bool should_try_larger_worker_on_oom = 3;</code>
+     */
+    public Builder setShouldTryLargerWorkerOnOom(boolean value) {
+      
+      shouldTryLargerWorkerOnOom_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Indicates if execution engine should try to execute current action with more powerful requirements
+     * </pre>
+     *
+     * <code>bool should_try_larger_worker_on_oom = 3;</code>
+     */
+    public Builder clearShouldTryLargerWorkerOnOom() {
+      
+      shouldTryLargerWorkerOnOom_ = false;
       onChanged();
       return this;
     }

@@ -55,7 +55,7 @@ public class WorkerRequirementsProviderTest {
 
   @Test
   public void testNoFileExistShouldReturnDefault() {
-    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, 1000);
+    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
@@ -66,7 +66,7 @@ public class WorkerRequirementsProviderTest {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
 
-    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, 1000);
+    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
@@ -78,7 +78,7 @@ public class WorkerRequirementsProviderTest {
     Assert.assertTrue(file.createNewFile());
     Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND).write("invalid json");
 
-    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, 1000);
+    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
@@ -91,7 +91,7 @@ public class WorkerRequirementsProviderTest {
     Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
         .write("{\"other_rule\": {\"workerSize\": \"SMALL\"}}");
 
-    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, 1000);
+    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
@@ -107,7 +107,7 @@ public class WorkerRequirementsProviderTest {
                 + SHORT_NAME
                 + "\": {\"workerSize\": \"LARGE\"}}");
 
-    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, 1000);
+    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(WorkerSize.LARGE, workerRequirements.getWorkerSize());
@@ -123,7 +123,7 @@ public class WorkerRequirementsProviderTest {
                 + SHORT_NAME
                 + "\": {\"workerSize\": \"UNKNOWN\"}}");
 
-    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, 1000);
+    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
     Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);

@@ -138,6 +138,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.requirementsProvider =
         new WorkerRequirementsProvider(
             strategyConfig.getWorkerRequirementsFilename(),
+            strategyConfig.tryLargerWorkerOnOom(),
             WORKER_REQUIREMENTS_PROVIDER_MAX_CACHE_SIZE);
 
     this.remoteExecutionSessionStartedEvent = Optional.empty();

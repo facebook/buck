@@ -48,10 +48,13 @@ public final class WorkerRequirementsProvider {
       MAPPER.getTypeFactory().constructMapType(Map.class, String.class, Requirements.class);
 
   private final String workerRequirementsFilename;
+  private final boolean tryLargerWorkerOnOom;
   private final Cache<Path, Map<String, WorkerRequirements>> cache;
 
-  public WorkerRequirementsProvider(String workerRequirementsFilename, int cacheSize) {
+  public WorkerRequirementsProvider(
+      String workerRequirementsFilename, boolean tryLargerWorkerOnOom, int cacheSize) {
     this.workerRequirementsFilename = workerRequirementsFilename;
+    this.tryLargerWorkerOnOom = tryLargerWorkerOnOom;
     cache =
         CacheBuilder.newBuilder()
             .maximumSize(cacheSize)
@@ -95,6 +98,9 @@ public final class WorkerRequirementsProvider {
                                 WorkerRequirements.newBuilder()
                                     .setWorkerSize(e.getValue().workerSize)
                                     .setPlatformType(e.getValue().platformType)
+                                    // TODO[bskorobogaty]: Should we override this with the value
+                                    // from the file?
+                                    .setShouldTryLargerWorkerOnOom(tryLargerWorkerOnOom)
                                     .build()));
               });
       return Optional.ofNullable(requirementsMap.get(target.getShortName()))

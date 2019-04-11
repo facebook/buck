@@ -26,4 +26,13 @@ public interface WorkerRequirementsOrBuilder extends
    * <code>.facebook.remote_execution.WorkerRequirements.WorkerPlatformType platform_type = 2;</code>
    */
   com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType getPlatformType();
+
+  /**
+   * <pre>
+   * Indicates if execution engine should try to execute current action with more powerful requirements
+   * </pre>
+   *
+   * <code>bool should_try_larger_worker_on_oom = 3;</code>
+   */
+  boolean getShouldTryLargerWorkerOnOom();
 }

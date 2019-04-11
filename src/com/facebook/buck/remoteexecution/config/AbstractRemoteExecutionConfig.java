@@ -104,6 +104,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
   /** Worker requirements filename */
   public static final String WORKER_REQUIREMENTS_FILENAME = "worker_requirements_filename";
 
+  // Should ree try to reschedule OOMed action on a larger worker
+  public static final String TRY_LARGER_WORKER_ON_OOM = "try_larger_worker_on_oom";
+
   public String getRemoteHost() {
     return getValueWithFallback("remote_host").orElse("localhost");
   }
@@ -196,6 +199,9 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
             .getValue(SECTION, WORKER_REQUIREMENTS_FILENAME)
             .orElse("re_worker_requirements");
 
+    boolean tryLargerWorkerOnOom =
+        getDelegate().getBoolean(SECTION, TRY_LARGER_WORKER_ON_OOM).orElse(false);
+
     // Some of these values are also limited by other ones (e.g. synchronous work is limited by the
     // number of threads). We detect some of these cases and log an error to the user to help them
     // understand the behavior.
@@ -271,6 +277,11 @@ abstract class AbstractRemoteExecutionConfig implements ConfigView<BuckConfig> {
       @Override
       public String getWorkerRequirementsFilename() {
         return workerRequirementsFilename;
+      }
+
+      @Override
+      public boolean tryLargerWorkerOnOom() {
+        return tryLargerWorkerOnOom;
       }
     };
   }

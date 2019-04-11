@@ -86,6 +86,8 @@ message WorkerRequirements {
 
   WorkerSize worker_size = 1;
   WorkerPlatformType platform_type = 2;
+  // Indicates if execution engine should try to execute current action with more powerful requirements
+  bool should_try_larger_worker_on_oom = 3;
 }
 
 // Optional context for an Action. May change between Actions from same RE Session if multiple jobs
