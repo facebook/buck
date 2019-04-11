@@ -499,21 +499,6 @@ android_app_modularity(
 )
 
 android_app_modularity(
-    name = "modularity-metadata-no-classes",
-    application_module_configs = {
-        "small_with_no_resource_deps": ["//java/com/sample/small:small_with_no_resource_deps"],
-    },
-    no_dx = [],
-    should_include_classes = False,
-    deps = [
-        "//java/com/sample/app:app",
-        "//java/com/sample/lib:lib",
-        "//java/com/sample/small:small_with_no_resource_deps",
-        "//res/com/sample/base:base",
-    ],
-)
-
-android_app_modularity(
     name = "modularity-metadata-inner-class",
     application_module_configs = {
         "small_inner_class_with_no_resource_deps": ["//java/com/sample/small_inner_class:small_inner_class_with_no_resource_deps"],
