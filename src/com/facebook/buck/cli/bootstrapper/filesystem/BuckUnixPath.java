@@ -29,6 +29,7 @@ import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchEvent.Modifier;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -69,15 +70,38 @@ public class BuckUnixPath implements Path {
     if (path.equals("/")) {
       return fs.getRootDirectory();
     }
-    return new BuckUnixPath(fs, intern(normalizeAndCheck(path).split("/")));
+    return new BuckUnixPath(fs, splitAndInternPath(path));
   }
 
-  private static String[] intern(String[] segments) {
-    // using plain old loops for performance
-    for (int i = 0; i < segments.length; i++) {
-      segments[i] = segments[i].intern();
+  private static String[] splitAndInternPath(String path) {
+    int n = path.length();
+    int segment_start = 0;
+    ArrayList<String> segments = new ArrayList<>(16);
+
+    for (int i = 0; i < n; ++i) {
+      char c = path.charAt(i);
+
+      if (c == '/') {
+        if (i == 0 || segment_start < i) {
+          // If '/' is the first character, we add "" to the segments list
+          // to indicate that the path is absolute.  Otherwise, we add
+          // non-empty path segments.
+          segments.add(path.substring(segment_start, i).intern());
+        }
+        segment_start = i + 1;
+        continue;
+      }
+
+      if (c == '\u0000') {
+        throw new InvalidPathException(path, "Nul character not allowed");
+      }
     }
-    return segments;
+
+    if (segment_start < n) {
+      segments.add(path.substring(segment_start).intern());
+    }
+
+    return segments.toArray(new String[segments.size()]);
   }
 
   static BuckUnixPath rootOf(BuckFileSystem fs) {
@@ -91,58 +115,6 @@ public class BuckUnixPath implements Path {
   /** Return Java default implementation of Path inferred from current instance */
   Path asDefault() {
     return fs.getDefaultFileSystem().getPath(toString());
-  }
-
-  /** Remove redundant slashes and check input for invalid characters */
-  private static String normalizeAndCheck(String input) {
-    int n = input.length();
-    char prevChar = 0;
-    for (int i = 0; i < n; i++) {
-      char c = input.charAt(i);
-      if ((c == '/') && (prevChar == '/')) {
-        return normalize(input, n, i - 1);
-      }
-      checkNotNul(input, c);
-      prevChar = c;
-    }
-    if (prevChar == '/') {
-      return normalize(input, n, n - 1);
-    }
-    return input;
-  }
-
-  private static void checkNotNul(String input, char c) {
-    if (c == '\u0000') {
-      throw new InvalidPathException(input, "Nul character not allowed");
-    }
-  }
-
-  private static String normalize(String input, int len, int off) {
-    if (len == 0) {
-      return input;
-    }
-    int n = len;
-    while ((n > 0) && (input.charAt(n - 1) == '/')) {
-      n--;
-    }
-    if (n == 0) {
-      return "/";
-    }
-    StringBuilder sb = new StringBuilder(input.length());
-    if (off > 0) {
-      sb.append(input, 0, off);
-    }
-    char prevChar = 0;
-    for (int i = off; i < n; i++) {
-      char c = input.charAt(i);
-      if ((c == '/') && (prevChar == '/')) {
-        continue;
-      }
-      checkNotNul(input, c);
-      sb.append(c);
-      prevChar = c;
-    }
-    return sb.toString();
   }
 
   // Convert given path to BuckUnixPath
