@@ -20,7 +20,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,12 +41,37 @@ public class ModularDexChangedReceiver extends BroadcastReceiver {
         new File("/data/local/tmp/exopackage/" + context.getPackageName(), changedPath);
     final List<File> dexJars = ExopackageDexLoader.getJarFilesFromContainingDirectory(changedDir);
     DelegatingClassLoader.getInstance().resetDelegate(dexJars);
-    List<String> moduleClasses = intent.getStringArrayListExtra("module_classes");
+    List<String> moduleClasses = getModuleClassesFromContainingDirectory(changedDir);
     ExoHelper.triggerCallbacks(moduleClasses);
   }
 
   /** @return a filter for the broadcast sent by buck when the installation completes */
   static IntentFilter getIntentFilter(String packageName) {
     return new IntentFilter(packageName + "._EXOPACKAGE_DIR_UPDATED");
+  }
+
+  /** Find all module classes for the given directory */
+  static List<String> getModuleClassesFromContainingDirectory(File containingDirectory) {
+    List<String> moduleClasses = new ArrayList();
+    try {
+      final File moduleClassesFile = new File(containingDirectory, "module_classes.txt");
+      if (!moduleClassesFile.exists()) {
+        return moduleClasses;
+      }
+
+      BufferedReader moduleClassesReader =
+          new BufferedReader(new InputStreamReader(new FileInputStream(moduleClassesFile)));
+      try {
+        String line;
+        while ((line = moduleClassesReader.readLine()) != null) {
+          moduleClasses.add(line);
+        }
+      } finally {
+        moduleClassesReader.close();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+    return moduleClasses;
   }
 }
