@@ -410,6 +410,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         getRequiredPaths(apk, instrumentationApkPath, apkUnderTestPath);
 
     return ExternalTestRunnerTestSpec.builder()
+        .setCwd(getProjectFilesystem().getRootPath())
         .setTarget(getBuildTarget())
         .setType("android_instrumentation")
         .setCommand(step.getShellCommandInternal(executionContext))

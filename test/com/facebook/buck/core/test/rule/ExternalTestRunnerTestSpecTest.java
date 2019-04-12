@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -30,18 +31,29 @@ public class ExternalTestRunnerTestSpecTest {
 
   @Test
   public void serializeToJson() throws IOException {
+    Path cwd = Paths.get("/some/directory");
     String result =
         ObjectMappers.WRITER.writeValueAsString(
             ExternalTestRunnerTestSpec.builder()
+                .setCwd(cwd)
                 .setTarget(BuildTargetFactory.newInstance("//:target"))
                 .setType("custom")
                 .setLabels(ImmutableList.of("label"))
                 .setRequiredPaths(ImmutableList.of(Paths.get("foo")))
                 .build());
+    String jsonEncodedCwd = ObjectMappers.WRITER.writeValueAsString(cwd.toAbsolutePath());
     assertThat(
         result,
         Matchers.equalTo(
-            "{\"target\":\"//:target\",\"type\":\"custom\",\"command\":[],\"env\":{},"
-                + "\"required_paths\":[\"foo\"],\"labels\":[\"label\"],\"contacts\":[]}"));
+            "{\"target\":\"//:target\","
+                + "\"type\":\"custom\","
+                + "\"command\":[],"
+                + "\"cwd\":"
+                + jsonEncodedCwd
+                + ","
+                + "\"env\":{},"
+                + "\"required_paths\":[\"foo\"],"
+                + "\"labels\":[\"label\"],"
+                + "\"contacts\":[]}"));
   }
 }

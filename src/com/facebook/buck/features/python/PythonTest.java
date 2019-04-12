@@ -269,6 +269,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
+        .setCwd(getProjectFilesystem().getRootPath())
         .setTarget(getBuildTarget())
         .setType("pyunit")
         .setNeededCoverage(neededCoverage)

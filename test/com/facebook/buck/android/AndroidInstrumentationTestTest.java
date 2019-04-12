@@ -94,6 +94,7 @@ public class AndroidInstrumentationTestTest {
     String result =
         ObjectMappers.WRITER.writeValueAsString(
             ExternalTestRunnerTestSpec.builder()
+                .setCwd(fakeFilesystem.getRootPath())
                 .setTarget(apk.getBuildTarget())
                 .setType("android_instrumentation")
                 .setRequiredPaths(
@@ -107,11 +108,16 @@ public class AndroidInstrumentationTestTest {
         MorePaths.pathWithPlatformSeparators(
             Paths.get("buck-out", "bin", "__instrumentation_test__exopackage_dir__")
                 .toAbsolutePath());
+    String jsonEncodedCwd = ObjectMappers.WRITER.writeValueAsString(fakeFilesystem.getRootPath());
     String jsonEncodedValue = ObjectMappers.WRITER.writeValueAsString(outputPath);
     assertEquals(
         "{\"target\":\"//:instrumentation_test\","
             + "\"type\":\"android_instrumentation\","
-            + "\"command\":[],\"env\":{},"
+            + "\"command\":[],"
+            + "\"cwd\":"
+            + jsonEncodedCwd
+            + ","
+            + "\"env\":{},"
             + "\"required_paths\":[\"apkUnderTest\",\"instrumentationApk\","
             + jsonEncodedValue
             + "],"

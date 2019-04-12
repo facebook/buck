@@ -53,6 +53,9 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
   /** @return the command the external test runner must invoke to run the test. */
   public abstract ImmutableList<String> getCommand();
 
+  /** @return the directory from which the external runner should invoke the command. */
+  public abstract Path getCwd();
+
   /**
    * @return coverage threshold and list of source path to be passed the test command for test
    *     coverage.
@@ -90,6 +93,7 @@ abstract class AbstractExternalTestRunnerTestSpec implements JsonSerializable {
     jsonGenerator.writeStringField("target", getTarget().toString());
     jsonGenerator.writeStringField("type", getType());
     jsonGenerator.writeObjectField("command", getCommand());
+    jsonGenerator.writeObjectField("cwd", getCwd().toAbsolutePath().toString());
     jsonGenerator.writeObjectField("env", getEnv());
     if (!getNeededCoverage().isEmpty()) {
       jsonGenerator.writeObjectField(

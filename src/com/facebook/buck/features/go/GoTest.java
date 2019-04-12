@@ -367,6 +367,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
+        .setCwd(getProjectFilesystem().getRootPath())
         .setTarget(getBuildTarget())
         .setType("go")
         .putAllEnv(

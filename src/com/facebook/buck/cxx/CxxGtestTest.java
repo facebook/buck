@@ -230,6 +230,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
+        .setCwd(getProjectFilesystem().getRootPath())
         .setTarget(getBuildTarget())
         .setType("gtest")
         .addAllCommand(

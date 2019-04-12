@@ -167,6 +167,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
+        .setCwd(getProjectFilesystem().getRootPath())
         .setTarget(getBuildTarget())
         .setType("rust")
         .addAllCommand(getTestCommand(buildContext.getSourcePathResolver()))
