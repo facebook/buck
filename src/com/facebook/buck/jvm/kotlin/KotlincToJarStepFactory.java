@@ -52,6 +52,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Ordering;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -69,6 +70,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
+  @AddToRuleKey private final ImmutableList<SourcePath> kotlincPlugins;
   @AddToRuleKey private final ImmutableList<SourcePath> friendPaths;
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
   @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
@@ -108,6 +110,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Kotlinc kotlinc,
       ImmutableSortedSet<Path> kotlinHomeLibraries,
       ImmutableList<String> extraKotlincArguments,
+      ImmutableList<SourcePath> kotlincPlugins,
       ImmutableList<SourcePath> friendPaths,
       AnnotationProcessingTool annotationProcessingTool,
       ImmutableMap<String, String> kaptApOptions,
@@ -117,6 +120,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.kotlinc = kotlinc;
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.extraKotlincArguments = extraKotlincArguments;
+    this.kotlincPlugins = kotlincPlugins;
     this.friendPaths = friendPaths;
     this.annotationProcessingTool = annotationProcessingTool;
     this.kaptApOptions = kaptApOptions;
@@ -188,7 +192,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .addAll(kotlinHomeLibraries)
               .build();
 
-      String friendPathsArg = getFriendsPath(buildContext.getSourcePathResolver(), friendPaths);
+      SourcePathResolver resolver = buildContext.getSourcePathResolver();
+      String friendPathsArg = getFriendsPath(resolver, friendPaths);
 
       if (generatingCode && annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
         addKaptGenFolderStep(
@@ -208,7 +213,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             classesOutput,
             sourcesOutput,
             parameters.getOutputPaths().getWorkingDirectory(),
-            buildContext.getSourcePathResolver());
+            resolver);
 
         sourceBuilder.add(genOutput);
       }
@@ -243,6 +248,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               ImmutableList.<String>builder()
                   .addAll(extraKotlincArguments)
                   .add(friendPathsArg)
+                  .addAll(getKotlincPluginsArgs(resolver))
                   .add(NO_STDLIB)
                   .add(NO_REFLECT)
                   .add(COMPILER_BUILTINS)
@@ -468,13 +474,18 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     // https://youtrack.jetbrains.com/issue/KT-29933
     ImmutableSortedSet<String> absoluteFriendPaths =
-        ImmutableSortedSet.copyOf(
-            friendPathsSourcePaths.stream()
-                .map(path -> sourcePathResolver.getAbsolutePath(path).toString())
-                .collect(Collectors.toSet()));
+        friendPathsSourcePaths.stream()
+            .map(path -> sourcePathResolver.getAbsolutePath(path).toString())
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
 
     return "-Xfriend-paths="
         + absoluteFriendPaths.stream().reduce("", (path1, path2) -> path1 + "," + path2);
+  }
+
+  private ImmutableList<String> getKotlincPluginsArgs(SourcePathResolver sourcePathResolver) {
+    return kotlincPlugins.stream()
+        .map(path -> "-Xplugin=" + sourcePathResolver.getRelativePath(path).toString())
+        .collect(ImmutableList.toImmutableList());
   }
 
   @Override

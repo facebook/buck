@@ -66,6 +66,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         kotlinBuckConfig.getKotlinc(),
         kotlinBuckConfig.getKotlinHomeLibraries(),
         kotlinArgs.getExtraKotlincArguments(),
+        kotlinArgs.getKotlincPlugins(),
         kotlinArgs.getFriendPaths(),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getKaptApOptions(),

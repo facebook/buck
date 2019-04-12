@@ -202,6 +202,8 @@ public class KotlinLibraryDescription
     ImmutableList<SourcePath> getFriendPaths();
 
     ImmutableMap<String, String> getKaptApOptions();
+
+    ImmutableList<SourcePath> getKotlincPlugins();
   }
 
   @BuckStyleImmutable
