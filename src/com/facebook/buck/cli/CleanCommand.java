@@ -25,6 +25,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
@@ -109,6 +110,14 @@ public class CleanCommand extends AbstractCommand {
         try {
           projectFilesystem.deleteRecursivelyIfExists(path);
           LOG.debug("Removed path: %s", path);
+        } catch (AccessDeniedException e) {
+          params
+              .getConsole()
+              .printErrorText(
+                  "Failed to remove path %s due to AccessDeniedException.%n"
+                      + "Make sure that you (not root) own all the contents inside buck-out",
+                  path);
+          LOG.warn(e, "Failed to remove path %s due to permissions issue", path);
         } catch (IOException e) {
           LOG.warn(e, "Failed to remove path %s", path);
         }
