@@ -67,7 +67,7 @@
 {call buck.param}
   {param name: 'without-tests' /}
   {param desc}
-    Indicates that Buck should build a project slice without tests (the default is to include 
+    Indicates that Buck should build a project slice without tests (the default is to include
     {sp}<code>tests</code> on <code>*_library</code> and <code>*_binary</code> rules).
   {/param}
 {/call}
@@ -102,12 +102,13 @@
 <ul>
   <li><a href="#intellij">IntelliJ</a></li>
   <li><a href="#xcode">Xcode</a></li>
+  <li><a hred="#gobuild">gobuild (Go IDEs such as Visual Sudio Code, GoLand)</a></li>
 </ul>
 
 <h3 id="intellij">IntelliJ</h3>
 
 <p>
-  This command processes all of the 
+  This command processes all of the
   {sp}{call buck.build_file /}s whose targets were specified and uses them to generate the
   configuration files for an IDE.  The generated files include:
 </p>
@@ -173,6 +174,25 @@
     deps of the associated project.
     You can specify the default value using by adding <code>project_schemes = true</code> to the
     <code>[project]</code> section of your <code>.buckconfig</code> file.
+  {/param}
+{/call}
+</ul>
+
+<h3 id="gobuild">Go IDEs</h3>
+<p>
+Go IDEs, such as Visual Studio Code and GoLand, use the <code>go build</code> command to build Go code. This command requires a proper layout of source code
+under <code>GOPATH</code>. However, Buck puts generated code in <code>buck-out</code>, which <code>go build</code> does not understand.
+The <code>project</code> command copies generated Go packages from <code>buck-out</code> and arranges them in the same layout as their import
+ paths.
+</p>
+
+<h4>Parameters</h4>
+<ul class="{css arglist}">
+{call buck.param}
+  {param name: 'project_path' /}
+  {param desc}
+    The directory to copy the generated code to. If not specified, the <code>project</code> command copies it to <code>\/\/vendor</code>,
+    or <code>\/\/src/vendor</code> if it exists.
   {/param}
 {/call}
 </ul>
