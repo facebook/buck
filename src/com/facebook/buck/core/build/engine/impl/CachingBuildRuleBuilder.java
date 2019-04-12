@@ -327,11 +327,17 @@ class CachingBuildRuleBuilder {
   }
 
   private BuildResult success(BuildRuleSuccessType successType, CacheResult cacheResult) {
+    return success(successType, cacheResult, Optional.empty());
+  }
+
+  private BuildResult success(
+      BuildRuleSuccessType successType, CacheResult cacheResult, Optional<String> strategyResult) {
     return buildResultBuilder()
         .setStatus(BuildRuleStatus.SUCCESS)
         .setSuccessOptional(successType)
         .setCacheResult(cacheResult)
         .setUploadCompleteFuture(uploadCompleteFuture)
+        .setStrategyResult(strategyResult)
         .build();
   }
 
@@ -868,8 +874,9 @@ class CachingBuildRuleBuilder {
           }
 
           @Override
-          public BuildResult createBuildResult(BuildRuleSuccessType successType) {
-            return success(successType, cacheResult);
+          public BuildResult createBuildResult(
+              BuildRuleSuccessType successType, Optional<String> strategyResult) {
+            return success(successType, cacheResult, strategyResult);
           }
 
           @Override

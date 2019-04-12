@@ -246,7 +246,8 @@ public class HybridLocalStrategyTest {
                   cancelled.release();
                   future.set(
                       Optional.of(
-                          strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY)));
+                          strategyContext.createBuildResult(
+                              BuildRuleSuccessType.BUILT_LOCALLY, Optional.empty())));
                   return false;
                 }
 
@@ -297,7 +298,9 @@ public class HybridLocalStrategyTest {
     public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
       ListenableFuture<Optional<BuildResult>> buildResult =
           Futures.immediateFuture(
-              Optional.of(strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY)));
+              Optional.of(
+                  strategyContext.createBuildResult(
+                      BuildRuleSuccessType.BUILT_LOCALLY, Optional.empty())));
       return StrategyBuildResult.nonCancellable(buildResult);
     }
 
@@ -337,7 +340,8 @@ public class HybridLocalStrategyTest {
                 numCurrentJobs.decrementAndGet();
                 finished.release();
                 return Optional.of(
-                    strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
+                    strategyContext.createBuildResult(
+                        BuildRuleSuccessType.BUILT_LOCALLY, Optional.empty()));
               });
 
       return StrategyBuildResult.nonCancellable(result);
@@ -376,7 +380,8 @@ public class HybridLocalStrategyTest {
                 assertTrue(busy.get() <= maxJobs);
                 busy.decrementAndGet();
                 finished.release();
-                return Optional.of(createBuildResult(BuildRuleSuccessType.FETCHED_FROM_CACHE));
+                return Optional.of(
+                    createBuildResult(BuildRuleSuccessType.FETCHED_FROM_CACHE, Optional.empty()));
               });
         }
       };
@@ -402,7 +407,8 @@ public class HybridLocalStrategyTest {
     @Override
     public ListenableFuture<Optional<BuildResult>> runWithDefaultBehavior() {
       return Futures.immediateFuture(
-          Optional.of(createBuildResult(BuildRuleSuccessType.FETCHED_FROM_CACHE)));
+          Optional.of(
+              createBuildResult(BuildRuleSuccessType.FETCHED_FROM_CACHE, Optional.empty())));
     }
 
     @Override
@@ -411,12 +417,14 @@ public class HybridLocalStrategyTest {
     }
 
     @Override
-    public BuildResult createBuildResult(BuildRuleSuccessType successType) {
+    public BuildResult createBuildResult(
+        BuildRuleSuccessType successType, Optional<String> strategyResult) {
       return BuildResult.builder()
           .setCacheResult(CacheResult.miss())
           .setRule(rule)
           .setStatus(BuildRuleStatus.SUCCESS)
           .setSuccessOptional(successType)
+          .setStrategyResult(strategyResult)
           .build();
     }
 

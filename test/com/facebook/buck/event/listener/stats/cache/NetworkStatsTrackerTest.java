@@ -175,6 +175,7 @@ public class NetworkStatsTrackerTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 

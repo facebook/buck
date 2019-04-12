@@ -466,6 +466,7 @@ public class CachingBuildEngineTest {
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),
+                  Optional.empty(),
                   Optional.empty())));
     }
 
@@ -520,6 +521,7 @@ public class CachingBuildEngineTest {
                   Optional.empty(),
                   Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
                   UploadToCacheResultType.UNCACHEABLE,
+                  Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),
                   Optional.empty(),
@@ -762,6 +764,7 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
+                    Optional.empty(),
                     Optional.empty())));
       }
     }
@@ -824,6 +827,7 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
+                    Optional.empty(),
                     Optional.empty())));
         BuildRuleEvent.Started started =
             TestEventConfigurator.configureTestEvent(
@@ -840,6 +844,7 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                     UploadToCacheResultType.UNCACHEABLE,
+                    Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
@@ -923,6 +928,7 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
+                    Optional.empty(),
                     Optional.empty())));
         BuildRuleEvent.Started startedDep =
             TestEventConfigurator.configureTestEvent(
@@ -947,6 +953,7 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
+                    Optional.empty(),
                     Optional.empty())));
         BuildRuleEvent.Started startedTransitive =
             TestEventConfigurator.configureTestEvent(
@@ -963,6 +970,7 @@ public class CachingBuildEngineTest {
                     Optional.empty(),
                     Optional.of(BuildRuleSuccessType.MATCHING_RULE_KEY),
                     UploadToCacheResultType.UNCACHEABLE,
+                    Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
                     Optional.empty(),
@@ -2201,7 +2209,8 @@ public class CachingBuildEngineTest {
                   try (Scope ignored = strategyContext.buildRuleScope()) {
                     return Futures.immediateFuture(
                         Optional.of(
-                            strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY)));
+                            strategyContext.createBuildResult(
+                                BuildRuleSuccessType.BUILT_LOCALLY, Optional.empty())));
                   }
                 });
         runVerifiedBuild(rule);
@@ -2238,7 +2247,7 @@ public class CachingBuildEngineTest {
 
                             return Optional.of(
                                 strategyContext.createBuildResult(
-                                    BuildRuleSuccessType.BUILT_LOCALLY));
+                                    BuildRuleSuccessType.BUILT_LOCALLY, Optional.empty()));
                           }
                         }));
         strategy.cancelCallback = () -> cancelSignal.countDown();

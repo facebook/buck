@@ -262,7 +262,8 @@ public class BuildRuleScopeManager {
           ruleKeyCacheCheckTimestamps,
           inputRuleKeyCacheCheckTimestamps,
           manifestRuleKeyCacheCheckTimestamps,
-          buildTimestamps);
+          buildTimestamps,
+          input.getStrategyResult());
     }
   }
 }

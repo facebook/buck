@@ -46,6 +46,8 @@ abstract class AbstractBuildResult {
 
   abstract Optional<BuildRuleSuccessType> getSuccessOptional();
 
+  abstract Optional<String> getStrategyResult();
+
   abstract Optional<Throwable> getFailureOptional();
 
   abstract Optional<Set<String>> getDepsWithCacheMisses();

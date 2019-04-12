@@ -37,6 +37,7 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 
 /**
@@ -114,12 +115,14 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
 
     volatile JobStage stage;
     @Nullable volatile StrategyBuildResult delegateResult;
+    volatile boolean cancelledOnDelegate;
 
     Job(BuildStrategyContext strategyContext, BuildRule rule) {
       this.strategyContext = strategyContext;
       this.rule = rule;
       this.future = SettableFuture.create();
       this.stage = JobStage.PENDING;
+      this.cancelledOnDelegate = false;
     }
 
     private void advanceStage(JobStage newStage) {
@@ -138,7 +141,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
         ListenableFuture<Optional<BuildResult>> localFuture =
             Futures.submitAsync(
                 strategyContext::runWithDefaultBehavior, strategyContext.getExecutorService());
-        future.setFuture(localFuture);
+        Futures.addCallback(localFuture, MoreFutures.finallyCallback(this::handleLocalResult));
         return localFuture;
       }
     }
@@ -156,6 +159,19 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
             Objects.requireNonNull(delegateResult).getBuildResult();
         Futures.addCallback(buildResult, MoreFutures.finallyCallback(this::handleDelegateResult));
         return buildResult;
+      }
+    }
+
+    private void handleLocalResult(ListenableFuture<Optional<BuildResult>> localResult) {
+      try {
+        future.set(
+            Optional.of(
+                BuildResult.builder()
+                    .from(localResult.get().get())
+                    .setStrategyResult("hybrid local" + (cancelledOnDelegate ? " - stolen" : ""))
+                    .build()));
+      } catch (InterruptedException | ExecutionException e) {
+        future.setFuture(localResult);
       }
     }
 
@@ -202,6 +218,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
           return true;
         }
         advanceStage(JobStage.REQUEST_DELEGATE_CANCELLED);
+        this.cancelledOnDelegate = true;
         StrategyBuildResult delegateBuildResult = Objects.requireNonNull(delegateResult);
         if (delegateBuildResult.cancelIfNotComplete(reason)) {
           advanceStage(JobStage.DELEGATE_CANCELLED);

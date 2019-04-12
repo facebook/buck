@@ -137,7 +137,8 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
                   }
 
                   return Optional.of(
-                      strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
+                      strategyContext.createBuildResult(
+                          BuildRuleSuccessType.BUILT_LOCALLY, Optional.of("reconstructed")));
                 });
     return StrategyBuildResult.nonCancellable(buildResult);
   }

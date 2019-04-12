@@ -504,7 +504,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                   strategyContext
                       .getBuildableContext()
                       .recordArtifact(filesystem.relativize(cellPathPrefix.resolve(output))));
-          return Optional.of(strategyContext.createBuildResult(BuildRuleSuccessType.BUILT_LOCALLY));
+          return Optional.of(
+              strategyContext.createBuildResult(
+                  BuildRuleSuccessType.BUILT_LOCALLY, Optional.of("built remotely")));
         },
         MoreExecutors.directExecutor());
   }

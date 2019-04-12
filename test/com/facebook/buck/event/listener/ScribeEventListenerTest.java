@@ -157,6 +157,7 @@ public class ScribeEventListenerTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty(),
+        Optional.empty(),
         Optional.empty());
   }
 }

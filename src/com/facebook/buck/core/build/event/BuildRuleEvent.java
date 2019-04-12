@@ -109,7 +109,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
       Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
       Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
-      Optional<Pair<Long, Long>> buildTimestamps) {
+      Optional<Pair<Long, Long>> buildTimestamps,
+      Optional<String> strategyResult) {
     return new Finished(
         beginning,
         ruleKeys,
@@ -126,7 +127,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         ruleKeyCacheCheckTimestamps,
         inputRuleKeyCacheCheckTimestamps,
         manifestRuleKeyCacheCheckTimestamps,
-        buildTimestamps);
+        buildTimestamps,
+        strategyResult);
   }
 
   public static StartedRuleKeyCalc ruleKeyCalculationStarted(
@@ -250,6 +252,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     private final Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps;
     private final Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps;
     private final Optional<Pair<Long, Long>> buildTimestamps;
+    private final Optional<String> strategyResult;
 
     private Finished(
         BeginningBuildRuleEvent beginning,
@@ -267,7 +270,8 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
         Optional<Pair<Long, Long>> ruleKeyCacheCheckTimestamps,
         Optional<Pair<Long, Long>> inputRuleKeyCacheCheckTimestamps,
         Optional<Pair<Long, Long>> manifestRuleKeyCacheCheckTimestamps,
-        Optional<Pair<Long, Long>> buildTimestamps) {
+        Optional<Pair<Long, Long>> buildTimestamps,
+        Optional<String> strategyResult) {
       super(beginning);
       this.status = status;
       this.cacheResult = cacheResult;
@@ -284,6 +288,7 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
       this.inputRuleKeyCacheCheckTimestamps = inputRuleKeyCacheCheckTimestamps;
       this.manifestRuleKeyCacheCheckTimestamps = manifestRuleKeyCacheCheckTimestamps;
       this.buildTimestamps = buildTimestamps;
+      this.strategyResult = strategyResult;
     }
 
     @JsonView(JsonViews.MachineReadableLog.class)
@@ -364,6 +369,11 @@ public abstract class BuildRuleEvent extends AbstractBuckEvent implements WorkAd
     @JsonIgnore
     public Optional<Pair<Long, Long>> getBuildTimestamps() {
       return buildTimestamps;
+    }
+
+    @JsonIgnore
+    public Optional<String> getStrategyResult() {
+      return strategyResult;
     }
 
     @JsonIgnore

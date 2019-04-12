@@ -147,6 +147,7 @@ public class MachineReadableLogJsonViewTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             Optional.empty());
     event.configure(timestampMillis, nanoTime, threadUserNanoTime, threadId, buildId);
     String message = WRITER.writeValueAsString(event);

@@ -199,6 +199,16 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         try {
           // Remote build failed but local build finished.
           Optional<BuildResult> result = future.get();
+          result =
+              Optional.of(
+                  BuildResult.builder()
+                      .from(result.get())
+                      .setStrategyResult(
+                          "local fallback - "
+                              + (result.get().getSuccessOptional().isPresent()
+                                  ? "success"
+                                  : "fail"))
+                      .build());
           completeCombinedFuture(
               result,
               remoteBuildResult.get(),

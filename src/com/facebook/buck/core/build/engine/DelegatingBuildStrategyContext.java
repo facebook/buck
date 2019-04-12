@@ -44,8 +44,9 @@ public class DelegatingBuildStrategyContext implements BuildStrategyContext {
   }
 
   @Override
-  public BuildResult createBuildResult(BuildRuleSuccessType successType) {
-    return delegateContext.createBuildResult(successType);
+  public BuildResult createBuildResult(
+      BuildRuleSuccessType successType, Optional<String> strategyResult) {
+    return delegateContext.createBuildResult(successType, strategyResult);
   }
 
   @Override

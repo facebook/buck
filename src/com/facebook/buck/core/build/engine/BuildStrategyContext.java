@@ -34,7 +34,7 @@ public interface BuildStrategyContext {
 
   ListeningExecutorService getExecutorService();
 
-  BuildResult createBuildResult(BuildRuleSuccessType successType);
+  BuildResult createBuildResult(BuildRuleSuccessType successType, Optional<String> strategyResult);
 
   BuildResult createCancelledResult(Throwable throwable);
 
