@@ -17,6 +17,8 @@ package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.util.concurrent.Parallelizer;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import java.util.function.Function;
@@ -72,4 +74,7 @@ public interface ActionGraphBuilder extends BuildRuleResolver {
   // Convenience methods offering alternate access patterns.
 
   ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets);
+
+  ImmutableSortedMap<BuildTarget, BuildRule> computeAllIfAbsent(
+      ImmutableMap<BuildTarget, Function<BuildTarget, BuildRule>> mappings);
 }

@@ -60,6 +60,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 import java.io.File;
@@ -655,25 +656,44 @@ abstract class AbstractCxxSourceRuleFactory {
 
   public ImmutableMap<CxxPreprocessAndCompile, SourcePath> requirePreprocessAndCompileRules(
       ImmutableMap<String, CxxSource> sources) {
+    ImmutableMap.Builder<BuildTarget, Function<BuildTarget, BuildRule>> mappings =
+        ImmutableMap.builder();
 
-    return sources.entrySet().stream()
-        .map(
-            entry -> {
-              String name = entry.getKey();
-              CxxSource source = entry.getValue();
+    sources.forEach(
+        (name, source) -> {
+          BuildTarget target = createCompileBuildTarget(name);
+          mappings.put(
+              target,
+              ignored -> {
+                Preconditions.checkState(
+                    CxxSourceTypes.isPreprocessableType(source.getType())
+                        || CxxSourceTypes.isCompilableType(source.getType()));
 
-              Preconditions.checkState(
-                  CxxSourceTypes.isPreprocessableType(source.getType())
-                      || CxxSourceTypes.isCompilableType(source.getType()));
+                // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
+                // Otherwise, use a regular compile rule.
+                if (CxxSourceTypes.isPreprocessableType(source.getType())) {
+                  CxxPreprocessAndCompile rule = createPreprocessAndCompileBuildRule(name, source);
+                  Preconditions.checkState(
+                      rule.getInput().equals(source.getPath()),
+                      "Hash collision for %s; a build rule would have been ignored.",
+                      name);
+                  return rule;
+                } else {
+                  CxxPreprocessAndCompile rule = createCompileBuildRule(name, source);
+                  Preconditions.checkState(
+                      rule.getInput().equals(source.getPath()),
+                      "Hash collision for %s; a build rule would have been ignored.",
+                      name);
+                  return rule;
+                }
+              });
+        });
 
-              // If it's a preprocessable source, use a combine preprocess-and-compile build rule.
-              // Otherwise, use a regular compile rule.
-              if (CxxSourceTypes.isPreprocessableType(source.getType())) {
-                return requirePreprocessAndCompileBuildRule(name, source);
-              } else {
-                return requireCompileBuildRule(name, source);
-              }
-            })
+    ImmutableSortedMap<BuildTarget, BuildRule> computedRules =
+        getActionGraphBuilder().computeAllIfAbsent(mappings.build());
+
+    return computedRules.values().stream()
+        .map(CxxPreprocessAndCompile.class::cast)
         .collect(
             ImmutableMap.toImmutableMap(
                 Function.identity(), CxxPreprocessAndCompile::getSourcePathToOutput));

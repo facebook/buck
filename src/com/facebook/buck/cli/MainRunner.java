@@ -1016,6 +1016,16 @@ public final class MainRunner {
                         listeningDecorator(Executors.newCachedThreadPool()),
                         ExecutorPool.CPU.toString(),
                         EXECUTOR_SERVICES_TIMEOUT_SECONDS);
+            // Create a cached thread pool for cpu intensive tasks
+            ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
+                graphCpuExecutorService =
+                    getExecutorWrapper(
+                        listeningDecorator(
+                            MostExecutors.newMultiThreadExecutor(
+                                "graph-cpu",
+                                buckConfig.getView(BuildBuckConfig.class).getNumThreads())),
+                        ExecutorPool.GRAPH_CPU.toString(),
+                        EXECUTOR_SERVICES_TIMEOUT_SECONDS);
             // Create a thread pool for network I/O tasks
             ThrowingCloseableWrapper<ListeningExecutorService, InterruptedException>
                 networkExecutorService =
@@ -1121,6 +1131,8 @@ public final class MainRunner {
               ImmutableMap.of(
                   ExecutorPool.CPU,
                   cpuExecutorService.get(),
+                  ExecutorPool.GRAPH_CPU,
+                  graphCpuExecutorService.get(),
                   ExecutorPool.NETWORK,
                   networkExecutorService.get(),
                   ExecutorPool.PROJECT,
@@ -1287,7 +1299,7 @@ public final class MainRunner {
                   command::getTargetPlatforms,
                   buckGlobalState,
                   buildEventBus,
-                  forkJoinPoolSupplier,
+                  executors,
                   ruleKeyConfiguration,
                   executableFinder,
                   manifestServiceSupplier,
@@ -1553,7 +1565,7 @@ public final class MainRunner {
       Supplier<ImmutableList<String>> targetPlatforms,
       BuckGlobalState buckGlobalState,
       BuckEventBus buildEventBus,
-      CloseableMemoizedSupplier<ForkJoinPool> forkJoinPoolSupplier,
+      ImmutableMap<ExecutorPool, ListeningExecutorService> executors,
       RuleKeyConfiguration ruleKeyConfiguration,
       ExecutableFinder executableFinder,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
@@ -1624,7 +1636,7 @@ public final class MainRunner {
         new ActionGraphProvider(
             buildEventBus,
             ActionGraphFactory.create(
-                buildEventBus, rootCell.getCellProvider(), forkJoinPoolSupplier, buckConfig),
+                buildEventBus, rootCell.getCellProvider(), executors, buckConfig),
             buckGlobalState.getActionGraphCache(),
             ruleKeyConfiguration,
             buckConfig),
@@ -2110,6 +2122,18 @@ public final class MainRunner {
             MostExecutors.forkJoinPoolWithThreadLimit(
                 config.getMaximumResourceAmounts().getCpu(), 16),
         ForkJoinPool::shutdownNow);
+  }
+
+  @VisibleForTesting
+  static CloseableMemoizedSupplier<ListeningExecutorService> getExecutorSupplier(
+      BuckConfig buckConfig) {
+    ResourcesConfig resource = buckConfig.getView(ResourcesConfig.class);
+    return CloseableMemoizedSupplier.of(
+        () ->
+            listeningDecorator(
+                MostExecutors.newMultiThreadExecutor(
+                    "executor", resource.getMaximumResourceAmounts().getCpu())),
+        ExecutorService::shutdownNow);
   }
 
   private static void installUncaughtExceptionHandler(Optional<NGContext> context) {

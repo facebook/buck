@@ -18,6 +18,7 @@ package com.facebook.buck.util.concurrent;
 
 public enum ExecutorPool {
   CPU,
+  GRAPH_CPU,
   NETWORK,
   PROJECT
 }

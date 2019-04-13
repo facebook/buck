@@ -100,7 +100,7 @@ public class FetchCommand extends BuildCommand {
                         ActionGraphFactory.create(
                             params.getBuckEventBus(),
                             params.getCell().getCellProvider(),
-                            params.getPoolSupplier(),
+                            params.getExecutors(),
                             params.getBuckConfig()),
                         new ActionGraphCache(
                             params

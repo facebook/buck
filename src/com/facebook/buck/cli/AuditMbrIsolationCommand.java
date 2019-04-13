@@ -108,7 +108,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
                           ActionGraphFactory.create(
                               params.getBuckEventBus(),
                               params.getCell().getCellProvider(),
-                              params.getPoolSupplier(),
+                              params.getExecutors(),
                               params.getBuckConfig()),
                           new ActionGraphCache(
                               params

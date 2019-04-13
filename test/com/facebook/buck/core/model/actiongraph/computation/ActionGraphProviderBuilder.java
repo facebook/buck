@@ -21,17 +21,17 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
+import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 import javax.annotation.Nullable;
 
 public class ActionGraphProviderBuilder {
 
   @Nullable private ActionGraphCache actionGraphCache;
 
-  @Nullable private CloseableMemoizedSupplier<ForkJoinPool> poolSupplier;
+  @Nullable private ImmutableMap<ExecutorPool, ListeningExecutorService> executors;
 
   @Nullable private BuckEventBus eventBus;
 
@@ -60,8 +60,8 @@ public class ActionGraphProviderBuilder {
   }
 
   public ActionGraphProviderBuilder withPoolSupplier(
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
-    this.poolSupplier = poolSupplier;
+      ImmutableMap<ExecutorPool, ListeningExecutorService> executors) {
+    this.executors = executors;
     return this;
   }
 
@@ -112,15 +112,7 @@ public class ActionGraphProviderBuilder {
   public ActionGraphProvider build() {
     ActionGraphCache actionGraphCache =
         this.actionGraphCache == null ? new ActionGraphCache(1) : this.actionGraphCache;
-    CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
-        this.poolSupplier == null
-            ? CloseableMemoizedSupplier.of(
-                () -> {
-                  throw new IllegalStateException(
-                      "should not use parallel executor for action graph construction in test");
-                },
-                ignored -> {})
-            : this.poolSupplier;
+    ImmutableMap<ExecutorPool, ListeningExecutorService> executors = this.executors;
     BuckEventBus eventBus =
         this.eventBus == null ? BuckEventBusForTests.newInstance() : this.eventBus;
     RuleKeyConfiguration ruleKeyConfiguration =
@@ -151,7 +143,7 @@ public class ActionGraphProviderBuilder {
         ActionGraphFactory.create(
             eventBus,
             cellProvider,
-            poolSupplier,
+            executors,
             parallelizationMode,
             false,
             incrementalActionGraphExperimentGroups),

@@ -22,8 +22,11 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.util.RichStream;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Comparator;
+import com.google.common.collect.Ordering;
+import java.util.function.Function;
 
 /** An abstract implementation of BuildRuleResolver that simplifies concrete implementations. */
 public abstract class AbstractActionGraphBuilder extends AbstractBuildRuleResolver
@@ -32,7 +35,18 @@ public abstract class AbstractActionGraphBuilder extends AbstractBuildRuleResolv
   public ImmutableSortedSet<BuildRule> requireAllRules(Iterable<BuildTarget> buildTargets) {
     return RichStream.from(buildTargets)
         .map(this::requireRule)
-        .toImmutableSortedSet(Comparator.naturalOrder());
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+  }
+
+  @Override
+  public ImmutableSortedMap<BuildTarget, BuildRule> computeAllIfAbsent(
+      ImmutableMap<BuildTarget, Function<BuildTarget, BuildRule>> mappings) {
+    return RichStream.from(mappings.entrySet())
+        .collect(
+            ImmutableSortedMap.toImmutableSortedMap(
+                Ordering.natural(),
+                entry -> entry.getKey(),
+                entry -> computeIfAbsent(entry.getKey(), entry.getValue())));
   }
 
   protected void checkRuleIsBuiltForCorrectTarget(BuildTarget arg, BuildRule rule) {

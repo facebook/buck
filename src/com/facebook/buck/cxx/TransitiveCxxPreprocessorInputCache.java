@@ -20,29 +20,23 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.util.concurrent.Parallelizer;
-import com.facebook.buck.util.concurrent.WorkThreadTrackingTask;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 /** Transitive C++ preprocessor input cache */
 public class TransitiveCxxPreprocessorInputCache {
   private final Cache<CxxPlatform, ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>> cache =
       CacheBuilder.newBuilder().build();
   private final CxxPreprocessorDep preprocessorDep;
-  private final ConcurrentHashMap<
-          CxxPlatform,
-          WorkThreadTrackingTask<ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>>>
-      cacheLoader = new ConcurrentHashMap<>();
 
   public TransitiveCxxPreprocessorInputCache(CxxPreprocessorDep preprocessorDep) {
     this.preprocessorDep = preprocessorDep;
@@ -51,31 +45,15 @@ public class TransitiveCxxPreprocessorInputCache {
   /** Get a value from the cache */
   public ImmutableMap<BuildTarget, CxxPreprocessorInput> getUnchecked(
       CxxPlatform key, ActionGraphBuilder graphBuilder) {
-    @Nullable
-    ImmutableSortedMap<BuildTarget, CxxPreprocessorInput> result = cache.getIfPresent(key);
-    if (result != null) {
-      return result;
+    try {
+      return cache.get(
+          key,
+          () ->
+              computeTransitiveCxxToPreprocessorInputMap(
+                  key, preprocessorDep, true, graphBuilder, graphBuilder.getParallelizer()));
+    } catch (ExecutionException e) {
+      throw new UncheckedExecutionException(e.getCause());
     }
-
-    // We schedule the compute for the given key so that it is computed only once.
-    WorkThreadTrackingTask<ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>> loadTask =
-        cacheLoader.computeIfAbsent(
-            key,
-            mapKey ->
-                new WorkThreadTrackingTask<>(
-                    () ->
-                        computeTransitiveCxxToPreprocessorInputMap(
-                            key,
-                            preprocessorDep,
-                            true,
-                            graphBuilder,
-                            graphBuilder.getParallelizer())));
-
-    result = Objects.requireNonNull(loadTask.externalCompute());
-
-    // store to cache after computing
-    cache.put(key, result);
-    return result;
   }
 
   public static ImmutableMap<BuildTarget, CxxPreprocessorInput>

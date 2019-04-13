@@ -23,18 +23,20 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ExperimentEvent;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
+import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
+import java.util.function.Supplier;
 
 public class ActionGraphFactory {
 
   public static ActionGraphFactory create(
       BuckEventBus eventBus,
       CellProvider cellProvider,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      ImmutableMap<ExecutorPool, ListeningExecutorService> executorSupplier,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding,
       Map<IncrementalActionGraphMode, Double> incrementalActionGraphExperimentGroups) {
@@ -42,7 +44,7 @@ public class ActionGraphFactory {
         createDelegate(
             eventBus,
             cellProvider,
-            poolSupplier,
+            () -> executorSupplier.get(ExecutorPool.GRAPH_CPU),
             parallelizationMode,
             shouldInstrumentGraphBuilding),
         eventBus,
@@ -52,13 +54,13 @@ public class ActionGraphFactory {
   public static ActionGraphFactory create(
       BuckEventBus eventBus,
       CellProvider cellProvider,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      ImmutableMap<ExecutorPool, ListeningExecutorService> executorSupplier,
       BuckConfig buckConfig) {
     ActionGraphConfig actionGraphConfig = buckConfig.getView(ActionGraphConfig.class);
     return create(
         eventBus,
         cellProvider,
-        poolSupplier,
+        executorSupplier,
         actionGraphConfig.getActionGraphParallelizationMode(),
         actionGraphConfig.getShouldInstrumentActionGraph(),
         actionGraphConfig.getIncrementalActionGraphExperimentGroups());
@@ -105,7 +107,7 @@ public class ActionGraphFactory {
   private static ActionGraphFactoryDelegate createDelegate(
       BuckEventBus eventBus,
       CellProvider cellProvider,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier,
+      Supplier<ListeningExecutorService> executorSupplier,
       ActionGraphParallelizationMode parallelizationMode,
       boolean shouldInstrumentGraphBuilding) {
 
@@ -138,7 +140,7 @@ public class ActionGraphFactory {
     }
     switch (parallelizationMode) {
       case ENABLED:
-        return new ParallelActionGraphFactory(poolSupplier, cellProvider);
+        return new ParallelActionGraphFactory(executorSupplier, cellProvider);
       case DISABLED:
         return new SerialActionGraphFactory(eventBus, cellProvider, shouldInstrumentGraphBuilding);
       case EXPERIMENT_UNSTABLE:

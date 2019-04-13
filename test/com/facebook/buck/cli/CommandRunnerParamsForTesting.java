@@ -68,11 +68,13 @@ import com.facebook.buck.versions.VersionedTargetGraphCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 import javax.annotation.Nullable;
 import org.pf4j.PluginManager;
 
@@ -115,6 +117,12 @@ public class CommandRunnerParamsForTesting {
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
 
+    ImmutableMap<ExecutorPool, ListeningExecutorService> executors =
+        ImmutableMap.of(
+            ExecutorPool.PROJECT,
+            MoreExecutors.newDirectExecutorService(),
+            ExecutorPool.GRAPH_CPU,
+            MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()));
     return CommandRunnerParams.of(
         console,
         new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
@@ -139,12 +147,12 @@ public class CommandRunnerParamsForTesting {
         Maps.newConcurrentMap(),
         config,
         new StackedFileHashCache(ImmutableList.of()),
-        ImmutableMap.of(ExecutorPool.PROJECT, MoreExecutors.newDirectExecutorService()),
+        executors,
         new FakeExecutor(),
         BUILD_ENVIRONMENT_DESCRIPTION,
         new ActionGraphProviderBuilder()
             .withMaxEntries(config.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
-            .withPoolSupplier(MainRunner.getForkJoinPoolSupplier(config))
+            .withPoolSupplier(executors)
             .build(),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),

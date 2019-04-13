@@ -51,21 +51,24 @@ import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.Scope;
+import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
+import com.google.common.util.concurrent.AbstractListeningExecutorService;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -82,7 +85,7 @@ public class ActionGraphProviderTest {
   private TargetGraph targetGraph1;
   private TargetGraph targetGraph2;
 
-  CloseableMemoizedSupplier<ForkJoinPool> fakePoolSupplier;
+  ImmutableMap<ExecutorPool, ListeningExecutorService> fakeExecutors;
 
   private BuckEventBus eventBus;
   private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
@@ -104,13 +107,45 @@ public class ActionGraphProviderTest {
     targetGraph1 = TargetGraphFactory.newInstance(nodeA, nodeB);
     targetGraph2 = TargetGraphFactory.newInstance(nodeB);
 
-    fakePoolSupplier =
-        CloseableMemoizedSupplier.of(
-            () -> {
-              throw new IllegalStateException(
-                  "should not use parallel executor for single threaded action graph construction in test");
-            },
-            ignored -> {});
+    fakeExecutors =
+        ImmutableMap.of(
+            ExecutorPool.GRAPH_CPU,
+            new AbstractListeningExecutorService() {
+              private RuntimeException fail() {
+                throw new IllegalStateException(
+                    "should not use parallel executor for single threaded action graph construction in test");
+              }
+
+              @Override
+              public void shutdown() {
+                throw fail();
+              }
+
+              @Override
+              public List<Runnable> shutdownNow() {
+                throw fail();
+              }
+
+              @Override
+              public boolean isShutdown() {
+                throw fail();
+              }
+
+              @Override
+              public boolean isTerminated() {
+                throw fail();
+              }
+
+              @Override
+              public boolean awaitTermination(long timeout, TimeUnit unit) {
+                throw fail();
+              }
+
+              @Override
+              public void execute(Runnable command) {
+                throw fail();
+              }
+            });
 
     eventBus =
         BuckEventBusForTests.newInstance(new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1)));
@@ -134,7 +169,7 @@ public class ActionGraphProviderTest {
   public void hitOnCache() {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
+            .withPoolSupplier(fakeExecutors)
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
             .withCheckActionGraphs()
@@ -165,7 +200,7 @@ public class ActionGraphProviderTest {
   public void hitOnMultiEntryCache() {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
+            .withPoolSupplier(fakeExecutors)
             .withMaxEntries(2)
             .withEventBus(eventBus)
             .withCheckActionGraphs()
@@ -192,7 +227,7 @@ public class ActionGraphProviderTest {
   public void testLruEvictionOrder() {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
+            .withPoolSupplier(fakeExecutors)
             .withMaxEntries(2)
             .withEventBus(eventBus)
             .withCheckActionGraphs()
@@ -233,7 +268,7 @@ public class ActionGraphProviderTest {
   public void missOnCache() {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
+            .withPoolSupplier(fakeExecutors)
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
             .withCheckActionGraphs()
@@ -277,7 +312,7 @@ public class ActionGraphProviderTest {
   public void compareActionGraphsBasedOnRuleKeys() {
     ActionGraphProvider actionGraphProvider =
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(fakePoolSupplier)
+            .withPoolSupplier(fakeExecutors)
             .withEventBus(eventBus)
             .build();
     ActionGraphAndBuilder resultRun1 =
@@ -302,14 +337,14 @@ public class ActionGraphProviderTest {
   @Test
   public void actionGraphParallelizationStateIsLogged() {
     List<ExperimentEvent> experimentEvents;
-    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
-        CloseableMemoizedSupplier.of(
-            () -> MostExecutors.forkJoinPoolWithThreadLimit(1, 1), ForkJoinPool::shutdownNow)) {
+    ListeningExecutorService executor =
+        MoreExecutors.listeningDecorator(MostExecutors.newMultiThreadExecutor("threads", 1));
+    try (Scope ignored = executor::shutdownNow) {
       for (ActionGraphParallelizationMode mode :
           ImmutableSet.of(
               ActionGraphParallelizationMode.DISABLED, ActionGraphParallelizationMode.ENABLED)) {
         new ActionGraphProviderBuilder()
-            .withPoolSupplier(poolSupplier)
+            .withPoolSupplier(ImmutableMap.of(ExecutorPool.GRAPH_CPU, executor))
             .withEventBus(eventBus)
             .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
             .withParallelizationMode(mode)
@@ -325,7 +360,7 @@ public class ActionGraphProviderTest {
 
       trackedEvents.clear();
       new ActionGraphProviderBuilder()
-          .withPoolSupplier(poolSupplier)
+          .withPoolSupplier(ImmutableMap.of(ExecutorPool.GRAPH_CPU, executor))
           .withEventBus(eventBus)
           .withParallelizationMode(ActionGraphParallelizationMode.EXPERIMENT)
           .build()
@@ -344,7 +379,7 @@ public class ActionGraphProviderTest {
 
       trackedEvents.clear();
       new ActionGraphProviderBuilder()
-          .withPoolSupplier(poolSupplier)
+          .withPoolSupplier(ImmutableMap.of(ExecutorPool.GRAPH_CPU, executor))
           .withEventBus(eventBus)
           .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
           .withParallelizationMode(ActionGraphParallelizationMode.EXPERIMENT_UNSTABLE)
@@ -370,7 +405,7 @@ public class ActionGraphProviderTest {
     for (IncrementalActionGraphMode mode :
         ImmutableSet.of(IncrementalActionGraphMode.DISABLED, IncrementalActionGraphMode.ENABLED)) {
       new ActionGraphProviderBuilder()
-          .withPoolSupplier(fakePoolSupplier)
+          .withPoolSupplier(fakeExecutors)
           .withEventBus(eventBus)
           .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
           .withIncrementalActionGraphMode(mode)
@@ -391,7 +426,7 @@ public class ActionGraphProviderTest {
     experimentGroups.put(IncrementalActionGraphMode.ENABLED, 0.5);
     experimentGroups.put(IncrementalActionGraphMode.DISABLED, 0.5);
     new ActionGraphProviderBuilder()
-        .withPoolSupplier(fakePoolSupplier)
+        .withPoolSupplier(fakeExecutors)
         .withEventBus(eventBus)
         .withRuleKeyConfiguration(TestRuleKeyConfigurationFactory.createWithSeed(keySeed))
         .withIncrementalActionGraphExperimentGroups(experimentGroups.build())
@@ -416,22 +451,23 @@ public class ActionGraphProviderTest {
   @Test
   public void cachedSubgraphReturnedFromNodeCacheSerial() {
     runCachedSubgraphReturnedFromNodeCacheTest(
-        ActionGraphParallelizationMode.DISABLED, fakePoolSupplier);
+        ActionGraphParallelizationMode.DISABLED, fakeExecutors);
   }
 
   @Test
   public void cachedSubgraphReturnedFromNodeCacheParallel() {
-    try (CloseableMemoizedSupplier<ForkJoinPool> poolSupplier =
-        CloseableMemoizedSupplier.of(
-            () -> MostExecutors.forkJoinPoolWithThreadLimit(1, 1), ForkJoinPool::shutdownNow)) {
+    ListeningExecutorService executor =
+        MoreExecutors.listeningDecorator(MostExecutors.newMultiThreadExecutor("threads", 1));
+    try (Scope ignored = executor::shutdownNow) {
       runCachedSubgraphReturnedFromNodeCacheTest(
-          ActionGraphParallelizationMode.ENABLED, poolSupplier);
+          ActionGraphParallelizationMode.ENABLED,
+          ImmutableMap.of(ExecutorPool.GRAPH_CPU, executor));
     }
   }
 
   private void runCachedSubgraphReturnedFromNodeCacheTest(
       ActionGraphParallelizationMode parallelizationMode,
-      CloseableMemoizedSupplier<ForkJoinPool> poolSupplier) {
+      ImmutableMap<ExecutorPool, ListeningExecutorService> poolSupplier) {
     ActionGraphProvider cache =
         new ActionGraphProviderBuilder()
             .withPoolSupplier(poolSupplier)

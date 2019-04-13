@@ -333,7 +333,6 @@ public class CleanCommandTest {
         new ActionGraphProviderBuilder()
             .withMaxEntries(
                 buckConfig.getView(BuildBuckConfig.class).getMaxActionGraphCacheEntries())
-            .withPoolSupplier(MainRunner.getForkJoinPoolSupplier(buckConfig))
             .build(),
         knownRuleTypesProvider,
         new BuildInfoStoreManager(),

@@ -198,7 +198,7 @@ public abstract class DistBuildFactory {
                     ActionGraphFactory.create(
                         params.getBuckEventBus(),
                         state.getRootCell().getCellProvider(),
-                        params.getPoolSupplier(),
+                        params.getExecutors(),
                         state.getRemoteRootCellConfig()),
                     new ActionGraphCache(
                         state

@@ -44,22 +44,24 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaBinary;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.util.concurrent.MostExecutors;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.hamcrest.Matchers;
-import org.junit.AfterClass;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -80,43 +82,58 @@ public class ActionGraphBuilderTest {
     }
   }
 
-  private static ForkJoinPool pool = new ForkJoinPool(4);
+  enum ClassToTest {
+    SINGLE_THREADED,
+    MULTI_THREADED
+  }
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
           {
-            SingleThreadedActionGraphBuilder.class,
-            (ActionGraphBuilderFactory)
-                (graph, transformer) ->
-                    new SingleThreadedActionGraphBuilder(
-                        graph, transformer, new TestCellBuilder().build().getCellProvider()),
-            MoreExecutors.newDirectExecutorService(),
+            ClassToTest.SINGLE_THREADED,
           },
           {
-            MultiThreadedActionGraphBuilder.class,
-            (ActionGraphBuilderFactory)
-                (graph, transformer) ->
-                    new MultiThreadedActionGraphBuilder(
-                        pool, graph, transformer, new TestCellBuilder().build().getCellProvider()),
-            pool,
+            ClassToTest.MULTI_THREADED,
           },
         });
   }
 
-  @Parameterized.Parameter(0)
-  public Class<? extends BuildRuleResolver> classUnderTest;
+  @Parameterized.Parameter() public ClassToTest classToTest;
 
-  @Parameterized.Parameter(1)
   public ActionGraphBuilderFactory actionGraphBuilderFactory;
-
-  @Parameterized.Parameter(2)
   public ExecutorService executorService;
 
-  @AfterClass
-  public static void afterClass() {
-    pool.shutdownNow();
+  @Before
+  public void setUp() {
+    switch (classToTest) {
+      case SINGLE_THREADED:
+        this.executorService = MoreExecutors.newDirectExecutorService();
+        this.actionGraphBuilderFactory =
+            (graph, transformer) ->
+                new SingleThreadedActionGraphBuilder(
+                    graph, transformer, new TestCellBuilder().build().getCellProvider());
+        break;
+      case MULTI_THREADED:
+        this.executorService = Executors.newFixedThreadPool(4);
+        this.actionGraphBuilderFactory =
+            (graph, transformer) ->
+                new MultiThreadedActionGraphBuilder(
+                    MoreExecutors.listeningDecorator(this.executorService),
+                    graph,
+                    transformer,
+                    new TestCellBuilder().build().getCellProvider());
+
+        break;
+      default:
+        throw new RuntimeException();
+    }
+  }
+
+  @After
+  public void tearDown() {
+    executorService.shutdownNow();
   }
 
   @Test
@@ -249,7 +266,7 @@ public class ActionGraphBuilderTest {
 
   @Test
   public void accessingTargetBeingBuildInDifferentThreadsWaitsForItsCompletion() throws Exception {
-    Assume.assumeTrue(classUnderTest == MultiThreadedActionGraphBuilder.class);
+    Assume.assumeTrue(classToTest == ClassToTest.MULTI_THREADED);
 
     BuildTarget target1 = BuildTargetFactory.newInstance("//foo:bar1");
     TargetNode<?> library1 = JavaLibraryBuilder.createBuilder(target1).build();
@@ -307,7 +324,9 @@ public class ActionGraphBuilderTest {
 
   @Test(timeout = 10000)
   public void deadLockOnDependencyTest() throws ExecutionException, InterruptedException {
-    Assume.assumeTrue(classUnderTest == MultiThreadedActionGraphBuilder.class);
+    Assume.assumeTrue(classToTest == ClassToTest.MULTI_THREADED);
+
+    // TODO(cjhopman): This test probably doesn't make sense anymore.
 
     /**
      * create a graph of the following
@@ -349,11 +368,12 @@ public class ActionGraphBuilderTest {
     CountDownLatch jobsStarted = new CountDownLatch(4);
 
     // run this with ThreadLimited FJP like our actual parallel implementation
-    ForkJoinPool forkJoinPool = MostExecutors.forkJoinPoolWithThreadLimit(4, 0);
+    ListeningExecutorService executorService =
+        MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(4));
     try {
       ActionGraphBuilder graphBuilder =
           new MultiThreadedActionGraphBuilder(
-              forkJoinPool,
+              executorService,
               targetGraph,
               new TargetNodeToBuildRuleTransformer() {
                 @Override
@@ -368,7 +388,7 @@ public class ActionGraphBuilderTest {
                   if (!targetNode.getExtraDeps().isEmpty()) {
                     try {
                       // this waits until all of bar0,...bar3 has executed up to this point before
-                      // requiring bar4, to create the situation where all 4 threads in ForkJoinPool
+                      // requiring bar4, to create the situation where all 4 threads in executor
                       // are blocked waiting for one dependency that has yet to be executed.
                       jobsStarted.await();
                     } catch (InterruptedException e) {
@@ -384,18 +404,16 @@ public class ActionGraphBuilderTest {
               new TestCellBuilder().build().getCellProvider());
 
       // mimic our actual parallel action graph construction, in which we call requireRule with
-      // threads
-      // outside the ForkJoinPool, which will then fork tasks to the ForkJoinPool.
-      CompletableFuture first = CompletableFuture.runAsync(() -> graphBuilder.requireRule(target0));
-      CompletableFuture second =
-          CompletableFuture.runAsync(() -> graphBuilder.requireRule(target1));
-      CompletableFuture third = CompletableFuture.runAsync(() -> graphBuilder.requireRule(target2));
-      CompletableFuture fourth =
-          CompletableFuture.runAsync(() -> graphBuilder.requireRule(target3));
+      // threads outside the executor, which will then fork tasks to the queue.
 
-      CompletableFuture.allOf(first, second, third, fourth).get();
+      ListenableFuture<?> first = executorService.submit(() -> graphBuilder.requireRule(target0));
+      ListenableFuture<?> second = executorService.submit(() -> graphBuilder.requireRule(target1));
+      ListenableFuture<?> third = executorService.submit(() -> graphBuilder.requireRule(target2));
+      ListenableFuture<?> fourth = executorService.submit(() -> graphBuilder.requireRule(target3));
+
+      Futures.allAsList(first, second, third, fourth).get();
     } finally {
-      forkJoinPool.shutdownNow();
+      executorService.shutdownNow();
     }
   }
 }
