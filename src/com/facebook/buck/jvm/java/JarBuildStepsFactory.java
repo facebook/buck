@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
@@ -102,13 +103,14 @@ public class JarBuildStepsFactory
   }
 
   private static class DependencyInfoHolder implements AddsToRuleKey, HasCustomDepsLogic {
-    // Adding this to the rulekey is slow for large projects and the abiClasspath already reflects
-    // all the inputs. For the same reason, we need to do custom inputs derivation and custom
-    // serialization.
     // TODO(cjhopman): This is pretty much all due to these things caching all AddsToRuleKey things,
     // but we don't want that for these things because nobody else uses them. We should improve the
     // rulekey and similar stuff to better handle this.
     @CustomFieldBehavior(InfosBehavior.class)
+    @ExcludeFromRuleKey(
+        "Adding this to the rulekey is slow for large projects and the abiClasspath already "
+            + " reflects all the inputs. For the same reason, we need to do custom inputs"
+            + " derivation and custom serialization.")
     private final ImmutableList<JavaDependencyInfo> infos;
 
     public DependencyInfoHolder(ImmutableList<JavaDependencyInfo> infos) {

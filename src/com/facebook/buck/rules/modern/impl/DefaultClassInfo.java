@@ -18,6 +18,8 @@ package com.facebook.buck.rules.modern.impl;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.MissingExcludeReporter;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
@@ -77,13 +79,15 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
           findMethodsForFields(parameterFields.keySet(), clazz);
       parameterFields.forEach(
           (field, isLazy) -> {
+            // findMethodsForFields has already verified that it found methods for any field that we
+            // think is interesting.
             Method method = parameterMethods.get(field);
             if (method == null) {
               return;
             }
             AddToRuleKey addAnnotation = method.getAnnotation(AddToRuleKey.class);
-            // TODO(cjhopman): Add @ExcludeFromRuleKey annotation and require that all fields are
-            // either explicitly added or explicitly excluded.
+            // TODO(cjhopman): Require that all fields are either explicitly added or explicitly
+            // excluded.
             Optional<CustomFieldBehavior> customBehavior =
                 Optional.ofNullable(method.getDeclaredAnnotation(CustomFieldBehavior.class));
             if (addAnnotation != null && !addAnnotation.stringify()) {
@@ -97,6 +101,12 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
                   forFieldWithBehavior(
                       field, methodNullable != null || methodOptional, customBehavior));
             } else {
+              ExcludeFromRuleKey excludeAnnotation = method.getAnnotation(ExcludeFromRuleKey.class);
+              if (excludeAnnotation == null) {
+                MissingExcludeReporter.reportMethodMissingAnnotation(clazz, method);
+              } else {
+                MissingExcludeReporter.reportExcludedMethod(clazz, method, excludeAnnotation);
+              }
               fieldsBuilder.add(excludedField(field, customBehavior));
             }
           });
@@ -124,6 +134,13 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
               forFieldWithBehavior(
                   field, field.getAnnotation(Nullable.class) != null, customBehavior));
         } else {
+          ExcludeFromRuleKey excludeAnnotation = field.getAnnotation(ExcludeFromRuleKey.class);
+          if (excludeAnnotation == null) {
+            MissingExcludeReporter.reportFieldMissingAnnotation(clazz, field);
+          } else {
+            MissingExcludeReporter.reportExcludedField(clazz, field, excludeAnnotation);
+          }
+
           fieldsBuilder.add(excludedField(field, customBehavior));
         }
       }

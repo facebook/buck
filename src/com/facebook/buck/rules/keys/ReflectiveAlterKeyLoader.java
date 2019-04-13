@@ -18,6 +18,8 @@ package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.MissingExcludeReporter;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
@@ -75,6 +77,13 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
           ValueExtractor valueExtractor = new FieldValueExtractor(field);
           sortedExtractors.put(
               valueExtractor, createAlterRuleKey(valueExtractor, annotation.stringify()));
+        } else {
+          ExcludeFromRuleKey excludeAnnotation = field.getAnnotation(ExcludeFromRuleKey.class);
+          if (excludeAnnotation != null) {
+            MissingExcludeReporter.reportExcludedField(key, field, excludeAnnotation);
+          } else {
+            MissingExcludeReporter.reportFieldMissingAnnotation(key, field);
+          }
         }
       }
       for (Method method : current.getDeclaredMethods()) {
@@ -91,6 +100,8 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
           sortedExtractors.put(
               valueExtractor, createAlterRuleKey(valueExtractor, annotation.stringify()));
         }
+        // For methods, we're unable here to determine whether we expect that a method should or
+        // shouldn't have an annotation.
       }
       builder.addAll(sortedExtractors.build().values());
     }

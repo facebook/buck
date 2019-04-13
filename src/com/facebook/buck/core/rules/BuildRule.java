@@ -19,6 +19,7 @@ package com.facebook.buck.core.rules;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AllowsNonAnnotatedFields;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -37,7 +38,9 @@ import javax.annotation.Nullable;
     fieldVisibility = JsonAutoDetect.Visibility.NONE,
     getterVisibility = JsonAutoDetect.Visibility.NONE,
     setterVisibility = JsonAutoDetect.Visibility.NONE)
-public interface BuildRule extends Comparable<BuildRule> {
+public interface BuildRule extends Comparable<BuildRule>, AllowsNonAnnotatedFields {
+  // We allow non-@AddToRuleKey annotated fields in BuildRule because they are so extensively used
+  // for non-action-y things (like Provider-type things).
 
   BuildTarget getBuildTarget();
 
