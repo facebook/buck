@@ -1,4 +1,7 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "standard_java_test",
+)
 
 java_library(
     name = "testutil",
@@ -9,7 +12,9 @@ java_library(
             "*Test.java",
         ],
     ),
-    visibility = ["//test/..."],
+    visibility = [
+        "//test/...",
+    ],
     deps = [
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
@@ -83,6 +88,8 @@ java_library(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/aether:aether-api",
         "//third-party/java/android:ddmlib",
         "//third-party/java/android:tools-sdk-common",

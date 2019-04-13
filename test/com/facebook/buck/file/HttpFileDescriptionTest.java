@@ -54,7 +54,7 @@ public class HttpFileDescriptionTest {
 
   @Before
   public void setUp() {
-    description = new HttpFileDescription((eventBus, uri, output) -> false);
+    description = new HttpFileDescription();
     graphBuilder = new TestActionGraphBuilder();
     filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryDir.getRoot());
     targetGraph = TargetGraph.EMPTY;

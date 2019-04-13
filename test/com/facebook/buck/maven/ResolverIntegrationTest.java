@@ -27,14 +27,10 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.features.python.PythonBuckConfig;
 import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.file.downloader.impl.ExplodingDownloader;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -108,12 +104,8 @@ public class ResolverIntegrationTest {
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
 
-    ToolchainProvider toolchainProvider =
-        new ToolchainProviderBuilder()
-            .withToolchain(Downloader.DEFAULT_NAME, new ExplodingDownloader())
-            .build();
     ImmutableSet<DescriptionWithTargetGraph<?>> descriptions =
-        ImmutableSet.of(new RemoteFileDescription(toolchainProvider), new PrebuiltJarDescription());
+        ImmutableSet.of(new RemoteFileDescription(), new PrebuiltJarDescription());
 
     buildFileParser =
         new PythonDslProjectBuildFileParser(

@@ -23,7 +23,6 @@ import com.facebook.buck.core.description.attr.ImplicitInputsInferringDescriptio
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -205,29 +204,6 @@ public class TargetNodeFactory implements NodeCopier {
       }
       throw new HumanReadableException(
           e, "Cannot traverse attribute %s of %s: %s", info.getName(), buildTarget, e.getMessage());
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public <T> TargetNode<T> copyNodeWithDescription(
-      TargetNode<?> originalNode, DescriptionWithTargetGraph<T> description) {
-    try {
-      return create(
-          description,
-          (T) originalNode.getConstructorArg(),
-          originalNode.getFilesystem(),
-          originalNode.getBuildTarget(),
-          originalNode.getDeclaredDeps(),
-          originalNode.getVisibilityPatterns(),
-          originalNode.getWithinViewPatterns(),
-          originalNode.getCellNames());
-    } catch (NoSuchBuildTargetException e) {
-      throw new IllegalStateException(
-          String.format(
-              "Caught exception when transforming TargetNode to use a different description: %s",
-              originalNode.getBuildTarget()),
-          e);
     }
   }
 

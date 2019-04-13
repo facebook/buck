@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -36,7 +35,6 @@ import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /**
@@ -45,19 +43,7 @@ import org.immutables.value.Value;
  */
 public class HttpArchiveDescription
     implements DescriptionWithTargetGraph<HttpArchiveDescriptionArg> {
-
   private static final Flavor ARCHIVE_DOWNLOAD = InternalFlavor.of("archive-download");
-
-  private final Supplier<Downloader> downloaderSupplier;
-
-  public HttpArchiveDescription(ToolchainProvider toolchainProvider) {
-    this.downloaderSupplier =
-        () -> toolchainProvider.getByName(Downloader.DEFAULT_NAME, Downloader.class);
-  }
-
-  public HttpArchiveDescription(Downloader downloader) {
-    this.downloaderSupplier = () -> downloader;
-  }
 
   @Override
   public Class<HttpArchiveDescriptionArg> getConstructorArgType() {
@@ -87,12 +73,15 @@ public class HttpArchiveDescription
 
     // Setup the implicit download rule
     BuildTarget httpFileTarget = buildTarget.withAppendedFlavors(ARCHIVE_DOWNLOAD);
+    Downloader downloader =
+        context.getToolchainProvider().getByName(Downloader.DEFAULT_NAME, Downloader.class);
+
     HttpFile httpFile =
         new HttpFile(
             httpFileTarget,
             projectFilesystem,
             params,
-            downloaderSupplier.get(),
+            downloader,
             args.getUrls(),
             sha256,
             out,

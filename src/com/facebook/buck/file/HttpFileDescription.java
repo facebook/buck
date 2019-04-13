@@ -21,12 +21,10 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.file.downloader.Downloader;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 /**
@@ -34,18 +32,6 @@ import org.immutables.value.Value;
  * RemoteFileDescription}.
  */
 public class HttpFileDescription implements DescriptionWithTargetGraph<HttpFileDescriptionArg> {
-
-  private final Supplier<Downloader> downloaderSupplier;
-
-  public HttpFileDescription(ToolchainProvider toolchainProvider) {
-    this.downloaderSupplier =
-        () -> toolchainProvider.getByName(Downloader.DEFAULT_NAME, Downloader.class);
-  }
-
-  public HttpFileDescription(Downloader downloader) {
-    this.downloaderSupplier = () -> downloader;
-  }
-
   @Override
   public Class<HttpFileDescriptionArg> getConstructorArgType() {
     return HttpFileDescriptionArg.class;
@@ -67,12 +53,14 @@ public class HttpFileDescription implements DescriptionWithTargetGraph<HttpFileD
     String out = args.getOut().orElse(buildTarget.getShortNameAndFlavorPostfix());
 
     boolean executable = args.getExecutable().orElse(false);
+    Downloader downloader =
+        context.getToolchainProvider().getByName(Downloader.DEFAULT_NAME, Downloader.class);
     if (executable) {
       return new HttpFileBinary(
           buildTarget,
           context.getProjectFilesystem(),
           params,
-          downloaderSupplier.get(),
+          downloader,
           args.getUrls(),
           sha256,
           out);
@@ -81,7 +69,7 @@ public class HttpFileDescription implements DescriptionWithTargetGraph<HttpFileD
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        downloaderSupplier.get(),
+        downloader,
         args.getUrls(),
         sha256,
         out,

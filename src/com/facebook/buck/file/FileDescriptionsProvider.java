@@ -29,8 +29,6 @@ public class FileDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     return ImmutableList.of(
-        new HttpArchiveDescription(context.getToolchainProvider()),
-        new HttpFileDescription(context.getToolchainProvider()),
-        new RemoteFileDescription(context.getToolchainProvider()));
+        new HttpArchiveDescription(), new HttpFileDescription(), new RemoteFileDescription());
   }
 }

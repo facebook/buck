@@ -57,13 +57,14 @@ public class RemoteFileDescriptionTest {
   private RemoteFileDescription description;
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
+  private ToolchainProvider toolchainProvider;
 
   @Before
   public void setUp() {
     downloader = new ExplodingDownloader();
-    ToolchainProvider toolchainProvider =
+    toolchainProvider =
         new ToolchainProviderBuilder().withToolchain(Downloader.DEFAULT_NAME, downloader).build();
-    description = new RemoteFileDescription(toolchainProvider);
+    description = new RemoteFileDescription();
     filesystem = new FakeProjectFilesystem();
     graphBuilder = new TestActionGraphBuilder();
   }
@@ -83,7 +84,7 @@ public class RemoteFileDescriptionTest {
     exception.expectMessage(Matchers.containsString(target.getFullyQualifiedName()));
 
     description.createBuildRule(
-        TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem),
+        TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem, toolchainProvider),
         target,
         RemoteFileBuilder.createBuilder(downloader, target)
             .from(arg)
@@ -106,7 +107,7 @@ public class RemoteFileDescriptionTest {
 
     BuildRule buildRule =
         description.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem),
+            TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem, toolchainProvider),
             target,
             RemoteFileBuilder.createBuilder(downloader, target)
                 .from(arg)

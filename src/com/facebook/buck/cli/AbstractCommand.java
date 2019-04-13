@@ -556,8 +556,17 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       builder.put(CellName.ALL_CELLS_SPECIAL_NAME, "cache", "mode", "");
     }
 
+    addCommandSpecificConfigOverrides(builder);
+
     return builder.build();
   }
+
+  /**
+   * Injection point for commands to add config overrides. Adding anything here will likely
+   * invalidate the @{link BuckGlobalState} and so it should be used extremely sparingly.
+   */
+  @SuppressWarnings("unused")
+  protected void addCommandSpecificConfigOverrides(CellConfig.Builder builder) {}
 
   @Override
   public ParsingContext createParsingContext(Cell cell, ListeningExecutorService executor) {

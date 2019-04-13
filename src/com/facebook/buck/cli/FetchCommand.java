@@ -24,23 +24,22 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.engine.impl.MetadataChecker;
 import com.facebook.buck.core.build.event.BuildEvent;
+import com.facebook.buck.core.cell.CellConfig;
+import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphFactory;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
-import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rulekey.RuleKey;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.transformer.impl.FetchTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.file.HttpArchiveDescription;
-import com.facebook.buck.file.HttpFileDescription;
-import com.facebook.buck.file.RemoteFileDescription;
-import com.facebook.buck.file.downloader.Downloader;
-import com.facebook.buck.file.downloader.impl.StackedDownloader;
+import com.facebook.buck.file.HttpArchive;
+import com.facebook.buck.file.HttpFile;
+import com.facebook.buck.file.RemoteFile;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.ParserConfig;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -51,6 +50,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.RichStream;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
@@ -59,8 +59,12 @@ import java.util.Optional;
 public class FetchCommand extends BuildCommand {
 
   @Override
-  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
+  protected void addCommandSpecificConfigOverrides(CellConfig.Builder builder) {
+    builder.put(CellName.ALL_CELLS_SPECIAL_NAME, "download", "in_build", "true");
+  }
 
+  @Override
+  public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     if (getArguments().isEmpty()) {
       throw new CommandLineException("must specify at least one build target");
     }
@@ -68,7 +72,6 @@ public class FetchCommand extends BuildCommand {
     BuildEvent.Started started = BuildEvent.started(getArguments());
     params.getBuckEventBus().post(started);
 
-    FetchTargetNodeToBuildRuleTransformer ruleGenerator = createFetchTransformer(params);
     ExitCode exitCode;
 
     try (CommandThreadManager pool =
@@ -106,8 +109,12 @@ public class FetchCommand extends BuildCommand {
                                 .getMaxActionGraphCacheEntries()),
                         params.getRuleKeyConfiguration(),
                         params.getBuckConfig())
-                    .getFreshActionGraph(ruleGenerator, result.getTargetGraph()));
-        buildTargets = ruleGenerator.getDownloadableTargets();
+                    .getFreshActionGraph(result.getTargetGraph()));
+        buildTargets =
+            RichStream.from(actionGraphAndBuilder.getActionGraph().getNodes())
+                .filter(rule -> isDownloadableRule(rule))
+                .map(BuildRule::getBuildTarget)
+                .collect(ImmutableSet.toImmutableSet());
       } catch (BuildFileParseException | VersionException e) {
         params
             .getBuckEventBus()
@@ -184,22 +191,15 @@ public class FetchCommand extends BuildCommand {
     return exitCode;
   }
 
+  // TODO(cjhopman): This should be done via a Provider/Interface. In addition, that interface
+  // should expose a function that takes a Downloader so we don't need the hacky config override.
+  private boolean isDownloadableRule(BuildRule rule) {
+    return rule instanceof HttpFile || rule instanceof RemoteFile || rule instanceof HttpArchive;
+  }
+
   @Override
   public boolean isReadOnly() {
     return false;
-  }
-
-  private FetchTargetNodeToBuildRuleTransformer createFetchTransformer(CommandRunnerParams params) {
-    Downloader downloader =
-        StackedDownloader.createFromConfig(
-            params.getBuckConfig(), params.getCell().getToolchainProvider());
-    ImmutableSet<DescriptionWithTargetGraph<?>> fetchingDescriptions =
-        ImmutableSet.of(
-            new RemoteFileDescription(downloader),
-            new HttpFileDescription(downloader),
-            new HttpArchiveDescription(downloader));
-
-    return new FetchTargetNodeToBuildRuleTransformer(fetchingDescriptions);
   }
 
   @Override

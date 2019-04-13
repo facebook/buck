@@ -23,29 +23,15 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.file.downloader.Downloader;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.immutables.value.Value;
 
 public class RemoteFileDescription implements DescriptionWithTargetGraph<RemoteFileDescriptionArg> {
-
-  private final Supplier<Downloader> downloaderSupplier;
-
-  public RemoteFileDescription(ToolchainProvider toolchainProvider) {
-    this.downloaderSupplier =
-        () -> toolchainProvider.getByName(Downloader.DEFAULT_NAME, Downloader.class);
-  }
-
-  public RemoteFileDescription(Downloader downloader) {
-    this.downloaderSupplier = () -> downloader;
-  }
-
   @Override
   public Class<RemoteFileDescriptionArg> getConstructorArgType() {
     return RemoteFileDescriptionArg.class;
@@ -72,26 +58,14 @@ public class RemoteFileDescription implements DescriptionWithTargetGraph<RemoteF
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     RemoteFile.Type type = args.getType().orElse(RemoteFile.Type.DATA);
+    Downloader downloader =
+        context.getToolchainProvider().getByName(Downloader.DEFAULT_NAME, Downloader.class);
     if (type == RemoteFile.Type.EXECUTABLE) {
       return new RemoteFileBinary(
-          buildTarget,
-          projectFilesystem,
-          params,
-          downloaderSupplier.get(),
-          args.getUrl(),
-          sha1,
-          out,
-          type);
+          buildTarget, projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
     }
     return new RemoteFile(
-        buildTarget,
-        projectFilesystem,
-        params,
-        downloaderSupplier.get(),
-        args.getUrl(),
-        sha1,
-        out,
-        type);
+        buildTarget, projectFilesystem, params, downloader, args.getUrl(), sha1, out, type);
   }
 
   @Override
