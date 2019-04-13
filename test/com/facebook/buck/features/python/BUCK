@@ -188,6 +188,13 @@ java_library(
 java_test(
     name = "python-binary-integration",
     srcs = ["PythonBinaryIntegrationTest.java"],
+    extra_arguments = select({
+        "DEFAULT": [],
+        "//tools/build/config:java_11": [
+            "--add-exports",
+            "java.xml/com.sun.org.apache.xerces.internal.util=ALL-UNNAMED",
+        ],
+    }),
     labels = ["long_running"],
     deps = [
         "//src-gen:thrift",
