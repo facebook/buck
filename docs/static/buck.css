@@ -280,6 +280,11 @@ button, a.button {
   margin-top: 1em;
   border: 0;
   cursor: pointer;
+  transition: transform 150ms;
+}
+
+button, a.button {
+  transform: scale(1.03);
 }
 
 header.hero aside {
