@@ -278,7 +278,9 @@ public class InstrumentationTestRunner {
             public void testRunEnded(long elapsedTime, Map<String, String> runMetrics) {}
 
             @Override
-            public void testRunFailed(String errorMessage) {}
+            public void testRunFailed(String errorMessage) {
+              System.err.println("Test Run Failed: " + errorMessage);
+            }
 
             @Override
             public void testStarted(TestIdentifier test) {}
