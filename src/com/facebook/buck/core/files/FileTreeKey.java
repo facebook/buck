@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.files;
 
-import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

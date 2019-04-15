@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.targetnode;
 
-import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import org.immutables.value.Value;

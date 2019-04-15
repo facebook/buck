@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
-import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.ActionAnalysisDataLookUp;
 import com.facebook.buck.core.rules.providers.ProviderInfoCollection;

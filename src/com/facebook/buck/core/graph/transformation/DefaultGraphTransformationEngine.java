@@ -18,10 +18,10 @@ package com.facebook.buck.core.graph.transformation;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
-import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
-import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.function.ThrowingSupplier;

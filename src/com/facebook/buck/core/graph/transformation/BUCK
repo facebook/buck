@@ -2,7 +2,7 @@ java_library(
     name = "transformation",
     srcs = glob(["*.java"]),
     exported_deps = [
-        "//src/com/facebook/buck/core/graph/transformation/compute:compute",
+        "//src/com/facebook/buck/core/graph/transformation/model:model",
     ],
     tests = [
         "//test/com/facebook/buck/core/graph/transformation:transformation_stackuse",

@@ -18,8 +18,8 @@ package com.facebook.buck.core.graph.transformation;
 
 import com.facebook.buck.core.graph.transformation.ChildrenAdder.LongNode;
 import com.facebook.buck.core.graph.transformation.ChildrenSumMultiplier.LongMultNode;
-import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
-import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Streams;

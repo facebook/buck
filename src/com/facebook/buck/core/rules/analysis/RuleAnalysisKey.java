@@ -15,7 +15,7 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
-import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
 import org.immutables.value.Value;
 

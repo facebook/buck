@@ -13,7 +13,7 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.graph.transformation.compute;
+package com.facebook.buck.core.graph.transformation.model;
 
 /**
  * This is an interface for all keys to be used in {@link

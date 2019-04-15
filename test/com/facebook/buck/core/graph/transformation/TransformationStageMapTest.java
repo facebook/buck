@@ -18,8 +18,8 @@ package com.facebook.buck.core.graph.transformation;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.graph.transformation.ChildrenAdder.LongNode;
-import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
-import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
+import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
