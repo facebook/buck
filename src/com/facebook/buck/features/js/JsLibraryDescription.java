@@ -46,6 +46,7 @@ import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.shell.ProvidesWorkerTool;
 import com.facebook.buck.shell.WorkerTool;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.types.Either;
@@ -119,7 +120,8 @@ public class JsLibraryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
     BuildTarget workerTarget = args.getWorker();
-    WorkerTool worker = graphBuilder.getRuleWithType(workerTarget, WorkerTool.class);
+    WorkerTool worker =
+        graphBuilder.getRuleWithType(workerTarget, ProvidesWorkerTool.class).getWorkerTool();
 
     // this params object is used as base for the JsLibrary build rule, but also for all dynamically
     // created JsFile rules.

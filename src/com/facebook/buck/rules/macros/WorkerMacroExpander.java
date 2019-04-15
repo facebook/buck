@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.shell.ProvidesWorkerTool;
 import com.facebook.buck.shell.WorkerTool;
 import java.util.function.Consumer;
 
@@ -34,13 +35,14 @@ public class WorkerMacroExpander extends BuildTargetMacroExpander<WorkerMacro> {
   }
 
   protected Tool getTool(BuildRule rule) throws MacroException {
-    if (!(rule instanceof WorkerTool)) {
-      throw new MacroException(
-          String.format(
-              "%s used in worker macro does not correspond to a worker_tool rule",
-              rule.getBuildTarget()));
+    if (rule instanceof ProvidesWorkerTool) {
+      WorkerTool workerTool = ((ProvidesWorkerTool) rule).getWorkerTool();
+      return workerTool.getTool();
     }
-    return ((WorkerTool) rule).getTool();
+    throw new MacroException(
+        String.format(
+            "%s used in worker macro does not correspond to a rule that can provide a worker tool",
+            rule.getBuildTarget()));
   }
 
   @Override

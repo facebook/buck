@@ -29,7 +29,7 @@ public class WorkerToolBuilder
         WorkerToolDescriptionArg.Builder,
         WorkerToolDescriptionArg,
         WorkerToolDescription,
-        DefaultWorkerTool> {
+        DefaultWorkerToolRule> {
   private WorkerToolBuilder(BuildTarget target) {
     super(new WorkerToolDescription(FakeBuckConfig.builder().build()), target);
   }

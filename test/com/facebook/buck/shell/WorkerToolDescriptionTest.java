@@ -181,12 +181,13 @@ public class WorkerToolDescriptionTest {
             ImmutableSortedSet::of,
             () -> ImmutableSortedSet.of(graphBuilder.getRule(exe)),
             ImmutableSortedSet.of());
-    return (WorkerTool)
-        workerToolDescription.createBuildRule(
-            TestBuildRuleCreationContextFactory.create(
-                targetGraph, graphBuilder, projectFilesystem),
-            buildTarget,
-            params,
-            argsBuilder.build());
+    return ((ProvidesWorkerTool)
+            workerToolDescription.createBuildRule(
+                TestBuildRuleCreationContextFactory.create(
+                    targetGraph, graphBuilder, projectFilesystem),
+                buildTarget,
+                params,
+                argsBuilder.build()))
+        .getWorkerTool();
   }
 }

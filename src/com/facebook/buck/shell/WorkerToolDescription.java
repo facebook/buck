@@ -153,7 +153,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     }
 
     CommandTool tool = builder.build();
-    return new DefaultWorkerTool(
+    return new DefaultWorkerToolRule(
         buildTarget,
         context.getProjectFilesystem(),
         new SourcePathRuleFinder(graphBuilder),

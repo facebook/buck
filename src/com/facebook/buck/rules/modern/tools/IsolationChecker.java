@@ -191,7 +191,7 @@ public class IsolationChecker {
 
       if (valueTypeInfo instanceof ExcludedValueTypeInfo) {
         throw new HumanReadableException(
-            "Can't serialize excluded field %s with type %s (instance type %s)",
+            "Can't serialize excluded field [%s] with type [%s] (instance type [%s])",
             field.getName(),
             field.getGenericType(),
             value == null ? "<null>" : value.getClass().getName());

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright 2019-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,25 +13,10 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.hash.HashCode;
-import java.nio.file.Path;
+/** {@link WorkerTool} provider */
+public interface ProvidesWorkerTool {
 
-/** Worker tool definition */
-public interface WorkerTool extends AddsToRuleKey {
-  Tool getTool();
-
-  /** Returns temp dir for this WorkerTool and provided filesystem */
-  Path getTempDir(ProjectFilesystem filesystem);
-
-  int getMaxWorkers();
-
-  boolean isPersistent();
-
-  HashCode getInstanceKey();
+  WorkerTool getWorkerTool();
 }

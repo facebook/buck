@@ -28,6 +28,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.shell.FakeWorkerBuilder.FakeWorkerToolRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
@@ -40,21 +41,31 @@ public class FakeWorkerBuilder
         FakeWorkerDescriptionArg.Builder,
         FakeWorkerDescriptionArg,
         FakeWorkerBuilder.FakeWorkerDescription,
-        FakeWorkerBuilder.FakeWorkerTool> {
+        FakeWorkerToolRule> {
 
   public FakeWorkerBuilder(BuildTarget target) {
     super(new FakeWorkerDescription(), target);
   }
 
-  public static class FakeWorkerTool extends NoopBuildRuleWithDeclaredAndExtraDeps
-      implements WorkerTool {
-    private final Tool tool = new FakeTool();
-    private final HashCode hashCode = HashCode.fromString("0123456789abcdef");
+  static class FakeWorkerToolRule extends NoopBuildRuleWithDeclaredAndExtraDeps
+      implements ProvidesWorkerTool {
+    private final FakeWorkerTool fakeWorkerTool = new FakeWorkerTool();
 
-    public FakeWorkerTool(
+    public FakeWorkerToolRule(
         BuildTarget buildTarget, ProjectFilesystem projectFilesystem, BuildRuleParams params) {
       super(buildTarget, projectFilesystem, params);
     }
+
+    @Override
+    public WorkerTool getWorkerTool() {
+      return fakeWorkerTool;
+    }
+  }
+
+  static class FakeWorkerTool implements WorkerTool {
+
+    private final Tool tool = new FakeTool();
+    private final HashCode hashCode = HashCode.fromString("0123456789abcdef");
 
     @Override
     public Tool getTool() {
@@ -62,7 +73,7 @@ public class FakeWorkerBuilder
     }
 
     @Override
-    public Path getTempDir() {
+    public Path getTempDir(ProjectFilesystem filesystem) {
       return Paths.get("");
     }
 
@@ -107,7 +118,7 @@ public class FakeWorkerBuilder
         BuildTarget buildTarget,
         BuildRuleParams params,
         FakeWorkerDescriptionArg args) {
-      return new FakeWorkerTool(buildTarget, context.getProjectFilesystem(), params);
+      return new FakeWorkerToolRule(buildTarget, context.getProjectFilesystem(), params);
     }
 
     @BuckStyleImmutable

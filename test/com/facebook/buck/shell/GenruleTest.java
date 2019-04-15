@@ -397,15 +397,16 @@ public class GenruleTest {
             .setMain(FakeSourcePath.of("bin/exe"))
             .build(graphBuilder);
 
-    DefaultWorkerTool workerTool =
+    DefaultWorkerToolRule workerToolRule =
         WorkerToolBuilder.newWorkerToolBuilder(BuildTargetFactory.newInstance("//:worker_rule"))
             .setExe(shBinaryRule.getBuildTarget())
             .build(graphBuilder);
-    workerTool.getBuildOutputInitializer().setBuildOutputForTests(UUID.randomUUID());
+    workerToolRule.getBuildOutputInitializer().setBuildOutputForTests(UUID.randomUUID());
 
     return GenruleBuilder.newGenruleBuilder(
             BuildTargetFactory.newInstance("//:genrule_with_worker"))
-        .setCmd(StringWithMacrosUtils.format("%s abc", WorkerMacro.of(workerTool.getBuildTarget())))
+        .setCmd(
+            StringWithMacrosUtils.format("%s abc", WorkerMacro.of(workerToolRule.getBuildTarget())))
         .setOut("output.txt");
   }
 

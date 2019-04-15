@@ -102,7 +102,7 @@ public class JsUtil {
         WorkerJobParams.of(
             jobArgsString,
             WorkerProcessParams.of(
-                worker.getTempDir(),
+                worker.getTempDir(filesystem),
                 tool.getCommandPrefix(pathResolver),
                 tool.getEnvironment(pathResolver),
                 worker.getMaxWorkers(),

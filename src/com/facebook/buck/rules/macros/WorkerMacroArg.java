@@ -24,8 +24,10 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
+import com.facebook.buck.shell.ProvidesWorkerTool;
 import com.facebook.buck.shell.WorkerTool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,15 +74,15 @@ public class WorkerMacroArg extends ProxyArg {
     WorkerMacro workerMacro = (WorkerMacro) firstMacro;
 
     BuildTarget workerTarget = workerMacro.getTarget();
-    BuildRule workerRule = resolver.getRule(workerTarget);
-    if (!(workerRule instanceof WorkerTool)) {
+    BuildRule workerToolProvider = resolver.getRule(workerTarget);
+    if (!(workerToolProvider instanceof ProvidesWorkerTool)) {
       throw new HumanReadableException(
           String.format(
               "%s used in worker macro, \"%s\", of target %s does "
-                  + "not correspond to a worker_tool",
+                  + "not correspond to a rule that can provide a worker tool",
               workerTarget, unexpanded, target));
     }
-    WorkerTool workerTool = (WorkerTool) workerRule;
+    WorkerTool workerTool = ((ProvidesWorkerTool) workerToolProvider).getWorkerTool();
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     Tool exe = workerTool.getTool();
@@ -97,8 +99,8 @@ public class WorkerMacroArg extends ProxyArg {
     return startupEnvironment;
   }
 
-  public Path getTempDir() {
-    return workerTool.getTempDir();
+  public Path getTempDir(ProjectFilesystem filesystem) {
+    return workerTool.getTempDir(filesystem);
   }
 
   public Optional<String> getPersistentWorkerKey() {

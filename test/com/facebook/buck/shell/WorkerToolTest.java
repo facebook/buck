@@ -63,7 +63,11 @@ public class WorkerToolTest {
         "getArgs should return the args string supplied in the definition.",
         ImmutableList.of("arg1", "arg2"),
         Matchers.is(
-            ((WorkerTool) workerRule).getTool().getCommandPrefix(pathResolver).subList(1, 3)));
+            ((ProvidesWorkerTool) workerRule)
+                .getWorkerTool()
+                .getTool()
+                .getCommandPrefix(pathResolver)
+                .subList(1, 3)));
   }
 
   @Test
@@ -107,17 +111,18 @@ public class WorkerToolTest {
             .setArgs(
                 StringWithMacrosUtils.format(
                     "--input %s", LocationMacro.of(exportFileRule.getBuildTarget())));
-    DefaultWorkerTool workerTool = workerToolBuilder.build(graphBuilder);
+    DefaultWorkerToolRule workerToolRule = workerToolBuilder.build(graphBuilder);
 
     assertThat(
         workerToolBuilder.build().getExtraDeps(),
         Matchers.hasItem(exportFileRule.getBuildTarget()));
-    assertThat(workerTool.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
+    assertThat(workerToolRule.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
-        workerTool.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
+        workerToolRule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
-        Joiner.on(' ').join(workerTool.getTool().getCommandPrefix(pathResolver)),
+        Joiner.on(' ')
+            .join(workerToolRule.getWorkerTool().getTool().getCommandPrefix(pathResolver)),
         Matchers.containsString(
             pathResolver.getAbsolutePath(exportFileRule.getSourcePathToOutput()).toString()));
   }
@@ -146,17 +151,17 @@ public class WorkerToolTest {
                     "ENV_VAR_NAME",
                     StringWithMacrosUtils.format(
                         "%s", LocationMacro.of(exportFileRule.getBuildTarget()))));
-    DefaultWorkerTool workerTool = workerToolBuilder.build(graphBuilder);
+    DefaultWorkerToolRule workerToolRule = workerToolBuilder.build(graphBuilder);
 
     assertThat(
         workerToolBuilder.build().getExtraDeps(),
         Matchers.hasItem(exportFileRule.getBuildTarget()));
-    assertThat(workerTool.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
+    assertThat(workerToolRule.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
-        workerTool.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
+        workerToolRule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
-        workerTool.getTool().getEnvironment(pathResolver),
+        workerToolRule.getWorkerTool().getTool().getEnvironment(pathResolver),
         Matchers.hasEntry(
             "ENV_VAR_NAME",
             pathResolver.getAbsolutePath(exportFileRule.getSourcePathToOutput()).toString()));
@@ -183,7 +188,7 @@ public class WorkerToolTest {
                 StringWithMacrosUtils.format("--input"),
                 StringWithMacrosUtils.format(
                     "%s", LocationMacro.of(exportFileRule.getBuildTarget())));
-    WorkerTool workerTool = workerToolBuilder.build(graphBuilder);
+    WorkerTool workerTool = workerToolBuilder.build(graphBuilder).getWorkerTool();
 
     assertThat(
         BuildableSupport.deriveInputs(workerTool.getTool())

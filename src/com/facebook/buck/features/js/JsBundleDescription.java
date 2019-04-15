@@ -50,7 +50,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ExportFile;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDirectoryAction;
-import com.facebook.buck.shell.WorkerTool;
+import com.facebook.buck.shell.ProvidesWorkerTool;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +61,6 @@ import com.google.common.collect.Ordering;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
 
@@ -201,7 +200,7 @@ public class JsBundleDescription
           libraries,
           entryPoints,
           extraJson,
-          graphBuilder.getRuleWithType(args.getWorker(), WorkerTool.class));
+          graphBuilder.getRuleWithType(args.getWorker(), ProvidesWorkerTool.class).getWorkerTool());
     }
 
     String bundleName =
@@ -215,7 +214,7 @@ public class JsBundleDescription
         entryPoints,
         extraJson,
         bundleName,
-        graphBuilder.getRuleWithType(args.getWorker(), WorkerTool.class));
+        graphBuilder.getRuleWithType(args.getWorker(), ProvidesWorkerTool.class).getWorkerTool());
   }
 
   private static BuildRule createAndroidRule(
@@ -260,7 +259,7 @@ public class JsBundleDescription
         buildTarget,
         projectFilesystem,
         new BuildRuleParams(
-            () -> ImmutableSortedSet.of(),
+            ImmutableSortedSet::of,
             () -> ImmutableSortedSet.of(jsBundle, resource),
             ImmutableSortedSet.of()),
         jsBundle,
@@ -288,9 +287,7 @@ public class JsBundleDescription
 
     BuildRuleParams params =
         new BuildRuleParams(
-            () -> ImmutableSortedSet.of(),
-            () -> ImmutableSortedSet.of(jsBundle),
-            ImmutableSortedSet.of());
+            ImmutableSortedSet::of, () -> ImmutableSortedSet.of(jsBundle), ImmutableSortedSet.of());
 
     return new AndroidResource(
         buildTarget,
@@ -314,8 +311,7 @@ public class JsBundleDescription
   private static Stream<BuildTarget> findGeneratedSources(
       SourcePathRuleFinder ruleFinder, Stream<JsLibrary> libraries) {
     return libraries
-        .map(lib -> lib.getJsFiles(ruleFinder))
-        .flatMap(Function.identity())
+        .flatMap(lib -> lib.getJsFiles(ruleFinder))
         .map(jsFile -> jsFile.getSourceBuildTarget(ruleFinder))
         .filter(Objects::nonNull);
   }
