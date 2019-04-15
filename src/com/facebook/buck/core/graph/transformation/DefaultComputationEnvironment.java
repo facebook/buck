@@ -22,10 +22,10 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map.Entry;
 
 /**
- * A computation environment that {@link GraphTransformer} can access. This class provides ability
- * of {@link GraphTransformer}s to access their dependencies.
+ * A computation environment that {@link GraphComputation} can access. This class provides ability
+ * of {@link GraphComputation}s to access their dependencies.
  */
-class DefaultTransformationEnvironment implements TransformationEnvironment {
+class DefaultComputationEnvironment implements ComputationEnvironment {
 
   private final ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> deps;
 
@@ -33,7 +33,7 @@ class DefaultTransformationEnvironment implements TransformationEnvironment {
    * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
    * environment
    */
-  DefaultTransformationEnvironment(
+  DefaultComputationEnvironment(
       ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> deps) {
     this.deps = deps;
   }

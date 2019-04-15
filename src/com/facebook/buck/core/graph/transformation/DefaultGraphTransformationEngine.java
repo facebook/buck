@@ -41,35 +41,35 @@ import java.util.concurrent.Future;
 
 /**
  * Transformation engine that transforms supplied {@link ComputeKey} into {@link ComputeResult} via
- * {@link GraphTransformer}. This engine is able to asynchronously run graph based computation,
+ * {@link GraphComputation}. This engine is able to asynchronously run graph based computation,
  * reusing results when possible. Note that the computation dependency graph must be an acyclic
  * graph.
  *
  * <p>This engine is able to deal with dependencies in the computation graph by having Transformer
  * request dependent results of other transformations through {@link
- * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} and {@link
- * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}. The engine guarantees that
+ * GraphComputation#discoverPreliminaryDeps(ComputeKey)} and {@link
+ * GraphComputation#discoverDeps(ComputeKey, ComputationEnvironment)}. The engine guarantees that
  * all dependencies are completed before performing the transformation.
  *
  * <p>This engine allows for multiple stages of transformations via different {@link
- * GraphTransformer}s. These are specified during construction of the engine by supplying multiple
- * {@link GraphTransformationStage}s. Different stages are allowed to depend on other stages, as
- * long as the computation nodes do not form a cyclic dependency.
+ * GraphComputation}s. These are specified during construction of the engine by supplying multiple
+ * {@link GraphComputationStage}s. Different stages are allowed to depend on other stages, as long
+ * as the computation nodes do not form a cyclic dependency.
  *
- * <p>{@link GraphTransformer#discoverPreliminaryDeps(ComputeKey)} will be ran first to discover a
+ * <p>{@link GraphComputation#discoverPreliminaryDeps(ComputeKey)} will be ran first to discover a
  * set of dependencies based only on the {@link ComputeKey}. The keys are then computed, and the
- * results passed via the {@link TransformationEnvironment} to {@link
- * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)} for a second stage of
+ * results passed via the {@link ComputationEnvironment} to {@link
+ * GraphComputation#discoverDeps(ComputeKey, ComputationEnvironment)} for a second stage of
  * dependency discovery, where the dependency discovery can use the dependencies previously
  * specified. The results of dependencies returned via both {@link
- * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} and {@link
- * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)} will be available for the
- * {@link GraphTransformer#transform(ComputeKey, TransformationEnvironment)} operation.
+ * GraphComputation#discoverPreliminaryDeps(ComputeKey)} and {@link
+ * GraphComputation#discoverDeps(ComputeKey, ComputationEnvironment)} will be available for the
+ * {@link GraphComputation#transform(ComputeKey, ComputationEnvironment)} operation.
  *
  * <p>Transformations also should never block waiting for each other in any manner. If required to
  * wait, the transformation must declare it through {@link
- * GraphTransformer#discoverPreliminaryDeps(ComputeKey)} or {@link
- * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}
+ * GraphComputation#discoverPreliminaryDeps(ComputeKey)} or {@link
+ * GraphComputation#discoverDeps(ComputeKey, ComputationEnvironment)}
  *
  * <p>The transformation is incremental, so cached portions of the transformation will be used
  * whenever possible based on {@code ComputeKey.equals()}. Therefore, {@link ComputeKey} should be
@@ -83,10 +83,10 @@ import java.util.concurrent.Future;
  *
  * <p>By using all callback based operations and queue based operations, this engine will also
  * reduce stack usage, eliminating stack overflow for large graph computations, provided that the
- * {@link GraphTransformer} itself does not stack overflow within its {@link
- * GraphTransformer#discoverPreliminaryDeps(ComputeKey)}, {@link
- * GraphTransformer#discoverDeps(ComputeKey, TransformationEnvironment)}, and {@link
- * GraphTransformer#transform(ComputeKey, TransformationEnvironment)} methods.
+ * {@link GraphComputation} itself does not stack overflow within its {@link
+ * GraphComputation#discoverPreliminaryDeps(ComputeKey)}, {@link
+ * GraphComputation#discoverDeps(ComputeKey, ComputationEnvironment)}, and {@link
+ * GraphComputation#transform(ComputeKey, ComputationEnvironment)} methods.
  */
 public final class DefaultGraphTransformationEngine implements GraphTransformationEngine {
 
@@ -103,12 +103,12 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
    */
   @SuppressWarnings("unchecked")
   public DefaultGraphTransformationEngine(
-      ImmutableList<GraphTransformationStage<?, ?>> stages,
+      ImmutableList<GraphComputationStage<?, ?>> stages,
       int estimatedNumOps,
       DepsAwareExecutor<? super ComputeResult, ?> executor) {
     this.impl =
         new GraphTransformationEngineImpl<>(
-            TransformationStageMap.from(stages),
+            ComputationStageMap.from(stages),
             estimatedNumOps,
             (DepsAwareExecutor<ComputeResult, ?>) executor);
   }
@@ -157,7 +157,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
   @VisibleForTesting
   class GraphTransformationEngineImpl<TaskType extends DepsAwareTask<ComputeResult, TaskType>> {
 
-    private final TransformationStageMap transformationStageMap;
+    private final ComputationStageMap transformationStageMap;
 
     private final DepsAwareExecutor<ComputeResult, TaskType> executor;
 
@@ -171,7 +171,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
      * @param executor the custom {@link Executor} the engine uses to execute tasks
      */
     private GraphTransformationEngineImpl(
-        TransformationStageMap transformationStageMap,
+        ComputationStageMap transformationStageMap,
         int estimatedNumOps,
         DepsAwareExecutor<ComputeResult, TaskType> executor) {
       this.transformationStageMap = transformationStageMap;
@@ -187,7 +187,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
     private <UResultType extends ComputeResult, UKeyType extends ComputeKey<UResultType>>
         Future<UResultType> compute(UKeyType key) {
       LOG.verbose("Attempting to load from cache for key: %s", key);
-      GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> stage =
+      GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> stage =
           transformationStageMap.get(key);
       Optional<? extends ComputeResult> result = stage.getCache().get(key);
       if (result.isPresent()) {
@@ -200,8 +200,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
 
     private TaskType convertKeyToTask(
         ComputeKey<? extends ComputeResult> key,
-        GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>
-            stage) {
+        GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> stage) {
       return computationIndex.computeIfAbsent(
           key,
           mapKey -> {
@@ -233,10 +232,10 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
 
     private ComputeResult computeForKey(
         ComputeKey<? extends ComputeResult> key,
-        GraphTransformationStage<ComputeKey<?>, ? extends ComputeResult> stage,
+        GraphComputationStage<ComputeKey<?>, ? extends ComputeResult> stage,
         ImmutableMap<ComputeKey<?>, ComputeResult> depResults)
         throws Exception {
-      ComputeResult result = stage.transform(key, new DefaultTransformationEnvironment(depResults));
+      ComputeResult result = stage.transform(key, new DefaultComputationEnvironment(depResults));
 
       computationIndex.remove(key);
       return result;
@@ -244,8 +243,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
 
     private ImmutableSet<TaskType> computePreliminaryDepForKey(
         ComputeKey<? extends ComputeResult> key,
-        GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>
-            stage,
+        GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> stage,
         ImmutableMap.Builder<ComputeKey<?>, Future<ComputeResult>> depResults)
         throws Exception {
       ImmutableSet<? extends ComputeKey<?>> preliminaryDepKeys =
@@ -254,7 +252,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
           ImmutableSet.builderWithExpectedSize(preliminaryDepKeys.size());
       preliminaryDepKeys.forEach(
           preliminaryDepKey -> {
-            GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>
+            GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>
                 depStage = transformationStageMap.get(preliminaryDepKey);
             TaskType task = convertKeyToTask(preliminaryDepKey, depStage);
             depResults.put(preliminaryDepKey, task.getResultFuture());
@@ -264,8 +262,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
     }
 
     private ImmutableSet<TaskType> computeDepsForKey(
-        GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>
-            stage,
+        GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> stage,
         ComputeKey<? extends ComputeResult> key,
         ImmutableMap.Builder<ComputeKey<?>, Future<ComputeResult>> depResults)
         throws Exception {
@@ -274,7 +271,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
           stage
               .getTransformer()
               .discoverDeps(
-                  key, new DefaultTransformationEnvironment(collectDeps(depResults.build())));
+                  key, new DefaultComputationEnvironment(collectDeps(depResults.build())));
 
       // task that executes secondary deps, depending on the initial deps
       ImmutableSet.Builder<TaskType> depWorkBuilder =

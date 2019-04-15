@@ -17,8 +17,8 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.graph.transformation.GraphTransformer;
-import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -34,19 +34,19 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 /**
- * The {@link GraphTransformer} for performing the target graph to provider and action graph
+ * The {@link GraphComputation} for performing the target graph to provider and action graph
  * transformation.
  *
  * <p>This represents the stage of Buck where the {@link
  * com.facebook.buck.core.model.targetgraph.TargetGraph} is transformed into the {@link
  * com.google.devtools.build.lib.packages.Provider} graph, along with the registered Actions.
  */
-public class RuleAnalysisTransformer
-    implements GraphTransformer<RuleAnalysisKey, RuleAnalysisResult> {
+public class RuleAnalysisComputation
+    implements GraphComputation<RuleAnalysisKey, RuleAnalysisResult> {
 
   private final TargetGraph targetGraph;
 
-  public RuleAnalysisTransformer(TargetGraph targetGraph) {
+  public RuleAnalysisComputation(TargetGraph targetGraph) {
     this.targetGraph = targetGraph;
   }
 
@@ -56,7 +56,7 @@ public class RuleAnalysisTransformer
   }
 
   @Override
-  public RuleAnalysisResult transform(RuleAnalysisKey key, TransformationEnvironment env) {
+  public RuleAnalysisResult transform(RuleAnalysisKey key, ComputationEnvironment env) {
     return transformImpl(targetGraph.get(key.getBuildTarget()), env);
   }
 
@@ -74,7 +74,7 @@ public class RuleAnalysisTransformer
    * @return an {@link RuleAnalysisResult} containing information about the rule analyzed
    */
   private <T> RuleAnalysisResult transformImpl(
-      TargetNode<T> targetNode, TransformationEnvironment env) {
+      TargetNode<T> targetNode, ComputationEnvironment env) {
     BaseDescription<T> baseDescription = targetNode.getDescription();
     Verify.verify(baseDescription instanceof RuleDescription);
 
@@ -105,7 +105,7 @@ public class RuleAnalysisTransformer
 
   @Override
   public ImmutableSet<RuleAnalysisKey> discoverDeps(
-      RuleAnalysisKey key, TransformationEnvironment env) {
+      RuleAnalysisKey key, ComputationEnvironment env) {
     return ImmutableSet.of();
   }
 }

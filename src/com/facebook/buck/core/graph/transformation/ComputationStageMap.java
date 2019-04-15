@@ -22,35 +22,34 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * A collection of {@link GraphTransformationStage} offering retrieval of stages via key class with
+ * A collection of {@link GraphComputationStage} offering retrieval of stages via key class with
  * casting of types
  */
-class TransformationStageMap {
+class ComputationStageMap {
 
-  private final ImmutableMap<Class<? extends ComputeKey<?>>, GraphTransformationStage<?, ?>>
-      stageMaps;
+  private final ImmutableMap<Class<? extends ComputeKey<?>>, GraphComputationStage<?, ?>> stageMaps;
 
-  TransformationStageMap(
-      ImmutableMap<Class<? extends ComputeKey<?>>, GraphTransformationStage<?, ?>> stageMaps) {
+  ComputationStageMap(
+      ImmutableMap<Class<? extends ComputeKey<?>>, GraphComputationStage<?, ?>> stageMaps) {
     this.stageMaps = stageMaps;
   }
 
-  static TransformationStageMap from(ImmutableList<GraphTransformationStage<?, ?>> stages) {
-    ImmutableMap.Builder<Class<? extends ComputeKey<?>>, GraphTransformationStage<?, ?>>
-        mapBuilder = ImmutableMap.builderWithExpectedSize(stages.size());
-    for (GraphTransformationStage<?, ?> stage : stages) {
+  static ComputationStageMap from(ImmutableList<GraphComputationStage<?, ?>> stages) {
+    ImmutableMap.Builder<Class<? extends ComputeKey<?>>, GraphComputationStage<?, ?>> mapBuilder =
+        ImmutableMap.builderWithExpectedSize(stages.size());
+    for (GraphComputationStage<?, ?> stage : stages) {
       mapBuilder.put(stage.getKeyClass(), stage);
     }
-    return new TransformationStageMap(mapBuilder.build());
+    return new ComputationStageMap(mapBuilder.build());
   }
 
   @SuppressWarnings("unchecked")
-  /** @return the corresponding {@link GraphTransformationStage} for the given {@link ComputeKey} */
-  GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> get(
+  /** @return the corresponding {@link GraphComputationStage} for the given {@link ComputeKey} */
+  GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> get(
       ComputeKey<? extends ComputeResult> key) {
-    GraphTransformationStage<?, ?> ret = stageMaps.get(key.getKeyClass());
+    GraphComputationStage<?, ?> ret = stageMaps.get(key.getKeyClass());
     Verify.verify(ret != null, "Unknown stage for key: (%s) requested.", key);
-    return (GraphTransformationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>)
+    return (GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>)
         ret;
   }
 }

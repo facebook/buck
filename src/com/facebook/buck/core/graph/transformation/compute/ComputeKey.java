@@ -17,10 +17,10 @@ package com.facebook.buck.core.graph.transformation.compute;
 
 /**
  * This is an interface for all keys to be used in {@link
- * com.facebook.buck.core.graph.transformation.GraphTransformer}.
+ * com.facebook.buck.core.graph.transformation.GraphComputation}.
  *
  * @param <ResultType> should be the corresponding result type of performing the transformation in
- *     the {@link com.facebook.buck.core.graph.transformation.GraphTransformer}
+ *     the {@link com.facebook.buck.core.graph.transformation.GraphComputation}
  */
 public interface ComputeKey<ResultType extends ComputeResult> {
 

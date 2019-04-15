@@ -16,8 +16,8 @@
 
 package com.facebook.buck.parser.manifest;
 
-import com.facebook.buck.core.graph.transformation.GraphTransformer;
-import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -26,26 +26,26 @@ import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 
 /** Parses build file to {@link BuildFileManifest} structure */
-public class BuildPackagePathToBuildFileManifestTransformer
-    implements GraphTransformer<BuildPackagePathToBuildFileManifestKey, BuildFileManifest> {
+public class BuildPackagePathToBuildFileManifestComputation
+    implements GraphComputation<BuildPackagePathToBuildFileManifestKey, BuildFileManifest> {
 
   private final ProjectBuildFileParser parser;
   private final Path buildFileName;
 
-  private BuildPackagePathToBuildFileManifestTransformer(
+  private BuildPackagePathToBuildFileManifestComputation(
       ProjectBuildFileParser parser, Path buildFileName) {
     this.parser = parser;
     this.buildFileName = buildFileName;
   }
 
   /**
-   * Create new instance of {@link BuildPackagePathToBuildFileManifestTransformer}
+   * Create new instance of {@link BuildPackagePathToBuildFileManifestComputation}
    *
    * @param parser Parser used to parse build file. This parser should be thread-safe.
    */
-  public static BuildPackagePathToBuildFileManifestTransformer of(
+  public static BuildPackagePathToBuildFileManifestComputation of(
       ProjectBuildFileParser parser, Path buildFileName) {
-    return new BuildPackagePathToBuildFileManifestTransformer(parser, buildFileName);
+    return new BuildPackagePathToBuildFileManifestComputation(parser, buildFileName);
   }
 
   @Override
@@ -55,13 +55,13 @@ public class BuildPackagePathToBuildFileManifestTransformer
 
   @Override
   public BuildFileManifest transform(
-      BuildPackagePathToBuildFileManifestKey key, TransformationEnvironment env) throws Exception {
+      BuildPackagePathToBuildFileManifestKey key, ComputationEnvironment env) throws Exception {
     return parser.getBuildFileManifest(key.getPath().resolve(buildFileName));
   }
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      BuildPackagePathToBuildFileManifestKey key, TransformationEnvironment env) {
+      BuildPackagePathToBuildFileManifestKey key, ComputationEnvironment env) {
     return ImmutableSet.of();
   }
 

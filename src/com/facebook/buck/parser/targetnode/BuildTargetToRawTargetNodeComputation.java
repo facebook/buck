@@ -17,8 +17,8 @@
 package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.graph.transformation.GraphTransformer;
-import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -35,20 +35,20 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /** Transforms one target from specific {@link BuildFileManifest} to {@link RawTargetNode} */
-public class BuildTargetToRawTargetNodeTransformer
-    implements GraphTransformer<BuildTargetToRawTargetNodeKey, RawTargetNode> {
+public class BuildTargetToRawTargetNodeComputation
+    implements GraphComputation<BuildTargetToRawTargetNodeKey, RawTargetNode> {
 
   private final RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory;
   private final Cell cell;
 
-  private BuildTargetToRawTargetNodeTransformer(
+  private BuildTargetToRawTargetNodeComputation(
       RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory, Cell cell) {
     this.rawTargetNodeFactory = rawTargetNodeFactory;
     this.cell = cell;
   }
 
   /**
-   * Create new instance of {@link BuildTargetToRawTargetNodeTransformer}
+   * Create new instance of {@link BuildTargetToRawTargetNodeComputation}
    *
    * @param rawTargetNodeFactory An actual factory that will create {@link RawTargetNode} from raw
    *     attributes containing in {@link BuildFileManifest}
@@ -56,9 +56,9 @@ public class BuildTargetToRawTargetNodeTransformer
    *     mostly used to resolve paths to absolute paths
    * @return
    */
-  public static BuildTargetToRawTargetNodeTransformer of(
+  public static BuildTargetToRawTargetNodeComputation of(
       RawTargetNodeFactory<Map<String, Object>> rawTargetNodeFactory, Cell cell) {
-    return new BuildTargetToRawTargetNodeTransformer(rawTargetNodeFactory, cell);
+    return new BuildTargetToRawTargetNodeComputation(rawTargetNodeFactory, cell);
   }
 
   @Override
@@ -67,7 +67,7 @@ public class BuildTargetToRawTargetNodeTransformer
   }
 
   @Override
-  public RawTargetNode transform(BuildTargetToRawTargetNodeKey key, TransformationEnvironment env) {
+  public RawTargetNode transform(BuildTargetToRawTargetNodeKey key, ComputationEnvironment env) {
     UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
 
     BuildFileManifest manifest = env.getDep(getManifestKey(key));
@@ -91,7 +91,7 @@ public class BuildTargetToRawTargetNodeTransformer
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      BuildTargetToRawTargetNodeKey key, TransformationEnvironment env) {
+      BuildTargetToRawTargetNodeKey key, ComputationEnvironment env) {
     return ImmutableSet.of();
   }
 

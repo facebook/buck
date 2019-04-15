@@ -28,7 +28,7 @@ import java.util.stream.LongStream;
 import org.immutables.value.Value;
 
 /**
- * Demonstration of usage of {@link GraphTransformer}.
+ * Demonstration of usage of {@link GraphComputation}.
  *
  * <p>This returns the value of the product of the nodes children's sum
  *
@@ -43,7 +43,7 @@ import org.immutables.value.Value;
  * For the above, we have f(1) = 1*f(2)*f(4*f(5)*s(2*s(4)*s(5) where s is the children adder
  * function
  */
-public class ChildrenSumMultiplier implements GraphTransformer<LongMultNode, LongMultNode> {
+public class ChildrenSumMultiplier implements GraphComputation<LongMultNode, LongMultNode> {
 
   @Value.Immutable(builder = false, copy = false, prehash = true)
   public abstract static class LongMultNode implements ComputeKey<LongMultNode>, ComputeResult {
@@ -68,7 +68,7 @@ public class ChildrenSumMultiplier implements GraphTransformer<LongMultNode, Lon
   }
 
   @Override
-  public LongMultNode transform(LongMultNode key, TransformationEnvironment env) {
+  public LongMultNode transform(LongMultNode key, ComputationEnvironment env) {
     LongStream sumDeps = env.getDeps(LongNode.class).values().stream().mapToLong(LongNode::get);
     LongStream deps =
         env.getDeps(LongMultNode.class).values().stream().mapToLong(LongMultNode::get);
@@ -78,7 +78,7 @@ public class ChildrenSumMultiplier implements GraphTransformer<LongMultNode, Lon
 
   @Override
   public ImmutableSet<? extends ComputeKey<?>> discoverDeps(
-      LongMultNode key, TransformationEnvironment env) {
+      LongMultNode key, ComputationEnvironment env) {
     return ImmutableSet.copyOf(
         Iterables.transform(
             input.successors(ImmutableLongNode.of(key.get())),

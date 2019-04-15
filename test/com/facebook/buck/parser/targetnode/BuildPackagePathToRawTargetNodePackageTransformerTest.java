@@ -20,7 +20,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
-import com.facebook.buck.core.graph.transformation.FakeTransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.FakeComputationEnvironment;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
@@ -101,13 +101,13 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             ImmutableSet.of(),
             ImmutableSet.of());
 
-    BuildPackagePathToRawTargetNodePackageTransformer transformer =
-        BuildPackagePathToRawTargetNodePackageTransformer.of(
+    BuildPackagePathToRawTargetNodePackageComputation transformer =
+        BuildPackagePathToRawTargetNodePackageComputation.of(
             rawTargetNodeToTargetNodeFactory, cell);
     RawTargetNodeWithDepsPackage rawTargetNodeWithDepsPackage =
         transformer.transform(
             ImmutableBuildPackagePathToRawTargetNodePackageKey.of(Paths.get("")),
-            new FakeTransformationEnvironment(
+            new FakeComputationEnvironment(
                 ImmutableMap.of(
                     ImmutableBuildTargetToRawTargetNodeKey.of(unconfiguredBuildTarget1),
                     rawTargetNode1,

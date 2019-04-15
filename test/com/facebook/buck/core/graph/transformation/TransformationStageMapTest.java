@@ -34,17 +34,17 @@ public class TransformationStageMapTest {
 
   @Test
   public void createAndGetWithSingleStage() {
-    GraphTransformationStage<?, ?> stage = new FakeTransformationStage<>(LongNode.class);
-    TransformationStageMap map = TransformationStageMap.from(ImmutableList.of(stage));
+    GraphComputationStage<?, ?> stage = new FakeComputationStage<>(LongNode.class);
+    ComputationStageMap map = ComputationStageMap.from(ImmutableList.of(stage));
 
     assertEquals(stage, map.get(ImmutableLongNode.of(1)));
   }
 
   @Test
   public void createAndGetWithMultipleStage() {
-    GraphTransformationStage<?, ?> stage1 = new FakeTransformationStage<>(LongNode.class);
-    GraphTransformationStage<?, ?> stage2 = new FakeTransformationStage<>(MyLongNode.class);
-    TransformationStageMap map = TransformationStageMap.from(ImmutableList.of(stage1, stage2));
+    GraphComputationStage<?, ?> stage1 = new FakeComputationStage<>(LongNode.class);
+    GraphComputationStage<?, ?> stage2 = new FakeComputationStage<>(MyLongNode.class);
+    ComputationStageMap map = ComputationStageMap.from(ImmutableList.of(stage1, stage2));
 
     assertEquals(stage1, map.get(ImmutableLongNode.of(1)));
     assertEquals(stage2, map.get(new MyLongNode()));
@@ -53,7 +53,7 @@ public class TransformationStageMapTest {
   @Test
   public void unknownKeyThrowsException() {
     expectedException.expect(VerifyException.class);
-    TransformationStageMap map = TransformationStageMap.from(ImmutableList.of());
+    ComputationStageMap map = ComputationStageMap.from(ImmutableList.of());
     map.get(new MyLongNode());
   }
 
@@ -65,24 +65,24 @@ public class TransformationStageMapTest {
     }
   }
 
-  static class FakeTransformationStage<Key extends ComputeKey<Result>, Result extends ComputeResult>
-      extends GraphTransformationStage<Key, Result> {
+  static class FakeComputationStage<Key extends ComputeKey<Result>, Result extends ComputeResult>
+      extends GraphComputationStage<Key, Result> {
 
-    public FakeTransformationStage(Class<Key> keyClass) {
+    public FakeComputationStage(Class<Key> keyClass) {
       super(
-          new GraphTransformer<Key, Result>() {
+          new GraphComputation<Key, Result>() {
             @Override
             public Class<Key> getKeyClass() {
               return keyClass;
             }
 
             @Override
-            public Result transform(Key key, TransformationEnvironment env) {
+            public Result transform(Key key, ComputationEnvironment env) {
               throw new UnsupportedOperationException();
             }
 
             @Override
-            public ImmutableSet<Key> discoverDeps(Key key, TransformationEnvironment env) {
+            public ImmutableSet<Key> discoverDeps(Key key, ComputationEnvironment env) {
               return ImmutableSet.of();
             }
 

@@ -21,15 +21,15 @@ import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.google.common.collect.ImmutableMap;
 
 /**
- * A computation environment that {@link GraphTransformer} can access. This class provides the
- * execution context for the {@link GraphTransformer}, such as the dependencies required for this
+ * A computation environment that {@link GraphComputation} can access. This class provides the
+ * execution context for the {@link GraphComputation}, such as the dependencies required for this
  * transformation.
  */
-public interface TransformationEnvironment {
+public interface ComputationEnvironment {
 
   /**
    * @return an immutable map containing the requested deps and their results. The dependencies here
-   *     are all of the keys returned from {@link GraphTransformer#discoverDeps}
+   *     are all of the keys returned from {@link GraphComputation#discoverDeps}
    */
   ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> getDeps();
 

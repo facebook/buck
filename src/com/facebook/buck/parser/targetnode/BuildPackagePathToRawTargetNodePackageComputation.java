@@ -17,8 +17,8 @@
 package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.graph.transformation.GraphTransformer;
-import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
@@ -52,23 +52,23 @@ import java.util.Optional;
  * Transforms all targets from results of parsing a single build file to {@link
  * RawTargetNodeWithDepsPackage}
  */
-public class BuildPackagePathToRawTargetNodePackageTransformer
-    implements GraphTransformer<
+public class BuildPackagePathToRawTargetNodePackageComputation
+    implements GraphComputation<
         BuildPackagePathToRawTargetNodePackageKey, RawTargetNodeWithDepsPackage> {
 
   private final RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory;
   private final Cell cell;
 
-  private BuildPackagePathToRawTargetNodePackageTransformer(
+  private BuildPackagePathToRawTargetNodePackageComputation(
       RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory, Cell cell) {
     this.rawTargetNodeToTargetNodeFactory = rawTargetNodeToTargetNodeFactory;
     this.cell = cell;
   }
 
-  /** Create new instance of {@link BuildPackagePathToRawTargetNodePackageTransformer} */
-  public static BuildPackagePathToRawTargetNodePackageTransformer of(
+  /** Create new instance of {@link BuildPackagePathToRawTargetNodePackageComputation} */
+  public static BuildPackagePathToRawTargetNodePackageComputation of(
       RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory, Cell cell) {
-    return new BuildPackagePathToRawTargetNodePackageTransformer(
+    return new BuildPackagePathToRawTargetNodePackageComputation(
         rawTargetNodeToTargetNodeFactory, cell);
   }
 
@@ -79,7 +79,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
 
   @Override
   public RawTargetNodeWithDepsPackage transform(
-      BuildPackagePathToRawTargetNodePackageKey key, TransformationEnvironment env) {
+      BuildPackagePathToRawTargetNodePackageKey key, ComputationEnvironment env) {
 
     ImmutableMap<BuildTargetToRawTargetNodeKey, RawTargetNode> rawTargetNodes =
         env.getDeps(BuildTargetToRawTargetNodeKey.class);
@@ -137,7 +137,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformer
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      BuildPackagePathToRawTargetNodePackageKey key, TransformationEnvironment env) {
+      BuildPackagePathToRawTargetNodePackageKey key, ComputationEnvironment env) {
 
     BuildFileManifest buildFileManifest =
         env.getDep(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));

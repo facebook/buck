@@ -16,11 +16,11 @@
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
-import com.facebook.buck.core.graph.transformation.GraphTransformationStage;
-import com.facebook.buck.core.graph.transformation.GraphTransformer;
-import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -58,14 +58,13 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /**
  * Takes a regular {@link TargetGraph}, resolves any versioned nodes, and returns a new graph with
- * the versioned nodes removed, transforming it asynchronously using {@link
- * com.facebook.buck.core.graph.transformation.GraphTransformer}.
+ * the versioned nodes removed, transforming it asynchronously using {@link GraphComputation}.
  */
 public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGraphBuilder {
 
   private static final Logger LOG = Logger.get(AsyncVersionedTargetGraphBuilder.class);
 
-  private final VersionedTargetGraphTransformer versionedTargetGraphTransformer;
+  private final VersionedTargetGraphComputation versionedTargetGraphTransformer;
 
   private final GraphTransformationEngine asyncTransformationEngine;
 
@@ -86,19 +85,19 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         TimeUnit.SECONDS);
 
     this.versionedTargetGraphTransformer =
-        new VersionedTargetGraphTransformer(
+        new VersionedTargetGraphComputation(
             unversionedTargetGraphAndBuildTargets.getTargetGraph(), versionSelector);
 
     this.asyncTransformationEngine =
         new DefaultGraphTransformationEngine(
-            ImmutableList.of(new GraphTransformationStage<>(versionedTargetGraphTransformer)),
+            ImmutableList.of(new GraphComputationStage<>(versionedTargetGraphTransformer)),
             unversionedTargetGraphAndBuildTargets.getTargetGraph().getSize() * 4,
             executor);
     this.versionInfoAsyncTransformationEngine =
         new DefaultGraphTransformationEngine(
             ImmutableList.of(
-                new GraphTransformationStage<>(
-                    new TargetNodeToVersionInfoTransformer(
+                new GraphComputationStage<>(
+                    new TargetNodeToVersionInfoComputation(
                         unversionedTargetGraphAndBuildTargets.getTargetGraph()))),
             2 * unversionedTargetGraphAndBuildTargets.getTargetGraph().getSize(),
             DefaultDepsAwareExecutor.of(2));
@@ -178,7 +177,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
   /**
    * Computes all the {@link VersionInfo} in the graph. TODO(bobyf) rewrite this as stages once
-   * {@link GraphTransformer} supports staging
+   * {@link GraphComputation} supports staging
    */
   @Value.Immutable(builder = false, copy = false, prehash = true)
   @Value.Style(visibility = ImplementationVisibility.PACKAGE)
@@ -192,12 +191,12 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
   }
 
-  private final class TargetNodeToVersionInfoTransformer
-      implements GraphTransformer<VersionInfoKey, VersionInfo> {
+  private final class TargetNodeToVersionInfoComputation
+      implements GraphComputation<VersionInfoKey, VersionInfo> {
 
     private final TargetGraph targetGraph;
 
-    public TargetNodeToVersionInfoTransformer(TargetGraph targetGraph) {
+    public TargetNodeToVersionInfoComputation(TargetGraph targetGraph) {
       this.targetGraph = targetGraph;
     }
 
@@ -207,13 +206,13 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     @Override
-    public VersionInfo transform(VersionInfoKey node, TransformationEnvironment env) {
+    public VersionInfo transform(VersionInfoKey node, ComputationEnvironment env) {
       return getVersionInfo(node.getTargetNode(), env);
     }
 
     @Override
     public ImmutableSet<VersionInfoKey> discoverDeps(
-        VersionInfoKey key, TransformationEnvironment env) {
+        VersionInfoKey key, ComputationEnvironment env) {
       return ImmutableSet.of();
     }
 
@@ -253,7 +252,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     /** Get/cache the transitive version info for this node. */
-    private VersionInfo getVersionInfo(TargetNode<?> node, TransformationEnvironment env) {
+    private VersionInfo getVersionInfo(TargetNode<?> node, ComputationEnvironment env) {
       HashMap<BuildTarget, ImmutableSet<Version>> versionDomain = new HashMap<>();
 
       Optional<TargetNode<VersionedAliasDescriptionArg>> versionedNode =
@@ -307,8 +306,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   }
 
   /** Transforms versioned {@link TargetGraph} */
-  private final class VersionedTargetGraphTransformer
-      implements GraphTransformer<VersionTargetGraphKey, TargetNode<?>> {
+  private final class VersionedTargetGraphComputation
+      implements GraphComputation<VersionTargetGraphKey, TargetNode<?>> {
 
     private final LoadingCache<VersionTargetGraphKey, VersionRootInfo> keyToRootInfoCache =
         CacheBuilder.newBuilder()
@@ -330,7 +329,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     /** The resolved version graph being built. */
     private final VersionedTargetGraph.Builder targetGraphBuilder = VersionedTargetGraph.builder();
 
-    public VersionedTargetGraphTransformer(
+    public VersionedTargetGraphComputation(
         TargetGraph targetGraph, VersionSelector versionSelector) {
       this.targetGraph = targetGraph;
       this.versionSelector = versionSelector;
@@ -342,7 +341,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     @Override
-    public TargetNode<?> transform(VersionTargetGraphKey key, TransformationEnvironment env)
+    public TargetNode<?> transform(VersionTargetGraphKey key, ComputationEnvironment env)
         throws VersionException {
 
       TargetNodeTranslator targetTranslator;
@@ -358,7 +357,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
     @Override
     public ImmutableSet<VersionTargetGraphKey> discoverDeps(
-        VersionTargetGraphKey key, TransformationEnvironment env) {
+        VersionTargetGraphKey key, ComputationEnvironment env) {
       return ImmutableSet.of();
     }
 
@@ -428,7 +427,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
     @SuppressWarnings("unchecked")
     private TargetNode<?> processVersionSubGraphNode(
-        TargetNode<?> node, TargetNodeTranslator targetTranslator, TransformationEnvironment env) {
+        TargetNode<?> node, TargetNodeTranslator targetTranslator, ComputationEnvironment env) {
 
       // Create the new target node, with the new target and deps.
       TargetNode<?> newNode =

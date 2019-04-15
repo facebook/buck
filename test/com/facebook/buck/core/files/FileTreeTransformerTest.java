@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.graph.transformation.FakeTransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.FakeComputationEnvironment;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,7 +44,7 @@ public class FileTreeTransformerTest {
     Files.createFile(file);
     Files.createFile(file1);
 
-    FileTreeTransformer transformer = FileTreeTransformer.of();
+    FileTreeComputation transformer = FileTreeComputation.of();
 
     DirectoryList dlist =
         ImmutableDirectoryList.of(
@@ -62,8 +62,8 @@ public class FileTreeTransformerTest {
     FileTreeKey fkey = ImmutableFileTreeKey.of(Paths.get("dir/dir1"));
     FileTree ftree = ImmutableFileTree.of(fkey.getPath(), dlist1, ImmutableMap.of());
 
-    FakeTransformationEnvironment env =
-        new FakeTransformationEnvironment(ImmutableMap.of(dkey, dlist, dkey1, dlist1, fkey, ftree));
+    FakeComputationEnvironment env =
+        new FakeComputationEnvironment(ImmutableMap.of(dkey, dlist, dkey1, dlist1, fkey, ftree));
     FileTree fileTree = transformer.transform(ImmutableFileTreeKey.of(Paths.get("dir")), env);
 
     ImmutableSortedSet<Path> dirs = fileTree.getDirectoryList().getDirectories();

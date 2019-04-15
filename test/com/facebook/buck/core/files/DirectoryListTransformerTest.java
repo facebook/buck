@@ -18,7 +18,7 @@ package com.facebook.buck.core.files;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.graph.transformation.FakeTransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.FakeComputationEnvironment;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -55,11 +55,10 @@ public class DirectoryListTransformerTest {
     Files.createFile(file2);
     Files.createSymbolicLink(link1, file1);
 
-    DirectoryListTransformer transformer = DirectoryListTransformer.of(filesystem.asView());
+    DirectoryListComputation transformer = DirectoryListComputation.of(filesystem.asView());
     DirectoryList dirList =
         transformer.transform(
-            ImmutableDirectoryListKey.of(dir),
-            new FakeTransformationEnvironment(ImmutableMap.of()));
+            ImmutableDirectoryListKey.of(dir), new FakeComputationEnvironment(ImmutableMap.of()));
     ImmutableSortedSet<Path> files = dirList.getFiles();
     assertEquals(2, files.size());
     assertTrue(files.contains(Paths.get("dir/file1")));

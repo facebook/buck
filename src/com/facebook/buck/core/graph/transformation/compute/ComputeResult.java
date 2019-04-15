@@ -17,6 +17,6 @@ package com.facebook.buck.core.graph.transformation.compute;
 
 /**
  * This is a marker interface for result types of {@link
- * com.facebook.buck.core.graph.transformation.GraphTransformer}.
+ * com.facebook.buck.core.graph.transformation.GraphComputation}.
  */
 public interface ComputeResult {}

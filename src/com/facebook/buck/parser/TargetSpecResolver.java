@@ -19,15 +19,15 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.files.DirectoryListCache;
-import com.facebook.buck.core.files.DirectoryListTransformer;
+import com.facebook.buck.core.files.DirectoryListComputation;
 import com.facebook.buck.core.files.FileTree;
 import com.facebook.buck.core.files.FileTreeCache;
+import com.facebook.buck.core.files.FileTreeComputation;
 import com.facebook.buck.core.files.FileTreeFileNameIterator;
-import com.facebook.buck.core.files.FileTreeTransformer;
 import com.facebook.buck.core.files.ImmutableFileTreeKey;
 import com.facebook.buck.core.graph.transformation.DefaultGraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.GraphComputationStage;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
-import com.facebook.buck.core.graph.transformation.GraphTransformationStage;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -133,10 +133,9 @@ public class TargetSpecResolver implements AutoCloseable {
 
                       return new DefaultGraphTransformationEngine(
                           ImmutableList.of(
-                              new GraphTransformationStage<>(
-                                  DirectoryListTransformer.of(fileSystemView), dirListCache),
-                              new GraphTransformationStage<>(
-                                  FileTreeTransformer.of(), fileTreeCache)),
+                              new GraphComputationStage<>(
+                                  DirectoryListComputation.of(fileSystemView), dirListCache),
+                              new GraphComputationStage<>(FileTreeComputation.of(), fileTreeCache)),
                           16,
                           executor);
                     }));

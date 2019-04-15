@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.files;
 
-import com.facebook.buck.core.graph.transformation.GraphTransformer;
-import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -30,16 +30,16 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Comparator;
 
 /** Produce a list of files and directories in provided folder */
-public class DirectoryListTransformer implements GraphTransformer<DirectoryListKey, DirectoryList> {
+public class DirectoryListComputation implements GraphComputation<DirectoryListKey, DirectoryList> {
 
   private final ProjectFilesystemView fileSystemView;
 
-  private DirectoryListTransformer(ProjectFilesystemView fileSystemView) {
+  private DirectoryListComputation(ProjectFilesystemView fileSystemView) {
     this.fileSystemView = fileSystemView;
   }
 
-  public static DirectoryListTransformer of(ProjectFilesystemView fileSystemView) {
-    return new DirectoryListTransformer(fileSystemView);
+  public static DirectoryListComputation of(ProjectFilesystemView fileSystemView) {
+    return new DirectoryListComputation(fileSystemView);
   }
 
   @Override
@@ -48,7 +48,7 @@ public class DirectoryListTransformer implements GraphTransformer<DirectoryListK
   }
 
   @Override
-  public DirectoryList transform(DirectoryListKey key, TransformationEnvironment env)
+  public DirectoryList transform(DirectoryListKey key, ComputationEnvironment env)
       throws Exception {
     ImmutableCollection<Path> contents = fileSystemView.getDirectoryContents(key.getPath());
 
@@ -85,7 +85,7 @@ public class DirectoryListTransformer implements GraphTransformer<DirectoryListK
 
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      DirectoryListKey key, TransformationEnvironment env) {
+      DirectoryListKey key, ComputationEnvironment env) {
     return ImmutableSet.of();
   }
 

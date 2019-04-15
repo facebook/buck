@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.files;
 
-import com.facebook.buck.core.graph.transformation.GraphTransformer;
-import com.facebook.buck.core.graph.transformation.TransformationEnvironment;
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.facebook.buck.util.MoreMaps;
@@ -29,12 +29,12 @@ import java.nio.file.Path;
 /**
  * Produce a file tree of a provided folder, i.e. a list of files and dependent folders recursively
  */
-public class FileTreeTransformer implements GraphTransformer<FileTreeKey, FileTree> {
+public class FileTreeComputation implements GraphComputation<FileTreeKey, FileTree> {
 
-  private FileTreeTransformer() {}
+  private FileTreeComputation() {}
 
-  public static FileTreeTransformer of() {
-    return new FileTreeTransformer();
+  public static FileTreeComputation of() {
+    return new FileTreeComputation();
   }
 
   @Override
@@ -43,7 +43,7 @@ public class FileTreeTransformer implements GraphTransformer<FileTreeKey, FileTr
   }
 
   @Override
-  public FileTree transform(FileTreeKey key, TransformationEnvironment env) {
+  public FileTree transform(FileTreeKey key, ComputationEnvironment env) {
 
     DirectoryList currentDir = env.getDep(ImmutableDirectoryListKey.of(key.getPath()));
     ImmutableMap<FileTreeKey, FileTree> children = env.getDeps(FileTreeKey.class);
@@ -64,7 +64,7 @@ public class FileTreeTransformer implements GraphTransformer<FileTreeKey, FileTr
   }
 
   @Override
-  public ImmutableSet<FileTreeKey> discoverDeps(FileTreeKey key, TransformationEnvironment env) {
+  public ImmutableSet<FileTreeKey> discoverDeps(FileTreeKey key, ComputationEnvironment env) {
     DirectoryList currentDir = env.getDep(ImmutableDirectoryListKey.of(key.getPath()));
     ImmutableSortedSet<Path> subDirs = currentDir.getDirectories();
     if (subDirs.isEmpty()) {

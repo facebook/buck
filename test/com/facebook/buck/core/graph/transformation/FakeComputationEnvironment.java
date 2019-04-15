@@ -19,13 +19,13 @@ import com.facebook.buck.core.graph.transformation.compute.ComputeKey;
 import com.facebook.buck.core.graph.transformation.compute.ComputeResult;
 import com.google.common.collect.ImmutableMap;
 
-public class FakeTransformationEnvironment extends DefaultTransformationEnvironment {
+public class FakeComputationEnvironment extends DefaultComputationEnvironment {
 
   /**
    * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
    * environment
    */
-  public FakeTransformationEnvironment(
+  public FakeComputationEnvironment(
       ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> deps) {
     super(deps);
   }

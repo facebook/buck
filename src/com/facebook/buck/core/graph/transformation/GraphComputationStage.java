@@ -22,19 +22,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents one "stage" of computation in the {@link GraphTransformationEngine}. This maps to a
- * single transformation by a {@link GraphTransformer} from a {@link ComputeKey} to a {@link
+ * single transformation by a {@link GraphComputation} from a {@link ComputeKey} to a {@link
  * ComputeResult}.
  *
  * @param <KeyType> the type of the {@link ComputeKey} for this stage
  * @param <ResultType> the type of the {@link ComputeResult} for this stage
  */
-public class GraphTransformationStage<
+public class GraphComputationStage<
     KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult> {
 
-  private final GraphTransformer<KeyType, ResultType> transformer;
+  private final GraphComputation<KeyType, ResultType> transformer;
   private final GraphEngineCache<KeyType, ResultType> cache;
 
-  public GraphTransformationStage(GraphTransformer<KeyType, ResultType> transformer) {
+  public GraphComputationStage(GraphComputation<KeyType, ResultType> transformer) {
     this(
         transformer,
         new GraphEngineCache<KeyType, ResultType>() {
@@ -52,14 +52,14 @@ public class GraphTransformationStage<
         });
   }
 
-  public GraphTransformationStage(
-      GraphTransformer<KeyType, ResultType> transformer,
+  public GraphComputationStage(
+      GraphComputation<KeyType, ResultType> transformer,
       GraphEngineCache<KeyType, ResultType> cache) {
     this.transformer = transformer;
     this.cache = cache;
   }
 
-  GraphTransformer<KeyType, ResultType> getTransformer() {
+  GraphComputation<KeyType, ResultType> getTransformer() {
     return transformer;
   }
 
@@ -71,7 +71,7 @@ public class GraphTransformationStage<
     return cache;
   }
 
-  ResultType transform(KeyType key, DefaultTransformationEnvironment env) throws Exception {
+  ResultType transform(KeyType key, DefaultComputationEnvironment env) throws Exception {
     ResultType result = transformer.transform(key, env);
 
     cache.put(key, result);
