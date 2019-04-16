@@ -40,6 +40,8 @@ import com.google.common.collect.ImmutableMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -256,15 +258,29 @@ public class BuildEndToEndTest {
             "//:query")
         .assertSuccess();
 
-    ImmutableList<BuildLogEntry> helper =
+    // Sometimes CI will think things aren't symlinks that should be, and will traverse the same
+    // logs twice (e.g. last_querycommand and the logs in the UUID directory might both get picked
+    // up). Quick hack to just get unique runs here...
+    HashMap<BuildId, BuildLogEntry> logs = new HashMap<>();
+    ImmutableList<BuildLogEntry> allLogs =
         new BuildLogHelper(
                 new DefaultProjectFilesystemFactory()
                     .createProjectFilesystem(workspace.getDestPath()))
             .getBuildLogs();
+    for (BuildLogEntry entry : allLogs) {
+      Optional<BuildId> buildIdOptional = entry.getBuildId();
+      if (!buildIdOptional.isPresent()) {
+        continue;
+      }
+      if (!logs.containsKey(buildIdOptional.get())) {
+        logs.put(buildIdOptional.get(), entry);
+      }
+    }
+    Collection<BuildLogEntry> dedupedLogs = logs.values();
 
-    assertEquals(2, helper.size());
+    assertEquals(2, dedupedLogs.size());
     Optional<BuildLogEntry> buildCommand =
-        helper.stream()
+        dedupedLogs.stream()
             .filter(
                 log -> {
                   Optional<List<String>> args = log.getCommandArgs();
@@ -273,7 +289,7 @@ public class BuildEndToEndTest {
                 })
             .findFirst();
     Optional<BuildLogEntry> queryCommand =
-        helper.stream()
+        dedupedLogs.stream()
             .filter(
                 log -> {
                   Optional<List<String>> args = log.getCommandArgs();
