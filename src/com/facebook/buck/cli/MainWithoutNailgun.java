@@ -27,7 +27,11 @@ import java.util.Optional;
  * state is not stored. It will also take care of error handling and shutdown procedures given that
  * we are not running as a nailgun server.
  */
-public class MainWithoutNailgun {
+public class MainWithoutNailgun extends AbstractMain {
+
+  public MainWithoutNailgun() {
+    super(System.out, System.err, System.in, getClientEnvironment(), Optional.empty());
+  }
 
   /**
    * The entry point of a buck command.
@@ -36,8 +40,10 @@ public class MainWithoutNailgun {
    */
   public static void main(String[] args) {
     // TODO(bobyf): add shutdown handling
-    new MainRunner(System.out, System.err, System.in, getClientEnvironment(), Optional.empty())
-        .runMainThenExit(args, System.nanoTime());
+
+    MainWithoutNailgun mainWithoutNailgun = new MainWithoutNailgun();
+    MainRunner mainRunner = mainWithoutNailgun.prepareMainRunner();
+    mainRunner.runMainThenExit(args, System.nanoTime());
   }
 
   private static ImmutableMap<String, String> getClientEnvironment() {

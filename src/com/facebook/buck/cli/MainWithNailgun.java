@@ -35,11 +35,23 @@ import javax.annotation.Nullable;
  * <p>This class maintains the state for statically storing daemon fields
  */
 @SuppressWarnings("unused")
-public class MainWithNailgun {
+public class MainWithNailgun extends AbstractMain {
 
   private static final Logger LOG = Logger.get(MainWithNailgun.class);
 
   @Nullable private static FileLock resourcesFileLock = null;
+
+  private final NGContext ngContext;
+
+  public MainWithNailgun(NGContext ngContext) {
+    super(
+        ngContext.out,
+        ngContext.err,
+        ngContext.in,
+        getClientEnvironment(ngContext),
+        Optional.of(ngContext));
+    this.ngContext = ngContext;
+  }
 
   /**
    * When running as a daemon in the NailGun server, {@link #nailMain(NGContext)} is called instead
@@ -51,6 +63,11 @@ public class MainWithNailgun {
     obtainResourceFileLock();
     try (DaemonCommandExecutionScope ignored =
         BuckDaemon.getInstance().getDaemonCommandExecutionScope()) {
+
+      MainWithNailgun mainWithNailgun = new MainWithNailgun(context);
+      MainRunner mainRunner = mainWithNailgun.prepareMainRunner();
+      mainRunner.runMainThenExit(context.getArgs(), System.nanoTime());
+
       new MainRunner(
               context.out,
               context.err,
