@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.Futures;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
@@ -131,10 +132,10 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   @Override
-  void schedule(ManagedBackgroundTask<?> task) {
+  Future<Void> schedule(ManagedBackgroundTask<?> task) {
     if (!schedulingOpen.get()) {
       LOG.warn("Manager is not accepting new tasks; newly scheduled tasks will not be run.");
-      return;
+      return Futures.immediateCancelledFuture();
     }
     Class<?> actionClass = task.getActionClass();
     synchronized (cancellableTasks) {
@@ -149,6 +150,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
       scheduledTasks.add(task);
       scheduledTasks.notify();
     }
+    return task.getFuture();
   }
 
   /**
@@ -157,13 +159,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    * @param managedTask Task to run
    */
   void runTask(ManagedBackgroundTask<?> managedTask) {
-    try {
-      managedTask.run();
-    } catch (InterruptedException e) {
-      LOG.warn(e, "Task %s interrupted.", managedTask.getId());
-    } catch (Throwable e) {
-      LOG.warn(e, "%s while running task %s", e.getClass().getName(), managedTask.getId());
-    }
+    managedTask.run();
   }
 
   private void addTimeoutIfNeeded(Future<?> taskHandler, ManagedBackgroundTask<?> task) {

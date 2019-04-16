@@ -18,22 +18,31 @@ package com.facebook.buck.support.bgtasks;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.google.common.collect.ImmutableList;
-import java.util.List;
+import com.google.common.collect.Lists;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class AsyncBackgroundTaskManagerTest {
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private AsyncBackgroundTaskManager manager;
   // tests should pass with arbitrary assignments (within reason) to these values
@@ -71,21 +80,17 @@ public class AsyncBackgroundTaskManagerTest {
     return generateWaitingTaskList(nTasks, failure, null, null, name);
   }
 
-  private void assertOutputValuesEqual(String expected, List<BackgroundTask<TestArgs>> taskList) {
-    for (BackgroundTask<TestArgs> task : taskList) {
-      assertEquals(expected, task.getActionArgs().getOutput());
-    }
-  }
-
   @Test
   public void testBlockingSuccessPath() {
     manager = new AsyncBackgroundTaskManager(true, NTHREADS);
     ImmutableList<BackgroundTask<TestArgs>> taskList =
         generateNoWaitingTaskList(1, Optional.empty(), "successTask");
-    schedule(taskList);
+    ImmutableList<Future<Void>> futures = schedule(taskList);
     manager.notify(Notification.COMMAND_END);
 
-    assertOutputValuesEqual("succeeded", taskList);
+    for (Future<?> f : futures) {
+      assertTrue(f.isDone());
+    }
     assertEquals(0, manager.getScheduledTasks().size());
   }
 
@@ -95,9 +100,21 @@ public class AsyncBackgroundTaskManagerTest {
     Exception expectedException = new Exception();
     ImmutableList<BackgroundTask<TestArgs>> taskList =
         generateNoWaitingTaskList(1, Optional.of(expectedException), "failureTask");
-    schedule(taskList);
+    ImmutableList<Future<Void>> futures = schedule(taskList);
     manager.notify(Notification.COMMAND_END);
-    assertOutputValuesEqual("init", taskList);
+
+    for (Future<?> f : futures) {
+      assertTrue(f.isDone());
+      try {
+        f.get();
+        fail("Expected an Exception from the task");
+      } catch (InterruptedException e) {
+        fail("Expected an Exception from the task");
+      } catch (ExecutionException e) {
+        assertSame(expectedException, e.getCause());
+      }
+    }
+
     assertEquals(0, manager.getScheduledTasks().size());
   }
 
@@ -110,15 +127,16 @@ public class AsyncBackgroundTaskManagerTest {
             .setActionArgs(new TestArgs(Optional.empty(), new CountDownLatch(1), null, null))
             .setName("interruptTask")
             .build();
-    schedule(task);
+    Future<Void> future = schedule(task);
     manager.shutdown(5, TimeUnit.SECONDS);
     manager.notify(Notification.COMMAND_END);
-    assertEquals("init", task.getActionArgs().getOutput());
+    assertFalse(future.isCancelled());
+    assertFalse(future.isDone());
     assertTrue(manager.isShutDown());
   }
 
   @Test(timeout = 8 * TIMEOUT_MILLIS)
-  public void testBlockingTimeout() {
+  public void testBlockingTimeout() throws ExecutionException, InterruptedException {
     manager = new AsyncBackgroundTaskManager(true, NTHREADS);
     CountDownLatch blocker = new CountDownLatch(1);
     BackgroundTask<TestArgs> task =
@@ -129,14 +147,15 @@ public class AsyncBackgroundTaskManagerTest {
             .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
             .build();
     manager.notify(Notification.COMMAND_START);
-    schedule(task);
+    Future<Void> future = schedule(task);
     manager.notify(Notification.COMMAND_END);
-    assertEquals("init", task.getActionArgs().getOutput());
-    assertFalse(manager.isShutDown());
+
+    expectedException.expect(CancellationException.class);
+    future.get();
   }
 
   @Test
-  public void testNonblockingNotify() throws InterruptedException {
+  public void testNonblockingNotify() {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
 
     CountDownLatch taskBlocker = new CountDownLatch(1);
@@ -145,17 +164,17 @@ public class AsyncBackgroundTaskManagerTest {
     ImmutableList<BackgroundTask<TestArgs>> taskList =
         generateWaitingTaskList(
             FIRST_COMMAND_TASKS, Optional.empty(), taskBlocker, taskWaiter, "testTask");
-    schedule(taskList);
+    ImmutableList<Future<Void>> futures = schedule(taskList);
     manager.notify(Notification.COMMAND_END);
     // all tasks should currently be waiting on taskBlocker(1)
-    assertOutputValuesEqual("init", taskList);
+
+    assertFuturesNotDone(futures);
     taskBlocker.countDown(); // signal tasks
-    taskWaiter.await();
-    assertOutputValuesEqual("succeeded", taskList);
+    assertFuturesSuccessful(futures);
   }
 
   @Test
-  public void testNonblockingNewCommandNonOverlapping() throws InterruptedException {
+  public void testNonblockingNewCommandNonOverlapping() {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
 
     CountDownLatch firstTaskBlocker = new CountDownLatch(1);
@@ -175,27 +194,28 @@ public class AsyncBackgroundTaskManagerTest {
             "nonOverlappingTask");
 
     manager.notify(Notification.COMMAND_START);
-    schedule(firstCommandTasks);
+    ImmutableList<Future<Void>> firstCommandFutures = schedule(firstCommandTasks);
     manager.notify(Notification.COMMAND_END);
-    assertOutputValuesEqual("init", firstCommandTasks);
+    assertFuturesNotDone(firstCommandFutures);
+
     firstTaskBlocker.countDown();
-    firstTaskWaiter.await();
-    assertOutputValuesEqual("succeeded", firstCommandTasks);
+    assertFuturesSuccessful(firstCommandFutures);
+
     assertEquals(0, manager.getScheduledTasks().size());
 
     manager.notify(Notification.COMMAND_START);
-    schedule(secondCommandTasks);
+    ImmutableList<Future<Void>> secondCommandFutures = schedule(secondCommandTasks);
     assertEquals(SECOND_COMMAND_TASKS, manager.getScheduledTasks().size());
     manager.notify(Notification.COMMAND_END);
-    assertOutputValuesEqual("init", secondCommandTasks);
+    assertFuturesNotDone(secondCommandFutures);
+
     secondTaskBlocker.countDown();
-    secondTaskWaiter.await();
-    assertOutputValuesEqual("succeeded", secondCommandTasks);
+    assertFuturesSuccessful(secondCommandFutures);
     assertEquals(0, manager.getScheduledTasks().size());
   }
 
   @Test
-  public void testNonblockingNewCommandsOverlapping() throws InterruptedException {
+  public void testNonblockingNewCommandsOverlapping() {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
 
     CountDownLatch firstBlockingTaskBlocker = new CountDownLatch(1);
@@ -225,8 +245,8 @@ public class AsyncBackgroundTaskManagerTest {
             "thirdCommandTask");
 
     manager.notify(Notification.COMMAND_START);
-    schedule(firstBlockingCommandTasks);
-    schedule(firstCommandTasks);
+    ImmutableList<Future<Void>> firstCommandBlockingFutures = schedule(firstBlockingCommandTasks);
+    ImmutableList<Future<Void>> firstCommandFutures = schedule(firstCommandTasks);
 
     manager.notify(Notification.COMMAND_END); // the first set of tasks will be allowed to ran
 
@@ -236,9 +256,9 @@ public class AsyncBackgroundTaskManagerTest {
     // completing.
     firstBlockingTaskBlocker.countDown();
 
-    schedule(secondCommandTasks);
+    ImmutableList<Future<Void>> secondCommandFutures = schedule(secondCommandTasks);
     manager.notify(Notification.COMMAND_START);
-    schedule(thirdCommandTasks);
+    ImmutableList<Future<Void>> thirdCommandFutures = schedule(thirdCommandTasks);
     // signal once -- this should not permit tasks to be run as one command is still waiting
     manager.notify(Notification.COMMAND_END);
     assertThat(
@@ -248,16 +268,17 @@ public class AsyncBackgroundTaskManagerTest {
         manager.getScheduledTasks().size(),
         Matchers.lessThanOrEqualTo(FIRST_COMMAND_TASKS + SECOND_COMMAND_TASKS + NTHREADS));
     manager.notify(Notification.COMMAND_END); // actually permit to run
-    firstTaskWaiter.await();
-    laterTasksWaiter.await();
-    assertOutputValuesEqual("succeeded", firstCommandTasks);
-    assertOutputValuesEqual("succeeded", secondCommandTasks);
-    assertOutputValuesEqual("succeeded", thirdCommandTasks);
+
+    assertFuturesSuccessful(firstCommandBlockingFutures);
+    assertFuturesSuccessful(firstCommandFutures);
+    assertFuturesSuccessful(secondCommandFutures);
+    assertFuturesSuccessful(thirdCommandFutures);
+
     assertEquals(0, manager.getScheduledTasks().size());
   }
 
   @Test
-  public void testHardShutdownNonblocking() throws InterruptedException {
+  public void testHardShutdownNonblocking() throws InterruptedException, ExecutionException {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
     CountDownLatch blocker = new CountDownLatch(1);
     CountDownLatch waiter = new CountDownLatch(1);
@@ -269,22 +290,25 @@ public class AsyncBackgroundTaskManagerTest {
             .setName("task")
             .build();
     manager.notify(Notification.COMMAND_START);
-    schedule(task);
+    Future<Void> taskFuture = schedule(task);
     manager.notify(Notification.COMMAND_END);
     taskStarted.await();
     manager.shutdownNow();
     blocker.countDown();
     assertEquals(0, manager.getScheduledTasks().size());
-    assertEquals("init", task.getActionArgs().getOutput());
+
+    assertFutureCancelled(taskFuture);
     assertTrue(manager.isShutDown());
+
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
             .setActionArgs(new TestArgs(Optional.empty()))
             .setName("noRunTask")
             .build();
-    schedule(secondTask);
+    Future<Void> secondFuture = schedule(secondTask);
     assertEquals(0, manager.getScheduledTasks().size());
+    assertTrue(secondFuture.isCancelled());
   }
 
   @Test
@@ -300,26 +324,28 @@ public class AsyncBackgroundTaskManagerTest {
             .setName("task")
             .build();
     manager.notify(Notification.COMMAND_START);
-    schedule(task);
+    Future<Void> firstTaskFuture = schedule(task);
     manager.notify(Notification.COMMAND_END);
     taskStarted.await();
     manager.shutdown(5, TimeUnit.SECONDS);
     blocker.countDown();
     waiter.await();
-    assertEquals("succeeded", task.getActionArgs().getOutput());
+    assertFutureSuccessful(firstTaskFuture);
     assertTrue(manager.isShutDown());
+
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
             .setActionArgs(new TestArgs(Optional.empty()))
             .setName("noRunTask")
             .build();
-    schedule(secondTask);
+    Future<Void> secondTaskFuture = schedule(secondTask);
+    assertTrue(secondTaskFuture.isCancelled());
     assertEquals(0, manager.getScheduledTasks().size());
   }
 
   @Test(timeout = 8 * TIMEOUT_MILLIS)
-  public void testNonblockingTimeout() throws InterruptedException {
+  public void testNonblockingTimeout() throws InterruptedException, ExecutionException {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
 
     CountDownLatch firstBlocker = new CountDownLatch(1);
@@ -339,18 +365,18 @@ public class AsyncBackgroundTaskManagerTest {
             .setName("secondTask")
             .build();
     manager.notify(Notification.COMMAND_START);
-    schedule(task);
-    schedule(secondTask);
+    Future<Void> firstTaskFuture = schedule(task);
+    Future<Void> secondTaskFuture = schedule(secondTask);
     manager.notify(Notification.COMMAND_END);
     secondBlocker.countDown();
     waiter.await(2 * TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
-    assertEquals("init", task.getActionArgs().getOutput());
-    assertEquals("succeeded", secondTask.getActionArgs().getOutput());
+    assertFutureCancelled(firstTaskFuture);
+    assertFutureSuccessful(secondTaskFuture);
     assertFalse(manager.isShutDown());
   }
 
   @Test
-  public void testCancellableTasks() throws InterruptedException {
+  public void testCancellableTasks() throws InterruptedException, ExecutionException {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
 
     CountDownLatch blocker = new CountDownLatch(1);
@@ -376,29 +402,29 @@ public class AsyncBackgroundTaskManagerTest {
             .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, null))
             .setName("thirdTask")
             .build();
-    schedule(firstTask);
-    schedule(secondTask);
+    Future<Void> firstTaskFuture = schedule(firstTask);
+    Future<Void> secondTaskFuture = schedule(secondTask);
     manager.notify(Notification.COMMAND_END);
     started.await();
-    schedule(thirdTask);
+    Future<Void> thirdTaskFuture = schedule(thirdTask);
     blocker.countDown();
-    waiter.await();
-    assertEquals("init", firstTask.getActionArgs().output);
-    assertEquals("succeeded", secondTask.getActionArgs().output);
-    assertEquals("succeeded", thirdTask.getActionArgs().output);
+
+    assertFutureSuccessful(secondTaskFuture);
+    assertFutureSuccessful(thirdTaskFuture);
+    assertFutureCancelled(firstTaskFuture);
+
     assertEquals(0, manager.getScheduledTasks().size());
     assertEquals(0, manager.getCancellableTasks().size());
   }
 
-  private void schedule(ImmutableList<? extends BackgroundTask<?>> taskList) {
-    for (BackgroundTask<?> task : taskList) {
-      schedule(task);
-    }
+  private ImmutableList<Future<Void>> schedule(
+      ImmutableList<? extends BackgroundTask<?>> taskList) {
+    return ImmutableList.copyOf(Lists.transform(taskList, this::schedule));
   }
 
-  private void schedule(BackgroundTask<?> task) {
+  private Future<Void> schedule(BackgroundTask<?> task) {
     ManagedBackgroundTask managedTask = new ManagedBackgroundTask(task, new BuildId("TESTID"));
-    manager.schedule(managedTask);
+    return manager.schedule(managedTask);
   }
 
   /**
@@ -418,7 +444,6 @@ public class AsyncBackgroundTaskManagerTest {
         args.getTaskWaiter().ifPresent(CountDownLatch::countDown);
         throw args.getFailure().get();
       } else {
-        args.setOutput("succeeded");
         args.getTaskWaiter().ifPresent(CountDownLatch::countDown);
       }
     }
@@ -426,7 +451,6 @@ public class AsyncBackgroundTaskManagerTest {
 
   static class TestArgs {
     private Optional<Exception> failure;
-    private String output;
     private final @Nullable CountDownLatch taskBlocker;
     private final @Nullable CountDownLatch taskWaiter;
     private final @Nullable CountDownLatch taskStarted;
@@ -437,7 +461,6 @@ public class AsyncBackgroundTaskManagerTest {
         @Nullable CountDownLatch taskWaiter,
         @Nullable CountDownLatch taskStarted) {
       this.failure = failure;
-      this.output = "init";
       this.taskBlocker = taskBlocker;
       this.taskWaiter = taskWaiter;
       this.taskStarted = taskStarted;
@@ -451,14 +474,6 @@ public class AsyncBackgroundTaskManagerTest {
       return failure;
     }
 
-    public String getOutput() {
-      return output;
-    }
-
-    public void setOutput(String newOutput) {
-      output = newOutput;
-    }
-
     public Optional<CountDownLatch> getTaskBlocker() {
       return Optional.ofNullable(taskBlocker);
     }
@@ -469,6 +484,36 @@ public class AsyncBackgroundTaskManagerTest {
 
     public Optional<CountDownLatch> getTaskStarted() {
       return Optional.ofNullable(taskStarted);
+    }
+  }
+
+  private void assertFuturesSuccessful(ImmutableList<Future<Void>> futures) {
+    for (Future<Void> f : futures) {
+      assertFutureSuccessful(f);
+    }
+  }
+
+  private void assertFutureSuccessful(Future<Void> future) {
+    try {
+      future.get();
+    } catch (Throwable e) {
+      fail(String.format("Expected success, but got exception %s", e));
+    }
+  }
+
+  private void assertFutureCancelled(Future<Void> future)
+      throws ExecutionException, InterruptedException {
+    try {
+      future.get();
+      fail("Expected future to be canceled, but got a result instead");
+    } catch (CancellationException e) {
+      // success
+    }
+  }
+
+  private void assertFuturesNotDone(ImmutableList<Future<Void>> futures) {
+    for (Future<Void> f : futures) {
+      assertFalse(f.isDone());
     }
   }
 }

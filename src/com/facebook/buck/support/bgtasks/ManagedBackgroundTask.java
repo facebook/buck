@@ -18,6 +18,8 @@ package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.log.Logger;
+import com.google.common.util.concurrent.SettableFuture;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -29,14 +31,18 @@ import org.immutables.value.Value;
  */
 class ManagedBackgroundTask<T> {
 
+  private static Logger LOG = Logger.get(ManagedBackgroundTask.class);
+
   private final BackgroundTask<T> task;
   private final TaskId id;
   private boolean toCancel;
+  private final SettableFuture<Void> future;
 
   protected ManagedBackgroundTask(BackgroundTask<T> task, BuildId buildId) {
     this.task = task;
     this.id = TaskId.of(task.getName(), buildId);
     this.toCancel = false;
+    this.future = SettableFuture.create();
   }
 
   BackgroundTask<T> getTask() {
@@ -54,15 +60,21 @@ class ManagedBackgroundTask<T> {
 
   void markToCancel() {
     toCancel = true;
+    future.cancel(true);
   }
 
-  /**
-   * Runs the action for this task with the given arguments.
-   *
-   * @throws Exception
-   */
-  void run() throws Exception {
-    task.getAction().run(task.getActionArgs());
+  /** Runs the action for this task with the given arguments. */
+  void run() {
+    try {
+      task.getAction().run(task.getActionArgs());
+      future.set(null);
+    } catch (InterruptedException e) {
+      future.cancel(true);
+      LOG.warn(e, "Task %s interrupted.", getId());
+    } catch (Throwable e) {
+      future.setException(e);
+      LOG.warn(e, "%s while running task %s", e.getClass().getName(), getId());
+    }
   }
 
   Class<?> getActionClass() {
@@ -75,6 +87,10 @@ class ManagedBackgroundTask<T> {
 
   boolean getShouldCancelOnRepeat() {
     return task.getShouldCancelOnRepeat();
+  }
+
+  SettableFuture<Void> getFuture() {
+    return future;
   }
 
   /** Task ID object for {@link ManagedBackgroundTask}. */

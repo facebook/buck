@@ -63,7 +63,6 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.remoteexecution.event.listener.TestRemoteExecutionStatsProvider;
 import com.facebook.buck.step.StepEvent;
-import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
@@ -95,12 +94,14 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.TimeZone;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 public class ChromeTraceBuildListenerTest {
@@ -113,6 +114,7 @@ public class ChromeTraceBuildListenerTest {
       "buck-out/log/2014-09-02_23h55m51s_no_sub_command_BUILD_ID/";
 
   @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private InvocationInfo invocationInfo;
   private BuildRuleDurationTracker durationTracker;
@@ -798,7 +800,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   @Test
-  public void testOutputFailed() throws IOException {
+  public void testOutputFailed() throws IOException, ExecutionException, InterruptedException {
     File folder = tmpDir.newFolder();
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(folder.toPath());
@@ -818,12 +820,11 @@ public class ChromeTraceBuildListenerTest {
             Optional.empty());
     listener.close();
     TestBackgroundTaskManager manager = (TestBackgroundTaskManager) managerScope.getManager();
-    BackgroundTask<?> closeTask = manager.getScheduledTasksToTest().get(0);
     managerScope.close();
 
-    Optional<Exception> exc = manager.getTaskErrors().get(closeTask);
-    assertTrue(exc.isPresent());
-    assertTrue(exc.get() instanceof IOException);
+    expectedException.expect(ExecutionException.class);
+    expectedException.expectCause(Matchers.instanceOf(IOException.class));
+    Iterables.getOnlyElement(manager.getScheduledTasksToTest().values()).get();
   }
 
   @Test
