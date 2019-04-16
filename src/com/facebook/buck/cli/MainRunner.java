@@ -16,8 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.AnsiEnvironmentChecking.NAILGUN_STDERR_ISTTY_ENV;
-import static com.facebook.buck.util.AnsiEnvironmentChecking.NAILGUN_STDOUT_ISTTY_ENV;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static com.google.common.util.concurrent.MoreExecutors.listeningDecorator;
 import static com.google.common.util.concurrent.MoreExecutors.newDirectExecutorService;
@@ -238,7 +236,6 @@ import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -383,6 +380,7 @@ public final class MainRunner {
   }
 
   private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
+  private final ImmutableMap<String, String> clientEnvironment;
 
   private Optional<BuckConfig> parsedRootConfig = Optional.empty();
 
@@ -393,6 +391,13 @@ public final class MainRunner {
   /**
    * This constructor allows integration tests to add/remove/modify known build rules (aka
    * descriptions).
+   *
+   * @param stdOut the stream to print to for the command being ran
+   * @param stdErr the error stream to print to for the command being ran
+   * @param stdIn the input stream to the command being ran
+   * @param knownRuleTypesFactoryFactory the known rule types for this command
+   * @param clientEnvironment the environment variable map for this command
+   * @param context the {@link NGContext} from nailgun for this command
    */
   @VisibleForTesting
   public MainRunner(
@@ -400,6 +405,7 @@ public final class MainRunner {
       PrintStream stdErr,
       InputStream stdIn,
       KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
+      ImmutableMap<String, String> clientEnvironment,
       Optional<NGContext> context) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
@@ -407,6 +413,7 @@ public final class MainRunner {
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
     this.architecture = Architecture.detect();
     this.platform = Platform.detect();
+    this.clientEnvironment = clientEnvironment;
     this.context = context;
 
     // Create default console to start outputting errors immediately, if any
@@ -419,13 +426,17 @@ public final class MainRunner {
             stdErr,
             new Ansi(
                 AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
-                    platform, getClientEnvironment(context))));
+                    platform, clientEnvironment)));
   }
 
   @VisibleForTesting
   public MainRunner(
-      PrintStream stdOut, PrintStream stdErr, InputStream stdIn, Optional<NGContext> context) {
-    this(stdOut, stdErr, stdIn, DefaultKnownRuleTypesFactory::new, context);
+      PrintStream stdOut,
+      PrintStream stdErr,
+      InputStream stdIn,
+      ImmutableMap<String, String> clientEnvironment,
+      Optional<NGContext> context) {
+    this(stdOut, stdErr, stdIn, DefaultKnownRuleTypesFactory::new, clientEnvironment, context);
   }
 
   /* Define all error handling surrounding main command */
@@ -446,16 +457,12 @@ public final class MainRunner {
               ? WatchmanWatcher.FreshInstanceAction.POST_OVERFLOW_EVENT
               : WatchmanWatcher.FreshInstanceAction.NONE;
 
-      // Get the client environment, either from this process or from the Nailgun context.
-      ImmutableMap<String, String> clientEnvironment = getClientEnvironment(context);
-
       CommandMode commandMode = CommandMode.RELEASE;
 
       exitCode =
           runMainWithExitCode(
               buildId,
               projectRoot,
-              clientEnvironment,
               commandMode,
               watchmanFreshInstanceAction,
               initTimestamp,
@@ -580,7 +587,6 @@ public final class MainRunner {
   public ExitCode runMainWithExitCode(
       BuildId buildId,
       Path projectRoot,
-      ImmutableMap<String, String> clientEnvironment,
       CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       long initTimestamp,
@@ -1834,32 +1840,6 @@ public final class MainRunner {
         // Intentional no-op.
       }
     };
-  }
-
-  /**
-   * @return the client environment, which is either the process environment or the environment sent
-   *     to the daemon by the Nailgun client. This method should always be used in preference to
-   *     System.getenv() and should be the only call to System.getenv() within the Buck codebase to
-   *     ensure that the use of the Buck daemon is transparent. This also scrubs NG environment
-   *     variables if no context is actually present.
-   */
-  @SuppressWarnings({"unchecked", "rawtypes"}) // Safe as Property is a Map<String, String>.
-  private static ImmutableMap<String, String> getClientEnvironment(Optional<NGContext> context) {
-    if (context.isPresent()) {
-      return ImmutableMap.<String, String>copyOf((Map) context.get().getEnv());
-    } else {
-      ImmutableMap<String, String> systemEnv = EnvVariablesProvider.getSystemEnv();
-      ImmutableMap.Builder<String, String> builder =
-          ImmutableMap.builderWithExpectedSize(systemEnv.size());
-
-      systemEnv.entrySet().stream()
-          .filter(
-              e ->
-                  !NAILGUN_STDOUT_ISTTY_ENV.equals(e.getKey())
-                      && !NAILGUN_STDERR_ISTTY_ENV.equals(e.getKey()))
-          .forEach(builder::put);
-      return builder.build();
-    }
   }
 
   /**

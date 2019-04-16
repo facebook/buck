@@ -15,6 +15,9 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.util.AnsiEnvironmentChecking;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 /**
@@ -33,7 +36,21 @@ public class MainWithoutNailgun {
    */
   public static void main(String[] args) {
     // TODO(bobyf): add shutdown handling
-    new MainRunner(System.out, System.err, System.in, Optional.empty())
+    new MainRunner(System.out, System.err, System.in, getClientEnvironment(), Optional.empty())
         .runMainThenExit(args, System.nanoTime());
+  }
+
+  private static ImmutableMap<String, String> getClientEnvironment() {
+    ImmutableMap<String, String> systemEnv = EnvVariablesProvider.getSystemEnv();
+    ImmutableMap.Builder<String, String> builder =
+        ImmutableMap.builderWithExpectedSize(systemEnv.size());
+
+    systemEnv.entrySet().stream()
+        .filter(
+            e ->
+                !AnsiEnvironmentChecking.NAILGUN_STDOUT_ISTTY_ENV.equals(e.getKey())
+                    && !AnsiEnvironmentChecking.NAILGUN_STDERR_ISTTY_ENV.equals(e.getKey()))
+        .forEach(builder::put);
+    return builder.build();
   }
 }

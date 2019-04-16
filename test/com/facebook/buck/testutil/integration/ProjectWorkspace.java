@@ -533,8 +533,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
       MainRunner main =
           knownRuleTypesFactoryFactory == null
-              ? new MainRunner(stdout, stderr, stdin, context)
-              : new MainRunner(stdout, stderr, stdin, knownRuleTypesFactoryFactory, context);
+              ? new MainRunner(stdout, stderr, stdin, sanizitedEnv, context)
+              : new MainRunner(
+                  stdout, stderr, stdin, knownRuleTypesFactoryFactory, sanizitedEnv, context);
       ExitCode exitCode;
 
       // TODO (buck_team): this code repeats the one in Main and thus wants generalization
@@ -568,7 +569,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
             main.runMainWithExitCode(
                 new BuildId(),
                 repoRoot,
-                sanizitedEnv,
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),

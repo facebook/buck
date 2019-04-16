@@ -18,12 +18,14 @@ package com.facebook.buck.cli;
 import com.facebook.buck.cli.BuckDaemon.DaemonCommandExecutionScope;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.nailgun.NGContext;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -49,7 +51,12 @@ public class MainWithNailgun {
     obtainResourceFileLock();
     try (DaemonCommandExecutionScope ignored =
         BuckDaemon.getInstance().getDaemonCommandExecutionScope()) {
-      new MainRunner(context.out, context.err, context.in, Optional.of(context))
+      new MainRunner(
+              context.out,
+              context.err,
+              context.in,
+              getClientEnvironment(context),
+              Optional.of(context))
           .runMainThenExit(context.getArgs(), System.nanoTime());
     }
   }
@@ -82,5 +89,10 @@ public class MainWithNailgun {
     } catch (IOException | OverlappingFileLockException e) {
       LOG.warn(e, "Error when attempting to acquire resources file lock.");
     }
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private static ImmutableMap<String, String> getClientEnvironment(NGContext context) {
+    return ImmutableMap.copyOf((Map) context.getEnv());
   }
 }
