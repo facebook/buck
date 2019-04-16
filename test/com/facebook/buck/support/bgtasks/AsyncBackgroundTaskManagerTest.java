@@ -49,7 +49,7 @@ public class AsyncBackgroundTaskManagerTest {
 
   private ImmutableList<BackgroundTask<TestArgs>> generateWaitingTaskList(
       int nTasks,
-      boolean success,
+      Optional<Exception> failure,
       @Nullable CountDownLatch taskBlocker,
       @Nullable CountDownLatch taskWaiter,
       String name) {
@@ -58,7 +58,7 @@ public class AsyncBackgroundTaskManagerTest {
       BackgroundTask<TestArgs> task =
           ImmutableBackgroundTask.<TestArgs>builder()
               .setAction(new TestAction())
-              .setActionArgs(new TestArgs(success, false, taskBlocker, taskWaiter, null))
+              .setActionArgs(new TestArgs(failure, false, taskBlocker, taskWaiter, null))
               .setName(name)
               .build();
       taskList.add(task);
@@ -67,8 +67,8 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   private ImmutableList<BackgroundTask<TestArgs>> generateNoWaitingTaskList(
-      int nTasks, boolean success, String name) {
-    return generateWaitingTaskList(nTasks, success, null, null, name);
+      int nTasks, Optional<Exception> failure, String name) {
+    return generateWaitingTaskList(nTasks, failure, null, null, name);
   }
 
   private void assertOutputValuesEqual(String expected, List<BackgroundTask<TestArgs>> taskList) {
@@ -83,7 +83,7 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, false))
+            .setActionArgs(new TestArgs(Optional.empty(), false))
             .setName("testTask")
             .build();
     schedule(task);
@@ -94,7 +94,7 @@ public class AsyncBackgroundTaskManagerTest {
   public void testBlockingSuccessPath() {
     manager = new AsyncBackgroundTaskManager(true, NTHREADS);
     ImmutableList<BackgroundTask<TestArgs>> taskList =
-        generateNoWaitingTaskList(1, true, "successTask");
+        generateNoWaitingTaskList(1, Optional.empty(), "successTask");
     schedule(taskList);
     manager.notify(Notification.COMMAND_END);
 
@@ -105,8 +105,9 @@ public class AsyncBackgroundTaskManagerTest {
   @Test
   public void testNonInterruptException() {
     manager = new AsyncBackgroundTaskManager(true, NTHREADS);
+    Exception expectedException = new Exception();
     ImmutableList<BackgroundTask<TestArgs>> taskList =
-        generateNoWaitingTaskList(1, false, "failureTask");
+        generateNoWaitingTaskList(1, Optional.of(expectedException), "failureTask");
     schedule(taskList);
     manager.notify(Notification.COMMAND_END);
     assertOutputValuesEqual("init", taskList);
@@ -119,7 +120,7 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, true))
+            .setActionArgs(new TestArgs(Optional.empty(), true))
             .setName("interruptTask")
             .build();
     schedule(task);
@@ -136,7 +137,7 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch blocker = new CountDownLatch(1);
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(true, false, blocker, null, null))
+            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, null, null))
             .setAction(new TestAction())
             .setName("timeoutTask")
             .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
@@ -156,7 +157,8 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch taskWaiter = new CountDownLatch(FIRST_COMMAND_TASKS);
 
     ImmutableList<BackgroundTask<TestArgs>> taskList =
-        generateWaitingTaskList(FIRST_COMMAND_TASKS, true, taskBlocker, taskWaiter, "testTask");
+        generateWaitingTaskList(
+            FIRST_COMMAND_TASKS, Optional.empty(), taskBlocker, taskWaiter, "testTask");
     schedule(taskList);
     manager.notify(Notification.COMMAND_END);
     // all tasks should currently be waiting on taskBlocker(1)
@@ -177,10 +179,14 @@ public class AsyncBackgroundTaskManagerTest {
 
     ImmutableList<BackgroundTask<TestArgs>> firstCommandTasks =
         generateWaitingTaskList(
-            FIRST_COMMAND_TASKS, true, firstTaskBlocker, firstTaskWaiter, "testTask");
+            FIRST_COMMAND_TASKS, Optional.empty(), firstTaskBlocker, firstTaskWaiter, "testTask");
     ImmutableList<BackgroundTask<TestArgs>> secondCommandTasks =
         generateWaitingTaskList(
-            SECOND_COMMAND_TASKS, true, secondTaskBlocker, secondTaskWaiter, "nonOverlappingTask");
+            SECOND_COMMAND_TASKS,
+            Optional.empty(),
+            secondTaskBlocker,
+            secondTaskWaiter,
+            "nonOverlappingTask");
 
     manager.notify(Notification.COMMAND_START);
     schedule(firstCommandTasks);
@@ -212,16 +218,22 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch laterTasksWaiter = new CountDownLatch(SECOND_COMMAND_TASKS);
 
     ImmutableList<BackgroundTask<TestArgs>> firstBlockingCommandTasks =
-        generateWaitingTaskList(NTHREADS, true, firstBlockingTaskBlocker, null, "blockedTestTask");
+        generateWaitingTaskList(
+            NTHREADS, Optional.empty(), firstBlockingTaskBlocker, null, "blockedTestTask");
     ImmutableList<BackgroundTask<TestArgs>> firstCommandTasks =
-        generateWaitingTaskList(FIRST_COMMAND_TASKS, true, null, firstTaskWaiter, "testTask");
+        generateWaitingTaskList(
+            FIRST_COMMAND_TASKS, Optional.empty(), null, firstTaskWaiter, "testTask");
     ImmutableList<BackgroundTask<TestArgs>> secondCommandTasks =
         generateWaitingTaskList(
-            SECOND_COMMAND_TASKS / 2, true, null, laterTasksWaiter, "secondCommandTask");
+            SECOND_COMMAND_TASKS / 2,
+            Optional.empty(),
+            null,
+            laterTasksWaiter,
+            "secondCommandTask");
     ImmutableList<BackgroundTask<TestArgs>> thirdCommandTasks =
         generateWaitingTaskList(
             SECOND_COMMAND_TASKS - (SECOND_COMMAND_TASKS / 2),
-            true,
+            Optional.empty(),
             null,
             laterTasksWaiter,
             "thirdCommandTask");
@@ -266,7 +278,7 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, true, blocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), true, blocker, waiter, null))
             .setName("interruptTask")
             .build();
     schedule(task);
@@ -286,7 +298,7 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, false, blocker, waiter, taskStarted))
+            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, taskStarted))
             .setName("task")
             .build();
     manager.notify(Notification.COMMAND_START);
@@ -302,7 +314,7 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, false))
+            .setActionArgs(new TestArgs(Optional.empty(), false))
             .setName("noRunTask")
             .build();
     schedule(secondTask);
@@ -318,7 +330,7 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, false, blocker, waiter, taskStarted))
+            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, taskStarted))
             .setName("task")
             .build();
     manager.notify(Notification.COMMAND_START);
@@ -333,7 +345,7 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, false))
+            .setActionArgs(new TestArgs(Optional.empty(), false))
             .setName("noRunTask")
             .build();
     schedule(secondTask);
@@ -349,14 +361,14 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch waiter = new CountDownLatch(2);
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(true, false, firstBlocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), false, firstBlocker, waiter, null))
             .setAction(new TestAction())
             .setName("timeoutTask")
             .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
             .build();
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(true, false, secondBlocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), false, secondBlocker, waiter, null))
             .setAction(new TestAction())
             .setName("secondTask")
             .build();
@@ -381,21 +393,21 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> firstTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, false, blocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, null))
             .setName("cancelled")
             .setShouldCancelOnRepeat(true)
             .build();
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, false, blocker, waiter, started))
+            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, started))
             .setName("cancellable but runs")
             .setShouldCancelOnRepeat(true)
             .build();
     BackgroundTask<TestArgs> thirdTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(true, false, blocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, null))
             .setName("thirdTask")
             .build();
     schedule(firstTask);
@@ -439,18 +451,18 @@ public class AsyncBackgroundTaskManagerTest {
       if (args.getInterrupt()) {
         throw new InterruptedException("TestAction task interrupted");
       }
-      if (args.getSuccess()) {
+      if (args.getFailure().isPresent()) {
+        args.getTaskWaiter().ifPresent(CountDownLatch::countDown);
+        throw args.getFailure().get();
+      } else {
         args.setOutput("succeeded");
         args.getTaskWaiter().ifPresent(CountDownLatch::countDown);
-      } else {
-        args.getTaskWaiter().ifPresent(CountDownLatch::countDown);
-        throw new Exception("failed");
       }
     }
   }
 
   static class TestArgs {
-    private boolean success;
+    private Optional<Exception> failure;
     private String output;
     private final @Nullable CountDownLatch taskBlocker;
     private final @Nullable CountDownLatch taskWaiter;
@@ -458,12 +470,12 @@ public class AsyncBackgroundTaskManagerTest {
     private final boolean interrupt;
 
     public TestArgs(
-        boolean success,
+        Optional<Exception> failure,
         boolean interrupt,
         @Nullable CountDownLatch taskBlocker,
         @Nullable CountDownLatch taskWaiter,
         @Nullable CountDownLatch taskStarted) {
-      this.success = success;
+      this.failure = failure;
       this.output = "init";
       this.taskBlocker = taskBlocker;
       this.taskWaiter = taskWaiter;
@@ -471,12 +483,12 @@ public class AsyncBackgroundTaskManagerTest {
       this.taskStarted = taskStarted;
     }
 
-    public TestArgs(boolean success, boolean interrupt) {
-      this(success, interrupt, null, null, null);
+    public TestArgs(Optional<Exception> failure, boolean interrupt) {
+      this(failure, interrupt, null, null, null);
     }
 
-    public boolean getSuccess() {
-      return success;
+    public Optional<Exception> getFailure() {
+      return failure;
     }
 
     public boolean getInterrupt() {
