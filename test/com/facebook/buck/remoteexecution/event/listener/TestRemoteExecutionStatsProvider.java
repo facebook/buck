@@ -93,7 +93,8 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
         .put(
             "localfallback_locally_successful_executed_rules",
             Integer.toString(localFallbackStats.getLocallySuccessfulRules()))
-        .put("remote_cpu_time_sec", Long.toString(getRemoteCpuTimeMs()));
+        .put("remote_cpu_time_sec", Long.toString(getRemoteCpuTimeMs()))
+        .put("remote_queue_time_sec", Long.toString(getRemoteQueueTimeMs()));
 
     for (ImmutableMap.Entry<State, Integer> entry : getActionsPerState().entrySet()) {
       retval.put(
@@ -107,5 +108,10 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
   @Override
   public long getRemoteCpuTimeMs() {
     return TimeUnit.SECONDS.toMillis(65);
+  }
+
+  @Override
+  public long getRemoteQueueTimeMs() {
+    return 0;
   }
 }

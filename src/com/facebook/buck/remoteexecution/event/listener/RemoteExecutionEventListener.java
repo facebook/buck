@@ -51,6 +51,7 @@ public class RemoteExecutionEventListener
   private final LongAdder uploadBytes;
 
   private final LongAdder remoteCpuTime;
+  private final LongAdder remoteQueueTime;
 
   private final AtomicBoolean hasFirstRemoteActionStarted;
 
@@ -64,6 +65,7 @@ public class RemoteExecutionEventListener
     this.uploads = new LongAdder();
     this.uploadBytes = new LongAdder();
     this.remoteCpuTime = new LongAdder();
+    this.remoteQueueTime = new LongAdder();
     this.totalBuildRules = new LongAdder();
     this.hasFirstRemoteActionStarted = new AtomicBoolean(false);
 
@@ -121,6 +123,14 @@ public class RemoteExecutionEventListener
       remoteCpuTime.add(
           TimeUnit.SECONDS.toMillis(duration.getSeconds())
               + TimeUnit.NANOSECONDS.toMillis(duration.getNanos()));
+
+      Duration queueDuration =
+          Timestamps.between(
+              event.getExecutedActionMetadata().get().getQueuedTimestamp(),
+              event.getExecutedActionMetadata().get().getWorkerStartTimestamp());
+      remoteQueueTime.add(
+          TimeUnit.SECONDS.toMillis(queueDuration.getSeconds())
+              + TimeUnit.NANOSECONDS.toMillis(queueDuration.getNanos()));
     }
   }
 
@@ -205,6 +215,11 @@ public class RemoteExecutionEventListener
   }
 
   @Override
+  public long getRemoteQueueTimeMs() {
+    return remoteQueueTime.sum();
+  }
+
+  @Override
   public ImmutableMap<String, String> exportFieldsToMap() {
     ImmutableMap.Builder<String, String> retval = ImmutableMap.builderWithExpectedSize(16);
 
@@ -218,7 +233,8 @@ public class RemoteExecutionEventListener
         .put(
             "localfallback_locally_successful_executed_rules",
             localFallbackSuccessfulLocalExecutions.toString())
-        .put("remote_cpu_time_ms", Long.toString(getRemoteCpuTimeMs()));
+        .put("remote_cpu_time_ms", Long.toString(getRemoteCpuTimeMs()))
+        .put("remote_queue_time_ms", Long.toString(getRemoteQueueTimeMs()));
 
     for (ImmutableMap.Entry<State, Integer> entry : getActionsPerState().entrySet()) {
       retval.put(
