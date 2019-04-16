@@ -28,6 +28,8 @@
   elementTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BuckElementType"
   tokenTypeClass="com.facebook.buck.intellij.ideabuck.lang.psi.BuckTokenType"
 
+  psiImplUtilClass="com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckPsiImplUtil"
+
   tokens = [
     NONE = 'None'
     BOOLEAN = 'regexp:(True|False)'
@@ -253,4 +255,12 @@ string ::= APOSTROPHED_STRING
 
 integer ::= HEX_LITERAL | OCTAL_LITERAL | DECIMAL_LITERAL
 
-identifier ::= IDENTIFIER_TOKEN
+identifier ::= IDENTIFIER_TOKEN {
+  mixin = "com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckNamedElementImpl"
+  implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BuckNamedElement"
+  methods = [
+    getName
+    getNameIdentifier
+    setName
+  ]
+}

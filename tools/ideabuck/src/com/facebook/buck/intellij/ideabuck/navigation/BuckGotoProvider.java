@@ -20,10 +20,11 @@ import com.facebook.buck.intellij.ideabuck.api.BuckTarget;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetLocator;
 import com.facebook.buck.intellij.ideabuck.api.BuckTargetPattern;
 import com.facebook.buck.intellij.ideabuck.lang.BuckLanguage;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionDefinition;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandlerBase;
@@ -62,8 +63,10 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
     if (buckLoadArgument != null) {
       return resolveAsLoadArgument(project, sourceFile, buckLoadArgument);
     }
-    if (element.getNode().getElementType() == BuckTypes.IDENTIFIER) {
-      return resolveAsIdentifier(project, element);
+    BuckIdentifier buckIdentifier =
+        PsiTreeUtil.getParentOfType(element, BuckIdentifier.class, false);
+    if (buckIdentifier != null) {
+      return resolveAsIdentifier(project, buckIdentifier);
     }
     String elementAsString = BuckPsiUtils.getStringValueFromBuckString(element);
     if (elementAsString == null) {
@@ -107,17 +110,38 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
   }
 
   @Nullable
-  private PsiElement resolveAsIdentifier(Project project, PsiElement identifier) {
-    PsiElement resolved =
-        BuckPsiUtils.findSymbolInPsiTree(identifier.getContainingFile(), identifier.getText());
-    return Optional.ofNullable(resolved)
-        .map(e -> PsiTreeUtil.getParentOfType(e, BuckLoadArgument.class))
-        .flatMap(
-            buckLoadArgument ->
-                Optional.ofNullable(identifier.getContainingFile().getVirtualFile())
-                    .map(
-                        sourceFile -> resolveAsLoadArgument(project, sourceFile, buckLoadArgument)))
-        .orElse(resolved);
+  private PsiElement resolveAsIdentifier(Project project, BuckIdentifier buckIdentifier) {
+    String text = buckIdentifier.getIdentifierToken().getText();
+    BuckFunctionDefinition functionDefinition =
+        PsiTreeUtil.getParentOfType(buckIdentifier, BuckFunctionDefinition.class);
+    PsiElement resolved = null;
+    while (functionDefinition != null) {
+      resolved = BuckPsiUtils.findSymbolInPsiTree(functionDefinition.getParameterList(), text);
+      if (resolved == null) {
+        resolved = BuckPsiUtils.findSymbolInPsiTree(functionDefinition.getSuite(), text);
+      }
+      // back out one level of scoping and try again
+      functionDefinition =
+          PsiTreeUtil.getParentOfType(functionDefinition, BuckFunctionDefinition.class);
+    }
+    if (resolved == null) {
+      resolved = BuckPsiUtils.findSymbolInPsiTree(buckIdentifier.getContainingFile(), text);
+    }
+    resolved =
+        Optional.ofNullable(resolved)
+            .map(e -> PsiTreeUtil.getParentOfType(e, BuckLoadArgument.class))
+            .flatMap(
+                buckLoadArgument ->
+                    Optional.ofNullable(buckIdentifier.getContainingFile().getVirtualFile())
+                        .map(
+                            sourceFile ->
+                                resolveAsLoadArgument(project, sourceFile, buckLoadArgument)))
+            .orElse(resolved);
+    if (resolved != null && !resolved.equals(buckIdentifier)) {
+      return resolved;
+    } else {
+      return null;
+    }
   }
 
   @Nullable

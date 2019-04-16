@@ -44,7 +44,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.util.IncorrectOperationException;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -290,7 +289,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
             BuckCommand.QUERY,
             new Callback<List<TargetMetadata>>() {
               @Override
-              public List<TargetMetadata> deserialize(JsonElement jsonElement) throws IOException {
+              public List<TargetMetadata> deserialize(JsonElement jsonElement) {
                 Type type = new TypeToken<Map<String, JsonObject>>() {}.getType();
                 Map<String, JsonObject> raw = new Gson().fromJson(jsonElement, type);
                 List<TargetMetadata> results = new ArrayList<>();

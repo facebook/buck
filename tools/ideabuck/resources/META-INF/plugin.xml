@@ -277,6 +277,7 @@
     <lang.braceMatcher
       language="Buck"
       implementationClass="com.facebook.buck.intellij.ideabuck.format.BuckBraceMatcher"/>
+    <lang.refactoringSupport language="Buck" implementationClass="com.facebook.buck.intellij.ideabuck.lang.BuckIdentifierRefactoringSupportProvider"/>
     <quoteHandler
       fileType="Buck"
       className="com.facebook.buck.intellij.ideabuck.format.BuckQuoteHandler"/>
@@ -302,6 +303,8 @@
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestConfigurationType"/>
     <programRunner
       implementation="com.facebook.buck.intellij.ideabuck.configurations.TestProgramRunner"/>
+    <psi.referenceContributor implementation="com.facebook.buck.intellij.ideabuck.lang.BuckIdentifierReferenceContributor"/>
+
     <runLineMarkerContributor language="JAVA"
       implementationClass="com.facebook.buck.intellij.ideabuck.actions.select.SelectedTestRunLineMarkerContributor"/>
     <additionalTextAttributes scheme="Default" file="colorSchemes/BuckDefault.xml"/>
