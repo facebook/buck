@@ -78,19 +78,6 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testScheduleCreatesManagedTask() {
-    manager = new AsyncBackgroundTaskManager(true, NTHREADS);
-    BackgroundTask<TestArgs> task =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), false))
-            .setName("testTask")
-            .build();
-    schedule(task);
-    assertEquals(task, manager.getScheduledTasks().peek().getTask());
-  }
-
-  @Test
   public void testBlockingSuccessPath() {
     manager = new AsyncBackgroundTaskManager(true, NTHREADS);
     ImmutableList<BackgroundTask<TestArgs>> taskList =
