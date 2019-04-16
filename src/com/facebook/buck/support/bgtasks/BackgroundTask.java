@@ -42,11 +42,11 @@ public abstract class BackgroundTask<T> {
   public abstract Optional<Timeout> getTimeout();
 
   @Value.Default
-  public boolean getShouldCancelOnRepeat() {
+  boolean getShouldCancelOnRepeat() {
     return false;
   }
 
-  public void run() throws Exception {
+  void run() throws Exception {
     getAction().run(getActionArgs());
   }
 

@@ -130,7 +130,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   @Override
-  public void schedule(ManagedBackgroundTask task) {
+  void schedule(ManagedBackgroundTask task) {
     if (!schedulingOpen.get()) {
       LOG.warn("Manager is not accepting new tasks; newly scheduled tasks will not be run.");
       return;
@@ -181,7 +181,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   @Override
-  protected void notify(Notification code) {
+  void notify(Notification code) {
     if (blocking) {
       notifySync(code);
     } else {

@@ -25,6 +25,9 @@ import com.google.common.collect.ImmutableList;
  * Scope class for client-side use of {@link BackgroundTaskManager}. Scope handles scheduling and
  * start/end notifications for individual builds, passing tasks/notifications to the manager for
  * scheduling.
+ *
+ * <p>This lives for the duration of the command, and will schedule the tasks to be run on {@link
+ * #close()}. {@link #close()} should only occur on command exit.
  */
 public class TaskManagerScope implements Scope {
 

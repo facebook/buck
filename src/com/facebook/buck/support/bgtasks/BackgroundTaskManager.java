@@ -37,7 +37,11 @@ public abstract class BackgroundTaskManager {
     COMMAND_END
   }
 
-  /** Returns a new {@link TaskManagerScope} for a build on this manager. */
+  /**
+   * Returns a new {@link TaskManagerScope} for a build on this manager. The {@link
+   * TaskManagerScope} lives for the duration of the command such that it's {@link
+   * TaskManagerScope#close()} will trigger the tasks scheduled to be ran.
+   */
   public abstract TaskManagerScope getNewScope(BuildId buildId);
 
   /** Shut down manager, without waiting for tasks to finish. */
@@ -55,12 +59,12 @@ public abstract class BackgroundTaskManager {
    * Schedule a task to be run in the background. Should be accessed through a {@link
    * TaskManagerScope} implementation.
    */
-  protected abstract void schedule(ManagedBackgroundTask task);
+  abstract void schedule(ManagedBackgroundTask task);
 
   /**
    * Notify the manager of some event, e.g. command start or end. Exceptions should generally be
    * caught and handled by the manager, except in test implementations. {@link Notification} should
    * be handled through a {@link TaskManagerScope}.
    */
-  protected abstract void notify(Notification code);
+  abstract void notify(Notification code);
 }

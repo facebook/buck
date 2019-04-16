@@ -36,19 +36,19 @@ class ManagedBackgroundTask {
     this.toCancel = false;
   }
 
-  public BackgroundTask<?> getTask() {
+  BackgroundTask<?> getTask() {
     return task;
   }
 
-  public TaskId getId() {
+  TaskId getId() {
     return id;
   }
 
-  public boolean getToCancel() {
+  boolean getToCancel() {
     return toCancel;
   }
 
-  protected void markToCancel() {
+  void markToCancel() {
     toCancel = true;
   }
 
