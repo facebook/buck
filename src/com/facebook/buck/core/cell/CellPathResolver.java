@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.core.cell;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTargetView;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -36,12 +35,6 @@ public interface CellPathResolver {
    * @throws AssertionError if cell is not known
    */
   Path getCellPathOrThrow(Optional<String> cellName);
-
-  /**
-   * @return Absolute path to the physical location of the cell that contains the provided target
-   * @throws AssertionError if cell is not known
-   */
-  Path getCellPathOrThrow(BuildTarget buildTarget);
 
   /**
    * @return Absolute path to the physical location of the cell that contains the provided target
