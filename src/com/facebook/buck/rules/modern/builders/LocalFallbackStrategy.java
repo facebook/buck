@@ -186,7 +186,11 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     }
 
     private void fallbackBuildToLocalStrategy() {
-      Preconditions.checkState(!hasCancellationBeenRequested);
+      if (hasCancellationBeenRequested) {
+        completeCombinedFutureWithException(
+            new InterruptedException(), remoteBuildResult.get(), Result.NOT_RUN);
+        return;
+      }
       ListenableFuture<Optional<BuildResult>> future =
           Futures.submitAsync(
               strategyContext::runWithDefaultBehavior, strategyContext.getExecutorService());
