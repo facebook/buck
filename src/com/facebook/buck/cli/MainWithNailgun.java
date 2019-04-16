@@ -67,14 +67,6 @@ public class MainWithNailgun extends AbstractMain {
       MainWithNailgun mainWithNailgun = new MainWithNailgun(context);
       MainRunner mainRunner = mainWithNailgun.prepareMainRunner();
       mainRunner.runMainThenExit(context.getArgs(), System.nanoTime());
-
-      new MainRunner(
-              context.out,
-              context.err,
-              context.in,
-              getClientEnvironment(context),
-              Optional.of(context))
-          .runMainThenExit(context.getArgs(), System.nanoTime());
     }
   }
 

@@ -188,7 +188,6 @@ import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.BuildEnvironmentDescription;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
-import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
@@ -240,7 +239,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.TimeZone;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -258,6 +256,8 @@ import org.pf4j.PluginManager;
 /**
  * Responsible for running the commands logic of buck after {@link MainWithNailgun} and {@link
  * MainWithoutNailgun} have completed the initial bootstrapping of resources and state.
+ *
+ * <p>One instance of {@link MainRunner} exists per command run.
  */
 public final class MainRunner {
   /**
@@ -272,7 +272,6 @@ public final class MainRunner {
 
   private static final Optional<String> BUCKD_LAUNCH_TIME_NANOS =
       Optional.ofNullable(System.getProperty("buck.buckd_launch_time_nanos"));
-  private static final String BUCK_BUILD_ID_ENV_VAR = "BUCK_BUILD_ID";
 
   private static final String BUCKD_COLOR_DEFAULT_ENV_VAR = "BUCKD_COLOR_DEFAULT";
 
@@ -381,6 +380,8 @@ public final class MainRunner {
   private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
   private final ImmutableMap<String, String> clientEnvironment;
 
+  private final BuildId buildId;
+
   private Optional<BuckConfig> parsedRootConfig = Optional.empty();
 
   static {
@@ -395,6 +396,7 @@ public final class MainRunner {
    * @param stdErr the error stream to print to for the command being ran
    * @param stdIn the input stream to the command being ran
    * @param knownRuleTypesFactoryFactory the known rule types for this command
+   * @param buildId the {@link BuildId} for this command
    * @param clientEnvironment the environment variable map for this command
    * @param context the {@link NGContext} from nailgun for this command
    */
@@ -404,6 +406,7 @@ public final class MainRunner {
       PrintStream stdErr,
       InputStream stdIn,
       KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
+      BuildId buildId,
       ImmutableMap<String, String> clientEnvironment,
       Optional<NGContext> context) {
     this.stdOut = stdOut;
@@ -411,6 +414,7 @@ public final class MainRunner {
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
     this.architecture = Architecture.detect();
+    this.buildId = buildId;
     this.platform = Platform.detect();
     this.clientEnvironment = clientEnvironment;
     this.context = context;
@@ -433,9 +437,17 @@ public final class MainRunner {
       PrintStream stdOut,
       PrintStream stdErr,
       InputStream stdIn,
+      BuildId buildId,
       ImmutableMap<String, String> clientEnvironment,
       Optional<NGContext> context) {
-    this(stdOut, stdErr, stdIn, DefaultKnownRuleTypesFactory::new, clientEnvironment, context);
+    this(
+        stdOut,
+        stdErr,
+        stdIn,
+        DefaultKnownRuleTypesFactory::new,
+        buildId,
+        clientEnvironment,
+        context);
   }
 
   /* Define all error handling surrounding main command */
@@ -447,7 +459,6 @@ public final class MainRunner {
       installUncaughtExceptionHandler(context);
 
       Path projectRoot = Paths.get(".");
-      BuildId buildId = getBuildId(context);
 
       // Only post an overflow event if Watchman indicates a fresh instance event
       // after our initial query.
@@ -460,7 +471,6 @@ public final class MainRunner {
 
       exitCode =
           runMainWithExitCode(
-              buildId,
               projectRoot,
               commandMode,
               watchmanFreshInstanceAction,
@@ -577,14 +587,12 @@ public final class MainRunner {
   }
 
   /**
-   * @param buildId an identifier for this command execution.
    * @param initTimestamp Value of System.nanoTime() when process got main()/nailMain() invoked.
    * @param unexpandedCommandLineArgs command line arguments
    * @return an ExitCode representing the result of the command
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
   public ExitCode runMainWithExitCode(
-      BuildId buildId,
       Path projectRoot,
       CommandMode commandMode,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
@@ -1057,7 +1065,6 @@ public final class MainRunner {
                     executionEnvironment,
                     locale,
                     filesystem.getBuckPaths().getLogDir().resolve("test.log"),
-                    buildId,
                     logBuckConfig.isLogBuildIdToConsoleEnabled(),
                     logBuckConfig.getBuildDetailsTemplate(),
                     createAdditionalConsoleLinesProviders(
@@ -2012,7 +2019,6 @@ public final class MainRunner {
       ExecutionEnvironment executionEnvironment,
       Locale locale,
       Path testLogPath,
-      BuildId buildId,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
       ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders,
@@ -2065,19 +2071,6 @@ public final class MainRunner {
   private static long getBuckPID() {
     String pid = ManagementFactory.getRuntimeMXBean().getName();
     return (pid != null && pid.matches("^\\d+@.*$")) ? Long.parseLong(pid.split("@")[0]) : 0L;
-  }
-
-  private static BuildId getBuildId(Optional<NGContext> context) {
-    String specifiedBuildId;
-    if (context.isPresent()) {
-      specifiedBuildId = context.get().getEnv().getProperty(BUCK_BUILD_ID_ENV_VAR);
-    } else {
-      specifiedBuildId = EnvVariablesProvider.getSystemEnv().get(BUCK_BUILD_ID_ENV_VAR);
-    }
-    if (specifiedBuildId == null) {
-      specifiedBuildId = UUID.randomUUID().toString();
-    }
-    return new BuildId(specifiedBuildId);
   }
 
   private static String getArtifactProducerId(ExecutionEnvironment executionEnvironment) {

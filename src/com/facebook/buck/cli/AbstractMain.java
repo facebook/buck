@@ -15,17 +15,22 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.model.BuildId;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.Optional;
+import java.util.UUID;
+import javax.annotation.Nullable;
 
 /**
  * The abstract entry point of Buck commands for both {@link MainWithoutNailgun} and {@link
  * MainWithNailgun}
  */
 abstract class AbstractMain {
+
+  private static final String BUCK_BUILD_ID_ENV_VAR = "BUCK_BUILD_ID";
 
   protected final PrintStream stdOut;
   protected final PrintStream stdErr;
@@ -54,6 +59,15 @@ abstract class AbstractMain {
    *     setup.
    */
   protected MainRunner prepareMainRunner() {
-    return new MainRunner(stdOut, stdErr, stdIn, clientEnvironment, optionalNGContext);
+    return new MainRunner(
+        stdOut, stdErr, stdIn, getBuildId(clientEnvironment), clientEnvironment, optionalNGContext);
+  }
+
+  private static BuildId getBuildId(ImmutableMap<String, String> clientEnvironment) {
+    @Nullable String specifiedBuildId = clientEnvironment.get(BUCK_BUILD_ID_ENV_VAR);
+    if (specifiedBuildId == null) {
+      specifiedBuildId = UUID.randomUUID().toString();
+    }
+    return new BuildId(specifiedBuildId);
   }
 }

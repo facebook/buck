@@ -529,13 +529,20 @@ public class ProjectWorkspace extends AbstractWorkspace {
         }
       }
       envBuilder.putAll(environmentOverrides);
+
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
 
       MainRunner main =
           knownRuleTypesFactoryFactory == null
-              ? new MainRunner(stdout, stderr, stdin, sanizitedEnv, context)
+              ? new MainRunner(stdout, stderr, stdin, new BuildId(), sanizitedEnv, context)
               : new MainRunner(
-                  stdout, stderr, stdin, knownRuleTypesFactoryFactory, sanizitedEnv, context);
+                  stdout,
+                  stderr,
+                  stdin,
+                  knownRuleTypesFactoryFactory,
+                  new BuildId(),
+                  sanizitedEnv,
+                  context);
       ExitCode exitCode;
 
       // TODO (buck_team): this code repeats the one in Main and thus wants generalization
@@ -567,7 +574,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
       try {
         exitCode =
             main.runMainWithExitCode(
-                new BuildId(),
                 repoRoot,
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,

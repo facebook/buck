@@ -169,11 +169,11 @@ public class DaemonIntegrationTest {
                 new CapturingPrintStream(),
                 new CapturingPrintStream(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
+                new BuildId(),
                 EnvVariablesProvider.getSystemEnv(),
                 Optional.of(new TestContext()));
         ExitCode exitCode =
             main.runMainWithExitCode(
-                new BuildId(),
                 tmp.getRoot(),
                 CommandMode.TEST,
                 WatchmanWatcher.FreshInstanceAction.NONE,
