@@ -58,7 +58,7 @@ public class AsyncBackgroundTaskManagerTest {
       BackgroundTask<TestArgs> task =
           ImmutableBackgroundTask.<TestArgs>builder()
               .setAction(new TestAction())
-              .setActionArgs(new TestArgs(failure, false, taskBlocker, taskWaiter, null))
+              .setActionArgs(new TestArgs(failure, taskBlocker, taskWaiter, null))
               .setName(name)
               .build();
       taskList.add(task);
@@ -107,14 +107,13 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), true))
+            .setActionArgs(new TestArgs(Optional.empty(), new CountDownLatch(1), null, null))
             .setName("interruptTask")
             .build();
     schedule(task);
-    manager.notify(Notification.COMMAND_END);
-    assertFalse(manager.isShutDown());
-    assertEquals("init", task.getActionArgs().getOutput());
     manager.shutdown(5, TimeUnit.SECONDS);
+    manager.notify(Notification.COMMAND_END);
+    assertEquals("init", task.getActionArgs().getOutput());
     assertTrue(manager.isShutDown());
   }
 
@@ -124,7 +123,7 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch blocker = new CountDownLatch(1);
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, null, null))
+            .setActionArgs(new TestArgs(Optional.empty(), blocker, null, null))
             .setAction(new TestAction())
             .setName("timeoutTask")
             .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
@@ -258,25 +257,6 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testTaskInterruptNonblocking() throws InterruptedException {
-    manager = new AsyncBackgroundTaskManager(false, 1);
-    CountDownLatch blocker = new CountDownLatch(1);
-    CountDownLatch waiter = new CountDownLatch(1);
-    BackgroundTask<TestArgs> task =
-        ImmutableBackgroundTask.<TestArgs>builder()
-            .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), true, blocker, waiter, null))
-            .setName("interruptTask")
-            .build();
-    schedule(task);
-    manager.notify(Notification.COMMAND_END);
-    blocker.countDown();
-    waiter.await(1, TimeUnit.SECONDS);
-    assertFalse(manager.isShutDown());
-    manager.shutdown(5, TimeUnit.SECONDS);
-  }
-
-  @Test
   public void testHardShutdownNonblocking() throws InterruptedException {
     manager = new AsyncBackgroundTaskManager(false, NTHREADS);
     CountDownLatch blocker = new CountDownLatch(1);
@@ -285,7 +265,7 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, taskStarted))
+            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, taskStarted))
             .setName("task")
             .build();
     manager.notify(Notification.COMMAND_START);
@@ -294,14 +274,13 @@ public class AsyncBackgroundTaskManagerTest {
     taskStarted.await();
     manager.shutdownNow();
     blocker.countDown();
-    waiter.await(1, TimeUnit.SECONDS);
     assertEquals(0, manager.getScheduledTasks().size());
     assertEquals("init", task.getActionArgs().getOutput());
     assertTrue(manager.isShutDown());
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), false))
+            .setActionArgs(new TestArgs(Optional.empty()))
             .setName("noRunTask")
             .build();
     schedule(secondTask);
@@ -317,22 +296,22 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, taskStarted))
+            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, taskStarted))
             .setName("task")
             .build();
     manager.notify(Notification.COMMAND_START);
     schedule(task);
     manager.notify(Notification.COMMAND_END);
     taskStarted.await();
-    blocker.countDown();
     manager.shutdown(5, TimeUnit.SECONDS);
+    blocker.countDown();
     waiter.await();
     assertEquals("succeeded", task.getActionArgs().getOutput());
     assertTrue(manager.isShutDown());
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), false))
+            .setActionArgs(new TestArgs(Optional.empty()))
             .setName("noRunTask")
             .build();
     schedule(secondTask);
@@ -348,14 +327,14 @@ public class AsyncBackgroundTaskManagerTest {
     CountDownLatch waiter = new CountDownLatch(2);
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(Optional.empty(), false, firstBlocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), firstBlocker, waiter, null))
             .setAction(new TestAction())
             .setName("timeoutTask")
             .setTimeout(Optional.of(Timeout.of(TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)))
             .build();
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
-            .setActionArgs(new TestArgs(Optional.empty(), false, secondBlocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), secondBlocker, waiter, null))
             .setAction(new TestAction())
             .setName("secondTask")
             .build();
@@ -380,21 +359,21 @@ public class AsyncBackgroundTaskManagerTest {
     BackgroundTask<TestArgs> firstTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, null))
             .setName("cancelled")
             .setShouldCancelOnRepeat(true)
             .build();
     BackgroundTask<TestArgs> secondTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, started))
+            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, started))
             .setName("cancellable but runs")
             .setShouldCancelOnRepeat(true)
             .build();
     BackgroundTask<TestArgs> thirdTask =
         ImmutableBackgroundTask.<TestArgs>builder()
             .setAction(new TestAction())
-            .setActionArgs(new TestArgs(Optional.empty(), false, blocker, waiter, null))
+            .setActionArgs(new TestArgs(Optional.empty(), blocker, waiter, null))
             .setName("thirdTask")
             .build();
     schedule(firstTask);
@@ -435,9 +414,6 @@ public class AsyncBackgroundTaskManagerTest {
       if (args.getTaskBlocker().isPresent()) {
         args.getTaskBlocker().get().await();
       }
-      if (args.getInterrupt()) {
-        throw new InterruptedException("TestAction task interrupted");
-      }
       if (args.getFailure().isPresent()) {
         args.getTaskWaiter().ifPresent(CountDownLatch::countDown);
         throw args.getFailure().get();
@@ -454,11 +430,9 @@ public class AsyncBackgroundTaskManagerTest {
     private final @Nullable CountDownLatch taskBlocker;
     private final @Nullable CountDownLatch taskWaiter;
     private final @Nullable CountDownLatch taskStarted;
-    private final boolean interrupt;
 
     public TestArgs(
         Optional<Exception> failure,
-        boolean interrupt,
         @Nullable CountDownLatch taskBlocker,
         @Nullable CountDownLatch taskWaiter,
         @Nullable CountDownLatch taskStarted) {
@@ -466,20 +440,15 @@ public class AsyncBackgroundTaskManagerTest {
       this.output = "init";
       this.taskBlocker = taskBlocker;
       this.taskWaiter = taskWaiter;
-      this.interrupt = interrupt;
       this.taskStarted = taskStarted;
     }
 
-    public TestArgs(Optional<Exception> failure, boolean interrupt) {
-      this(failure, interrupt, null, null, null);
+    public TestArgs(Optional<Exception> failure) {
+      this(failure, null, null, null);
     }
 
     public Optional<Exception> getFailure() {
       return failure;
-    }
-
-    public boolean getInterrupt() {
-      return interrupt;
     }
 
     public String getOutput() {

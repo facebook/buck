@@ -328,13 +328,6 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    */
   @VisibleForTesting
   protected boolean isShutDown() {
-    boolean schedulerDone = true;
-    if (scheduler.isPresent()) {
-      schedulerDone = scheduler.get().isTerminated();
-    }
-    return taskPool.isTerminated()
-        && timeoutPool.isTerminated()
-        && schedulerDone
-        && !schedulingOpen.get();
+    return !schedulingOpen.get();
   }
 }
