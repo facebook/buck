@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.config.AliasConfig;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.support.cli.config.AliasConfig;
 import com.facebook.buck.util.ExitCode;
 import java.util.Map;
 import org.kohsuke.args4j.Option;

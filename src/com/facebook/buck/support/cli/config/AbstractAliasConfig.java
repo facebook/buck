@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.config;
+package com.facebook.buck.support.cli.config;
 
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
