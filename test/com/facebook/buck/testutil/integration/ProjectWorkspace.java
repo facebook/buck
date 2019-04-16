@@ -62,7 +62,6 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.testutil.AbstractWorkspace;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
-import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ErrorLogger;
@@ -83,7 +82,6 @@ import com.facebook.buck.util.trace.ChromeTraceParser.ChromeTraceEventMatcher;
 import com.facebook.nailgun.NGContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -454,16 +452,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ProcessResult runBuckdCommand(NGContext context, String... args) throws IOException {
-    return runBuckdCommand(destPath, context, new CapturingPrintStream(), args);
+    return runBuckdCommand(destPath, context, args);
   }
 
   public ProcessResult runBuckdCommand(Path repoRoot, NGContext context, String... args)
-      throws IOException {
-    return runBuckdCommand(repoRoot, context, new CapturingPrintStream(), args);
-  }
-
-  public ProcessResult runBuckdCommand(
-      Path repoRoot, NGContext context, CapturingPrintStream stderr, String... args)
       throws IOException {
     assumeTrue(
         "watchman must exist to run buckd",
@@ -473,28 +465,17 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
     ImmutableMap<String, String> clientEnv = ImmutableMap.copyOf((Map) context.getEnv());
     return runBuckCommandWithEnvironmentOverridesAndContext(
-        repoRoot, Optional.of(context), clientEnv, stderr, args);
+        repoRoot, Optional.of(context), clientEnv, args);
   }
 
   public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
       Path repoRoot,
       Optional<NGContext> context,
       ImmutableMap<String, String> environmentOverrides,
-      String... args)
-      throws IOException {
-    return runBuckCommandWithEnvironmentOverridesAndContext(
-        repoRoot, context, environmentOverrides, new CapturingPrintStream(), args);
-  }
-
-  public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
-      Path repoRoot,
-      Optional<NGContext> context,
-      ImmutableMap<String, String> environmentOverrides,
-      CapturingPrintStream stderr,
       String... args) {
     try {
       assertTrue("setUp() must be run before this method is invoked", isSetUp);
-      CapturingPrintStream stdout = new CapturingPrintStream();
+      TestConsole testConsole = new TestConsole();
       InputStream stdin = new ByteArrayInputStream("".getBytes());
 
       // Construct a limited view of the parent environment for the child.
@@ -542,8 +523,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
       MainRunner main =
           knownRuleTypesFactoryFactory == null
               ? new MainRunner(
-                  stdout,
-                  stderr,
+                  testConsole,
                   stdin,
                   new BuildId(),
                   sanizitedEnv,
@@ -552,8 +532,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   moduleManager,
                   context)
               : new MainRunner(
-                  stdout,
-                  stderr,
+                  testConsole,
                   stdin,
                   knownRuleTypesFactoryFactory,
                   new BuildId(),
@@ -599,14 +578,14 @@ public class ProjectWorkspace extends AbstractWorkspace {
                 System.nanoTime(),
                 ImmutableList.copyOf(args));
       } catch (InterruptedException e) {
-        e.printStackTrace(stderr);
+        e.printStackTrace(testConsole.getStdErr());
         exitCode = ExitCode.BUILD_ERROR;
         Threads.interruptCurrentThread();
       } catch (CommandLineException e) {
-        stderr.println(e.getMessage());
+        testConsole.getStdErr().println(e.getMessage());
         exitCode = ExitCode.COMMANDLINE_ERROR;
       } catch (BuildFileParseException e) {
-        stderr.println(e.getHumanReadableErrorMessage());
+        testConsole.getStdErr().println(e.getHumanReadableErrorMessage());
         exitCode = ExitCode.PARSE_ERROR;
       } catch (Throwable t) {
         logger.logException(t);
@@ -615,8 +594,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
       return new ProcessResult(
           exitCode,
-          stdout.getContentsAsString(Charsets.UTF_8),
-          stderr.getContentsAsString(Charsets.UTF_8) + errorMessage.toString());
+          testConsole.getTextWrittenToStdOut(),
+          testConsole.getTextWrittenToStdErr() + errorMessage.toString());
     } finally {
       if (JavaVersion.getMajorVersion() < 9) {
         // javac has a global cache of zip/jar file content listings. It determines the validity of

@@ -20,6 +20,10 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.util.Ansi;
+import com.facebook.buck.util.AnsiEnvironmentChecking;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
@@ -45,14 +49,13 @@ abstract class AbstractMain {
     moduleManager = new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
   }
 
-  protected final PrintStream stdOut;
-  protected final PrintStream stdErr;
   protected final InputStream stdIn;
 
   protected final ImmutableMap<String, String> clientEnvironment;
   protected final Platform platform;
 
   private final Optional<NGContext> optionalNGContext; // TODO(bobyf): remove this dependency.
+  private final Console defaultConsole;
 
   protected AbstractMain(
       PrintStream stdOut,
@@ -61,13 +64,23 @@ abstract class AbstractMain {
       ImmutableMap<String, String> clientEnvironment,
       Platform platform,
       Optional<NGContext> ngContext) {
-    this.stdOut = stdOut;
-    this.stdErr = stdErr;
     this.stdIn = stdIn;
 
     this.clientEnvironment = clientEnvironment;
     this.platform = platform;
     this.optionalNGContext = ngContext;
+
+    // Create default console to start outputting errors immediately, if any
+    // console may be overridden with custom console later once we have enough information to
+    // construct it
+    this.defaultConsole =
+        new Console(
+            Verbosity.STANDARD_INFORMATION,
+            stdOut,
+            stdErr,
+            new Ansi(
+                AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
+                    platform, clientEnvironment)));
   }
 
   /**
@@ -75,9 +88,9 @@ abstract class AbstractMain {
    *     setup.
    */
   protected MainRunner prepareMainRunner() {
+
     return new MainRunner(
-        stdOut,
-        stdErr,
+        defaultConsole,
         stdIn,
         getBuildId(clientEnvironment),
         clientEnvironment,

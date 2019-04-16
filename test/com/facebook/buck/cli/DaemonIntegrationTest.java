@@ -32,10 +32,10 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.CommandMode;
@@ -175,8 +175,7 @@ public class DaemonIntegrationTest {
 
         MainRunner main =
             new MainRunner(
-                new CapturingPrintStream(),
-                new CapturingPrintStream(),
+                new TestConsole(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
                 new BuildId(),
                 EnvVariablesProvider.getSystemEnv(),

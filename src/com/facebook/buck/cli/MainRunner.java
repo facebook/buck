@@ -150,8 +150,6 @@ import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
-import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CloseableWrapper;
@@ -282,8 +280,6 @@ public final class MainRunner {
   private static final int COUNTER_AGGREGATOR_SERVICE_TIMEOUT_SECONDS = 20;
 
   private final InputStream stdIn;
-  private final PrintStream stdOut;
-  private final PrintStream stdErr;
 
   private final Architecture architecture;
 
@@ -388,8 +384,7 @@ public final class MainRunner {
    * This constructor allows integration tests to add/remove/modify known build rules (aka
    * descriptions).
    *
-   * @param stdOut the stream to print to for the command being ran
-   * @param stdErr the error stream to print to for the command being ran
+   * @param console the {@link Console} to print to for this command
    * @param stdIn the input stream to the command being ran
    * @param knownRuleTypesFactoryFactory the known rule types for this command
    * @param buildId the {@link BuildId} for this command
@@ -401,8 +396,7 @@ public final class MainRunner {
    */
   @VisibleForTesting
   public MainRunner(
-      PrintStream stdOut,
-      PrintStream stdErr,
+      Console console,
       InputStream stdIn,
       KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
       BuildId buildId,
@@ -411,8 +405,7 @@ public final class MainRunner {
       PluginManager pluginManager,
       BuckModuleManager moduleManager,
       Optional<NGContext> context) {
-    this.stdOut = stdOut;
-    this.stdErr = stdErr;
+    this.console = console;
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
     this.pluginManager = pluginManager;
@@ -422,24 +415,11 @@ public final class MainRunner {
     this.clientEnvironment = clientEnvironment;
     this.platform = platform;
     this.context = context;
-
-    // Create default console to start outputting errors immediately, if any
-    // console may be overridden with custom console later once we have enough information to
-    // construct it
-    this.console =
-        new Console(
-            Verbosity.STANDARD_INFORMATION,
-            stdOut,
-            stdErr,
-            new Ansi(
-                AnsiEnvironmentChecking.environmentSupportsAnsiEscapes(
-                    platform, clientEnvironment)));
   }
 
   @VisibleForTesting
   public MainRunner(
-      PrintStream stdOut,
-      PrintStream stdErr,
+      Console console,
       InputStream stdIn,
       BuildId buildId,
       ImmutableMap<String, String> clientEnvironment,
@@ -448,8 +428,7 @@ public final class MainRunner {
       BuckModuleManager moduleManager,
       Optional<NGContext> context) {
     this(
-        stdOut,
-        stdErr,
+        console,
         stdIn,
         DefaultKnownRuleTypesFactory::new,
         buildId,
@@ -633,7 +612,7 @@ public final class MainRunner {
     }
 
     // Return help strings fast if the command is a help request.
-    Optional<ExitCode> result = command.runHelp(stdOut);
+    Optional<ExitCode> result = command.runHelp(console.getStdOut());
     if (result.isPresent()) {
       return result.get();
     }
@@ -966,7 +945,11 @@ public final class MainRunner {
       try (TaskManagerScope managerScope = buckGlobalState.getBgTaskManager().getNewScope(buildId);
           GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
-                  .setupLoggers(invocationInfo, console.getStdErr(), stdErr, verbosity);
+                  .setupLoggers(
+                      invocationInfo,
+                      console.getStdErr(),
+                      console.getStdErr().getRawStream(),
+                      verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier =
               ThrowingCloseableMemoizedSupplier.of(
@@ -1691,7 +1674,10 @@ public final class MainRunner {
       color = Optional.empty();
     }
     return new Console(
-        verbosity, stdOut, stdErr, buckConfig.getView(CliConfig.class).createAnsi(color));
+        verbosity,
+        console.getStdOut().getRawStream(),
+        console.getStdErr().getRawStream(),
+        buckConfig.getView(CliConfig.class).createAnsi(color));
   }
 
   private void flushAndCloseEventListeners(
