@@ -465,6 +465,10 @@ public class BuckUnixPath implements Path {
 
   @Override
   public boolean equals(Object ob) {
+    if (this == ob) {
+      return true;
+    }
+
     if (!(ob instanceof BuckUnixPath)) {
       return false;
     }
