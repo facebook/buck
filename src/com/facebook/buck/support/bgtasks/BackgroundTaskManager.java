@@ -59,7 +59,7 @@ public abstract class BackgroundTaskManager {
    * Schedule a task to be run in the background. Should be accessed through a {@link
    * TaskManagerCommandScope} implementation.
    */
-  abstract void schedule(ManagedBackgroundTask task);
+  abstract void schedule(ManagedBackgroundTask<?> task);
 
   /**
    * Notify the manager of some event, e.g. command start or end. Exceptions should generally be

@@ -23,20 +23,22 @@ import org.immutables.value.Value;
 /**
  * Wrapper class for {@link BackgroundTask} that includes data generated/ managed by the {@link
  * BackgroundTaskManager}, e.g. task ID.
+ *
+ * @param <T> the type of the argument to the {@link BackgroundTask}
  */
-class ManagedBackgroundTask {
+class ManagedBackgroundTask<T> {
 
-  private final BackgroundTask<?> task;
+  private final BackgroundTask<T> task;
   private final TaskId id;
   private boolean toCancel;
 
-  protected ManagedBackgroundTask(BackgroundTask<?> task, BuildId buildId) {
+  protected ManagedBackgroundTask(BackgroundTask<T> task, BuildId buildId) {
     this.task = task;
     this.id = TaskId.of(task.getName(), buildId);
     this.toCancel = false;
   }
 
-  BackgroundTask<?> getTask() {
+  BackgroundTask<T> getTask() {
     return task;
   }
 

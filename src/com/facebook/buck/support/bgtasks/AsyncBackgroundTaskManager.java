@@ -52,8 +52,9 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   private static final Logger LOG = Logger.get(AsyncBackgroundTaskManager.class);
   private static final int DEFAULT_THREADS = 3;
 
-  private final Queue<ManagedBackgroundTask> scheduledTasks = new LinkedList<>();
-  private final Map<Class<?>, ManagedBackgroundTask> cancellableTasks = new ConcurrentHashMap<>();
+  private final Queue<ManagedBackgroundTask<?>> scheduledTasks = new LinkedList<>();
+  private final Map<Class<?>, ManagedBackgroundTask<?>> cancellableTasks =
+      new ConcurrentHashMap<>();
   private final boolean blocking;
 
   private final AtomicBoolean schedulerRunning;
@@ -130,7 +131,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   @Override
-  void schedule(ManagedBackgroundTask task) {
+  void schedule(ManagedBackgroundTask<?> task) {
     if (!schedulingOpen.get()) {
       LOG.warn("Manager is not accepting new tasks; newly scheduled tasks will not be run.");
       return;
@@ -155,7 +156,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    *
    * @param managedTask Task to run
    */
-  void runTask(ManagedBackgroundTask managedTask) {
+  void runTask(ManagedBackgroundTask<?> managedTask) {
     try {
       BackgroundTask<?> task = managedTask.getTask();
       task.run();
@@ -166,7 +167,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     }
   }
 
-  private void addTimeoutIfNeeded(Future<?> taskHandler, ManagedBackgroundTask task) {
+  private void addTimeoutIfNeeded(Future<?> taskHandler, ManagedBackgroundTask<?> task) {
     Optional<Timeout> timeout = task.getTask().getTimeout();
     if (timeout.isPresent()) {
       timeoutPool.schedule(
@@ -189,7 +190,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     }
   }
 
-  private Future<?> submitTask(ManagedBackgroundTask task) {
+  private Future<?> submitTask(ManagedBackgroundTask<?> task) {
     Future<?> handler =
         taskPool.submit(
             () -> {
@@ -200,7 +201,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     return handler;
   }
 
-  private boolean taskCancelled(ManagedBackgroundTask task) {
+  private boolean taskCancelled(ManagedBackgroundTask<?> task) {
     cancellableTasks.remove(task.getTask().getAction().getClass(), task);
     return task.getToCancel();
   }
@@ -224,7 +225,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
                 break;
               }
               availableThreads.acquire();
-              ManagedBackgroundTask task = scheduledTasks.remove();
+              ManagedBackgroundTask<?> task = scheduledTasks.remove();
               if (taskCancelled(task)) {
                 availableThreads.release();
                 continue;
@@ -278,7 +279,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
           }
         }
         availableThreads.acquire();
-        ManagedBackgroundTask task;
+        ManagedBackgroundTask<?> task;
         synchronized (scheduledTasks) {
           task = scheduledTasks.remove();
         }
@@ -304,7 +305,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    * @return list of currently scheduled tasks
    */
   @VisibleForTesting
-  protected Queue<ManagedBackgroundTask> getScheduledTasks() {
+  protected Queue<ManagedBackgroundTask<?>> getScheduledTasks() {
     return scheduledTasks;
   }
 
@@ -316,7 +317,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    * @return map of cancellable tasks
    */
   @VisibleForTesting
-  protected Map<Class<?>, ManagedBackgroundTask> getCancellableTasks() {
+  protected Map<Class<?>, ManagedBackgroundTask<?>> getCancellableTasks() {
     return cancellableTasks;
   }
 
