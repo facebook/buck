@@ -301,8 +301,12 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   }
 
   private boolean equalTo(ImmutableUnconfiguredBuildTargetView another) {
-    return Objects.equals(data, another.data)
-        && Objects.equals(unflavoredBuildTargetView, another.unflavoredBuildTargetView);
+    if (hash != another.hash) {
+      return false;
+    }
+
+    return data.equals(another.data)
+        && unflavoredBuildTargetView.equals(another.unflavoredBuildTargetView);
   }
 
   @Override

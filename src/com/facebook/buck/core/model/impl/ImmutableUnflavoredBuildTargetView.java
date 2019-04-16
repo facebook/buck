@@ -135,7 +135,11 @@ public class ImmutableUnflavoredBuildTargetView extends AbstractUnflavoredBuildT
   }
 
   private boolean equalTo(ImmutableUnflavoredBuildTargetView another) {
-    return cellPath.equals(another.cellPath) && Objects.equals(data, another.data);
+    if (hash != another.hash) {
+      return false;
+    }
+
+    return cellPath.equals(another.cellPath) && data.equals(another.data);
   }
 
   @Override
