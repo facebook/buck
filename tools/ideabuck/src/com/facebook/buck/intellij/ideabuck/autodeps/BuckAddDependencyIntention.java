@@ -266,7 +266,11 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     }
 
     boolean hasDependencyOn(BuckTarget target) {
-      return deps.stream().anyMatch(dep -> dep.equals(target));
+      if (deps == null) {
+        return false;
+      } else {
+        return deps.stream().anyMatch(dep -> dep.equals(target));
+      }
     }
 
     boolean contains(BuckTarget targetFile) {
@@ -274,7 +278,8 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
         return false;
       }
       String relativeToBuildFile = targetFile.getRuleName();
-      return srcs.contains(relativeToBuildFile) || resources.contains(relativeToBuildFile);
+      return (srcs != null && srcs.contains(relativeToBuildFile))
+          || (resources != null && resources.contains(relativeToBuildFile));
     }
   }
 
@@ -331,7 +336,6 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                             + editSourceFile
                             + " and/or "
                             + importSourceFile);
-                return;
               }
             });
     handler
