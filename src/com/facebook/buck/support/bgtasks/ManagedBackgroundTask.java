@@ -18,6 +18,7 @@ package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -39,6 +40,7 @@ class ManagedBackgroundTask<T> {
   }
 
   BackgroundTask<T> getTask() {
+    // TODO(bobyf): this should just be private
     return task;
   }
 
@@ -52,6 +54,27 @@ class ManagedBackgroundTask<T> {
 
   void markToCancel() {
     toCancel = true;
+  }
+
+  /**
+   * Runs the action for this task with the given arguments.
+   *
+   * @throws Exception
+   */
+  void run() throws Exception {
+    task.getAction().run(task.getActionArgs());
+  }
+
+  Class<?> getActionClass() {
+    return task.getAction().getClass();
+  }
+
+  Optional<Timeout> getTimeout() {
+    return task.getTimeout();
+  }
+
+  boolean getShouldCancelOnRepeat() {
+    return task.getShouldCancelOnRepeat();
   }
 
   /** Task ID object for {@link ManagedBackgroundTask}. */

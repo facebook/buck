@@ -136,12 +136,12 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
       LOG.warn("Manager is not accepting new tasks; newly scheduled tasks will not be run.");
       return;
     }
-    Class<?> actionClass = task.getTask().getAction().getClass();
+    Class<?> actionClass = task.getActionClass();
     synchronized (cancellableTasks) {
       if (cancellableTasks.containsKey(actionClass)) {
         cancellableTasks.get(actionClass).markToCancel();
       }
-      if (task.getTask().getShouldCancelOnRepeat()) {
+      if (task.getShouldCancelOnRepeat()) {
         cancellableTasks.put(actionClass, task);
       }
     }
@@ -158,8 +158,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    */
   void runTask(ManagedBackgroundTask<?> managedTask) {
     try {
-      BackgroundTask<?> task = managedTask.getTask();
-      task.run();
+      managedTask.run();
     } catch (InterruptedException e) {
       LOG.warn(e, "Task %s interrupted.", managedTask.getId());
     } catch (Throwable e) {
@@ -168,7 +167,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   private void addTimeoutIfNeeded(Future<?> taskHandler, ManagedBackgroundTask<?> task) {
-    Optional<Timeout> timeout = task.getTask().getTimeout();
+    Optional<Timeout> timeout = task.getTimeout();
     if (timeout.isPresent()) {
       timeoutPool.schedule(
           () -> {
@@ -202,7 +201,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   private boolean taskCancelled(ManagedBackgroundTask<?> task) {
-    cancellableTasks.remove(task.getTask().getAction().getClass(), task);
+    cancellableTasks.remove(task.getActionClass(), task);
     return task.getToCancel();
   }
 

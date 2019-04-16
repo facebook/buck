@@ -38,9 +38,8 @@ public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
 
   @Override
   void runTask(ManagedBackgroundTask managedTask) {
-    BackgroundTask<?> task = managedTask.getTask();
     try {
-      task.run();
+      managedTask.run();
       statuses.put(managedTask, Optional.empty());
     } catch (Exception e) {
       statuses.put(managedTask, Optional.of(e));

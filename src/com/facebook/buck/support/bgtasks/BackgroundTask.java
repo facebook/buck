@@ -46,10 +46,6 @@ public abstract class BackgroundTask<T> {
     return false;
   }
 
-  void run() throws Exception {
-    getAction().run(getActionArgs());
-  }
-
   /** Timeout object for {@link BackgroundTask}. */
   @Value.Immutable(builder = false)
   @BuckStyleImmutable
