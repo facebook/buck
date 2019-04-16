@@ -361,10 +361,9 @@ public final class MainRunner {
 
   private static final HangMonitor.AutoStartInstance HANG_MONITOR =
       new HangMonitor.AutoStartInstance(
-          (input) -> {
-            LOG.info(
-                "No recent activity, dumping thread stacks (`tr , '\\n'` to decode): %s", input);
-          },
+          (input) ->
+              LOG.info(
+                  "No recent activity, dumping thread stacks (`tr , '\\n'` to decode): %s", input),
           HANG_DETECTOR_TIMEOUT);
 
   private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
