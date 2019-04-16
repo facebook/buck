@@ -31,15 +31,15 @@ import org.immutables.value.Value;
 public abstract class BackgroundTask<T> {
 
   @Value.Parameter
-  public abstract String getName();
+  abstract String getName();
 
   @Value.Parameter
-  public abstract TaskAction<T> getAction();
+  abstract TaskAction<T> getAction();
 
   @Value.Parameter
-  protected abstract T getActionArgs();
+  abstract T getActionArgs();
 
-  public abstract Optional<Timeout> getTimeout();
+  abstract Optional<Timeout> getTimeout();
 
   @Value.Default
   boolean getShouldCancelOnRepeat() {
