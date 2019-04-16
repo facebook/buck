@@ -71,9 +71,7 @@ public class BuildTargetToRawTargetNodeComputation
     UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
 
     BuildFileManifest manifest = env.getDep(getManifestKey(key));
-    @Nullable
-    Map<String, Object> rawAttributes =
-        manifest.getTargets().get(buildTarget.getUnflavoredBuildTarget().getName());
+    @Nullable Map<String, Object> rawAttributes = manifest.getTargets().get(buildTarget.getName());
     if (rawAttributes == null) {
       throw new NoSuchBuildTargetException(buildTarget);
     }

@@ -38,7 +38,6 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 
 /** An immutable implementation of {@link UnconfiguredBuildTargetView}. */
 @JsonAutoDetect(
@@ -53,15 +52,36 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
 
   private ImmutableUnconfiguredBuildTargetView(
       UnflavoredBuildTargetView unflavoredBuildTargetView, ImmutableSortedSet<Flavor> flavors) {
-    this.data = ImmutableUnconfiguredBuildTarget.of(unflavoredBuildTargetView.getData(), flavors);
+    if (flavors.size() == 0) {
+      this.data = unflavoredBuildTargetView.getData();
+    } else {
+      // If we have flavors for this view, add them by recreating UnconfiguredBuildTarget from
+      // unflavored view
+      UnconfiguredBuildTarget from = unflavoredBuildTargetView.getData();
+      this.data =
+          ImmutableUnconfiguredBuildTarget.of(
+              from.getCell(), from.getBaseName(), from.getName(), flavors);
+    }
     this.unflavoredBuildTargetView = unflavoredBuildTargetView;
     this.hash = Objects.hash(this.data, this.unflavoredBuildTargetView);
   }
 
   private ImmutableUnconfiguredBuildTargetView(Path cellPath, UnconfiguredBuildTarget data) {
     this.data = data;
-    this.unflavoredBuildTargetView =
-        ImmutableUnflavoredBuildTargetView.of(cellPath, data.getUnflavoredBuildTarget());
+    if (data.getFlavors().size() == 0) {
+      this.unflavoredBuildTargetView = ImmutableUnflavoredBuildTargetView.of(cellPath, data);
+    } else {
+      // strip flavors for unflavored view
+      this.unflavoredBuildTargetView =
+          ImmutableUnflavoredBuildTargetView.of(
+              cellPath,
+              ImmutableUnconfiguredBuildTarget.of(
+                  data.getCell(),
+                  data.getBaseName(),
+                  data.getName(),
+                  UnconfiguredBuildTarget.NO_FLAVORS));
+    }
+
     this.hash = Objects.hash(this.data, this.unflavoredBuildTargetView);
   }
 
@@ -143,7 +163,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @JsonProperty("cell")
   @Override
   public Optional<String> getCell() {
-    String cell = data.getUnflavoredBuildTarget().getCell();
+    String cell = data.getCell();
     return cell == "" ? Optional.empty() : Optional.of(cell);
   }
 
@@ -157,7 +177,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @JsonView(JsonViews.MachineReadableLog.class)
   @Override
   public String getBaseName() {
-    return data.getUnflavoredBuildTarget().getBaseName();
+    return data.getBaseName();
   }
 
   @JsonIgnore
@@ -170,7 +190,7 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   @JsonView(JsonViews.MachineReadableLog.class)
   @Override
   public String getShortName() {
-    return data.getUnflavoredBuildTarget().getName();
+    return data.getName();
   }
 
   @JsonIgnore
@@ -192,15 +212,10 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
     return "#" + getFlavorsAsString();
   }
 
-  private @Nullable String fullyQualifiedName = null;
-
   @JsonIgnore
   @Override
   public String getFullyQualifiedName() {
-    if (fullyQualifiedName == null) {
-      fullyQualifiedName = unflavoredBuildTargetView.getFullyQualifiedName() + getFlavorPostfix();
-    }
-    return fullyQualifiedName;
+    return data.getFullyQualifiedName();
   }
 
   @JsonIgnore
@@ -286,8 +301,6 @@ public class ImmutableUnconfiguredBuildTargetView implements UnconfiguredBuildTa
   }
 
   private boolean equalTo(ImmutableUnconfiguredBuildTargetView another) {
-    // Do not use 'unflavoredBuildTargetView' - everything except cell path is in 'data'
-    // And we do not want to compare with absolute paths
     return Objects.equals(data, another.data)
         && Objects.equals(unflavoredBuildTargetView, another.unflavoredBuildTargetView);
   }

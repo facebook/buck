@@ -306,7 +306,7 @@ internal data class Deltas(val buildPackageDeltas: List<BuildPackageDelta>,
 }
 
 private fun getRuleNames(rules: Set<InternalRawBuildRule>): Set<String> {
-    return rules.map { it.targetNode.buildTarget.unflavoredBuildTarget.name }.toSet()
+    return rules.map { it.targetNode.buildTarget.name }.toSet()
 }
 
 /**

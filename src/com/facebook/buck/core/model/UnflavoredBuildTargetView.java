@@ -27,7 +27,7 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * .
  *
- * <p>If used as data class, consider {@link UnflavoredBuildTarget} instead
+ * <p>If used as data class, consider {@link UnconfiguredBuildTarget} instead
  */
 @ThreadSafe
 public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTargetView> {
@@ -62,5 +62,5 @@ public interface UnflavoredBuildTargetView extends Comparable<UnflavoredBuildTar
   Path getBasePath();
 
   /** Data object that backs current instance */
-  UnflavoredBuildTarget getData();
+  UnconfiguredBuildTarget getData();
 }

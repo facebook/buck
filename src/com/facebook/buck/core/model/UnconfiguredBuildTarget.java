@@ -52,10 +52,33 @@ public abstract class UnconfiguredBuildTarget implements Comparable<Unconfigured
   /** Flavors passed to this object should be sorted using this ordering */
   public static final Ordering<Flavor> FLAVOR_ORDERING = Ordering.natural();
 
-  /** Build target without flavors */
+  /** Indicates empty set of flavors */
+  public static final ImmutableSortedSet<Flavor> NO_FLAVORS =
+      ImmutableSortedSet.orderedBy(FLAVOR_ORDERING).build();
+
+  private static final String BUILD_TARGET_PREFIX = "//";
+
+  /** Name of the cell that current build target belongs to */
   @Value.Parameter
-  @JsonProperty("unflavoredBuildTarget")
-  public abstract UnflavoredBuildTarget getUnflavoredBuildTarget();
+  @JsonProperty("cell")
+  public abstract String getCell();
+
+  /**
+   * Base name of build target, i.e. part of fully qualified name before the colon If this build
+   * target were //third_party/java/guava:guava-latest, then this would return
+   * "//third_party/java/guava"
+   */
+  @Value.Parameter
+  @JsonProperty("baseName")
+  public abstract String getBaseName();
+
+  /**
+   * Name of the build target, i.e. part of fully qualified name after the colon If this build
+   * target were //third_party/java/guava:guava-latest, then this would return "guava-latest"
+   */
+  @Value.Parameter
+  @JsonProperty("name")
+  public abstract String getName();
 
   /** Set of flavors used with that build target. */
   @Value.Parameter
@@ -65,6 +88,22 @@ public abstract class UnconfiguredBuildTarget implements Comparable<Unconfigured
   /** Validation for flavor ordering */
   @Value.Check
   protected void check() {
+    // this check is not always required but may be expensive
+    // TODO(buck_team): only validate data if provided as a user input
+
+    Preconditions.checkArgument(
+        getBaseName().startsWith(BUILD_TARGET_PREFIX),
+        "baseName must start with %s but was %s",
+        BUILD_TARGET_PREFIX,
+        getBaseName());
+
+    // BaseName may contain backslashes, which are the path separator, so not permitted.
+    Preconditions.checkArgument(
+        !getBaseName().contains("\\"), "baseName may not contain backslashes.");
+
+    Preconditions.checkArgument(
+        !getName().contains("#"), "Build target name cannot contain '#' but was: %s.", getName());
+
     Preconditions.checkArgument(
         getFlavors().comparator() == FLAVOR_ORDERING,
         "Flavors must be ordered using natural ordering.");
@@ -72,12 +111,12 @@ public abstract class UnconfiguredBuildTarget implements Comparable<Unconfigured
 
   /**
    * Fully qualified name of unconfigured build target, for example
-   * cell//some/target:name#flavor1,flavor2 *
+   * cell//some/target:name#flavor1,flavor2
    */
   @Value.Lazy
   @JsonIgnore
   public String getFullyQualifiedName() {
-    return getUnflavoredBuildTarget() + getFlavorPostfix();
+    return getCell() + getBaseName() + ":" + getName() + getFlavorPostfix();
   }
 
   @JsonIgnore
@@ -105,7 +144,9 @@ public abstract class UnconfiguredBuildTarget implements Comparable<Unconfigured
     }
 
     return ComparisonChain.start()
-        .compare(getUnflavoredBuildTarget(), o.getUnflavoredBuildTarget())
+        .compare(getCell(), o.getCell())
+        .compare(getBaseName(), o.getBaseName())
+        .compare(getName(), o.getName())
         .compare(getFlavors(), o.getFlavors(), LEXICOGRAPHICAL_ORDERING)
         .result();
   }

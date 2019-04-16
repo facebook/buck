@@ -24,7 +24,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
-import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
@@ -43,7 +42,6 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.manifest.ImmutableBuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -128,8 +126,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
 
       RawTargetNodeWithDeps rawTargetNodeWithDeps =
           ImmutableRawTargetNodeWithDeps.of(rawTargetNode, deps);
-      builder.put(
-          unconfiguredBuildTarget.getUnflavoredBuildTarget().getName(), rawTargetNodeWithDeps);
+      builder.put(unconfiguredBuildTarget.getName(), rawTargetNodeWithDeps);
     }
 
     return ImmutableRawTargetNodeWithDepsPackage.of(builder.build());
@@ -150,9 +147,10 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       BuildTargetToRawTargetNodeKey depkey =
           ImmutableBuildTargetToRawTargetNodeKey.of(
               ImmutableUnconfiguredBuildTarget.of(
-                  ImmutableUnflavoredBuildTarget.of(
-                      cell.getCanonicalName().orElse(""), baseName, target),
-                  ImmutableSortedSet.of()));
+                  cell.getCanonicalName().orElse(""),
+                  baseName,
+                  target,
+                  UnconfiguredBuildTarget.NO_FLAVORS));
       builder.add(depkey);
     }
     return builder.build();

@@ -22,7 +22,6 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.FakeComputationEnvironment;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
-import com.facebook.buck.core.model.ImmutableUnflavoredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
@@ -77,8 +76,10 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
             ImmutableSortedSet.of(":target2"));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         ImmutableUnconfiguredBuildTarget.of(
-            ImmutableUnflavoredBuildTarget.of(cell.getCanonicalName().orElse(""), "//", "target1"),
-            ImmutableSortedSet.of());
+            cell.getCanonicalName().orElse(""),
+            "//",
+            "target1",
+            UnconfiguredBuildTarget.NO_FLAVORS);
     RawTargetNode rawTargetNode1 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget1,
@@ -91,8 +92,10 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
         ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         ImmutableUnconfiguredBuildTarget.of(
-            ImmutableUnflavoredBuildTarget.of(cell.getCanonicalName().orElse(""), "//", "target2"),
-            ImmutableSortedSet.of());
+            cell.getCanonicalName().orElse(""),
+            "//",
+            "target2",
+            UnconfiguredBuildTarget.NO_FLAVORS);
     RawTargetNode rawTargetNode2 =
         ImmutableRawTargetNode.of(
             unconfiguredBuildTarget2,
@@ -129,7 +132,7 @@ public class BuildPackagePathToRawTargetNodePackageTransformerTest {
     assertEquals(1, deps.size());
 
     UnconfiguredBuildTarget dep = deps.iterator().next();
-    assertEquals("//", dep.getUnflavoredBuildTarget().getBaseName());
-    assertEquals("target2", dep.getUnflavoredBuildTarget().getName());
+    assertEquals("//", dep.getBaseName());
+    assertEquals("target2", dep.getName());
   }
 }
