@@ -25,6 +25,7 @@ import com.facebook.buck.intellij.ideabuck.icons.BuckIcons;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckTypes;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.codeInsight.completion.CompletionContributor;
@@ -266,7 +267,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         .map(e -> PsiTreeUtil.getParentOfType(e, BuckLoadCall.class))
         .map(BuckLoadCall::getLoadTargetArgument)
         .map(BuckLoadTargetArgument::getString)
-        .map(BuckPsiUtils::getStringValueFromBuckString)
+        .map(BuckString::getValue)
         .flatMap(BuckTarget::parse)
         .flatMap(target -> buckTargetLocator.resolve(sourceFile, target))
         .flatMap(buckTargetLocator::findVirtualFileForExtensionFile)

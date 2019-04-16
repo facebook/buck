@@ -207,7 +207,7 @@ public final class BuckPsiUtils {
         .filter(e -> e.getFactorExpression() == null)
         .map(BuckPowerExpression::getAtomicExpression)
         .map(BuckAtomicExpression::getString)
-        .map(BuckPsiUtils::getStringValueFromBuckString)
+        .map(BuckString::getValue)
         .orElse(null);
   }
 
@@ -225,10 +225,10 @@ public final class BuckPsiUtils {
     if (hasElementType(stringElement, STRING_LITERALS)) {
       stringElement = stringElement.getParent();
     }
-    if (!hasElementType(stringElement, BuckTypes.STRING)) {
-      return null;
+    if (stringElement instanceof BuckString) {
+      return ((BuckString) stringElement).getValue();
     }
-    return getStringValueFromBuckString((BuckString) stringElement);
+    return null;
   }
 
   /**
@@ -238,42 +238,7 @@ public final class BuckPsiUtils {
    * sequences correctly.
    */
   public static String getStringValueFromBuckString(BuckString buckString) {
-    PsiElement quotedElement = buckString.getApostrophedString();
-    if (quotedElement == null) {
-      quotedElement = buckString.getQuotedString();
-    }
-    if (quotedElement != null) {
-      String text = quotedElement.getText();
-      return text.length() >= 2 ? text.substring(1, text.length() - 1) : null;
-    }
-
-    quotedElement = buckString.getApostrophedRawString();
-    if (quotedElement == null) {
-      quotedElement = buckString.getQuotedRawString();
-    }
-    if (quotedElement != null) {
-      String text = quotedElement.getText();
-      return text.length() >= 3 ? text.substring(2, text.length() - 1) : null;
-    }
-
-    quotedElement = buckString.getTripleApostrophedString();
-    if (quotedElement == null) {
-      quotedElement = buckString.getTripleQuotedString();
-    }
-    if (quotedElement != null) {
-      String text = quotedElement.getText();
-      return text.length() >= 6 ? text.substring(3, text.length() - 3) : null;
-    }
-
-    quotedElement = buckString.getTripleApostrophedRawString();
-    if (quotedElement == null) {
-      quotedElement = buckString.getTripleQuotedRawString();
-    }
-    if (quotedElement != null) {
-      String text = quotedElement.getText();
-      return text.length() >= 7 ? text.substring(4, text.length() - 3) : null;
-    }
-    return null;
+    return buckString.getValue();
   }
 
   /**
@@ -359,8 +324,7 @@ public final class BuckPsiUtils {
         recurse.accept(identifier);
       } else {
         BuckString nameElement = ((BuckLoadArgument) psiElement).getString();
-        String stringValue = getStringValueFromBuckString(nameElement);
-        visitor.visit(stringValue, nameElement);
+        visitor.visit(nameElement.getValue(), nameElement);
       }
     } else if (psiElement instanceof BuckFunctionDefinition) {
       recurse.accept(((BuckFunctionDefinition) psiElement).getIdentifier());

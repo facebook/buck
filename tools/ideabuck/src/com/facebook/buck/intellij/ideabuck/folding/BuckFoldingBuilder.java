@@ -119,7 +119,7 @@ public class BuckFoldingBuilder extends CustomFoldingBuilder {
             @Nullable
             @Override
             public String getPlaceholderText() {
-              List<BuckArgument> argumentList = functionTrailer.getArgumentList().getArgumentList();
+              List<BuckArgument> argumentList = functionTrailer.getArgumentList();
               if (argumentList.size() > 1) {
                 for (BuckArgument argument : argumentList) {
                   BuckIdentifier identifier = argument.getIdentifier();

@@ -19,7 +19,6 @@ package com.facebook.buck.intellij.ideabuck.build;
 import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFile;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgument;
-import com.facebook.buck.intellij.ideabuck.lang.psi.BuckArgumentList;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckExpression;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
@@ -113,7 +112,7 @@ public final class BuckBuildUtil {
             PsiTreeUtil.findChildOfType(child, BuckFunctionTrailer.class);
         // Find rule "project_config"
         if (functionTrailer != null) {
-          return getPropertyValue(functionTrailer.getArgumentList(), SRC_TARGET_PROPERTY_NAME);
+          return getPropertyValue(functionTrailer, SRC_TARGET_PROPERTY_NAME);
         }
       }
     }
@@ -124,7 +123,7 @@ public final class BuckBuildUtil {
    * Get the value of a property in a specific buck rule body. TODO(#7908675): We should use Buck's
    * own classes for it.
    */
-  public static String getPropertyValue(BuckArgumentList argumentList, String name) {
+  public static String getPropertyValue(BuckFunctionTrailer argumentList, String name) {
     if (argumentList == null) {
       return null;
     }

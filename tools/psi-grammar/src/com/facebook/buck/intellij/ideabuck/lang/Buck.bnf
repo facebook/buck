@@ -60,15 +60,15 @@
 
     LINE_COMMENT = 'regexp:#[^\r\n]*'
 
-    TRIPLE_APOSTROPHED_STRING="regexp:'''.*'''"
-    TRIPLE_APOSTROPHED_RAW_STRING="regexp:r'''.*'''"
+    TRIPLE_APOSTROPHED_STRING="regexp:'''.*(''')?"
+    TRIPLE_APOSTROPHED_RAW_STRING="regexp:r'''.*(''')?"
     APOSTROPHED_STRING="regexp:'([^\\'\r\n]|\\.)*'?"
-    APOSTROPHED_RAW_STRING="regexp:r'[^\r\n']*'"
+    APOSTROPHED_RAW_STRING="regexp:r'[^\r\n']*'?"
 
-    TRIPLE_QUOTED_STRING='regexp:""".*"""'
-    TRIPLE_QUOTED_RAW_STRING='regexp:r""".*"""'
-    QUOTED_STRING='regexp:"([^\\"\r\n]|\\.)*"'
-    QUOTED_RAW_STRING='regexp:r"[^\r\n"]*"'
+    TRIPLE_QUOTED_STRING='regexp:""".*(""")?'
+    TRIPLE_QUOTED_RAW_STRING='regexp:r""".*(""")?'
+    QUOTED_STRING='regexp:"([^\\"\r\n]|\\.)*"?'
+    QUOTED_RAW_STRING='regexp:r"[^\r\n"]*"?'
 
     // As per https://github.com/bazelbuild/starlark/blob/master/spec.md
     // "The following tokens are keywords and may not be used as identifiers:"
@@ -129,7 +129,15 @@
 
 buckFile ::= statement*
 
-function_definition ::= 'def' identifier '(' parameter_list ')' ':' suite
+function_definition ::= 'def' identifier '(' parameter_list ')' ':' suite {
+  mixin = "com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckNamedElementImpl"
+  implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BuckNamedElement"
+  methods = [
+    getName
+    getNameIdentifier
+    setName
+  ]
+}
 
 parameter_list ::= [parameter (',' parameter)* ','?]
 parameter ::= '**' identifier | '*' identifier | identifier ['=' simple_expression]
@@ -148,7 +156,15 @@ small_statement ::= (load_call
 
 load_call ::= 'load' '(' load_target_argument (',' load_argument) (',' load_argument)* [','] ')'
 load_target_argument ::= string
-load_argument ::= [identifier '='] string
+load_argument ::= [identifier '='] string {
+  mixin = "com.facebook.buck.intellij.ideabuck.lang.psi.impl.BuckNamedElementImpl"
+  implements = "com.facebook.buck.intellij.ideabuck.lang.psi.BuckNamedElement"
+  methods = [
+    getName
+    getNameIdentifier
+    setName
+  ]
+}
 
 expression_statement ::= expression_list (augment_assignment expression_list | ('=' expression_list)*)
 
@@ -213,7 +229,7 @@ list_maker ::= expression_list_or_comprehension
 expression_list_or_comprehension ::= [expression ( comprehension_for | (',' expression)* [','] )]
 
 expression_trailer ::= function_trailer | subscript_trailer | dot_trailer
-function_trailer ::= '(' argument_list ')'
+function_trailer ::= '(' [argument (',' argument)* ','?] ')'
 subscript_trailer ::= '[' subscript_list ']'
 dot_trailer ::= '.' identifier
 
@@ -237,8 +253,13 @@ expression_list ::= expression (',' expression)* [',']
 dict_maker ::= [dict_entry (comprehension_for | (',' dict_entry)* [','])]
 dict_entry ::= expression ':' expression
 
-argument_list ::= [argument (',' argument)* ','?]
-argument ::= '**' expression | '*' expression | [identifier '='] expression
+argument ::= '**' expression | '*' expression | [identifier '='] expression {
+  methods = [
+    getName
+    getNameIdentifier
+    setName
+  ]
+}
 
 comprehension_iter ::= comprehension_for | comprehension_if
 comprehension_for ::= 'for' simple_expression_list 'in' or_expression [comprehension_iter]
@@ -251,7 +272,14 @@ string ::= APOSTROPHED_STRING
          | QUOTED_STRING
          | QUOTED_RAW_STRING
          | TRIPLE_QUOTED_STRING
-         | TRIPLE_QUOTED_RAW_STRING
+         | TRIPLE_QUOTED_RAW_STRING {
+  methods = [
+    getInnerText
+    getValue
+    setInnerText
+    setValue
+  ]
+}
 
 integer ::= HEX_LITERAL | OCTAL_LITERAL | DECIMAL_LITERAL
 

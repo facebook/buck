@@ -25,6 +25,7 @@ import com.facebook.buck.intellij.ideabuck.lang.psi.BuckIdentifier;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadArgument;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadCall;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckLoadTargetArgument;
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
 import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.intellij.codeInsight.navigation.actions.GotoDeclarationHandlerBase;
@@ -96,7 +97,7 @@ public class BuckGotoProvider extends GotoDeclarationHandlerBase {
     }
     BuckTargetLocator buckTargetLocator = BuckTargetLocator.getInstance(project);
     return Optional.of(buckLoadCall.getLoadTargetArgument().getString())
-        .map(BuckPsiUtils::getStringValueFromBuckString)
+        .map(BuckString::getValue)
         .flatMap(BuckTarget::parse)
         .flatMap(target -> buckTargetLocator.resolve(sourceFile, target))
         .flatMap(buckTargetLocator::findVirtualFileForExtensionFile)

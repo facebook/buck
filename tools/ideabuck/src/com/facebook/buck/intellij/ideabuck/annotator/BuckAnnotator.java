@@ -83,7 +83,7 @@ public class BuckAnnotator implements Annotator {
 
     BuckTarget buckTarget =
         Optional.of(loadTargetArgument.getString())
-            .map(BuckPsiUtils::getStringValueFromBuckString)
+            .map(BuckString::getValue)
             .flatMap(BuckTarget::parse)
             .orElse(null);
     if (buckTarget == null) {
@@ -133,8 +133,7 @@ public class BuckAnnotator implements Annotator {
     Set<String> availableSymbols = BuckPsiUtils.findSymbolsInPsiTree(psiFile, "").keySet();
     for (BuckLoadArgument loadArgument : loadCall.getLoadArgumentList()) {
       BuckString buckString = loadArgument.getString();
-      String symbol = BuckPsiUtils.getStringValueFromBuckString(buckString);
-      if (availableSymbols.contains(symbol)) {
+      if (availableSymbols.contains(buckString.getValue())) {
         annotationHolder
             .createInfoAnnotation(buckString, null)
             .setTextAttributes(BuckSyntaxHighlighter.BUCK_IDENTIFIER);

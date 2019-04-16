@@ -13,6 +13,10 @@
 <h3>3.7.2</h3>
 <ul>
   <li>Make grammar fully Starlark-compatible.</li>
+  <li>Support reference navigation for identifiers in Starlark files.</li>
+  <li>Support folding of various multi-line Starlark elements (function definitions,
+      collections/comprehensions, etc.).</li>
+  <li>Support structure view.</li>
 </ul>
 <h3>3.7.1</h3>
 <ul>
@@ -281,6 +285,7 @@
     <quoteHandler
       fileType="Buck"
       className="com.facebook.buck.intellij.ideabuck.format.BuckQuoteHandler"/>
+    <lang.psiStructureViewFactory language="Buck" implementationClass="com.facebook.buck.intellij.ideabuck.structure.BuckStructureViewFactory"/>
     <copyPastePreProcessor
       implementation="com.facebook.buck.intellij.ideabuck.format.BuckCopyPasteProcessor"/>
     <toolWindow

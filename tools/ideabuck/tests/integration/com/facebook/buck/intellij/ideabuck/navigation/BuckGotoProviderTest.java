@@ -20,7 +20,6 @@ import com.facebook.buck.intellij.ideabuck.config.BuckCellSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.endtoend.BuckTestCase;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckFunctionTrailer;
 import com.facebook.buck.intellij.ideabuck.lang.psi.BuckString;
-import com.facebook.buck.intellij.ideabuck.util.BuckPsiUtils;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiElement;
@@ -93,11 +92,10 @@ public class BuckGotoProviderTest extends BuckTestCase {
 
   private PsiElement findStringInFile(String s, VirtualFile virtualFile) {
     PsiFile psiFile = toPsiFile(virtualFile);
-    for (PsiElement candidate : PsiTreeUtil.findChildrenOfType(psiFile, BuckString.class)) {
-      BuckString buckString = (BuckString) candidate;
-      String value = BuckPsiUtils.getStringValueFromBuckString(buckString);
+    for (BuckString buckString : PsiTreeUtil.findChildrenOfType(psiFile, BuckString.class)) {
+      String value = buckString.getValue();
       if (s.equals(value)) {
-        return candidate;
+        return buckString;
       }
     }
     fail("Could not find string " + s + " in file " + virtualFile.getPath());

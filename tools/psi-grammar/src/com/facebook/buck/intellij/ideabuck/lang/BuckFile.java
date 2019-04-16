@@ -16,9 +16,12 @@
 
 package com.facebook.buck.intellij.ideabuck.lang;
 
+import com.facebook.buck.intellij.ideabuck.lang.psi.BuckStatement;
 import com.intellij.extapi.psi.PsiFileBase;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.psi.FileViewProvider;
+import com.intellij.psi.util.PsiTreeUtil;
+import java.util.List;
 import javax.swing.Icon;
 
 public class BuckFile extends PsiFileBase {
@@ -40,5 +43,9 @@ public class BuckFile extends PsiFileBase {
   @Override
   public Icon getIcon(int flags) {
     return super.getIcon(flags);
+  }
+
+  public List<BuckStatement> getStatementList() {
+    return PsiTreeUtil.getChildrenOfTypeAsList(this, BuckStatement.class);
   }
 }
