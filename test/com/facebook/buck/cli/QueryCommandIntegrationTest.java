@@ -1347,6 +1347,78 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void testBooleanConfigurableValuesWorkInOutputAttributes() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:genrule_with_boolean",
+            "--output-attributes",
+            "executable");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:genrule_with_boolean\" : {\n"
+                    + "    \"executable\" : false\n"
+                    + "  }\n"
+                    + "}\n")));
+
+    result =
+        workspace.runBuckCommand(
+            "query", "//:genrule_with_boolean", "--output-attributes", "executable");
+    result.assertSuccess();
+    assertThat(
+        result.getStdout(),
+        is(
+            equalToIgnoringPlatformNewlines(
+                "{\n"
+                    + "  \"//:genrule_with_boolean\" : {\n"
+                    + "    \"executable\" : true\n"
+                    + "  }\n"
+                    + "}\n")));
+  }
+
+  @Test
+  public void testBooleanConfigurableValuesThrowWhenConcatenated() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_with_configurable_attributes", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "-c",
+            "config.mode=a",
+            "//:genrule_with_concatenated_boolean",
+            "--output-attributes",
+            "executable");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsIgnoringPlatformNewlines(
+            "type 'class java.lang.Boolean' doesn't support select concatenation"));
+
+    result =
+        workspace.runBuckCommand(
+            "query", "//:genrule_with_concatenated_boolean", "--output-attributes", "executable");
+    result.assertFailure();
+    assertThat(
+        result.getStderr(),
+        containsIgnoringPlatformNewlines(
+            "type 'class java.lang.Boolean' doesn't support select concatenation"));
+  }
+
+  @Test
   public void testExcludeIncompatibleTargetsFiltersTargetsByConstraints() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

@@ -49,7 +49,6 @@ public class JsonTypeConcatenatingCoercerFactory {
     if (Integer.class.equals(type)) {
       return new IntConcatenatingCoercer();
     }
-    throw new IllegalArgumentException(
-        String.format("Type %s does not support concatenation", type.getName()));
+    return new SingleElementJsonTypeConcatenatingCoercer(type);
   }
 }

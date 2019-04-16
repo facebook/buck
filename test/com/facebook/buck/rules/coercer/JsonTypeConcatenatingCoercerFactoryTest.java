@@ -56,10 +56,9 @@ public class JsonTypeConcatenatingCoercerFactoryTest {
   }
 
   @Test
-  public void testCreateThrowsExceptionForUnsupportedType() {
-    thrown.expectMessage("Type java.lang.Object does not support concatenation");
-    thrown.expect(IllegalArgumentException.class);
-
-    JsonTypeConcatenatingCoercerFactory.createForType(Object.class);
+  public void testCreateReturnsSingleElementCoercerForUnsupportedType() {
+    assertTrue(
+        JsonTypeConcatenatingCoercerFactory.createForType(Boolean.class)
+            instanceof SingleElementJsonTypeConcatenatingCoercer);
   }
 }

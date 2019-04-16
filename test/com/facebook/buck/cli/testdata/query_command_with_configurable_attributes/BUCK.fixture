@@ -77,3 +77,23 @@ java_test(
               },
           }),
 )
+
+genrule(
+    name = "genrule_with_boolean",
+    out = "c",
+    cmd = "echo c > $OUT",
+    executable = select({
+        ":mode_a": False,
+        "DEFAULT": True,
+    }),
+)
+
+genrule(
+    name = "genrule_with_concatenated_boolean",
+    out = "c",
+    cmd = "echo c > $OUT",
+    executable = True + select({
+        ":mode_a": False,
+        "DEFAULT": True,
+    }),
+)
