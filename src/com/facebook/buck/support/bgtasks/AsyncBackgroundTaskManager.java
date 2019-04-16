@@ -89,8 +89,8 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   @Override
-  public TaskManagerScope getNewScope(BuildId buildId) {
-    return new TaskManagerScope(this, buildId);
+  public TaskManagerCommandScope getNewScope(BuildId buildId) {
+    return new TaskManagerCommandScope(this, buildId);
   }
 
   private void startSchedulingIfNeeded() {

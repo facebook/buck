@@ -55,7 +55,7 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.util.Optionals;
@@ -126,7 +126,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   private final ThreadMXBean threadMXBean;
 
   private final ExecutorService outputExecutor;
-  private final TaskManagerScope managerScope;
+  private final TaskManagerCommandScope managerScope;
 
   private final BuildId buildId;
 
@@ -137,7 +137,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       InvocationInfo invocationInfo,
       Clock clock,
       ChromeTraceBuckConfig config,
-      TaskManagerScope managerScope,
+      TaskManagerCommandScope managerScope,
       Optional<RemoteExecutionStatsProvider> reStatsProvider)
       throws IOException {
     this(
@@ -161,7 +161,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       TimeZone timeZone,
       ThreadMXBean threadMXBean,
       ChromeTraceBuckConfig config,
-      TaskManagerScope managerScope,
+      TaskManagerCommandScope managerScope,
       Optional<RemoteExecutionStatsProvider> reStatsProvider)
       throws IOException {
     this.logDirectoryPath = invocationInfo.getLogDirectoryPath();

@@ -36,7 +36,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
@@ -209,7 +209,7 @@ public class ArtifactCachesIntegrationTest {
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
 
   private BackgroundTaskManager bgTaskManager;
-  private TaskManagerScope managerScope;
+  private TaskManagerCommandScope managerScope;
   private Path clientCertPath;
   private Path clientKeyPath;
   private Path serverCertPath;

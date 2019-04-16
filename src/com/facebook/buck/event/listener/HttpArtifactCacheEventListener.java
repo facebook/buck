@@ -27,7 +27,7 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.network.BatchingLogger;
 import com.facebook.buck.util.network.HiveRowFormatter;
 import com.google.common.eventbus.Subscribe;
@@ -51,12 +51,12 @@ public class HttpArtifactCacheEventListener implements BuckEventListener {
   private final BatchingLogger storeRequestLogger;
   private final BatchingLogger fetchRequestLogger;
 
-  private final TaskManagerScope managerScope;
+  private final TaskManagerCommandScope managerScope;
 
   public HttpArtifactCacheEventListener(
       BatchingLogger storeRequestLogger,
       BatchingLogger fetchRequestLogger,
-      TaskManagerScope managerScope) {
+      TaskManagerCommandScope managerScope) {
     this.storeRequestLogger = storeRequestLogger;
     this.fetchRequestLogger = fetchRequestLogger;
     this.managerScope = managerScope;

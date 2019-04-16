@@ -29,7 +29,7 @@ import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ThrowingPrintWriter;
 import com.google.common.collect.ImmutableList;
@@ -62,7 +62,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private final InvocationInfo info;
   private final ExecutorService outputExecutor;
 
-  private final TaskManagerScope managerScope;
+  private final TaskManagerCommandScope managerScope;
 
   private final int minDiagKeysForAutoFlush;
   private final int minSizeForAutoFlush;
@@ -81,7 +81,7 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
       ProjectFilesystem projectFilesystem,
       InvocationInfo info,
       ExecutorService outputExecutor,
-      TaskManagerScope managerScope) {
+      TaskManagerCommandScope managerScope) {
     this.projectFilesystem = projectFilesystem;
     this.info = info;
     this.outputExecutor = outputExecutor;

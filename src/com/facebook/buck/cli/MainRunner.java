@@ -141,7 +141,7 @@ import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.log.LogBuckConfig;
@@ -942,7 +942,8 @@ public final class MainRunner {
 
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 
-      try (TaskManagerScope managerScope = buckGlobalState.getBgTaskManager().getNewScope(buildId);
+      try (TaskManagerCommandScope managerScope =
+              buckGlobalState.getBgTaskManager().getNewScope(buildId);
           GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
                   .setupLoggers(
@@ -1903,7 +1904,7 @@ public final class MainRunner {
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
       Optional<RemoteExecutionStatsProvider> reStatsProvider,
-      TaskManagerScope managerScope) {
+      TaskManagerCommandScope managerScope) {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder().add(new LoggingBuildListener());
 

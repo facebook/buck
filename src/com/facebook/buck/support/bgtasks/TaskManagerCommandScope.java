@@ -29,12 +29,12 @@ import com.google.common.collect.ImmutableList;
  * <p>This lives for the duration of the command, and will schedule the tasks to be run on {@link
  * #close()}. {@link #close()} should only occur on command exit.
  */
-public class TaskManagerScope implements Scope {
+public class TaskManagerCommandScope implements Scope {
 
   private final BackgroundTaskManager manager;
   private final BuildId buildId;
 
-  protected TaskManagerScope(BackgroundTaskManager manager, BuildId buildId) {
+  protected TaskManagerCommandScope(BackgroundTaskManager manager, BuildId buildId) {
     this.manager = manager;
     this.buildId = buildId;
     manager.notify(Notification.COMMAND_START);

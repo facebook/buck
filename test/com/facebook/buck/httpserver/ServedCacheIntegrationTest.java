@@ -49,7 +49,7 @@ import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
@@ -97,7 +97,7 @@ public class ServedCacheIntegrationTest {
       MoreExecutors.newDirectExecutorService();
 
   private BackgroundTaskManager bgTaskManager;
-  private TaskManagerScope managerScope;
+  private TaskManagerCommandScope managerScope;
 
   @Before
   public void setUp() throws Exception {

@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * BackgroundTaskManager schedules and runs background tasks like cleanup and logging. A manager
  * should be notified when a new command starts and when it finishes so that it can schedule tasks
- * appropriately. Tasks should typically be scheduled through a {@link TaskManagerScope}.
+ * appropriately. Tasks should typically be scheduled through a {@link TaskManagerCommandScope}.
  */
 public abstract class BackgroundTaskManager {
 
@@ -38,11 +38,11 @@ public abstract class BackgroundTaskManager {
   }
 
   /**
-   * Returns a new {@link TaskManagerScope} for a build on this manager. The {@link
-   * TaskManagerScope} lives for the duration of the command such that it's {@link
-   * TaskManagerScope#close()} will trigger the tasks scheduled to be ran.
+   * Returns a new {@link TaskManagerCommandScope} for a build on this manager. The {@link
+   * TaskManagerCommandScope} lives for the duration of the command such that it's {@link
+   * TaskManagerCommandScope#close()} will trigger the tasks scheduled to be ran.
    */
-  public abstract TaskManagerScope getNewScope(BuildId buildId);
+  public abstract TaskManagerCommandScope getNewScope(BuildId buildId);
 
   /** Shut down manager, without waiting for tasks to finish. */
   public abstract void shutdownNow();
@@ -57,14 +57,14 @@ public abstract class BackgroundTaskManager {
 
   /**
    * Schedule a task to be run in the background. Should be accessed through a {@link
-   * TaskManagerScope} implementation.
+   * TaskManagerCommandScope} implementation.
    */
   abstract void schedule(ManagedBackgroundTask task);
 
   /**
    * Notify the manager of some event, e.g. command start or end. Exceptions should generally be
    * caught and handled by the manager, except in test implementations. {@link Notification} should
-   * be handled through a {@link TaskManagerScope}.
+   * be handled through a {@link TaskManagerCommandScope}.
    */
   abstract void notify(Notification code);
 }

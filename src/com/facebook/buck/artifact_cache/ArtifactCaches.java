@@ -44,7 +44,7 @@ import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.Timeout;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
 import com.facebook.buck.util.timing.DefaultClock;
@@ -96,7 +96,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private final ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService;
   private List<ArtifactCache> artifactCaches = new ArrayList<>();
   private final ListeningExecutorService dirWriteExecutorService;
-  private final TaskManagerScope managerScope;
+  private final TaskManagerCommandScope managerScope;
   private final String producerId;
   private final String producerHostname;
   private final Optional<ClientCertificateHandler> clientCertificateHandler;
@@ -159,7 +159,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpFetchExecutorService,
       ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
       ListeningExecutorService dirWriteExecutorService,
-      TaskManagerScope managerScope,
+      TaskManagerCommandScope managerScope,
       String producerId,
       String producerHostname,
       Optional<ClientCertificateHandler> clientCertificateHandler) {

@@ -33,7 +33,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -53,7 +53,7 @@ public class RuleKeyLoggerListenerTest {
   private ExecutorService outputExecutor;
   private InvocationInfo info;
   private BuildRuleDurationTracker durationTracker;
-  private TaskManagerScope managerScope;
+  private TaskManagerCommandScope managerScope;
 
   @Before
   public void setUp() throws IOException {
@@ -150,7 +150,7 @@ public class RuleKeyLoggerListenerTest {
   }
 
   private RuleKeyLoggerListener newInstance(
-      TaskManagerScope managerScope, int minLinesForAutoFlush) {
+      TaskManagerCommandScope managerScope, int minLinesForAutoFlush) {
     return new RuleKeyLoggerListener(
         projectFilesystem, info, outputExecutor, managerScope, minLinesForAutoFlush);
   }

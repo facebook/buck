@@ -24,7 +24,7 @@ import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
-import com.facebook.buck.support.bgtasks.TaskManagerScope;
+import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
 import com.facebook.buck.util.trace.uploader.types.CompressionType;
@@ -42,14 +42,14 @@ public class LogUploaderListener implements BuckEventListener {
   private final Path logFilePath;
   private final Path logDirectoryPath;
   private final BuildId buildId;
-  private final TaskManagerScope managerScope;
+  private final TaskManagerCommandScope managerScope;
 
   public LogUploaderListener(
       ChromeTraceBuckConfig config,
       Path logFilePath,
       Path logDirectoryPath,
       BuildId buildId,
-      TaskManagerScope managerScope) {
+      TaskManagerCommandScope managerScope) {
     this.config = config;
     this.logFilePath = logFilePath;
     this.logDirectoryPath = logDirectoryPath;
