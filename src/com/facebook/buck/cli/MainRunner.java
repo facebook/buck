@@ -47,11 +47,8 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.module.BuckModuleManager;
-import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
-import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
-import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
@@ -355,9 +352,6 @@ public final class MainRunner {
 
   private static final Logger LOG = Logger.get(MainRunner.class);
 
-  private static PluginManager pluginManager;
-  private static BuckModuleManager moduleManager;
-
   private static final HangMonitor.AutoStartInstance HANG_MONITOR =
       new HangMonitor.AutoStartInstance(
           (input) ->
@@ -380,6 +374,9 @@ public final class MainRunner {
   private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
   private final ImmutableMap<String, String> clientEnvironment;
 
+  private final PluginManager pluginManager;
+  private final BuckModuleManager moduleManager;
+
   private final BuildId buildId;
 
   private Optional<BuckConfig> parsedRootConfig = Optional.empty();
@@ -398,6 +395,8 @@ public final class MainRunner {
    * @param knownRuleTypesFactoryFactory the known rule types for this command
    * @param buildId the {@link BuildId} for this command
    * @param clientEnvironment the environment variable map for this command
+   * @param pluginManager the {@link PluginManager} for this command
+   * @param moduleManager the {@link BuckModuleManager} for this command
    * @param context the {@link NGContext} from nailgun for this command
    */
   @VisibleForTesting
@@ -408,11 +407,15 @@ public final class MainRunner {
       KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
       BuildId buildId,
       ImmutableMap<String, String> clientEnvironment,
+      PluginManager pluginManager,
+      BuckModuleManager moduleManager,
       Optional<NGContext> context) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
+    this.pluginManager = pluginManager;
+    this.moduleManager = moduleManager;
     this.architecture = Architecture.detect();
     this.buildId = buildId;
     this.platform = Platform.detect();
@@ -439,6 +442,8 @@ public final class MainRunner {
       InputStream stdIn,
       BuildId buildId,
       ImmutableMap<String, String> clientEnvironment,
+      PluginManager pluginManager,
+      BuckModuleManager moduleManager,
       Optional<NGContext> context) {
     this(
         stdOut,
@@ -447,6 +452,8 @@ public final class MainRunner {
         DefaultKnownRuleTypesFactory::new,
         buildId,
         clientEnvironment,
+        pluginManager,
+        moduleManager,
         context);
   }
 
@@ -609,11 +616,6 @@ public final class MainRunner {
     ImmutableMap<CellName, Path> rootCellMapping = getCellMapping(canonicalRootPath);
     ImmutableList<String> args =
         BuckArgsMethods.expandAtFiles(unexpandedCommandLineArgs, rootCellMapping);
-
-    if (moduleManager == null) {
-      pluginManager = BuckPluginManagerFactory.createPluginManager();
-      moduleManager = new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
-    }
 
     // Parse command line arguments
     BuckCommand command = new BuckCommand();

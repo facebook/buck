@@ -16,6 +16,10 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.module.BuckModuleManager;
+import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
+import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
 import java.io.InputStream;
@@ -23,6 +27,7 @@ import java.io.PrintStream;
 import java.util.Optional;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import org.pf4j.PluginManager;
 
 /**
  * The abstract entry point of Buck commands for both {@link MainWithoutNailgun} and {@link
@@ -31,6 +36,13 @@ import javax.annotation.Nullable;
 abstract class AbstractMain {
 
   private static final String BUCK_BUILD_ID_ENV_VAR = "BUCK_BUILD_ID";
+  private static PluginManager pluginManager;
+  private static BuckModuleManager moduleManager;
+
+  static {
+    pluginManager = BuckPluginManagerFactory.createPluginManager();
+    moduleManager = new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
+  }
 
   protected final PrintStream stdOut;
   protected final PrintStream stdErr;
@@ -60,7 +72,14 @@ abstract class AbstractMain {
    */
   protected MainRunner prepareMainRunner() {
     return new MainRunner(
-        stdOut, stdErr, stdIn, getBuildId(clientEnvironment), clientEnvironment, optionalNGContext);
+        stdOut,
+        stdErr,
+        stdIn,
+        getBuildId(clientEnvironment),
+        clientEnvironment,
+        pluginManager,
+        moduleManager,
+        optionalNGContext);
   }
 
   private static BuildId getBuildId(ImmutableMap<String, String> clientEnvironment) {

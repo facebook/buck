@@ -26,6 +26,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
+import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -57,6 +60,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.pf4j.PluginManager;
 
 public class DaemonIntegrationTest {
 
@@ -164,6 +168,10 @@ public class DaemonIntegrationTest {
   private Runnable createRunnableCommand(ExitCode expectedExitCode, String... args) {
     return () -> {
       try {
+        PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+        DefaultBuckModuleManager moduleManager =
+            new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
+
         MainRunner main =
             new MainRunner(
                 new CapturingPrintStream(),
@@ -171,6 +179,8 @@ public class DaemonIntegrationTest {
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
                 new BuildId(),
                 EnvVariablesProvider.getSystemEnv(),
+                pluginManager,
+                moduleManager,
                 Optional.of(new TestContext()));
         ExitCode exitCode =
             main.runMainWithExitCode(

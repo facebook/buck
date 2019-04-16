@@ -41,6 +41,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
+import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
+import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -532,9 +534,21 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
 
+      PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
+      DefaultBuckModuleManager moduleManager =
+          new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
+
       MainRunner main =
           knownRuleTypesFactoryFactory == null
-              ? new MainRunner(stdout, stderr, stdin, new BuildId(), sanizitedEnv, context)
+              ? new MainRunner(
+                  stdout,
+                  stderr,
+                  stdin,
+                  new BuildId(),
+                  sanizitedEnv,
+                  pluginManager,
+                  moduleManager,
+                  context)
               : new MainRunner(
                   stdout,
                   stderr,
@@ -542,6 +556,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   knownRuleTypesFactoryFactory,
                   new BuildId(),
                   sanizitedEnv,
+                  pluginManager,
+                  moduleManager,
                   context);
       ExitCode exitCode;
 
