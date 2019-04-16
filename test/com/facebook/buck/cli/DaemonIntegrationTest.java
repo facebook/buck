@@ -40,6 +40,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -179,6 +180,7 @@ public class DaemonIntegrationTest {
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
                 new BuildId(),
                 EnvVariablesProvider.getSystemEnv(),
+                Platform.detect(),
                 pluginManager,
                 moduleManager,
                 Optional.of(new TestContext()));

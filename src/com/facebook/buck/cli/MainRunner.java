@@ -300,8 +300,6 @@ public final class MainRunner {
   private static final AsynchronousDirectoryContentsCleaner TRASH_CLEANER =
       new AsynchronousDirectoryContentsCleaner();
 
-  private final Platform platform;
-
   private Console console;
 
   private Optional<NGContext> context;
@@ -373,6 +371,7 @@ public final class MainRunner {
 
   private final KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
   private final ImmutableMap<String, String> clientEnvironment;
+  private final Platform platform;
 
   private final PluginManager pluginManager;
   private final BuckModuleManager moduleManager;
@@ -395,6 +394,7 @@ public final class MainRunner {
    * @param knownRuleTypesFactoryFactory the known rule types for this command
    * @param buildId the {@link BuildId} for this command
    * @param clientEnvironment the environment variable map for this command
+   * @param platform the current running {@link Platform}
    * @param pluginManager the {@link PluginManager} for this command
    * @param moduleManager the {@link BuckModuleManager} for this command
    * @param context the {@link NGContext} from nailgun for this command
@@ -407,6 +407,7 @@ public final class MainRunner {
       KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
       BuildId buildId,
       ImmutableMap<String, String> clientEnvironment,
+      Platform platform,
       PluginManager pluginManager,
       BuckModuleManager moduleManager,
       Optional<NGContext> context) {
@@ -418,8 +419,8 @@ public final class MainRunner {
     this.moduleManager = moduleManager;
     this.architecture = Architecture.detect();
     this.buildId = buildId;
-    this.platform = Platform.detect();
     this.clientEnvironment = clientEnvironment;
+    this.platform = platform;
     this.context = context;
 
     // Create default console to start outputting errors immediately, if any
@@ -442,6 +443,7 @@ public final class MainRunner {
       InputStream stdIn,
       BuildId buildId,
       ImmutableMap<String, String> clientEnvironment,
+      Platform platform,
       PluginManager pluginManager,
       BuckModuleManager moduleManager,
       Optional<NGContext> context) {
@@ -452,6 +454,7 @@ public final class MainRunner {
         DefaultKnownRuleTypesFactory::new,
         buildId,
         clientEnvironment,
+        platform,
         pluginManager,
         moduleManager,
         context);

@@ -533,6 +533,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
       envBuilder.putAll(environmentOverrides);
 
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
+      Platform platform = Platform.detect();
 
       PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
       DefaultBuckModuleManager moduleManager =
@@ -546,6 +547,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   stdin,
                   new BuildId(),
                   sanizitedEnv,
+                  platform,
                   pluginManager,
                   moduleManager,
                   context)
@@ -556,6 +558,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   knownRuleTypesFactoryFactory,
                   new BuildId(),
                   sanizitedEnv,
+                  platform,
                   pluginManager,
                   moduleManager,
                   context);

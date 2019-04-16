@@ -17,6 +17,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
@@ -30,7 +31,13 @@ import java.util.Optional;
 public class MainWithoutNailgun extends AbstractMain {
 
   public MainWithoutNailgun() {
-    super(System.out, System.err, System.in, getClientEnvironment(), Optional.empty());
+    super(
+        System.out,
+        System.err,
+        System.in,
+        getClientEnvironment(),
+        Platform.detect(),
+        Optional.empty());
   }
 
   /**

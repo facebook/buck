@@ -17,6 +17,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.BuckDaemon.DaemonCommandExecutionScope;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -41,6 +42,8 @@ public class MainWithNailgun extends AbstractMain {
 
   @Nullable private static FileLock resourcesFileLock = null;
 
+  private static final Platform running_platform = Platform.detect();
+
   private final NGContext ngContext;
 
   public MainWithNailgun(NGContext ngContext) {
@@ -49,6 +52,7 @@ public class MainWithNailgun extends AbstractMain {
         ngContext.err,
         ngContext.in,
         getClientEnvironment(ngContext),
+        running_platform,
         Optional.of(ngContext));
     this.ngContext = ngContext;
   }

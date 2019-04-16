@@ -20,6 +20,7 @@ import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
 import java.io.InputStream;
@@ -49,6 +50,7 @@ abstract class AbstractMain {
   protected final InputStream stdIn;
 
   protected final ImmutableMap<String, String> clientEnvironment;
+  protected final Platform platform;
 
   private final Optional<NGContext> optionalNGContext; // TODO(bobyf): remove this dependency.
 
@@ -57,12 +59,14 @@ abstract class AbstractMain {
       PrintStream stdErr,
       InputStream stdIn,
       ImmutableMap<String, String> clientEnvironment,
+      Platform platform,
       Optional<NGContext> ngContext) {
     this.stdOut = stdOut;
     this.stdErr = stdErr;
     this.stdIn = stdIn;
 
     this.clientEnvironment = clientEnvironment;
+    this.platform = platform;
     this.optionalNGContext = ngContext;
   }
 
@@ -77,6 +81,7 @@ abstract class AbstractMain {
         stdIn,
         getBuildId(clientEnvironment),
         clientEnvironment,
+        platform,
         pluginManager,
         moduleManager,
         optionalNGContext);
