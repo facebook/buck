@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Files;
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -177,6 +179,7 @@ public class BuildLogHelper {
     List<Path> logfiles = new ArrayList<>();
     projectFilesystem.walkRelativeFileTree(
         projectFilesystem.getBuckPaths().getLogDir(),
+        EnumSet.noneOf(FileVisitOption.class),
         new FileVisitor<Path>() {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
@@ -203,7 +206,8 @@ public class BuildLogHelper {
           public FileVisitResult postVisitDirectory(Path dir, IOException exc) {
             return FileVisitResult.CONTINUE;
           }
-        });
+        },
+        false);
 
     return logfiles;
   }
