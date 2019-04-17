@@ -19,16 +19,13 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Arrays;
 import java.util.Optional;
 
 public class CxxLibraryImplicitFlavors {
-  private static final Logger LOG = Logger.get(CxxLibraryImplicitFlavors.class);
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
@@ -40,13 +37,10 @@ public class CxxLibraryImplicitFlavors {
   }
 
   public ImmutableSortedSet<Flavor> addImplicitFlavorsForRuleTypes(
-      ImmutableSortedSet<Flavor> argDefaultFlavors, RuleType... types) {
-    Optional<Flavor> typeFlavor = CxxLibraryDescription.LIBRARY_TYPE.getFlavor(argDefaultFlavors);
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    Optional<Flavor> platformFlavor =
-        cxxPlatformsProvider.getUnresolvedCxxPlatforms().getFlavor(argDefaultFlavors);
+      Optional<Flavor> argDefaultPlatformFlavor, RuleType... types) {
 
-    LOG.debug("Got arg default type %s platform %s", typeFlavor, platformFlavor);
+    Optional<Flavor> platformFlavor = argDefaultPlatformFlavor;
+    Optional<Flavor> typeFlavor = Optional.empty();
 
     for (RuleType type : types) {
       ImmutableMap<String, Flavor> libraryDefaults =
@@ -68,9 +62,8 @@ public class CxxLibraryImplicitFlavors {
             // Default to static if not otherwise specified.
             typeFlavor.orElse(CxxDescriptionEnhancer.STATIC_FLAVOR),
             platformFlavor.orElse(
-                cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor()));
+                getCxxPlatformsProvider().getDefaultUnresolvedCxxPlatform().getFlavor()));
 
-    LOG.debug("Got default flavors %s for rule types %s", result, Arrays.toString(types));
     return result;
   }
 

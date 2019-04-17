@@ -14,11 +14,11 @@
  * under the License.
  */
 
-
 package com.facebook.buck.core.description.attr;
 
 import com.facebook.buck.core.model.Flavor;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Optional;
 
 /**
  * While building up the target graph, we allow descriptions to apply default flavors (e.g.,
@@ -26,5 +26,5 @@ import com.google.common.collect.ImmutableSortedSet;
  * environment) from the .buckconfig file.
  */
 public interface ImplicitFlavorsInferringDescription {
-  ImmutableSortedSet<Flavor> addImplicitFlavors(ImmutableSortedSet<Flavor> argDefaultFlavors);
+  ImmutableSortedSet<Flavor> addImplicitFlavors(Optional<Flavor> argDefaultPlatformFlavor);
 }

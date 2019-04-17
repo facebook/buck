@@ -172,13 +172,13 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
-  public void testAppleLibraryWithDefaultsInRuleBuildsSomething() throws IOException {
+  public void testAppleLibraryWithDefaultPlatform() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
-            this, "apple_library_with_platform_and_type", tmp);
+            this, "apple_library_with_default_platform", tmp);
     workspace.setUp();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -189,7 +189,7 @@ public class AppleLibraryIntegrationTest {
 
     BuildTarget implicitTarget =
         target.withAppendedFlavors(
-            InternalFlavor.of("shared"), InternalFlavor.of("iphoneos-arm64"));
+            InternalFlavor.of("static"), InternalFlavor.of("iphoneos-arm64"));
     Path outputPath =
         workspace.getPath(BuildTargetPaths.getGenPath(filesystem, implicitTarget, "%s"));
     assertTrue(Files.exists(outputPath));

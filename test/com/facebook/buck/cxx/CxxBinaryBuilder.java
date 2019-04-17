@@ -59,7 +59,6 @@ public class CxxBinaryBuilder
 
     return new CxxBinaryDescription(
         toolchainProvider,
-        new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig),
         new CxxBinaryFactory(
             toolchainProvider,
             cxxBuckConfig,

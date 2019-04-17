@@ -1,10 +1,7 @@
 apple_library(
     name = "TestLibrary",
     srcs = ["TestClass.m"],
-    defaults = {
-        "platform": "iphoneos-arm64",
-        "type": "shared",
-    },
+    default_platform = "iphoneos-arm64",
     info_plist = "Info.plist",
     linker_flags = ["-lobjc"],
 )

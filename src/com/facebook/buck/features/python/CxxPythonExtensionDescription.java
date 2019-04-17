@@ -436,13 +436,8 @@ public class CxxPythonExtensionDescription
           BuildTarget target = buildTarget;
 
           if (!cxxPlatforms.containsAnyOf(target.getFlavors())) {
-            // constructor args *should* contain a default flavor, but
-            // we keep the platform default as a final fallback
-            ImmutableSet<Flavor> defaultCxxFlavors = args.getDefaultFlavors();
-            if (!cxxPlatforms.containsAnyOf(defaultCxxFlavors)) {
-              defaultCxxFlavors = ImmutableSet.of(getDefaultCxxPlatform().getFlavor());
-            }
-
+            ImmutableSet<Flavor> defaultCxxFlavors =
+                ImmutableSet.of(getDefaultCxxPlatform().getFlavor());
             target = target.withAppendedFlavors(defaultCxxFlavors);
           }
 

@@ -37,8 +37,6 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
 
-    CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
-        new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxBinaryFactory cxxBinaryFactory =
         new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
     CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
@@ -47,11 +45,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
 
     CxxBinaryDescription cxxBinaryDescription =
         new CxxBinaryDescription(
-            toolchainProvider,
-            cxxBinaryImplicitFlavors,
-            cxxBinaryFactory,
-            cxxBinaryMetadataFactory,
-            cxxBinaryFlavored);
+            toolchainProvider, cxxBinaryFactory, cxxBinaryMetadataFactory, cxxBinaryFlavored);
 
     CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
         new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
