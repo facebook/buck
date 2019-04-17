@@ -56,14 +56,16 @@ public class CxxPrepareForLinkStep {
 
     boolean hasLinkArgsToSupportFileList = linkerArgsToSupportFileList.iterator().hasNext();
 
-    LOG.debug(
-        "Link command (pwd=%s): %s %s",
-        currentCellPath.toString(),
-        String.join("", linker.getCommandPrefix(resolver)),
-        String.join(
-            " ",
-            CxxWriteArgsToFileStep.stringify(
-                allArgs, currentCellPath, resolver, linker.getUseUnixPathSeparator())));
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose(
+          "Link command (pwd=%s): %s %s",
+          currentCellPath.toString(),
+          String.join("", linker.getCommandPrefix(resolver)),
+          String.join(
+              " ",
+              CxxWriteArgsToFileStep.stringify(
+                  allArgs, currentCellPath, resolver, linker.getUseUnixPathSeparator())));
+    }
 
     CxxWriteArgsToFileStep createArgFileStep =
         CxxWriteArgsToFileStep.create(

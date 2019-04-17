@@ -209,7 +209,9 @@ class CxxPreprocessAndCompileStep implements Step {
 
     ProcessExecutorParams params = builder.build();
 
-    LOG.debug("Running command (pwd=%s): %s", params.getDirectory(), getDescription(context));
+    if (LOG.isVerboseEnabled()) {
+      LOG.verbose("Running command (pwd=%s): %s", params.getDirectory(), getDescription(context));
+    }
 
     ProcessExecutor.Result result =
         new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
@@ -345,7 +347,9 @@ class CxxPreprocessAndCompileStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("%s %s -> %s", operation.toString().toLowerCase(), input, output);
+    }
 
     ProcessExecutor.Result result = executeCompilation(context);
     int exitCode = result.getExitCode();
@@ -369,7 +373,9 @@ class CxxPreprocessAndCompileStep implements Step {
     }
 
     if (exitCode != 0) {
-      LOG.debug("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
+      if (LOG.isDebugEnabled()) {
+        LOG.debug("error %d %s %s", exitCode, operation.toString().toLowerCase(), input);
+      }
     }
 
     return StepExecutionResult.of(result);
