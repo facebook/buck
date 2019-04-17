@@ -26,6 +26,9 @@ import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
+import com.facebook.buck.remoteexecution.util.OutputsCollector.CollectedOutputs;
+import com.facebook.buck.remoteexecution.util.OutputsCollector.Delegate;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -33,22 +36,26 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
+import com.google.common.io.ByteSource;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 import org.junit.Test;
 
 public class OutputsMaterializerTest {
@@ -112,8 +119,129 @@ public class OutputsMaterializerTest {
             "some/final/output"));
   }
 
-  // TODO(cjhopman): Add output directory materialization test when we can do it without reproducing
-  // all the logic for collecting outputs.
+  @Test
+  public void testMaterializeDirs() throws IOException, ExecutionException, InterruptedException {
+    Protocol protocol = new GrpcProtocol();
+    OutputsMaterializerTest.RecordingFileMaterializer recordingMaterializer =
+        new RecordingFileMaterializer();
+
+    Path path1 = Paths.get("root/some/output/one");
+    Path path2 = Paths.get("root/some/output/two");
+    Path path3 = Paths.get("root/other/output/three");
+
+    ByteString data1 = ByteString.copyFromUtf8("data1");
+    ByteString data2 = ByteString.copyFromUtf8("data2");
+    ByteString data3 = ByteString.copyFromUtf8("data3");
+
+    Path rootDir = Paths.get("root");
+    CollectedOutputs collectedOutputs =
+        createCollectedOutputs(
+            ImmutableMap.of(path1, data1, path2, data2, path3, data3),
+            ImmutableSet.of(Paths.get("root/some/output"), Paths.get("root/other")),
+            rootDir,
+            protocol);
+
+    AsyncBlobFetcher fetcher =
+        new SimpleSingleThreadedBlobFetcher(
+            collectedOutputs.requiredData.stream()
+                .collect(
+                    ImmutableMap.toImmutableMap(
+                        data -> data.getDigest(),
+                        data -> {
+                          try (InputStream stream = data.get()) {
+                            return ByteString.readFrom(stream);
+                          } catch (IOException e) {
+                            throw new RuntimeException(e);
+                          }
+                        })));
+
+    new OutputsMaterializer(fetcher, protocol)
+        .materialize(
+            collectedOutputs.outputDirectories, collectedOutputs.outputFiles, recordingMaterializer)
+        .get();
+
+    Map<Path, OutputItemState> expectedState =
+        ImmutableMap.of(
+            rootDir.relativize(path1),
+            new OutputItemState(data1, false),
+            rootDir.relativize(path2),
+            new OutputItemState(data2, false),
+            rootDir.relativize(path3),
+            new OutputItemState(data3, false));
+
+    recordingMaterializer.verify(
+        expectedState, ImmutableSet.of("some", "some/output", "other", "other/output"));
+  }
+
+  public CollectedOutputs createCollectedOutputs(
+      Map<Path, ByteString> data, Set<Path> outputs, Path rootDir, Protocol protocol)
+      throws IOException {
+    Set<Path> dirs = new HashSet<>();
+    dirs.add(rootDir);
+
+    data.keySet()
+        .forEach(
+            path -> {
+              Verify.verify(path.startsWith(rootDir));
+              path = path.getParent();
+              while (path.startsWith(rootDir)) {
+                if (!dirs.add(path)) {
+                  break;
+                }
+                path = path.getParent();
+              }
+            });
+
+    return new OutputsCollector(
+            protocol,
+            new Delegate() {
+              @Override
+              public ByteSource asByteSource(Path file) {
+                Verify.verify(data.containsKey(file), "Couldn't find file %s.", file);
+                return ByteSource.wrap(data.get(file).toByteArray());
+              }
+
+              @Override
+              public boolean exists(Path path) {
+                return data.containsKey(path) || dirs.contains(path);
+              }
+
+              @Override
+              public boolean isDirectory(Path path) {
+                return dirs.contains(path);
+              }
+
+              @Override
+              public Stream<Path> walk(Path path) {
+                return data.keySet().stream().filter(candidate -> candidate.startsWith(path));
+              }
+
+              @Override
+              public boolean isRegularFile(Path entry) {
+                // TODO(cjhopman): support this if needed.
+                return data.containsKey(entry);
+              }
+
+              @Override
+              public boolean isExecutable(Path entry) {
+                // TODO(cjhopman): support executables.
+                return false;
+              }
+
+              @Override
+              public InputStream getInputStream(Path path) throws IOException {
+                return asByteSource(path).openStream();
+              }
+
+              @Override
+              public long size(Path path) throws IOException {
+                return asByteSource(path).size();
+              }
+            })
+        .collect(
+            outputs.stream().map(rootDir::relativize).collect(ImmutableSet.toImmutableSet()),
+            rootDir);
+  }
 
   private static class OutputItemState {
     private final boolean executable;
