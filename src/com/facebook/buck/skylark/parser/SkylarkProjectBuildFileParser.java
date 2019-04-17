@@ -447,7 +447,7 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
       }
       if (result.containsErrors()) {
         throw BuildFileParseException.createForUnknownParseError(
-            "Cannot parse %s.  It was referenced form %s", path, containingLabel);
+            "Cannot parse %s.  It was referenced from %s", path, containingLabel);
       }
       astCache.put(path, result);
     }
