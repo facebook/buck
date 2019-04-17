@@ -270,10 +270,6 @@ public class TargetsCommand extends AbstractCommand {
 
   @Argument private List<String> arguments = new ArrayList<>();
 
-  public List<String> getArguments() {
-    return arguments;
-  }
-
   public ImmutableSet<String> getTypes() {
     return types.get();
   }
@@ -331,7 +327,7 @@ public class TargetsCommand extends AbstractCommand {
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState(),
                     getTargetPlatforms())) {
-          ResolveAliasHelper.resolveAlias(params, parserState, getArguments());
+          ResolveAliasHelper.resolveAlias(params, parserState, arguments);
         }
         return ExitCode.SUCCESS;
       }
@@ -349,7 +345,7 @@ public class TargetsCommand extends AbstractCommand {
     // referencedFiles can try to find targets based on a file, so make sure at least
     // /something/ is provided. We don't want people accidentally crawling a whole repo
     // when they didn't intend to.
-    if (getArguments().isEmpty() && this.referencedFiles.get().isEmpty()) {
+    if (arguments.isEmpty() && this.referencedFiles.get().isEmpty()) {
       throw new CommandLineException(
           "Must specify at least one build target pattern. See https://buckbuild.com/concept/build_target_pattern.html");
     }
@@ -522,7 +518,7 @@ public class TargetsCommand extends AbstractCommand {
         createParsingContext(params.getCell(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withSpeculativeParsing(SpeculativeParsing.ENABLED);
-    if (getArguments().isEmpty()) {
+    if (arguments.isEmpty()) {
       TargetGraphAndBuildTargets completeTargetGraphAndBuildTargets =
           params
               .getParser()
@@ -549,7 +545,7 @@ public class TargetsCommand extends AbstractCommand {
                   parsingContext.withApplyDefaultFlavorsMode(
                       ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), getArguments()),
+                      params.getCell(), params.getBuckConfig(), arguments),
                   params.getTargetConfiguration()),
           descriptionClasses);
     }
@@ -643,7 +639,7 @@ public class TargetsCommand extends AbstractCommand {
     // their dependencies. If we're detecting test changes we need the whole graph as tests are not
     // dependencies.
     TargetGraphAndBuildTargets targetGraphAndBuildTargets;
-    if (getArguments().isEmpty() || isDetectTestChanges) {
+    if (arguments.isEmpty() || isDetectTestChanges) {
       targetGraphAndBuildTargets =
           TargetGraphAndBuildTargets.of(
               params
@@ -664,7 +660,7 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithConfigurationTargets(
                   parsingContext,
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), getArguments()),
+                      params.getCell(), params.getBuckConfig(), arguments),
                   params.getTargetConfiguration());
     }
     return params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions()
