@@ -55,17 +55,22 @@ public class AndroidAppModularityDescription
             context.getTargetGraph(),
             buildTarget);
 
-    AndroidAppModularityGraphEnhancer graphEnhancer =
-        new AndroidAppModularityGraphEnhancer(
-            buildTarget, params, context.getActionGraphBuilder(), args.getNoDx(), apkModuleGraph);
+    AndroidAppModularityGraphEnhancementResult result = null;
 
-    AndroidAppModularityGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
+    if (args.getShouldIncludeClasses()) {
+      AndroidAppModularityGraphEnhancer graphEnhancer =
+          new AndroidAppModularityGraphEnhancer(
+              buildTarget, params, context.getActionGraphBuilder(), args.getNoDx(), apkModuleGraph);
+
+      result = graphEnhancer.createAdditionalBuildables();
+    }
 
     return new AndroidAppModularity(
         buildTarget,
         context.getProjectFilesystem(),
-        params.withExtraDeps(result.getFinalDeps()),
-        result);
+        result,
+        args.getShouldIncludeClasses(),
+        apkModuleGraph);
   }
 
   @BuckStyleImmutable
@@ -82,5 +87,10 @@ public class AndroidAppModularityDescription
 
     @Hint(isDep = false)
     ImmutableSet<BuildTarget> getNoDx();
+
+    @Value.Default
+    default boolean getShouldIncludeClasses() {
+      return true;
+    }
   }
 }

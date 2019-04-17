@@ -1,0 +1,14 @@
+TARGETS
+  dex
+    //java/com/sample/app:app
+    //java/com/sample/lib:lib
+    //res/com/sample/asset_only:asset_only
+    //res/com/sample/base:base
+    //res/com/sample/title:title
+    //res/com/sample/top:top
+  small_with_no_resource_deps
+    //java/com/sample/small:small_with_no_resource_deps
+DEPS
+  dex
+  small_with_no_resource_deps
+    dex

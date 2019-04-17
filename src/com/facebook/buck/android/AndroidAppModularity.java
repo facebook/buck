@@ -17,13 +17,14 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
+import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.BuildRule;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -33,21 +34,29 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Optional;
+import java.util.SortedSet;
+import javax.annotation.Nullable;
 
-public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+public class AndroidAppModularity extends AbstractBuildRule {
 
-  @AddToRuleKey private final AndroidAppModularityGraphEnhancementResult result;
+  @Nullable @AddToRuleKey private final AndroidAppModularityGraphEnhancementResult result;
+  @AddToRuleKey private final boolean shouldIncludeClasses;
+  @AddToRuleKey private final APKModuleGraph apkModuleGraph;
 
   AndroidAppModularity(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      AndroidAppModularityGraphEnhancementResult result) {
-    super(buildTarget, projectFilesystem, params);
+      @Nullable AndroidAppModularityGraphEnhancementResult result,
+      boolean shouldIncludeClasses,
+      APKModuleGraph apkModuleGraph) {
+    super(buildTarget, projectFilesystem);
     this.result = result;
+    this.shouldIncludeClasses = shouldIncludeClasses;
+    this.apkModuleGraph = apkModuleGraph;
   }
 
   @Override
@@ -82,18 +91,17 @@ public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraD
                                       .getAbsolutePath(input.getValue()))))
               .collect(ImmutableSet.toImmutableSet()));
     }
-    ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap =
-        additionalDexStoreToJarPathMapBuilder.build();
 
     steps.add(
         WriteAppModuleMetadataStep.writeModuleMetadata(
             metadataFile,
-            additionalDexStoreToJarPathMap,
-            result.getAPKModuleGraph(),
+            additionalDexStoreToJarPathMapBuilder.build(),
+            apkModuleGraph,
             getProjectFilesystem(),
             Optional.empty(),
             Optional.empty(),
-            /*skipProguard*/ true));
+            /*skipProguard*/ true,
+            shouldIncludeClasses));
 
     buildableContext.recordArtifact(metadataFile);
 
@@ -106,5 +114,14 @@ public class AndroidAppModularity extends AbstractBuildRuleWithDeclaredAndExtraD
         getBuildTarget(),
         BuildTargetPaths.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "%s/modulemetadata.txt"));
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    if (result != null) {
+      return result.getFinalDeps();
+    } else {
+      return ImmutableSortedSet.of();
+    }
   }
 }
