@@ -52,6 +52,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -110,7 +111,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
           }
 
           @Override
-          public ListenableFuture<Void> fetchToStream(Digest digest, FileChannel channel) {
+          public ListenableFuture<Void> fetchToStream(Digest digest, WritableByteChannel channel) {
             try (FileInputStream stream = getFileInputStream(digest)) {
               FileChannel input = stream.getChannel();
               input.transferTo(0, input.size(), channel);
@@ -202,9 +203,11 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
    */
   @Override
   public ListenableFuture<Void> materializeOutputs(
-      List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
+      List<OutputDirectory> outputDirectories,
+      List<OutputFile> outputFiles,
+      FileMaterializer materializer)
       throws IOException {
-    return outputsMaterializer.materialize(outputDirectories, outputFiles, root);
+    return outputsMaterializer.materialize(outputDirectories, outputFiles, materializer);
   }
 
   public Protocol.Action materializeAction(Protocol.Digest actionDigest) throws IOException {

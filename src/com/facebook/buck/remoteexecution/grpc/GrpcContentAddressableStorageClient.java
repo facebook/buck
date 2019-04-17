@@ -31,7 +31,6 @@ import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.bytestream.ByteStreamGrpc.ByteStreamStub;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
@@ -67,9 +66,11 @@ public class GrpcContentAddressableStorageClient implements ContentAddressedStor
 
   @Override
   public ListenableFuture<Void> materializeOutputs(
-      List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
+      List<OutputDirectory> outputDirectories,
+      List<OutputFile> outputFiles,
+      FileMaterializer materializer)
       throws IOException {
-    return outputsMaterializer.materialize(outputDirectories, outputFiles, root);
+    return outputsMaterializer.materialize(outputDirectories, outputFiles, materializer);
   }
 
   @Override

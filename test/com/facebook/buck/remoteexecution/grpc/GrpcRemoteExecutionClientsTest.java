@@ -32,6 +32,7 @@ import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
+import com.facebook.buck.remoteexecution.util.OutputsMaterializer.FilesystemFileMaterializer;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.Charsets;
@@ -181,7 +182,8 @@ public class GrpcRemoteExecutionClientsTest {
 
     clients
         .getContentAddressedStorage()
-        .materializeOutputs(ImmutableList.of(), ImmutableList.of(), workDir)
+        .materializeOutputs(
+            ImmutableList.of(), ImmutableList.of(), new FilesystemFileMaterializer(workDir))
         .get();
 
     assertEquals(ImmutableMap.of(), getDirectoryContents(workDir));
@@ -195,7 +197,7 @@ public class GrpcRemoteExecutionClientsTest {
             ImmutableList.of(
                 protocol.newOutputFile(out1, digest1, false),
                 protocol.newOutputFile(out2, digest2, false)),
-            workDir)
+            new FilesystemFileMaterializer(workDir))
         .get();
 
     assertEquals(ImmutableMap.of(out1, data1, out2, data2), getDirectoryContents(workDir));

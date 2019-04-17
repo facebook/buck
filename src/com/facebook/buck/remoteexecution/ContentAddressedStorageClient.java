@@ -21,6 +21,7 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputFile;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -31,8 +32,22 @@ public interface ContentAddressedStorageClient {
 
   /** Materializes the outputFiles and outputDirectories into root. */
   ListenableFuture<Void> materializeOutputs(
-      List<OutputDirectory> outputDirectories, List<OutputFile> outputFiles, Path root)
+      List<OutputDirectory> outputDirectories,
+      List<OutputFile> outputFiles,
+      FileMaterializer materializer)
       throws IOException;
 
   boolean containsDigest(Digest digest);
+
+  /** Interface for filesystem operations required for materialization. */
+  interface FileMaterializer {
+    /**
+     * Get a writable channel to the file at the provided path, marking it executable if
+     * appropriate.
+     */
+    WritableByteChannel getOutputChannel(Path path, boolean executable) throws IOException;
+
+    /** Make the directory and all parent directories. */
+    void makeDirectories(Path dirRoot) throws IOException;
+  }
 }

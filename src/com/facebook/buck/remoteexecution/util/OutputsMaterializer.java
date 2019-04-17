@@ -17,7 +17,9 @@
 package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
+import com.facebook.buck.remoteexecution.ContentAddressedStorageClient.FileMaterializer;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
+import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Directory;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.OutputDirectory;
 import com.google.common.base.Preconditions;
@@ -27,11 +29,13 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,32 +47,70 @@ public class OutputsMaterializer {
   private final AsyncBlobFetcher fetcher;
   private final Protocol protocol;
 
+  /** Simple default file materializer that actually materializes things on the filesystem. */
+  public static class FilesystemFileMaterializer implements FileMaterializer {
+    private final Path root;
+
+    public FilesystemFileMaterializer(Path root) {
+      this.root = root;
+    }
+
+    @Override
+    public void makeDirectories(Path dirRoot) throws IOException {
+      Files.createDirectories(root.resolve(dirRoot));
+    }
+
+    @Override
+    public WritableByteChannel getOutputChannel(Path path, boolean executable) throws IOException {
+      path = root.resolve(path);
+      MoreFiles.createParentDirectories(path);
+
+      FileChannel channel =
+          FileChannel.open(path, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW);
+      try {
+        // Creating the FileOutputStream makes the file so we can now set it executable.
+        setExecutable(executable, path);
+      } catch (Exception e) {
+        channel.close();
+        throw e;
+      }
+      return channel;
+    }
+
+    private void setExecutable(boolean isExecutable, Path path) {
+      if (isExecutable) {
+        Preconditions.checkState(path.toFile().setExecutable(true));
+      }
+    }
+  }
+
   public OutputsMaterializer(AsyncBlobFetcher fetcher, Protocol protocol) {
     this.fetcher = fetcher;
     this.protocol = protocol;
-  }
-
-  private static Path ensureParent(Path path) throws IOException {
-    MoreFiles.createParentDirectories(path);
-    return path;
   }
 
   /** Materialize the outputs of an action into a directory. */
   public ListenableFuture<Void> materialize(
       Collection<OutputDirectory> outputDirectories,
       Collection<Protocol.OutputFile> outputFiles,
-      Path root)
+      FileMaterializer materializer)
       throws IOException {
     ImmutableList.Builder<ListenableFuture<Void>> pending = ImmutableList.builder();
 
     for (Protocol.OutputFile file : outputFiles) {
-      Path path = root.resolve(file.getPath());
-      ensureParent(path);
-      pending.add(fetchAndMaterialize(file.getDigest(), file.getIsExecutable(), path));
+      Path filePath = Paths.get(file.getPath());
+      Path parent = filePath.getParent();
+      if (parent != null) {
+        materializer.makeDirectories(parent);
+      }
+      pending.add(
+          fetchAndMaterialize(materializer, file.getDigest(), file.getIsExecutable(), filePath));
     }
 
     for (Protocol.OutputDirectory directory : outputDirectories) {
-      Path dirRoot = root.resolve(directory.getPath());
+      Path dirRoot = Paths.get(directory.getPath());
+      // If a directory is empty, we need to still ensure that it is created.
+      materializer.makeDirectories(dirRoot);
       pending.add(
           Futures.transformAsync(
               fetcher.fetch(directory.getTreeDigest()),
@@ -78,11 +120,13 @@ public class OutputsMaterializer {
                 // TODO(cjhopman): If a Tree contains multiple duplicate Directory nodes, is that
                 // valid? Should that be rejected?
                 for (Directory child : tree.getChildrenList()) {
-                  childMap.put(protocol.computeDigest(child), child);
+                  Digest digest = protocol.computeDigest(child);
+                  childMap.put(digest, child);
                 }
                 ImmutableList.Builder<ListenableFuture<Void>> pendingFilesBuilder =
                     ImmutableList.builder();
-                materializeDirectory(childMap, tree.getRoot(), dirRoot, pendingFilesBuilder::add);
+                materializeDirectory(
+                    materializer, childMap, tree.getRoot(), dirRoot, pendingFilesBuilder::add);
                 return Futures.whenAllSucceed(pendingFilesBuilder.build()).call(() -> null);
               }));
     }
@@ -91,15 +135,16 @@ public class OutputsMaterializer {
   }
 
   private void materializeDirectory(
-      Map<Protocol.Digest, Protocol.Directory> childMap,
-      Protocol.Directory directory,
+      FileMaterializer materializer,
+      Map<Digest, Directory> childMap,
+      Directory directory,
       Path root,
       Consumer<ListenableFuture<Void>> pendingWorkConsumer)
       throws IOException {
-    Files.createDirectories(root);
+    materializer.makeDirectories(root);
     for (Protocol.DirectoryNode childNode : directory.getDirectoriesList()) {
-
       materializeDirectory(
+          materializer,
           childMap,
           Objects.requireNonNull(
               childMap.get(childNode.getDigest()),
@@ -111,34 +156,28 @@ public class OutputsMaterializer {
     for (Protocol.FileNode file : directory.getFilesList()) {
       pendingWorkConsumer.accept(
           fetchAndMaterialize(
-              file.getDigest(), file.getIsExecutable(), root.resolve(file.getName())));
+              materializer,
+              file.getDigest(),
+              file.getIsExecutable(),
+              root.resolve(file.getName())));
     }
   }
 
   private ListenableFuture<Void> fetchAndMaterialize(
-      Protocol.Digest digest, boolean isExecutable, Path path) throws IOException {
-    FileOutputStream stream = new FileOutputStream(path.toFile());
-    FileChannel channel = stream.getChannel();
+      FileMaterializer materializer, Protocol.Digest digest, boolean isExecutable, Path path)
+      throws IOException {
+    WritableByteChannel channel = materializer.getOutputChannel(path, isExecutable);
+    // TODO(cjhopman): This doesn't close the stream on failure.
     return Futures.transform(
         fetcher.fetchToStream(digest, channel),
         ignored -> {
           try {
             channel.close();
-            stream.close();
-            if (isExecutable) {
-              setExecutable(true, path);
-            }
             return null;
           } catch (IOException e) {
             throw new UncheckedExecutionException(e);
           }
         },
         MoreExecutors.directExecutor());
-  }
-
-  private void setExecutable(boolean isExecutable, Path path) {
-    if (isExecutable) {
-      Preconditions.checkState(path.toFile().setExecutable(true));
-    }
   }
 }

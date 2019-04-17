@@ -40,6 +40,7 @@ import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
+import com.facebook.buck.remoteexecution.util.OutputsMaterializer.FilesystemFileMaterializer;
 import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.StepExecutionResult;
@@ -487,7 +488,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
         executionClients
             .getContentAddressedStorage()
             .materializeOutputs(
-                result.getOutputDirectories(), result.getOutputFiles(), cellPathPrefix);
+                result.getOutputDirectories(),
+                result.getOutputFiles(),
+                new FilesystemFileMaterializer(cellPathPrefix));
 
     return Futures.transform(
         materializationFuture,
