@@ -49,6 +49,9 @@ public interface RemoteExecutionStatsProvider {
   /** Metadata for total time spent queued for executing actions in millis. */
   long getRemoteQueueTimeMs();
 
+  /** Metadata for total time spent running actions remotely. */
+  long getTotalRemoteTimeMs();
+
   /** Export all the above metadata in a Map format */
   ImmutableMap<String, String> exportFieldsToMap();
 }

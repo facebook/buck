@@ -52,6 +52,7 @@ public class RemoteExecutionEventListener
 
   private final LongAdder remoteCpuTime;
   private final LongAdder remoteQueueTime;
+  private final LongAdder totalRemoteTime;
 
   private final AtomicBoolean hasFirstRemoteActionStarted;
 
@@ -66,6 +67,7 @@ public class RemoteExecutionEventListener
     this.uploadBytes = new LongAdder();
     this.remoteCpuTime = new LongAdder();
     this.remoteQueueTime = new LongAdder();
+    this.totalRemoteTime = new LongAdder();
     this.totalBuildRules = new LongAdder();
     this.hasFirstRemoteActionStarted = new AtomicBoolean(false);
 
@@ -118,8 +120,8 @@ public class RemoteExecutionEventListener
     if (event.getExecutedActionMetadata().isPresent()) {
       Duration duration =
           Timestamps.between(
-              event.getExecutedActionMetadata().get().getExecutionStartTimestamp(),
-              event.getExecutedActionMetadata().get().getExecutionCompletedTimestamp());
+              event.getExecutedActionMetadata().get().getWorkerStartTimestamp(),
+              event.getExecutedActionMetadata().get().getWorkerCompletedTimestamp());
       remoteCpuTime.add(
           TimeUnit.SECONDS.toMillis(duration.getSeconds())
               + TimeUnit.NANOSECONDS.toMillis(duration.getNanos()));
@@ -131,6 +133,14 @@ public class RemoteExecutionEventListener
       remoteQueueTime.add(
           TimeUnit.SECONDS.toMillis(queueDuration.getSeconds())
               + TimeUnit.NANOSECONDS.toMillis(queueDuration.getNanos()));
+
+      Duration totalDuration =
+          Timestamps.between(
+              event.getExecutedActionMetadata().get().getQueuedTimestamp(),
+              event.getExecutedActionMetadata().get().getOutputUploadCompletedTimestamp());
+      totalRemoteTime.add(
+          TimeUnit.SECONDS.toMillis(totalDuration.getSeconds())
+              + TimeUnit.NANOSECONDS.toMillis(totalDuration.getNanos()));
     }
   }
 
@@ -220,6 +230,11 @@ public class RemoteExecutionEventListener
   }
 
   @Override
+  public long getTotalRemoteTimeMs() {
+    return totalRemoteTime.sum();
+  }
+
+  @Override
   public ImmutableMap<String, String> exportFieldsToMap() {
     ImmutableMap.Builder<String, String> retval = ImmutableMap.builderWithExpectedSize(16);
 
@@ -234,7 +249,8 @@ public class RemoteExecutionEventListener
             "localfallback_locally_successful_executed_rules",
             localFallbackSuccessfulLocalExecutions.toString())
         .put("remote_cpu_time_ms", Long.toString(getRemoteCpuTimeMs()))
-        .put("remote_queue_time_ms", Long.toString(getRemoteQueueTimeMs()));
+        .put("remote_queue_time_ms", Long.toString(getRemoteQueueTimeMs()))
+        .put("remote_total_time_ms", Long.toString(getTotalRemoteTimeMs()));
 
     for (ImmutableMap.Entry<State, Integer> entry : getActionsPerState().entrySet()) {
       retval.put(

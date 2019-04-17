@@ -114,4 +114,9 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
   public long getRemoteQueueTimeMs() {
     return 0;
   }
+
+  @Override
+  public long getTotalRemoteTimeMs() {
+    return 0;
+  }
 }
