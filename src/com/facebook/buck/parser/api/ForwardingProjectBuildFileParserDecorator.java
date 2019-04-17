@@ -30,7 +30,7 @@ import java.nio.file.Path;
  * <p>This decorator makes it easy to write decorators that are supposed to modify the behavior of a
  * subset of {@link ProjectBuildFileParser} methods.
  */
-public class ForwardingProjectBuildFileParserDecorator implements ProjectBuildFileParser {
+public abstract class ForwardingProjectBuildFileParserDecorator implements ProjectBuildFileParser {
 
   protected final ProjectBuildFileParser delegate;
 
