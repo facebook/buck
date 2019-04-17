@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "parser",
+    deps = [
+        "//src/com/facebook/buck/core/files:files",
+        "//src/com/facebook/buck/core/parser:parser",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//test/com/facebook/buck/core/graph/transformation:testutil",
+        "//third-party/java/junit:junit",
+        "//third-party/java/junitparams:junitparams",
+    ],
+)
