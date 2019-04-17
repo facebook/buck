@@ -133,6 +133,12 @@ public class CxxBinaryFactory {
           inferBuckConfig);
     }
 
+    if (flavors.contains(CxxDescriptionEnhancer.INCREMENTAL_THINLTO)) {
+      return CxxDescriptionEnhancer.createBuildRuleForCxxThinLtoBinary(
+          target,
+          projectFilesystem);
+    }
+
     CxxLinkAndCompileRules cxxLinkAndCompileRules =
         CxxDescriptionEnhancer.createBuildRulesForCxxBinaryDescriptionArg(
             target,

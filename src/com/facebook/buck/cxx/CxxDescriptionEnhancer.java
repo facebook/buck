@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -110,6 +111,7 @@ public class CxxDescriptionEnhancer {
 
   private static final Logger LOG = Logger.get(CxxDescriptionEnhancer.class);
 
+  public static final Flavor INCREMENTAL_THINLTO = InternalFlavor.of("incremental-thinlto");
   public static final Flavor HEADER_SYMLINK_TREE_FLAVOR = InternalFlavor.of("private-headers");
   public static final Flavor EXPORTED_HEADER_SYMLINK_TREE_FLAVOR = InternalFlavor.of("headers");
   public static final Flavor STATIC_FLAVOR = InternalFlavor.of("static");
@@ -733,6 +735,12 @@ public class CxxDescriptionEnhancer {
               .toString();
       return Paths.get(translateMacrosFn.apply(pathAsString));
     }
+  }
+
+  public static BuildRule createBuildRuleForCxxThinLtoBinary(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem) {
+    return new NoopBuildRule(target, projectFilesystem);
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
