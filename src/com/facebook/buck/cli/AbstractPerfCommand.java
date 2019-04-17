@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FlushConsoleEvent;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -89,16 +88,6 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
   /** Result of invocation of the targeted perf test. */
   interface PerfResult {
     // TODO(cjhopman): Do something with this or delete it.
-  }
-
-  /** Helper for printing warnings to the console. */
-  protected void printWarning(CommandRunnerParams params, String format, Object... args) {
-    printWarning(params, String.format(format, args));
-  }
-
-  /** Helper for printing warnings to the console. */
-  protected void printWarning(CommandRunnerParams params, String s) {
-    params.getBuckEventBus().post(ConsoleEvent.warning(s));
   }
 
   protected abstract String getComputationName();

@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
 package com.facebook.buck.cli;
 
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
@@ -22,18 +21,13 @@ import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.spi.SubCommand;
 import org.kohsuke.args4j.spi.SubCommands;
 
-/** The PerfCommand is for targeted tests of the performance of buck components. */
-public class PerfCommand extends AbstractContainerCommand {
+/** Commands to test the performance of cas upload and download. */
+public class PerfCasCommand extends AbstractContainerCommand {
 
   @Argument(handler = AdditionalOptionsSubCommandHandler.class)
   @SubCommands({
-    // TODO(cjhopman): Should we enforce that each of these commands derives from
-    // AbstractPerfCommand?
-    @SubCommand(name = "action-graph", impl = PerfActionGraphCommand.class),
-    @SubCommand(name = "cas", impl = PerfCasCommand.class),
-    @SubCommand(name = "rk", impl = PerfRuleKeyCommand.class),
-    @SubCommand(name = "manifest", impl = PerfManifestCommand.class),
-    @SubCommand(name = "mbr", impl = PerfMbrCommand.class),
+    @SubCommand(name = "upload", impl = PerfCasUploadCommand.class),
+    @SubCommand(name = "download", impl = PerfCasDownloadCommand.class),
   })
   @SuppressFieldNotInitialized
   Command subcommand;
@@ -45,14 +39,12 @@ public class PerfCommand extends AbstractContainerCommand {
 
   @Override
   public String getShortDescription() {
-    return "various utilities for testing performance of Buck against real codebases and "
-        + "configurations. NOTE: This command's interface is unstable and will change without "
-        + "warning.";
+    return "measure performance of cas upload/download";
   }
 
   @Override
   protected String getContainerCommandPrefix() {
-    return "buck perf";
+    return "buck perf cas";
   }
 
   @Override

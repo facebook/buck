@@ -291,6 +291,16 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     };
   }
 
+  /** Helper for printing warnings to the console. */
+  protected void printWarning(CommandRunnerParams params, String format, Object... args) {
+    printWarning(params, String.format(format, args));
+  }
+
+  /** Helper for printing warnings to the console. */
+  protected void printWarning(CommandRunnerParams params, String s) {
+    params.getBuckEventBus().post(ConsoleEvent.warning(s));
+  }
+
   public abstract ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception;
 
   protected CommandLineBuildTargetNormalizer getCommandLineBuildTargetNormalizer(

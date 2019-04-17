@@ -860,12 +860,10 @@ public class TargetsCommand extends AbstractCommand {
         Map<String, Object> targetNodeAttributes =
             params.getParser().getTargetNodeRawAttributes(state, params.getCell(), targetNode);
         if (targetNodeAttributes == null) {
-          params
-              .getBuckEventBus()
-              .post(
-                  ConsoleEvent.warning(
-                      "unable to find rule for target "
-                          + targetNode.getBuildTarget().getFullyQualifiedName()));
+          printWarning(
+              params,
+              "unable to find rule for target "
+                  + targetNode.getBuildTarget().getFullyQualifiedName());
           continue;
         }
 
