@@ -151,7 +151,8 @@ public class AndroidBundle extends AbstractBuildRule
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
-      Optional<ExopackageInfo> exopackageInfo) {
+      Optional<ExopackageInfo> exopackageInfo,
+      Optional<SourcePath> bundleConfigFilePath) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.ruleFinder = ruleFinder;
@@ -223,6 +224,7 @@ public class AndroidBundle extends AbstractBuildRule
             resourceFilesInfo,
             apkModules,
             enhancementResult.getModuleResourceApkPaths(),
+            bundleConfigFilePath,
             false);
     this.exopackageInfo = exopackageInfo;
 

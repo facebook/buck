@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
+import com.android.bundle.Config.BundleConfig;
 import com.android.common.SdkConstants;
 import com.android.common.sdklib.build.ApkBuilder;
 import com.android.sdklib.build.ApkCreationException;
@@ -26,6 +27,7 @@ import com.android.sdklib.build.IArchiveBuilder;
 import com.android.sdklib.build.SealedApkException;
 import com.android.tools.build.bundletool.commands.BuildBundleCommand;
 import com.android.tools.build.bundletool.model.BundleModule;
+import com.android.tools.build.bundletool.utils.files.BufferedIo;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -37,15 +39,19 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -60,6 +66,7 @@ public class AabBuilderStep implements Step {
 
   private final ProjectFilesystem filesystem;
   private final Path pathToOutputAabFile;
+  private final Optional<Path> pathToBundleConfigFile;
   private BuildTarget buildTarget;
   private final boolean debugMode;
   private static final Pattern PATTERN_NATIVELIB_EXT =
@@ -78,12 +85,14 @@ public class AabBuilderStep implements Step {
   public AabBuilderStep(
       ProjectFilesystem filesystem,
       Path pathToOutputAabFile,
+      Optional<Path> pathToBundleConfigFile,
       BuildTarget buildTarget,
       boolean debugMode,
       ImmutableSet<ModuleInfo> modulesInfo,
       ImmutableSet<String> moduleNames) {
     this.filesystem = filesystem;
     this.pathToOutputAabFile = pathToOutputAabFile;
+    this.pathToBundleConfigFile = pathToBundleConfigFile;
     this.buildTarget = buildTarget;
     this.debugMode = debugMode;
     this.modulesInfo = modulesInfo;
@@ -113,12 +122,35 @@ public class AabBuilderStep implements Step {
       modulesPathsBuilder.add(moduleGenPath);
     }
 
-    BuildBundleCommand.builder()
-        .setOutputPath(pathToOutputAabFile)
-        .setModulesPaths(modulesPathsBuilder.build())
-        .build()
-        .execute();
+    BuildBundleCommand.Builder bundleBuilder =
+        BuildBundleCommand.builder()
+            .setOutputPath(pathToOutputAabFile)
+            .setModulesPaths(modulesPathsBuilder.build());
+
+    if (pathToBundleConfigFile.isPresent()) {
+      bundleBuilder.setBundleConfig(parseBundleConfigJson(pathToBundleConfigFile.get()));
+    }
+    bundleBuilder.build().execute();
     return StepExecutionResults.SUCCESS;
+  }
+
+  // To be removed when https://github.com/google/bundletool/issues/63 is fixed
+  private static BundleConfig parseBundleConfigJson(Path bundleConfigJsonPath) {
+    BundleConfig.Builder bundleConfig = BundleConfig.newBuilder();
+    try (Reader bundleConfigReader = BufferedIo.reader(bundleConfigJsonPath)) {
+      JsonFormat.parser().merge(bundleConfigReader, bundleConfig);
+    } catch (InvalidProtocolBufferException e) {
+      throw new HumanReadableException(
+          e,
+          String.format(
+              "The file '%s' is not a valid BundleConfig JSON file.", bundleConfigJsonPath));
+    } catch (IOException e) {
+      throw new HumanReadableException(
+          e,
+          String.format(
+              "An error occurred while trying to read the file '%s'.", bundleConfigJsonPath));
+    }
+    return bundleConfig.build();
   }
 
   private void addFile(

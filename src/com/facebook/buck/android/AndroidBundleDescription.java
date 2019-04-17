@@ -295,6 +295,8 @@ public class AndroidBundleDescription
 
     abstract Optional<SourcePath> getSecondaryDexTailClassesFile();
 
+    abstract Optional<SourcePath> getBundleConfigFile();
+
     abstract Optional<SourcePath> getAndroidAppModularityResult();
 
     @Value.Default
