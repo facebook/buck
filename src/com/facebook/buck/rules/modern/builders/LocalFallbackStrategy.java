@@ -66,6 +66,13 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     return mainBuildRuleStrategy.canBuild(instance);
   }
 
+  /** Thrown when execution needs to be halted because of cancellation */
+  public static class RemoteActionCancelledException extends Exception {
+    RemoteActionCancelledException(String message) {
+      super(message);
+    }
+  }
+
   /**
    * Contains the combined result of running the remote execution and local execution if necessary.
    */
@@ -188,7 +195,10 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     private void fallbackBuildToLocalStrategy() {
       if (hasCancellationBeenRequested) {
         completeCombinedFutureWithException(
-            new InterruptedException(), remoteBuildResult.get(), Result.NOT_RUN);
+            new RemoteActionCancelledException(
+                "Unable to fall back to Local Strategy, execution has been cancelled"),
+            remoteBuildResult.get(),
+            Result.NOT_RUN);
         return;
       }
       ListenableFuture<Optional<BuildResult>> future =
