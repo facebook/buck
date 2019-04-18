@@ -190,6 +190,8 @@ public class CxxCompilationDatabaseTest {
                     "/foo/bar",
                     "-isystem",
                     "/test",
+                    "-fdebug-prefix-map=/Users/user/src=.",
+                    "-gno-record-gcc-switches",
                     "-o",
                     "buck-out/gen/foo/baz#compile-test.cpp/test.o",
                     "-c",

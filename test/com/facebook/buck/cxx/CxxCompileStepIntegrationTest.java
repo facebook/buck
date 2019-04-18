@@ -36,7 +36,7 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -45,7 +45,6 @@ import com.facebook.buck.testutil.TestConsole;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,7 +58,7 @@ public class CxxCompileStepIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private void assertCompDir(Path compDir, Optional<String> failure) throws Exception {
+  private void assertCompDir(Optional<String> failure) throws Exception {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     CxxPlatform platform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
@@ -81,8 +80,7 @@ public class CxxCompileStepIntegrationTest {
     ImmutableList.Builder<String> compilerArguments = ImmutableList.builder();
     compilerArguments.add("-g");
 
-    DebugPathSanitizer sanitizer =
-        new MungingDebugPathSanitizer(200, File.separatorChar, compDir, ImmutableBiMap.of());
+    DebugPathSanitizer sanitizer = new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
 
     // Build an archive step.
     CxxPreprocessAndCompileStep step =
@@ -126,8 +124,7 @@ public class CxxCompileStepIntegrationTest {
 
   @Test
   public void updateCompilationDir() throws Exception {
-    assertCompDir(Paths.get("."), Optional.empty());
-    assertCompDir(Paths.get("blah"), Optional.empty());
+    assertCompDir(Optional.empty());
   }
 
   @Test

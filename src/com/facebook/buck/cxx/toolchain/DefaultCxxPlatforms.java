@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -253,11 +252,6 @@ public class DefaultCxxPlatforms {
         staticLibraryExtension,
         objectFileExtension,
         compilerSanitizer,
-        new MungingDebugPathSanitizer(
-            config.getDebugPathSanitizerLimit(),
-            File.separatorChar,
-            Paths.get("."),
-            ImmutableBiMap.of()),
         ImmutableMap.of(),
         binaryExtension,
         config.getHeaderVerificationOrIgnore(),

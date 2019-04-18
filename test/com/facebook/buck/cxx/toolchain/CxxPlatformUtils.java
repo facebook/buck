@@ -35,10 +35,8 @@ import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class CxxPlatformUtils {
 
@@ -60,10 +58,7 @@ public class CxxPlatformUtils {
   }
 
   public static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
-      new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
-
-  public static final DebugPathSanitizer DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER =
-      new MungingDebugPathSanitizer(250, File.separatorChar, Paths.get("."), ImmutableBiMap.of());
+      new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of());
 
   public static final InternalFlavor DEFAULT_PLATFORM_FLAVOR = InternalFlavor.of("default");
   public static final CxxPlatform DEFAULT_PLATFORM =
@@ -92,7 +87,6 @@ public class CxxPlatformUtils {
           .setStaticLibraryExtension("a")
           .setObjectFileExtension("o")
           .setCompilerDebugPathSanitizer(DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)
-          .setAssemblerDebugPathSanitizer(DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER)
           .setHeaderVerification(DEFAULT_CONFIG.getHeaderVerificationOrIgnore())
           .setPublicHeadersSymlinksEnabled(true)
           .setPrivateHeadersSymlinksEnabled(true)

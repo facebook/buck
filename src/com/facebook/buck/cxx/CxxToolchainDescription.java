@@ -198,7 +198,6 @@ public class CxxToolchainDescription
 
     // User-configured cxx platforms are required to handle path sanitization themselves.
     cxxPlatform.setCompilerDebugPathSanitizer(NoopDebugPathSanitizer.INSTANCE);
-    cxxPlatform.setAssemblerDebugPathSanitizer(NoopDebugPathSanitizer.INSTANCE);
 
     // We require that untracked headers are errors and don't allow any whitelisting (the
     // user-configured platform can implement it's only filtering of the produced depfiles).

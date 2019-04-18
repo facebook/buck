@@ -225,8 +225,7 @@ abstract class AbstractCxxSourceRuleFactory {
                         /* leadingIncludePaths */ Optional.empty(),
                         Optional.of(aggregatedDeps),
                         getCxxPlatform().getConflictingHeaderBasenameWhitelist());
-                return new PreprocessorDelegateCacheValue(
-                    delegate, getSanitizerForSourceType(key.getSourceType()));
+                return new PreprocessorDelegateCacheValue(delegate, getSanitizer());
               });
 
   /**
@@ -393,7 +392,7 @@ abstract class AbstractCxxSourceRuleFactory {
         getCompileOutputName(name),
         source.getPath(),
         source.getType(),
-        getSanitizerForSourceType(source.getType()));
+        getSanitizer());
   }
 
   @VisibleForTesting
@@ -536,7 +535,7 @@ abstract class AbstractCxxSourceRuleFactory {
         source.getPath(),
         source.getType(),
         precompiledHeaderRule,
-        getSanitizerForSourceType(source.getType()));
+        getSanitizer());
   }
 
   Optional<CxxPrecompiledHeader> getOptionalPrecompiledHeader(
@@ -699,10 +698,8 @@ abstract class AbstractCxxSourceRuleFactory {
                 Function.identity(), CxxPreprocessAndCompile::getSourcePathToOutput));
   }
 
-  private DebugPathSanitizer getSanitizerForSourceType(CxxSource.Type type) {
-    return type.isAssembly()
-        ? getCxxPlatform().getAssemblerDebugPathSanitizer()
-        : getCxxPlatform().getCompilerDebugPathSanitizer();
+  private DebugPathSanitizer getSanitizer() {
+    return getCxxPlatform().getCompilerDebugPathSanitizer();
   }
 
   @Value.Immutable

@@ -428,14 +428,11 @@ public class CxxPreprocessAndCompileTest {
             projectFilesystem,
             ruleFinder,
             new CompilerDelegate(
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
-                DEFAULT_COMPILER,
-                flags,
-                DEFAULT_USE_ARG_FILE),
+                NoopDebugPathSanitizer.INSTANCE, DEFAULT_COMPILER, flags, DEFAULT_USE_ARG_FILE),
             outputName,
             FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+            NoopDebugPathSanitizer.INSTANCE);
 
     ImmutableList<String> expectedCompileCommand =
         ImmutableList.<String>builder()
@@ -642,7 +639,7 @@ public class CxxPreprocessAndCompileTest {
             projectFilesystem,
             ruleFinder,
             new CompilerDelegate(
-                CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                NoopDebugPathSanitizer.INSTANCE,
                 new GccCompiler(
                     new HashedFileTool(
                         () ->
@@ -656,7 +653,7 @@ public class CxxPreprocessAndCompileTest {
             outputName,
             FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+            NoopDebugPathSanitizer.INSTANCE);
 
     ImmutableList<String> expectedCompileCommand =
         ImmutableList.<String>builder()

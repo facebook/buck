@@ -81,7 +81,6 @@ public class CxxPlatformsTest {
             .setStaticLibraryExtension("a")
             .setObjectFileExtension("so")
             .setCompilerDebugPathSanitizer(CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER)
-            .setAssemblerDebugPathSanitizer(CxxPlatformUtils.DEFAULT_ASSEMBLER_DEBUG_PATH_SANITIZER)
             .setHeaderVerification(CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification())
             .setPublicHeadersSymlinksEnabled(true)
             .setPrivateHeadersSymlinksEnabled(true)

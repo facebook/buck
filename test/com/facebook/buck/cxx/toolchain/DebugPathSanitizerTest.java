@@ -27,15 +27,13 @@ import org.junit.Test;
 
 public class DebugPathSanitizerTest {
 
-  MungingDebugPathSanitizer debugPathSanitizer;
+  DebugPathSanitizer debugPathSanitizer;
 
   @Before
   public void setUp() {
     debugPathSanitizer =
-        new MungingDebugPathSanitizer(
-            40,
-            '/',
-            Paths.get("."),
+        new PrefixMapDebugPathSanitizer(
+            ".",
             ImmutableBiMap.of(
                 Paths.get("/some/absolute/path"),
                 "SYMBOLIC_NAME",

@@ -47,7 +47,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
@@ -72,7 +71,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -319,12 +317,6 @@ public class AppleCxxPlatforms {
             DebugPathSanitizer.getPaddedDir(
                 ".", config.getDebugPathSanitizerLimit(), File.separatorChar),
             sanitizerPaths.build());
-    DebugPathSanitizer assemblerDebugPathSanitizer =
-        new MungingDebugPathSanitizer(
-            config.getDebugPathSanitizerLimit(),
-            File.separatorChar,
-            Paths.get("."),
-            sanitizerPaths.build());
 
     ImmutableList<String> cflags = cflagsBuilder.build();
 
@@ -450,7 +442,6 @@ public class AppleCxxPlatforms {
             "a",
             "o",
             compilerDebugPathSanitizer,
-            assemblerDebugPathSanitizer,
             macros,
             Optional.empty(),
             headerVerification,

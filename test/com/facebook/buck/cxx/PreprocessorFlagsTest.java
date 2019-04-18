@@ -27,7 +27,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -39,7 +39,6 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
-import java.io.File;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
@@ -138,11 +137,7 @@ public class PreprocessorFlagsTest {
       class TestData {
         public RuleKey generate(String prefix) {
           DebugPathSanitizer sanitizer =
-              new MungingDebugPathSanitizer(
-                  10,
-                  File.separatorChar,
-                  Paths.get("PWD"),
-                  ImmutableBiMap.of(Paths.get(prefix), "A"));
+              new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(Paths.get(prefix), "A"));
 
           CxxToolFlags flags =
               CxxToolFlags.explicitBuilder()

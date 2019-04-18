@@ -106,7 +106,6 @@ public class CxxPlatforms {
       String staticLibraryExtension,
       String objectFileExtension,
       DebugPathSanitizer compilerDebugPathSanitizer,
-      DebugPathSanitizer assemblerDebugPathSanitizer,
       ImmutableMap<String, String> flagMacros,
       Optional<String> binaryExtension,
       HeaderVerification headerVerification,
@@ -152,7 +151,6 @@ public class CxxPlatforms {
             config.getStaticLibraryExtension().orElse(staticLibraryExtension))
         .setObjectFileExtension(config.getObjectFileExtension().orElse(objectFileExtension))
         .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
-        .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setFlagMacros(flagMacros)
         .setHeaderVerification(headerVerification)
         .setPublicHeadersSymlinksEnabled(
@@ -225,7 +223,6 @@ public class CxxPlatforms {
         defaultPlatform.getStaticLibraryExtension(),
         defaultPlatform.getObjectFileExtension(),
         defaultPlatform.getCompilerDebugPathSanitizer(),
-        defaultPlatform.getAssemblerDebugPathSanitizer(),
         defaultPlatform.getFlagMacros(),
         defaultPlatform.getBinaryExtension(),
         defaultPlatform.getHeaderVerification(),

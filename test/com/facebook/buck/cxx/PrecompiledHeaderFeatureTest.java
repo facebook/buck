@@ -40,8 +40,8 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.StringArg;
@@ -157,8 +157,7 @@ public class PrecompiledHeaderFeatureTest {
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
       CxxPlatform platform =
           PLATFORM_SUPPORTING_PCH.withCompilerDebugPathSanitizer(
-              new MungingDebugPathSanitizer(
-                  250, File.separatorChar, Paths.get("."), ImmutableBiMap.of()));
+              new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of()));
       CxxBuckConfig config = buildConfig(/* pchEnabled */ true);
       CxxSourceRuleFactory factory =
           preconfiguredSourceRuleFactoryBuilder(graphBuilder)
@@ -200,11 +199,7 @@ public class PrecompiledHeaderFeatureTest {
               preconfiguredSourceRuleFactoryBuilder(graphBuilder)
                   .setCxxPlatform(
                       PLATFORM_SUPPORTING_PCH.withCompilerDebugPathSanitizer(
-                          new MungingDebugPathSanitizer(
-                              250,
-                              File.separatorChar,
-                              Paths.get("."),
-                              ImmutableBiMap.of(from, "melon"))))
+                          new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(from, "melon"))))
                   .setPrefixHeader(FakeSourcePath.of(("foo.pch")))
                   .setCxxBuckConfig(buildConfig(/* pchEnabled */ true))
                   .build();

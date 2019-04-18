@@ -119,8 +119,6 @@ interface AbstractCxxPlatform extends FlavorConvertible {
 
   DebugPathSanitizer getCompilerDebugPathSanitizer();
 
-  DebugPathSanitizer getAssemblerDebugPathSanitizer();
-
   HeaderVerification getHeaderVerification();
 
   Optional<Boolean> getUseArgFile();

@@ -46,11 +46,9 @@ import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
-import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.GnuArchiver;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -565,9 +563,6 @@ public class NdkCxxPlatforms {
     ImmutableBiMap<Path, String> sanitizePaths = sanitizePathsBuilder.build();
     PrefixMapDebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(".", sanitizePaths, true);
-    DebugPathSanitizer assemblerDebugPathSanitizer =
-        new MungingDebugPathSanitizer(
-            config.getDebugPathSanitizerLimit(), File.separatorChar, Paths.get("."), sanitizePaths);
     cxxPlatformBuilder
         .setFlavor(flavor)
         .setAs(cc)
@@ -607,7 +602,6 @@ public class NdkCxxPlatforms {
                 getGccTool(toolchainPaths, "ranlib", version, executableFinder)))
         // NDK builds are cross compiled, so the header is the same regardless of the host platform.
         .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
-        .setAssemblerDebugPathSanitizer(assemblerDebugPathSanitizer)
         .setSharedLibraryExtension("so")
         .setSharedLibraryVersionedExtensionFormat("so.%s")
         .setStaticLibraryExtension("a")

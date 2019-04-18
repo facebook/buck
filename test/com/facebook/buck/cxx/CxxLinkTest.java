@@ -31,7 +31,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.MungingDebugPathSanitizer;
+import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.linker.GnuLinker;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -47,7 +47,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -192,19 +191,10 @@ public class CxxLinkTest {
             ruleFinder);
 
     // Set up a map to sanitize the differences in the flags.
-    int pathSize = 10;
     DebugPathSanitizer sanitizer1 =
-        new MungingDebugPathSanitizer(
-            pathSize,
-            File.separatorChar,
-            Paths.get("PWD"),
-            ImmutableBiMap.of(Paths.get("something"), "A"));
+        new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(Paths.get("something"), "A"));
     DebugPathSanitizer sanitizer2 =
-        new MungingDebugPathSanitizer(
-            pathSize,
-            File.separatorChar,
-            Paths.get("PWD"),
-            ImmutableBiMap.of(Paths.get("different"), "A"));
+        new PrefixMapDebugPathSanitizer(".", ImmutableBiMap.of(Paths.get("different"), "A"));
 
     // Generate a rule with a path we need to sanitize to a consistent value.
     ImmutableList<Arg> args1 =
