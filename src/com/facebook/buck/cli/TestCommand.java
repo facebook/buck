@@ -464,8 +464,11 @@ public class TestCommand extends BuildCommand {
 
     LOG.debug("Running with arguments %s", getArguments());
 
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     try (CommandThreadManager pool =
-        new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()))) {
+            new CommandThreadManager("Test", getConcurrencyLimit(params.getBuckConfig()));
+        BuildPrehook prehook = getPrehook(processExecutor, params)) {
+      prehook.startPrehookScript();
       BuildEvent.Started started = BuildEvent.started(getArguments());
       params.getBuckEventBus().post(started);
 

@@ -64,6 +64,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.ProcessExecutor;
@@ -206,10 +207,13 @@ public class InstallCommand extends BuildCommand {
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     assertArguments(params);
 
+    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     BuildRunResult buildRunResult;
     try (CommandThreadManager pool =
             new CommandThreadManager("Install", getConcurrencyLimit(params.getBuckConfig()));
-        TriggerCloseable triggerCloseable = new TriggerCloseable(params)) {
+        TriggerCloseable triggerCloseable = new TriggerCloseable(params);
+        BuildPrehook prehook = getPrehook(processExecutor, params)) {
+      prehook.startPrehookScript();
       // Get the helper targets if present
       ImmutableSet<String> installHelperTargets;
       try {

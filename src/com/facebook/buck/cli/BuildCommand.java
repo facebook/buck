@@ -333,17 +333,20 @@ public class BuildCommand extends AbstractCommand {
     ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
     try (CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()));
-        BuildPrehook prehook =
-            new BuildPrehook(
-                processExecutor,
-                params.getCell(),
-                params.getBuckEventBus(),
-                params.getBuckConfig(),
-                params.getEnvironment(),
-                getArguments())) {
+        BuildPrehook prehook = getPrehook(processExecutor, params)) {
       prehook.startPrehookScript();
       return run(params, pool, Function.identity(), ImmutableSet.of());
     }
+  }
+
+  BuildPrehook getPrehook(ListeningProcessExecutor processExecutor, CommandRunnerParams params) {
+    return new BuildPrehook(
+        processExecutor,
+        params.getCell(),
+        params.getBuckEventBus(),
+        params.getBuckConfig(),
+        params.getEnvironment(),
+        getArguments());
   }
 
   /** @throw CommandLineException if arguments provided are incorrect */
