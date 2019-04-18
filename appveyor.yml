@@ -12,7 +12,7 @@ install:
   - cmd: set GOROOT=
   - cmd: set PATH=%PATH:C:\go\bin;=%
   - cmd: set PATH=%PATH:C:\go\bin=%
-  - cmd: set ANT_OPTS=-Xmx512m
+  - cmd: set ANT_OPTS=-Xmx1g
   - cmd: set
   - cmd: python --version
   - cmd: java -version
