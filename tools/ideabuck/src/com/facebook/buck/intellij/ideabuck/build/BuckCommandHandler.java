@@ -33,6 +33,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.vcs.LineHandlerHelper;
 import com.intellij.openapi.vfs.CharsetToolkit;
+import com.intellij.util.EnvironmentUtil;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
@@ -124,6 +125,7 @@ public abstract class BuckCommandHandler {
     commandLine = new GeneralCommandLine();
     commandLine.setExePath(buckExecutable);
     commandLine.withWorkDirectory(calcWorkingDirFor(project));
+    commandLine.withEnvironment(EnvironmentUtil.getEnvironmentMap());
     commandLine.addParameter(command.name());
     for (String parameter : command.getParameters()) {
       commandLine.addParameter(parameter);
