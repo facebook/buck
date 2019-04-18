@@ -7,4 +7,4 @@ Use the following instructions to build d8.jar:
 - Build d8: tools/gradle.py -Pexclude_deps d8
 - d8.jar can be found in build/libs/d8.jar
 
-Current revision: 411925fd052cc7f9d45a563e44928587383b5f18
+Current revision: 887271c359ed811656e4b116fb58d64fa9728e0a
