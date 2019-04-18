@@ -20,7 +20,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import com.google.common.collect.ImmutableSet;
@@ -34,8 +33,6 @@ import javax.annotation.Nullable;
 
 /** A kotlin-specific "view" of BuckConfig. */
 public class KotlinBuckConfig implements ConfigView<BuckConfig> {
-
-  private static final Logger LOG = Logger.get(KotlinBuckConfig.class);
 
   private static final String SECTION = "kotlin";
   public static final String PROPERTY_COMPILE_AGAINST_ABIS = "compile_against_abis";
@@ -72,7 +69,8 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
             getPathToStdlibJar(),
             getPathToReflectJar(),
             getPathToScriptRuntimeJar(),
-            getPathToCompilerJar()));
+            getPathToCompilerJar(),
+            getPathToTrove4jJar()));
   }
 
   public boolean shouldCompileAgainstAbis() {
@@ -123,12 +121,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the Kotlin runtime jar path
    */
   Path getPathToStdlibJar() {
-    try {
-      return getPathToJar("kotlin-stdlib");
-    } catch (HumanReadableException e) {
-      // TODO: Check if kt version < 1.1
-      return getPathToJar("kotlin-runtime");
-    }
+    return getPathToJar("kotlin-stdlib");
   }
 
   /**
@@ -155,16 +148,16 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the Kotlin compiler jar path
    */
   Path getPathToCompilerJar() {
-    try {
-      return getPathToJar("kotlin-compiler-embeddable");
-    } catch (HumanReadableException e) {
-      LOG.warn(
-          "kotlin-compiler-embeddable.jar was not found in "
-              + kotlinHome
-              + " directory, this"
-              + " may result in kapt not working properly. Proceeding with kotlin-compiler.jar");
-      return getPathToJar("kotlin-compiler");
-    }
+    return getPathToJar("kotlin-compiler");
+  }
+
+  /**
+   * Get the path to the trove4j jar, which is required by the compiler jar.
+   *
+   * @return the trove4j jar path
+   */
+  Path getPathToTrove4jJar() {
+    return getPathToJar("trove4j");
   }
 
   /**
@@ -173,24 +166,7 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
    * @return the Kotlin annotation processing jar path
    */
   Path getPathToAnnotationProcessingJar() {
-    try {
-      return getPathToJar("kotlin-annotation-processing-gradle");
-    } catch (HumanReadableException e) {
-      LOG.warn(
-          "kotlin-annotation-processing-gradle.jar was not found in "
-              + kotlinHome
-              + " directory, searching for kotlin-annotation-processing-maven.jar");
-      try {
-        return getPathToJar("kotlin-annotation-processing-maven");
-      } catch (HumanReadableException er) {
-        LOG.warn(
-            "kotlin-annotation-processing-maven.jar was not found in "
-                + kotlinHome
-                + " directory, this"
-                + " may result in kapt not working properly. Proceeding with kotlin-annotation-processing.jar");
-        return getPathToJar("kotlin-annotation-processing");
-      }
-    }
+    return getPathToJar("kotlin-annotation-processing");
   }
 
   /**
