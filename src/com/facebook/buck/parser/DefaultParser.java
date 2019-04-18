@@ -17,11 +17,11 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.log.Logger;
@@ -36,7 +36,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -155,20 +154,19 @@ class DefaultParser extends AbstractParser {
       return target;
     }
 
-    if (targetNode.getDescription() instanceof ImplicitFlavorsInferringDescription) {
-      Optional<Flavor> defaultArgPlatform = Optional.empty();
-      if (targetNode.getConstructorArg() instanceof HasDefaultPlatform) {
-        defaultArgPlatform =
-            ((HasDefaultPlatform) targetNode.getConstructorArg()).getDefaultPlatform();
-        LOG.debug("Got default platform %s from args of %s", defaultArgPlatform, target);
-      }
-      ImmutableSortedSet<Flavor> defaultFlavors =
-          ((ImplicitFlavorsInferringDescription) targetNode.getDescription())
-              .addImplicitFlavors(defaultArgPlatform);
-      LOG.debug("Got default flavors %s from description of %s", defaultFlavors, target);
-      return target.withFlavors(defaultFlavors);
+    ImmutableSortedSet<Flavor> defaultFlavors = ImmutableSortedSet.of();
+    if (targetNode.getConstructorArg() instanceof HasDefaultFlavors) {
+      defaultFlavors = ((HasDefaultFlavors) targetNode.getConstructorArg()).getDefaultFlavors();
+      LOG.debug("Got default flavors %s from args of %s", defaultFlavors, target);
     }
 
-    return target;
+    if (targetNode.getDescription() instanceof ImplicitFlavorsInferringDescription) {
+      defaultFlavors =
+          ((ImplicitFlavorsInferringDescription) targetNode.getDescription())
+              .addImplicitFlavors(defaultFlavors);
+      LOG.debug("Got default flavors %s from description of %s", defaultFlavors, target);
+    }
+
+    return target.withFlavors(defaultFlavors);
   }
 }

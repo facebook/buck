@@ -25,6 +25,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -45,9 +47,11 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryFlavored;
+import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
@@ -87,6 +91,7 @@ public class AppleBinaryDescription
     implements DescriptionWithTargetGraph<AppleBinaryDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<AppleBinaryDescription.AbstractAppleBinaryDescriptionArg>,
+        ImplicitFlavorsInferringDescription,
         MetadataProvidingDescription<AppleBinaryDescriptionArg> {
 
   public static final Flavor APP_FLAVOR = InternalFlavor.of("app");
@@ -111,6 +116,7 @@ public class AppleBinaryDescription
   private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
   private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
   private final CxxBinaryFlavored cxxBinaryFlavored;
@@ -122,6 +128,7 @@ public class AppleBinaryDescription
       AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig,
+      CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
       CxxBinaryFactory cxxBinaryFactory,
       CxxBinaryMetadataFactory cxxBinaryMetadataFactory,
       CxxBinaryFlavored cxxBinaryFlavored) {
@@ -132,6 +139,7 @@ public class AppleBinaryDescription
     this.appleConfig = appleConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+    this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
     this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
     this.cxxBinaryFlavored = cxxBinaryFlavored;
@@ -648,6 +656,16 @@ public class AppleBinaryDescription
     }
 
     return Optional.of(metadataClass.cast(FrameworkDependencies.of(sourcePaths.build())));
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors) {
+    // Use defaults.apple_binary if present, but fall back to defaults.cxx_binary otherwise.
+    return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
+        argDefaultFlavors,
+        DescriptionCache.getRuleType(this),
+        DescriptionCache.getRuleType(CxxBinaryDescription.class));
   }
 
   @Override

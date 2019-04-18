@@ -282,9 +282,10 @@ public class CxxLibraryDescription
   }
 
   @Override
-  public ImmutableSortedSet<Flavor> addImplicitFlavors(Optional<Flavor> argDefaultPlatformFlavor) {
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors) {
     return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
-        argDefaultPlatformFlavor, DescriptionCache.getRuleType(this));
+        argDefaultFlavors, DescriptionCache.getRuleType(this));
   }
 
   @Override

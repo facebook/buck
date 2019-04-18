@@ -20,6 +20,8 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.MetadataProvidingDescription;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -48,20 +50,24 @@ public class CxxBinaryDescription
     implements DescriptionWithTargetGraph<CxxBinaryDescriptionArg>,
         Flavored,
         ImplicitDepsInferringDescription<CxxBinaryDescription.AbstractCxxBinaryDescriptionArg>,
+        ImplicitFlavorsInferringDescription,
         MetadataProvidingDescription<CxxBinaryDescriptionArg>,
         VersionRoot<CxxBinaryDescriptionArg> {
 
   private final ToolchainProvider toolchainProvider;
+  private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
   private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
   private final CxxBinaryFlavored cxxBinaryFlavored;
 
   public CxxBinaryDescription(
       ToolchainProvider toolchainProvider,
+      CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
       CxxBinaryFactory cxxBinaryFactory,
       CxxBinaryMetadataFactory cxxBinaryMetadataFactory,
       CxxBinaryFlavored cxxBinaryFlavored) {
     this.toolchainProvider = toolchainProvider;
+    this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
     this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
     this.cxxBinaryFlavored = cxxBinaryFlavored;
@@ -125,6 +131,13 @@ public class CxxBinaryDescription
       Class<U> metadataClass) {
     return cxxBinaryMetadataFactory.createMetadata(
         buildTarget, graphBuilder, args.getDeps(), metadataClass);
+  }
+
+  @Override
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors) {
+    return cxxBinaryImplicitFlavors.addImplicitFlavorsForRuleTypes(
+        argDefaultFlavors, DescriptionCache.getRuleType(this));
   }
 
   @Override

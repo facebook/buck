@@ -34,6 +34,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryFlavored;
+import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
@@ -316,6 +317,8 @@ public class FakeAppleRuleDescriptions {
                         DEFAULT_IPHONEOS_I386_PLATFORM.getCxxPlatform()),
                     DEFAULT_APPLE_FLAVOR_DOMAIN))
             .build();
+    CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
+        new CxxBinaryImplicitFlavors(toolchainProvider, CxxPlatformUtils.DEFAULT_CONFIG);
     CxxBinaryFactory cxxBinaryFactory =
         new CxxBinaryFactory(
             toolchainProvider,
@@ -335,6 +338,7 @@ public class FakeAppleRuleDescriptions {
         DEFAULT_BUCK_CONFIG.getView(AppleConfig.class),
         CxxPlatformUtils.DEFAULT_CONFIG,
         DEFAULT_BUCK_CONFIG.getView(SwiftBuckConfig.class),
+        cxxBinaryImplicitFlavors,
         cxxBinaryFactory,
         cxxBinaryMetadataFactory,
         cxxBinaryFlavored);

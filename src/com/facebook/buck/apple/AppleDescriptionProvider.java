@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.CxxBinaryFactory;
 import com.facebook.buck.cxx.CxxBinaryFlavored;
+import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
@@ -47,6 +48,8 @@ public class AppleDescriptionProvider implements DescriptionProvider {
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
     AppleConfig appleConfig = config.getView(AppleConfig.class);
 
+    CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
+        new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxBinaryFactory cxxBinaryFactory =
         new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
     CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
@@ -89,6 +92,7 @@ public class AppleDescriptionProvider implements DescriptionProvider {
             appleConfig,
             cxxBuckConfig,
             swiftBuckConfig,
+            cxxBinaryImplicitFlavors,
             cxxBinaryFactory,
             cxxBinaryMetadataFactory,
             cxxBinaryFlavored);

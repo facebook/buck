@@ -1000,10 +1000,11 @@ public class AppleLibraryDescription
   }
 
   @Override
-  public ImmutableSortedSet<Flavor> addImplicitFlavors(Optional<Flavor> argDefaultPlatformFlavor) {
+  public ImmutableSortedSet<Flavor> addImplicitFlavors(
+      ImmutableSortedSet<Flavor> argDefaultFlavors) {
     // Use defaults.apple_library if present, but fall back to defaults.cxx_library otherwise.
     return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
-        argDefaultPlatformFlavor,
+        argDefaultFlavors,
         DescriptionCache.getRuleType(this),
         DescriptionCache.getRuleType(CxxLibraryDescription.class));
   }
