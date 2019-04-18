@@ -76,6 +76,27 @@ go_test(
 )
 
 go_test(
+    name = "test-with-resources-directory",
+    srcs = ["resources_test.go"],
+    resources = ["testdata"],
+)
+
+go_test(
+    name = "test-with-resources-2directory",
+    srcs = ["resources_test_2level.go"],
+    resources = ["testdata"],
+)
+
+go_test(
+    name = "test-with-resources-2directory-2resources",
+    srcs = ["resources_test_2level.go"],
+    resources = [
+        "testdata/level2",
+        "testdata/level2bis",
+    ],
+)
+
+go_test(
     name = "test-spinning",
     srcs = ["spinning_test.go"],
     test_rule_timeout_ms = 500,

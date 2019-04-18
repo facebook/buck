@@ -37,11 +37,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
+import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implements BinaryBuildRule {
@@ -90,28 +91,6 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
     this.linkMode = linkMode;
   }
 
-  private SymlinkTreeStep getResourceSymlinkTree(
-      BuildContext buildContext, Path outputDirectory, BuildableContext buildableContext) {
-
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
-
-    resources.forEach(
-        pth ->
-            buildableContext.recordArtifact(resolver.getRelativePath(getProjectFilesystem(), pth)));
-
-    return new SymlinkTreeStep(
-        "go_binary",
-        getProjectFilesystem(),
-        outputDirectory,
-        resources.stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    input ->
-                        getProjectFilesystem()
-                            .getPath(resolver.getSourcePathName(getBuildTarget(), input)),
-                    input -> resolver.getAbsolutePath(input))));
-  }
-
   @Override
   public Tool getExecutableCommand() {
     return new CommandTool.Builder().addArg(SourcePathArg.of(getSourcePathToOutput())).build();
@@ -142,9 +121,40 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
-    // symlink resources to target directory
-    steps.addAll(
-        ImmutableList.of(getResourceSymlinkTree(context, output.getParent(), buildableContext)));
+    // copy resources to target directory
+    for (SourcePath resource : resources) {
+      // sourcePathName is the name of the resource as found in BUCK file:
+      // testdata/level2
+      String sourcePathName = resolver.getSourcePathName(getBuildTarget(), resource);
+      // outputResourcePath is the full path to buck-out/gen/targetdir...
+      // buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2
+      Path outputResourcePath = output.getParent().resolve(sourcePathName);
+      buildableContext.recordArtifact(outputResourcePath);
+      if (Files.isDirectory(resolver.getAbsolutePath(resource))) {
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    outputResourcePath.getParent())));
+        steps.add(
+            CopyStep.forDirectory(
+                getProjectFilesystem(),
+                resolver.getRelativePath(resource),
+                outputResourcePath.getParent(),
+                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
+      } else {
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(),
+                    getProjectFilesystem(),
+                    outputResourcePath.getParent())));
+        steps.add(
+            CopyStep.forFile(
+                getProjectFilesystem(), resolver.getRelativePath(resource), outputResourcePath));
+      }
+    }
 
     // cxxLinkerArgs comes from cgo rules and are reuqired for cxx deps linking
     ImmutableList.Builder<String> externalLinkerFlags = ImmutableList.builder();

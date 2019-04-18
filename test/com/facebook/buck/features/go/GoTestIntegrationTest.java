@@ -17,6 +17,7 @@
 package com.facebook.buck.features.go;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -110,9 +111,60 @@ public class GoTestIntegrationTest {
             "//:test-with-resources");
     result1.assertSuccess();
 
-    assertIsSymbolicLink(
+    assertIsRegularCopy(
         workspace.resolve("buck-out/gen/test-with-resources#test-main/testdata/input"),
         workspace.resolve("testdata/input"));
+  }
+
+  @Test
+  public void testWithResourcesDirectoryAndExternalRunner() throws IOException {
+    ProcessResult result1 =
+        workspace.runBuckCommand(
+            "build",
+            "--config",
+            "test.external_runner=fake/bin/fake_runner",
+            "//:test-with-resources-directory");
+    result1.assertSuccess();
+
+    assertIsRegularCopy(
+        workspace.resolve("buck-out/gen/test-with-resources-directory#test-main/testdata/input"),
+        workspace.resolve("testdata/input"));
+  }
+
+  @Test
+  public void testWithResourcesDirectory2LevelAndExternalRunner() throws IOException {
+    ProcessResult result1 =
+        workspace.runBuckCommand(
+            "build",
+            "--config",
+            "test.external_runner=fake/bin/fake_runner",
+            "//:test-with-resources-2directory");
+    result1.assertSuccess();
+
+    assertIsRegularCopy(
+        workspace.resolve(
+            "buck-out/gen/test-with-resources-2directory#test-main/testdata/level2/input"),
+        workspace.resolve("testdata/level2/input"));
+  }
+
+  @Test
+  public void testWithResourcesDirectory2Level2ResourcesAndExternalRunner() throws IOException {
+    ProcessResult result1 =
+        workspace.runBuckCommand(
+            "build",
+            "--config",
+            "test.external_runner=fake/bin/fake_runner",
+            "//:test-with-resources-2directory-2resources");
+    result1.assertSuccess();
+
+    assertIsRegularCopy(
+        workspace.resolve(
+            "buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2/input"),
+        workspace.resolve("testdata/level2/input"));
+    assertIsRegularCopy(
+        workspace.resolve(
+            "buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2bis/input"),
+        workspace.resolve("testdata/level2bis/input"));
   }
 
   @Test
@@ -215,8 +267,8 @@ public class GoTestIntegrationTest {
         .assertTestFailure();
   }
 
-  private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
-    assertTrue(Files.isSymbolicLink(link));
-    assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link)));
+  private static void assertIsRegularCopy(Path link, Path target) throws IOException {
+    assertTrue(Files.isRegularFile(link));
+    assertEquals(Files.readAllLines(link), Files.readAllLines(target));
   }
 }
