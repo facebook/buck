@@ -131,8 +131,7 @@ public class DelegateAndGraphsInitializer {
                   .toVersionedTargetGraph(
                       args.getBuckEventBus(),
                       args.getState().getRemoteRootCellConfig(),
-                      new DefaultTypeCoercerFactory(
-                          PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY),
+                      new DefaultTypeCoercerFactory(),
                       new ParsingUnconfiguredBuildTargetFactory(),
                       targetGraphAndBuildTargets,
                       EmptyTargetConfiguration.INSTANCE)
@@ -215,8 +214,7 @@ public class DelegateAndGraphsInitializer {
     // shaved off in the versioned target graph, and so they don't get recorded in the distributed
     // state, and hence they're not pre-loaded. So even when we pre-load the files, we need this
     // hack so that the coercer does not check for existence of these unrecorded files.
-    TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             args.getKnownRuleTypesProvider(),

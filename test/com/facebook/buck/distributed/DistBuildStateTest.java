@@ -429,8 +429,7 @@ public class DistBuildStateTest {
       nodeToRawNode = ignored -> ImmutableMap.of();
     }
 
-    TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =

@@ -92,8 +92,7 @@ public class AsyncJobStateFactory {
     TargetGraphAndBuildTargets targetGraphAndBuildTargets =
         graphsAndBuildTargets.getGraphs().getTargetGraphForDistributedBuild();
 
-    TypeCoercerFactory typeCoercerFactory =
-        new DefaultTypeCoercerFactory(PathTypeCoercer.PathExistenceVerificationMode.DO_NOT_VERIFY);
+    TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserTargetNodeFactory<Map<String, Object>> parserTargetNodeFactory =
         DefaultParserTargetNodeFactory.createForDistributedBuild(
             params.getKnownRuleTypesProvider(),
