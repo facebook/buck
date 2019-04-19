@@ -38,7 +38,7 @@ other rules.
 </p>
 
 <p>
-Examples of rules that use string parameter macros are:
+Rules that support string parameter macros are:
 </p>
 
 <ul>
@@ -47,8 +47,16 @@ Examples of rules that use string parameter macros are:
 <li>{call buck.cxx_genrule /}</li>
 </ul>
 
+<p>
+Note that {call buck.cxx_genrule /} supports only 
+the <code>$(exe ...)</code> and <code>$(location ...)</code> macros. 
+</p>
 
+<h3>Format</h3>
+
+<p>
 String parameter macros have the form 
+</p>
 
 <p>
 <pre>
@@ -61,6 +69,12 @@ $([@]<em>macroname</em> [ <em>argument</em> ... ])
 <p>
 String parameter macros take a space-separated list of arguments,
 where each argument is a {call buck.build_target_pattern /}.
+</p>
+
+<p>
+Note that the <code>$(query_* ...)</code> macros require a
+fully-qualified {call buck.build_target /} and do not
+support build target patterns.
 </p>
 
 
