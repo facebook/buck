@@ -33,6 +33,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.log.Logger;
@@ -276,6 +277,15 @@ public class AppleCxxPlatforms {
     Tool dsymutil =
         getXcodeTool(
             filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "dsymutil", version);
+
+    // We are seeing a stack overflow in dsymutil during (fat) LTO
+    // builds. Upstream dsymutil was patched to avoid recursion in the
+    // offending path in https://reviews.llvm.org/D48899, and
+    // https://reviews.llvm.org/D45172 mentioned that there is much
+    // more stack space available when single threaded.
+    if (appleConfig.shouldWorkAroundDsymutilLTOStackOverflowBug()) {
+      dsymutil = new CommandTool.Builder(dsymutil).addArg("-num-threads=1").build();
+    }
 
     Tool lipo =
         getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "lipo", version);

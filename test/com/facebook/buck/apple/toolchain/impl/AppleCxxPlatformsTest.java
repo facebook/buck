@@ -153,8 +153,7 @@ public class AppleCxxPlatformsTest {
     }
   }
 
-  @Test
-  public void iphoneOSSdkPathsBuiltFromDirectory() {
+  private AppleCxxPlatform buildAppleCxxPlatformWithConfig(BuckConfig buckConfig) {
     AppleSdkPaths appleSdkPaths =
         AppleSdkPaths.builder()
             .setDeveloperPath(developerDir)
@@ -191,17 +190,21 @@ public class AppleCxxPlatformsTest {
             .build();
     paths.forEach(this::touchFile);
 
+    return AppleCxxPlatforms.buildWithXcodeToolFinder(
+        projectFilesystem,
+        targetSdk,
+        "7.0",
+        "armv7",
+        appleSdkPaths,
+        buckConfig,
+        new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
+        new AppleCxxPlatforms.XcodeBuildVersionCache());
+  }
+
+  @Test
+  public void iphoneOSSdkPathsBuiltFromDirectory() {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
-    AppleCxxPlatform appleCxxPlatform =
-        AppleCxxPlatforms.buildWithXcodeToolFinder(
-            projectFilesystem,
-            targetSdk,
-            "7.0",
-            "armv7",
-            appleSdkPaths,
-            buckConfig,
-            new XcodeToolFinder(buckConfig.getView(AppleConfig.class)),
-            new AppleCxxPlatforms.XcodeBuildVersionCache());
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
@@ -483,6 +486,22 @@ public class AppleCxxPlatformsTest {
             .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
+  }
+
+  @Test
+  public void worksAroundDsymutilLTOStackOverflowBug() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "work_around_dsymutil_lto_stack_overflow_bug = true")
+            .build();
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+    assertEquals(
+        ImmutableList.of(
+            "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil", "-num-threads=1"),
+        appleCxxPlatform.getDsymutil().getCommandPrefix(resolver));
   }
 
   @Test

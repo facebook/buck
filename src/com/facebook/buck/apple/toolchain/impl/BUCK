@@ -20,6 +20,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/rules/args:args",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/swift/toolchain:toolchain",
         "//src/com/facebook/buck/swift/toolchain/impl:impl",

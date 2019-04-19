@@ -21,8 +21,10 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
@@ -195,5 +197,25 @@ public class AppleConfigTest {
     /* make sure that we have a sane default of 300s when the value is not specified */
     AppleConfig config = FakeBuckConfig.builder().build().getView(AppleConfig.class);
     assertThat(config.getCodesignTimeout(), equalTo(Duration.ofSeconds(300)));
+  }
+
+  @Test
+  public void testShouldWorkAroundDsymutilLTOStackOverflowBug() {
+    AppleConfig configExplicitTrue =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "work_around_dsymutil_lto_stack_overflow_bug = true")
+            .build()
+            .getView(AppleConfig.class);
+    assertTrue(configExplicitTrue.shouldWorkAroundDsymutilLTOStackOverflowBug());
+
+    AppleConfig configExplicitFalse =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "work_around_dsymutil_lto_stack_overflow_bug = false")
+            .build()
+            .getView(AppleConfig.class);
+    assertFalse(configExplicitFalse.shouldWorkAroundDsymutilLTOStackOverflowBug());
+
+    AppleConfig configUnset = FakeBuckConfig.builder().build().getView(AppleConfig.class);
+    assertFalse(configUnset.shouldWorkAroundDsymutilLTOStackOverflowBug());
   }
 }
