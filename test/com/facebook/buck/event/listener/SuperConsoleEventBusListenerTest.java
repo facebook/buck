@@ -165,38 +165,38 @@ public class SuperConsoleEventBusListenerTest {
     durationTracker = new BuildRuleDurationTracker();
   }
 
-  @Parameters(name = "{2}")
+  @Parameters(name = "{0}")
   public static Collection<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
           {
-            false,
-            Optional.empty(),
             "no_build_id_and_no_build_url",
+            false,
+            Optional.empty(),
             ImmutableSet.of("build", "test", "install")
           },
           {
+            "build_id_and_no_build_url",
             true,
             Optional.empty(),
-            "build_id_and_no_build_url",
             ImmutableSet.of("build", "test", "install")
           },
           {
+            "build_id_and_build_url",
             true,
             Optional.of("View details at https://example.com/build/{build_id}"),
-            "build_id_and_build_url",
             ImmutableSet.of("build", "test", "install")
           },
           {
-            false,
-            Optional.of("View details at https://example.com/build/{build_id}"),
             "no_build_id_and_build_url",
+            false,
+            Optional.of("View details at https://example.com/build/{build_id}"),
             ImmutableSet.of("build", "test", "install")
           },
           {
+            "no_build_id_and_build_url_but_no_build_command",
             false,
             Optional.of("View details at https://example.com/build/{build_id}"),
-            "no_build_id_and_build_url_but_no_build_command",
             ImmutableSet.of()
           }
         });
@@ -205,13 +205,13 @@ public class SuperConsoleEventBusListenerTest {
   private final BuildId buildId = new BuildId("1234-5678");
 
   @Parameterized.Parameter(0)
-  public boolean printBuildId;
+  public String _ignoredName;
 
   @Parameterized.Parameter(1)
-  public Optional<String> buildDetailsTemplate;
+  public boolean printBuildId;
 
   @Parameterized.Parameter(2)
-  public String _ignoredName;
+  public Optional<String> buildDetailsTemplate;
 
   @Parameterized.Parameter(3)
   public ImmutableSet<String> buildDetailsCommands;

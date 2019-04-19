@@ -107,65 +107,65 @@ public class SimpleConsoleEventBusListenerTest {
     console = new TestConsole();
   }
 
-  @Parameters(name = "{2}")
+  @Parameters(name = "{0}")
   public static Collection<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
           {
-            false,
-            Optional.empty(),
             "no_build_id_and_no_build_url",
+            false,
+            Optional.empty(),
+            ImmutableSet.of("build", "test", "install"),
             Optional.empty(),
             false,
-            ImmutableSet.of("build", "test", "install"),
           },
           {
-            true,
-            Optional.empty(),
             "build_id_and_no_build_url",
+            true,
+            Optional.empty(),
+            ImmutableSet.of("build", "test", "install"),
             Optional.empty(),
             false,
-            ImmutableSet.of("build", "test", "install"),
           },
           {
-            true,
-            Optional.of("View details at https://example.com/build/{build_id}"),
             "build_id_and_build_url",
+            true,
+            Optional.of("View details at https://example.com/build/{build_id}"),
+            ImmutableSet.of("build", "test", "install"),
             Optional.empty(),
             false,
-            ImmutableSet.of("build", "test", "install"),
           },
           {
-            false,
-            Optional.of("View details at https://example.com/build/{build_id}"),
             "no_build_id_and_build_url",
-            Optional.empty(),
-            false,
-            ImmutableSet.of("build", "test", "install"),
-          },
-          {
             false,
             Optional.of("View details at https://example.com/build/{build_id}"),
-            "no_build_id_and_build_url_but_no_build_command",
+            ImmutableSet.of("build", "test", "install"),
             Optional.empty(),
             false,
-            ImmutableSet.of(),
           },
           {
+            "no_build_id_and_build_url_but_no_build_command",
+            false,
+            Optional.of("View details at https://example.com/build/{build_id}"),
+            ImmutableSet.of(),
+            Optional.empty(),
+            false,
+          },
+          {
+            "with_re_session_id",
             false,
             Optional.empty(),
-            "with_re_session_id",
+            ImmutableSet.of(),
             Optional.of("super cool remote execution session id."),
             false,
-            ImmutableSet.of(),
           },
           {
+            "with_additional_line_provider",
             false,
             Optional.empty(),
-            "with_additional_line_provider",
+            ImmutableSet.of(),
             Optional.of("super cool remote execution session id."),
             true,
-            ImmutableSet.of(),
           },
         });
   }
@@ -173,22 +173,22 @@ public class SimpleConsoleEventBusListenerTest {
   private final BuildId buildId = new BuildId("1234-5678");
 
   @Parameterized.Parameter(0)
-  public boolean printBuildId;
-
-  @Parameterized.Parameter(1)
-  public Optional<String> buildDetailsTemplate;
-
-  @Parameterized.Parameter(2)
   public String _ignoredName;
 
+  @Parameterized.Parameter(1)
+  public boolean printBuildId;
+
+  @Parameterized.Parameter(2)
+  public Optional<String> buildDetailsTemplate;
+
   @Parameterized.Parameter(3)
-  public Optional<String> reSessionIdDetails;
+  public ImmutableSet<String> buildDetailsCommands;
 
   @Parameterized.Parameter(4)
-  public boolean enableAdditionalLineProviders;
+  public Optional<String> reSessionIdDetails;
 
   @Parameterized.Parameter(5)
-  public ImmutableSet<String> buildDetailsCommands;
+  public boolean enableAdditionalLineProviders;
 
   @Test
   public void testSimpleBuild() {
