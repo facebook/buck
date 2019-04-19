@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -71,7 +70,7 @@ abstract class AbstractImmutableCell implements Cell {
         ignores.add(RecursiveFileMatcher.of(filesystem.relativize(subCellRoots)));
       }
     }
-    return filesystem.asView().withView(Paths.get(""), ignores.build());
+    return filesystem.asView().withView(filesystem.getPath(""), ignores.build());
   }
 
   @Override
