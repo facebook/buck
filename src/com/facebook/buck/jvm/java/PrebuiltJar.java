@@ -61,7 +61,6 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 
-@BuildsAnnotationProcessor
 public class PrebuiltJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements AndroidPackageable,
         ExportDependencies,

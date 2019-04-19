@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -50,11 +51,57 @@ public class JavacPluginPropertiesTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
-    FakeJavaLibrary rawDep = new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep"));
-    BuildRule dep = graphBuilder.computeIfAbsent(rawDep.getBuildTarget(), buildTarget -> rawDep);
+    FakeProjectFilesystem fakeProjectFilesystem = new FakeProjectFilesystem();
+
+    PrebuiltJar rawTransitivePrebuiltJarDep =
+        new PrebuiltJar(
+            BuildTargetFactory.newInstance("//lib:junit-util"),
+            fakeProjectFilesystem,
+            TestBuildRuleParams.create(),
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+            FakeSourcePath.of("abi-util.jar"),
+            Optional.of(FakeSourcePath.of("lib/junit-util-4.11-sources.jar")),
+            /* gwtJar */ Optional.empty(),
+            Optional.of("http://junit-team.github.io/junit-util/javadoc/latest/"),
+            /* mavenCoords */ Optional.empty(),
+            /* provided */ false,
+            /* requiredForSourceOnlyAbi */ false);
+    BuildRule transitivePrebuiltJarDep =
+        graphBuilder.computeIfAbsent(
+            rawTransitivePrebuiltJarDep.getBuildTarget(),
+            buildTarget -> rawTransitivePrebuiltJarDep);
+
+    PrebuiltJar rawFirstLevelPrebuiltJarDep =
+        new PrebuiltJar(
+            BuildTargetFactory.newInstance("//lib:junit"),
+            fakeProjectFilesystem,
+            new BuildRuleParams(
+                () -> ImmutableSortedSet.of(transitivePrebuiltJarDep),
+                ImmutableSortedSet::of,
+                ImmutableSortedSet.of()),
+            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+            FakeSourcePath.of("abi.jar"),
+            Optional.of(FakeSourcePath.of("lib/junit-4.11-sources.jar")),
+            /* gwtJar */ Optional.empty(),
+            Optional.of("http://junit-team.github.io/junit/javadoc/latest/"),
+            /* mavenCoords */ Optional.empty(),
+            /* provided */ false,
+            /* requiredForSourceOnlyAbi */ false);
+    BuildRule firstLevelPrebuiltJarDep =
+        graphBuilder.computeIfAbsent(
+            rawFirstLevelPrebuiltJarDep.getBuildTarget(),
+            buildTarget -> rawFirstLevelPrebuiltJarDep);
+
+    FakeJavaLibrary rawJavaLibraryDep =
+        new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep"));
+    BuildRule javaLibraryDep =
+        graphBuilder.computeIfAbsent(
+            rawJavaLibraryDep.getBuildTarget(), buildTarget -> rawJavaLibraryDep);
+
     FakeJavaLibrary rawProcessor =
         new FakeJavaLibrary(
-            BuildTargetFactory.newInstance("//:processor"), ImmutableSortedSet.of(dep));
+            BuildTargetFactory.newInstance("//:processor"),
+            ImmutableSortedSet.of(javaLibraryDep, firstLevelPrebuiltJarDep));
     BuildRule processor =
         graphBuilder.computeIfAbsent(rawProcessor.getBuildTarget(), buildTarget -> rawProcessor);
 
@@ -69,7 +116,13 @@ public class JavacPluginPropertiesTest {
 
     assertThat(
         ruleFinder.filterBuildRuleInputs(props.getInputs()),
-        Matchers.containsInAnyOrder(processor, dep));
+        Matchers.containsInAnyOrder(
+            processor, javaLibraryDep, firstLevelPrebuiltJarDep, transitivePrebuiltJarDep));
+
+    assertThat(
+        ruleFinder.filterBuildRuleInputs(props.getClasspathEntries()),
+        Matchers.containsInAnyOrder(
+            processor, javaLibraryDep, firstLevelPrebuiltJarDep, transitivePrebuiltJarDep));
   }
 
   private JavaAnnotationProcessor createAnnotationProcessor(
