@@ -85,6 +85,7 @@ public class ArtifactUploader {
             ArtifactInfo.builder()
                 .setRuleKeys(ruleKeys)
                 .setMetadata(buildMetadata)
+                .setBuildTarget(buildTarget)
                 .setBuildTimeMs(buildTimeMs)
                 .build(),
             BorrowablePath.borrowablePath(archive.get()));

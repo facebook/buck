@@ -190,6 +190,7 @@ public class DistBuildArtifactCacheImpl implements ArtifactCacheByBuildRule {
                   ArtifactInfo.builder()
                       .setRuleKeys(ImmutableSet.of(Futures.getUnchecked(asyncRuleKey)))
                       .setMetadata(fetchResult.getMetadata())
+                      .setBuildTarget(rule.getBuildTarget())
                       .build(),
                   BorrowablePath.notBorrowablePath(releasedFile.get()));
             },

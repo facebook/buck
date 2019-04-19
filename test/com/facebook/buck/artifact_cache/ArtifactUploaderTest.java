@@ -93,6 +93,9 @@ public class ArtifactUploaderTest {
             // Verify the build metadata.
             assertThat(
                 info.getMetadata().get("build-metadata"), Matchers.equalTo("build-metadata"));
+            assertThat(
+                info.getBuildTarget().get().getFullyQualifiedName(),
+                Matchers.equalTo(BUILD_TARGET.getFullyQualifiedName()));
 
             // Unarchive file.
             final ImmutableMap<String, byte[]> archiveContents;

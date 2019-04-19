@@ -260,6 +260,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
         new Pair<>(
             ArtifactInfo.builder()
                 .addRuleKeys(new RuleKey(hashCode))
+                .setBuildTarget(info.getBuildTarget())
                 .setBuildTimeMs(info.getBuildTimeMs())
                 .build(),
             output);
@@ -268,6 +269,7 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
             ArtifactInfo.builder()
                 .setRuleKeys(info.getRuleKeys())
                 .setMetadata(metadataWithCacheKey)
+                .setBuildTarget(info.getBuildTarget())
                 .setBuildTimeMs(info.getBuildTimeMs())
                 .build(),
             BorrowablePath.notBorrowablePath(emptyFilePath));

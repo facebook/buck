@@ -95,7 +95,11 @@ public class MultiArtifactCache implements ArtifactCache {
           }
           storeToCaches(
               cachesToFill.build(),
-              ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(result.getMetadata()).build(),
+              ArtifactInfo.builder()
+                  .addRuleKeys(ruleKey)
+                  .setMetadata(result.getMetadata())
+                  .setBuildTarget(Optional.ofNullable(target))
+                  .build(),
               BorrowablePath.notBorrowablePath(output.getUnchecked()));
           return result;
         },
