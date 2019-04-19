@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -88,6 +89,12 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
       usage =
           "Read depfiles that are on disk and use those as the used inputs for computing depfile keys. This is unsafe and might cause problems with Buck's internal state.")
   private boolean unsafeReadOnDiskDepfiles = false;
+
+  @Option(
+      name = "--preserve-file-hash-cache",
+      usage =
+          "Whether to keep the file hash cache between runs or not. If enabled, the first run will have a cold cache. This may more accurately reflect the performance for incremental builds.")
+  private boolean preserveFileHashCache;
 
   @Argument private List<String> arguments = new ArrayList<>();
 
@@ -146,7 +153,9 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
                   "rulekey-computation",
                   params.getBuckConfig().getView(BuildBuckConfig.class).getNumThreads()));
 
-      return new PreparedState(service, graphBuilder, rulesInGraph, usedInputs);
+      StackedFileHashCache fileHashCache =
+          preserveFileHashCache ? createStackedFileHashCache(params) : null;
+      return new PreparedState(service, graphBuilder, rulesInGraph, usedInputs, fileHashCache);
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(
           e, "When inspecting serialization state of the action graph.");
@@ -159,16 +168,19 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
     private final BuildRuleResolver graphBuilder;
     private final ImmutableList<BuildRule> rulesInGraph;
     private final Map<BuildRule, ImmutableList<DependencyFileEntry>> usedInputs;
+    @Nullable private final StackedFileHashCache fileHashCache;
 
     PreparedState(
         ListeningExecutorService service,
         BuildRuleResolver graphBuilder,
         ImmutableList<BuildRule> rulesInGraph,
-        Map<BuildRule, ImmutableList<DependencyFileEntry>> usedInputs) {
+        Map<BuildRule, ImmutableList<DependencyFileEntry>> usedInputs,
+        @Nullable StackedFileHashCache fileHashCache) {
       this.service = service;
       this.graphBuilder = graphBuilder;
       this.rulesInGraph = rulesInGraph;
       this.usedInputs = usedInputs;
+      this.fileHashCache = fileHashCache;
     }
   }
 
@@ -199,7 +211,8 @@ public class PerfRuleKeyCommand extends AbstractPerfCommand<PreparedState> {
       throws InterruptedException {
     // We recreate the filehashcache and key factory in each run to ensure they don't benefit from
     // internal caching.
-    StackedFileHashCache fileHashCache = createStackedFileHashCache(params);
+    StackedFileHashCache fileHashCache =
+        context.fileHashCache != null ? context.fileHashCache : createStackedFileHashCache(params);
 
     TrackedRuleKeyCache<RuleKey> ruleKeyCache =
         new TrackedRuleKeyCache<>(
