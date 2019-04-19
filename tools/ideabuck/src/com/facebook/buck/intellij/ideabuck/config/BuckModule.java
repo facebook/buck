@@ -17,7 +17,6 @@
 package com.facebook.buck.intellij.ideabuck.config;
 
 import com.facebook.buck.intellij.ideabuck.debugger.AndroidDebugger;
-import com.facebook.buck.intellij.ideabuck.file.BuckFileUtil;
 import com.facebook.buck.intellij.ideabuck.ui.BuckEventsConsumer;
 import com.facebook.buck.intellij.ideabuck.ui.BuckUIManager;
 import com.facebook.buck.intellij.ideabuck.ui.utils.BuckPluginNotifications;
@@ -61,7 +60,7 @@ public final class BuckModule implements ProjectComponent {
   @Override
   public void projectOpened() {
     projectClosed = new AtomicBoolean(false);
-    BuckFileUtil.setBuckFileType();
+
     // connect to the Buck client
     BuckClientManager.getOrCreateClient(mProject, mEventHandler).connect();
 
