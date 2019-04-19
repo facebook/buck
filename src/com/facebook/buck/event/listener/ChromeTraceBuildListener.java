@@ -50,6 +50,8 @@ import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.step.StepEvent;
@@ -834,6 +836,32 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceMetadataEvent(
         "watchman_overflow",
         ImmutableMap.of("cellPath", event.getCellPath().toString(), "reason", event.getReason()));
+  }
+
+  private void writeRemoteExecutionStateTraceEvents(RemoteExecutionActionEvent event) {
+    if (reStatsProvider.isPresent()) {
+      for (ImmutableMap.Entry<State, Integer> entry :
+          reStatsProvider.get().getActionsPerState().entrySet()) {
+        writeChromeTraceEvent(
+            "remote_execution",
+            String.format("re_%s", entry.getKey().toString().toLowerCase()),
+            ChromeTraceEvent.Phase.COUNTER,
+            ImmutableMap.of(entry.getKey().getAbbreviateName(), Integer.toString(entry.getValue())),
+            event);
+      }
+    }
+  }
+
+  /** Add metadata for actions in each Remote Execution state */
+  @Subscribe
+  public void onActionEventStarted(RemoteExecutionActionEvent.Started event) {
+    writeRemoteExecutionStateTraceEvents(event);
+  }
+
+  /** Add metadata for actions in each Remote Execution state */
+  @Subscribe
+  public void onActionEventFinished(RemoteExecutionActionEvent.Finished event) {
+    writeRemoteExecutionStateTraceEvents(event);
   }
 
   /** Mark the start of a Remote Execution session */
