@@ -18,6 +18,7 @@ package com.facebook.buck.support.log;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -81,5 +82,13 @@ public abstract class AbstractLogBuckConfig implements ConfigView<BuckConfig> {
 
   public Optional<String> getBuildDetailsTemplate() {
     return getDelegate().getValue(LOG_SECTION, "build_details_template");
+  }
+
+  @Value.Lazy
+  public ImmutableSet<String> getBuildDetailsCommands() {
+    return getDelegate()
+        .getOptionalListWithoutComments(LOG_SECTION, "build_details_commands")
+        .map(ImmutableSet::copyOf)
+        .orElse(ImmutableSet.of("build", "test", "install"));
   }
 }

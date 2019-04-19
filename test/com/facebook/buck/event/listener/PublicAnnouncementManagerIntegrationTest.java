@@ -42,6 +42,7 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -147,6 +148,7 @@ public class PublicAnnouncementManagerIntegrationTest {
               new BuildId("1234-5679"),
               false,
               Optional.empty(),
+              ImmutableSet.of(),
               ImmutableList.of());
       eventBus.register(listener);
 

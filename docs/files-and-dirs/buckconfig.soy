@@ -3475,6 +3475,19 @@ or the value could be a custom platform flavor:
   {/param}
 {/call}
 
+{call buckconfig.entry}
+  {param section: 'log' /}
+  {param name: 'build_details_commands' /}
+  {param example_value: 'build, test, install, query, targets' /}
+  {param description}
+    If <a href="#log.build_details_template"><code>build_details_template</code></a> is provided, 
+    Buck prints the specified string to the console for each of the specified list of
+    commands. This can be useful for ensuring that users do not have too much information
+    provided, but allows configuring log-heavy environments like CI systems to output more
+    information for commands like 'query'. Default value is build, test, install
+  {/param}
+{/call}
+
 {call buckconfig.section}
   {param name: 'lua' /}
   {param description}

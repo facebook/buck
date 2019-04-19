@@ -59,7 +59,8 @@ public abstract class AbstractConfigIgnoredByDaemon implements ConfigView<BuckCo
             "max_traces",
             "public_announcements",
             "log_build_id_to_console_enabled",
-            "build_details_template"));
+            "build_details_template",
+            "build_details_commands"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "project", ImmutableSet.of("ide_prompt", "ide_force_kill"));
     ignoreFieldsForDaemonRestartBuilder.put(

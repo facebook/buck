@@ -111,35 +111,61 @@ public class SimpleConsoleEventBusListenerTest {
   public static Collection<Object[]> data() {
     return Arrays.asList(
         new Object[][] {
-          {false, Optional.empty(), "no_build_id_and_no_build_url", Optional.empty(), false},
-          {true, Optional.empty(), "build_id_and_no_build_url", Optional.empty(), false},
+          {
+            false,
+            Optional.empty(),
+            "no_build_id_and_no_build_url",
+            Optional.empty(),
+            false,
+            ImmutableSet.of("build", "test", "install"),
+          },
+          {
+            true,
+            Optional.empty(),
+            "build_id_and_no_build_url",
+            Optional.empty(),
+            false,
+            ImmutableSet.of("build", "test", "install"),
+          },
           {
             true,
             Optional.of("View details at https://example.com/build/{build_id}"),
             "build_id_and_build_url",
             Optional.empty(),
-            false
+            false,
+            ImmutableSet.of("build", "test", "install"),
           },
           {
             false,
             Optional.of("View details at https://example.com/build/{build_id}"),
             "no_build_id_and_build_url",
             Optional.empty(),
-            false
+            false,
+            ImmutableSet.of("build", "test", "install"),
+          },
+          {
+            false,
+            Optional.of("View details at https://example.com/build/{build_id}"),
+            "no_build_id_and_build_url_but_no_build_command",
+            Optional.empty(),
+            false,
+            ImmutableSet.of(),
           },
           {
             false,
             Optional.empty(),
             "with_re_session_id",
             Optional.of("super cool remote execution session id."),
-            false
+            false,
+            ImmutableSet.of(),
           },
           {
             false,
             Optional.empty(),
             "with_additional_line_provider",
             Optional.of("super cool remote execution session id."),
-            true
+            true,
+            ImmutableSet.of(),
           },
         });
   }
@@ -161,9 +187,13 @@ public class SimpleConsoleEventBusListenerTest {
   @Parameterized.Parameter(4)
   public boolean enableAdditionalLineProviders;
 
+  @Parameterized.Parameter(5)
+  public ImmutableSet<String> buildDetailsCommands;
+
   @Test
   public void testSimpleBuild() {
-    setupSimpleConsole(false, printBuildId, buildDetailsTemplate, reSessionIdDetails);
+    setupSimpleConsole(
+        false, printBuildId, buildDetailsTemplate, reSessionIdDetails, buildDetailsCommands);
     String expectedOutput = "";
     if (printBuildId) {
       expectedOutput = "Build UUID: 1234-5678" + System.lineSeparator();
@@ -305,7 +335,7 @@ public class SimpleConsoleEventBusListenerTest {
     CommandEvent.Started commandStarted =
         CommandEvent.started("build", ImmutableList.of(), OptionalLong.of(100), 1234);
     eventBus.post(CommandEvent.finished(commandStarted, ExitCode.SUCCESS));
-    if (buildDetailsTemplate.isPresent()) {
+    if (buildDetailsCommands.contains("build") && buildDetailsTemplate.isPresent()) {
       expectedOutput +=
           "View details at https://example.com/build/1234-5678" + System.lineSeparator();
     }
@@ -590,14 +620,16 @@ public class SimpleConsoleEventBusListenerTest {
   }
 
   private void setupSimpleConsole(boolean hideSucceededRules) {
-    setupSimpleConsole(hideSucceededRules, false, Optional.empty(), Optional.empty());
+    setupSimpleConsole(
+        hideSucceededRules, false, Optional.empty(), Optional.empty(), ImmutableSet.of());
   }
 
   private void setupSimpleConsole(
       boolean hideSucceededRules,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
-      Optional<String> reSessionIdInfo) {
+      Optional<String> reSessionIdInfo,
+      ImmutableSet<String> buildDetailsCommands) {
     SimpleConsoleEventBusListener listener =
         new SimpleConsoleEventBusListener(
             new RenderingConsole(fakeClock, console),
@@ -613,6 +645,7 @@ public class SimpleConsoleEventBusListenerTest {
             buildId,
             printBuildId,
             buildDetailsTemplate,
+            buildDetailsCommands,
             reSessionIdInfo,
             enableAdditionalLineProviders ? createAdditionalLineProvider() : ImmutableList.of());
 

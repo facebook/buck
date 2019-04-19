@@ -25,6 +25,7 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -43,7 +44,8 @@ public class AbstractConsoleEventBusListenerTest {
             EnvVariablesProvider.getSystemEnv(), System.getProperties()),
         false,
         1,
-        false) {
+        false,
+        ImmutableSet.of("build", "install", "test")) {
       @Override
       public void printSevereWarningDirectly(String line) {}
     };

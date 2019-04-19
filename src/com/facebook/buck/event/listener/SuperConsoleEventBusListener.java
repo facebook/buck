@@ -54,6 +54,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
@@ -161,6 +162,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       BuildId buildId,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
+      ImmutableSet<String> buildDetailsCommands,
       ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders) {
     this(
         config,
@@ -178,6 +180,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         buildId,
         printBuildId,
         buildDetailsTemplate,
+        buildDetailsCommands,
         additionalConsoleLineProviders);
   }
 
@@ -198,6 +201,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       BuildId buildId,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
+      ImmutableSet<String> buildDetailsCommands,
       ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders) {
     super(
         renderingConsole,
@@ -206,7 +210,8 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         executionEnvironment,
         false,
         config.getNumberOfSlowRulesToShow(),
-        config.shouldShowSlowRulesInConsole());
+        config.shouldShowSlowRulesInConsole(),
+        buildDetailsCommands);
     this.additionalConsoleLineProviders = additionalConsoleLineProviders;
     this.locale = locale;
     this.formatTimeFunction = this::formatElapsedTime;

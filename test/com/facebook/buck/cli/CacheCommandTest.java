@@ -46,6 +46,7 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.util.concurrent.Futures;
@@ -276,6 +277,7 @@ public class CacheCommandTest {
             new BuildId("1234-5678"),
             false,
             Optional.empty(),
+            ImmutableSet.of(),
             ImmutableList.of());
     listener.register(eventBus);
     return listener;

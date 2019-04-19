@@ -43,6 +43,7 @@ import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -75,6 +76,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
       BuildId buildId,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
+      ImmutableSet<String> buildDetailsCommands,
       Optional<String> reSessionIDInfo,
       ImmutableList<AdditionalConsoleLineProvider> buildFinishedLineProvider) {
     super(
@@ -84,7 +86,8 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         executionEnvironment,
         true,
         numberOfSlowRulesToShow,
-        showSlowRulesInConsole);
+        showSlowRulesInConsole,
+        buildDetailsCommands);
     Preconditions.checkArgument(!console.getVerbosity().isSilent());
     this.locale = locale;
     this.buildId = buildId;

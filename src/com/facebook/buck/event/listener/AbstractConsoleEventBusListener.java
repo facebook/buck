@@ -146,8 +146,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   protected BuildRuleThreadTracker buildRuleThreadTracker;
 
   /** Commands that should print out the build details, if provided */
-  protected final ImmutableSet<String> buildDetailsCommands =
-      ImmutableSet.of("build", "test", "install");
+  protected final ImmutableSet<String> buildDetailsCommands;
 
   private final AtomicBoolean topSlowestRulesLogged = new AtomicBoolean(false);
 
@@ -158,7 +157,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
       ExecutionEnvironment executionEnvironment,
       boolean showTextInAllCaps,
       int numberOfSlowRulesToShow,
-      boolean showSlowRulesInConsole) {
+      boolean showSlowRulesInConsole,
+      ImmutableSet<String> buildDetailsCommands) {
     this.console = console;
     this.parseStats = new ParseStatsTracker();
     this.networkStatsTracker = new NetworkStatsTracker();
@@ -190,6 +190,7 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
     this.installFinished = null;
 
     this.buildRuleThreadTracker = new BuildRuleThreadTracker(executionEnvironment);
+    this.buildDetailsCommands = buildDetailsCommands;
   }
 
   public void register(BuckEventBus buildEventBus) {

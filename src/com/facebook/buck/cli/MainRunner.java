@@ -1056,6 +1056,7 @@ public final class MainRunner {
                     filesystem.getBuckPaths().getLogDir().resolve("test.log"),
                     logBuckConfig.isLogBuildIdToConsoleEnabled(),
                     logBuckConfig.getBuildDetailsTemplate(),
+                    logBuckConfig.getBuildDetailsCommands(),
                     createAdditionalConsoleLinesProviders(
                         remoteExecutionListener, remoteExecutionConfig, metadataProvider),
                     isRemoteExecutionBuild(command, buckConfig)
@@ -2013,6 +2014,7 @@ public final class MainRunner {
       Path testLogPath,
       boolean printBuildId,
       Optional<String> buildDetailsTemplate,
+      ImmutableSet<String> buildDetailsCommands,
       ImmutableList<AdditionalConsoleLineProvider> additionalConsoleLineProviders,
       Optional<String> reSessionIDInfo) {
     RenderingConsole renderingConsole = new RenderingConsole(clock, console);
@@ -2030,6 +2032,7 @@ public final class MainRunner {
               buildId,
               printBuildId,
               buildDetailsTemplate,
+              buildDetailsCommands,
               additionalConsoleLineProviders);
       return superConsole;
     }
@@ -2050,6 +2053,7 @@ public final class MainRunner {
         buildId,
         printBuildId,
         buildDetailsTemplate,
+        buildDetailsCommands,
         reSessionIDInfo,
         additionalConsoleLineProviders);
   }

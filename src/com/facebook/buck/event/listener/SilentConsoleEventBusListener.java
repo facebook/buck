@@ -19,6 +19,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -33,7 +34,7 @@ public class SilentConsoleEventBusListener extends AbstractConsoleEventBusListen
       Clock clock,
       Locale locale,
       ExecutionEnvironment executionEnvironment) {
-    super(superConsole, clock, locale, executionEnvironment, false, 0, false);
+    super(superConsole, clock, locale, executionEnvironment, false, 0, false, ImmutableSet.of());
     Preconditions.checkArgument(
         superConsole.getVerbosity().isSilent(),
         "SilentConsole shouldn't be used with a non-silent verbosity.");
