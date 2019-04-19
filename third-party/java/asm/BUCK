@@ -14,45 +14,45 @@ java_library(
 
 prebuilt_jar(
     name = "asm-jar",
-    binary_jar = "asm-7.0.jar",
+    binary_jar = "asm-7.1.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-7.0-sources.jar",
+    source_jar = "asm-7.1-sources.jar",
 )
 
 prebuilt_jar(
     name = "asm-analysis",
-    binary_jar = "asm-analysis-7.0.jar",
+    binary_jar = "asm-analysis-7.1.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-analysis-7.0-sources.jar",
+    source_jar = "asm-analysis-7.1-sources.jar",
 )
 
 prebuilt_jar(
     name = "asm-commons",
-    binary_jar = "asm-commons-7.0.jar",
+    binary_jar = "asm-commons-7.1.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-commons-7.0-sources.jar",
+    source_jar = "asm-commons-7.1-sources.jar",
 )
 
 prebuilt_jar(
     name = "asm-tree",
-    binary_jar = "asm-tree-7.0.jar",
+    binary_jar = "asm-tree-7.1.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-tree-7.0-sources.jar",
+    source_jar = "asm-tree-7.1-sources.jar",
 )
 
 prebuilt_jar(
     name = "asm-util",
-    binary_jar = "asm-util-7.0.jar",
+    binary_jar = "asm-util-7.1.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "asm-util-7.0-sources.jar",
+    source_jar = "asm-util-7.1-sources.jar",
 )
