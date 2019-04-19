@@ -92,7 +92,7 @@ public class BuckClient {
                 } catch (NumberFormatException | ExecutionException | IOException e) {
                   LOG.error(e);
                 } catch (RuntimeException e) {
-                  LOG.error(e);
+                  LOG.info(e);
                   if (!mProject.isDisposed()) {
                     BuckModule buckModule = mProject.getComponent(BuckModule.class);
                     /* FIXME(shemitz) attachIfDetached() adds a lot of listeners to the IJ message
