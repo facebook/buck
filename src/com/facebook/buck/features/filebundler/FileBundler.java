@@ -56,7 +56,7 @@ public abstract class FileBundler {
       Map<Path, Path> relativePathMap) {
     Path pathRelativeToBaseDir;
 
-    if (relativeFilePath.startsWith(basePath) || basePath.equals(MorePaths.EMPTY_PATH)) {
+    if (relativeFilePath.startsWith(basePath) || MorePaths.isEmpty(basePath)) {
       pathRelativeToBaseDir = MorePaths.relativize(basePath, relativeFilePath);
     } else {
       pathRelativeToBaseDir = assumedAbsoluteBasePath.relativize(absoluteFilePath);

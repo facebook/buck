@@ -262,7 +262,7 @@ public class BuildFileManifestCache
           return false;
         }
 
-        if (path.equals(MorePaths.EMPTY_PATH)) {
+        if (MorePaths.isEmpty(path)) {
           // Empty path means root. Nothing to traverse beyond that.
           return false;
         }

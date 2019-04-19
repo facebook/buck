@@ -95,7 +95,7 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
       while (true) {
         fileTreeCache.cache.remove(ImmutableFileTreeKey.of(folderPath));
 
-        if (folderPath.equals(MorePaths.EMPTY_PATH)) {
+        if (MorePaths.isEmpty(folderPath)) {
           // empty path means root, it has no parent so return
           break;
         }

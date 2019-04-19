@@ -15,7 +15,6 @@
  */
 package com.facebook.buck.parser.implicit;
 
-import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -128,7 +127,8 @@ public class PackageImplicitIncludesFinder {
    */
   public Optional<ImplicitInclude> findIncludeForBuildFile(@Nullable Path packagePath) {
     if (packagePath == null) {
-      packagePath = MorePaths.EMPTY_PATH;
+      // TODO(buck_team): remove @Nullable and this codepath
+      packagePath = Paths.get("");
     }
     return node.findIncludeForPath(packagePath);
   }

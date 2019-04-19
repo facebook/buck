@@ -142,7 +142,7 @@ public class ExopackageSymlinkTree {
     // Each shared-object referenced by the metadata is contained within a folder named with the abi
     // so we extract the set of parent folder names for all the objects.
     return ExopackageInstaller.parseExopackageInfoMetadata(
-            metadataPath, MorePaths.EMPTY_PATH, filesystem)
+            metadataPath, MorePaths.emptyOf(metadataPath), filesystem)
         .values().stream()
         .map(path -> path.getParent().getFileName().toString())
         .collect(ImmutableSet.toImmutableSet())

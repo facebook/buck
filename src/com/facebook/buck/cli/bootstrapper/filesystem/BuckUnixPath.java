@@ -136,12 +136,12 @@ public class BuckUnixPath implements Path {
   }
 
   /** @return {@code true} if this path is an empty path */
-  private boolean isEmpty() {
+  public boolean isEmpty() {
     return segments.length == 0;
   }
 
   /** @return an empty path */
-  private BuckUnixPath emptyPath() {
+  public BuckUnixPath emptyPath() {
     return fs.getEmptyPath();
   }
 
