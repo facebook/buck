@@ -109,7 +109,7 @@ public class BuckCompletionContributor extends CompletionContributor {
     // Auto completion for basic rule names.
     extend(
         CompletionType.BASIC,
-        PlatformPatterns.psiElement(BuckTypes.IDENTIFIER).withLanguage(BuckLanguage.INSTANCE),
+        PlatformPatterns.psiElement(BuckTypes.IDENTIFIER_TOKEN).withLanguage(BuckLanguage.INSTANCE),
         BuckKeywordsCompletionProvider.INSTANCE);
   }
 
