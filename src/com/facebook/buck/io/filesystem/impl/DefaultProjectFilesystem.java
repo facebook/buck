@@ -124,7 +124,6 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       ProjectFilesystemDelegate projectFilesystemDelegate,
       @Nullable WindowsFS winFSInstance) {
     this(
-        root.getFileSystem(),
         root,
         ImmutableSet.of(),
         BuckPaths.createDefaultBuckPaths(root),
@@ -133,7 +132,6 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   }
 
   public DefaultProjectFilesystem(
-      FileSystem vfs,
       Path root,
       ImmutableSet<PathMatcher> blackListedPaths,
       BuckPaths buckPaths,
@@ -141,7 +139,6 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
       @Nullable WindowsFS winFSInstance) {
     if (shouldVerifyConstructorArguments()) {
       Preconditions.checkArgument(Files.isDirectory(root), "%s must be a directory", root);
-      Preconditions.checkState(vfs.equals(root.getFileSystem()));
       Preconditions.checkArgument(root.isAbsolute(), "Expected absolute path. Got <%s>.", root);
     }
 

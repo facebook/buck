@@ -292,7 +292,6 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
     HashFunction hashFunction = Hashing.sha1();
 
     return new DefaultProjectFilesystem(
-        realFilesystem.getRootPath().getFileSystem(),
         realFilesystem.getRootPath(),
         realFilesystem.getBlacklistedPaths(),
         realFilesystem.getBuckPaths(),

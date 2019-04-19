@@ -59,7 +59,6 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
     BuckPaths buckPaths = getConfiguredBuckPaths(root, config, embeddedCellBuckOutInfo);
     return new DefaultProjectFilesystem(
-        root.getFileSystem(),
         root,
         extractIgnorePaths(root, config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
