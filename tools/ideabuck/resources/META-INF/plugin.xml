@@ -1,7 +1,7 @@
 <idea-plugin>
   <id>intellij.buck.plugin</id>
   <name>Buck for IDEA</name>
-  <version>3.7.3</version>
+  <version>3.7.4-SNAPSHOT</version>
   <category>Build</category>
   <vendor email="fb-plugins@fb.com" url="www.facebook.com">Facebook, Inc.</vendor>
 
@@ -10,6 +10,9 @@
   ]]></description>
 
   <change-notes><![CDATA[
+<h3>3.7.4</h3>
+<ul>
+</ul>
 <h3>3.7.3</h3>
 <ul>
   <li>Fixes to make triggering buck from IntelliJ more consistent with
