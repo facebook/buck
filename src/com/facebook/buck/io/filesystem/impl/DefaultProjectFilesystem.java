@@ -403,8 +403,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
         skipIgnored);
   }
 
-  @Override
-  public void walkRelativeFileTree(
+  private void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor)
@@ -413,8 +412,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
   }
 
   /** Walks a project-root relative file tree with a visitor and visit options. */
-  @Override
-  public void walkRelativeFileTree(
+  protected void walkRelativeFileTree(
       Path pathRelativeToProjectRoot,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor,
@@ -491,8 +489,7 @@ public class DefaultProjectFilesystem implements ProjectFilesystem {
     walkFileTree(root, options, fileVisitor, true);
   }
 
-  @Override
-  public void walkFileTree(
+  private void walkFileTree(
       Path root, Set<FileVisitOption> options, FileVisitor<Path> fileVisitor, boolean skipIgnored)
       throws IOException {
     walkFileTree(

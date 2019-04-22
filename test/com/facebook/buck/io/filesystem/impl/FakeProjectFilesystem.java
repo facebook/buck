@@ -703,7 +703,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
    * fileVisitor}.
    */
   @Override
-  public final void walkRelativeFileTree(
+  protected final void walkRelativeFileTree(
       Path path,
       EnumSet<FileVisitOption> visitOptions,
       FileVisitor<Path> fileVisitor,
