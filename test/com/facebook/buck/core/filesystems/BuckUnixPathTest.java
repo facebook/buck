@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.bootstrapper.filesystem;
+package com.facebook.buck.core.filesystems;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

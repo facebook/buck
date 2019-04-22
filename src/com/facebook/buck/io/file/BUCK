@@ -8,8 +8,8 @@ java_library(
         "PUBLIC",
     ],
     deps = [
-        "//src/com/facebook/buck/cli/bootstrapper/filesystem:filesystem_lib",
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/util:exceptions",
         "//src/com/facebook/buck/util:util",

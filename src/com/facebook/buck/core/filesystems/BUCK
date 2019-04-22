@@ -1,6 +1,7 @@
 java_library(
-    name = "filesystem_lib",
+    name = "filesystems",
     srcs = glob(["*.java"]),
+    tests = ["//test/com/facebook/buck/core/filesystems:filesystems"],
     visibility = [
         # `BuckUnixPath` needs to be visible in `MorePaths.dropInternalCaches`
         "//src/com/facebook/buck/io/file:file",

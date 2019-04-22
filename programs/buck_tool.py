@@ -796,7 +796,7 @@ class BuckTool(object):
                 # TODO: Temporarily disabled for Java 11 due to class loader issues.
                 java_args.append(
                     "-Djava.nio.file.spi.DefaultFileSystemProvider="
-                    "com.facebook.buck.cli.bootstrapper.filesystem.BuckFileSystemProvider"
+                    "com.facebook.buck.core.filesystems.BuckFileSystemProvider"
                 )
 
             resource_lock_path = self._get_resource_lock_path()

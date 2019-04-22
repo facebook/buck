@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cli.bootstrapper.filesystem;
+package com.facebook.buck.core.filesystems;
 
 import java.io.File;
 import java.io.IOException;
