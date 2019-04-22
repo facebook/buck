@@ -72,7 +72,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.HashSet;
 import java.util.Map;
@@ -244,10 +243,10 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
     return parseResult;
   }
 
-  private ImplicitlyLoadedExtension loadImplicitExtension(String basePath, Label containingLabel)
+  private ImplicitlyLoadedExtension loadImplicitExtension(Path basePath, Label containingLabel)
       throws IOException, InterruptedException {
     Optional<ImplicitInclude> implicitInclude =
-        packageImplicitIncludeFinder.findIncludeForBuildFile(Paths.get(basePath));
+        packageImplicitIncludeFinder.findIncludeForBuildFile(basePath);
     if (!implicitInclude.isPresent()) {
       return ImplicitlyLoadedExtension.empty();
     }
@@ -278,7 +277,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
     String basePath = getBasePath(buildFile);
     Label containingLabel = createContainingLabel(basePath);
-    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
+    ImplicitlyLoadedExtension implicitLoad =
+        loadImplicitExtension(buildFile.getFileSystem().getPath(basePath), containingLabel);
 
     BuildFileAST buildFileAst = parseBuildFile(buildFilePath, containingLabel);
     CachingGlobber globber = newGlobber(buildFile);
@@ -881,7 +881,8 @@ public class SkylarkProjectBuildFileParser implements ProjectBuildFileParser {
 
     String basePath = getBasePath(buildFile);
     Label containingLabel = createContainingLabel(basePath);
-    ImplicitlyLoadedExtension implicitLoad = loadImplicitExtension(basePath, containingLabel);
+    ImplicitlyLoadedExtension implicitLoad =
+        loadImplicitExtension(buildFile.getFileSystem().getPath(basePath), containingLabel);
     BuildFileAST buildFileAst = parseBuildFile(buildFilePath, containingLabel);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, buildFileAst.getImports());
