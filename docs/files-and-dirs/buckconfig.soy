@@ -4985,6 +4985,17 @@ buck = .
 
 {call buckconfig.entry}
   {param section: 'tools' /}
+  {param name: 'java_for_tests' /}
+  {param description}
+    The <code>java_for_tests</code> option is a path to a <code>java</code> binary.
+    When set, buck uses that binary to execute Java tests--when using either the internal or
+   external test runners--instead of the <code>java</code> binary used to run Buck itself.
+    When this option is not set, Buck executes Java tests using the same binary used to run Buck.
+  {/param}
+{/call}
+
+{call buckconfig.entry}
+  {param section: 'tools' /}
   {param name: 'compiler_class_name' /}
   {param description}
     When javac_jar is set, Buck loads the referenced compiler class name from the jar.
