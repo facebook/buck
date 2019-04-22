@@ -42,6 +42,7 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
@@ -628,12 +629,17 @@ public class TestCommand extends BuildCommand {
                     getExecutionContext(),
                     isKeepGoing())) {
 
-          // Build all of the test rules.
+          // Build all of the test rules and runtime deps.
+          Iterable<BuildTarget> targets =
+              RichStream.from(testRules)
+                  .filter(HasRuntimeDeps.class::isInstance)
+                  .map(HasRuntimeDeps.class::cast)
+                  .flatMap(rule -> rule.getRuntimeDeps(sourcePathRuleFinder))
+                  .concat(RichStream.from(testRules).map(TestRule::getBuildTarget))
+                  .toImmutableList();
           ExitCode exitCode =
               build.executeAndPrintFailuresToEventBus(
-                  RichStream.from(testRules)
-                      .map(TestRule::getBuildTarget)
-                      .collect(ImmutableList.toImmutableList()),
+                  targets,
                   params.getBuckEventBus(),
                   params.getConsole(),
                   getPathToBuildReport(params.getBuckConfig()));
