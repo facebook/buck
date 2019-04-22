@@ -24,7 +24,7 @@ import com.facebook.buck.core.graph.transformation.FakeComputationEnvironment;
 import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDepsPackage;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;

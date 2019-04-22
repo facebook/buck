@@ -14,12 +14,14 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.platform;
+package com.facebook.buck.core.model.platform.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.platform.ConstraintSetting;
+import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.google.common.collect.ImmutableSet;
 import java.util.Arrays;
 import java.util.Collections;

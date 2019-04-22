@@ -30,7 +30,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.platform.ConstraintBasedPlatform;
+import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.select.SelectableConfigurationContext;

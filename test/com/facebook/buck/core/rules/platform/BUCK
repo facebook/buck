@@ -18,6 +18,7 @@ java_test(
     has_immutable_types = True,
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/junit:junit",

@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.platform;
+package com.facebook.buck.core.model.platform.impl;
 
+import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.model.platform.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 
