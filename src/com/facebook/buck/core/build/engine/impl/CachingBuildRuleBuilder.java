@@ -52,6 +52,7 @@ import com.facebook.buck.core.build.engine.type.DepFiles;
 import com.facebook.buck.core.build.engine.type.MetadataStorage;
 import com.facebook.buck.core.build.engine.type.UploadToCacheResultType;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
+import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -1447,27 +1448,35 @@ class CachingBuildRuleBuilder {
         BuildContext buildRuleBuildContext,
         BuildableContext buildableContext)
         throws StepFailedException, InterruptedException {
-      // Get and run all of the commands.
-      List<? extends Step> steps;
+      try (Scope ignored = BuildRuleExecutionEvent.scope(eventBus, rule)) {
+        // Get and run all of the commands.
+        for (Step step : getSteps(buildRuleBuildContext, buildableContext)) {
+          StepRunner.runStep(executionContext, step);
+          rethrowIgnoredInterruptedException(step);
+        }
+      }
+    }
+
+    private List<? extends Step> getSteps(
+        BuildContext buildRuleBuildContext, BuildableContext buildableContext) {
       try (Scope ignored = LeafEvents.scope(eventBus, "get_build_steps")) {
         if (pipelineState == null) {
-          steps = rule.getBuildSteps(buildRuleBuildContext, buildableContext);
+          return rule.getBuildSteps(buildRuleBuildContext, buildableContext);
         } else {
           @SuppressWarnings("unchecked")
           SupportsPipelining<T> pipelinedRule = (SupportsPipelining<T>) rule;
-          steps =
-              pipelinedRule.getPipelinedBuildSteps(
-                  buildRuleBuildContext, buildableContext, pipelineState);
+          return pipelinedRule.getPipelinedBuildSteps(
+              buildRuleBuildContext, buildableContext, pipelineState);
         }
       }
+    }
 
-      for (Step step : steps) {
-        StepRunner.runStep(executionContext, step);
-        // Check for interruptions that may have been ignored by step.
-        if (Thread.interrupted()) {
-          Thread.currentThread().interrupt();
-          throw new InterruptedException();
-        }
+    private void rethrowIgnoredInterruptedException(Step step) throws InterruptedException {
+      // Check for interruptions that may have been ignored by step.
+      if (Thread.interrupted()) {
+        Thread.currentThread().interrupt();
+        throw new InterruptedException(
+            "Thread was interrupted inside the executed step: " + step.getShortName());
       }
     }
   }
