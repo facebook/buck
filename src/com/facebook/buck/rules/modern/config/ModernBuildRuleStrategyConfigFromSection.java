@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.config;
 
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import java.util.function.Supplier;
@@ -49,7 +50,12 @@ public class ModernBuildRuleStrategyConfigFromSection implements ModernBuildRule
 
   @Override
   public HybridLocalBuildStrategyConfig getHybridLocalConfig() {
-    int localJobs = delegate.getInteger(section, "local_jobs").orElseThrow(requires("local_jobs"));
+    int localJobs =
+        delegate
+            .getInteger(section, "local_jobs")
+            .orElse(delegate.getView(BuildBuckConfig.class).getNumThreads());
+    localJobs =
+        (int) Math.ceil(delegate.getFloat(section, "local_jobs_ratio").orElse(1.0F) * localJobs);
     int remoteJobs =
         delegate.getInteger(section, "delegate_jobs").orElseThrow(requires("delegate_jobs"));
     String delegateFlavor =
