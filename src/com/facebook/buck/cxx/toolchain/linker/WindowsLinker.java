@@ -46,6 +46,9 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
         @Override
         public ImmutableMap<String, Path> deriveExtraOutputsFromArgs(
             ImmutableList<String> linkerArgs, Path output) {
+
+          ImmutableMap.Builder<String, Path> builder = new ImmutableMap.Builder<String, Path>();
+
           // A .pdb is generated if any /DEBUG option is specified, which isn't /DEBUG:NONE.
           // Buck realistically only support /DEBUG, which is the same as /DEBUG:FULL, but lld-link
           // has other options including /DEBUG:GHASH, so we have to be more careful checking here.
@@ -55,9 +58,15 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
           if (isPdbGenerated) {
             String pdbFilename = MorePaths.getNameWithoutExtension(output) + ".pdb";
             Path pdbOutput = output.getParent().resolve(pdbFilename);
-            return ImmutableMap.of("pdb", pdbOutput);
+            builder.put("pdb", pdbOutput);
           }
-          return ImmutableMap.of();
+          // An implib is generated if we are making a dll.
+          boolean isDllGenerated = linkerArgs.stream().anyMatch(arg -> arg.startsWith("/DLL"));
+          if (isDllGenerated) {
+            Path implibPath = importLibraryPath(output);
+            builder.put("implib", implibPath);
+          }
+          return builder.build();
         }
       };
 

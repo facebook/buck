@@ -35,3 +35,9 @@ cxx_library(
     soname = "implib_debug.dll",
     visibility = ["PUBLIC"],
 )
+
+genrule(
+    name = "implib_copy",
+    out = "implib_copy.lib",
+    cmd = "cp $(location :implib#windows-x86_64,shared[implib]) $OUT",
+)

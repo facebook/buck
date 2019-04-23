@@ -151,6 +151,12 @@ public class WindowsCxxIntegrationTest {
   }
 
   @Test
+  public void implibOutputAccessible() throws IOException {
+    workspace.runBuckCommand("build", "//implib:implib_copy").assertSuccess();
+    assertTrue(Files.exists(workspace.resolve("buck-out/gen/implib/implib_copy/implib_copy.lib")));
+  }
+
+  @Test
   public void errorVerifyHeaders() throws IOException {
     ProcessResult result;
     result =
