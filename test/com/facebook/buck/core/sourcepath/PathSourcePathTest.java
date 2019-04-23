@@ -18,7 +18,9 @@ package com.facebook.buck.core.sourcepath;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -27,6 +29,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 public class PathSourcePathTest {
@@ -74,5 +78,29 @@ public class PathSourcePathTest {
     assertNotEquals(pathA1.hashCode(), pathA2.hashCode());
     assertNotEquals(pathA1, pathA2);
     assertNotEquals(0, pathA1.compareTo(pathA2));
+  }
+
+  @Test
+  public void fromSourcePath() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    PathSourcePath pathSourcePath = FakeSourcePath.of(filesystem, "test");
+
+    assertThat(PathSourcePath.from(pathSourcePath), Matchers.equalTo(Optional.of(pathSourcePath)));
+
+    assertThat(
+        PathSourcePath.from(
+            DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:rule"))),
+        Matchers.equalTo(Optional.empty()));
+
+    assertThat(
+        PathSourcePath.from(
+            ArchiveMemberSourcePath.of(pathSourcePath, filesystem.getPath("something"))),
+        Matchers.equalTo(Optional.of(pathSourcePath)));
+    assertThat(
+        PathSourcePath.from(
+            ArchiveMemberSourcePath.of(
+                DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:rule")),
+                filesystem.getPath("something"))),
+        Matchers.equalTo(Optional.empty()));
   }
 }

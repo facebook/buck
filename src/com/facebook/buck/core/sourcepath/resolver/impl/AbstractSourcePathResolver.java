@@ -38,7 +38,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -226,17 +225,6 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
         .filter(PathSourcePath.class)
         .transform(PathSourcePath::getRelativePath)
         .toList();
-  }
-
-  /** @return the {@link PathSourcePath} backing the given {@link SourcePath}, if any. */
-  @Override
-  public Optional<PathSourcePath> getPathSourcePath(SourcePath sourcePath) {
-    if (sourcePath instanceof ArchiveMemberSourcePath) {
-      sourcePath = ((ArchiveMemberSourcePath) sourcePath).getArchiveSourcePath();
-    }
-    return sourcePath instanceof PathSourcePath
-        ? Optional.of((PathSourcePath) sourcePath)
-        : Optional.empty();
   }
 
   @Override

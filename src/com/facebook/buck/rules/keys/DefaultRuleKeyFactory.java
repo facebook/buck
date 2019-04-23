@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -191,8 +192,7 @@ public class DefaultRuleKeyFactory implements RuleKeyFactoryWithDiagnostics<Rule
         return setSourcePathAsRule((BuildTargetSourcePath) sourcePath);
       } else {
         // Add `PathSourcePath`s to our tracked inputs.
-        pathResolver
-            .getPathSourcePath(sourcePath)
+        PathSourcePath.from(sourcePath)
             .ifPresent(
                 path -> inputs.add(RuleKeyInput.of(path.getFilesystem(), path.getRelativePath())));
         return setSourcePathDirectly(sourcePath);

@@ -21,6 +21,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ComparisonChain;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 @BuckStyleTuple
@@ -71,5 +72,15 @@ public abstract class AbstractPathSourcePath implements SourcePath {
         .compare(getFilesystem().getRootPath(), that.getFilesystem().getRootPath())
         .compare(getRelativePath(), that.getRelativePath())
         .result();
+  }
+
+  /** @return the {@link PathSourcePath} backing the given {@link SourcePath}, if any. */
+  public static Optional<PathSourcePath> from(SourcePath sourcePath) {
+    if (sourcePath instanceof ArchiveMemberSourcePath) {
+      sourcePath = ((ArchiveMemberSourcePath) sourcePath).getArchiveSourcePath();
+    }
+    return sourcePath instanceof PathSourcePath
+        ? Optional.of((PathSourcePath) sourcePath)
+        : Optional.empty();
   }
 }

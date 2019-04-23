@@ -35,6 +35,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -435,8 +436,7 @@ public class JsLibraryDescription
     Path directoryOfBuildFile = cellPath.resolve(target.getBasePath());
     Path transplantTo = MorePaths.normalize(directoryOfBuildFile.resolve(basePath));
     Path absolutePath =
-        sourcePathResolver
-            .getPathSourcePath(sourcePath)
+        PathSourcePath.from(sourcePath)
             .map(
                 pathSourcePath -> // for sub paths, replace the leading directory with the base path
                 transplantTo.resolve(
