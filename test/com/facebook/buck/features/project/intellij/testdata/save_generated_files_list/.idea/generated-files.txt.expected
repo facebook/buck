@@ -1,4 +1,5 @@
 .idea/modules.xml
+.idea/target-info.json
 .idea/workspace.xml
 buck-out/android/modules/dep1/gen/com/test/BuildConfig.java
 buck-out/android/modules/dep1/gen/com/test/Manifest.java

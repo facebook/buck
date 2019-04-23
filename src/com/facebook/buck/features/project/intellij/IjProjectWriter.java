@@ -171,6 +171,7 @@ public class IjProjectWriter {
         ObjectMappers.createGenerator(outFilesystem.newFileOutputStream(targetInfoMapPath))
             .useDefaultPrettyPrinter()) {
       generator.writeObject(targetInfoMap);
+      cleaner.doNotDelete(targetInfoMapPath);
     }
   }
 
