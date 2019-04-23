@@ -297,17 +297,9 @@ genrule(
 </pre>
 </p>
 
-<strong>Example</strong>: Queries
+<strong>Example</strong>: Query macro
 
-<p>
-<pre class="prettyprint lang-py">
-{literal}
-cmd = '$(query_targets "deps(:foo)")'
-cmd = '$(query_outputs "filter(name_regex, deps(:bar))")'
-cmd = '$(query_targets "attrfilter(annotation_processors, com.foo.Processor, deps(:app))")'
-{/literal}
-</pre>
-</p>
+{call buckquery.example_macro_query_targets_deps /}
 
 {/param}
 

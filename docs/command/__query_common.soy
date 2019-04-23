@@ -79,3 +79,39 @@ those targets.
 </p>
 {/template}
 
+
+/***/
+{template .example_macro_query_targets_deps}
+
+<p>
+The following example adds an <code>apk_genrule</code> to the BUCK file that is used in 
+the <a href="https://github.com/fbsamples/bucksamples">cross-platform Buck sample</a> from 
+GitHub. The genrule, <code>string_param</code>, writes the transitive closure of dependencies
+for the android_binary rule, <code>demo-app</code>, to the file <code>deps.txt</code>.
+</p>
+
+<p>
+<pre>
+{literal}
+android_binary(
+  name = 'demo-app',
+  manifest = 'AndroidManifest.xml',
+  keystore = '//android/keystores:debug',
+  deps = [
+    '//android/java/com/facebook/buck/demo:lib',
+  ],
+)
+
+apk_genrule(
+  name = 'string_param',
+  apk  = ':demo-app',
+  srcs = [ '//android/java/com/facebook/buck/demo:lib' ],
+  cmd = 'mkdir $OUT; echo deps: $(query_targets deps(//android:demo-app)) > $OUT/deps.txt',
+  out = 'out-dir'
+)
+{/literal}
+</pre>
+</p>
+
+{/template}
+
