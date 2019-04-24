@@ -26,6 +26,9 @@ import org.pf4j.Extension;
 public class ConstraintRulesDescriptionProvider implements ConfigurationRuleDescriptionProvider {
   @Override
   public Collection<ConfigurationRuleDescription<?>> getDescriptions() {
-    return Arrays.asList(new ConstraintSettingDescription(), new ConstraintValueDescription());
+    return Arrays.asList(
+        new ConstraintSettingDescription(),
+        new ConstraintValueDescription(),
+        new CpuConstraintDetectorDescription());
   }
 }
