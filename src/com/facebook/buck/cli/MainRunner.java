@@ -789,7 +789,8 @@ public final class MainRunner {
           DefaultCellPathResolver.of(filesystem.getRootPath(), buckConfig.getConfig());
 
       Supplier<TargetConfiguration> targetConfigurationSupplier =
-          createTargetConfigurationSupplier(command, buildTargetFactory, rootCellCellPathResolver);
+          createTargetConfigurationSupplier(
+              command, buckConfig, buildTargetFactory, rootCellCellPathResolver);
 
       KnownRuleTypesProvider knownRuleTypesProvider =
           new KnownRuleTypesProvider(
@@ -1432,10 +1433,17 @@ public final class MainRunner {
 
   private Supplier<TargetConfiguration> createTargetConfigurationSupplier(
       Command command,
+      BuckConfig buckConfig,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       CellPathResolver cellPathResolver) {
     if (command.getTargetPlatforms().isEmpty()) {
-      return () -> HostTargetConfiguration.INSTANCE;
+      Optional<UnconfiguredBuildTargetView> hostPlatformFromConfig =
+          buckConfig.getView(BuildBuckConfig.class).getHostPlatform();
+      TargetConfiguration hostTargetConfiguration =
+          hostPlatformFromConfig
+              .<TargetConfiguration>map(ImmutableDefaultTargetConfiguration::of)
+              .orElse(HostTargetConfiguration.INSTANCE);
+      return () -> hostTargetConfiguration;
     }
     UnconfiguredBuildTargetView targetPlatform =
         unconfiguredBuildTargetFactory.create(

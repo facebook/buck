@@ -459,6 +459,26 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void hostOsConstraintsAreResolvedWithCustomPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    Platform platform = Platform.detect();
+    String hostPlatform =
+        (platform == Platform.LINUX) ? "//config:osx_x86-64" : "//config:linux_x86-64";
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "//:platform_dependent_genrule", "-c", "build.host_platform=" + hostPlatform);
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
+
+    String expected = (platform == Platform.LINUX) ? "osx" : "linux";
+    assertEquals(expected, workspace.getFileContents(output).trim());
+  }
+
+  @Test
   public void hostCpuConstraintsAreResolved() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
