@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
@@ -73,6 +74,11 @@ import javax.annotation.Nullable;
  * other such fields).
  */
 public class Serializer {
+
+  public static final int TARGET_CONFIGURATION_TYPE_EMPTY = 0;
+  public static final int TARGET_CONFIGURATION_TYPE_HOST = 1;
+  public static final int TARGET_CONFIGURATION_TYPE_DEFAULT = 2;
+
   private static final int MAX_INLINE_LENGTH = 100;
   private final ConcurrentHashMap<AddsToRuleKey, Either<HashCode, byte[]>> cache =
       new ConcurrentHashMap<>();
@@ -405,9 +411,11 @@ public class Serializer {
     @Override
     public void visitTargetConfiguration(TargetConfiguration value) throws IOException {
       if (value instanceof EmptyTargetConfiguration) {
-        stream.writeBoolean(true);
+        stream.writeInt(TARGET_CONFIGURATION_TYPE_EMPTY);
+      } else if (value instanceof HostTargetConfiguration) {
+        stream.writeInt(TARGET_CONFIGURATION_TYPE_HOST);
       } else if (value instanceof DefaultTargetConfiguration) {
-        stream.writeBoolean(false);
+        stream.writeInt(TARGET_CONFIGURATION_TYPE_DEFAULT);
         UnconfiguredBuildTargetTypeInfo.INSTANCE.visit(
             ((DefaultTargetConfiguration) value).getTargetPlatform(), this);
       } else {

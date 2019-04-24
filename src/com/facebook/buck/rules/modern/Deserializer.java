@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
@@ -414,12 +415,19 @@ public class Deserializer {
 
     @Override
     public TargetConfiguration createTargetConfiguration() throws IOException {
-      if (stream.readBoolean()) {
-        return EmptyTargetConfiguration.INSTANCE;
+      int type = stream.readInt();
+      switch (type) {
+        case Serializer.TARGET_CONFIGURATION_TYPE_EMPTY:
+          return EmptyTargetConfiguration.INSTANCE;
+        case Serializer.TARGET_CONFIGURATION_TYPE_HOST:
+          return HostTargetConfiguration.INSTANCE;
+        case Serializer.TARGET_CONFIGURATION_TYPE_DEFAULT:
+          UnconfiguredBuildTargetView targetPlatform =
+              UnconfiguredBuildTargetTypeInfo.INSTANCE.createNotNull(this);
+          return ImmutableDefaultTargetConfiguration.of(targetPlatform);
+        default:
+          throw new IllegalStateException("Cannot create target configuration for type " + type);
       }
-      UnconfiguredBuildTargetView targetPlatform =
-          UnconfiguredBuildTargetTypeInfo.INSTANCE.createNotNull(this);
-      return ImmutableDefaultTargetConfiguration.of(targetPlatform);
     }
   }
 }

@@ -19,8 +19,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
+import com.facebook.buck.core.model.impl.HostTargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
+import com.facebook.buck.core.model.platform.impl.HostPlatform;
 
 /**
  * {@link TargetPlatformResolver} that supports both rule based platforms and a platform for an
@@ -42,6 +44,8 @@ public class DefaultTargetPlatformResolver implements TargetPlatformResolver {
   public Platform getTargetPlatform(TargetConfiguration targetConfiguration) {
     if (targetConfiguration instanceof EmptyTargetConfiguration) {
       return emptyTargetConfigurationPlatform;
+    } else if (targetConfiguration instanceof HostTargetConfiguration) {
+      return HostPlatform.INSTANCE;
     } else if (targetConfiguration instanceof DefaultTargetConfiguration) {
       return ruleBasedTargetPlatformResolver.getTargetPlatform(targetConfiguration);
     }

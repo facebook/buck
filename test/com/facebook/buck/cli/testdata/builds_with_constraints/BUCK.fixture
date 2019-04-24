@@ -24,5 +24,15 @@ genrule(
     cmd = select({
         "//config:linux_config": "echo linux > $OUT",
         "//config:osx_config": "echo osx > $OUT",
+        "DEFAULT": "echo unknown > $OUT",
+    }),
+)
+
+genrule(
+    name = "cpu_dependent_genrule",
+    out = "out",
+    cmd = select({
+        "//config:x86_64_config": "echo x86_64 > $OUT",
+        "DEFAULT": "echo unknown > $OUT",
     }),
 )

@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.function.Function;
 
@@ -55,7 +56,11 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
   @Override
   public String serialize(TargetConfiguration targetConfiguration) {
     try {
-      return objectWriter.writeValueAsString(targetConfiguration);
+      if (targetConfiguration instanceof HostTargetConfiguration) {
+        return objectWriter.writeValueAsString(ImmutableMap.of("hostPlatform", true));
+      } else {
+        return objectWriter.writeValueAsString(targetConfiguration);
+      }
     } catch (JsonProcessingException e) {
       throw new HumanReadableException(
           e, "Cannot serialize target configuration %s", targetConfiguration);
@@ -72,6 +77,9 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
     }
     if (node.size() == 0) {
       return EmptyTargetConfiguration.INSTANCE;
+    }
+    if (node.has("hostPlatform")) {
+      return HostTargetConfiguration.INSTANCE;
     }
     JsonNode targetPlatformNode =
         Preconditions.checkNotNull(

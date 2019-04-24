@@ -1,5 +1,10 @@
+os_constraint_detector(
+    name = "os-detector",
+)
+
 constraint_setting(
     name = "os",
+    host_constraint_detector = ":os-detector",
 )
 
 constraint_value(
@@ -12,12 +17,17 @@ constraint_value(
     constraint_setting = ":os",
 )
 
+cpu_constraint_detector(
+    name = "cpu-detector",
+)
+
 constraint_setting(
     name = "cpu",
+    host_constraint_detector = ":cpu-detector",
 )
 
 constraint_value(
-    name = "x86-64",
+    name = "x86_64",
     constraint_setting = ":cpu",
 )
 
@@ -25,7 +35,7 @@ platform(
     name = "osx_x86-64",
     constraint_values = [
         ":osx",
-        ":x86-64",
+        ":x86_64",
     ],
 )
 
@@ -33,7 +43,7 @@ platform(
     name = "linux_x86-64",
     constraint_values = [
         ":linux",
-        ":x86-64",
+        ":x86_64",
     ],
 )
 
@@ -48,5 +58,12 @@ config_setting(
     name = "linux_config",
     constraint_values = [
         ":linux",
+    ],
+)
+
+config_setting(
+    name = "x86_64_config",
+    constraint_values = [
+        ":x86_64",
     ],
 )
