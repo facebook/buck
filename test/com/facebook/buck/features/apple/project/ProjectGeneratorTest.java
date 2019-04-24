@@ -25,6 +25,7 @@ import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
@@ -6135,7 +6136,8 @@ public class ProjectGeneratorTest {
     PBXTarget pbxTarget = assertTargetExistsAndReturnTarget(pbxProject, "//foo:lib");
     ImmutableMap<String, String> buildSettings = getBuildSettings(buildTarget, pbxTarget, "Debug");
 
-    assertThat(buildSettings.get("DERIVED_FILE_DIR"), equalTo("../" + derivedSourcesUserDir));
+    assertThat(buildSettings.get("DERIVED_FILE_DIR"), startsWith("/"));
+    assertTrue(buildSettings.get("DERIVED_FILE_DIR").endsWith(derivedSourcesUserDir));
     assertThat(
         buildSettings.get("SWIFT_OBJC_INTERFACE_HEADER_NAME"), equalTo(objCGeneratedHeaderName));
   }
