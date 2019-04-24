@@ -4,7 +4,7 @@ java_library(
         "A.java",
     ],
     target_compatible_with = [
-        "//config:linux",
+        "buck//config/constraints:linux",
     ],
 )
 

@@ -1,80 +1,47 @@
-constraint_setting(
-    name = "os",
-)
-
-constraint_value(
-    name = "linux",
-    constraint_setting = ":os",
-)
-
-constraint_value(
-    name = "osx",
-    constraint_setting = ":os",
-)
-
-constraint_setting(
-    name = "cpu",
-)
-
-constraint_value(
-    name = "x86-64",
-    constraint_setting = ":cpu",
-)
-
-constraint_value(
-    name = "aarch64",
-    constraint_setting = ":cpu",
-)
-
-constraint_value(
-    name = "arm",
-    constraint_setting = ":cpu",
-)
-
 platform(
-    name = "osx_x86-64",
+    name = "osx_x86_64",
     constraint_values = [
-        ":osx",
-        ":x86-64",
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
     ],
 )
 
 platform(
     name = "linux_aarch64",
     constraint_values = [
-        ":linux",
-        ":aarch64",
+        "buck//config/constraints:linux",
+        "buck//config/constraints:aarch64",
     ],
 )
 
 platform(
     name = "linux_arm",
     constraint_values = [
-        ":arm",
-        ":linux",
+        "buck//config/constraints:arm",
+        "buck//config/constraints:linux",
     ],
 )
 
 config_setting(
     name = "osx_config",
     constraint_values = [
-        ":osx",
+        "buck//config/constraints:osx",
     ],
 )
 
 config_setting(
     name = "osx_x86-64_config",
     constraint_values = [
-        ":osx",
-        ":x86-64",
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
     ],
 )
 
 config_setting(
     name = "osx_x86-64_config_with_a",
     constraint_values = [
-        ":osx",
-        ":x86-64",
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
     ],
     values = {
         "cat.file": "a",
@@ -84,8 +51,8 @@ config_setting(
 config_setting(
     name = "osx_x86-64_config_with_ab",
     constraint_values = [
-        ":osx",
-        ":x86-64",
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
     ],
     values = {
         "cat.file": "a",
@@ -96,15 +63,15 @@ config_setting(
 config_setting(
     name = "linux_aarch64_config",
     constraint_values = [
-        ":linux",
-        ":aarch64",
+        "buck//config/constraints:linux",
+        "buck//config/constraints:aarch64",
     ],
 )
 
 config_setting(
     name = "a_on_osx",
     constraint_values = [
-        ":osx",
+        "buck//config/constraints:osx",
     ],
     values = {
         "cat.file": "a",
@@ -114,8 +81,8 @@ config_setting(
 config_setting(
     name = "b_on_linux_aarch64",
     constraint_values = [
-        ":linux",
-        ":aarch64",
+        "buck//config/constraints:linux",
+        "buck//config/constraints:aarch64",
     ],
     values = {
         "cat.file": "b",

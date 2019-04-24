@@ -138,7 +138,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
       "test/com/facebook/buck/testutil/integration/testlibs";
 
   private static final String[] TEST_CELL_DIRECTORIES_TO_LINK = {
-    "third-party",
+    "config", "third-party",
   };
 
   private boolean isSetUp = false;

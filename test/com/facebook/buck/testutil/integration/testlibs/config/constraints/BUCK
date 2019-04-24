@@ -1,0 +1,42 @@
+os_constraint_detector(
+    name = "os-detector",
+)
+
+constraint_setting(
+    name = "os",
+    host_constraint_detector = ":os-detector",
+)
+
+constraint_value(
+    name = "linux",
+    constraint_setting = ":os",
+)
+
+constraint_value(
+    name = "osx",
+    constraint_setting = ":os",
+)
+
+cpu_constraint_detector(
+    name = "cpu-detector",
+)
+
+constraint_setting(
+    name = "cpu",
+    host_constraint_detector = ":cpu-detector",
+)
+
+constraint_value(
+    name = "x86_64",
+    constraint_setting = ":cpu",
+)
+
+constraint_value(
+    name = "aarch64",
+    constraint_setting = ":cpu",
+)
+
+constraint_value(
+    name = "arm",
+    constraint_setting = ":cpu",
+)

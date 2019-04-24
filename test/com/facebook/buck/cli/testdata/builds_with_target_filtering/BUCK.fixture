@@ -7,7 +7,7 @@ genrule(
     cmd = "cat $SRCS > $OUT",
     cmd_exe = "type $SRCS > $OUT",
     target_compatible_with = [
-        "//config:linux",
+        "buck//config/constraints:linux",
     ],
 )
 
@@ -20,6 +20,6 @@ genrule(
     cmd = "cat $SRCS > $OUT",
     cmd_exe = "type $SRCS > $OUT",
     target_compatible_with = [
-        "//config:osx",
+        "buck//config/constraints:osx",
     ],
 )

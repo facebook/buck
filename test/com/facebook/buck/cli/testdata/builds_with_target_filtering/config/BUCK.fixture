@@ -1,38 +1,15 @@
-constraint_setting(
-    name = "os",
-)
-
-constraint_value(
-    name = "linux",
-    constraint_setting = ":os",
-)
-
-constraint_value(
-    name = "osx",
-    constraint_setting = ":os",
-)
-
-constraint_setting(
-    name = "cpu",
-)
-
-constraint_value(
-    name = "x86-64",
-    constraint_setting = ":cpu",
-)
-
 platform(
-    name = "osx_x86-64",
+    name = "osx_x86_64",
     constraint_values = [
-        ":osx",
-        ":x86-64",
+        "buck//config/constraints:osx",
+        "buck//config/constraints:x86_64",
     ],
 )
 
 platform(
-    name = "linux_x86-64",
+    name = "linux_x86_64",
     constraint_values = [
-        ":linux",
-        ":x86-64",
+        "buck//config/constraints:linux",
+        "buck//config/constraints:x86_64",
     ],
 )

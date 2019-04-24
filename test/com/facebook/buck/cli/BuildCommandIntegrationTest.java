@@ -340,7 +340,7 @@ public class BuildCommandIntegrationTest {
         .runBuckCommand(
             "build",
             "--target-platforms",
-            "//config:osx_x86-64",
+            "//config:osx_x86_64",
             "--exclude-incompatible-targets",
             "//:")
         .assertSuccess();
@@ -352,7 +352,7 @@ public class BuildCommandIntegrationTest {
         .runBuckCommand(
             "build",
             "--target-platforms",
-            "//config:linux_x86-64",
+            "//config:linux_x86_64",
             "--exclude-incompatible-targets",
             "//:")
         .assertSuccess();
@@ -407,7 +407,7 @@ public class BuildCommandIntegrationTest {
         MoreStringsForTests.containsIgnoringPlatformNewlines(
             "Build target //:dep is restricted to constraints in \"target_compatible_with\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
-                + "Target constraints:\n//config:linux"));
+                + "Target constraints:\nbuck//config/constraints:linux"));
   }
 
   @Test

@@ -1,28 +1,14 @@
-constraint_setting(
-    name = "os",
-)
-
-constraint_value(
-    name = "linux",
-    constraint_setting = ":os",
-)
-
-constraint_value(
-    name = "osx",
-    constraint_setting = ":os",
-)
-
 platform(
     name = "linux_platform",
     constraint_values = [
-        ":linux",
+        "buck//config/constraints:linux",
     ],
 )
 
 platform(
     name = "osx_platform",
     constraint_values = [
-        ":osx",
+        "buck//config/constraints:osx",
     ],
 )
 
@@ -31,7 +17,7 @@ genrule(
     out = "a",
     cmd = "echo a > $OUT",
     target_compatible_with = [
-        ":linux",
+        "buck//config/constraints:linux",
     ],
 )
 
@@ -40,7 +26,7 @@ genrule(
     out = "b",
     cmd = "echo b > $OUT",
     target_compatible_with = [
-        ":osx",
+        "buck//config/constraints:osx",
     ],
 )
 
@@ -50,7 +36,7 @@ java_library(
         "A.java",
     ],
     target_compatible_with = [
-        ":linux",
+        "buck//config/constraints:linux",
     ],
 )
 
@@ -60,6 +46,6 @@ java_library(
         "A.java",
     ],
     target_compatible_with = [
-        ":osx",
+        "buck//config/constraints:osx",
     ],
 )
