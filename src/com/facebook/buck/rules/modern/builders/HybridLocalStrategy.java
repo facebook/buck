@@ -88,7 +88,10 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
             return listenableFuture;
           }
         } catch (Exception e) {
-          LOG.info(e, "Got an exception while trying to cancel the remotely scheduled job.");
+          LOG.info(
+              e,
+              "Got an exception while trying to cancel the remotely scheduled job building: %s",
+              job.rule.getFullyQualifiedName());
           job.future.setException(
               new BuckUncheckedExecutionException(
                   e, "When trying to steal remotely scheduled job."));
@@ -172,6 +175,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
         if (future.isDone()) {
           return;
         }
+        LOG.info("Canceling job building: %s", rule.getFullyQualifiedName());
         Optional<BuildResult> cancelledResult =
             Optional.of(strategyContext.createCancelledResult(reason));
         // TODO(cjhopman): We should probably have a more forceful cancellation that succeeds as
