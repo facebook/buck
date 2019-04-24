@@ -50,7 +50,7 @@ public class CliConfigTest {
     assumeThat(Platform.detect(), is(Platform.LINUX));
     CliConfig linuxConfig =
         FakeBuckConfig.builder()
-            .setArchitecture(Architecture.I386)
+            .setArchitecture(Architecture.X86_32)
             .setPlatform(Platform.LINUX)
             .build()
             .getView(CliConfig.class);

@@ -681,6 +681,7 @@ public class RustCompileUtils {
       return null;
     }
 
+    // This is according to https://forge.rust-lang.org/platform-support.html
     String rawArch = parts.get(1);
     String rustArch;
     if (rawArch.equals("armv7")) {
@@ -688,7 +689,11 @@ public class RustCompileUtils {
       rustArch = "armv7";
     } else {
       Architecture arch = Architecture.fromName(parts.get(1));
-      rustArch = arch.toString();
+      if (arch == Architecture.X86_32) {
+        rustArch = "i386";
+      } else {
+        rustArch = arch.toString();
+      }
     }
 
     return rustArch + "-apple-ios";

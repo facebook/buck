@@ -48,7 +48,7 @@ public class HostInfo {
             .put("is_aarch64", hostArchitecture == Architecture.AARCH64)
             .put("is_arm", hostArchitecture == Architecture.ARM)
             .put("is_armeb", hostArchitecture == Architecture.ARMEB)
-            .put("is_i386", hostArchitecture == Architecture.I386)
+            .put("is_i386", hostArchitecture == Architecture.X86_32)
             .put("is_mips", hostArchitecture == Architecture.MIPS)
             .put("is_mips64", hostArchitecture == Architecture.MIPS64)
             .put("is_mipsel", hostArchitecture == Architecture.MIPSEL)

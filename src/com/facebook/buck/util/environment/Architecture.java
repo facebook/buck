@@ -25,7 +25,6 @@ public enum Architecture {
   AARCH64("aarch64", "arm64"),
   ARM("arm"),
   ARMEB("armeb"),
-  I386("i386"),
   MIPS("mips"),
   MIPS64("mips64"),
   MIPSEL("mipsel"),
@@ -33,6 +32,7 @@ public enum Architecture {
   POWERPC("powerpc"),
   PPC64("ppc64"),
   UNKNOWN("unknown"),
+  X86_32("x86_32", "i386", "i486", "i586", "i686", "i786", "x86"),
   X86_64("x86_64", "amd64");
 
   /** Maps names as used in the os.arch property to Architecture values. */

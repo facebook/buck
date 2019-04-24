@@ -83,7 +83,7 @@ public class HostInfoTest {
         "arch",
         "is_armeb");
     validateSkylarkStruct(
-        HostInfo.createHostInfoStruct(() -> Platform.UNKNOWN, () -> Architecture.I386),
+        HostInfo.createHostInfoStruct(() -> Platform.UNKNOWN, () -> Architecture.X86_32),
         "arch",
         "is_i386");
     validateSkylarkStruct(

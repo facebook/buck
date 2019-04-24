@@ -26,7 +26,7 @@ import java.util.NoSuchElementException;
  * https://github.com/golang/go/blob/master/src/go/build/syslist.go
  */
 public enum GoArch {
-  I386("386", Architecture.I386),
+  I386("386", Architecture.X86_32),
   AMD64("amd64", Architecture.X86_64),
   AMD64P32("amd64p32", Architecture.UNKNOWN),
   ARM("arm", Architecture.ARM),
