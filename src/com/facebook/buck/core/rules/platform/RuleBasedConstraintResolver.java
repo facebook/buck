@@ -28,6 +28,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.UncheckedExecutionException;
+import java.util.Optional;
 
 /**
  * {@link ConstraintResolver} that uses configuration rules obtained from {@link
@@ -52,7 +53,7 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
                           configurationRule instanceof ConstraintSettingRule,
                           "%s is used as constraint_setting, but has wrong type",
                           buildTarget);
-                      return ConstraintSetting.of(buildTarget);
+                      return ConstraintSetting.of(buildTarget, Optional.empty());
                     }
                   });
 

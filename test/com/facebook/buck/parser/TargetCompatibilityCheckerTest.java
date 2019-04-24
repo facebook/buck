@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
+import java.util.Optional;
 import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +48,8 @@ import org.junit.Test;
 public class TargetCompatibilityCheckerTest {
 
   private final ConstraintSetting cs1 =
-      ConstraintSetting.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1"));
+      ConstraintSetting.of(
+          UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1"), Optional.empty());
   private final ConstraintValue cs1v1 =
       ConstraintValue.of(UnconfiguredBuildTargetFactoryForTests.newInstance("//cs:cs1v1"), cs1);
   private final ConstraintValue cs1v2 =
