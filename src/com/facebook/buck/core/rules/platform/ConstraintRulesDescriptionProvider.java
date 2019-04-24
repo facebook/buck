@@ -29,6 +29,7 @@ public class ConstraintRulesDescriptionProvider implements ConfigurationRuleDesc
     return Arrays.asList(
         new ConstraintSettingDescription(),
         new ConstraintValueDescription(),
-        new CpuConstraintDetectorDescription());
+        new CpuConstraintDetectorDescription(),
+        new OsConstraintDetectorDescription());
   }
 }

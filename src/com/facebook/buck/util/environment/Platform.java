@@ -24,11 +24,11 @@ import java.util.Properties;
  * Unix (MACOS, LINUX, ...).
  */
 public enum Platform {
-  LINUX("Linux", "Linux", "linux", PlatformType.UNIX),
-  MACOS("OS X", "Mac OS X", "darwin", PlatformType.UNIX),
-  WINDOWS("Windows", "Windows", "windows", PlatformType.WINDOWS),
-  FREEBSD("FreeBSD", "FreeBSD", "freebsd", PlatformType.UNIX),
-  UNKNOWN("Unknown", "Unknown", "unknown", PlatformType.UNKNOWN);
+  LINUX("Linux", "Linux", "linux", "linux", PlatformType.UNIX),
+  MACOS("OS X", "Mac OS X", "darwin", "osx", PlatformType.UNIX),
+  WINDOWS("Windows", "Windows", "windows", "windows", PlatformType.WINDOWS),
+  FREEBSD("FreeBSD", "FreeBSD", "freebsd", "freebsd", PlatformType.UNIX),
+  UNKNOWN("Unknown", "Unknown", "unknown", "unknown", PlatformType.UNKNOWN);
 
   /**
    * Name that is used for debugging purposes. This is different from {@link #platformName} due to
@@ -39,14 +39,20 @@ public enum Platform {
   private final String printableName;
 
   private final String autoconfName;
+  private final String canonicalName;
   private final String platformName;
   private final PlatformType platformType;
 
   Platform(
-      String printableName, String platformName, String autoconfName, PlatformType platformType) {
+      String printableName,
+      String platformName,
+      String autoconfName,
+      String canonicalName,
+      PlatformType platformType) {
     this.printableName = printableName;
     this.platformName = platformName;
     this.autoconfName = autoconfName;
+    this.canonicalName = canonicalName;
     this.platformType = platformType;
   }
 
@@ -61,6 +67,10 @@ public enum Platform {
 
   public PlatformType getType() {
     return platformType;
+  }
+
+  public String getCanonicalName() {
+    return canonicalName;
   }
 
   /**
