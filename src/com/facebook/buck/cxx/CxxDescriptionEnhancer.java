@@ -31,7 +31,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
-import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -739,8 +738,69 @@ public class CxxDescriptionEnhancer {
 
   public static BuildRule createBuildRuleForCxxThinLtoBinary(
       BuildTarget target,
-      ProjectFilesystem projectFilesystem) {
-    return new NoopBuildRule(target, projectFilesystem);
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      CommonArg args,
+      ImmutableSet<BuildTarget> extraDeps) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    ImmutableMap<String, CxxSource> srcs =
+        parseCxxSources(target, graphBuilder, ruleFinder, pathResolver, cxxPlatform, args);
+    ImmutableMap<Path, SourcePath> headers =
+        parseHeaders(
+            target, graphBuilder, ruleFinder, pathResolver, Optional.of(cxxPlatform), args);
+
+    // Build the binary deps.
+    ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
+    // Add original declared and extra deps.
+    args.getCxxDeps().get(graphBuilder, cxxPlatform).forEach(depsBuilder::add);
+    // Add in deps found via deps query.
+    ImmutableList<BuildRule> depQueryDeps =
+        args.getDepsQuery().map(query -> Objects.requireNonNull(query.getResolvedQuery()))
+            .orElse(ImmutableSortedSet.of()).stream()
+            .map(graphBuilder::getRule)
+            .collect(ImmutableList.toImmutableList());
+    depsBuilder.addAll(depQueryDeps);
+    // Add any extra deps passed in.
+    extraDeps.stream().map(graphBuilder::getRule).forEach(depsBuilder::add);
+    ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
+
+    CxxLinkOptions linkOptions =
+        CxxLinkOptions.of(
+            false, false
+            );
+
+    ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
+        createCompileRulesForCxxBinary(
+            target,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
+            cxxBuckConfig,
+            cxxPlatform,
+            srcs,
+            headers,
+            deps,
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+            linkOptions,
+            args.getPreprocessorFlags(),
+            args.getPlatformPreprocessorFlags(),
+            args.getLangPreprocessorFlags(),
+            args.getLangPlatformPreprocessorFlags(),
+            args.getFrameworks(),
+            args.getCompilerFlags(),
+            args.getLangCompilerFlags(),
+            args.getPlatformCompilerFlags(),
+            args.getLangPlatformCompilerFlags(),
+            args.getPrefixHeader(),
+            args.getPrecompiledHeader(),
+            args.getRawHeaders(),
+            args.getIncludeDirectories());
+
+    return objects.keySet().iterator().next();
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
@@ -821,7 +881,7 @@ public class CxxDescriptionEnhancer {
         args.getExecutableName());
   }
 
-  public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
+  private static ImmutableMap<CxxPreprocessAndCompile, SourcePath> createCompileRulesForCxxBinary(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -831,9 +891,6 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
       SortedSet<BuildRule> deps,
-      ImmutableSet<BuildTarget> linkWholeDeps,
-      Optional<StripStyle> stripStyle,
-      Optional<LinkerMapMode> flavoredLinkerMapMode,
       LinkableDepType linkStyle,
       CxxLinkOptions linkOptions,
       ImmutableList<StringWithMacros> preprocessorFlags,
@@ -842,7 +899,6 @@ public class CxxDescriptionEnhancer {
       ImmutableMap<Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
           langPlatformPreprocessorFlags,
       ImmutableSortedSet<FrameworkPath> frameworks,
-      ImmutableSortedSet<FrameworkPath> libraries,
       ImmutableList<StringWithMacros> compilerFlags,
       ImmutableMap<Type, ImmutableList<StringWithMacros>> langCompilerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformCompilerFlags,
@@ -850,31 +906,10 @@ public class CxxDescriptionEnhancer {
           langPlatformCompilerFlags,
       Optional<SourcePath> prefixHeader,
       Optional<SourcePath> precompiledHeader,
-      ImmutableList<StringWithMacros> linkerFlags,
-      ImmutableList<String> linkerExtraOutputs,
-      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
-      Optional<CxxRuntimeType> cxxRuntimeType,
       ImmutableSortedSet<SourcePath> rawHeaders,
-      ImmutableSortedSet<String> includeDirectories,
-      Optional<String> outputRootName) {
+      ImmutableSortedSet<String> includeDirectories) {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
-    //    TODO(beefon): should be:
-    //    Path linkOutput = getLinkOutputPath(
-    //        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
-    //        projectFilesystem);
-
-    Path linkOutput =
-        getBinaryOutputPath(
-            flavoredLinkerMapMode.isPresent()
-                ? target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor())
-                : target,
-            projectFilesystem,
-            cxxPlatform.getBinaryExtension(),
-            outputRootName);
-
-    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -940,21 +975,103 @@ public class CxxDescriptionEnhancer {
         linkStyle == Linker.LinkableDepType.STATIC
             ? PicType.PDC
             : cxxPlatform.getPicTypeForSharedLinking();
+    return CxxSourceRuleFactory.of(
+            projectFilesystem,
+            target,
+            graphBuilder,
+            sourcePathResolver,
+            ruleFinder,
+            cxxBuckConfig,
+            cxxPlatform,
+            cxxPreprocessorInput,
+            allCompilerFlags,
+            prefixHeader,
+            precompiledHeader,
+            pic)
+        .requirePreprocessAndCompileRules(srcs);
+  }
+
+  public static CxxLinkAndCompileRules createBuildRulesForCxxBinary(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<String, CxxSource> srcs,
+      ImmutableMap<Path, SourcePath> headers,
+      SortedSet<BuildRule> deps,
+      ImmutableSet<BuildTarget> linkWholeDeps,
+      Optional<StripStyle> stripStyle,
+      Optional<LinkerMapMode> flavoredLinkerMapMode,
+      LinkableDepType linkStyle,
+      CxxLinkOptions linkOptions,
+      ImmutableList<StringWithMacros> preprocessorFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformPreprocessorFlags,
+      ImmutableMap<Type, ImmutableList<StringWithMacros>> langPreprocessorFlags,
+      ImmutableMap<Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          langPlatformPreprocessorFlags,
+      ImmutableSortedSet<FrameworkPath> frameworks,
+      ImmutableSortedSet<FrameworkPath> libraries,
+      ImmutableList<StringWithMacros> compilerFlags,
+      ImmutableMap<Type, ImmutableList<StringWithMacros>> langCompilerFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformCompilerFlags,
+      ImmutableMap<Type, PatternMatchedCollection<ImmutableList<StringWithMacros>>>
+          langPlatformCompilerFlags,
+      Optional<SourcePath> prefixHeader,
+      Optional<SourcePath> precompiledHeader,
+      ImmutableList<StringWithMacros> linkerFlags,
+      ImmutableList<String> linkerExtraOutputs,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags,
+      Optional<CxxRuntimeType> cxxRuntimeType,
+      ImmutableSortedSet<SourcePath> rawHeaders,
+      ImmutableSortedSet<String> includeDirectories,
+      Optional<String> outputRootName) {
+    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    //    TODO(beefon): should be:
+    //    Path linkOutput = getLinkOutputPath(
+    //        createCxxLinkTarget(params.getBuildTarget(), flavoredLinkerMapMode),
+    //        projectFilesystem);
+
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
-        CxxSourceRuleFactory.of(
-                projectFilesystem,
-                target,
-                graphBuilder,
-                sourcePathResolver,
-                ruleFinder,
-                cxxBuckConfig,
-                cxxPlatform,
-                cxxPreprocessorInput,
-                allCompilerFlags,
-                prefixHeader,
-                precompiledHeader,
-                pic)
-            .requirePreprocessAndCompileRules(srcs);
+        createCompileRulesForCxxBinary(
+            target,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
+            cxxBuckConfig,
+            cxxPlatform,
+            srcs,
+            headers,
+            deps,
+            linkStyle,
+            linkOptions,
+            preprocessorFlags,
+            platformPreprocessorFlags,
+            langPreprocessorFlags,
+            langPlatformPreprocessorFlags,
+            frameworks,
+            compilerFlags,
+            langCompilerFlags,
+            platformCompilerFlags,
+            langPlatformCompilerFlags,
+            prefixHeader,
+            precompiledHeader,
+            rawHeaders,
+            includeDirectories);
+
+    Path linkOutput =
+        getBinaryOutputPath(
+            flavoredLinkerMapMode.isPresent()
+                ? target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor())
+                : target,
+            projectFilesystem,
+            cxxPlatform.getBinaryExtension(),
+            outputRootName);
+
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+    CommandTool.Builder executableBuilder = new CommandTool.Builder();
 
     BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
 
