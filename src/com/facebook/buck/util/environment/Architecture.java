@@ -22,7 +22,7 @@ import java.util.Properties;
 
 /** Represents the CPU architecture of a system. */
 public enum Architecture {
-  AARCH64("aarch64"),
+  AARCH64("aarch64", "arm64"),
   ARM("arm"),
   ARMEB("armeb"),
   I386("i386"),
@@ -33,7 +33,7 @@ public enum Architecture {
   POWERPC("powerpc"),
   PPC64("ppc64"),
   UNKNOWN("unknown"),
-  X86_64("x86_64");
+  X86_64("x86_64", "amd64");
 
   /** Maps names as used in the os.arch property to Architecture values. */
   private static Map<String, Architecture> nameToValueMap;
@@ -42,29 +42,31 @@ public enum Architecture {
     nameToValueMap = new HashMap<>();
     for (Architecture arch : Architecture.values()) {
       nameToValueMap.put(arch.toString(), arch);
+      for (String archName : arch.names) {
+        nameToValueMap.put(archName, arch);
+      }
     }
-    // Also add a few aliases
-    nameToValueMap.put("amd64", X86_64);
-    nameToValueMap.put("arm64", AARCH64);
   }
 
-  Architecture(String name) {
+  private final String name;
+  private final String[] names;
+
+  Architecture(String name, String... names) {
     this.name = name;
+    this.names = names;
   }
+
+  private static final Architecture HOST_ARCHITECTURE = detect(System.getProperties());
 
   /** Detect the host architecture from the given Java properties */
   public static Architecture detect(Properties properties) {
     String javaName = properties.getProperty("os.arch");
-    Architecture result = nameToValueMap.get(javaName);
-    if (result == null) {
-      return UNKNOWN;
-    } else {
-      return result;
-    }
+    return fromName(javaName);
   }
 
+  /** @return CPU architecture of the currently running OS. */
   public static Architecture detect() {
-    return detect(System.getProperties());
+    return HOST_ARCHITECTURE;
   }
 
   public static Architecture fromName(String name) {
@@ -75,6 +77,4 @@ public enum Architecture {
   public String toString() {
     return name;
   }
-
-  private String name;
 }
