@@ -62,7 +62,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
-import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -800,7 +799,59 @@ public class CxxDescriptionEnhancer {
             args.getRawHeaders(),
             args.getIncludeDirectories());
 
-    return objects.keySet().iterator().next();
+    Path indexOutput =
+        getBinaryOutputPath(
+            target, projectFilesystem, Optional.empty(), Optional.of("thinlto.indices"));
+
+    CommandTool.Builder executableBuilder = new CommandTool.Builder();
+    Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
+
+    ImmutableList<Arg> indexArgs =
+        createLinkArgsForCxxBinary(
+            target,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
+            cxxPlatform,
+            objects,
+            deps,
+            executableBuilder,
+            linker,
+            args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+            indexOutput,
+            args.getLinkerFlags(),
+            args.getPlatformLinkerFlags());
+
+    CxxThinLTOIndex cxxThinLTOIndex =
+        (CxxThinLTOIndex)
+            graphBuilder.computeIfAbsent(
+                target,
+                ignored ->
+                    CxxLinkableEnhancer.createCxxThinLTOIndexBuildRule(
+                        cxxBuckConfig,
+                        cxxPlatform,
+                        projectFilesystem,
+                        graphBuilder,
+                        pathResolver,
+                        ruleFinder,
+                        target,
+                        indexOutput,
+                        args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                        RichStream.from(deps).filter(NativeLinkable.class).toImmutableList(),
+                        args.getCxxRuntimeType(),
+                        ImmutableSet.of(),
+                        args.getLinkDepsQueryWhole()
+                            ? RichStream.from(depQueryDeps)
+                                .map(BuildRule::getBuildTarget)
+                                .toImmutableSet()
+                            : ImmutableSet.of(),
+                        NativeLinkableInput.builder()
+                            .setArgs(indexArgs)
+                            .setFrameworks(args.getFrameworks())
+                            .setLibraries(args.getLibraries())
+                            .build()));
+
+    return cxxThinLTOIndex;
   }
 
   public static CxxLinkAndCompileRules createBuildRulesForCxxBinaryDescriptionArg(
@@ -879,6 +930,81 @@ public class CxxDescriptionEnhancer {
         args.getRawHeaders(),
         args.getIncludeDirectories(),
         args.getExecutableName());
+  }
+
+  private static ImmutableList<Arg> createLinkArgsForCxxBinary(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxPlatform cxxPlatform,
+      ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects,
+      SortedSet<BuildRule> deps,
+      CommandTool.Builder executableBuilder,
+      Linker linker,
+      LinkableDepType linkStyle,
+      Path linkOutput,
+      ImmutableList<StringWithMacros> linkerFlags,
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    // Build up the linker flags, which support macro expansion.
+    {
+      ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>> expanders =
+          ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander());
+
+      StringWithMacrosConverter macrosConverter =
+          StringWithMacrosConverter.builder()
+              .setBuildTarget(target)
+              .setCellPathResolver(cellRoots)
+              .setExpanders(expanders)
+              .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
+              .build();
+      CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+              linkerFlags, platformLinkerFlags, cxxPlatform)
+          .stream()
+          .map(x -> macrosConverter.convert(x, graphBuilder))
+          .forEach(argsBuilder::add);
+    }
+
+    // Special handling for dynamically linked binaries with rpath support
+    if (linkStyle == Linker.LinkableDepType.SHARED
+        && linker.getSharedLibraryLoadingType() == Linker.SharedLibraryLoadingType.RPATH) {
+      // Create a symlink tree with for all shared libraries needed by this binary.
+      SymlinkTree sharedLibraries =
+          requireSharedLibrarySymlinkTree(
+              target, projectFilesystem, graphBuilder, cxxPlatform, deps);
+
+      // Embed a origin-relative library path into the binary so it can find the shared libraries.
+      // The shared libraries root is absolute. Also need an absolute path to the linkOutput
+      Path absLinkOut = projectFilesystem.resolve(linkOutput);
+      argsBuilder.addAll(
+          StringArg.from(
+              Linkers.iXlinker(
+                  "-rpath",
+                  String.format(
+                      "%s/%s",
+                      linker.origin(),
+                      absLinkOut.getParent().relativize(sharedLibraries.getRoot()).toString()))));
+
+      // Add all the shared libraries and the symlink tree as inputs to the tool that represents
+      // this binary, so that users can attach the proper deps.
+      executableBuilder.addNonHashableInput(sharedLibraries.getRootSourcePath());
+      executableBuilder.addInputs(sharedLibraries.getLinks().values());
+    }
+
+    // Add object files into the args.
+    ImmutableList<SourcePathArg> objectArgs =
+        SourcePathArg.from(objects.values()).stream()
+            .map(
+                input -> {
+                  Preconditions.checkArgument(input instanceof SourcePathArg);
+                  return (SourcePathArg) input;
+                })
+            .collect(ImmutableList.toImmutableList());
+    argsBuilder.addAll(objectArgs);
+
+    return argsBuilder.build();
   }
 
   private static ImmutableMap<CxxPreprocessAndCompile, SourcePath> createCompileRulesForCxxBinary(
@@ -1061,6 +1187,10 @@ public class CxxDescriptionEnhancer {
             rawHeaders,
             includeDirectories);
 
+    CommandTool.Builder executableBuilder = new CommandTool.Builder();
+    Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
+    BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
+
     Path linkOutput =
         getBinaryOutputPath(
             flavoredLinkerMapMode.isPresent()
@@ -1070,68 +1200,21 @@ public class CxxDescriptionEnhancer {
             cxxPlatform.getBinaryExtension(),
             outputRootName);
 
-    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    CommandTool.Builder executableBuilder = new CommandTool.Builder();
-
-    BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
-
-    // Build up the linker flags, which support macro expansion.
-    {
-      ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>> expanders =
-          ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander());
-
-      StringWithMacrosConverter macrosConverter =
-          StringWithMacrosConverter.builder()
-              .setBuildTarget(linkRuleTarget)
-              .setCellPathResolver(cellRoots)
-              .setExpanders(expanders)
-              .setSanitizer(getStringWithMacrosArgSanitizer(cxxPlatform))
-              .build();
-      CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-              linkerFlags, platformLinkerFlags, cxxPlatform)
-          .stream()
-          .map(x -> macrosConverter.convert(x, graphBuilder))
-          .forEach(argsBuilder::add);
-    }
-
-    Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
-
-    // Special handling for dynamically linked binaries with rpath support
-    if (linkStyle == Linker.LinkableDepType.SHARED
-        && linker.getSharedLibraryLoadingType() == Linker.SharedLibraryLoadingType.RPATH) {
-      // Create a symlink tree with for all shared libraries needed by this binary.
-      SymlinkTree sharedLibraries =
-          requireSharedLibrarySymlinkTree(
-              target, projectFilesystem, graphBuilder, cxxPlatform, deps);
-
-      // Embed a origin-relative library path into the binary so it can find the shared libraries.
-      // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path absLinkOut = projectFilesystem.resolve(linkOutput);
-      argsBuilder.addAll(
-          StringArg.from(
-              Linkers.iXlinker(
-                  "-rpath",
-                  String.format(
-                      "%s/%s",
-                      linker.origin(),
-                      absLinkOut.getParent().relativize(sharedLibraries.getRoot()).toString()))));
-
-      // Add all the shared libraries and the symlink tree as inputs to the tool that represents
-      // this binary, so that users can attach the proper deps.
-      executableBuilder.addNonHashableInput(sharedLibraries.getRootSourcePath());
-      executableBuilder.addInputs(sharedLibraries.getLinks().values());
-    }
-
-    // Add object files into the args.
-    ImmutableList<SourcePathArg> objectArgs =
-        SourcePathArg.from(objects.values()).stream()
-            .map(
-                input -> {
-                  Preconditions.checkArgument(input instanceof SourcePathArg);
-                  return (SourcePathArg) input;
-                })
-            .collect(ImmutableList.toImmutableList());
-    argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
+    ImmutableList<Arg> args =
+        createLinkArgsForCxxBinary(
+            linkRuleTarget,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
+            cxxPlatform,
+            objects,
+            deps,
+            executableBuilder,
+            linker,
+            linkStyle,
+            linkOutput,
+            linkerFlags,
+            platformLinkerFlags);
 
     CxxLink cxxLink =
         (CxxLink)
@@ -1160,7 +1243,7 @@ public class CxxDescriptionEnhancer {
                         ImmutableSet.of(),
                         linkWholeDeps,
                         NativeLinkableInput.builder()
-                            .setArgs(argsBuilder.build())
+                            .setArgs(args)
                             .setFrameworks(frameworks)
                             .setLibraries(libraries)
                             .build(),

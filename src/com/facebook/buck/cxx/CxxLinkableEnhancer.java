@@ -73,6 +73,85 @@ public class CxxLinkableEnhancer {
   // Utility class doesn't instantiate.
   private CxxLinkableEnhancer() {}
 
+  /** Generate build rule for the indexing step of an incremental ThinLTO build */
+  public static CxxThinLTOIndex createCxxThinLTOIndexBuildRule(
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      BuildTarget target,
+      Path output,
+      Linker.LinkableDepType depType,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
+      ImmutableSet<BuildTarget> blacklist,
+      ImmutableSet<BuildTarget> linkWholeDeps,
+      NativeLinkableInput immediateLinkableInput) {
+
+    // Build up the arguments to pass to the linker.
+    ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
+
+    Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
+
+    // Add flags to generate linker map if supported.
+    if (linker instanceof HasLinkerMap && LinkerMapMode.isLinkerMapEnabledForBuildTarget(target)) {
+      argsBuilder.addAll(((HasLinkerMap) linker).linkerMap(output));
+    }
+
+    argsBuilder.add(StringArg.of("-Wl,-plugin-opt,thinlto-index-only=thinlto.objects"));
+    argsBuilder.add(StringArg.of("-Wl,-plugin-opt,thinlto-emit-imports-files"));
+    argsBuilder.add(StringArg.of("-Wl,-plugin-opt,thinlto-prefix-replace=;" + output.toString()));
+
+    if (linker instanceof HasImportLibrary) {
+      argsBuilder.addAll(((HasImportLibrary) linker).importLibrary(output));
+    }
+
+    // Pass any platform specific or extra linker flags.
+    argsBuilder.addAll(
+        SanitizedArg.from(
+            cxxPlatform.getCompilerDebugPathSanitizer().sanitize(Optional.empty()),
+            cxxPlatform.getLdflags()));
+
+    ImmutableList<Arg> allArgs =
+        createDepSharedLibFrameworkArgsForLink(
+            cxxPlatform,
+            graphBuilder,
+            resolver,
+            target,
+            Linker.LinkType.EXECUTABLE,
+            Optional.empty(),
+            depType,
+            nativeLinkableDeps,
+            Optional.empty(),
+            blacklist,
+            linkWholeDeps,
+            immediateLinkableInput);
+
+    argsBuilder.addAll(allArgs);
+
+    Linker.LinkableDepType runtimeDepType = depType;
+    if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
+      runtimeDepType = Linker.LinkableDepType.STATIC;
+    }
+
+    // Add all arguments needed to link in the C/C++ platform runtime.
+    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(runtimeDepType)));
+
+    ImmutableList<Arg> ldArgs = argsBuilder.build();
+
+    return new CxxThinLTOIndex(
+        target,
+        projectFilesystem,
+        ruleFinder,
+        linker,
+        output,
+        ldArgs,
+        cxxBuckConfig.getLinkScheduleInfo(),
+        cxxBuckConfig.shouldCacheLinks());
+  }
+
   public static CxxLink createCxxLinkableBuildRule(
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
@@ -155,36 +234,19 @@ public class CxxLinkableEnhancer {
         linkOptions.getFatLto());
   }
 
-  /**
-   * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects and
-   * a dependency tree of {@link NativeLinkable} dependencies.
-   *
-   * @param nativeLinkableDeps library dependencies that the linkable links in
-   * @param immediateLinkableInput framework and libraries of the linkable itself
-   * @param cellPathResolver
-   */
-  public static CxxLink createCxxLinkableBuildRule(
-      CxxBuckConfig cxxBuckConfig,
+  private static ImmutableList<Arg> createDepSharedLibFrameworkArgsForLink(
       CxxPlatform cxxPlatform,
-      ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver resolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       Linker.LinkType linkType,
       Optional<String> soname,
-      Path output,
-      ImmutableList<String> extraOutputNames,
       Linker.LinkableDepType depType,
-      CxxLinkOptions linkOptions,
       Iterable<? extends NativeLinkable> nativeLinkableDeps,
-      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
       Optional<SourcePath> bundleLoader,
       ImmutableSet<BuildTarget> blacklist,
       ImmutableSet<BuildTarget> linkWholeDeps,
-      NativeLinkableInput immediateLinkableInput,
-      Optional<LinkOutputPostprocessor> postprocessor,
-      CellPathResolver cellPathResolver) {
+      NativeLinkableInput immediateLinkableInput) {
 
     // Soname should only ever be set when linking a "shared" library.
     Preconditions.checkState(!soname.isPresent() || SONAME_REQUIRED_LINK_TYPES.contains(linkType));
@@ -268,12 +330,59 @@ public class CxxLinkableEnhancer {
           argsBuilder);
     }
 
+    return argsBuilder.build();
+  }
+
+  /**
+   * Construct a {@link CxxLink} rule that builds a native linkable from top-level input objects and
+   * a dependency tree of {@link NativeLinkable} dependencies.
+   *
+   * @param nativeLinkableDeps library dependencies that the linkable links in
+   * @param immediateLinkableInput framework and libraries of the linkable itself
+   * @param cellPathResolver
+   */
+  public static CxxLink createCxxLinkableBuildRule(
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      SourcePathResolver resolver,
+      SourcePathRuleFinder ruleFinder,
+      BuildTarget target,
+      Linker.LinkType linkType,
+      Optional<String> soname,
+      Path output,
+      ImmutableList<String> extraOutputNames,
+      Linker.LinkableDepType depType,
+      CxxLinkOptions linkOptions,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      Optional<Linker.CxxRuntimeType> cxxRuntimeType,
+      Optional<SourcePath> bundleLoader,
+      ImmutableSet<BuildTarget> blacklist,
+      ImmutableSet<BuildTarget> linkWholeDeps,
+      NativeLinkableInput immediateLinkableInput,
+      Optional<LinkOutputPostprocessor> postprocessor,
+      CellPathResolver cellPathResolver) {
+
+    ImmutableList<Arg> allArgs =
+        createDepSharedLibFrameworkArgsForLink(
+            cxxPlatform,
+            graphBuilder,
+            resolver,
+            target,
+            linkType,
+            soname,
+            depType,
+            nativeLinkableDeps,
+            bundleLoader,
+            blacklist,
+            linkWholeDeps,
+            immediateLinkableInput);
+
     Linker.LinkableDepType runtimeDepType = depType;
     if (cxxRuntimeType.orElse(Linker.CxxRuntimeType.DYNAMIC) == Linker.CxxRuntimeType.STATIC) {
       runtimeDepType = Linker.LinkableDepType.STATIC;
     }
-
-    ImmutableList<Arg> allArgs = argsBuilder.build();
 
     return createCxxLinkableBuildRule(
         cellPathResolver,
