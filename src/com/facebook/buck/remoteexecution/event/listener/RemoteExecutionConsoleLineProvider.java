@@ -79,6 +79,16 @@ public class RemoteExecutionConsoleLineProvider implements AdditionalConsoleLine
               "Building with Remote Execution [RE]. Used %d:%02d minutes of distributed CPU time.",
               minutes,
               TimeUnit.MILLISECONDS.toSeconds(remoteMs) - TimeUnit.MINUTES.toSeconds(minutes)));
+      int waitingActions = 0;
+      for (State state : RemoteExecutionActionEvent.State.values()) {
+        if (!RemoteExecutionActionEvent.isTerminalState(state)) {
+          waitingActions += actionsPerState.getOrDefault(state, 0);
+        }
+      }
+      lines.add(
+          String.format(
+              "[RE] Waiting on %d remote actions. Completed %d actions remotely.",
+              waitingActions, actionsPerState.getOrDefault(State.ACTION_SUCCEEDED, 0)));
     }
     LocalFallbackStats localFallbackStats = statsProvider.getLocalFallbackStats();
     if (localFallbackStats.getLocallyExecutedRules() > 0) {

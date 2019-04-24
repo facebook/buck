@@ -86,10 +86,13 @@ public class RemoteExecutionConsoleLineProviderTest {
     RemoteExecutionConsoleLineProvider provider =
         new RemoteExecutionConsoleLineProvider(statsProvider, SESSION_ID_INFO, false);
     List<String> lines = provider.createConsoleLinesAtTime(0);
-    Assert.assertEquals(1, lines.size());
+    Assert.assertEquals(2, lines.size());
     Assert.assertEquals(
         lines.get(0),
         "Building with Remote Execution [RE]. Used 1:05 minutes of distributed CPU time.");
+    Assert.assertEquals(
+        lines.get(1), "[RE] Waiting on 0 remote actions. Completed 84 actions remotely.");
+
     for (String line : lines) {
       Assert.assertFalse(line.contains("LocalFallback"));
     }
