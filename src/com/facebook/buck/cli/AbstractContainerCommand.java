@@ -172,11 +172,7 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
 
   @Override
   public ImmutableList<String> getTargetPlatforms() {
-    return getSubcommand()
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException("Target platforms are not supported in this command"))
-        .getTargetPlatforms();
+    return getSubcommand().map(Command::getTargetPlatforms).orElse(ImmutableList.of());
   }
 
   @Override
