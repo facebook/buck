@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -70,7 +71,7 @@ public class DefaultTargetPlatformResolverTest {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
           if (buildTarget.equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintValue, "value");
+            return new ConstraintSettingRule(constraintValue, "value", Optional.empty());
           }
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };

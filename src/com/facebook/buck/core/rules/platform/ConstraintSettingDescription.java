@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /**
@@ -51,12 +52,14 @@ public class ConstraintSettingDescription
       Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       ConstraintSettingArg arg) {
-    return new ConstraintSettingRule(buildTarget, arg.getName());
+    return new ConstraintSettingRule(buildTarget, arg.getName(), arg.getHostConstraintDetector());
   }
 
   @BuckStyleImmutable
   @Value.Immutable
   interface AbstractConstraintSettingArg {
     String getName();
+
+    Optional<UnconfiguredBuildTargetView> getHostConstraintDetector();
   }
 }

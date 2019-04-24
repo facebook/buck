@@ -65,7 +65,8 @@ public class TargetCompatibilityCheckerTest {
         new RuleBasedConstraintResolver(
             buildTarget -> {
               if (buildTarget.equals(cs1.getBuildTarget())) {
-                return new ConstraintSettingRule(buildTarget, buildTarget.getShortName());
+                return new ConstraintSettingRule(
+                    buildTarget, buildTarget.getShortName(), Optional.empty());
               } else {
                 return new ConstraintValueRule(
                     buildTarget, buildTarget.getShortName(), cs1.getBuildTarget());

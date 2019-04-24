@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -40,7 +41,7 @@ public class RuleBasedTargetPlatformResolverTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
     RuleBasedTargetPlatformResolver resolver =
         new RuleBasedTargetPlatformResolver(
-            target -> new ConstraintSettingRule(constraint, "setting"),
+            target -> new ConstraintSettingRule(constraint, "setting", Optional.empty()),
             new ThrowingConstraintResolver());
 
     thrown.expect(HumanReadableException.class);
@@ -69,7 +70,7 @@ public class RuleBasedTargetPlatformResolverTest {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);
           }
           if (buildTarget.equals(constraintSetting)) {
-            return new ConstraintSettingRule(constraintValue, "value");
+            return new ConstraintSettingRule(constraintValue, "value", Optional.empty());
           }
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };
