@@ -58,7 +58,12 @@ public class WorkerRequirementsProviderTest {
     WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
-    Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
+    Assert.assertEquals(WorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
+
+    provider = new WorkerRequirementsProvider(FILENAME, false, 1000);
+    workerRequirements = provider.resolveRequirements(buildTarget);
+    Assert.assertNotNull(workerRequirements);
+    Assert.assertEquals(WorkerRequirementsProvider.DONT_RETRY_ON_OOM_DEFAULT, workerRequirements);
   }
 
   @Test
@@ -69,7 +74,7 @@ public class WorkerRequirementsProviderTest {
     WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
-    Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
+    Assert.assertEquals(WorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
   }
 
   @Test
@@ -81,7 +86,7 @@ public class WorkerRequirementsProviderTest {
     WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
-    Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
+    Assert.assertEquals(WorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
   }
 
   @Test
@@ -94,7 +99,7 @@ public class WorkerRequirementsProviderTest {
     WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
-    Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
+    Assert.assertEquals(WorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
   }
 
   @Test
@@ -126,7 +131,7 @@ public class WorkerRequirementsProviderTest {
     WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, true, 1000);
     WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
     Assert.assertNotNull(workerRequirements);
-    Assert.assertEquals(WorkerRequirementsProvider.DEFAULT, workerRequirements);
+    Assert.assertEquals(WorkerRequirementsProvider.RETRY_ON_OOM_DEFAULT, workerRequirements);
   }
 
   @After

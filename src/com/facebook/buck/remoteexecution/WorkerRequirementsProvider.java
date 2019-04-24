@@ -37,10 +37,17 @@ import java.util.stream.Collectors;
 
 /** Provides rule's RE worker requirements based on JSON file */
 public final class WorkerRequirementsProvider {
-  public static final WorkerRequirements DEFAULT =
+  public static final WorkerRequirements RETRY_ON_OOM_DEFAULT =
       WorkerRequirements.newBuilder()
           .setWorkerSize(WorkerSize.SMALL)
           .setPlatformType(WorkerPlatformType.LINUX)
+          .setShouldTryLargerWorkerOnOom(true)
+          .build();
+  public static final WorkerRequirements DONT_RETRY_ON_OOM_DEFAULT =
+      WorkerRequirements.newBuilder()
+          .setWorkerSize(WorkerSize.SMALL)
+          .setPlatformType(WorkerPlatformType.LINUX)
+          .setShouldTryLargerWorkerOnOom(false)
           .build();
   private static final Logger LOG = Logger.get(WorkerRequirementsProvider.class);
   private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -68,6 +75,10 @@ public final class WorkerRequirementsProvider {
             .build();
   }
 
+  private WorkerRequirements resolveDefault() {
+    return tryLargerWorkerOnOom ? RETRY_ON_OOM_DEFAULT : DONT_RETRY_ON_OOM_DEFAULT;
+  }
+
   /**
    * Resolve rule's worker requirements.
    *
@@ -78,7 +89,7 @@ public final class WorkerRequirementsProvider {
   public WorkerRequirements resolveRequirements(BuildTarget target) {
     Path filepath = target.getBasePath().resolve(workerRequirementsFilename);
     if (!Files.exists(filepath)) {
-      return DEFAULT;
+      return resolveDefault();
     }
 
     try {
@@ -109,11 +120,11 @@ public final class WorkerRequirementsProvider {
                 LOG.debug(
                     "No requirements found for rule=%s, using default",
                     target.getFullyQualifiedName());
-                return DEFAULT;
+                return resolveDefault();
               });
     } catch (ExecutionException e) {
       LOG.error(e.getCause(), "Unable to parse worker requirements file=%s", filepath.toString());
-      return DEFAULT;
+      return resolveDefault();
     }
   }
 

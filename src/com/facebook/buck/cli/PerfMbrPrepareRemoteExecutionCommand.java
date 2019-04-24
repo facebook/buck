@@ -156,7 +156,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
                             return helper.prepareRemoteExecution(
                                 (ModernBuildRule<?>) buildRule,
                                 digest -> !containedHashes.contains(digest),
-                                WorkerRequirementsProvider.DEFAULT);
+                                WorkerRequirementsProvider.DONT_RETRY_ON_OOM_DEFAULT);
                           } catch (Exception e) {
                             // Ignore. Hopefully this is just a serialization failure. In normal
                             // builds, those rules just fall back to non-RE.
