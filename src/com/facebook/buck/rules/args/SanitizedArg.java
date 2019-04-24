@@ -96,10 +96,17 @@ public class SanitizedArg implements Arg {
     return INTERNER.intern(new SanitizedArg(unsanitized, sanitizer.apply(unsanitized)));
   }
 
-  public static ImmutableList<Arg> from(Function<String, String> sanitizer, Iterable<String> args) {
+  /**
+   * Create a list of SanitizedArgs by applying the given sanitizer function to a list of arg
+   * strings and filtering empty args
+   */
+  public static ImmutableList<Arg> from(
+      Function<? super String, String> sanitizer, Iterable<String> args) {
     ImmutableList.Builder<Arg> converted = ImmutableList.builder();
     for (String arg : args) {
-      converted.add(create(sanitizer, arg));
+      if (!arg.isEmpty()) {
+        converted.add(create(sanitizer, arg));
+      }
     }
     return converted.build();
   }
