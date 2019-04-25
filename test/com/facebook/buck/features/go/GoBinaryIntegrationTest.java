@@ -337,4 +337,23 @@ public class GoBinaryIntegrationTest {
         workspace.runBuckCommand("run", "//:bin").assertSuccess().getStdout(),
         Matchers.containsString("foo"));
   }
+
+  @Test
+  public void binaryWithSharedCgoDepsCanBeRebuiltFromCache() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+    workspace.enableDirCache();
+
+    // Do an initial run to warm the cache and verify shared linking is working
+    workspace.runBuckCommand("run", "//src/mixed_with_c:bin-shared").assertSuccess();
+
+    // Clean the build products, as we're going to test that pulling from cache works.
+    workspace.runBuckCommand("clean", "--keep-cache");
+
+    // Run another run to ensure that shared libs were fetched from cache
+    workspace.runBuckCommand("run", "//src/mixed_with_c:bin-shared").assertSuccess();
+
+    workspace.getBuildLog().assertTargetWasFetchedFromCache("//src/mixed_with_c:bin-shared");
+  }
 }
