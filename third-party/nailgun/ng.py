@@ -45,6 +45,12 @@ else:
         return bytes(s, "utf-8")
 
 
+if sys.platform == "win32":
+    import os, msvcrt
+    msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+    msvcrt.setmode(sys.stderr.fileno(), os.O_BINARY)
+
+
 def bytes_to_str(bytes_to_convert):
     """Version independent way of converting bytes to string."""
     return bytes_to_convert if is_py2 else bytes_to_convert.decode("utf-8")
