@@ -153,7 +153,11 @@ public class MetadataProviderFactory {
 
       @Override
       public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
-        return get();
+        return metadataProvider
+            .getForAction(actionDigest, ruleName)
+            .toBuilder()
+            .setWorkerRequirements(requirementsSupplier.get())
+            .build();
       }
     };
   }
