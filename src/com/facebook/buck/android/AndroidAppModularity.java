@@ -39,18 +39,17 @@ import java.nio.file.Path;
 import java.util.AbstractMap;
 import java.util.Optional;
 import java.util.SortedSet;
-import javax.annotation.Nullable;
 
 public class AndroidAppModularity extends AbstractBuildRule {
 
-  @Nullable @AddToRuleKey private final AndroidAppModularityGraphEnhancementResult result;
+  @AddToRuleKey private final AndroidAppModularityGraphEnhancementResult result;
   @AddToRuleKey private final boolean shouldIncludeClasses;
   @AddToRuleKey private final APKModuleGraph apkModuleGraph;
 
   AndroidAppModularity(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      @Nullable AndroidAppModularityGraphEnhancementResult result,
+      AndroidAppModularityGraphEnhancementResult result,
       boolean shouldIncludeClasses,
       APKModuleGraph apkModuleGraph) {
     super(buildTarget, projectFilesystem);
@@ -76,7 +75,7 @@ public class AndroidAppModularity extends AbstractBuildRule {
 
     ImmutableMultimap.Builder<APKModule, Path> additionalDexStoreToJarPathMapBuilder =
         ImmutableMultimap.builder();
-    if (result != null) {
+    if (shouldIncludeClasses) {
       additionalDexStoreToJarPathMapBuilder.putAll(
           result.getPackageableCollection().getModuleMappedClasspathEntriesToDex().entries()
               .stream()
@@ -118,7 +117,7 @@ public class AndroidAppModularity extends AbstractBuildRule {
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    if (result != null) {
+    if (shouldIncludeClasses) {
       return result.getFinalDeps();
     } else {
       return ImmutableSortedSet.of();

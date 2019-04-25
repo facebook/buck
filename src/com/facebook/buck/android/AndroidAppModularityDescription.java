@@ -55,15 +55,11 @@ public class AndroidAppModularityDescription
             context.getTargetGraph(),
             buildTarget);
 
-    AndroidAppModularityGraphEnhancementResult result = null;
+    AndroidAppModularityGraphEnhancer graphEnhancer =
+        new AndroidAppModularityGraphEnhancer(
+            buildTarget, params, context.getActionGraphBuilder(), args.getNoDx(), apkModuleGraph);
 
-    if (args.getShouldIncludeClasses()) {
-      AndroidAppModularityGraphEnhancer graphEnhancer =
-          new AndroidAppModularityGraphEnhancer(
-              buildTarget, params, context.getActionGraphBuilder(), args.getNoDx(), apkModuleGraph);
-
-      result = graphEnhancer.createAdditionalBuildables();
-    }
+    AndroidAppModularityGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     return new AndroidAppModularity(
         buildTarget,
