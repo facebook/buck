@@ -16,9 +16,11 @@
 package com.facebook.buck.remoteexecution;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import java.io.File;
@@ -47,10 +49,34 @@ public class WorkerRequirementsProviderTest {
     buildTarget = EasyMock.createMock(BuildTarget.class);
 
     EasyMock.expect(buildTarget.getFullyQualifiedName()).andReturn(FULL_NAME).anyTimes();
-    EasyMock.expect(buildTarget.getShortName()).andReturn(SHORT_NAME).anyTimes();
+    EasyMock.expect(buildTarget.getShortNameAndFlavorPostfix()).andReturn(SHORT_NAME).anyTimes();
     EasyMock.expect(buildTarget.getBasePath()).andReturn(tmp.toPath()).anyTimes();
 
     EasyMock.replay(buildTarget);
+  }
+
+  @Test
+  public void testCxxCompileRule() throws IOException {
+    BuildTarget buildTarget = EasyMock.createMock(BuildTarget.class);
+    EasyMock.expect(buildTarget.getShortNameAndFlavorPostfix())
+        .andReturn(
+            "adfinderconfig#compile-AdFinderConfigeratorBundle.cpp.oc430ec3a,platform007-clang,v13e8451")
+        .anyTimes();
+    EasyMock.expect(buildTarget.getShortName()).andReturn("adfinderconfig").anyTimes();
+    EasyMock.expect(buildTarget.getBasePath()).andReturn(tmp.toPath()).anyTimes();
+    EasyMock.expect(buildTarget.isFlavored()).andReturn(false).anyTimes();
+    EasyMock.expect(buildTarget.getFlavors())
+        .andReturn(ImmutableSortedSet.<Flavor>naturalOrder().build())
+        .anyTimes();
+    EasyMock.replay(buildTarget);
+    File file = Paths.get(tmp.getPath(), FILENAME).toFile();
+    Assert.assertTrue(file.createNewFile());
+    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+        .write(
+            "{\"adfinderconfig#compile-AdFinderConfigeratorBundle.cpp.oc430ec3a,platform007-clang,v13e8451\": {\"workerSize\": \"LARGE\"}}");
+    WorkerRequirementsProvider provider = new WorkerRequirementsProvider(FILENAME, false, 1000);
+    WorkerRequirements workerRequirements = provider.resolveRequirements(buildTarget);
+    Assert.assertEquals(WorkerSize.LARGE, workerRequirements.getWorkerSize());
   }
 
   @Test

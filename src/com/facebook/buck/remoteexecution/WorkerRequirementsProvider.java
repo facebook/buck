@@ -82,7 +82,7 @@ public final class WorkerRequirementsProvider {
   /**
    * Resolve rule's worker requirements.
    *
-   * @param target build rule target
+   * @param target build target
    * @return @see com.facebook.buck.remoteexecution.proto.WorkerRequirements based on JSON file,
    *     otherwise @see com.facebook.buck.remoteexecution.WorkerRequirementsProvider.DEFAULT
    */
@@ -114,7 +114,7 @@ public final class WorkerRequirementsProvider {
                                     .setShouldTryLargerWorkerOnOom(tryLargerWorkerOnOom)
                                     .build()));
               });
-      return Optional.ofNullable(requirementsMap.get(target.getShortName()))
+      return Optional.ofNullable(requirementsMap.get(target.getShortNameAndFlavorPostfix()))
           .orElseGet(
               () -> {
                 LOG.debug(
