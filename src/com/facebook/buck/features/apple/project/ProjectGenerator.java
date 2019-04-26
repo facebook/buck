@@ -107,9 +107,11 @@ import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
 import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescription.CommonArg;
+import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderTemplate;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxSource;
@@ -1806,6 +1808,9 @@ public class ProjectGenerator {
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                .addAll(collectRecursivePublicSystemIncludeDirectories(targetNode))
+                .addAll(collectRecursivePublicIncludeDirectories(targetNode))
+                .addAll(extractIncludeDirectories(targetNode))
                 .addAll(testingOverlay)
                 .build();
         Iterable<String> targetCxxFlags =
@@ -1822,6 +1827,9 @@ public class ProjectGenerator {
                 .addAll(
                     convertStringWithMacros(
                         targetNode, collectRecursiveSystemPreprocessorFlags(targetNode)))
+                .addAll(collectRecursivePublicSystemIncludeDirectories(targetNode))
+                .addAll(collectRecursivePublicIncludeDirectories(targetNode))
+                .addAll(extractIncludeDirectories(targetNode))
                 .addAll(testingOverlay)
                 .build();
 
@@ -3955,6 +3963,69 @@ public class ProjectGenerator {
               }
               return StringWithMacros.of(ImmutableList.of(Either.ofLeft("-isystem" + headerDir)));
             });
+  }
+
+  private Iterable<String> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
+    return FluentIterable.from(
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                targetNode,
+                ImmutableSet.of(CxxLibraryDescription.class)))
+        .append(targetNode)
+        .transformAndConcat(this::extractPublicIncludeDirectories);
+  }
+
+  private Iterable<String> collectRecursivePublicSystemIncludeDirectories(
+      TargetNode<?> targetNode) {
+    return FluentIterable.from(
+            AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
+                xcodeDescriptions,
+                targetGraph,
+                Optional.of(dependenciesCache),
+                AppleBuildRules.RecursiveDependenciesMode.BUILDING,
+                targetNode,
+                ImmutableSet.of(CxxLibraryDescription.class)))
+        .append(targetNode)
+        .transformAndConcat(this::extractPublicSystemIncludeDirectories);
+  }
+
+  private Iterable<String> extractIncludeDirectories(TargetNode<?> targetNode) {
+    Path basePath =
+        getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
+            .resolve(targetNode.getBuildTarget().getBasePath());
+    ImmutableSortedSet<String> includeDirectories =
+        TargetNodes.castArg(targetNode, CxxConstructorArg.class)
+            .map(input -> input.getConstructorArg().getIncludeDirectories())
+            .orElse(ImmutableSortedSet.of());
+    return FluentIterable.from(includeDirectories)
+        .transform(includeDirectory -> "-I" + basePath.resolve(includeDirectory).normalize());
+  }
+
+  private Iterable<String> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
+    Path basePath =
+        getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
+            .resolve(targetNode.getBuildTarget().getBasePath());
+    ImmutableSortedSet<String> includeDirectories =
+        TargetNodes.castArg(targetNode, CxxLibraryDescriptionArg.class)
+            .map(input -> input.getConstructorArg().getPublicIncludeDirectories())
+            .orElse(ImmutableSortedSet.of());
+    return FluentIterable.from(includeDirectories)
+        .transform(includeDirectory -> "-I" + basePath.resolve(includeDirectory).normalize());
+  }
+
+  private Iterable<String> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+    Path basePath =
+        getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
+            .resolve(targetNode.getBuildTarget().getBasePath());
+    ImmutableSortedSet<String> includeDirectories =
+        TargetNodes.castArg(targetNode, CxxLibraryDescriptionArg.class)
+            .map(input -> input.getConstructorArg().getPublicSystemIncludeDirectories())
+            .orElse(ImmutableSortedSet.of());
+    return FluentIterable.from(includeDirectories)
+        .transform(includeDirectory -> "-isystem" + basePath.resolve(includeDirectory).normalize());
   }
 
   private ImmutableList<StringWithMacros> collectRecursiveExportedLinkerFlags(
