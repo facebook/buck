@@ -1,0 +1,67 @@
+[
+  {
+    "commit": "608fd7bdf9",
+    "added": [
+      {
+        "path": "java/com/facebook/buck/base",
+        "rules": {
+          "base": {
+          }
+        }
+      }
+    ]
+  },
+  {
+    "commit": "9efba3bca1",
+    "added": [
+      {
+        "path": "java/com/facebook/buck/model",
+        "rules": {
+          "model": {
+            "deps": [
+              "//java/com/facebook/buck/base:base"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "commit": "1b522b5b47",
+    "added": [
+      {
+        "path": "java/com/facebook/buck/util",
+        "rules": {
+          "util": {
+            "deps": [
+              "//java/com/facebook/buck/base:base"
+            ]
+          }
+        }
+      }
+    ],
+    "modified": [
+      {
+        "path": "java/com/facebook/buck/model",
+        "rules": {
+          "model": {
+            "deps": [
+              "//java/com/facebook/buck/base:base",
+              "//java/com/facebook/buck/util:util"
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    // Nothing changes!
+    "commit": "270c3e4c42"
+  },
+  {
+    "commit": "c880d5b5d8",
+    "removed": [
+      "java/com/facebook/buck/model"
+    ]
+  }
+]
