@@ -252,7 +252,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
           ImmutableList.of(
               new AttrFilterFunction(),
               new ClasspathFunction(),
-              new DepsFunction(),
+              new DepsFunction<>(),
               new DepsFunction.FirstOrderDepsFunction(),
               new DepsFunction.LookupFunction<QueryBuildTarget, QueryBuildTarget>(),
               new KindFunction(),

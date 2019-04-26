@@ -56,7 +56,7 @@ import java.util.function.Consumer;
  *
  * <pre>       | DEPS '(' expr ',' INTEGER ',' expr ')'</pre>
  */
-public class DepsFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
+public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.INTEGER, ArgumentType.EXPRESSION);
@@ -79,16 +79,16 @@ public class DepsFunction implements QueryFunction<QueryBuildTarget, QueryBuildT
   }
 
   private void forEachDep(
-      QueryEnvironment<QueryBuildTarget> env,
-      QueryExpression<QueryBuildTarget> depsExpression,
-      Iterable<QueryBuildTarget> targets,
-      Consumer<QueryBuildTarget> consumer)
+      QueryEnvironment<T> env,
+      QueryExpression<T> depsExpression,
+      Iterable<T> targets,
+      Consumer<T> consumer)
       throws QueryException {
-    for (QueryBuildTarget target : targets) {
-      ImmutableSet<QueryBuildTarget> deps =
+    for (T target : targets) {
+      ImmutableSet<T> deps =
           depsExpression.eval(
-              new NoopQueryEvaluator<QueryBuildTarget>(),
-              new TargetVariablesQueryEnvironment<QueryBuildTarget>(
+              new NoopQueryEvaluator<T>(),
+              new TargetVariablesQueryEnvironment<T>(
                   ImmutableMap.of(
                       FirstOrderDepsFunction.NAME,
                       ImmutableSet.copyOf(env.getFwdDeps(ImmutableList.of(target))),
@@ -105,27 +105,25 @@ public class DepsFunction implements QueryFunction<QueryBuildTarget, QueryBuildT
    * supplied) is reached.
    */
   @Override
-  public ImmutableSet<QueryBuildTarget> eval(
-      QueryEvaluator<QueryBuildTarget> evaluator,
-      QueryEnvironment<QueryBuildTarget> env,
-      ImmutableList<Argument<QueryBuildTarget>> args)
+  public ImmutableSet<T> eval(
+      QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
-    ImmutableSet<QueryBuildTarget> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
+    ImmutableSet<T> argumentSet = evaluator.eval(args.get(0).getExpression(), env);
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
-    Optional<QueryExpression<QueryBuildTarget>> deps =
+    Optional<QueryExpression<T>> deps =
         args.size() > 2 ? Optional.of(args.get(2).getExpression()) : Optional.empty();
     env.buildTransitiveClosure(argumentSet, depthBound);
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
     // traversed level-by-level.
-    Set<QueryBuildTarget> result = new LinkedHashSet<>(argumentSet);
-    Collection<QueryBuildTarget> current = argumentSet;
+    Set<T> result = new LinkedHashSet<T>(argumentSet);
+    Collection<T> current = argumentSet;
 
     // Iterating depthBound+1 times because the first one processes the given argument set.
     for (int i = 0; i < depthBound; i++) {
-      Collection<QueryBuildTarget> next = new ArrayList<>();
-      Consumer<QueryBuildTarget> consumer =
+      Collection<T> next = new ArrayList<>();
+      Consumer<T> consumer =
           queryTarget -> {
             boolean added = result.add(queryTarget);
             if (added) {
