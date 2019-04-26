@@ -147,8 +147,7 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
    * A function that resolves to the current node's target being traversed when evaluating the deps
    * function.
    */
-  public static class FirstOrderDepsFunction
-      implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
+  public static class FirstOrderDepsFunction<T extends QueryTarget> implements QueryFunction<T, T> {
 
     private static final String NAME = "first_order_deps";
 
@@ -168,10 +167,8 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
     }
 
     @Override
-    public ImmutableSet<QueryBuildTarget> eval(
-        QueryEvaluator<QueryBuildTarget> evaluator,
-        QueryEnvironment<QueryBuildTarget> env,
-        ImmutableList<Argument<QueryBuildTarget>> args) {
+    public ImmutableSet<T> eval(
+        QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args) {
       Preconditions.checkArgument(args.isEmpty());
       return env.resolveTargetVariable(getName());
     }

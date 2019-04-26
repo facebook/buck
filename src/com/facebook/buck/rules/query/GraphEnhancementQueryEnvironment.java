@@ -253,7 +253,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
               new AttrFilterFunction(),
               new ClasspathFunction(),
               new DepsFunction<>(),
-              new DepsFunction.FirstOrderDepsFunction(),
+              new DepsFunction.FirstOrderDepsFunction<>(),
               new DepsFunction.LookupFunction<QueryBuildTarget, QueryBuildTarget>(),
               new KindFunction(),
               new FilterFunction<QueryBuildTarget>(),

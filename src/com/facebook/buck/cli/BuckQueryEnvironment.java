@@ -108,7 +108,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
           new AttrFilterFunction(),
           new BuildFileFunction(),
           new DepsFunction<>(),
-          new DepsFunction.FirstOrderDepsFunction(),
+          new DepsFunction.FirstOrderDepsFunction<>(),
           new DepsFunction.LookupFunction<QueryTarget, QueryBuildTarget>(),
           new InputsFunction(),
           new FilterFunction<QueryBuildTarget>(),
