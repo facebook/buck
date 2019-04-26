@@ -123,6 +123,18 @@ class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuild
         return visited.map { buildTargetCache.getByIndex(it) }.toSet()
     }
 
+    fun getFwdDeps(indexReadLock: IndexReadLock, commit: Commit, targets: Iterable<UnconfiguredBuildTarget>, out: MutableSet<UnconfiguredBuildTarget>) {
+        checkReadLock(indexReadLock)
+        val generation = commitToGeneration.getValue(commit)
+        for (target in targets) {
+            val targetId = buildTargetCache.get(target)
+            val node = ruleMap.getVersion(targetId, generation) ?: continue
+            for (dep in node.deps) {
+                out.add(buildTargetCache.getByIndex(dep))
+            }
+        }
+    }
+
     /**
      * @param indexReadLock caller is responsible for ensuring this lock is still held, i.e., that
      * `close()` has not been invoked.
