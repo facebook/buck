@@ -87,7 +87,9 @@ class CommandLineArgs:
         self.command_options = []
 
         for arg in self.args:
-            if self.command is not None:
+            if arg == "--":
+                break
+            elif self.command is not None:
                 self.command_options.append(arg)
             elif (arg[:1]) == "-":
                 self.buck_options.append(arg)

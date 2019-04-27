@@ -81,6 +81,34 @@ class TestCommandLineArgs(unittest.TestCase):
         self.assertEqual(args.command_options, ["--help", "all"])
         self.assertTrue(args.is_help())
 
+    def test_run_command(self):
+        args = CommandLineArgs(["buck", "run", "--help"])
+        self.assertEqual(args.command, "run")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, ["--help"])
+        self.assertTrue(args.is_help())
+
+    def test_run_command_help_for_program(self):
+        args = CommandLineArgs(["buck", "run", "//some:cli", "--", "--help"])
+        self.assertEqual(args.command, "run")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, ["//some:cli"])
+        self.assertFalse(args.is_help())
+
+    def test_run_command_help_for_program_and_buck(self):
+        args = CommandLineArgs(["buck", "--help", "run", "//some:cli", "--", "--help"])
+        self.assertEqual(args.command, "run")
+        self.assertEqual(args.buck_options, ["--help"])
+        self.assertEqual(args.command_options, ["//some:cli"])
+        self.assertFalse(args.is_help(), "Global --help ignored with command")
+
+    def test_run_command_help_for_program_and_command(self):
+        args = CommandLineArgs(["buck", "run", "--help", "//some:cli", "--", "--help"])
+        self.assertEqual(args.command, "run")
+        self.assertEqual(args.buck_options, [])
+        self.assertEqual(args.command_options, ["--help", "//some:cli"])
+        self.assertTrue(args.is_help())
+
 
 class TestJavaPath(unittest.TestCase):
     def setUp(self):
