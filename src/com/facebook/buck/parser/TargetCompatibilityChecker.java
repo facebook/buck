@@ -17,8 +17,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.PlatformResolver;
+import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import java.util.stream.Collectors;
 
 /**
@@ -32,16 +35,40 @@ class TargetCompatibilityChecker {
    *     platform.
    */
   public static boolean targetNodeArgMatchesPlatform(
-      ConstraintResolver constraintResolver, Object targetNodeArg, Platform platform) {
+      ConstraintResolver constraintResolver,
+      PlatformResolver platformResolver,
+      Object targetNodeArg,
+      Platform platform) {
     if (!(targetNodeArg instanceof HasTargetCompatibleWith)) {
       return true;
     }
     HasTargetCompatibleWith argWithTargetCompatible = (HasTargetCompatibleWith) targetNodeArg;
 
-    return platform.matchesAll(
-        argWithTargetCompatible.getTargetCompatibleWith().stream()
-            .map(BuildTarget::getUnconfiguredBuildTargetView)
-            .map(constraintResolver::getConstraintValue)
-            .collect(Collectors.toList()));
+    boolean matchesConstraints =
+        platform.matchesAll(
+            argWithTargetCompatible.getTargetCompatibleWith().stream()
+                .map(BuildTarget::getUnconfiguredBuildTargetView)
+                .map(constraintResolver::getConstraintValue)
+                .collect(Collectors.toList()));
+
+    if (!matchesConstraints) {
+      return false;
+    }
+
+    if (argWithTargetCompatible.getTargetCompatiblePlatforms().isEmpty()) {
+      return true;
+    }
+
+    for (UnconfiguredBuildTargetView compatiblePlatformTarget :
+        argWithTargetCompatible.getTargetCompatiblePlatforms()) {
+      ConstraintBasedPlatform compatiblePlatform =
+          (ConstraintBasedPlatform) platformResolver.getPlatform(compatiblePlatformTarget);
+
+      if (platform.matchesAll(compatiblePlatform.getConstraintValues())) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

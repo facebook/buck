@@ -256,7 +256,8 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         constraintResolver,
         selectorListResolver,
         selectorListFactory,
-        targetPlatformResolver);
+        targetPlatformResolver,
+        platformResolver);
   }
 
   @SuppressWarnings("PMD.AvoidThreadGroup")

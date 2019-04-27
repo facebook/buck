@@ -36,3 +36,23 @@ genrule(
         "DEFAULT": "echo unknown > $OUT",
     }),
 )
+
+java_library(
+    name = "dep_with_compatible_platform",
+    srcs = [
+        "A.java",
+    ],
+    target_compatible_platforms = [
+        "//config:linux_x86-64",
+    ],
+)
+
+java_library(
+    name = "lib_with_compatible_platform",
+    srcs = [
+        "B.java",
+    ],
+    deps = [
+        ":dep_with_compatible_platform",
+    ],
+)

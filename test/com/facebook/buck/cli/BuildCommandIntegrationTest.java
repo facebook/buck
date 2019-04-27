@@ -405,9 +405,33 @@ public class BuildCommandIntegrationTest {
     MatcherAssert.assertThat(
         result.getStderr(),
         MoreStringsForTests.containsIgnoringPlatformNewlines(
-            "Build target //:dep is restricted to constraints in \"target_compatible_with\" "
+            "Build target //:dep is restricted to constraints "
+                + "in \"target_compatible_with\" and \"target_compatible_platforms\" "
                 + "that do not match the target platform //config:osx_x86-64.\n"
                 + "Target constraints:\nbuck//config/constraints:linux"));
+  }
+
+  @Test
+  public void testBuildFailsWhenDepCompatiblePlatformDoesNotMatchTargetPlatform()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "build",
+            "--target-platforms",
+            "//config:osx_x86-64",
+            "//:lib_with_compatible_platform");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        MoreStringsForTests.containsIgnoringPlatformNewlines(
+            "Build target //:dep_with_compatible_platform is restricted to constraints "
+                + "in \"target_compatible_with\" and \"target_compatible_platforms\" "
+                + "that do not match the target platform //config:osx_x86-64.\n"
+                + "Target compatible with platforms:\n//config:linux_x86-64"));
   }
 
   @Test

@@ -16,15 +16,20 @@
 package com.facebook.buck.core.description.arg;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.google.common.collect.ImmutableList;
 
 /**
- * This interface indicates that users can declare constraints that needs to be matched by a target
- * platform in order to build a particular target.
+ * This interface indicates that users can declare constraints and platforms that needs to be
+ * matched by a target platform in order to build a particular target.
  *
  * <p>This can be used to filter out targets that cannot be built for a particular target platform.
  */
 public interface HasTargetCompatibleWith {
   @Hint(isDep = false)
   ImmutableList<BuildTarget> getTargetCompatibleWith();
+
+  /** A list of platforms a target is compatible with. */
+  @Hint(isDep = false)
+  ImmutableList<UnconfiguredBuildTargetView> getTargetCompatiblePlatforms();
 }

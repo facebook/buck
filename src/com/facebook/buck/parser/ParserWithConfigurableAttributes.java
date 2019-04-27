@@ -48,7 +48,6 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -227,6 +226,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         targetNode ->
             TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
                 stateWithConfigurableAttributes.getConstraintResolver(),
+                stateWithConfigurableAttributes.getPlatformResolver(),
                 targetNode.getConstructorArg(),
                 stateWithConfigurableAttributes
                     .getTargetPlatformResolver()
@@ -341,20 +341,40 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             .getTargetPlatform(targetNode.getBuildTarget().getTargetConfiguration());
     if (!TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
         stateWithConfigurableAttributes.getConstraintResolver(),
+        stateWithConfigurableAttributes.getPlatformResolver(),
         targetNode.getConstructorArg(),
         targetPlatform)) {
       HasTargetCompatibleWith argWithTargetCompatible =
           (HasTargetCompatibleWith) targetNode.getConstructorArg();
 
-      String constraints =
-          argWithTargetCompatible.getTargetCompatibleWith().stream()
-              .map(BuildTarget::getFullyQualifiedName)
-              .collect(Collectors.joining(System.lineSeparator()));
+      StringBuilder diagnostics = new StringBuilder();
+      if (!argWithTargetCompatible.getTargetCompatibleWith().isEmpty()) {
+        diagnostics.append("%nTarget constraints:%n");
+        argWithTargetCompatible
+            .getTargetCompatibleWith()
+            .forEach(
+                target ->
+                    diagnostics
+                        .append(target.getFullyQualifiedName())
+                        .append(System.lineSeparator()));
+      }
+      if (!argWithTargetCompatible.getTargetCompatiblePlatforms().isEmpty()) {
+        diagnostics.append("%nTarget compatible with platforms:%n");
+        argWithTargetCompatible
+            .getTargetCompatiblePlatforms()
+            .forEach(
+                target ->
+                    diagnostics
+                        .append(target.getFullyQualifiedName())
+                        .append(System.lineSeparator()));
+      }
 
       throw new HumanReadableException(
-          "Build target %s is restricted to constraints in \"target_compatible_with\" "
-              + "that do not match the target platform %s.%nTarget constraints:%n%s",
-          targetNode.getBuildTarget(), targetPlatform, constraints);
+          "Build target %s is restricted to constraints in \"target_compatible_with\""
+              + " and \"target_compatible_platforms\" that do not match the target platform %s."
+              + diagnostics,
+          targetNode.getBuildTarget(),
+          targetPlatform);
     }
   }
 }
