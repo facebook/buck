@@ -119,7 +119,6 @@ public class QueryCommandTest {
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
-                cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 getManifestSupplier(),

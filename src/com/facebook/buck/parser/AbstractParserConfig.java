@@ -298,11 +298,6 @@ abstract class AbstractParserConfig implements ConfigView<BuckConfig> {
   }
 
   @Value.Lazy
-  public boolean getEnableConfigurableAttributes() {
-    return getDelegate().getBooleanValue("parser", "enable_configurable_attributes", true);
-  }
-
-  @Value.Lazy
   public boolean getEnableTargetCompatibilityChecks() {
     return getDelegate().getBooleanValue("parser", "enable_target_compatibility_checks", true);
   }

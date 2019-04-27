@@ -1617,7 +1617,6 @@ public final class MainRunner {
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-            rootCell.getBuckConfig(),
             buckGlobalState.getDaemonicParserState(),
             targetSpecResolver,
             watchman,

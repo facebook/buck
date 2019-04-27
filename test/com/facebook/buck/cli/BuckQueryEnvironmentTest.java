@@ -122,7 +122,6 @@ public class BuckQueryEnvironmentTest {
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
-            cell.getBuckConfig(),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
             getManifestSupplier(),

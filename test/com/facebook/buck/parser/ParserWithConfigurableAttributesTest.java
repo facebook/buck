@@ -141,7 +141,7 @@ import org.junit.runners.Parameterized;
 import org.pf4j.PluginManager;
 
 @RunWith(Parameterized.class)
-public class DefaultParserTest {
+public class ParserWithConfigurableAttributesTest {
 
   @Rule public TemporaryPaths tempDir = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
@@ -208,7 +208,6 @@ public class DefaultParserTest {
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
-                cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 getManifestSupplier(),
@@ -2578,7 +2577,6 @@ public class DefaultParserTest {
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
-                cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 getManifestSupplier(),

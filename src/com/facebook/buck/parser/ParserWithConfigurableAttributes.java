@@ -18,8 +18,11 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.HasTargetCompatibleWith;
+import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.HasDefaultFlavors;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
@@ -28,17 +31,21 @@ import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeProviderForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.JsonTypeConcatenatingCoercerFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -60,6 +67,8 @@ import javax.annotation.Nullable;
  */
 class ParserWithConfigurableAttributes extends AbstractParser {
 
+  private static final Logger LOG = Logger.get(ParserWithConfigurableAttributes.class);
+
   private final TargetSpecResolver targetSpecResolver;
 
   ParserWithConfigurableAttributes(
@@ -70,6 +79,53 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       Supplier<ImmutableList<String>> targetPlatforms) {
     super(daemonicParserState, perBuildStateFactory, eventBus, targetPlatforms);
     this.targetSpecResolver = targetSpecResolver;
+  }
+
+  static TargetNodeProviderForSpecResolver<TargetNode<?>> createTargetNodeProviderForSpecResolver(
+      PerBuildState state) {
+    return new TargetNodeProviderForSpecResolver<TargetNode<?>>() {
+      @Override
+      public ListenableFuture<TargetNode<?>> getTargetNodeJob(BuildTarget target)
+          throws BuildTargetException {
+        return state.getTargetNodeJob(target);
+      }
+
+      @Override
+      public ListenableFuture<ImmutableList<TargetNode<?>>> getAllTargetNodesJob(
+          Cell cell, Path buildFile, TargetConfiguration targetConfiguration)
+          throws BuildTargetException {
+        return state.getAllTargetNodesJob(cell, buildFile, targetConfiguration);
+      }
+    };
+  }
+
+  @VisibleForTesting
+  static BuildTarget applyDefaultFlavors(
+      BuildTarget target,
+      TargetNode<?> targetNode,
+      TargetNodeSpec.TargetType targetType,
+      ParserConfig.ApplyDefaultFlavorsMode applyDefaultFlavorsMode) {
+    if (target.isFlavored()
+        || (targetType == TargetNodeSpec.TargetType.MULTIPLE_TARGETS
+            && applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.SINGLE)
+        || applyDefaultFlavorsMode == ParserConfig.ApplyDefaultFlavorsMode.DISABLED) {
+      return target;
+    }
+
+    ImmutableSortedSet<Flavor> defaultFlavors = ImmutableSortedSet.of();
+    if (targetNode.getConstructorArg() instanceof HasDefaultFlavors) {
+      defaultFlavors = ((HasDefaultFlavors) targetNode.getConstructorArg()).getDefaultFlavors();
+      LOG.debug("Got default flavors %s from args of %s", defaultFlavors, target);
+    }
+
+    if (targetNode.getDescription() instanceof ImplicitFlavorsInferringDescription) {
+      defaultFlavors =
+          ((ImplicitFlavorsInferringDescription) targetNode.getDescription())
+              .addImplicitFlavors(defaultFlavors);
+      LOG.debug("Got default flavors %s from description of %s", defaultFlavors, target);
+    }
+
+    return target.withFlavors(defaultFlavors);
   }
 
   /**
@@ -247,7 +303,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
           (spec, nodes) -> spec.filter(nodes);
 
       TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
-          DefaultParser.createTargetNodeProviderForSpecResolver(state);
+          createTargetNodeProviderForSpecResolver(state);
 
       ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
           targetSpecResolver.resolveTargetSpecs(
@@ -255,7 +311,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
               specs,
               targetConfiguration,
               (buildTarget, targetNode, targetType) ->
-                  DefaultParser.applyDefaultFlavors(
+                  applyDefaultFlavors(
                       buildTarget,
                       targetNode,
                       targetType,
@@ -288,7 +344,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         (PerBuildStateWithConfigurableAttributes) state;
 
     TargetNodeProviderForSpecResolver<TargetNode<?>> targetNodeProvider =
-        DefaultParser.createTargetNodeProviderForSpecResolver(state);
+        createTargetNodeProviderForSpecResolver(state);
 
     TargetNodeFilterForSpecResolver<TargetNode<?>> targetNodeFilter =
         (spec, nodes) -> spec.filter(nodes);
@@ -305,7 +361,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             targetNodeSpecs,
             targetConfiguration,
             (buildTarget, targetNode, targetType) ->
-                DefaultParser.applyDefaultFlavors(
+                applyDefaultFlavors(
                     buildTarget,
                     targetNode,
                     targetType,

@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
@@ -352,7 +353,7 @@ public class ParsePipelineTest {
     private final ProjectWorkspace workspace;
     private final BuckEventBus eventBus;
     private final TestConsole console;
-    private final TargetNodeParsePipeline targetNodeParsePipeline;
+    private final RawTargetNodeToTargetNodeParsePipeline targetNodeParsePipeline;
     private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cell cell;
@@ -431,23 +432,34 @@ public class ParsePipelineTest {
 
       KnownRuleTypesProvider knownRuleTypesProvider =
           TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
-      this.targetNodeParsePipeline =
-          new TargetNodeParsePipeline(
-              this.targetNodeParsePipelineCache,
+      RawTargetNodePipeline rawTargetNodePipeline =
+          new RawTargetNodePipeline(
+              executorService,
+              new TypedParsePipelineCache<>(),
+              eventBus,
+              buildFileRawNodeParsePipeline,
+              buildTargetRawNodeParsePipeline,
+              new DefaultRawTargetNodeFactory(knownRuleTypesProvider, new BuiltTargetVerifier()));
+      ParserTargetNodeFactory<RawTargetNode> rawTargetNodeToTargetNodeFactory =
+          new NonResolvingRawTargetNodeToTargetNodeFactory(
               DefaultParserTargetNodeFactory.createForParser(
                   knownRuleTypesProvider,
                   constructorArgMarshaller,
                   buildFileTrees,
                   nodeListener,
-                  new TargetNodeFactory(coercerFactory)),
+                  new TargetNodeFactory(coercerFactory)));
+      this.targetNodeParsePipeline =
+          new RawTargetNodeToTargetNodeParsePipeline(
+              this.targetNodeParsePipelineCache,
               this.executorService,
+              rawTargetNodePipeline,
               this.eventBus,
+              "raw_target_node_parse_pipeline",
               speculativeParsing == SpeculativeParsing.ENABLED,
-              buildFileRawNodeParsePipeline,
-              buildTargetRawNodeParsePipeline);
+              rawTargetNodeToTargetNodeFactory);
     }
 
-    public TargetNodeParsePipeline getTargetNodeParsePipeline() {
+    public RawTargetNodeToTargetNodeParsePipeline getTargetNodeParsePipeline() {
       return targetNodeParsePipeline;
     }
 

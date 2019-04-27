@@ -106,7 +106,6 @@ public class AuditDependenciesCommand extends AbstractCommand {
                     params.getKnownRuleTypesProvider(),
                     new ParserPythonInterpreterProvider(
                         params.getCell().getBuckConfig(), params.getExecutableFinder()),
-                    params.getCell().getBuckConfig(),
                     params.getWatchman(),
                     params.getBuckEventBus(),
                     params.getManifestServiceSupplier(),

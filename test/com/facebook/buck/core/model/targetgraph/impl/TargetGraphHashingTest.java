@@ -107,7 +107,6 @@ public class TargetGraphHashingTest {
                 new DefaultConstructorArgMarshaller(typeCoercerFactory),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
-                cell.getBuckConfig(),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close),

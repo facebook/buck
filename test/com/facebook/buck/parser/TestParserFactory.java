@@ -59,7 +59,6 @@ public class TestParserFactory {
             new DefaultConstructorArgMarshaller(typeCoercerFactory),
             knownRuleTypesProvider,
             new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder()),
-            cell.getBuckConfig(),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
             getManifestSupplier(),
@@ -80,7 +79,7 @@ public class TestParserFactory {
       Cell cell, PerBuildStateFactory perBuildStateFactory, BuckEventBus eventBus) {
     ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
 
-    return new DefaultParser(
+    return new ParserWithConfigurableAttributes(
         new DaemonicParserState(parserConfig.getNumParsingThreads()),
         perBuildStateFactory,
         TestTargetSpecResolverFactory.create(cell.getCellProvider(), eventBus),

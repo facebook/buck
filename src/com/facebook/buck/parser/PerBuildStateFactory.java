@@ -16,7 +16,6 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
@@ -54,32 +53,21 @@ public abstract class PerBuildStateFactory {
       ConstructorArgMarshaller marshaller,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ParserPythonInterpreterProvider parserPythonInterpreterProvider,
-      BuckConfig buckConfig,
       Watchman watchman,
       BuckEventBus eventBus,
       ThrowingCloseableMemoizedSupplier<ManifestService, IOException> manifestServiceSupplier,
       FileHashCache fileHashCache,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory) {
-    return buckConfig.getView(ParserConfig.class).getEnableConfigurableAttributes()
-        ? new PerBuildStateFactoryWithConfigurableAttributes(
-            typeCoercerFactory,
-            marshaller,
-            knownRuleTypesProvider,
-            parserPythonInterpreterProvider,
-            watchman,
-            eventBus,
-            manifestServiceSupplier,
-            fileHashCache,
-            unconfiguredBuildTargetFactory)
-        : new LegacyPerBuildStateFactory(
-            typeCoercerFactory,
-            marshaller,
-            knownRuleTypesProvider,
-            parserPythonInterpreterProvider,
-            watchman,
-            eventBus,
-            manifestServiceSupplier,
-            fileHashCache);
+    return new PerBuildStateFactoryWithConfigurableAttributes(
+        typeCoercerFactory,
+        marshaller,
+        knownRuleTypesProvider,
+        parserPythonInterpreterProvider,
+        watchman,
+        eventBus,
+        manifestServiceSupplier,
+        fileHashCache,
+        unconfiguredBuildTargetFactory);
   }
 
   public PerBuildState create(

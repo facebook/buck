@@ -118,7 +118,6 @@ public class TargetSpecResolverTest {
             constructorArgMarshaller,
             knownRuleTypesProvider,
             parserPythonInterpreterProvider,
-            cell.getBuckConfig(),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
             getManifestSupplier(),
