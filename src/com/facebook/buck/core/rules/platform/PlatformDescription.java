@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 /**
@@ -55,7 +56,7 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
       Cell cell,
       UnconfiguredBuildTargetView buildTarget,
       PlatformArg arg) {
-    return PlatformRule.of(buildTarget, arg.getName(), arg.getConstraintValues());
+    return PlatformRule.of(buildTarget, arg.getName(), arg.getConstraintValues(), arg.getDeps());
   }
 
   @BuckStyleImmutable
@@ -64,6 +65,9 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
     String getName();
 
     ImmutableList<UnconfiguredBuildTargetView> getConstraintValues();
+
+    @Value.NaturalOrder
+    ImmutableSortedSet<UnconfiguredBuildTargetView> getDeps();
   }
 
   /** {@code platform} rule. */
@@ -79,5 +83,9 @@ public class PlatformDescription implements ConfigurationRuleDescription<Platfor
 
     @Value.Parameter
     ImmutableList<UnconfiguredBuildTargetView> getConstrainValues();
+
+    @Value.Parameter
+    @Value.NaturalOrder
+    ImmutableSortedSet<UnconfiguredBuildTargetView> getDeps();
   }
 }

@@ -64,7 +64,8 @@ public class RuleBasedTargetPlatformResolverTest {
     ConfigurationRuleResolver configurationRuleResolver =
         buildTarget -> {
           if (buildTarget.equals(platformTarget)) {
-            return PlatformRule.of(platformTarget, "platform", ImmutableList.of(constraintValue));
+            return PlatformRule.of(
+                platformTarget, "platform", ImmutableList.of(constraintValue), ImmutableList.of());
           }
           if (buildTarget.equals(constraintValue)) {
             return new ConstraintValueRule(constraintValue, "value", constraintSetting);

@@ -27,7 +27,9 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Streams;
 
 /**
  * An implementation of {@link TargetPlatformResolver} that creates {@link Platform} from {@link
@@ -56,21 +58,34 @@ public class RuleBasedTargetPlatformResolver implements TargetPlatformResolver {
     UnconfiguredBuildTargetView buildTarget =
         ((DefaultTargetConfiguration) targetConfiguration).getTargetPlatform();
 
-    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
+    PlatformRule platformRule = getPlatformRule(buildTarget);
 
+    ImmutableSet<ConstraintValue> constraintValues =
+        Streams.concat(
+                platformRule.getConstrainValues().stream(),
+                getConstraintValuesFromDeps(platformRule).stream())
+            .map(constraintResolver::getConstraintValue)
+            .collect(ImmutableSet.toImmutableSet());
+
+    return new ConstraintBasedPlatform(buildTarget.getFullyQualifiedName(), constraintValues);
+  }
+
+  private ImmutableList<UnconfiguredBuildTargetView> getConstraintValuesFromDeps(
+      PlatformRule platformRule) {
+    ImmutableList.Builder<UnconfiguredBuildTargetView> result = ImmutableList.builder();
+    for (UnconfiguredBuildTargetView dep : platformRule.getDeps()) {
+      result.addAll(getPlatformRule(dep).getConstrainValues());
+    }
+    return result.build();
+  }
+
+  private PlatformRule getPlatformRule(UnconfiguredBuildTargetView buildTarget) {
+    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
     if (!(configurationRule instanceof PlatformRule)) {
       throw new HumanReadableException(
           "%s is used as a target platform, but not declared using `platform` rule",
           buildTarget.getFullyQualifiedName());
     }
-
-    PlatformRule platformRule = (PlatformRule) configurationRule;
-
-    ImmutableSet<ConstraintValue> constraintValues =
-        platformRule.getConstrainValues().stream()
-            .map(constraintResolver::getConstraintValue)
-            .collect(ImmutableSet.toImmutableSet());
-
-    return new ConstraintBasedPlatform(buildTarget.getFullyQualifiedName(), constraintValues);
+    return (PlatformRule) configurationRule;
   }
 }

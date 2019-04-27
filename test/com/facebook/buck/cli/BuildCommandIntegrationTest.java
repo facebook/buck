@@ -500,6 +500,21 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void hostCpuConstraintsAreResolvedWithCustomHostPlatforms() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    Path output =
+        workspace.buildAndReturnOutput(
+            "//:cpu_dependent_genrule", "--target-platforms", "//config:osx_x86-64");
+
+    workspace.getBuildLog().assertTargetBuiltLocally("//:cpu_dependent_genrule");
+
+    assertEquals("x86_64", workspace.getFileContents(output).trim());
+  }
+
+  @Test
   public void testBuildSucceedsWhenDepMatchesTargetPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
