@@ -15,37 +15,36 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.model.platform.TargetPlatformResolver;
+import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 /**
- * An implementation of {@link TargetPlatformResolver} that caches platforms created by a given
- * delegate.
+ * An implementation of {@link PlatformResolver} that caches platforms created by a given delegate.
  */
-public class CachingTargetPlatformResolver implements TargetPlatformResolver {
+public class CachingPlatformResolver implements PlatformResolver {
 
-  private final TargetPlatformResolver delegate;
+  private final PlatformResolver delegate;
 
-  private final LoadingCache<TargetConfiguration, Platform> platformCache =
+  private final LoadingCache<UnconfiguredBuildTargetView, Platform> platformCache =
       CacheBuilder.newBuilder()
           .build(
-              new CacheLoader<TargetConfiguration, Platform>() {
+              new CacheLoader<UnconfiguredBuildTargetView, Platform>() {
                 @Override
-                public Platform load(TargetConfiguration targetConfiguration) {
-                  return delegate.getTargetPlatform(targetConfiguration);
+                public Platform load(UnconfiguredBuildTargetView buildTarget) {
+                  return delegate.getPlatform(buildTarget);
                 }
               });
 
-  public CachingTargetPlatformResolver(TargetPlatformResolver delegate) {
+  public CachingPlatformResolver(PlatformResolver delegate) {
     this.delegate = delegate;
   }
 
   @Override
-  public Platform getTargetPlatform(TargetConfiguration targetConfiguration) {
-    return platformCache.getUnchecked(targetConfiguration);
+  public Platform getPlatform(UnconfiguredBuildTargetView buildTarget) {
+    return platformCache.getUnchecked(buildTarget);
   }
 }

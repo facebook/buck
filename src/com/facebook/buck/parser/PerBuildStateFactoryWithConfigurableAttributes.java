@@ -21,6 +21,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -32,9 +33,10 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.impl.ConfigurationRuleSelectableResolver;
 import com.facebook.buck.core.rules.config.impl.SameThreadConfigurationRuleResolver;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
-import com.facebook.buck.core.rules.platform.CachingTargetPlatformResolver;
+import com.facebook.buck.core.rules.platform.CachingPlatformResolver;
 import com.facebook.buck.core.rules.platform.DefaultTargetPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.rules.platform.RuleBasedPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedTargetPlatformResolver;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -196,11 +198,12 @@ class PerBuildStateFactoryWithConfigurableAttributes extends PerBuildStateFactor
         new RuleBasedConstraintResolver(configurationRuleResolver);
 
     Platform defaultPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
+    PlatformResolver platformResolver =
+        new CachingPlatformResolver(
+            new RuleBasedPlatformResolver(configurationRuleResolver, constraintResolver));
     TargetPlatformResolver targetPlatformResolver =
-        new CachingTargetPlatformResolver(
-            new DefaultTargetPlatformResolver(
-                new RuleBasedTargetPlatformResolver(configurationRuleResolver, constraintResolver),
-                defaultPlatform));
+        new DefaultTargetPlatformResolver(
+            new RuleBasedTargetPlatformResolver(platformResolver), defaultPlatform);
 
     RawTargetNodeToTargetNodeFactory rawTargetNodeToTargetNodeFactory =
         new RawTargetNodeToTargetNodeFactory(

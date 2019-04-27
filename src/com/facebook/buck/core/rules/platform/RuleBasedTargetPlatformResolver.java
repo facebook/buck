@@ -15,21 +15,13 @@
  */
 package com.facebook.buck.core.rules.platform;
 
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
-import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.rules.config.ConfigurationRule;
-import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Streams;
 
 /**
  * An implementation of {@link TargetPlatformResolver} that creates {@link Platform} from {@link
@@ -40,13 +32,10 @@ import com.google.common.collect.Streams;
  */
 public class RuleBasedTargetPlatformResolver implements TargetPlatformResolver {
 
-  private final ConfigurationRuleResolver configurationRuleResolver;
-  private final ConstraintResolver constraintResolver;
+  private final PlatformResolver platformResolver;
 
-  public RuleBasedTargetPlatformResolver(
-      ConfigurationRuleResolver configurationRuleResolver, ConstraintResolver constraintResolver) {
-    this.configurationRuleResolver = configurationRuleResolver;
-    this.constraintResolver = constraintResolver;
+  public RuleBasedTargetPlatformResolver(PlatformResolver platformResolver) {
+    this.platformResolver = platformResolver;
   }
 
   @Override
@@ -58,34 +47,6 @@ public class RuleBasedTargetPlatformResolver implements TargetPlatformResolver {
     UnconfiguredBuildTargetView buildTarget =
         ((DefaultTargetConfiguration) targetConfiguration).getTargetPlatform();
 
-    PlatformRule platformRule = getPlatformRule(buildTarget);
-
-    ImmutableSet<ConstraintValue> constraintValues =
-        Streams.concat(
-                platformRule.getConstrainValues().stream(),
-                getConstraintValuesFromDeps(platformRule).stream())
-            .map(constraintResolver::getConstraintValue)
-            .collect(ImmutableSet.toImmutableSet());
-
-    return new ConstraintBasedPlatform(buildTarget.getFullyQualifiedName(), constraintValues);
-  }
-
-  private ImmutableList<UnconfiguredBuildTargetView> getConstraintValuesFromDeps(
-      PlatformRule platformRule) {
-    ImmutableList.Builder<UnconfiguredBuildTargetView> result = ImmutableList.builder();
-    for (UnconfiguredBuildTargetView dep : platformRule.getDeps()) {
-      result.addAll(getPlatformRule(dep).getConstrainValues());
-    }
-    return result.build();
-  }
-
-  private PlatformRule getPlatformRule(UnconfiguredBuildTargetView buildTarget) {
-    ConfigurationRule configurationRule = configurationRuleResolver.getRule(buildTarget);
-    if (!(configurationRule instanceof PlatformRule)) {
-      throw new HumanReadableException(
-          "%s is used as a target platform, but not declared using `platform` rule",
-          buildTarget.getFullyQualifiedName());
-    }
-    return (PlatformRule) configurationRule;
+    return platformResolver.getPlatform(buildTarget);
   }
 }

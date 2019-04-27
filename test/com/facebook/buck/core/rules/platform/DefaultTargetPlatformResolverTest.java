@@ -43,7 +43,8 @@ public class DefaultTargetPlatformResolverTest {
     Platform emptyTargetConfigurationPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
-            new RuleBasedTargetPlatformResolver(target -> null, new ThrowingConstraintResolver()),
+            new RuleBasedTargetPlatformResolver(
+                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())),
             emptyTargetConfigurationPlatform);
 
     assertEquals(
@@ -79,7 +80,9 @@ public class DefaultTargetPlatformResolverTest {
 
     RuleBasedTargetPlatformResolver ruleBasedTargetPlatformResolver =
         new RuleBasedTargetPlatformResolver(
-            configurationRuleResolver, new RuleBasedConstraintResolver(configurationRuleResolver));
+            new RuleBasedPlatformResolver(
+                configurationRuleResolver,
+                new RuleBasedConstraintResolver(configurationRuleResolver)));
 
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
@@ -101,7 +104,8 @@ public class DefaultTargetPlatformResolverTest {
     Platform emptyTargetConfigurationPlatform = new ConstraintBasedPlatform("", ImmutableSet.of());
     DefaultTargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(
-            new RuleBasedTargetPlatformResolver(target -> null, new ThrowingConstraintResolver()),
+            new RuleBasedTargetPlatformResolver(
+                new RuleBasedPlatformResolver(target -> null, new ThrowingConstraintResolver())),
             emptyTargetConfigurationPlatform);
 
     thrown.expect(HumanReadableException.class);

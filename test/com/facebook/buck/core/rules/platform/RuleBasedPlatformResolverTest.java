@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.google.common.collect.ImmutableList;
@@ -30,7 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class RuleBasedTargetPlatformResolverTest {
+public class RuleBasedPlatformResolverTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -39,8 +38,8 @@ public class RuleBasedTargetPlatformResolverTest {
 
     UnconfiguredBuildTargetView constraint =
         UnconfiguredBuildTargetFactoryForTests.newInstance("//constraint:setting");
-    RuleBasedTargetPlatformResolver resolver =
-        new RuleBasedTargetPlatformResolver(
+    RuleBasedPlatformResolver resolver =
+        new RuleBasedPlatformResolver(
             target -> new ConstraintSettingRule(constraint, "setting", Optional.empty()),
             new ThrowingConstraintResolver());
 
@@ -48,7 +47,7 @@ public class RuleBasedTargetPlatformResolverTest {
     thrown.expectMessage(
         "//constraint:setting is used as a target platform, but not declared using `platform` rule");
 
-    resolver.getTargetPlatform(ImmutableDefaultTargetConfiguration.of(constraint));
+    resolver.getPlatform(constraint);
   }
 
   @Test
@@ -76,13 +75,12 @@ public class RuleBasedTargetPlatformResolverTest {
           throw new IllegalArgumentException("Invalid build target: " + buildTarget);
         };
 
-    RuleBasedTargetPlatformResolver resolver =
-        new RuleBasedTargetPlatformResolver(
+    RuleBasedPlatformResolver resolver =
+        new RuleBasedPlatformResolver(
             configurationRuleResolver, new RuleBasedConstraintResolver(configurationRuleResolver));
 
     ConstraintBasedPlatform platform =
-        (ConstraintBasedPlatform)
-            resolver.getTargetPlatform(ImmutableDefaultTargetConfiguration.of(platformTarget));
+        (ConstraintBasedPlatform) resolver.getPlatform(platformTarget);
 
     assertEquals("//platform:platform", platform.toString());
     assertEquals(1, platform.getConstraintValues().size());
