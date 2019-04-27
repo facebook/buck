@@ -179,6 +179,15 @@ public class ParamInfo implements Comparable<ParamInfo> {
     return Hint.DEFAULT_IS_INPUT;
   }
 
+  /** @see Hint#isConfigurable() */
+  public boolean isConfigurable() {
+    Hint hint = getHint();
+    if (hint != null) {
+      return hint.isConfigurable();
+    }
+    return Hint.DEFAULT_IS_CONFIGURABLE;
+  }
+
   private Hint getHint() {
     return this.closestGetterOnAbstractClassOrInterface.get().getAnnotation(Hint.class);
   }

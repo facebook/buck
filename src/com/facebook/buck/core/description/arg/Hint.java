@@ -33,6 +33,7 @@ public @interface Hint {
   boolean DEFAULT_IS_DEP = true;
   boolean DEFAULT_IS_INPUT = true;
   boolean DEFAULT_IS_TARGET_GRAPH_ONLY_DEP = false;
+  boolean DEFAULT_IS_CONFIGURABLE = true;
 
   /** @return Whether to search the field's value for dependencies */
   boolean isDep() default DEFAULT_IS_DEP;
@@ -49,4 +50,7 @@ public @interface Hint {
    *     dependencies matching target platform into the action graph.
    */
   boolean isTargetGraphOnlyDep() default DEFAULT_IS_TARGET_GRAPH_ONLY_DEP;
+
+  /** @return Whether an attribute can be configured using {@code select}. */
+  boolean isConfigurable() default DEFAULT_IS_CONFIGURABLE;
 }

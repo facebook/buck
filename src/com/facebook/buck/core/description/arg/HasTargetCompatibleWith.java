@@ -30,6 +30,6 @@ public interface HasTargetCompatibleWith {
   ImmutableList<BuildTarget> getTargetCompatibleWith();
 
   /** A list of platforms a target is compatible with. */
-  @Hint(isDep = false)
+  @Hint(isDep = false, isConfigurable = false)
   ImmutableList<UnconfiguredBuildTargetView> getTargetCompatiblePlatforms();
 }

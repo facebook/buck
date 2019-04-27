@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
@@ -151,6 +152,12 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     // ListWithSelects} is not generic class, but an instance contains all necessary information
     // to coerce the value into an instance of {@link SelectorList} which is a generic class.
     if (rawValue instanceof ListWithSelects) {
+      if (!argumentInfo.isConfigurable()) {
+        throw new HumanReadableException(
+            "%s: attribute '%s' cannot be configured using select",
+            buildTarget, argumentInfo.getName());
+      }
+
       coercer =
           typeCoercerFactory.typeCoercerForParameterizedType(
               "ListWithSelects",

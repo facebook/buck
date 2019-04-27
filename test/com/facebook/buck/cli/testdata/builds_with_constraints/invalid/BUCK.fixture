@@ -1,0 +1,11 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "A.java",
+    ],
+    target_compatible_platforms = select({
+        "DEFAULT": [
+            "//config:linux_x86-64",
+        ],
+    }),
+)

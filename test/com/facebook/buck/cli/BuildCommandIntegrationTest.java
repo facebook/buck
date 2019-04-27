@@ -435,6 +435,20 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void testBuildFailsWhenNonConfigurableAttributeUsesSelect() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("build", "//invalid:lib");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        Matchers.containsString(
+            "//invalid:lib: attribute 'targetCompatiblePlatforms' cannot be configured using select"));
+  }
+
+  @Test
   public void changingTargetPlatformTriggersRebuild() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
