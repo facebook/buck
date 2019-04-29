@@ -43,30 +43,37 @@ public class BuckAutoDepsQuickFixProvider
 
   private static Logger LOGGER = Logger.getInstance(BuckAutoDepsQuickFixProvider.class);
 
+  private static final String KEEP_DEFAULT_AUTODEPS = "ideabuck.quickfix.autodeps.showdefault";
+
   @Override
   public void registerFixes(
       @NotNull PsiJavaCodeReferenceElement referenceElement,
       @NotNull QuickFixActionRegistrar quickFixActionRegistrar) {
     List<IntentionAction> fixes = findFixesForReference(referenceElement);
     fixes.forEach(quickFixActionRegistrar::register);
-    if (!fixes.isEmpty()) {
-      // If we think we can add both a Buck dependency and an IntelliJ module dependency,
-      // unregister the default fix, which only adds an IntelliJ module dependency.
-      quickFixActionRegistrar.unregister(
-          new Condition<IntentionAction>() {
-            private static final String ADD_MODULE_DEPENDENCY_FIX_CLASSNAME =
-                "com.intellij.codeInsight.daemon.impl.quickfix.AddModuleDependencyFix";
-
-            @Override
-            public boolean value(IntentionAction intentionAction) {
-              String className = intentionAction.getClass().getName();
-              if (ADD_MODULE_DEPENDENCY_FIX_CLASSNAME.equals(className)) {
-                return true;
-              }
-              return false;
-            }
-          });
+    if (fixes.isEmpty() || Boolean.parseBoolean(System.getProperty(KEEP_DEFAULT_AUTODEPS))) {
+      // Don't unregister the default if:
+      //  1) We can't replace it with anything.
+      //  2) The user has requested to keep it.
+      return;
     }
+
+    // If we think we can add both a Buck dependency and an IntelliJ module dependency,
+    // unregister the default fix, which only adds an IntelliJ module dependency.
+    quickFixActionRegistrar.unregister(
+        new Condition<IntentionAction>() {
+          private static final String ADD_MODULE_DEPENDENCY_FIX_CLASSNAME =
+              "com.intellij.codeInsight.daemon.impl.quickfix.AddModuleDependencyFix";
+
+          @Override
+          public boolean value(IntentionAction intentionAction) {
+            String className = intentionAction.getClass().getName();
+            if (ADD_MODULE_DEPENDENCY_FIX_CLASSNAME.equals(className)) {
+              return true;
+            }
+            return false;
+          }
+        });
   }
 
   private List<IntentionAction> findFixesForReference(
