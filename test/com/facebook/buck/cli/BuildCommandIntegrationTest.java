@@ -474,6 +474,27 @@ public class BuildCommandIntegrationTest {
   }
 
   @Test
+  public void platformWithCircularDepTriggersFailure() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckBuild(
+            "--target-platforms",
+            "//config:platform-with-circular-dep",
+            "//:platform_dependent_genrule");
+
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr(),
+        MoreStringsForTests.containsIgnoringPlatformNewlines(
+            "Buck can't handle circular dependencies.\n"
+                + "The following circular dependency has been found:\n"
+                + "//config:platform-with-circular-dep -> //config:platform-with-circular-dep"));
+  }
+
+  @Test
   public void hostOsConstraintsAreResolved() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);

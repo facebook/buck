@@ -24,9 +24,10 @@ import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Streams;
 
 public class RuleBasedPlatformResolver implements PlatformResolver {
 
@@ -41,25 +42,31 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
 
   @Override
   public Platform getPlatform(UnconfiguredBuildTargetView buildTarget) {
-    PlatformRule platformRule = getPlatformRule(buildTarget);
+    GraphTraversable<UnconfiguredBuildTargetView> traversable =
+        target -> {
+          PlatformRule platformRule = getPlatformRule(target);
+          return platformRule.getDeps().iterator();
+        };
+
+    AcyclicDepthFirstPostOrderTraversal<UnconfiguredBuildTargetView> platformTraversal =
+        new AcyclicDepthFirstPostOrderTraversal<>(traversable);
+
+    ImmutableSet<UnconfiguredBuildTargetView> platformTargets;
+    try {
+      platformTargets =
+          ImmutableSet.copyOf(platformTraversal.traverse(ImmutableList.of(buildTarget)));
+    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+      throw new HumanReadableException(e.getMessage());
+    }
 
     ImmutableSet<ConstraintValue> constraintValues =
-        Streams.concat(
-                platformRule.getConstrainValues().stream(),
-                getConstraintValuesFromDeps(platformRule).stream())
+        platformTargets.stream()
+            .map(this::getPlatformRule)
+            .flatMap(rule -> rule.getConstrainValues().stream())
             .map(constraintResolver::getConstraintValue)
             .collect(ImmutableSet.toImmutableSet());
 
     return new ConstraintBasedPlatform(buildTarget.getFullyQualifiedName(), constraintValues);
-  }
-
-  private ImmutableList<UnconfiguredBuildTargetView> getConstraintValuesFromDeps(
-      PlatformRule platformRule) {
-    ImmutableList.Builder<UnconfiguredBuildTargetView> result = ImmutableList.builder();
-    for (UnconfiguredBuildTargetView dep : platformRule.getDeps()) {
-      result.addAll(getPlatformRule(dep).getConstrainValues());
-    }
-    return result.build();
   }
 
   private PlatformRule getPlatformRule(UnconfiguredBuildTargetView buildTarget) {

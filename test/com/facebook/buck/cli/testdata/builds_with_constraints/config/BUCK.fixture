@@ -45,3 +45,14 @@ config_setting(
         "buck//config/constraints:x86_64",
     ],
 )
+
+platform(
+    name = "platform-with-circular-dep",
+    constraint_values = [
+        "buck//config/constraints:osx",
+    ],
+    deps = [
+        ":platform-with-circular-dep",
+        ":x86_64-platform",
+    ],
+)
