@@ -35,6 +35,10 @@ import java.util.function.Function;
 /** Serializer that uses JSON to represent {@link TargetConfiguration} in a text form. */
 public class JsonTargetConfigurationSerializer implements TargetConfigurationSerializer {
 
+  private static final ImmutableMap<String, Boolean>
+      HOST_TARGET_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION =
+          ImmutableMap.of("hostPlatform", true);
+
   private final ObjectWriter objectWriter;
   private final ObjectReader objectReader;
   private final Function<String, UnconfiguredBuildTargetView> buildTargetProvider;
@@ -57,7 +61,8 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
   public String serialize(TargetConfiguration targetConfiguration) {
     try {
       if (targetConfiguration instanceof HostTargetConfiguration) {
-        return objectWriter.writeValueAsString(ImmutableMap.of("hostPlatform", true));
+        return objectWriter.writeValueAsString(
+            HOST_TARGET_CONFIGURATION_ATTRIBUTES_FOR_SERIALIZATION);
       } else {
         return objectWriter.writeValueAsString(targetConfiguration);
       }
