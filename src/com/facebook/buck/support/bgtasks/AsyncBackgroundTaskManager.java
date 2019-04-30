@@ -20,14 +20,11 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.Futures;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
-import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -98,7 +95,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
 
   @Override
   public TaskManagerCommandScope getNewScope(BuildId buildId) {
-    return new TaskManagerCommandScope(this, buildId);
+    return new TaskManagerCommandScope(this, buildId, blocking);
   }
 
   protected void startScheduling() {
@@ -181,15 +178,6 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     }
   }
 
-  @Override
-  void notify(Notification code) {
-    if (blocking) {
-      notifySync(code);
-    } else {
-      notifyAsync(code);
-    }
-  }
-
   private Future<?> submitTask(ManagedBackgroundTask<?> task) {
     Future<?> handler =
         taskPool.submit(
@@ -206,50 +194,8 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     return task.getToCancel();
   }
 
-  private void notifySync(Notification code) {
-    switch (code) {
-      case COMMAND_START:
-        commandsRunning.incrementAndGet();
-        break;
-
-      case COMMAND_END:
-        if (commandsRunning.decrementAndGet() > 0) {
-          return;
-        }
-        try {
-          ArrayList<Future<?>> futures;
-          synchronized (scheduledTasks) {
-            futures = new ArrayList<>(scheduledTasks.size());
-            while (!scheduledTasks.isEmpty()) {
-              if (!schedulingOpen.get()) {
-                break;
-              }
-              availableThreads.acquire();
-              ManagedBackgroundTask<?> task = scheduledTasks.remove();
-              if (taskCancelled(task)) {
-                availableThreads.release();
-                continue;
-              }
-              futures.add(submitTask(task));
-            }
-          }
-          for (Future<?> future : futures) {
-            try {
-              future.get();
-            } catch (ExecutionException e) {
-              // task exceptions should normally be caught in runTask
-              LOG.error(e, "Task threw exception");
-            } catch (CancellationException e) {
-              LOG.info(e, "Task was cancelled");
-            }
-          }
-        } catch (InterruptedException e) {
-          LOG.warn("Blocking manager interrupted");
-        }
-    }
-  }
-
-  private void notifyAsync(Notification code) {
+  @Override
+  void notify(Notification code) {
     switch (code) {
       case COMMAND_START:
         commandsRunning.incrementAndGet();

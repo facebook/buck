@@ -17,11 +17,13 @@
 package com.facebook.buck.support.bgtasks;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 /**
@@ -34,6 +36,9 @@ import java.util.concurrent.Future;
  */
 public class TaskManagerCommandScope implements Scope {
 
+  private static final Logger LOG = Logger.get(TaskManagerCommandScope.class);
+
+  private final boolean blocking;
   private final BackgroundTaskManager manager;
   private final BuildId buildId;
   private final ConcurrentLinkedQueue<ManagedBackgroundTask<?>> scheduledTasks =
@@ -41,7 +46,9 @@ public class TaskManagerCommandScope implements Scope {
 
   private boolean isClosed = false;
 
-  protected TaskManagerCommandScope(BackgroundTaskManager manager, BuildId buildId) {
+  protected TaskManagerCommandScope(
+      BackgroundTaskManager manager, BuildId buildId, boolean blocking) {
+    this.blocking = blocking;
     this.manager = manager;
     this.buildId = buildId;
     manager.notify(Notification.COMMAND_START);
@@ -82,10 +89,31 @@ public class TaskManagerCommandScope implements Scope {
 
   @Override
   public synchronized void close() {
-    if (isClosed) {
-      return;
+    if (!isClosed) {
+      isClosed = true;
+      manager.notify(Notification.COMMAND_END);
     }
-    isClosed = true;
-    manager.notify(Notification.COMMAND_END);
+
+    if (blocking) {
+      awaitTasksToComplete();
+    }
+  }
+
+  private void awaitTasksToComplete() {
+    ImmutableList<Future<?>> futures =
+        scheduledTasks.stream()
+            .map(ManagedBackgroundTask::getFuture)
+            .collect(ImmutableList.toImmutableList());
+
+    for (Future<?> future : futures) {
+      try {
+        future.get();
+      } catch (InterruptedException e) {
+        LOG.info("Waiting for background tasks was interrupted");
+        return;
+      } catch (ExecutionException e) {
+        LOG.warn(e.getCause(), "Exception occurred executing background task");
+      }
+    }
   }
 }

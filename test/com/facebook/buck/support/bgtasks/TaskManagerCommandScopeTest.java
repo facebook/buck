@@ -26,6 +26,7 @@ import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.util.concurrent.Future;
+import java.util.concurrent.Semaphore;
 import org.junit.Test;
 
 public class TaskManagerCommandScopeTest {
@@ -34,7 +35,7 @@ public class TaskManagerCommandScopeTest {
   public void taskManagerDoesNotReportCommandEndTwiceOnMultipleClose() {
     TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
     TaskManagerCommandScope scope =
-        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId());
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), false);
 
     testBackgroundTaskManager.notify(Notification.COMMAND_START); // one extra command
 
@@ -48,7 +49,7 @@ public class TaskManagerCommandScopeTest {
   public void taskManagerCommandScopeSchedulesTasksToManager() {
     TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
     TaskManagerCommandScope scope =
-        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId());
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
     BackgroundTask<?> task = ImmutableBackgroundTask.of("test", ignored -> fail(), new Object());
     scope.schedule(task);
 
@@ -60,7 +61,7 @@ public class TaskManagerCommandScopeTest {
   public void taskManagerCommandScopeStoresAllTasksForScope() {
     TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
     TaskManagerCommandScope scope =
-        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId());
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
     BackgroundTask<?> task1 = ImmutableBackgroundTask.of("test1", ignored -> fail(), new Object());
     BackgroundTask<?> task2 = ImmutableBackgroundTask.of("test2", ignored -> {}, new Object());
     scope.schedule(task1);
@@ -73,5 +74,86 @@ public class TaskManagerCommandScopeTest {
 
     assertFalse(scheduledTasks.get(task1).isDone());
     assertFalse(scheduledTasks.get(task2).isDone());
+  }
+
+  @Test
+  public void commandScopeCloseBlocksUntilTasksCompleteForBlockingMode() {
+    TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
+    TaskManagerCommandScope scope =
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
+    BackgroundTask<?> task1 = ImmutableBackgroundTask.of("test1", ignored -> {}, new Object());
+    BackgroundTask<?> task2 = ImmutableBackgroundTask.of("test2", ignored -> {}, new Object());
+    scope.schedule(task1);
+    scope.schedule(task2);
+
+    ImmutableMap<BackgroundTask<?>, Future<Void>> scheduledTasks = scope.getScheduledTasksResults();
+
+    assertTrue(scheduledTasks.containsKey(task1));
+    assertTrue(scheduledTasks.containsKey(task2));
+
+    scope.close();
+
+    for (Future<Void> f : scheduledTasks.values()) {
+      assertTrue(f.isDone());
+    }
+  }
+
+  @Test
+  public void commandScopeCloseBlocksOnlyForTasksItScheduled() {
+    TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
+    TaskManagerCommandScope scope1 =
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
+    TaskManagerCommandScope scope2 =
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), false);
+
+    Semaphore semaphore = new Semaphore(0);
+
+    BackgroundTask<?> task1 = ImmutableBackgroundTask.of("test1", ignored -> {}, new Object());
+    BackgroundTask<?> task2 =
+        ImmutableBackgroundTask.of("test2", ignored -> semaphore.acquire(), new Object());
+    scope1.schedule(task1);
+    scope2.schedule(task2);
+
+    scope2.close();
+    scope1.close();
+
+    ImmutableMap<BackgroundTask<?>, Future<Void>> scheduledTasks1 =
+        scope1.getScheduledTasksResults();
+
+    assertTrue(scheduledTasks1.containsKey(task1));
+    assertTrue(scheduledTasks1.get(task1).isDone());
+
+    ImmutableMap<BackgroundTask<?>, Future<Void>> scheduledTasks2 =
+        scope2.getScheduledTasksResults();
+
+    assertTrue(scheduledTasks2.containsKey(task2));
+    assertFalse(scheduledTasks2.get(task2).isDone());
+  }
+
+  @Test
+  public void commandScopeCloseDoesNotBlockForAsyncMode() {
+    TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
+    TaskManagerCommandScope scope =
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), false);
+
+    Semaphore blocker = new Semaphore(0);
+
+    BackgroundTask<?> task1 =
+        ImmutableBackgroundTask.of("test1", ignored -> blocker.acquire(), new Object());
+    BackgroundTask<?> task2 =
+        ImmutableBackgroundTask.of("test2", ignored -> blocker.acquire(), new Object());
+    scope.schedule(task1);
+    scope.schedule(task2);
+
+    ImmutableMap<BackgroundTask<?>, Future<Void>> scheduledTasks = scope.getScheduledTasksResults();
+
+    assertTrue(scheduledTasks.containsKey(task1));
+    assertTrue(scheduledTasks.containsKey(task2));
+
+    scope.close();
+
+    for (Future<Void> f : scheduledTasks.values()) {
+      assertFalse(f.isDone());
+    }
   }
 }

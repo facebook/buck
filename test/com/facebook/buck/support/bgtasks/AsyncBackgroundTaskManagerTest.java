@@ -81,20 +81,6 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testBlockingSuccessPath() {
-    manager = AsyncBackgroundTaskManager.of(true, NTHREADS);
-    ImmutableList<BackgroundTask<TestArgs>> taskList =
-        generateNoWaitingTaskList(1, Optional.empty(), "successTask");
-    ImmutableList<Future<Void>> futures = schedule(taskList);
-    manager.notify(Notification.COMMAND_END);
-
-    for (Future<?> f : futures) {
-      assertTrue(f.isDone());
-    }
-    assertEquals(0, manager.getScheduledTasks().size());
-  }
-
-  @Test
   public void testNonInterruptException() {
     manager = AsyncBackgroundTaskManager.of(true, NTHREADS);
     Exception expectedException = new Exception();
@@ -119,7 +105,7 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testTaskInterruptBlocking() throws InterruptedException {
+  public void testTaskInterrupt() throws InterruptedException {
     manager = AsyncBackgroundTaskManager.of(true, 1);
     BackgroundTask<TestArgs> task =
         ImmutableBackgroundTask.<TestArgs>builder()
@@ -155,7 +141,7 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testNonblockingNotify() {
+  public void testNotify() {
     manager = AsyncBackgroundTaskManager.of(false, NTHREADS);
 
     CountDownLatch taskBlocker = new CountDownLatch(1);
@@ -174,7 +160,7 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testNonblockingNewCommandNonOverlapping() {
+  public void testNewCommandNonOverlapping() {
     manager = AsyncBackgroundTaskManager.of(false, NTHREADS);
 
     CountDownLatch firstTaskBlocker = new CountDownLatch(1);
@@ -215,7 +201,7 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testNonblockingNewCommandsOverlapping() {
+  public void testNewCommandsOverlapping() {
     manager = AsyncBackgroundTaskManager.of(false, NTHREADS);
 
     CountDownLatch firstBlockingTaskBlocker = new CountDownLatch(1);
@@ -278,7 +264,7 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testHardShutdownNonblocking() throws InterruptedException, ExecutionException {
+  public void testHardShutdown() throws InterruptedException, ExecutionException {
     manager = AsyncBackgroundTaskManager.of(false, NTHREADS);
     CountDownLatch blocker = new CountDownLatch(1);
     CountDownLatch waiter = new CountDownLatch(1);
@@ -312,7 +298,7 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test
-  public void testSoftShutdownNonblocking() throws InterruptedException {
+  public void testSoftShutdown() throws InterruptedException {
     manager = AsyncBackgroundTaskManager.of(false, NTHREADS);
     CountDownLatch blocker = new CountDownLatch(1);
     CountDownLatch waiter = new CountDownLatch(1);
@@ -345,7 +331,7 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   @Test(timeout = 8 * TIMEOUT_MILLIS)
-  public void testNonblockingTimeout() throws InterruptedException, ExecutionException {
+  public void testTimeout() throws InterruptedException, ExecutionException {
     manager = AsyncBackgroundTaskManager.of(false, NTHREADS);
 
     CountDownLatch firstBlocker = new CountDownLatch(1);
