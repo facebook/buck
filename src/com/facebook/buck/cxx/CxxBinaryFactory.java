@@ -81,7 +81,7 @@ public class CxxBinaryFactory {
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(target.getFlavors());
     CxxPlatform cxxPlatform =
         CxxPlatforms.getCxxPlatform(cxxPlatformsProvider, target, args.getDefaultPlatform())
-            .resolve(graphBuilder);
+            .resolve(graphBuilder, target.getTargetConfiguration());
     if (flavors.contains(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR)) {
       return createHeaderSymlinkTreeBuildRule(
           target.withoutFlavors(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),

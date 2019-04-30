@@ -29,7 +29,7 @@ import com.google.common.base.Verify;
  */
 public interface UnresolvedCxxPlatform extends FlavorConvertible {
   /** Resolves the platform. */
-  CxxPlatform resolve(BuildRuleResolver resolver);
+  CxxPlatform resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration);
 
   @Override
   Flavor getFlavor();

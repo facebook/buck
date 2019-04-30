@@ -89,7 +89,8 @@ public class DTestDescription
         (SymlinkTree) graphBuilder.requireRule(DDescriptionUtils.getSymlinkTreeTarget(buildTarget));
 
     CxxPlatform cxxPlatform =
-        DDescriptionUtils.getCxxPlatform(graphBuilder, toolchainProvider, dBuckConfig);
+        DDescriptionUtils.getCxxPlatform(
+            graphBuilder, toolchainProvider, dBuckConfig, buildTarget.getTargetConfiguration());
 
     // Create a helper rule to build the test binary.
     // The rule needs its own target so that we can depend on it without creating cycles.

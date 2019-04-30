@@ -322,7 +322,9 @@ public class PythonBinaryDescription
                     args.getPlatform()
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
-    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args).resolve(graphBuilder);
+    CxxPlatform cxxPlatform =
+        getCxxPlatform(buildTarget, args)
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     CellPathResolver cellRoots = context.getCellPathResolver();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     StringWithMacrosConverter macrosConverter =

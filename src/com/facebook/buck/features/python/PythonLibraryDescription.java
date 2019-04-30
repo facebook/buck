@@ -127,7 +127,9 @@ public class PythonLibraryDescription
                       ruleFinder,
                       pathResolver,
                       pythonPlatform.getValue(),
-                      cxxPlatform.getValue().resolve(graphBuilder),
+                      cxxPlatform
+                          .getValue()
+                          .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                       "srcs",
                       baseModule,
                       args.getSrcs(),
@@ -140,7 +142,9 @@ public class PythonLibraryDescription
                       ruleFinder,
                       pathResolver,
                       pythonPlatform.getValue(),
-                      cxxPlatform.getValue().resolve(graphBuilder),
+                      cxxPlatform
+                          .getValue()
+                          .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                       "resources",
                       baseModule,
                       args.getResources(),
@@ -165,7 +169,9 @@ public class PythonLibraryDescription
           ImmutableList<BuildTarget> depTargets =
               PythonUtil.getDeps(
                   pythonPlatform.getValue(),
-                  cxxPlatform.getValue().resolve(graphBuilder),
+                  cxxPlatform
+                      .getValue()
+                      .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
                   args.getDeps(),
                   args.getPlatformDeps());
           return Optional.of(graphBuilder.getAllRules(depTargets)).map(metadataClass::cast);

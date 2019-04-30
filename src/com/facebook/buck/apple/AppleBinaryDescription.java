@@ -359,7 +359,7 @@ public class AppleBinaryDescription
           cxxPlatforms
               .getValue(buildTarget)
               .orElse(cxxPlatforms.getValue(defaultCxxFlavor))
-              .resolve(graphBuilder);
+              .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       ApplePlatform applePlatform =
           appleCxxPlatformsFlavorDomain
               .getValue(cxxPlatform.getFlavor())
@@ -597,7 +597,7 @@ public class AppleBinaryDescription
         cxxPlatforms
             .getValue(buildTarget)
             .orElse(cxxPlatforms.getValue(defaultCxxFlavor))
-            .resolve(ruleResolver);
+            .resolve(ruleResolver, buildTarget.getTargetConfiguration());
 
     if (!appleCxxPlatformsFlavorDomain.contains(cxxPlatform.getFlavor())) {
       return Optional.empty();

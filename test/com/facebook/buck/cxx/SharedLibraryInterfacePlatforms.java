@@ -78,6 +78,6 @@ public class SharedLibraryInterfacePlatforms {
             .iterator()
             .next()
             .getCxxPlatform()
-            .resolve(new TestActionGraphBuilder()));
+            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE));
   }
 }

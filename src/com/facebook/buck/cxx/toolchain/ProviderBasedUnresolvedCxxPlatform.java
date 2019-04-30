@@ -34,7 +34,7 @@ public class ProviderBasedUnresolvedCxxPlatform implements UnresolvedCxxPlatform
   }
 
   @Override
-  public CxxPlatform resolve(BuildRuleResolver resolver) {
+  public CxxPlatform resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     BuildRule rule = resolver.getRule(buildTarget);
     Verify.verify(
         rule instanceof ProvidesCxxPlatform, "%s isn't a cxx_platform rule", rule.getBuildTarget());

@@ -211,7 +211,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
       return Optional.empty();
     }
 
-    CxxPlatform cxxPlatform = maybeCxxPlatform.get().resolve(resolver);
+    CxxPlatform cxxPlatform =
+        maybeCxxPlatform.get().resolve(resolver, buildTarget.getTargetConfiguration());
     ImmutableList.Builder<MacroExpander<? extends Macro, ?>> expanders = ImmutableList.builder();
 
     expanders.add(new ExecutableMacroExpander());

@@ -97,7 +97,7 @@ public class ScalaTestDescription
             args.getCxxLibraryWhitelist(),
             graphBuilder,
             ruleFinder,
-            getCxxPlatform().resolve(graphBuilder));
+            getCxxPlatform().resolve(graphBuilder, buildTarget.getTargetConfiguration()));
     BuildRuleParams params = cxxLibraryEnhancement.updatedParams;
     BuildTarget javaLibraryBuildTarget =
         buildTarget.withAppendedFlavors(JavaTest.COMPILED_TESTS_LIBRARY_FLAVOR);

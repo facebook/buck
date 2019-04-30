@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -187,8 +188,12 @@ abstract class DDescriptionUtils {
   }
 
   static CxxPlatform getCxxPlatform(
-      BuildRuleResolver resolver, ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig) {
-    return getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig).resolve(resolver);
+      BuildRuleResolver resolver,
+      ToolchainProvider toolchainProvider,
+      DBuckConfig dBuckConfig,
+      TargetConfiguration targetConfiguration) {
+    return getUnresolvedCxxPlatform(toolchainProvider, dBuckConfig)
+        .resolve(resolver, targetConfiguration);
   }
 
   public static SymlinkTree createSourceSymlinkTree(

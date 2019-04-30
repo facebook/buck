@@ -100,7 +100,8 @@ public class DBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            DDescriptionUtils.getCxxPlatform(graphBuilder, toolchainProvider, dBuckConfig),
+            DDescriptionUtils.getCxxPlatform(
+                graphBuilder, toolchainProvider, dBuckConfig, buildTarget.getTargetConfiguration()),
             dBuckConfig,
             cxxBuckConfig,
             /* compilerFlags */ ImmutableList.of(),

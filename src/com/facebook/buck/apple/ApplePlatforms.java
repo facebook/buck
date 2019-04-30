@@ -51,7 +51,8 @@ public class ApplePlatforms {
       appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
     } else {
       CxxPlatform cxxPlatform =
-          getCxxPlatformForBuildTarget(cxxPlatformsProvider, target).resolve(ruleResolver);
+          getCxxPlatformForBuildTarget(cxxPlatformsProvider, target)
+              .resolve(ruleResolver, target.getTargetConfiguration());
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());
       } catch (FlavorDomainException e) {

@@ -285,7 +285,7 @@ public class AppleLibraryDescription
                 cxxPlatforms
                     .getValue(buildTarget)
                     .orElseThrow(IllegalArgumentException::new)
-                    .resolve(graphBuilder);
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
@@ -300,7 +300,7 @@ public class AppleLibraryDescription
                 cxxPlatforms
                     .getValue(buildTarget)
                     .orElseThrow(IllegalArgumentException::new)
-                    .resolve(graphBuilder);
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
             return Optional.of(
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
@@ -315,7 +315,7 @@ public class AppleLibraryDescription
                 cxxPlatforms
                     .getValue(buildTarget)
                     .orElseThrow(IllegalArgumentException::new)
-                    .resolve(graphBuilder);
+                    .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
             // TODO(mgd): Must handle 'default' platform
             AppleCxxPlatform applePlatform =
@@ -514,7 +514,7 @@ public class AppleLibraryDescription
                     Sets.intersection(
                         cxxPlatforms.getFlavors(), unstrippedBuildTarget.getFlavors()),
                     defaultCxxFlavor))
-            .resolve(graphBuilder);
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
     BuildTarget strippedBuildTarget =
         CxxStrip.restoreStripStyleFlavorInTarget(unstrippedBuildTarget, flavoredStripStyle);
@@ -656,7 +656,7 @@ public class AppleLibraryDescription
           buildTarget,
           context.getProjectFilesystem(),
           graphBuilder,
-          platform.get().resolve(graphBuilder),
+          platform.get().resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           args);
     } else if (platform.isPresent()
         && libType.isPresent()
@@ -948,7 +948,8 @@ public class AppleLibraryDescription
     BuildTarget baseTarget =
         buildTarget.withoutFlavors(
             cxxMetaDataType.getKey(), platformEntry.getKey(), visibility.getKey());
-    CxxPlatform cxxPlatform = platformEntry.getValue().resolve(graphBuilder);
+    CxxPlatform cxxPlatform =
+        platformEntry.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
     CxxPreprocessorInput.Builder cxxPreprocessorInputBuilder = CxxPreprocessorInput.builder();
     CxxLibraryMetadataFactory.addCxxPreprocessorInputFromArgs(

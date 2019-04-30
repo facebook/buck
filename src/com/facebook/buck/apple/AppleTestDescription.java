@@ -234,7 +234,10 @@ public class AppleTestDescription
       ImmutableList.Builder<CxxPlatform> cxxPlatformBuilder = ImmutableList.builder();
       for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
         cxxPlatformBuilder.add(
-            cxxPlatformFlavorDomain.getValue(thinTarget).get().resolve(graphBuilder));
+            cxxPlatformFlavorDomain
+                .getValue(thinTarget)
+                .get()
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
       }
       cxxPlatforms = cxxPlatformBuilder.build();
       appleCxxPlatform = multiarchFileInfo.get().getRepresentativePlatform();
@@ -243,7 +246,7 @@ public class AppleTestDescription
           cxxPlatformFlavorDomain
               .getValue(buildTarget)
               .orElse(cxxPlatformFlavorDomain.getValue(defaultCxxFlavor))
-              .resolve(graphBuilder);
+              .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       cxxPlatforms = ImmutableList.of(cxxPlatform);
       try {
         appleCxxPlatform = appleCxxPlatformFlavorDomain.getValue(cxxPlatform.getFlavor());

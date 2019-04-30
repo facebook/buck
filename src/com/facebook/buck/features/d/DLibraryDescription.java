@@ -123,7 +123,8 @@ public class DLibraryDescription
       PicType pic) {
 
     CxxPlatform cxxPlatform =
-        DDescriptionUtils.getCxxPlatform(graphBuilder, toolchainProvider, dBuckConfig);
+        DDescriptionUtils.getCxxPlatform(
+            graphBuilder, toolchainProvider, dBuckConfig, buildTarget.getTargetConfiguration());
 
     ImmutableList<SourcePath> compiledSources =
         DDescriptionUtils.sourcePathsForCompiledSources(

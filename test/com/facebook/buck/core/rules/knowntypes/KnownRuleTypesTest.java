@@ -183,7 +183,7 @@ public class KnownRuleTypesTest {
         cxxPlatformsProvider
             .getUnresolvedCxxPlatforms()
             .getValue(flavor)
-            .resolve(new TestActionGraphBuilder())
+            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)
             .getCflags(),
         Matchers.contains(flag));
     TestKnownRuleTypesFactory.create(

@@ -246,7 +246,9 @@ public class PythonTestDescription
                     args.getPlatform()
                         .<Flavor>map(InternalFlavor::of)
                         .orElse(pythonPlatforms.getFlavors().iterator().next())));
-    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args).resolve(graphBuilder);
+    CxxPlatform cxxPlatform =
+        getCxxPlatform(buildTarget, args)
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());

@@ -40,7 +40,8 @@ public class ProviderBackedUnresolvedNdkCxxPlatform implements UnresolvedNdkCxxP
     this.cxxPlatformProvider =
         new UnresolvedCxxPlatform() {
           @Override
-          public CxxPlatform resolve(BuildRuleResolver resolver) {
+          public CxxPlatform resolve(
+              BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
             return ProviderBackedUnresolvedNdkCxxPlatform.this.resolve(resolver).getCxxPlatform();
           }
 

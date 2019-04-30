@@ -95,7 +95,7 @@ public class CxxPlatformsTest {
                     borlandCxx452Platform.getFlavor(),
                     new StaticUnresolvedCxxPlatform(borlandCxx452Platform)),
                 CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
-            .resolve(new TestActionGraphBuilder()),
+            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE),
         equalTo(borlandCxx452Platform));
   }
 

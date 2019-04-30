@@ -32,7 +32,7 @@ public class StaticUnresolvedCxxPlatform implements UnresolvedCxxPlatform {
   }
 
   @Override
-  public CxxPlatform resolve(BuildRuleResolver resolver) {
+  public CxxPlatform resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     // TODO(cjhopman): Should we verify that some of the rules are actually present in the graph at
     // this point? We might be able to give a more informative message.
     return cxxPlatform;

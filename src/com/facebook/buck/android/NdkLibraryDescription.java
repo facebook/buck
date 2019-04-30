@@ -198,7 +198,8 @@ public class NdkLibraryDescription
 
     for (Map.Entry<TargetCpuType, UnresolvedNdkCxxPlatform> entry :
         ndkCxxPlatformsProvider.getNdkCxxPlatforms().entrySet()) {
-      CxxPlatform cxxPlatform = entry.getValue().getCxxPlatform().resolve(graphBuilder);
+      CxxPlatform cxxPlatform =
+          entry.getValue().getCxxPlatform().resolve(graphBuilder, targetConfiguration);
 
       // Collect the preprocessor input for all C/C++ library deps.  We search *through* other
       // NDK library rules.

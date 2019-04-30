@@ -115,7 +115,8 @@ public class CxxLibraryMetadataFactory {
 
           // TODO(agallagher): We currently always add exported flags and frameworks to the
           // preprocessor input to mimic existing behavior, but this should likely be fixed.
-          CxxPlatform cxxPlatform = platform.getValue().resolve(graphBuilder);
+          CxxPlatform cxxPlatform =
+              platform.getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
           addCxxPreprocessorInputFromArgs(
               cxxPreprocessorInputBuilder,
               args,

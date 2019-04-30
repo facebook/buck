@@ -425,7 +425,9 @@ public class CxxPythonExtensionDescription
               graphBuilderLocal,
               cellRoots,
               pythonPlatforms.getRequiredValue(buildTarget),
-              cxxPlatforms.getRequiredValue(buildTarget).resolve(graphBuilderLocal),
+              cxxPlatforms
+                  .getRequiredValue(buildTarget)
+                  .resolve(graphBuilderLocal, buildTarget.getTargetConfiguration()),
               args);
         case COMPILATION_DATABASE:
           // so for the moment, when we get a target whose flavor is just #compilation-database
@@ -456,7 +458,9 @@ public class CxxPythonExtensionDescription
               graphBuilderLocal,
               cellRoots,
               pythonPlatforms.getRequiredValue(target),
-              cxxPlatforms.getRequiredValue(target).resolve(graphBuilderLocal),
+              cxxPlatforms
+                  .getRequiredValue(target)
+                  .resolve(graphBuilderLocal, buildTarget.getTargetConfiguration()),
               args);
       }
     }

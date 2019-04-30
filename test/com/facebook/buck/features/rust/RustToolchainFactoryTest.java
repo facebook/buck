@@ -78,13 +78,15 @@ public class RustToolchainFactoryTest {
     assertThat(
         toolchain.get().getDefaultRustPlatform().getCxxPlatform(),
         Matchers.equalTo(
-            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(new TestActionGraphBuilder())));
+            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(
+                new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)));
     assertThat(
         toolchain.get().getRustPlatforms().getValues().stream()
             .map(RustPlatform::getCxxPlatform)
             .collect(ImmutableList.toImmutableList()),
         Matchers.contains(
-            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(new TestActionGraphBuilder())));
+            CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(
+                new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)));
   }
 
   @Test
@@ -153,6 +155,7 @@ public class RustToolchainFactoryTest {
         Matchers.contains(filesystem.resolve(linker).toString()));
     assertThat(
         platform.getCxxPlatform(),
-        Matchers.equalTo(cxxPlatform.resolve(new TestActionGraphBuilder())));
+        Matchers.equalTo(
+            cxxPlatform.resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)));
   }
 }

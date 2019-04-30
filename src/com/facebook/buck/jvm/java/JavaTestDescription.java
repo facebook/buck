@@ -131,7 +131,8 @@ public class JavaTestDescription
             args.getCxxLibraryWhitelist(),
             graphBuilder,
             ruleFinder,
-            getUnresolvedCxxPlatform(args).resolve(graphBuilder));
+            getUnresolvedCxxPlatform(args)
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration()));
     params = cxxLibraryEnhancement.updatedParams;
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =

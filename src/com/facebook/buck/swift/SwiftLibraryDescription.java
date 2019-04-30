@@ -188,7 +188,8 @@ public class SwiftLibraryDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     if (!buildFlavors.contains(SWIFT_COMPANION_FLAVOR) && platform.isPresent()) {
       // TODO(cjhopman): This doesn't properly handle parse time deps...
-      CxxPlatform cxxPlatform = platform.get().getValue().resolve(graphBuilder);
+      CxxPlatform cxxPlatform =
+          platform.get().getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
       Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(buildTarget);
       if (!swiftPlatform.isPresent()) {
         throw new HumanReadableException("Platform %s is missing swift compiler", cxxPlatform);

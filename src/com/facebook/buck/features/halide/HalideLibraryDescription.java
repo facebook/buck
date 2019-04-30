@@ -301,7 +301,7 @@ public class HalideLibraryDescription
         cxxPlatforms
             .getValue(flavors)
             .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform())
-            .resolve(graphBuilder);
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)) {
@@ -328,7 +328,9 @@ public class HalideLibraryDescription
       // we use the host flavor here, regardless of the flavors on the build
       // target.
       CxxPlatform hostCxxPlatform =
-          cxxPlatforms.getValue(CxxPlatforms.getHostFlavor()).resolve(graphBuilder);
+          cxxPlatforms
+              .getValue(CxxPlatforms.getHostFlavor())
+              .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       ImmutableSortedSet<BuildTarget> compilerDeps = args.getCompilerDeps();
       return createHalideCompiler(
           buildTarget,

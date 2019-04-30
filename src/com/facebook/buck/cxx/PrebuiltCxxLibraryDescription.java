@@ -390,7 +390,8 @@ public class PrebuiltCxxLibraryDescription
       Preconditions.checkState(platform.isPresent());
       BuildTarget baseTarget =
           buildTarget.withoutFlavors(type.get().getKey(), platform.get().getKey());
-      CxxPlatform cxxPlatform = platform.get().getValue().resolve(graphBuilder);
+      CxxPlatform cxxPlatform =
+          platform.get().getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
       if (type.get().getValue() == Type.EXPORTED_HEADERS) {
         return createExportedHeaderSymlinkTreeBuildRule(
             buildTarget,

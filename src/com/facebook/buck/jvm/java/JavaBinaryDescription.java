@@ -102,7 +102,7 @@ public class JavaBinaryDescription
     ImmutableMap<String, SourcePath> nativeLibraries =
         JavaLibraryRules.getNativeLibraries(
             params.getBuildDeps(),
-            getCxxPlatform(args).resolve(graphBuilder),
+            getCxxPlatform(args).resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             context.getActionGraphBuilder());
     BuildTarget binaryBuildTarget = buildTarget;
 

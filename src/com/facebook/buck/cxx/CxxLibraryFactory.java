@@ -100,7 +100,8 @@ public class CxxLibraryFactory {
 
     CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
     FlavorDomain<CxxPlatform> cxxPlatforms =
-        cxxPlatformsProvider.getResolvedCxxPlatforms(graphBuilder);
+        cxxPlatformsProvider.getResolvedCxxPlatforms(
+            graphBuilder, buildTarget.getTargetConfiguration());
     Flavor defaultCxxFlavor = cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract

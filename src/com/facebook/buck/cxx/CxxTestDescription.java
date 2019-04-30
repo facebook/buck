@@ -164,7 +164,9 @@ public class CxxTestDescription
     BuildTarget buildTarget = inputBuildTarget;
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    CxxPlatform cxxPlatform = getCxxPlatform(buildTarget, args).resolve(graphBuilder);
+    CxxPlatform cxxPlatform =
+        getCxxPlatform(buildTarget, args)
+            .resolve(graphBuilder, buildTarget.getTargetConfiguration());
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
