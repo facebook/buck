@@ -19,7 +19,6 @@ package com.facebook.buck.support.bgtasks;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -63,7 +62,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   private final AtomicBoolean schedulingOpen;
 
   private final Semaphore availableThreads;
-  private final Optional<ExecutorService> scheduler;
+  private final ExecutorService scheduler;
   private final ExecutorService taskPool;
   private final ScheduledExecutorService timeoutPool;
 
@@ -76,7 +75,9 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    *     not provided
    */
   public static AsyncBackgroundTaskManager of(boolean blocking, int nThreads) {
-    return new AsyncBackgroundTaskManager(blocking, nThreads);
+    AsyncBackgroundTaskManager manager = new AsyncBackgroundTaskManager(blocking, nThreads);
+    manager.startScheduling();
+    return manager;
   }
 
   /** Same as {@link #of(boolean, int)} except with the default number of threads. */
@@ -89,7 +90,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     this.schedulerRunning = new AtomicBoolean(false);
     this.taskPool = Executors.newFixedThreadPool(nThreads);
     this.timeoutPool = Executors.newScheduledThreadPool(1);
-    this.scheduler = blocking ? Optional.empty() : Optional.of(Executors.newFixedThreadPool(1));
+    this.scheduler = Executors.newFixedThreadPool(1);
     this.commandsRunning = new AtomicInteger(0);
     this.availableThreads = new Semaphore(nThreads);
     this.schedulingOpen = new AtomicBoolean(true);
@@ -100,23 +101,22 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     return new TaskManagerCommandScope(this, buildId);
   }
 
-  private void startSchedulingIfNeeded() {
-    Preconditions.checkState(scheduler.isPresent());
+  protected void startScheduling() {
     if (schedulerRunning.getAndSet(true)) {
       return;
     }
-    scheduler.get().submit(this::scheduleLoop);
+    scheduler.submit(this::scheduleLoop);
   }
 
   private void shutDownScheduling() {
     schedulingOpen.set(false);
     try {
-      if (!blocking) {
-        scheduler.get().shutdownNow();
-        scheduler.get().awaitTermination(1, TimeUnit.SECONDS);
+      scheduler.shutdown();
+      if (!scheduler.awaitTermination(1, TimeUnit.SECONDS)) {
+        scheduler.shutdownNow();
       }
-    } catch (InterruptedException e) {
-      scheduler.get().shutdownNow();
+    } catch (Exception e) {
+      scheduler.shutdownNow();
     }
   }
 
@@ -250,7 +250,6 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   private void notifyAsync(Notification code) {
-    startSchedulingIfNeeded();
     switch (code) {
       case COMMAND_START:
         commandsRunning.incrementAndGet();

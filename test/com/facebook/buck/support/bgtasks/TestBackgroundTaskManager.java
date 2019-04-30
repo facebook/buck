@@ -31,7 +31,9 @@ public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
   private final Map<BackgroundTask<?>, Future<Void>> tasks;
 
   public static TestBackgroundTaskManager of() {
-    return new TestBackgroundTaskManager();
+    TestBackgroundTaskManager manager = new TestBackgroundTaskManager();
+    manager.startScheduling();
+    return manager;
   }
 
   private TestBackgroundTaskManager() {
