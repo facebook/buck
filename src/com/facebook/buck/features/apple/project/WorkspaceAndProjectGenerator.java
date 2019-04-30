@@ -558,13 +558,15 @@ public class WorkspaceAndProjectGenerator {
       } else {
         LOG.debug("Generating project for directory %s with targets %s", projectDirectory, rules);
         String projectName;
-        if (projectDirectory.getFileName().toString().equals("")) {
+        Path projectDirectoryName = projectDirectory.getFileName();
+        if (projectDirectoryName == null || projectDirectoryName.toString().equals("")) {
           // If we're generating a project in the root directory, use a generic name.
           projectName = "Project";
         } else {
           // Otherwise, name the project the same thing as the directory we're in.
-          projectName = projectDirectory.getFileName().toString();
+          projectName = projectDirectoryName.toString();
         }
+
         generator =
             new ProjectGenerator(
                 xcodeDescriptions,
