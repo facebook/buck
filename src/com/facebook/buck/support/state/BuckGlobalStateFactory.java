@@ -41,7 +41,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
@@ -60,7 +59,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.function.Supplier;
 
 /** Factory for {@link BuckGlobalState}. */
 public class BuckGlobalStateFactory {
@@ -75,8 +73,7 @@ public class BuckGlobalStateFactory {
       Optional<WebServer> webServerToReuse,
       UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
-      Clock clock,
-      Supplier<BackgroundTaskManager> bgTaskManagerFactory) {
+      Clock clock) {
     EventBus fileEventBus = new EventBus("file-change-events");
 
     ImmutableList<Cell> allCells = rootCell.getAllCells();
@@ -164,7 +161,6 @@ public class BuckGlobalStateFactory {
         cursor,
         knownRuleTypesProvider,
         clock,
-        bgTaskManagerFactory.get(),
         watchman != WatchmanFactory.NULL_WATCHMAN);
   }
 

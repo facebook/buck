@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.cli;
 
+import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
@@ -48,9 +50,11 @@ public class MainWithoutNailgun extends AbstractMain {
   public static void main(String[] args) {
     // TODO(bobyf): add shutdown handling
 
+    BackgroundTaskManager backgroundTaskManager = AsyncBackgroundTaskManager.of();
     MainWithoutNailgun mainWithoutNailgun = new MainWithoutNailgun();
-    MainRunner mainRunner = mainWithoutNailgun.prepareMainRunner();
+    MainRunner mainRunner = mainWithoutNailgun.prepareMainRunner(backgroundTaskManager);
     mainRunner.runMainThenExit(args, System.nanoTime());
+    backgroundTaskManager.shutdownNow();
   }
 
   private static ImmutableMap<String, String> getClientEnvironment() {

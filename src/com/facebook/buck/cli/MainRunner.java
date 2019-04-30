@@ -139,7 +139,6 @@ import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleStrategyConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategyFactory;
 import com.facebook.buck.sandbox.impl.PlatformSandboxExecutionStrategyFactory;
-import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.cli.args.BuckArgsMethods;
@@ -374,6 +373,8 @@ public final class MainRunner {
 
   private final BuildId buildId;
 
+  private final BackgroundTaskManager bgTaskManager;
+
   private Optional<BuckConfig> parsedRootConfig = Optional.empty();
 
   static {
@@ -404,12 +405,14 @@ public final class MainRunner {
       Platform platform,
       PluginManager pluginManager,
       BuckModuleManager moduleManager,
+      BackgroundTaskManager bgTaskManager,
       Optional<NGContext> context) {
     this.console = console;
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
     this.pluginManager = pluginManager;
     this.moduleManager = moduleManager;
+    this.bgTaskManager = bgTaskManager;
     this.architecture = Architecture.detect();
     this.buildId = buildId;
     this.clientEnvironment = clientEnvironment;
@@ -426,6 +429,7 @@ public final class MainRunner {
       Platform platform,
       PluginManager pluginManager,
       BuckModuleManager moduleManager,
+      BackgroundTaskManager bgTaskManager,
       Optional<NGContext> context) {
     this(
         console,
@@ -436,6 +440,7 @@ public final class MainRunner {
         platform,
         pluginManager,
         moduleManager,
+        bgTaskManager,
         context);
   }
 
@@ -827,11 +832,6 @@ public final class MainRunner {
           new JsonTargetConfigurationSerializer(
               targetName -> buildTargetFactory.create(rootCell.getCellPathResolver(), targetName));
 
-      // When Nailgun context is not present it means the process will be finished immediately after
-      // the command. So, override task manager to be blocking one, i.e. execute background
-      // clean up tasks synchronously
-      Supplier<BackgroundTaskManager> bgTaskManagerFactory = AsyncBackgroundTaskManager::of;
-
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
               rootCell,
@@ -840,8 +840,7 @@ public final class MainRunner {
               console,
               clock,
               buildTargetFactory,
-              targetConfigurationSerializer,
-              bgTaskManagerFactory);
+              targetConfigurationSerializer);
 
       BuckGlobalState buckGlobalState = buckGlobalStateRequest.getFirst();
       LifecycleStatus stateLifecycleStatus = buckGlobalStateRequest.getSecond();
@@ -937,15 +936,13 @@ public final class MainRunner {
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 
       try (TaskManagerCommandScope managerScope =
-              buckGlobalState
-                  .getBgTaskManager()
-                  .getNewScope(
-                      buildId,
-                      !context.isPresent()
-                          || rootCell
-                              .getBuckConfig()
-                              .getView(CliConfig.class)
-                              .getFlushEventsBeforeExit());
+              bgTaskManager.getNewScope(
+                  buildId,
+                  !context.isPresent()
+                      || rootCell
+                          .getBuckConfig()
+                          .getView(CliConfig.class)
+                          .getFlushEventsBeforeExit());
           GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
                   .setupLoggers(

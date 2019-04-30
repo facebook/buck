@@ -59,6 +59,8 @@ import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.testutil.AbstractWorkspace;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
@@ -519,6 +521,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
       PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
       DefaultBuckModuleManager moduleManager =
           new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
+      BackgroundTaskManager manager = AsyncBackgroundTaskManager.of();
 
       MainRunner main =
           knownRuleTypesFactoryFactory == null
@@ -530,6 +533,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   platform,
                   pluginManager,
                   moduleManager,
+                  manager,
                   context)
               : new MainRunner(
                   testConsole,
@@ -540,6 +544,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   platform,
                   pluginManager,
                   moduleManager,
+                  manager,
                   context);
       ExitCode exitCode;
 

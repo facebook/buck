@@ -45,8 +45,6 @@ import com.facebook.buck.io.watchman.FakeWatchmanClient;
 import com.facebook.buck.io.watchman.FakeWatchmanFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
-import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
@@ -65,7 +63,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
-import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,7 +82,6 @@ public class BuckGlobalStateLifecycleManagerTest {
   private Watchman watchman;
   private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
   private TargetConfigurationSerializer targetConfigurationSerializer;
-  private Supplier<BackgroundTaskManager> backgroundTaskManagerFactory;
 
   @Before
   public void setUp() {
@@ -104,7 +100,6 @@ public class BuckGlobalStateLifecycleManagerTest {
     targetConfigurationSerializer =
         new JsonTargetConfigurationSerializer(
             buildTarget -> unconfiguredBuildTargetFactory.create(cellPathResolver, buildTarget));
-    backgroundTaskManagerFactory = TestBackgroundTaskManager::of;
   }
 
   @Test
@@ -126,8 +121,7 @@ public class BuckGlobalStateLifecycleManagerTest {
             Console.createNullConsole(),
             clock,
             unconfiguredBuildTargetFactory,
-            targetConfigurationSerializer,
-            backgroundTaskManagerFactory);
+            targetConfigurationSerializer);
 
     Pair<BuckGlobalState, LifecycleStatus> buckStateResult2 =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
@@ -145,8 +139,7 @@ public class BuckGlobalStateLifecycleManagerTest {
             Console.createNullConsole(),
             clock,
             unconfiguredBuildTargetFactory,
-            targetConfigurationSerializer,
-            backgroundTaskManagerFactory);
+            targetConfigurationSerializer);
 
     Pair<BuckGlobalState, LifecycleStatus> buckStateResult3 =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
@@ -164,8 +157,7 @@ public class BuckGlobalStateLifecycleManagerTest {
             Console.createNullConsole(),
             clock,
             unconfiguredBuildTargetFactory,
-            targetConfigurationSerializer,
-            backgroundTaskManagerFactory);
+            targetConfigurationSerializer);
 
     assertEquals(
         "Daemon should not be replaced when config equal.",
@@ -203,8 +195,7 @@ public class BuckGlobalStateLifecycleManagerTest {
             Console.createNullConsole(),
             clock,
             unconfiguredBuildTargetFactory,
-            targetConfigurationSerializer,
-            backgroundTaskManagerFactory);
+            targetConfigurationSerializer);
 
     assertNotEquals(
         "Daemon state should be replaced when not equal.",
@@ -216,8 +207,7 @@ public class BuckGlobalStateLifecycleManagerTest {
             Console.createNullConsole(),
             clock,
             unconfiguredBuildTargetFactory,
-            targetConfigurationSerializer,
-            backgroundTaskManagerFactory));
+            targetConfigurationSerializer));
   }
 
   @Test
@@ -236,8 +226,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     Object buckGlobalState2 =
@@ -249,8 +238,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
     assertEquals("Apple SDK should still be not found", buckGlobalState1, buckGlobalState2);
 
@@ -274,8 +262,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
     assertNotEquals("Apple SDK should be found", buckGlobalState2, buckGlobalState3);
 
@@ -291,8 +278,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
     assertEquals("Apple SDK should still be found", buckGlobalState3, buckGlobalState4);
   }
@@ -334,8 +320,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
     Object buckGlobalState2 =
         buckGlobalStateLifecycleManager
@@ -346,8 +331,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
     assertEquals(
         "Android SDK should be the same initial location", buckGlobalState1, buckGlobalState2);
@@ -365,8 +349,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertEquals("Daemon should not be re-created", buckGlobalState2, buckGlobalState3);
@@ -379,8 +362,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertEquals(
@@ -424,8 +406,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
     Object buckGlobalState2 =
         buckGlobalStateLifecycleManager
@@ -436,8 +417,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
     assertEquals(
         "Android SDK should be the same initial location", buckGlobalState1, buckGlobalState2);
@@ -456,8 +436,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertNotEquals("Android SDK should be the other location", buckGlobalState2, buckGlobalState3);
@@ -470,8 +449,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertEquals(
@@ -506,8 +484,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     tmp.newFolder("android-sdk");
@@ -522,8 +499,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertNotEquals(buckGlobalStateWithBrokenAndroidSdk, buckGlobalStateWithWorkingAndroidSdk);
@@ -548,8 +524,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     Files.deleteIfExists(androidSdkPath);
@@ -564,8 +539,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertNotEquals(buckGlobalStateWithWorkingAndroidSdk, buckGlobalStateWithBrokenAndroidSdk);
@@ -590,8 +564,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     cell = createCellWithAndroidSdk(androidSdkPath);
@@ -606,8 +579,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertEquals(buckGlobalStateWithBrokenAndroidSdk1, buckGlobalStateWithBrokenAndroidSdk2);
@@ -633,8 +605,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     cell = createCellWithAndroidSdk(androidSdkPath);
@@ -647,8 +618,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertEquals(buckGlobalStateWithBrokenAndroidSdk1, buckGlobalStateWithBrokenAndroidSdk2);
@@ -672,8 +642,7 @@ public class BuckGlobalStateLifecycleManagerTest {
             Console.createNullConsole(),
             clock,
             unconfiguredBuildTargetFactory,
-            targetConfigurationSerializer,
-            backgroundTaskManagerFactory);
+            targetConfigurationSerializer);
 
     cell = createCellWithAndroidSdk(androidSdkPath.resolve("some-other-dir"));
     Object buckGlobalStateWithBrokenAndroidSdk2 =
@@ -684,8 +653,7 @@ public class BuckGlobalStateLifecycleManagerTest {
             Console.createNullConsole(),
             clock,
             unconfiguredBuildTargetFactory,
-            targetConfigurationSerializer,
-            backgroundTaskManagerFactory);
+            targetConfigurationSerializer);
 
     assertNotEquals(buckGlobalStateWithBrokenAndroidSdk1, buckGlobalStateWithBrokenAndroidSdk2);
   }
@@ -703,8 +671,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                 Console.createNullConsole(),
                 clock,
                 unconfiguredBuildTargetFactory,
-                targetConfigurationSerializer,
-                backgroundTaskManagerFactory)
+                targetConfigurationSerializer)
             .getFirst();
 
     assertEquals(buckGlobalState.getUptime(), 0);

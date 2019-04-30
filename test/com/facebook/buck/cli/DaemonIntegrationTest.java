@@ -30,6 +30,8 @@ import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -172,6 +174,7 @@ public class DaemonIntegrationTest {
         PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
         DefaultBuckModuleManager moduleManager =
             new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
+        BackgroundTaskManager manager = TestBackgroundTaskManager.of();
 
         MainRunner main =
             new MainRunner(
@@ -182,6 +185,7 @@ public class DaemonIntegrationTest {
                 Platform.detect(),
                 pluginManager,
                 moduleManager,
+                manager,
                 Optional.of(new TestContext()));
         ExitCode exitCode =
             main.runMainWithExitCode(

@@ -32,7 +32,6 @@ import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.parser.DaemonicParserState;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.cache.impl.WatchedFileHashCache;
 import com.facebook.buck.util.timing.Clock;
@@ -81,8 +80,6 @@ public final class BuckGlobalState implements Closeable {
   private final long startTime;
   private final boolean usesWatchman;
 
-  private final BackgroundTaskManager bgTaskManager;
-
   BuckGlobalState(
       Cell rootCell,
       TypeCoercerFactory typeCoercerFactory,
@@ -99,7 +96,6 @@ public final class BuckGlobalState implements Closeable {
       ImmutableMap<Path, WatchmanCursor> cursor,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Clock clock,
-      BackgroundTaskManager bgTaskManager,
       boolean usesWatchman) {
     this.rootCell = rootCell;
     this.typeCoercerFactory = typeCoercerFactory;
@@ -116,7 +112,6 @@ public final class BuckGlobalState implements Closeable {
     this.cursor = cursor;
     this.knownRuleTypesProvider = knownRuleTypesProvider;
     this.clock = clock;
-    this.bgTaskManager = bgTaskManager;
     this.usesWatchman = usesWatchman;
 
     this.startTime = clock.currentTimeMillis();
@@ -124,10 +119,6 @@ public final class BuckGlobalState implements Closeable {
 
   Cell getRootCell() {
     return rootCell;
-  }
-
-  public BackgroundTaskManager getBgTaskManager() {
-    return bgTaskManager;
   }
 
   public Optional<WebServer> getWebServer() {
@@ -239,7 +230,6 @@ public final class BuckGlobalState implements Closeable {
 
   @Override
   public void close() {
-    bgTaskManager.shutdownNow();
     shutdownPersistentWorkerPools();
     shutdownWebServer();
   }
