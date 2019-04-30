@@ -186,6 +186,13 @@ public class AndroidLibraryDescriptionIntegrationTest extends AbiCompilationMode
     workspace.runBuckBuild("//:needs_c_has_res").assertFailure();
   }
 
+  @Test
+  public void testQueryCanContributeToGraph() throws Exception {
+    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    workspace.runBuckBuild("//:lib_with_query_and_no_declared").assertSuccess();
+    workspace.runBuckBuild("//:lib_with_query_and_no_declared_2_level").assertSuccess();
+  }
+
   private Path getOutputFile(String targetName) {
     try {
       ProcessResult buildResult =

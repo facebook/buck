@@ -7,6 +7,24 @@ java_library(
 )
 
 android_library(
+    name = "lib_with_query_and_no_declared",
+    srcs = [
+        "NeedsC.java",
+    ],
+    deps_query = "set(:lib_c)",
+    deps = [],
+)
+
+android_library(
+    name = "lib_with_query_and_no_declared_2_level",
+    srcs = [
+        "NeedsC.java",
+    ],
+    deps_query = "deps(:lib_b)",
+    deps = [],
+)
+
+android_library(
     name = "lib_a",
     srcs = ["A.java"],
 )

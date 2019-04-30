@@ -40,6 +40,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
@@ -152,6 +153,11 @@ public class AndroidLibraryDescription
         .addTargetDeps(
             buildTarget.getTargetConfiguration(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
     javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    // Extract parse time deps from the query
+    constructorArg
+        .getDepsQuery()
+        .map(query -> QueryUtils.extractParseTimeTargets(buildTarget, cellRoots, query))
+        .ifPresent(streamOfDeps -> streamOfDeps.forEach(targetGraphOnlyDepsBuilder::add));
   }
 
   public interface CoreArg
