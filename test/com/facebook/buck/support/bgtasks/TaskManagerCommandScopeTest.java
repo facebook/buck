@@ -15,11 +15,15 @@
  */
 package com.facebook.buck.support.bgtasks;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.model.BuildId;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import java.util.concurrent.Future;
 import org.junit.Test;
 
 public class TaskManagerCommandScopeTest {
@@ -34,5 +38,24 @@ public class TaskManagerCommandScopeTest {
 
     assertSame(
         task, Iterables.getOnlyElement(testBackgroundTaskManager.getScheduledTasks()).getTask());
+  }
+
+  @Test
+  public void taskManagerCommandScopeStoresAllTasksForScope() {
+    TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
+    TaskManagerCommandScope scope =
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId());
+    BackgroundTask<?> task1 = ImmutableBackgroundTask.of("test1", ignored -> fail(), new Object());
+    BackgroundTask<?> task2 = ImmutableBackgroundTask.of("test2", ignored -> {}, new Object());
+    scope.schedule(task1);
+    scope.schedule(task2);
+
+    ImmutableMap<BackgroundTask<?>, Future<Void>> scheduledTasks = scope.getScheduledTasksResults();
+
+    assertTrue(scheduledTasks.containsKey(task1));
+    assertTrue(scheduledTasks.containsKey(task2));
+
+    assertFalse(scheduledTasks.get(task1).isDone());
+    assertFalse(scheduledTasks.get(task2).isDone());
   }
 }

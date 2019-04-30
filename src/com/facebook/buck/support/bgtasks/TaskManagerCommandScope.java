@@ -20,6 +20,9 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.facebook.buck.util.Scope;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Future;
 
 /**
  * Scope class for client-side use of {@link BackgroundTaskManager}. Scope handles scheduling and
@@ -33,6 +36,8 @@ public class TaskManagerCommandScope implements Scope {
 
   private final BackgroundTaskManager manager;
   private final BuildId buildId;
+  private final ConcurrentLinkedQueue<ManagedBackgroundTask<?>> scheduledTasks =
+      new ConcurrentLinkedQueue<>();
 
   protected TaskManagerCommandScope(BackgroundTaskManager manager, BuildId buildId) {
     this.manager = manager;
@@ -47,6 +52,7 @@ public class TaskManagerCommandScope implements Scope {
    */
   public void schedule(BackgroundTask<?> task) {
     ManagedBackgroundTask<?> managedTask = new ManagedBackgroundTask<>(task, buildId);
+    scheduledTasks.add(managedTask);
     manager.schedule(managedTask);
   }
 
@@ -63,6 +69,13 @@ public class TaskManagerCommandScope implements Scope {
 
   public BackgroundTaskManager getManager() {
     return manager;
+  }
+
+  ImmutableMap<BackgroundTask<?>, Future<Void>> getScheduledTasksResults() {
+    return scheduledTasks.stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                ManagedBackgroundTask::getTask, ManagedBackgroundTask::getFuture));
   }
 
   @Override
