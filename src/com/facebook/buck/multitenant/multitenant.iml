@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" packagePrefix="com.facebook.buck.multitenant" />
+    </content>
+    <content url="file://$MODULE_DIR$/../../../../../test/com/facebook/buck/multitenant">
+      <sourceFolder url="file://$MODULE_DIR$/../../../../../test/com/facebook/buck/multitenant" isTestSource="true" packagePrefix="com.facebook.buck.multitenant" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../../../test/com/facebook/buck/multitenant/query" type="java-resource" relativeOutputPath="com/facebook/buck/multitenant/query" />
+      <sourceFolder url="file://$MODULE_DIR$/../../../../../test/com/facebook/buck/multitenant/service" type="java-resource" relativeOutputPath="com/facebook/buck/multitenant/service" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="module" module-name="buck" />
+    <orderEntry type="library" name="junit" level="project" />
+    <orderEntry type="library" name="buck-lib" level="project" />
+    <orderEntry type="library" name="guava" level="project" />
+  </component>
+</module>
