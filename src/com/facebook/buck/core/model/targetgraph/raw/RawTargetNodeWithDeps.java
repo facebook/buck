@@ -41,4 +41,9 @@ public abstract class RawTargetNodeWithDeps implements ComputeResult {
   @Value.Parameter
   @JsonProperty("deps")
   public abstract ImmutableSet<UnconfiguredBuildTarget> getDeps();
+
+  public static RawTargetNodeWithDeps of(
+      RawTargetNode rawTargetNode, Iterable<? extends UnconfiguredBuildTarget> deps) {
+    return ImmutableRawTargetNodeWithDeps.of(rawTargetNode, deps);
+  }
 }

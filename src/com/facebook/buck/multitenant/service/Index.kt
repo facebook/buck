@@ -17,7 +17,6 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.core.model.targetgraph.raw.ImmutableRawTargetNodeWithDeps
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps
 import com.facebook.buck.multitenant.collect.GenerationMap
 import com.google.common.collect.ImmutableSet
@@ -129,7 +128,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         return internalRules.map {
             if (it != null) {
                 val deps = it.deps.map { buildTargetCache.getByIndex(it) }
-                ImmutableRawTargetNodeWithDeps.of(it.targetNode, deps)
+                RawTargetNodeWithDeps.of(it.targetNode, deps)
             } else {
                 null
             }
