@@ -30,6 +30,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.google.common.collect.ImmutableList;

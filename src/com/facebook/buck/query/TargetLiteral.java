@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.collect.ImmutableSet;
 import javax.annotation.Nullable;
 

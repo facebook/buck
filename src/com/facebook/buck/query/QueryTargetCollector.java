@@ -17,6 +17,7 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.collect.ImmutableSet;
 
 class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV_NODE_TYPE> {

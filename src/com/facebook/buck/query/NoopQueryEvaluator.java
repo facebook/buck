@@ -16,6 +16,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.collect.ImmutableSet;
 
 public class NoopQueryEvaluator<ENV_NODE_TYPE> implements QueryEvaluator<ENV_NODE_TYPE> {
