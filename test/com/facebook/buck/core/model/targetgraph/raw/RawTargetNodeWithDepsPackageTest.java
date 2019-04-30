@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.targetgraph;
+package com.facebook.buck.core.model.targetgraph.raw;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableRawTargetNode;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

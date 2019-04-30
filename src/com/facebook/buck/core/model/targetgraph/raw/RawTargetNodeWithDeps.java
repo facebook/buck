@@ -14,11 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.targetgraph;
+package com.facebook.buck.core.model.targetgraph.raw;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableSet;

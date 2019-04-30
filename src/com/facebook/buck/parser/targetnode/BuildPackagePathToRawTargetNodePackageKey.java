@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.targetnode;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
-import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDepsPackage;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 

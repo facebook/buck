@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.core.model.targetgraph;
+package com.facebook.buck.core.model.targetgraph.raw;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.fasterxml.jackson.annotation.JsonProperty;

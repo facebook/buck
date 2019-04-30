@@ -27,12 +27,12 @@ import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.targetgraph.ImmutableRawTargetNodeWithDeps;
-import com.facebook.buck.core.model.targetgraph.ImmutableRawTargetNodeWithDepsPackage;
-import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDeps;
-import com.facebook.buck.core.model.targetgraph.RawTargetNodeWithDepsPackage;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.ImmutableRawTargetNodeWithDeps;
+import com.facebook.buck.core.model.targetgraph.raw.ImmutableRawTargetNodeWithDepsPackage;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
 import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.file.MorePaths;
@@ -94,9 +94,11 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       UnconfiguredBuildTarget unconfiguredBuildTarget = entry.getKey().getBuildTarget();
       RawTargetNode rawTargetNode = entry.getValue();
 
-      // To discover dependencies, we coerce RawTargetNode to TargetNode, get dependencies out of
+      // To discover dependencies, we coerce RawTargetNode to TargetNode, get
+      // dependencies out of
       // it, then trash target node
-      // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have to resolve
+      // THIS SOLUTION IS TEMPORARY and not 100% correct in general, because we have
+      // to resolve
       // configuration for Target Node (we use default configuration at this point)
 
       // Create short living UnconfiguredBuildTargetView
@@ -159,7 +161,8 @@ public class BuildPackagePathToRawTargetNodePackageComputation
   @Override
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
       BuildPackagePathToRawTargetNodePackageKey key) {
-    // To construct raw target node, we first need to parse a build file and obtain corresponding
+    // To construct raw target node, we first need to parse a build file and obtain
+    // corresponding
     // manifest, so require it as a dependency
     return ImmutableSet.of(ImmutableBuildPackagePathToBuildFileManifestKey.of(key.getPath()));
   }
