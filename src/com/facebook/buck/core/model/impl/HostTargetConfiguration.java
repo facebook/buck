@@ -16,10 +16,23 @@
 package com.facebook.buck.core.model.impl;
 
 import com.facebook.buck.core.model.TargetConfiguration;
+import java.util.Objects;
 
 /** Target configuration for the host platform. */
 public class HostTargetConfiguration implements TargetConfiguration {
   public static final HostTargetConfiguration INSTANCE = new HostTargetConfiguration();
 
+  private final int hashCode = Objects.hash(HostTargetConfiguration.class.getName());
+
   private HostTargetConfiguration() {}
+
+  @Override
+  public int hashCode() {
+    return hashCode;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof HostTargetConfiguration;
+  }
 }
