@@ -104,7 +104,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     targetConfigurationSerializer =
         new JsonTargetConfigurationSerializer(
             buildTarget -> unconfiguredBuildTargetFactory.create(cellPathResolver, buildTarget));
-    backgroundTaskManagerFactory = TestBackgroundTaskManager::new;
+    backgroundTaskManagerFactory = TestBackgroundTaskManager::of;
   }
 
   @Test

@@ -137,7 +137,7 @@ public class ChromeTraceBuildListenerTest {
             .build();
     durationTracker = new BuildRuleDurationTracker();
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);
-    managerScope = new TestBackgroundTaskManager().getNewScope(invocationInfo.getBuildId());
+    managerScope = TestBackgroundTaskManager.of().getNewScope(invocationInfo.getBuildId());
   }
 
   @Test

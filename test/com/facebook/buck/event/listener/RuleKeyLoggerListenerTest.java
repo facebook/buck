@@ -76,7 +76,7 @@ public class RuleKeyLoggerListenerTest {
             tempDirectory.getRoot().toPath(),
             false);
     durationTracker = new BuildRuleDurationTracker();
-    managerScope = new TestBackgroundTaskManager().getNewScope(info.getBuildId());
+    managerScope = TestBackgroundTaskManager.of().getNewScope(info.getBuildId());
   }
 
   @Test

@@ -79,7 +79,7 @@ public class HttpArtifactCacheEventListenerTest {
   public void setUp() {
     TestBatchingLogger storeLogger = new TestBatchingLogger(1);
     fetchLogger = new TestBatchingLogger(1);
-    managerScope = new TestBackgroundTaskManager().getNewScope(new BuildId("test"));
+    managerScope = TestBackgroundTaskManager.of().getNewScope(new BuildId("test"));
     listener = new HttpArtifactCacheEventListener(storeLogger, fetchLogger, managerScope);
   }
 

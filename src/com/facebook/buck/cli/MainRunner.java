@@ -832,7 +832,7 @@ public final class MainRunner {
       // clean up tasks synchronously
       Supplier<BackgroundTaskManager> bgTaskManagerFactory =
           () ->
-              new AsyncBackgroundTaskManager(
+              AsyncBackgroundTaskManager.of(
                   !context.isPresent()
                       || rootCell
                           .getBuckConfig()

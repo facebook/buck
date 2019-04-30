@@ -75,7 +75,16 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    * @param nThreads (optional) number of threads in pool. defaults to {@code DEFAULT_THREADS} if
    *     not provided
    */
-  public AsyncBackgroundTaskManager(boolean blocking, int nThreads) {
+  public static AsyncBackgroundTaskManager of(boolean blocking, int nThreads) {
+    return new AsyncBackgroundTaskManager(blocking, nThreads);
+  }
+
+  /** Same as {@link #of(boolean, int)} except with the default number of threads. */
+  public static AsyncBackgroundTaskManager of(boolean blocking) {
+    return of(blocking, DEFAULT_THREADS);
+  }
+
+  protected AsyncBackgroundTaskManager(boolean blocking, int nThreads) {
     this.blocking = blocking;
     this.schedulerRunning = new AtomicBoolean(false);
     this.taskPool = Executors.newFixedThreadPool(nThreads);
@@ -84,10 +93,6 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
     this.commandsRunning = new AtomicInteger(0);
     this.availableThreads = new Semaphore(nThreads);
     this.schedulingOpen = new AtomicBoolean(true);
-  }
-
-  public AsyncBackgroundTaskManager(boolean blocking) {
-    this(blocking, DEFAULT_THREADS);
   }
 
   @Override

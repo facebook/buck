@@ -30,7 +30,11 @@ public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
 
   private final Map<BackgroundTask<?>, Future<Void>> tasks;
 
-  public TestBackgroundTaskManager() {
+  public static TestBackgroundTaskManager of() {
+    return new TestBackgroundTaskManager();
+  }
+
+  private TestBackgroundTaskManager() {
     super(true, 1);
     tasks = new ConcurrentHashMap<>();
   }

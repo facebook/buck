@@ -219,7 +219,7 @@ public class ArtifactCachesIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    bgTaskManager = new TestBackgroundTaskManager();
+    bgTaskManager = TestBackgroundTaskManager.of();
     managerScope = bgTaskManager.getNewScope(BUILD_ID);
 
     clientCertPath = tempDir.newFile("client.crt");

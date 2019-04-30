@@ -110,7 +110,7 @@ public class ServedCacheIntegrationTest {
         ArtifactInfo.builder().addRuleKeys(A_FILE_RULE_KEY).setMetadata(A_FILE_METADATA).build(),
         BorrowablePath.notBorrowablePath(A_FILE_PATH));
 
-    bgTaskManager = new TestBackgroundTaskManager();
+    bgTaskManager = TestBackgroundTaskManager.of();
     managerScope = bgTaskManager.getNewScope(BUILD_ID);
 
     cellPathResolver = TestCellPathResolver.get(projectFilesystem);

@@ -56,7 +56,7 @@ public class ArtifactCachesTest {
 
   @Before
   public void setUp() {
-    bgTaskManager = new TestBackgroundTaskManager();
+    bgTaskManager = TestBackgroundTaskManager.of();
     managerScope = bgTaskManager.getNewScope(BUILD_ID);
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetFactory();
   }
