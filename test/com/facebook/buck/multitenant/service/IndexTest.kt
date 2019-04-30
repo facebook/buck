@@ -17,6 +17,7 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.google.common.collect.ImmutableSet
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -76,21 +77,21 @@ class IndexTest {
                     index.getTransitiveDeps(it, commit3, bt("//java/com/facebook/buck/model:model"))
             )
 
-            val commit1baseFwdDeps = mutableSetOf<UnconfiguredBuildTarget>()
+            val commit1baseFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
             index.getFwdDeps(it, commit1, listOf(bt("//java/com/facebook/buck/base:base")), commit1baseFwdDeps)
-            assertEquals(commit1baseFwdDeps, setOf<UnconfiguredBuildTarget>())
+            assertEquals(commit1baseFwdDeps.build(), setOf<UnconfiguredBuildTarget>())
 
-            val commit2modelFwdDeps = mutableSetOf<UnconfiguredBuildTarget>()
+            val commit2modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
             index.getFwdDeps(it, commit2, listOf(bt("//java/com/facebook/buck/model:model")), commit2modelFwdDeps)
-            assertEquals(commit2modelFwdDeps, setOf(bt("//java/com/facebook/buck/base:base")))
+            assertEquals(commit2modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
 
-            val commit3modelFwdDeps = mutableSetOf<UnconfiguredBuildTarget>()
+            val commit3modelFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
             index.getFwdDeps(it, commit3, listOf(bt("//java/com/facebook/buck/model:model")), commit3modelFwdDeps)
-            assertEquals(commit3modelFwdDeps, setOf(bt("//java/com/facebook/buck/base:base"), bt("//java/com/facebook/buck/util:util")))
+            assertEquals(commit3modelFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base"), bt("//java/com/facebook/buck/util:util")))
 
-            val commit3utilFwdDeps = mutableSetOf<UnconfiguredBuildTarget>()
+            val commit3utilFwdDeps = ImmutableSet.Builder<UnconfiguredBuildTarget>()
             index.getFwdDeps(it, commit3, listOf(bt("//java/com/facebook/buck/util:util")), commit3utilFwdDeps)
-            assertEquals(commit3utilFwdDeps, setOf(bt("//java/com/facebook/buck/base:base")))
+            assertEquals(commit3utilFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
         }
     }
 }

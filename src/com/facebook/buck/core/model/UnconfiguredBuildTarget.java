@@ -44,7 +44,8 @@ import org.immutables.value.Value;
  */
 @Value.Immutable(builder = false, copy = false, prehash = true)
 @JsonDeserialize
-public abstract class UnconfiguredBuildTarget implements Comparable<UnconfiguredBuildTarget> {
+public abstract class UnconfiguredBuildTarget
+    implements Comparable<UnconfiguredBuildTarget>, QueryTarget {
 
   private static final Ordering<Iterable<Flavor>> LEXICOGRAPHICAL_ORDERING =
       Ordering.<Flavor>natural().lexicographical();

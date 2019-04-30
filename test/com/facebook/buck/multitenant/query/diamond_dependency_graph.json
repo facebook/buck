@@ -1,0 +1,29 @@
+[
+  {
+    "commit": "608fd7bdf9",
+    "added": [
+      {
+        "path": "java/com/example",
+        "rules": {
+          "A": {},
+          "B": {
+            "deps": [
+              "//java/com/example:A"
+            ]
+          },
+          "C": {
+            "deps": [
+              "//java/com/example:A"
+            ]
+          },
+          "D": {
+            "deps": [
+              "//java/com/example:B",
+              "//java/com/example:C"
+            ]
+          }
+        }
+      }
+    ]
+  }
+]

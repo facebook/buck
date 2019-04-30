@@ -12,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/toolchain/impl/testdata" type="java-test-resource" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" type="java-test-resource" relativeOutputPath="com/facebook/buck/cli/testdata" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/config/testdata" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/multitenant/query" type="java-resource" relativeOutputPath="com/facebook/buck/multitenant/query" />
       <sourceFolder url="file://$MODULE_DIR$/test/com/facebook/buck/multitenant/service" type="java-resource" relativeOutputPath="com/facebook/buck/multitenant/service" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/dx/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java8" isTestSource="false" packagePrefix="com.facebook.buck.jvm.java.abi" />

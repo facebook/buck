@@ -1,17 +1,17 @@
 kotlin_library(
-    name = "service",
+    name = "query",
     srcs = glob(["*.kt"]),
     tests = [
-        "//test/com/facebook/buck/multitenant/service:service",
+        "//test/com/facebook/buck/multitenant/query:query",
     ],
     visibility = [
-        "//src/com/facebook/buck/multitenant/query:",
-        "//test/com/facebook/buck/multitenant/...",
+        "//test/com/facebook/buck/multitenant/query:",
     ],
     deps = [
         "//src/com/facebook/buck/core/model:model",
-        "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/multitenant/collect:collect",
+        "//src/com/facebook/buck/multitenant/service:service",
+        "//src/com/facebook/buck/query:query",
         "//third-party/java/guava:guava",
     ],
 )

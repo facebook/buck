@@ -18,6 +18,7 @@ package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.facebook.buck.multitenant.collect.GenerationMap
+import com.google.common.collect.ImmutableSet
 import java.io.Closeable
 import java.nio.file.Path
 import java.util.concurrent.locks.ReentrantReadWriteLock
@@ -46,7 +47,7 @@ class IndexReadLock internal constructor(internal val readLock: ReentrantReadWri
     }
 }
 
-class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) {
+class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) {
     /**
      * To save space, we pass around ints instead of references to BuildTargets.
      * AppendOnlyBidirectionalCache does its own synchronization, so it does not need to be guarded
@@ -123,7 +124,7 @@ class Index(private val buildTargetParser: (target: String) -> UnconfiguredBuild
         return visited.map { buildTargetCache.getByIndex(it) }.toSet()
     }
 
-    fun getFwdDeps(indexReadLock: IndexReadLock, commit: Commit, targets: Iterable<UnconfiguredBuildTarget>, out: MutableSet<UnconfiguredBuildTarget>) {
+    fun getFwdDeps(indexReadLock: IndexReadLock, commit: Commit, targets: Iterable<UnconfiguredBuildTarget>, out: ImmutableSet.Builder<UnconfiguredBuildTarget>) {
         checkReadLock(indexReadLock)
         val generation = commitToGeneration.getValue(commit)
         for (target in targets) {
