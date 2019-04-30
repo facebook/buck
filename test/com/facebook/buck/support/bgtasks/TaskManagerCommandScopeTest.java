@@ -15,18 +15,34 @@
  */
 package com.facebook.buck.support.bgtasks;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.support.bgtasks.BackgroundTaskManager.Notification;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.util.concurrent.Future;
 import org.junit.Test;
 
 public class TaskManagerCommandScopeTest {
+
+  @Test
+  public void taskManagerDoesNotReportCommandEndTwiceOnMultipleClose() {
+    TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
+    TaskManagerCommandScope scope =
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId());
+
+    testBackgroundTaskManager.notify(Notification.COMMAND_START); // one extra command
+
+    scope.close();
+    scope.close(); // two closes should not send two command ends
+
+    assertEquals(1, testBackgroundTaskManager.getCommandsRunning());
+  }
 
   @Test
   public void taskManagerCommandScopeSchedulesTasksToManager() {

@@ -330,4 +330,9 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   protected boolean isShutDown() {
     return !schedulingOpen.get();
   }
+
+  @VisibleForTesting
+  protected int getCommandsRunning() {
+    return commandsRunning.get();
+  }
 }

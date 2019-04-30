@@ -39,6 +39,8 @@ public class TaskManagerCommandScope implements Scope {
   private final ConcurrentLinkedQueue<ManagedBackgroundTask<?>> scheduledTasks =
       new ConcurrentLinkedQueue<>();
 
+  private boolean isClosed = false;
+
   protected TaskManagerCommandScope(BackgroundTaskManager manager, BuildId buildId) {
     this.manager = manager;
     this.buildId = buildId;
@@ -79,7 +81,11 @@ public class TaskManagerCommandScope implements Scope {
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
+    if (isClosed) {
+      return;
+    }
+    isClosed = true;
     manager.notify(Notification.COMMAND_END);
   }
 }
