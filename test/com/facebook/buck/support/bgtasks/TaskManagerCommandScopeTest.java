@@ -77,6 +77,20 @@ public class TaskManagerCommandScopeTest {
   }
 
   @Test
+  public void taskManagerRejectsTasksAfterClose() {
+    TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
+    TaskManagerCommandScope scope =
+        new TaskManagerCommandScope(testBackgroundTaskManager, new BuildId(), true);
+    scope.close();
+    BackgroundTask<?> task = ImmutableBackgroundTask.of("test1", ignored -> fail(), new Object());
+    scope.schedule(task);
+
+    ImmutableMap<BackgroundTask<?>, Future<Void>> scheduledTasks = scope.getScheduledTasksResults();
+
+    assertFalse(scheduledTasks.containsKey(task));
+  }
+
+  @Test
   public void commandScopeCloseBlocksUntilTasksCompleteForBlockingMode() {
     TestBackgroundTaskManager testBackgroundTaskManager = TestBackgroundTaskManager.of();
     TaskManagerCommandScope scope =

@@ -44,7 +44,7 @@ public class TaskManagerCommandScope implements Scope {
   private final ConcurrentLinkedQueue<ManagedBackgroundTask<?>> scheduledTasks =
       new ConcurrentLinkedQueue<>();
 
-  private boolean isClosed = false;
+  private volatile boolean isClosed = false;
 
   protected TaskManagerCommandScope(
       BackgroundTaskManager manager, BuildId buildId, boolean blocking) {
@@ -60,6 +60,10 @@ public class TaskManagerCommandScope implements Scope {
    * @param task task to be run
    */
   public void schedule(BackgroundTask<?> task) {
+    if (isClosed) {
+      // TODO(bobyf): look to see if its safe to throw here instead of silently ignoring.
+      return;
+    }
     ManagedBackgroundTask<?> managedTask = new ManagedBackgroundTask<>(task, buildId);
     scheduledTasks.add(managedTask);
     manager.schedule(managedTask);
