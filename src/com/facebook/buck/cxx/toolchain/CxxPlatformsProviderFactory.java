@@ -21,7 +21,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -55,20 +54,14 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     }
 
     try {
-      return Optional.of(
-          createProvider(
-              context.getBuckConfig(),
-              context.getTargetConfiguration().get(),
-              cxxSystemPlatforms.build()));
+      return Optional.of(createProvider(context.getBuckConfig(), cxxSystemPlatforms.build()));
     } catch (HumanReadableException e) {
       throw ToolchainInstantiationException.wrap(e);
     }
   }
 
   private static CxxPlatformsProvider createProvider(
-      BuckConfig config,
-      TargetConfiguration targetConfiguration,
-      ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatforms) {
+      BuckConfig config, ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatforms) {
     Platform platform = Platform.detect();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
 
@@ -90,7 +83,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
     Map<Flavor, UnresolvedCxxPlatform> cxxOverridePlatformsMap =
         updateCxxPlatformsWithOptionsFromBuckConfig(
-            targetConfiguration, platform, config, cxxSystemPlatformsMap, defaultHostCxxPlatform);
+            platform, config, cxxSystemPlatformsMap, defaultHostCxxPlatform);
 
     UnresolvedCxxPlatform hostCxxPlatform =
         getHostCxxPlatform(cxxBuckConfig, cxxOverridePlatformsMap);
@@ -134,7 +127,6 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
    * cxx#{flavor name}. These platforms are overrides for existing system platforms.
    */
   private static Map<Flavor, UnresolvedCxxPlatform> updateCxxPlatformsWithOptionsFromBuckConfig(
-      TargetConfiguration targetConfiguration,
       Platform platform,
       BuckConfig config,
       ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsMap,
@@ -145,7 +137,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     ImmutableSet<Flavor> cxxFlavors = CxxBuckConfig.getCxxFlavors(config);
     for (Flavor flavor : cxxFlavors) {
       Optional<UnresolvedCxxPlatform> newPlatform =
-          CxxBuckConfig.getProviderBasedPlatform(config, flavor, targetConfiguration);
+          CxxBuckConfig.getProviderBasedPlatform(config, flavor);
 
       if (!newPlatform.isPresent()) {
         newPlatform =

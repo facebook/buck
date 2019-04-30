@@ -628,11 +628,11 @@ public class CxxBuckConfig {
    * backed by the specified target.
    */
   public static Optional<UnresolvedCxxPlatform> getProviderBasedPlatform(
-      BuckConfig config, Flavor flavor, TargetConfiguration targetConfiguration) {
+      BuckConfig config, Flavor flavor) {
     String cxxSection = new CxxBuckConfig(config, flavor).cxxSection;
 
-    Optional<BuildTarget> toolchainTarget =
-        config.getBuildTarget(cxxSection, TOOLCHAIN_TARGET, targetConfiguration);
+    Optional<UnconfiguredBuildTargetView> toolchainTarget =
+        config.getMaybeUnconfiguredBuildTarget(cxxSection, TOOLCHAIN_TARGET);
     if (!toolchainTarget.isPresent()) {
       return Optional.empty();
     }

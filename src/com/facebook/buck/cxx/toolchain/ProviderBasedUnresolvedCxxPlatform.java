@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.google.common.base.Verify;
@@ -25,17 +26,18 @@ import com.google.common.collect.ImmutableList;
 
 /** Used to provide a {@link CxxPlatform} that is specified as a cxx_toolchain build target. */
 public class ProviderBasedUnresolvedCxxPlatform implements UnresolvedCxxPlatform {
-  private final BuildTarget buildTarget;
+  private final UnconfiguredBuildTargetView unconfiguredBuildTarget;
   private final Flavor flavor;
 
-  public ProviderBasedUnresolvedCxxPlatform(BuildTarget buildTarget, Flavor flavor) {
-    this.buildTarget = buildTarget;
+  public ProviderBasedUnresolvedCxxPlatform(
+      UnconfiguredBuildTargetView unconfiguredBuildTarget, Flavor flavor) {
+    this.unconfiguredBuildTarget = unconfiguredBuildTarget;
     this.flavor = flavor;
   }
 
   @Override
   public CxxPlatform resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-    BuildRule rule = resolver.getRule(buildTarget);
+    BuildRule rule = resolver.getRule(unconfiguredBuildTarget.configure(targetConfiguration));
     Verify.verify(
         rule instanceof ProvidesCxxPlatform, "%s isn't a cxx_platform rule", rule.getBuildTarget());
     return ((ProvidesCxxPlatform) rule).getPlatformWithFlavor(flavor);
@@ -53,12 +55,12 @@ public class ProviderBasedUnresolvedCxxPlatform implements UnresolvedCxxPlatform
 
   @Override
   public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
-    return ImmutableList.of(buildTarget);
+    return ImmutableList.of(unconfiguredBuildTarget.configure(targetConfiguration));
   }
 
   @Override
   public Iterable<? extends BuildTarget> getLinkerParseTimeDeps(
       TargetConfiguration targetConfiguration) {
-    return ImmutableList.of(buildTarget);
+    return ImmutableList.of(unconfiguredBuildTarget.configure(targetConfiguration));
   }
 }
