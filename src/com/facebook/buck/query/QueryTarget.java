@@ -17,8 +17,8 @@
 package com.facebook.buck.query;
 
 /**
- * Currently, this is effectively a marker interface, but given the actual implementations of this
- * interface, it would be more accurate to represent it as an algebraic data type:
+ * Currently, this is a marker interface, but given the actual implementations of this interface, it
+ * would be more accurate to represent it as an algebraic data type:
  *
  * <pre>
  * sealed class QueryTarget {
@@ -27,33 +27,17 @@ package com.facebook.buck.query;
  * }
  * </pre>
  *
- * Note that implementations of {@link QueryEnvironment} make heavy use of <code>instanceof</code>
- * because they do not actually work with arbitrary implementations of <code>QueryTarget</code>.
- *
  * <p>Implementors of this class <strong>MUST</strong> provide their own implementation of {@link
- * Object#toString()} so that {@link #compareTo(QueryTarget)} works as expected. We could try to
- * make this more obvious by doing something like:
- *
- * <pre>
- * String getStringRepresentation();
- *
- * @Override
- * default String toString() { return getStringRepresentation() }
- *
- * // compareTo() would be defined in terms of getStringRepresentation().
- * </pre>
- *
- * Unfortunately, it turns out we cannot define a default implementation of {@link
- * Object#toString()}: https://stackoverflow.com/q/24595266/396304.
+ * Object#toString()} so that {@link #compare(QueryTarget, QueryTarget)} works as expected.
  */
-public interface QueryTarget extends Comparable<QueryTarget> {
+public interface QueryTarget {
 
-  @Override
-  default int compareTo(QueryTarget other) {
-    if (this == other) {
+  /** Compare {@link QueryTarget}s by their {@link Object#toString()} methods. */
+  static int compare(QueryTarget a, QueryTarget b) {
+    if (a == b) {
       return 0;
     }
 
-    return toString().compareTo(other.toString());
+    return a.toString().compareTo(b.toString());
   }
 }

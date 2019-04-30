@@ -48,7 +48,8 @@ public class QueryTargetAccessor {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();
     }
-    ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSet.Builder<QueryTarget> builder =
+        new ImmutableSortedSet.Builder<>(QueryTarget::compare);
     info.traverse(
         node.getCellNames(),
         value -> {

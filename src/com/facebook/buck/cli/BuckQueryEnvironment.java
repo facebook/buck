@@ -261,7 +261,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
 
   public ImmutableSet<QueryBuildTarget> getTargetsFromTargetNodes(
       Iterable<TargetNode<?>> targetNodes) {
-    ImmutableSortedSet.Builder<QueryBuildTarget> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<QueryBuildTarget> builder =
+        new ImmutableSortedSet.Builder<>(QueryTarget::compare);
     for (TargetNode<?> targetNode : targetNodes) {
       builder.add(getOrCreateQueryBuildTarget(targetNode.getBuildTarget()));
     }
@@ -270,7 +271,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
 
   public ImmutableSet<QueryBuildTarget> getTargetsFromBuildTargets(
       Iterable<BuildTarget> buildTargets) {
-    ImmutableSortedSet.Builder<QueryBuildTarget> builder = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<QueryBuildTarget> builder =
+        new ImmutableSortedSet.Builder<>(QueryTarget::compare);
     for (BuildTarget buildTarget : buildTargets) {
       builder.add(getOrCreateQueryBuildTarget(buildTarget));
     }

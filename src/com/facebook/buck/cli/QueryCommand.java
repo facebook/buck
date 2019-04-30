@@ -357,7 +357,8 @@ public class QueryCommand extends AbstractCommand {
     env.preloadTargetPatterns(targetLiterals);
 
     // Now execute the query on the arguments one-by-one.
-    TreeMultimap<String, QueryTarget> queryResultMap = TreeMultimap.create();
+    TreeMultimap<String, QueryTarget> queryResultMap =
+        TreeMultimap.create(String::compareTo, QueryTarget::compare);
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
       ImmutableSet<QueryTarget> queryResult = env.evaluateQuery(query);

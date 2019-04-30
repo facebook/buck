@@ -26,7 +26,6 @@ import com.facebook.buck.query.QueryTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -91,6 +90,6 @@ public class ClasspathFunction
       current = next;
     }
     return env.restrictToInstancesOf(result, HasClasspathEntries.class)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(QueryTarget::compare));
   }
 }

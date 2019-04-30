@@ -76,7 +76,7 @@ public final class CommandHelper {
    */
   public static void print(
       Multimap<String, QueryTarget> targetsAndDependencies, PrintStream printStream) {
-    ImmutableSortedSet.copyOf(targetsAndDependencies.values()).stream()
+    ImmutableSortedSet.copyOf(QueryTarget::compare, targetsAndDependencies.values()).stream()
         .map(CommandHelper::stringify)
         .forEach(printStream::println);
   }

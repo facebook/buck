@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -133,7 +132,7 @@ class TargetPatternEvaluator {
     return filePaths.stream()
         .map(path -> PathSourcePath.of(rootCell.getFilesystem(), path))
         .map(QueryFileTarget::of)
-        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+        .collect(ImmutableSortedSet.toImmutableSortedSet(QueryTarget::compare));
   }
 
   private ImmutableMap<String, ImmutableSet<QueryTarget>> resolveBuildTargetPatterns(
@@ -154,7 +153,8 @@ class TargetPatternEvaluator {
     for (int index = 0; index < buildTargets.size(); index++) {
       ImmutableSet<BuildTarget> targets = buildTargets.get(index);
       // Sorting to have predictable results across different java libraries implementations.
-      ImmutableSet.Builder<QueryTarget> builder = ImmutableSortedSet.naturalOrder();
+      ImmutableSet.Builder<QueryTarget> builder =
+          new ImmutableSortedSet.Builder<>(QueryTarget::compare);
       for (BuildTarget target : targets) {
         builder.add(QueryBuildTarget.of(target));
       }
