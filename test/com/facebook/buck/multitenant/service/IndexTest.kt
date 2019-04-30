@@ -19,6 +19,7 @@ package com.facebook.buck.multitenant.service
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
 import com.google.common.collect.ImmutableSet
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class IndexTest {
@@ -93,5 +94,26 @@ class IndexTest {
             index.getFwdDeps(it, commit3, listOf(bt("//java/com/facebook/buck/util:util")), commit3utilFwdDeps)
             assertEquals(commit3utilFwdDeps.build(), setOf(bt("//java/com/facebook/buck/base:base")))
         }
+    }
+
+    @Test
+    fun getTargetNodes() {
+        val bt = BUILD_TARGET_PARSER
+        val index = Index(bt)
+
+        val commits = populateIndexFromStream(index, IndexTest::class.java.getResourceAsStream("index_test_targets_and_deps.json"))
+        val commit5 = commits[4]
+
+        val targetNodes = index.getTargetNodes(commit5, listOf(
+                bt("//java/com/facebook/buck/base:base"),
+                bt("//java/com/facebook/buck/model:model"),
+                bt("//java/com/facebook/buck/util:util")
+        ))
+        assertEquals(targetNodes[0]!!.rawTargetNode.getRuleType(), FAKE_RULE_TYPE)
+        assertNull("model was deleted at commit 5", targetNodes[1])
+        assertEquals(targetNodes[2]!!.deps, setOf(bt("//java/com/facebook/buck/base:base")))
+
+        assertEquals(targetNodes[0], index.getTargetNode(commit5, bt("//java/com/facebook/buck/base:base")))
+        assertEquals(targetNodes[1], null)
     }
 }

@@ -17,6 +17,8 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.core.model.targetgraph.raw.ImmutableRawTargetNodeWithDeps
+import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps
 import com.facebook.buck.multitenant.collect.GenerationMap
 import com.google.common.collect.ImmutableSet
 import java.io.Closeable
@@ -89,6 +91,48 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     private fun checkReadLock(indexReadLock: IndexReadLock) {
         require(indexReadLock.readLock === rwLock.readLock()) {
             "Specified lock must belong to this Index."
+        }
+    }
+
+    /**
+     * If you need to look up multiple target nodes for the same commit, prefer [getTargetNodes].
+     *
+     * Note this method does not take an [IndexReadLock] because it does its own synchronization
+     * internally.
+     *
+     * @return the corresponding [RawTargetNodeWithDeps] at the specified commit, if it exists;
+     *     otherwise, return `null`.
+     */
+    fun getTargetNode(commit: Commit, target: UnconfiguredBuildTarget): RawTargetNodeWithDeps? {
+        return getTargetNodes(commit, listOf(target))[0]
+    }
+
+    /**
+     * Note this method does not take an [IndexReadLock] because it does its own synchronization
+     * internally.
+     *
+     * @return a list whose entries correspond to the input list of `targets` where each element in
+     *     the output is the corresponding target node for the build target at the commit or `null`
+     *     if no rule existed for that target at that commit.
+     */
+    fun getTargetNodes(commit: Commit, targets: List<UnconfiguredBuildTarget>): List<RawTargetNodeWithDeps?> {
+        val internalRules = acquireReadLock().use {
+            val generation = commitToGeneration.getValue(commit)
+            return@use targets.map {
+                buildTargetCache.get(it)
+            }.map {
+                ruleMap.getVersion(it, generation)
+            }
+        }
+        // We can release the lock because now we only need access to buildTargetCache, which does
+        // not need to be guarded by rwLock.
+        return internalRules.map {
+            if (it != null) {
+                val deps = it.deps.map { buildTargetCache.getByIndex(it) }
+                ImmutableRawTargetNodeWithDeps.of(it.targetNode, deps)
+            } else {
+                null
+            }
         }
     }
 
@@ -224,7 +268,10 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
     }
 
     private fun createBuildTarget(buildFileDirectory: Path, name: String): UnconfiguredBuildTarget {
-        return buildTargetParser(String.format("//%s:%s", buildFileDirectory, name))
+        // Same as MorePaths.pathWithUnixSeparators(), but MorePaths has too many dependencies, so
+        // we inline the method here since it is one trivial line.
+        val unixPath = buildFileDirectory.toString().replace('\\', '/')
+        return buildTargetParser(String.format("//%s:%s", unixPath, name))
     }
 
     private fun determineDeltas(changes: InternalChanges): Deltas {
