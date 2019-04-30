@@ -62,6 +62,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -1002,7 +1003,7 @@ public class CxxDescriptionEnhancer {
                   return (SourcePathArg) input;
                 })
             .collect(ImmutableList.toImmutableList());
-    argsBuilder.addAll(objectArgs);
+    argsBuilder.addAll(FileListableLinkerInputArg.from(objectArgs));
 
     return argsBuilder.build();
   }
