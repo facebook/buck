@@ -52,7 +52,6 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   private final Queue<ManagedBackgroundTask<?>> scheduledTasks = new LinkedList<>();
   private final Map<Class<?>, ManagedBackgroundTask<?>> cancellableTasks =
       new ConcurrentHashMap<>();
-  private final boolean blocking;
 
   private final AtomicBoolean schedulerRunning;
   private final AtomicInteger commandsRunning;
@@ -67,23 +66,21 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
    * Constructs an {@link AsyncBackgroundTaskManager}. If in nonblocking mode, sets up a scheduler
    * thread and pool for tasks.
    *
-   * @param blocking bool indicating if this manager should block when running tasks or not
    * @param nThreads (optional) number of threads in pool. defaults to {@code DEFAULT_THREADS} if
    *     not provided
    */
-  public static AsyncBackgroundTaskManager of(boolean blocking, int nThreads) {
-    AsyncBackgroundTaskManager manager = new AsyncBackgroundTaskManager(blocking, nThreads);
+  public static AsyncBackgroundTaskManager of(int nThreads) {
+    AsyncBackgroundTaskManager manager = new AsyncBackgroundTaskManager(nThreads);
     manager.startScheduling();
     return manager;
   }
 
-  /** Same as {@link #of(boolean, int)} except with the default number of threads. */
-  public static AsyncBackgroundTaskManager of(boolean blocking) {
-    return of(blocking, DEFAULT_THREADS);
+  /** Same as {@link #of()} except with the default number of threads. */
+  public static AsyncBackgroundTaskManager of() {
+    return of(DEFAULT_THREADS);
   }
 
-  protected AsyncBackgroundTaskManager(boolean blocking, int nThreads) {
-    this.blocking = blocking;
+  protected AsyncBackgroundTaskManager(int nThreads) {
     this.schedulerRunning = new AtomicBoolean(false);
     this.taskPool = Executors.newFixedThreadPool(nThreads);
     this.timeoutPool = Executors.newScheduledThreadPool(1);
@@ -94,7 +91,7 @@ public class AsyncBackgroundTaskManager extends BackgroundTaskManager {
   }
 
   @Override
-  public TaskManagerCommandScope getNewScope(BuildId buildId) {
+  public TaskManagerCommandScope getNewScope(BuildId buildId, boolean blocking) {
     return new TaskManagerCommandScope(this, buildId, blocking);
   }
 

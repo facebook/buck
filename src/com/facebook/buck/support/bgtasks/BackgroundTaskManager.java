@@ -42,8 +42,11 @@ public abstract class BackgroundTaskManager {
    * Returns a new {@link TaskManagerCommandScope} for a build on this manager. The {@link
    * TaskManagerCommandScope} lives for the duration of the command such that it's {@link
    * TaskManagerCommandScope#close()} will trigger the tasks scheduled to be ran.
+   *
+   * @param buildId unique identifier {@link BuildId} of a command that created a scope
+   * @param blocking whether the current command should wait for tasks to finish on exit
    */
-  public abstract TaskManagerCommandScope getNewScope(BuildId buildId);
+  public abstract TaskManagerCommandScope getNewScope(BuildId buildId, boolean blocking);
 
   /** Shut down manager, without waiting for tasks to finish. */
   public abstract void shutdownNow();

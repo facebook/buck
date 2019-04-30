@@ -16,6 +16,7 @@
 
 package com.facebook.buck.support.bgtasks;
 
+import com.facebook.buck.core.model.BuildId;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -37,8 +38,12 @@ public class TestBackgroundTaskManager extends AsyncBackgroundTaskManager {
   }
 
   private TestBackgroundTaskManager() {
-    super(true, 1);
+    super(1);
     tasks = new ConcurrentHashMap<>();
+  }
+
+  public TaskManagerCommandScope getNewScope(BuildId buildId) {
+    return getNewScope(buildId, true);
   }
 
   @Override

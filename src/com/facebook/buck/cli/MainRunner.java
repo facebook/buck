@@ -830,14 +830,7 @@ public final class MainRunner {
       // When Nailgun context is not present it means the process will be finished immediately after
       // the command. So, override task manager to be blocking one, i.e. execute background
       // clean up tasks synchronously
-      Supplier<BackgroundTaskManager> bgTaskManagerFactory =
-          () ->
-              AsyncBackgroundTaskManager.of(
-                  !context.isPresent()
-                      || rootCell
-                          .getBuckConfig()
-                          .getView(CliConfig.class)
-                          .getFlushEventsBeforeExit());
+      Supplier<BackgroundTaskManager> bgTaskManagerFactory = AsyncBackgroundTaskManager::of;
 
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
@@ -944,7 +937,15 @@ public final class MainRunner {
       LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
 
       try (TaskManagerCommandScope managerScope =
-              buckGlobalState.getBgTaskManager().getNewScope(buildId);
+              buckGlobalState
+                  .getBgTaskManager()
+                  .getNewScope(
+                      buildId,
+                      !context.isPresent()
+                          || rootCell
+                              .getBuckConfig()
+                              .getView(CliConfig.class)
+                              .getFlushEventsBeforeExit());
           GlobalStateManager.LoggerIsMappedToThreadScope loggerThreadMappingScope =
               GlobalStateManager.singleton()
                   .setupLoggers(

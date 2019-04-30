@@ -31,7 +31,6 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -50,7 +49,7 @@ public class ArtifactCachesTest {
 
   private static final BuildId BUILD_ID = new BuildId("test");
 
-  private BackgroundTaskManager bgTaskManager;
+  private TestBackgroundTaskManager bgTaskManager;
   private TaskManagerCommandScope managerScope;
   private UnconfiguredBuildTargetFactory unconfiguredBuildTargetFactory;
 
