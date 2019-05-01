@@ -1110,6 +1110,8 @@
       <mkdir dir="@{destdir}" />
       <record name="@{destdir}/javadoc.log" action="start" />
 
+      <!-- Explicitly set source to 8 to work around JDK-8212233 when run under
+           Java 11.0.2. -->
       <javadoc destdir="@{destdir}"
                access="@{access}"
                classpathref="@{classpathref}"
@@ -1117,6 +1119,7 @@
                failonerror="true"
                additionalparam="${javadoc.doclint}"
                useexternalfile="true"
+               source="8"
                >
         <arg value="-notimestamp"/>
         <fileset dir="${src.dir}">
