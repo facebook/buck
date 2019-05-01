@@ -116,11 +116,13 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
     // The delegateResult is null if we either (1) haven't schedule the delegate yet or (2) have (or
     // are in the process of) cancelling the delegate.
     @Nullable StrategyBuildResult delegateResult;
+    volatile boolean cancelledOnDelegate;
 
     Job(BuildStrategyContext strategyContext, BuildRule rule) {
       this.strategyContext = strategyContext;
       this.rule = rule;
       this.future = SettableFuture.create();
+      this.cancelledOnDelegate = false;
     }
 
     // TODO(cjhopman): These schedule functions might not be resilient in the face of exceptions
@@ -133,8 +135,17 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
         }
 
         ListenableFuture<Optional<BuildResult>> localFuture =
-            Futures.submitAsync(
-                strategyContext::runWithDefaultBehavior, strategyContext.getExecutorService());
+            Futures.transform(
+                Futures.submitAsync(
+                    strategyContext::runWithDefaultBehavior, strategyContext.getExecutorService()),
+                result ->
+                    Optional.of(
+                        BuildResult.builder()
+                            .from(result.get())
+                            .setStrategyResult(
+                                "hybrid local" + (cancelledOnDelegate ? " - stolen" : ""))
+                            .build()),
+                MoreExecutors.directExecutor());
         future.setFuture(localFuture);
         return localFuture;
       }
@@ -232,6 +243,7 @@ public class HybridLocalStrategy implements BuildRuleStrategy {
       // clear it here.
       this.delegateResult = null;
       if (capturedDelegateResult.cancelIfNotComplete(reason)) {
+        cancelledOnDelegate = true;
         return true;
       }
       this.delegateResult = capturedDelegateResult;

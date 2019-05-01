@@ -268,10 +268,6 @@ public class HybridLocalStrategyTest {
         SettableFuture<Optional<BuildResult>> localResult = SettableFuture.create();
         for (int i = 0; i < 1000; i++) {
           FakeBuildRule rule = new FakeBuildRule("//:target-" + i);
-          if (delegateScheduled.get() >= 80 && i >= 200) {
-            // We also don't want to wait for everything to be sent to the strategy.
-            localResult.set(Optional.empty());
-          }
           SimpleBuildStrategyContext strategyContext =
               new SimpleBuildStrategyContext(rule, service) {
                 @Override
@@ -285,6 +281,14 @@ public class HybridLocalStrategyTest {
                       .withDefaultAmounts(ResourceAmounts.of(0, 1, 0, 0));
                 }
               };
+          if (delegateScheduled.get() >= 80 && i >= 200) {
+            // We also don't want to wait for everything to be sent to the strategy.
+            localResult.set(
+                Optional.of(
+                    strategyContext.createBuildResult(
+                        BuildRuleSuccessType.BUILT_LOCALLY, Optional.empty())));
+          }
+
           futures.add(
               Futures.submitAsync(
                   () -> strategy.build(rule, strategyContext).getBuildResult(), service));
