@@ -19,20 +19,15 @@ package com.facebook.buck.core.build.event;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.event.AbstractBuckEvent;
+import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
-import com.facebook.buck.event.LeafEvent;
 import com.facebook.buck.util.Scope;
 
 /** Events used to track time spent executing rule. */
-public interface BuildRuleExecutionEvent extends LeafEvent {
+public interface BuildRuleExecutionEvent extends BuckEvent {
 
   BuildTarget getTarget();
-
-  @Override
-  default String getCategory() {
-    return "rule_execution_time";
-  }
 
   /** Common event implementation */
   class Event extends AbstractBuckEvent implements BuildRuleExecutionEvent {
