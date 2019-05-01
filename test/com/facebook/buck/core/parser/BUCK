@@ -6,7 +6,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/files:files",
         "//src/com/facebook/buck/core/parser:parser",
         "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-        "//test/com/facebook/buck/core/graph/transformation:testutil",
+        "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
         "//third-party/java/junit:junit",
         "//third-party/java/junitparams:junitparams",
     ],

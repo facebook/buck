@@ -25,7 +25,7 @@ import com.facebook.buck.core.files.ImmutableDirectoryList;
 import com.facebook.buck.core.files.ImmutableDirectoryListKey;
 import com.facebook.buck.core.files.ImmutableFileTree;
 import com.facebook.buck.core.files.ImmutableFileTreeKey;
-import com.facebook.buck.core.graph.transformation.FakeComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternData.Kind;
 import com.facebook.buck.core.parser.buildtargetparser.ImmutableBuildTargetPatternData;
 import com.google.common.collect.ImmutableMap;

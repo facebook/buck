@@ -5,7 +5,7 @@ standard_java_test(
     deps = [
         "//src/com/facebook/buck/core/files:files",
         "//src/com/facebook/buck/io/watchman:watchman",
-        "//test/com/facebook/buck/core/graph/transformation:testutil",
+        "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",

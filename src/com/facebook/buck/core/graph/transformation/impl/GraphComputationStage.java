@@ -13,8 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.facebook.buck.core.graph.transformation;
+package com.facebook.buck.core.graph.transformation.impl;
 
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.GraphEngineCache;
+import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import java.util.Optional;
@@ -71,7 +75,7 @@ public class GraphComputationStage<
     return cache;
   }
 
-  ResultType transform(KeyType key, DefaultComputationEnvironment env) throws Exception {
+  ResultType transform(KeyType key, ComputationEnvironment env) throws Exception {
     ResultType result = transformer.transform(key, env);
 
     cache.put(key, result);

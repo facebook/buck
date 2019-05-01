@@ -14,10 +14,13 @@
  * under the License.
  */
 
-package com.facebook.buck.core.graph.transformation;
+package com.facebook.buck.core.graph.transformation.impl;
 
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;

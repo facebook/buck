@@ -14,8 +14,10 @@
  * under the License.
  */
 
-package com.facebook.buck.core.graph.transformation;
+package com.facebook.buck.core.graph.transformation.impl;
 
+import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
+import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableMap;

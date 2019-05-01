@@ -29,7 +29,7 @@ java_test(
         "//src/com/facebook/buck/core/rules/analysis/impl:impl",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//test/com/facebook/buck/core/cell:testutil",
-        "//test/com/facebook/buck/core/graph/transformation:testutil",
+        "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph/impl:testutil",
         "//test/com/facebook/buck/core/rules/actions:testutil",

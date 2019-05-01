@@ -6,7 +6,7 @@ standard_java_test(
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser/manifest:manifest",
-        "//test/com/facebook/buck/core/graph/transformation:testutil",
+        "//test/com/facebook/buck/core/graph/transformation/impl:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/guava:guava",

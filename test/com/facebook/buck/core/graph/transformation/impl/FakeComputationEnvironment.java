@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright 2018-present Facebook, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may
  * not use this file except in compliance with the License. You may obtain
@@ -13,24 +13,20 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-
-package com.facebook.buck.core.graph.transformation;
+package com.facebook.buck.core.graph.transformation.impl;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import java.util.Optional;
+import com.google.common.collect.ImmutableMap;
 
-/**
- * Graph Engine cache that does not store result, and always returns nothing on get. Can be used for
- * testing or fast transformations that do not benefit from caching intermediate data.
- */
-public class NoOpGraphEngineCache<Key extends ComputeKey<Value>, Value extends ComputeResult>
-    implements GraphEngineCache<Key, Value> {
-  @Override
-  public Optional<Value> get(Key key) {
-    return Optional.empty();
+public class FakeComputationEnvironment extends DefaultComputationEnvironment {
+
+  /**
+   * Package protected constructor so only {@link DefaultGraphTransformationEngine} can create the
+   * environment
+   */
+  public FakeComputationEnvironment(
+      ImmutableMap<? extends ComputeKey<?>, ? extends ComputeResult> deps) {
+    super(deps);
   }
-
-  @Override
-  public void put(Key key, Value value) {}
 }
