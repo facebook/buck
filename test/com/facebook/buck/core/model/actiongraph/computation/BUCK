@@ -12,6 +12,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker:linker",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/features/filebundler:filebundler",

@@ -16,7 +16,6 @@
 package com.facebook.buck.cxx.toolchain.impl;
 
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.google.common.base.Verify;
 
