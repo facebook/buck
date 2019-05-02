@@ -484,7 +484,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   private ImmutableList<String> getKotlincPluginsArgs(SourcePathResolver sourcePathResolver) {
     return kotlincPlugins.stream()
-        .map(path -> "-Xplugin=" + sourcePathResolver.getRelativePath(path).toString())
+        .map(path -> "-Xplugin=" + sourcePathResolver.getAbsolutePath(path).toString())
         .collect(ImmutableList.toImmutableList());
   }
 
