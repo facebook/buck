@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.toolchain;
+package com.facebook.buck.cxx.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -34,7 +34,19 @@ import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
+import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider.LegacyArchiverType;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
+import com.facebook.buck.cxx.toolchain.CxxToolProvider.Type;
+import com.facebook.buck.cxx.toolchain.CxxToolTypeInferer;
+import com.facebook.buck.cxx.toolchain.HeaderMode;
+import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
+import com.facebook.buck.cxx.toolchain.ProviderBasedUnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
+import com.facebook.buck.cxx.toolchain.ToolType;
+import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -107,36 +119,6 @@ public class CxxBuckConfig {
   private static final String OBJCOPY = "objcopy";
   private static final String NM = "nm";
   private static final String STRIP = "strip";
-
-  /** Enumerates possible external tools used in building C/C++ programs. */
-  public enum ToolType {
-    AR("ar", "arflags"),
-    AS("as", "asflags"),
-    ASM("asm", "asmflags"),
-    ASMPP("asmpp", "asmppflags"),
-    ASPP("aspp", "asppflags"),
-    CC("cc", "cflags"),
-    CPP("cpp", "cppflags"),
-    CUDA("cuda", "cudaflags"),
-    CUDAPP("cudapp", "cudappflags"),
-    CXX("cxx", "cxxflags"),
-    CXXPP("cxxpp", "cxxppflags"),
-    HIP("hip", "hipflags"),
-    HIPPP("hippp", "hipppflags"),
-    LD("ld", "ldflags"),
-    RANLIB("ranlib", "ranlibflags"),
-    ;
-
-    /** Buck config key used to specify tool path. */
-    private final String key;
-    /** Buck config key used to specify tool flags. */
-    private final String flagsKey;
-
-    ToolType(String key, String flagsKey) {
-      this.key = key;
-      this.flagsKey = flagsKey;
-    }
-  }
 
   private final BuckConfig delegate;
   private final String cxxSection;
@@ -330,8 +312,7 @@ public class CxxBuckConfig {
     String source = String.format("[%s] %s", cxxSection, toolType.key);
     Optional<UnconfiguredBuildTargetView> target =
         delegate.getMaybeUnconfiguredBuildTarget(cxxSection, toolType.key);
-    Optional<CxxToolProvider.Type> type =
-        delegate.getEnum(cxxSection, toolType.key + "_type", CxxToolProvider.Type.class);
+    Optional<Type> type = delegate.getEnum(cxxSection, toolType.key + "_type", Type.class);
     if (target.isPresent()) {
       return Optional.of(
           CxxToolProviderParams.builder()
@@ -663,7 +644,7 @@ public class CxxBuckConfig {
 
     public abstract Optional<PathSourcePath> getPath();
 
-    public abstract Optional<CxxToolProvider.Type> getType();
+    public abstract Optional<Type> getType();
 
     public abstract ToolType getToolType();
 

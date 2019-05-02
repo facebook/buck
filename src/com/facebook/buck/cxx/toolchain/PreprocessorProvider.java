@@ -18,7 +18,6 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.cxx.toolchain.CxxBuckConfig.ToolType;
 import java.util.function.Supplier;
 
 public class PreprocessorProvider extends CxxToolProvider<Preprocessor> {

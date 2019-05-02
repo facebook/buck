@@ -7,6 +7,7 @@ java_library(
         exclude = glob(["*Test.java"]),
     ),
     exported_deps = [
+        "//src/com/facebook/buck/cxx/config:config",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
     ],
     visibility = [
