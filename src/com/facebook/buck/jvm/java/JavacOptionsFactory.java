@@ -64,6 +64,8 @@ public final class JavacOptionsFactory {
         jvmLibraryArg.buildStandardJavacParams(buildTarget, resolver);
     builder.setStandardJavacPluginParams(standardJavacPluginsParams);
 
+    builder.setJavacPluginArguments(jvmLibraryArg.getPluginsArguments());
+
     return builder.build();
   }
 

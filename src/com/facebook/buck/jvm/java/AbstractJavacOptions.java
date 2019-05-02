@@ -102,6 +102,9 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
   }
 
   @AddToRuleKey
+  protected abstract Map<String, ImmutableList<String>> getJavacPluginArguments();
+
+  @AddToRuleKey
   public abstract List<String> getExtraArguments();
 
   // TODO(cjhopman): This should use SourcePaths
@@ -230,7 +233,14 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
       allPluginsBuilder.addAll(javacPlugins);
 
       for (ResolvedJavacPluginProperties properties : javacPlugins) {
-        optionsConsumer.addFlag("Xplugin:" + properties.getProcessorNames().first());
+        // Javac plugins should be declared as:
+        // '-Xplugin:<pluginName> <arg1> <arg2> <arg3> ...'
+        String pluginName = properties.getProcessorNames().first();
+        String pluginArguments = getJavacPluginArguments()
+            .getOrDefault(pluginName, ImmutableList.of())
+            .stream()
+            .reduce(" ", (s, s2) -> s + " " + s2);
+        optionsConsumer.addFlag("Xplugin:" + pluginName + pluginArguments);
       }
 
       // Add plugin parameters.

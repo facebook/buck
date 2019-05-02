@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -74,6 +75,8 @@ public interface JvmLibraryArg extends CommonDescriptionArg, MaybeRequiredForSou
   Optional<Boolean> getAnnotationProcessorOnly();
 
   ImmutableList<BuildTarget> getPlugins();
+
+  Map<String, ImmutableList<String>> getPluginsArguments();
 
   Optional<AbiGenerationMode> getAbiGenerationMode();
 
