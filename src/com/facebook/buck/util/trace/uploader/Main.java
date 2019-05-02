@@ -166,6 +166,7 @@ public final class Main {
       }
     } catch (Exception e) {
       log.format("\nFailed to upload trace; %s\n", e.getMessage());
+      e.printStackTrace(log);
       return 1;
     } finally {
       log.format("Elapsed time: %d millis", timer.elapsed(TimeUnit.MILLISECONDS));
