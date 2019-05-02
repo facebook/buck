@@ -197,7 +197,9 @@ public class RustLibraryDescription
         }
       }
 
-      RustPlatform platform = RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args);
+      RustPlatform platform =
+          RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
+              .resolve(graphBuilder, buildTarget.getTargetConfiguration());
       return requireBuild(
           buildTarget,
           projectFilesystem,
@@ -361,7 +363,10 @@ public class RustLibraryDescription
         ImmutableList.Builder<NativeLinkable> nativedeps = ImmutableList.builder();
 
         RustPlatform rustPlatform =
-            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
+            getRustToolchain()
+                .getRustPlatforms()
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration());
         new AbstractBreadthFirstTraversal<BuildRule>(allDeps.get(graphBuilder, cxxPlatform)) {
           @Override
           public Iterable<BuildRule> visit(BuildRule rule) {
@@ -404,7 +409,10 @@ public class RustLibraryDescription
         }
 
         RustPlatform rustPlatform =
-            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
+            getRustToolchain()
+                .getRustPlatforms()
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration());
         BuildRule rule =
             requireBuild(
                 buildTarget,
@@ -443,7 +451,10 @@ public class RustLibraryDescription
         String sharedLibrarySoname =
             CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform).get();
         RustPlatform rustPlatform =
-            getRustToolchain().getRustPlatforms().getValue(cxxPlatform.getFlavor());
+            getRustToolchain()
+                .getRustPlatforms()
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder, buildTarget.getTargetConfiguration());
         BuildRule sharedLibraryBuildRule =
             requireBuild(
                 buildTarget,

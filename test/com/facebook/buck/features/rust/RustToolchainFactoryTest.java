@@ -76,13 +76,20 @@ public class RustToolchainFactoryTest {
     Optional<RustToolchain> toolchain =
         factory.createToolchain(toolchainProvider, toolchainCreationContext);
     assertThat(
-        toolchain.get().getDefaultRustPlatform().getCxxPlatform(),
+        toolchain
+            .get()
+            .getDefaultRustPlatform()
+            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)
+            .getCxxPlatform(),
         Matchers.equalTo(
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(
                 new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)));
     assertThat(
         toolchain.get().getRustPlatforms().getValues().stream()
-            .map(RustPlatform::getCxxPlatform)
+            .map(
+                p ->
+                    p.resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)
+                        .getCxxPlatform())
             .collect(ImmutableList.toImmutableList()),
         Matchers.contains(
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(
@@ -133,12 +140,18 @@ public class RustToolchainFactoryTest {
     RustToolchainFactory factory = new RustToolchainFactory();
     Optional<RustToolchain> toolchain =
         factory.createToolchain(toolchainProvider, toolchainCreationContext);
-    RustPlatform platform = toolchain.get().getRustPlatforms().getValue(custom);
+    RustPlatform platform =
+        toolchain
+            .get()
+            .getRustPlatforms()
+            .getValue(custom)
+            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
     assertThat(
         toolchain
             .get()
             .getRustPlatforms()
             .getValue(custom)
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
             .getRustCompiler()
             .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
             .getCommandPrefix(pathResolver),
@@ -148,6 +161,7 @@ public class RustToolchainFactoryTest {
             .get()
             .getRustPlatforms()
             .getValue(custom)
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
             .getLinker()
             .get()
             .resolve(resolver, EmptyTargetConfiguration.INSTANCE)

@@ -33,8 +33,8 @@ public interface AbstractRustToolchain extends Toolchain {
   }
 
   @Value.Parameter
-  RustPlatform getDefaultRustPlatform();
+  UnresolvedRustPlatform getDefaultRustPlatform();
 
   @Value.Parameter
-  FlavorDomain<RustPlatform> getRustPlatforms();
+  FlavorDomain<UnresolvedRustPlatform> getRustPlatforms();
 }

@@ -43,7 +43,7 @@ public class RustPlatformFactoryTest {
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(finder);
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     RustPlatformFactory factory =
-        RustPlatformFactory.of(
+        new ImmutableRustPlatformFactory(
             FakeBuckConfig.builder()
                 .setFilesystem(filesystem)
                 .setSections(
@@ -54,7 +54,10 @@ public class RustPlatformFactoryTest {
                             "linker", "linker")))
                 .build(),
             new AlwaysFoundExecutableFinder());
-    RustPlatform platform = factory.getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
+    RustPlatform platform =
+        factory
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
+            .resolve(resolver, EmptyTargetConfiguration.INSTANCE);
     assertThat(
         platform
             .getRustCompiler()

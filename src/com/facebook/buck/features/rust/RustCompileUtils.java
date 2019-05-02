@@ -40,7 +40,6 @@ import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
-import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
@@ -299,6 +298,7 @@ public class RustCompileUtils {
       boolean preferStatic,
       Iterable<BuildRule> deps,
       Optional<String> incremental) {
+
     return (RustCompileRule)
         graphBuilder.computeIfAbsent(
             getCompileBuildTarget(buildTarget, rustPlatform.getCxxPlatform(), crateType),
@@ -349,7 +349,8 @@ public class RustCompileUtils {
     return ret;
   }
 
-  public static RustPlatform getRustPlatform(
+  /** Gets the {@link UnresolvedRustPlatform} for a target. */
+  public static UnresolvedRustPlatform getRustPlatform(
       RustToolchain rustToolchain, BuildTarget target, HasDefaultPlatform hasDefaultPlatform) {
     return rustToolchain
         .getRustPlatforms()
@@ -362,12 +363,8 @@ public class RustCompileUtils {
   }
 
   static Iterable<BuildTarget> getPlatformParseTimeDeps(
-      TargetConfiguration targetConfiguration, RustPlatform rustPlatform) {
-    ImmutableSet.Builder<BuildTarget> deps = ImmutableSet.builder();
-    deps.addAll(rustPlatform.getRustCompiler().getParseTimeDeps(targetConfiguration));
-    rustPlatform.getLinker().ifPresent(l -> deps.addAll(l.getParseTimeDeps(targetConfiguration)));
-    deps.addAll(CxxPlatforms.getParseTimeDeps(targetConfiguration, rustPlatform.getCxxPlatform()));
-    return deps.build();
+      TargetConfiguration targetConfiguration, UnresolvedRustPlatform rustPlatform) {
+    return rustPlatform.getParseTimeDeps(targetConfiguration);
   }
 
   public static Iterable<BuildTarget> getPlatformParseTimeDeps(

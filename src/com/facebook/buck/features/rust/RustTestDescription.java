@@ -91,7 +91,8 @@ public class RustTestDescription
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     RustPlatform rustPlatform =
-        RustCompileUtils.getRustPlatform(getRustToolchain(), buildTarget, args);
+        RustCompileUtils.getRustPlatform(getRustToolchain(), buildTarget, args)
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
     BinaryWrapperRule testExeBuild =
         (BinaryWrapperRule)

@@ -44,8 +44,9 @@ abstract class RustAssumptions {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     RustPlatform rustPlatform =
-        RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
+        new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
+            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
     Throwable exception = null;
     try {
       rustPlatform
@@ -64,8 +65,9 @@ abstract class RustAssumptions {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     RustPlatform rustPlatform =
-        RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
+        new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
+            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
         rustPlatform
             .getRustCompiler()
@@ -82,8 +84,9 @@ abstract class RustAssumptions {
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
     RustPlatform rustPlatform =
-        RustPlatformFactory.of(FakeBuckConfig.builder().build(), new ExecutableFinder())
-            .getPlatform("rust", CxxPlatformUtils.DEFAULT_PLATFORM);
+        new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
+            .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
+            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> rustc =
         rustPlatform
             .getRustCompiler()

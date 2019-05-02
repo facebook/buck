@@ -16,12 +16,17 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider.Type;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
+import com.google.common.collect.ImmutableList;
 
 public class RustTestUtils {
 
@@ -35,9 +40,27 @@ public class RustTestUtils {
           .setCxxPlatform(CxxPlatformUtils.DEFAULT_PLATFORM)
           .build();
 
-  public static final FlavorDomain<RustPlatform> DEFAULT_PLATFORMS =
+  public static final FlavorDomain<UnresolvedRustPlatform> DEFAULT_PLATFORMS =
       FlavorDomain.of("Rust Platforms");
 
   public static final RustToolchain DEFAULT_TOOLCHAIN =
-      RustToolchain.of(DEFAULT_PLATFORM, DEFAULT_PLATFORMS);
+      RustToolchain.of(
+          new UnresolvedRustPlatform() {
+            @Override
+            public RustPlatform resolve(
+                BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
+              return DEFAULT_PLATFORM;
+            }
+
+            @Override
+            public Flavor getFlavor() {
+              return DEFAULT_PLATFORM.getFlavor();
+            }
+
+            @Override
+            public Iterable<BuildTarget> getParseTimeDeps(TargetConfiguration targetConfiguration) {
+              return ImmutableList.of();
+            }
+          },
+          DEFAULT_PLATFORMS);
 }

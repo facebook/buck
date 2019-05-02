@@ -86,7 +86,9 @@ public class RustBinaryDescription
         BINARY_TYPE.getFlavorAndValue(buildTarget).map(Entry::getValue).orElse(Type.STATIC);
 
     RustToolchain rustToolchain = getRustToolchain();
-    RustPlatform rustPlatform = RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args);
+    RustPlatform rustPlatform =
+        RustCompileUtils.getRustPlatform(rustToolchain, buildTarget, args)
+            .resolve(context.getActionGraphBuilder(), buildTarget.getTargetConfiguration());
 
     return RustCompileUtils.createBinaryBuildRule(
         buildTarget,
