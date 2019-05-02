@@ -111,7 +111,7 @@ class IndexTest {
                 bt("//java/com/facebook/buck/model:model"),
                 bt("//java/com/facebook/buck/util:util")
         ))
-        assertEquals(targetNodes[0]!!.rawTargetNode.getRuleType().getName(), "java_library")
+        assertEquals(targetNodes[0]!!.targetNode.ruleType.name, "java_library")
         assertNull("model was deleted at commit 5", targetNodes[1])
         assertEquals(targetNodes[2]!!.deps, setOf(bt("//java/com/facebook/buck/base:base")))
 

@@ -17,7 +17,6 @@
 package com.facebook.buck.multitenant.service
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps
 import com.facebook.buck.multitenant.collect.GenerationMap
 import com.google.common.collect.ImmutableSet
 import java.io.Closeable
@@ -99,10 +98,10 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      * Note this method does not take an [IndexReadLock] because it does its own synchronization
      * internally.
      *
-     * @return the corresponding [RawTargetNodeWithDeps] at the specified commit, if it exists;
+     * @return the corresponding [RawBuildRule] at the specified commit, if it exists;
      *     otherwise, return `null`.
      */
-    fun getTargetNode(commit: Commit, target: UnconfiguredBuildTarget): RawTargetNodeWithDeps? {
+    fun getTargetNode(commit: Commit, target: UnconfiguredBuildTarget): RawBuildRule? {
         return getTargetNodes(commit, listOf(target))[0]
     }
 
@@ -114,7 +113,7 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
      *     the output is the corresponding target node for the build target at the commit or `null`
      *     if no rule existed for that target at that commit.
      */
-    fun getTargetNodes(commit: Commit, targets: List<UnconfiguredBuildTarget>): List<RawTargetNodeWithDeps?> {
+    fun getTargetNodes(commit: Commit, targets: List<UnconfiguredBuildTarget>): List<RawBuildRule?> {
         val internalRules = acquireReadLock().use {
             val generation = commitToGeneration.getValue(commit)
             return@use targets.map {
@@ -127,8 +126,8 @@ class Index(val buildTargetParser: (target: String) -> UnconfiguredBuildTarget) 
         // not need to be guarded by rwLock.
         return internalRules.map {
             if (it != null) {
-                val deps = it.deps.map { buildTargetCache.getByIndex(it) }
-                RawTargetNodeWithDeps.of(it.targetNode, deps)
+                val deps = it.deps.map { buildTargetCache.getByIndex(it) }.toSet()
+                RawBuildRule(it.targetNode, deps)
             } else {
                 null
             }
