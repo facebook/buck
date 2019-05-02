@@ -179,7 +179,8 @@ public class JsLibraryDescriptionTest {
     BuildRule filesRule = internalFileRule(scenario.graphBuilder);
     assertThat(
         filesRule.getBuildDeps(),
-        hasItems(Stream.of(a, b, c).map(JsFileMatcher::new).toArray(JsFileMatcher[]::new)));
+        hasItems(
+            Stream.of(a, b, c).map(JsFileMatcher::new).toArray(size -> new JsFileMatcher[size])));
   }
 
   @Test
@@ -231,10 +232,12 @@ public class JsLibraryDescriptionTest {
             .library(target, a, b)
             .build();
 
-    ImmutableMap<SourcePath, JsFileDev> fileRules =
+    ImmutableMap<SourcePath, JsFile> fileRules =
         findJsFileRules(scenario.graphBuilder)
-            .filter(JsFileDev.class)
-            .collect(ImmutableMap.toImmutableMap(JsFileDev::getSource, Function.identity()));
+            .filter(rule -> rule.getBuildable() instanceof JsFileDev)
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    rule -> ((JsFileDev) rule.getBuildable()).getSource(), Function.identity()));
 
     assertThat(a.getTarget(), in(getBuildDepsAsTargets(fileRules.get(a))));
     assertThat(b.getTarget(), not(in(getBuildDepsAsTargets(fileRules.get(a)))));
@@ -510,7 +513,11 @@ public class JsLibraryDescriptionTest {
   }
 
   private JsFile.JsFileDev findFirstJsFileDevRule(ActionGraphBuilder graphBuilder) {
-    return findJsFileRules(graphBuilder).filter(JsFileDev.class).findFirst().get();
+    return findJsFileRules(graphBuilder)
+        .map(JsFile::getBuildable)
+        .filter(JsFileDev.class)
+        .findFirst()
+        .get();
   }
 
   private JsLibrary.Files internalFileRule(ActionGraphBuilder graphBuilder) {
@@ -555,7 +562,12 @@ public class JsLibraryDescriptionTest {
 
     @Override
     public boolean matches(Object o) {
-      return o instanceof JsFile.JsFileDev && ((JsFile.JsFileDev) o).getSource().equals(source);
+      return RichStream.of(o)
+          .filter(JsFile.class)
+          .map(JsFile::getBuildable)
+          .filter(JsFileDev.class)
+          .map(JsFileDev::getSource)
+          .allMatch(source::equals);
     }
 
     @Override

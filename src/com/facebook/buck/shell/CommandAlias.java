@@ -19,12 +19,12 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -34,6 +34,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
+import com.facebook.buck.rules.modern.PlatformSerialization;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -126,7 +127,9 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
                     Ordering.natural(), Entry::getKey, e -> buildRuleAsTool(e.getValue())));
 
     return CrossPlatformTool.of(
-        genericDelegate.map(this::buildRuleAsTool).orElseGet(UnsupportedPlatformTool::new),
+        genericDelegate
+            .map(this::buildRuleAsTool)
+            .orElseGet(() -> new UnsupportedPlatformTool(getBuildTarget(), platform)),
         platformTools,
         platform);
   }
@@ -147,21 +150,31 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
     return tool.build();
   }
 
-  private class UnsupportedPlatformTool implements Tool {
+  private static class UnsupportedPlatformTool implements Tool {
+
+    @AddToRuleKey private final BuildTarget buildTarget;
+
+    @CustomFieldBehavior(PlatformSerialization.class)
+    private final Platform platform;
+
+    private UnsupportedPlatformTool(BuildTarget buildTarget, Platform platform) {
+      this.buildTarget = buildTarget;
+      this.platform = platform;
+    }
+
     @Override
     public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-      throw new UnsupportedPlatformException(getBuildTarget(), platform);
+      throw new UnsupportedPlatformException(buildTarget, platform);
     }
 
     @Override
     public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-      throw new UnsupportedPlatformException(getBuildTarget(), platform);
+      throw new UnsupportedPlatformException(buildTarget, platform);
     }
   }
 
   private Stream<BuildRule> extractDepsFromArgs(Stream<Arg> args, SourcePathRuleFinder ruleFinder) {
-    return args.map(arg -> BuildableSupport.deriveDeps(arg, ruleFinder))
-        .flatMap(Function.identity());
+    return args.flatMap(arg -> BuildableSupport.deriveDeps(arg, ruleFinder));
   }
 
   /**
@@ -185,17 +198,18 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
    */
   @Value.Immutable
   @BuckStyleTuple
-  abstract static class AbstractCrossPlatformTool implements Tool, AddsToRuleKey {
+  abstract static class AbstractCrossPlatformTool implements Tool {
+
     @AddToRuleKey
     protected abstract Tool getGenericTool();
 
     @AddToRuleKey
     protected abstract ImmutableSortedMap<Platform, Tool> getPlatformTools();
 
+    @CustomFieldBehavior(PlatformSerialization.class)
     protected abstract Platform getPlatform();
 
-    @Value.Derived
-    protected Tool getTool() {
+    private Tool getTool() {
       return getPlatformTools().getOrDefault(getPlatform(), getGenericTool());
     }
 

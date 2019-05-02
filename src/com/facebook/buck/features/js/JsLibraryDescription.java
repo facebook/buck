@@ -146,11 +146,10 @@ public class JsLibraryDescription
     if (file.isPresent()) {
       return buildTarget.getFlavors().contains(JsFlavors.RELEASE)
           ? createReleaseFileRule(
-              buildTarget, projectFilesystem, baseParams, graphBuilder, cellRoots, args, worker)
+              buildTarget, projectFilesystem, ruleFinder, graphBuilder, cellRoots, args, worker)
           : createDevFileRule(
               buildTarget,
               projectFilesystem,
-              baseParams,
               ruleFinder,
               sourcePathResolver,
               graphBuilder,
@@ -223,7 +222,7 @@ public class JsLibraryDescription
     private final BuildTarget fileBaseTarget;
     private final BuildRuleParams baseParams;
 
-    @Nullable private ImmutableList<JsFile> jsFileRules;
+    @Nullable private ImmutableList<JsFile<?>> jsFileRules;
 
     public LibraryFilesBuilder(
         ActionGraphBuilder graphBuilder,
@@ -250,7 +249,7 @@ public class JsLibraryDescription
       return this;
     }
 
-    private JsFile requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file) {
+    private JsFile<?> requireJsFile(Either<SourcePath, Pair<SourcePath, String>> file) {
       Flavor fileFlavor = sourcesToFlavors.get(file);
       BuildTarget target = fileBaseTarget.withAppendedFlavors(fileFlavor);
       graphBuilder.requireRule(target);
@@ -342,26 +341,25 @@ public class JsLibraryDescription
   private static BuildRule createReleaseFileRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
+      SourcePathRuleFinder ruleFinder,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       JsLibraryDescriptionArg args,
       WorkerTool worker) {
     BuildTarget devTarget = withFileFlavorOnly(buildTarget);
-    BuildRule devFile = graphBuilder.requireRule(devTarget);
-    return new JsFile.JsFileRelease(
+    graphBuilder.requireRule(devTarget);
+    return JsFile.create(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(devFile),
-        graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
+        ruleFinder,
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
-        worker);
+        worker,
+        graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput());
   }
 
   private static <A extends AbstractJsLibraryDescriptionArg> BuildRule createDevFileRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       SourcePathRuleFinder ruleFinder,
       SourcePathResolver sourcePathResolver,
       ActionGraphBuilder graphBuilder,
@@ -385,15 +383,15 @@ public class JsLibraryDescription
                             buildTarget.getUnflavoredBuildTarget())
                         .resolve(subPath.orElse("")));
 
-    return new JsFile.JsFileDev(
+    return JsFile.create(
         buildTarget,
         projectFilesystem,
-        ruleFinder.getRule(sourcePath).map(params::copyAppendingExtraDeps).orElse(params),
+        ruleFinder,
+        JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
+        worker,
         sourcePath,
         subPath,
-        virtualPath,
-        JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
-        worker);
+        virtualPath);
   }
 
   private static BuildTarget withFileFlavorOnly(BuildTarget target) {

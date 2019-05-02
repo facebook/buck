@@ -25,12 +25,15 @@ import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.modern.annotations.CustomFieldBehavior;
+import com.facebook.buck.core.rules.modern.annotations.DefaultFieldSerialization;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.modern.HashCodeSerialization;
 import com.google.common.hash.HashCode;
 import java.nio.file.Path;
 import java.util.SortedSet;
@@ -131,11 +134,19 @@ public class DefaultWorkerToolRule extends WriteFile
     @AddToRuleKey private final boolean isPersistent;
     @AddToRuleKey private final BuildTarget buildTarget;
 
-    // Important : Do not add this field into RuleKey
-    private final int maxWorkers;
+    /**
+     * Important : Do not add this field into RuleKey. Rule key should not change in case of max
+     * worker variable modification.
+     */
+    @CustomFieldBehavior(DefaultFieldSerialization.class)
+    private final Integer maxWorkers;
 
-    // Important : Do not add this field into RuleKey
-    private String instanceKey;
+    /**
+     * Important : Do not add this field into RuleKey. Rule key should not change in case of
+     * instance key modification (that is calculated during creation as random UUID).
+     */
+    @CustomFieldBehavior(HashCodeSerialization.class)
+    private HashCode instanceKey;
 
     DefaultWorkerTool(
         Tool tool, int maxWorkers, boolean isPersistent, BuildTarget buildTarget, UUID uuid) {
@@ -150,8 +161,8 @@ public class DefaultWorkerToolRule extends WriteFile
       this.instanceKey = calculateInstanceKey(uuid);
     }
 
-    private String calculateInstanceKey(UUID uuid) {
-      return uuid.toString().replace("-", "");
+    private HashCode calculateInstanceKey(UUID uuid) {
+      return HashCode.fromString(uuid.toString().replace("-", ""));
     }
 
     @Override
@@ -176,7 +187,7 @@ public class DefaultWorkerToolRule extends WriteFile
 
     @Override
     public HashCode getInstanceKey() {
-      return HashCode.fromString(instanceKey);
+      return instanceKey;
     }
   }
 }

@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -49,13 +48,13 @@ import com.facebook.buck.worker.WorkerProcessPoolFactory;
 import com.fasterxml.jackson.core.io.CharTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
 public class JsUtil {
+
   private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
       MACRO_EXPANDERS =
           ImmutableList.of(
@@ -68,17 +67,24 @@ public class JsUtil {
                 protected Arg expand(
                     SourcePathResolver resolver, LocationMacro macro, BuildRule rule)
                     throws MacroException {
-                  return new ProxyArg(super.expand(resolver, macro, rule)) {
-                    @Override
-                    public void appendToCommandLine(
-                        Consumer<String> consumer, SourcePathResolver pathResolver) {
-                      super.appendToCommandLine(
-                          s -> consumer.accept(escapeJsonForStringEmbedding(s)), pathResolver);
-                    }
-                  };
+                  return new JsArg(super.expand(resolver, macro, rule));
                 }
               });
-  private static final int[] outputEscapes = CharTypes.get7BitOutputEscapes();
+
+  private static class JsArg extends ProxyArg {
+
+    public JsArg(Arg arg) {
+      super(arg);
+    }
+
+    @Override
+    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+      super.appendToCommandLine(
+          s -> consumer.accept(escapeJsonForStringEmbedding(s)), pathResolver);
+    }
+  }
+
+  private static final int[] OUTPUT_ESCAPES = CharTypes.get7BitOutputEscapes();
 
   private JsUtil() {}
 
@@ -122,10 +128,6 @@ public class JsUtil {
 
   static boolean isJsLibraryTarget(BuildTarget target, TargetGraph targetGraph) {
     return targetGraph.get(target).getDescription() instanceof JsLibraryDescription;
-  }
-
-  static BuildRuleParams paramsWithDeps(BuildRuleParams params, BuildRule... rules) {
-    return params.withoutDeclaredDeps().withExtraDeps(ImmutableSortedSet.copyOf(rules));
   }
 
   static SourcePath relativeToOutputRoot(
@@ -173,16 +175,16 @@ public class JsUtil {
     StringBuilder builder = new StringBuilder(input.length());
     for (int i = 0; i < input.length(); i++) {
       char c = input.charAt(i);
-      if (c > 0x7f || outputEscapes[c] == 0) {
+      if (c > 0x7f || OUTPUT_ESCAPES[c] == 0) {
         builder.append(c);
-      } else if (outputEscapes[c] == -1) {
+      } else if (OUTPUT_ESCAPES[c] == -1) {
         builder.append('\\').append('u').append('0').append('0');
         if (c < 0x10) {
           builder.append('0');
         }
         builder.append(Integer.toHexString(c));
       } else {
-        builder.append('\\').append((char) outputEscapes[c]);
+        builder.append('\\').append((char) OUTPUT_ESCAPES[c]);
       }
     }
 
