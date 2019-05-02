@@ -712,13 +712,24 @@ public final class MainRunner {
       ExecutionEnvironment executionEnvironment =
           new DefaultExecutionEnvironment(clientEnvironment, System.getProperties());
 
-      // Automatically use distributed build for supported repositories and users.
+      // Automatically use distributed build for supported repositories and users, unless
+      // Remote Execution is in use. All RE builds should not use distributed build.
+      final boolean isRemoteExecutionBuild = isRemoteExecutionBuild(command, buckConfig);
       if (command.subcommand instanceof BuildCommand) {
         BuildCommand subcommand = (BuildCommand) command.subcommand;
         isUsingDistributedBuild = subcommand.isUsingDistributedBuild();
-        if (!isUsingDistributedBuild
-            && (distBuildConfig.shouldUseDistributedBuild(
-                buildId, executionEnvironment.getUsername(), subcommand.getArguments()))) {
+        boolean shouldUseDistributedBuild =
+            distBuildConfig.shouldUseDistributedBuild(
+                buildId, executionEnvironment.getUsername(), subcommand.getArguments());
+
+        if (isRemoteExecutionBuild && (isUsingDistributedBuild || shouldUseDistributedBuild)) {
+          String msg =
+              "Remote Execution is enabled. Deprecated distributed build will not be used.";
+          LOG.warn(msg);
+          printWarnMessage(msg);
+          subcommand.forceDisableDistributedBuild();
+          isUsingDistributedBuild = false;
+        } else if (!isUsingDistributedBuild && shouldUseDistributedBuild) {
           isUsingDistributedBuild = subcommand.tryConvertingToStampede(distBuildConfig);
         }
       }
@@ -914,10 +925,10 @@ public final class MainRunner {
               args,
               unexpandedCommandLineArgs,
               filesystem.getBuckPaths().getLogDir(),
-              isRemoteExecutionBuild(command, buckConfig));
+              isRemoteExecutionBuild);
 
       RemoteExecutionConfig remoteExecutionConfig = buckConfig.getView(RemoteExecutionConfig.class);
-      if (isRemoteExecutionBuild(command, buckConfig)) {
+      if (isRemoteExecutionBuild) {
         remoteExecutionConfig.validateCertificatesOrThrow();
       }
 
@@ -1058,7 +1069,7 @@ public final class MainRunner {
                     logBuckConfig.getBuildDetailsCommands(),
                     createAdditionalConsoleLinesProviders(
                         remoteExecutionListener, remoteExecutionConfig, metadataProvider),
-                    isRemoteExecutionBuild(command, buckConfig)
+                    isRemoteExecutionBuild
                         ? Optional.of(
                             remoteExecutionConfig.getDebugURLString(
                                 metadataProvider.get().getReSessionId()))
@@ -1168,7 +1179,6 @@ public final class MainRunner {
                       .getEventListeners(executors, scheduledExecutorPool.get())
                   : ImmutableList.of();
 
-          final boolean isRemoteExecutionBuild = isRemoteExecutionBuild(command, buckConfig);
           if (isRemoteExecutionBuild) {
             List<BuckEventListener> remoteExecutionsListeners = Lists.newArrayList();
             if (remoteExecutionListener.isPresent()) {

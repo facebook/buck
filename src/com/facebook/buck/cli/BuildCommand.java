@@ -266,6 +266,10 @@ public class BuildCommand extends AbstractCommand {
     this.keepGoing = keepGoing;
   }
 
+  public void forceDisableDistributedBuild() {
+    forceDisableDistributedBuild = true;
+  }
+
   /** Whether this build is using stampede or not. */
   public boolean isUsingDistributedBuild() {
     if (forceDisableDistributedBuild) {
@@ -297,9 +301,7 @@ public class BuildCommand extends AbstractCommand {
   public boolean tryConvertingToStampede(DistBuildConfig config) {
     if (forceDisableDistributedBuild) {
       LOG.info(
-          String.format(
-              "%s has been specified. Will not auto-convert build to stampede.",
-              LOCAL_BUILD_LONG_ARG));
+          "Distributed build was forcefully disabled. Will not auto-convert build to stampede.");
 
       useDistributedBuild = false; // Make sure
       return false;
