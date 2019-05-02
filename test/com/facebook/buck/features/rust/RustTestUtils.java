@@ -20,8 +20,8 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
-import com.facebook.buck.cxx.toolchain.linker.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider.Type;
+import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 
 public class RustTestUtils {
 

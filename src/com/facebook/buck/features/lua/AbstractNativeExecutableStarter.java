@@ -43,7 +43,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.cxx.toolchain.linker.Linkers;
+import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;

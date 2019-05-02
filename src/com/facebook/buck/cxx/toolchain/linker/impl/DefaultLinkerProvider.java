@@ -14,13 +14,15 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.toolchain.linker;
+package com.facebook.buck.cxx.toolchain.linker.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;

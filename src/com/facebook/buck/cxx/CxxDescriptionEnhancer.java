@@ -54,7 +54,7 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.Linker.CxxRuntimeType;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
-import com.facebook.buck.cxx.toolchain.linker.Linkers;
+import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;

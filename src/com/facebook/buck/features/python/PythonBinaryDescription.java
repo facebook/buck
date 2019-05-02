@@ -43,7 +43,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.WindowsLinker;
+import com.facebook.buck.cxx.toolchain.linker.impl.WindowsLinker;
 import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;

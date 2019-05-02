@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.toolchain.linker;
+package com.facebook.buck.cxx.toolchain.linker.impl;
 
 import com.google.common.collect.ImmutableList;
 

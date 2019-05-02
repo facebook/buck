@@ -17,6 +17,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
         "//src/com/facebook/buck/rules/modern:modern",
     ],
 )

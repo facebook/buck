@@ -19,7 +19,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/config:config",
         "//src/com/facebook/buck/cxx/toolchain:toolchain",
-        "//src/com/facebook/buck/cxx/toolchain/linker:linker",
+        "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/file:rules",

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package com.facebook.buck.cxx.toolchain.linker;
+package com.facebook.buck.cxx.toolchain.linker.impl;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -24,6 +24,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.cxx.toolchain.linker.HasImportLibrary;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;

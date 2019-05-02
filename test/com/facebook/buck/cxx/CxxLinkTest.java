@@ -32,8 +32,8 @@ import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.PrefixMapDebugPathSanitizer;
-import com.facebook.buck.cxx.toolchain.linker.GnuLinker;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.impl.GnuLinker;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
