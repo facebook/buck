@@ -21,44 +21,34 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
+import com.facebook.buck.cxx.toolchain.BuildRuleResolverCacheByTargetConfiguration;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import javax.annotation.Nonnull;
-import org.immutables.value.Value.Immutable;
-import org.immutables.value.Value.Parameter;
 
 public class DefaultLinkerProvider implements LinkerProvider {
-
-  @Immutable(builder = false, copy = false, prehash = true)
-  interface DefaultLinkerProviderCacheKey {
-    @Parameter
-    BuildRuleResolver getBuildRuleResolver();
-
-    @Parameter
-    TargetConfiguration getTargetConfiguration();
-  }
 
   private final Type type;
   private final ToolProvider toolProvider;
   private final boolean cacheLinks;
 
-  private final LoadingCache<DefaultLinkerProviderCacheKey, Linker> cache =
-      CacheBuilder.newBuilder()
-          .weakKeys()
-          .build(
-              new CacheLoader<DefaultLinkerProviderCacheKey, Linker>() {
-                @Override
-                public Linker load(@Nonnull DefaultLinkerProviderCacheKey key) {
-                  return build(
-                      type,
-                      toolProvider.resolve(
-                          key.getBuildRuleResolver(), key.getTargetConfiguration()),
-                      cacheLinks);
-                }
-              });
+  private final LoadingCache<BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<Linker>>
+      cache =
+          CacheBuilder.newBuilder()
+              .weakKeys()
+              .build(
+                  new CacheLoader<
+                      BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<Linker>>() {
+                    @Override
+                    public BuildRuleResolverCacheByTargetConfiguration<Linker> load(
+                        @Nonnull BuildRuleResolver buildRuleResolver) {
+                      return new BuildRuleResolverCacheByTargetConfiguration<>(
+                          buildRuleResolver, toolProvider, tool -> build(type, tool, cacheLinks));
+                    }
+                  });
 
   public DefaultLinkerProvider(Type type, ToolProvider toolProvider, boolean cacheLinks) {
     this.type = type;
@@ -83,8 +73,7 @@ public class DefaultLinkerProvider implements LinkerProvider {
   @Override
   public synchronized Linker resolve(
       BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
-    return cache.getUnchecked(
-        ImmutableDefaultLinkerProviderCacheKey.of(resolver, targetConfiguration));
+    return cache.getUnchecked(resolver).get(targetConfiguration);
   }
 
   @Override
