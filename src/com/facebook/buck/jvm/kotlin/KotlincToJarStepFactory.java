@@ -484,6 +484,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   private ImmutableList<String> getKotlincPluginsArgs(SourcePathResolver sourcePathResolver) {
     return kotlincPlugins.stream()
+        // Ideally, we would not use getAbsolutePath() here, but getRelativePath() does not
+        // appear to work correctly if path is a BuildTargetSourcePath in a different cell than
+        // the kotlin_library() rule being defined.
         .map(path -> "-Xplugin=" + sourcePathResolver.getAbsolutePath(path).toString())
         .collect(ImmutableList.toImmutableList());
   }
