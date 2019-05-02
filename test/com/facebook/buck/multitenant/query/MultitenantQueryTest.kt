@@ -17,16 +17,16 @@
 package com.facebook.buck.multitenant.query
 
 import com.facebook.buck.core.model.UnconfiguredBuildTarget
-import com.facebook.buck.multitenant.service.BUILD_TARGET_PARSER
+import com.facebook.buck.multitenant.importer.parseOrdinaryBuildTarget
+import com.facebook.buck.multitenant.importer.populateIndexFromStream
 import com.facebook.buck.multitenant.service.Index
-import com.facebook.buck.multitenant.service.populateIndexFromStream
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class MultitenantQueryTest {
     @Test
     fun depsQuery() {
-        val index = Index(BUILD_TARGET_PARSER)
+        val index = Index(::parseOrdinaryBuildTarget)
         val commits = populateIndexFromStream(index, MultitenantQueryTest::class.java.getResourceAsStream("diamond_dependency_graph.json"))
         val commit = commits[0]
 
@@ -59,5 +59,5 @@ class MultitenantQueryTest {
 }
 
 fun asOutput(vararg target: String): Set<UnconfiguredBuildTarget> {
-    return target.map(BUILD_TARGET_PARSER).toSet()
+    return target.map(::parseOrdinaryBuildTarget).toSet()
 }

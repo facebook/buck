@@ -5,7 +5,7 @@ kotlin_library(
         "//test/com/facebook/buck/multitenant/service:service",
     ],
     visibility = [
-        "//src/com/facebook/buck/multitenant/query:",
+        "//src/com/facebook/buck/multitenant/...",
         "//test/com/facebook/buck/multitenant/...",
     ],
     deps = [

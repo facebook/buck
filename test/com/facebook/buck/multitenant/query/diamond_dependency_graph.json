@@ -4,25 +4,34 @@
     "added": [
       {
         "path": "java/com/example",
-        "rules": {
-          "A": {},
-          "B": {
+        "rules": [
+          {
+            "name": "A",
+            "buck.type": "java_library",
+          },
+          {
+            "name": "B",
+            "buck.type": "java_library",
             "deps": [
               "//java/com/example:A"
-            ]
+            ],
           },
-          "C": {
+          {
+            "name": "C",
+            "buck.type": "java_library",
             "deps": [
-              "//java/com/example:A"
-            ]
+              "//java/com/example:A",
+            ],
           },
-          "D": {
+          {
+            "name": "D",
+            "buck.type": "java_library",
             "deps": [
               "//java/com/example:B",
-              "//java/com/example:C"
-            ]
-          }
-        }
+              "//java/com/example:C",
+            ],
+          },
+        ],
       }
     ]
   }

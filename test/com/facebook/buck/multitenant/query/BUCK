@@ -7,10 +7,10 @@ kotlin_test(
     resources = glob(["*.json"]),
     deps = [
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/multitenant/importer:importer",
         "//src/com/facebook/buck/multitenant/query:query",
         "//src/com/facebook/buck/multitenant/service:service",
         "//src/com/facebook/buck/query:query",
-        "//test/com/facebook/buck/multitenant/service:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],

@@ -16,10 +16,17 @@
 
 package com.facebook.buck.multitenant.service
 
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
+import com.facebook.buck.core.model.UnconfiguredBuildTarget
+import com.facebook.buck.multitenant.importer.FAKE_RULE_TYPE
+import com.facebook.buck.multitenant.importer.ServiceRawTargetNode
+import com.facebook.buck.multitenant.importer.parseOrdinaryBuildTarget
+import com.google.common.collect.ImmutableMap
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.nio.file.Path
+import java.nio.file.Paths
 
 class MapDiffTest {
 
@@ -44,7 +51,7 @@ class MapDiffTest {
 
     @Test
     fun nonEmptyOldRulesWithEmptyNewRules() {
-        val oldRules = setOf(createRule("one" , intArrayOf(1)), createRule("two", intArrayOf(2, 3)))
+        val oldRules = setOf(createRule("one", intArrayOf(1)), createRule("two", intArrayOf(2, 3)))
         val newRules = setOf<InternalRawBuildRule>()
         val deltas = diffRules(oldRules, newRules)
         assertEquals(setOf(
@@ -93,7 +100,7 @@ class MapDiffTest {
     fun detectModifiedRulesWithMoreNewRules() {
         val oldRules = setOf(
                 createRule("foo", intArrayOf(1)),
-                        createRule("bar", intArrayOf(2)),
+                createRule("bar", intArrayOf(2)),
                 createRule("baz", intArrayOf(4, 5)))
         val newRules = setOf(
                 createRule("foo", intArrayOf(1)),
@@ -116,4 +123,19 @@ class MapDiffTest {
                 "equality, these two maps are not .equals() to one another even though they are " +
                 "'contentEquals' to one another.", buildRules1, buildRules2)
     }
+}
+
+private val BUILD_FILE_DIRECTORY: Path = Paths.get("foo")
+private val BUILD_TARGET_PARSER: ((shortOrFullyQualifiedName: String) -> UnconfiguredBuildTarget) = {
+    parseOrdinaryBuildTarget("//%s:%s".format(BUILD_FILE_DIRECTORY, it))
+}
+
+private fun createBuildTarget(shortName: String): UnconfiguredBuildTarget {
+    return BUILD_TARGET_PARSER(shortName)
+}
+
+private fun createRule(shortName: String, deps: BuildTargetSet): InternalRawBuildRule {
+    val buildTarget = createBuildTarget(shortName)
+    val node = ServiceRawTargetNode(buildTarget, FAKE_RULE_TYPE, ImmutableMap.of())
+    return InternalRawBuildRule(node, deps)
 }
