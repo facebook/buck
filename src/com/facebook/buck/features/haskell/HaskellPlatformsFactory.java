@@ -23,6 +23,7 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Paths;
@@ -41,7 +42,7 @@ public class HaskellPlatformsFactory {
   }
 
   private HaskellPlatform getPlatform(String section, UnresolvedCxxPlatform unresolvedCxxPlatform) {
-    CxxPlatform cxxPlatform = unresolvedCxxPlatform.getLegacyTotallyUnsafe();
+    CxxPlatform cxxPlatform = LegacyToolchainProvider.getLegacyTotallyUnsafe(unresolvedCxxPlatform);
 
     return HaskellPlatform.builder()
         .setHaskellVersion(HaskellVersion.of(haskellBuckConfig.getCompilerMajorVersion(section)))

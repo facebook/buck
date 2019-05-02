@@ -28,6 +28,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.rules.tool.config.ToolConfig;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
@@ -122,7 +123,7 @@ public class OcamlToolchainFactory implements ToolchainFactory<OcamlToolchain> {
             cxxPlatform ->
                 getPlatform(
                     context,
-                    cxxPlatform.getLegacyTotallyUnsafe(),
+                    LegacyToolchainProvider.getLegacyTotallyUnsafe(cxxPlatform),
                     getSection(cxxPlatform.getFlavor())));
     OcamlPlatform defaultOcamlPlatform = ocamlPlatforms.getValue(defaultCxxPlatform.getFlavor());
 

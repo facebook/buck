@@ -48,6 +48,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.halide.HalideBuckConfig;
@@ -488,7 +489,8 @@ public class XCodeProjectCommandHelper {
               .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
 
       CxxPlatform defaultCxxPlatform =
-          cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getLegacyTotallyUnsafe();
+          LegacyToolchainProvider.getLegacyTotallyUnsafe(
+              cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
       Cell workspaceCell = cell.getCell(inputTarget);
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(

@@ -27,6 +27,7 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.util.immutables.BuckStyleTuple;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -80,12 +81,12 @@ abstract class AbstractGoPlatformFactory {
   public GoPlatform getPlatform(String section, Flavor flavor) {
     Path goRoot = getGoRoot(section);
     CxxPlatform cxxPlatform =
-        getBuckConfig()
-            .getValue(section, "cxx_platform")
-            .map(InternalFlavor::of)
-            .map(getCxxPlatforms()::getValue)
-            .orElse(getDefaultCxxPlatform())
-            .getLegacyTotallyUnsafe();
+        LegacyToolchainProvider.getLegacyTotallyUnsafe(
+            getBuckConfig()
+                .getValue(section, "cxx_platform")
+                .map(InternalFlavor::of)
+                .map(getCxxPlatforms()::getValue)
+                .orElse(getDefaultCxxPlatform()));
     return GoPlatform.builder()
         .setFlavor(flavor)
         .setGoOs(getOs(section))

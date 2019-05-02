@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.google.common.base.Verify;
 
 /**
  * Used by descriptions to properly handle {@link CxxPlatform}. During parsing/configuration only
@@ -50,18 +49,4 @@ public interface UnresolvedCxxPlatform extends FlavorConvertible {
    */
   // TODO(cjhopman): delete this.
   Iterable<? extends BuildTarget> getLinkerParseTimeDeps(TargetConfiguration targetConfiguration);
-
-  /**
-   * This definitely shouldn't exist. Currently, there are cases where we require resolving the
-   * CxxPlatform before graph construction. This is mostly just for other platform-like things that
-   * reference the cxx one.
-   */
-  // TODO(cjhopman): delete this.
-  default CxxPlatform getLegacyTotallyUnsafe() {
-    Verify.verify(
-        this instanceof StaticUnresolvedCxxPlatform,
-        "Resolving the CxxPlatform without a BuildRuleResolver is totally unsupported. "
-            + "It only sort of happens to work with static cxx platforms.");
-    return ((StaticUnresolvedCxxPlatform) this).getCxxPlatform();
-  }
 }

@@ -24,6 +24,7 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.rules.tool.config.ToolConfig;
@@ -106,6 +107,8 @@ public class LuaBuckConfig {
     return cxxPlatforms.convert(
         LuaPlatform.FLAVOR_DOMAIN_NAME,
         platformProvider ->
-            getPlatform(targetConfiguration, platformProvider.getLegacyTotallyUnsafe()));
+            getPlatform(
+                targetConfiguration,
+                LegacyToolchainProvider.getLegacyTotallyUnsafe(platformProvider)));
   }
 }
