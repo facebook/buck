@@ -354,12 +354,10 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<SourcePath> sources,
       ImmutableList<StringWithMacros> flags) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
             buildTarget,
             graphBuilder,
-            ruleFinder,
             pathResolver,
             cxxPlatform,
             wrapSourcePathsWithFlags(sources),

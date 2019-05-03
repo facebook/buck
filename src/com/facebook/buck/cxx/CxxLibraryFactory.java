@@ -495,7 +495,7 @@ public class CxxLibraryFactory {
             pic)
         .requirePreprocessAndCompileRules(
             CxxDescriptionEnhancer.parseCxxSources(
-                buildTarget, graphBuilder, ruleFinder, sourcePathResolver, cxxPlatform, args));
+                buildTarget, graphBuilder, sourcePathResolver, cxxPlatform, args));
   }
 
   private static NativeLinkableInput getSharedLibraryNativeLinkTargetInput(

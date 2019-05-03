@@ -122,7 +122,7 @@ public class CxxLuaExtensionDescription
     // Extract all C/C++ sources from the constructor arg.
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(
-            buildTarget, graphBuilder, ruleFinder, pathResolver, cxxPlatform, args);
+            buildTarget, graphBuilder, pathResolver, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
             buildTarget, graphBuilder, ruleFinder, pathResolver, Optional.of(cxxPlatform), args);

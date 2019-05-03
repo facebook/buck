@@ -563,8 +563,7 @@ public class HaskellDescriptionUtils {
     ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
 
     HaskellSources srcs =
-        HaskellSources.from(
-            buildTarget, graphBuilder, pathResolver, ruleFinder, platform, "srcs", argSrcs);
+        HaskellSources.from(buildTarget, graphBuilder, pathResolver, platform, "srcs", argSrcs);
 
     return HaskellGhciRule.from(
         buildTarget,

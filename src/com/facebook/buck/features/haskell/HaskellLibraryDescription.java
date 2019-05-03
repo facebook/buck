@@ -156,7 +156,7 @@ public class HaskellLibraryDescription
         Optional.of(getPackageInfo(platform, buildTarget)),
         args.getCompilerFlags(),
         HaskellSources.from(
-            buildTarget, graphBuilder, pathResolver, ruleFinder, platform, "srcs", args.getSrcs()));
+            buildTarget, graphBuilder, pathResolver, platform, "srcs", args.getSrcs()));
   }
 
   private Archive createStaticLibrary(
@@ -543,13 +543,7 @@ public class HaskellLibraryDescription
             baseParams,
             ruleFinder,
             HaskellSources.from(
-                baseTarget,
-                graphBuilder,
-                pathResolver,
-                ruleFinder,
-                platform,
-                "srcs",
-                args.getSrcs()),
+                baseTarget, graphBuilder, pathResolver, platform, "srcs", args.getSrcs()),
             platform.getHaddock().resolve(graphBuilder, baseTarget.getTargetConfiguration()),
             args.getHaddockFlags(),
             args.getCompilerFlags(),

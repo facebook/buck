@@ -272,8 +272,8 @@ public class RustCompileUtils {
         args.build(),
         depArgs.build(),
         linkerArgs.build(),
-        CxxGenruleDescription.fixupSourcePaths(graphBuilder, ruleFinder, cxxPlatform, sources),
-        CxxGenruleDescription.fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, rootModule),
+        CxxGenruleDescription.fixupSourcePaths(graphBuilder, cxxPlatform, sources),
+        CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, rootModule),
         rustConfig.getRemapSrcPaths());
   }
 
@@ -415,7 +415,6 @@ public class RustCompileUtils {
             buildTarget,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             cxxPlatform,
             crate,
             crateRoot,
@@ -623,7 +622,6 @@ public class RustCompileUtils {
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       String crate,
       Optional<SourcePath> crateRoot,
@@ -631,7 +629,7 @@ public class RustCompileUtils {
       ImmutableSortedSet<SourcePath> srcs) {
 
     ImmutableSortedSet<SourcePath> fixedSrcs =
-        CxxGenruleDescription.fixupSourcePaths(graphBuilder, ruleFinder, cxxPlatform, srcs);
+        CxxGenruleDescription.fixupSourcePaths(graphBuilder, cxxPlatform, srcs);
 
     Optional<SourcePath> rootModule =
         crateRoot

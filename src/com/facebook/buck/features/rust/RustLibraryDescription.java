@@ -113,7 +113,6 @@ public class RustLibraryDescription
             buildTarget,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             rustPlatform.getCxxPlatform(),
             crate,
             args.getCrateRoot(),

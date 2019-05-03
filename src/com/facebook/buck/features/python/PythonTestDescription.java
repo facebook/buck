@@ -259,7 +259,6 @@ public class PythonTestDescription
         PythonUtil.getModules(
             buildTarget,
             graphBuilder,
-            ruleFinder,
             pathResolver,
             pythonPlatform,
             cxxPlatform,
@@ -274,7 +273,6 @@ public class PythonTestDescription
         PythonUtil.getModules(
             buildTarget,
             graphBuilder,
-            ruleFinder,
             pathResolver,
             pythonPlatform,
             cxxPlatform,

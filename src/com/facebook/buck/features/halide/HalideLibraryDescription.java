@@ -149,7 +149,6 @@ public class HalideLibraryDescription
         CxxDescriptionEnhancer.parseCxxSources(
             buildTarget,
             graphBuilder,
-            ruleFinder,
             pathResolver,
             cxxPlatform,
             halideSources,

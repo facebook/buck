@@ -251,7 +251,7 @@ public final class CxxInferEnhancer {
     SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return CxxDescriptionEnhancer.parseCxxSources(
-        buildTarget, graphBuilder, ruleFinder, pathResolver, cxxPlatform, args);
+        buildTarget, graphBuilder, pathResolver, cxxPlatform, args);
   }
 
   private <T extends BuildRule> ImmutableSet<T> requireTransitiveDependentLibraries(

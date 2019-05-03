@@ -130,11 +130,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    *     refers to a {@link CxxGenrule} with the given {@code platform} flavor applied.
    */
   public static SourcePath fixupSourcePath(
-      ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      CxxPlatform platform,
-      SourcePath path) {
-    Optional<BuildRule> rule = ruleFinder.getRule(path);
+      ActionGraphBuilder graphBuilder, CxxPlatform platform, SourcePath path) {
+    Optional<BuildRule> rule = graphBuilder.getSourcePathRuleFinder().getRule(path);
     if (rule.isPresent() && rule.get() instanceof CxxGenrule) {
       Genrule platformRule =
           (Genrule)
@@ -146,39 +143,31 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   }
 
   public static ImmutableList<SourcePath> fixupSourcePaths(
-      ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
-      ImmutableList<SourcePath> paths) {
+      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, ImmutableList<SourcePath> paths) {
     ImmutableList.Builder<SourcePath> fixed = ImmutableList.builder();
     for (SourcePath path : paths) {
-      fixed.add(fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, path));
+      fixed.add(fixupSourcePath(graphBuilder, cxxPlatform, path));
     }
     return fixed.build();
   }
 
   public static ImmutableSortedSet<SourcePath> fixupSourcePaths(
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       ImmutableSortedSet<SourcePath> paths) {
     ImmutableSortedSet.Builder<SourcePath> fixed =
         new ImmutableSortedSet.Builder<>(Objects.requireNonNull(paths.comparator()));
     for (SourcePath path : paths) {
-      fixed.add(fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, path));
+      fixed.add(fixupSourcePath(graphBuilder, cxxPlatform, path));
     }
     return fixed.build();
   }
 
   public static <T> ImmutableMap<T, SourcePath> fixupSourcePaths(
-      ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
-      CxxPlatform cxxPlatform,
-      ImmutableMap<T, SourcePath> paths) {
+      ActionGraphBuilder graphBuilder, CxxPlatform cxxPlatform, ImmutableMap<T, SourcePath> paths) {
     ImmutableMap.Builder<T, SourcePath> fixed = ImmutableMap.builder();
     for (Map.Entry<T, SourcePath> ent : paths.entrySet()) {
-      fixed.put(
-          ent.getKey(), fixupSourcePath(graphBuilder, ruleFinder, cxxPlatform, ent.getValue()));
+      fixed.put(ent.getKey(), fixupSourcePath(graphBuilder, cxxPlatform, ent.getValue()));
     }
     return fixed.build();
   }

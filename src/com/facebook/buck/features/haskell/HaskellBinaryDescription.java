@@ -272,13 +272,7 @@ public class HaskellBinaryDescription
                 Optional.empty(),
                 args.getCompilerFlags(),
                 HaskellSources.from(
-                    buildTarget,
-                    graphBuilder,
-                    pathResolver,
-                    ruleFinder,
-                    platform,
-                    "srcs",
-                    args.getSrcs())));
+                    buildTarget, graphBuilder, pathResolver, platform, "srcs", args.getSrcs())));
     linkInputsBuilder.addAll(SourcePathArg.from(compileRule.getObjects()));
 
     ImmutableList<Arg> linkInputs = linkInputsBuilder.build();

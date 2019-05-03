@@ -95,7 +95,6 @@ public class PythonUtil {
   public static ImmutableMap<Path, SourcePath> getModules(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
@@ -107,7 +106,6 @@ public class PythonUtil {
       Optional<ImmutableMap<BuildTarget, Version>> versions) {
     return CxxGenruleDescription.fixupSourcePaths(
         graphBuilder,
-        ruleFinder,
         cxxPlatform,
         ImmutableMap.<Path, SourcePath>builder()
             .putAll(

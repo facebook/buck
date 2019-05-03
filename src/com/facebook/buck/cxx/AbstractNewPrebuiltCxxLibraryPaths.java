@@ -20,7 +20,6 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -107,10 +106,7 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
       Optional<VersionMatchedCollection<SourcePath>> versionedLib) {
     Optional<SourcePath> path =
         getParameter(parameter, lib, cxxPlatform, platformLib, selectedVersions, versionedLib);
-    return path.map(
-        p ->
-            CxxGenruleDescription.fixupSourcePath(
-                graphBuilder, new SourcePathRuleFinder(graphBuilder), cxxPlatform, p));
+    return path.map(p -> CxxGenruleDescription.fixupSourcePath(graphBuilder, cxxPlatform, p));
   }
 
   @Override
@@ -180,9 +176,6 @@ abstract class AbstractNewPrebuiltCxxLibraryPaths implements PrebuiltCxxLibraryP
             selectedVersions,
             getVersionedHeaderDirs());
     return CxxGenruleDescription.fixupSourcePaths(
-        graphBuilder,
-        new SourcePathRuleFinder(graphBuilder),
-        cxxPlatform,
-        dirs.orElse(ImmutableList.of()));
+        graphBuilder, cxxPlatform, dirs.orElse(ImmutableList.of()));
   }
 }

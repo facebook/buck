@@ -46,7 +46,6 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       HaskellPlatform platform,
       String parameter,
       SourceSortedSet sources) {
@@ -56,7 +55,7 @@ abstract class AbstractHaskellSources implements AddsToRuleKey {
       builder.putModuleMap(
           ent.getKey().substring(0, ent.getKey().lastIndexOf('.')).replace(File.separatorChar, '.'),
           CxxGenruleDescription.fixupSourcePath(
-              graphBuilder, ruleFinder, platform.getCxxPlatform(), ent.getValue()));
+              graphBuilder, platform.getCxxPlatform(), ent.getValue()));
     }
     return builder.build();
   }

@@ -124,7 +124,6 @@ public class PythonLibraryDescription
                   PythonUtil.getModules(
                       baseTarget,
                       graphBuilder,
-                      ruleFinder,
                       pathResolver,
                       pythonPlatform.getValue(),
                       cxxPlatform
@@ -139,7 +138,6 @@ public class PythonLibraryDescription
                   PythonUtil.getModules(
                       baseTarget,
                       graphBuilder,
-                      ruleFinder,
                       pathResolver,
                       pythonPlatform.getValue(),
                       cxxPlatform
