@@ -25,6 +25,13 @@ import java.util.Optional;
 
 /** An abstract implementation of BuildTargetResolver that simplifies concrete implementations. */
 public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
+
+  private final SourcePathRuleFinder sourcePathRuleFinder;
+
+  protected AbstractBuildRuleResolver() {
+    sourcePathRuleFinder = new SourcePathRuleFinder(this);
+  }
+
   @Override
   public <T> Optional<T> getRuleOptionalWithType(BuildTarget buildTarget, Class<T> cls) {
     return getRuleOptional(buildTarget)
@@ -38,6 +45,11 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
                     buildTarget, cls, rule.getClass());
               }
             });
+  }
+
+  @Override
+  public SourcePathRuleFinder getSourcePathRuleFinder() {
+    return sourcePathRuleFinder;
   }
 
   @Override
