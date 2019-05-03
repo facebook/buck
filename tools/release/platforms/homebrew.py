@@ -22,7 +22,7 @@ import tempfile
 
 import requests
 
-from platforms.common import ReleaseException, run, temp_move_file
+from platforms.common import ReleaseException, run
 from releases import get_version_and_timestamp_from_release
 
 
@@ -166,40 +166,18 @@ def build_bottle_file(
     """
     brew_target = tap_repository + "/buck"
 
-    # So, if buck wasn't linked to begin with, we can't unlink it. Ideally the install
-    # fails down the road. There is, so far as I could tell, no way to verify if
-    # a formula is linked :/
-    logging.info("Unlinking buck")
-    brew(homebrew_dir, ["unlink", brew_target], tap_path, check=False)
-
     logging.info("Building bottle")
-    # If there is still a buck file that exists, move it out of the way for now
-    # This should generally not be an issue outside of FB
-    with temp_move_file("/usr/local/bin/buck") as moved:
-        # Cool, so install --force will still not rebuild. Uninstall, and just don't
-        # care if the uninstall fails
-        brew(
-            homebrew_dir,
-            ["uninstall", "--force", "--build-bottle", brew_target],
-            tap_path,
-            check=False,
-        )
-        brew(
-            homebrew_dir,
-            ["install", "--force", "--build-bottle", brew_target],
-            tap_path,
-        )
-        logging.info("Creating bottle file")
-        brew(
-            homebrew_dir,
-            ["bottle", "--no-rebuild", "--skip-relocation", brew_target],
-            tap_path,
-        )
-        logging.info("Created bottle file")
-        if moved:
-            # Make sure to unlink again so that we can move the original file back
-            logging.info("Unlinking buck again")
-            brew(homebrew_dir, ["unlink", brew_target], tap_path)
+    # Cool, so install --force will still not rebuild. Uninstall, and just don't
+    # care if the uninstall fails
+    brew(homebrew_dir, ["uninstall", "--force", brew_target], tap_path, check=False)
+    brew(homebrew_dir, ["install", "--force", "--build-bottle", brew_target], tap_path)
+    logging.info("Creating bottle file")
+    brew(
+        homebrew_dir,
+        ["bottle", "--no-rebuild", "--skip-relocation", brew_target],
+        tap_path,
+    )
+    logging.info("Created bottle file")
 
     bottle_filename = "buck-{ver}.{macos_ver}.bottle.tar.gz".format(
         ver=release_version, macos_ver=target_macos_version
@@ -299,21 +277,18 @@ def validate_tap(homebrew_dir, tap_repository, version):
     logging.info("Validating that brew installs with new tap information")
     brew_target = tap_repository + "/buck"
     brew(homebrew_dir, ["uninstall", "--force", brew_target])
-    with temp_move_file("/usr/local/bin/buck") as moved:
-        brew(homebrew_dir, ["install", brew_target])
-        output = (
-            brew(homebrew_dir, ["info", brew_target], capture_output=True)
-            .stdout.decode("utf-8")
-            .splitlines()[0]
-        )
-        if moved:
-            brew(homebrew_dir, ["uninstall", brew_target])
-        if "{}/buck: stable {}".format(tap_repository, version) not in output:
-            raise ReleaseException(
-                "Expected version {} to be installed, but got this from `brew info {}`: {}".format(
-                    version, tap_repository, output
-                )
+    brew(homebrew_dir, ["install", brew_target])
+    output = (
+        brew(homebrew_dir, ["info", brew_target], capture_output=True)
+        .stdout.decode("utf-8")
+        .splitlines()[0]
+    )
+    if "{}/buck: stable {}".format(tap_repository, version) not in output:
+        raise ReleaseException(
+            "Expected version {} to be installed, but got this from `brew info {}`: {}".format(
+                version, tap_repository, output
             )
+        )
 
 
 def audit_tap(homebrew_dir, tap_repository):

@@ -423,6 +423,9 @@ def main():
             )
         if args.output_dir:
             output_dir = args.output_dir
+            if not os.path.exists(output_dir):
+                logging.info("{} does not exist. Creating it".format(output_dir))
+                os.makedirs(output_dir, exist_ok=True)
         else:
             temp_dir = tempfile.mkdtemp()
             output_dir = temp_dir
