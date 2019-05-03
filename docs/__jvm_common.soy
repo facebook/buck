@@ -219,3 +219,28 @@
   {/param}
 {/call}
 {/template}
+
+/***/
+{template .plugins}
+{call buck.arg}
+  {param name: 'plugins' /}
+  {param default: '[]' /}
+  {param desc}
+     <p><code>java_plugin</code> or <code>java_annotation_processor</code> rules
+     to run together with compilation.</p>
+  {/param}
+{/call}
+{/template}
+
+/***/
+{template .plugins_arguments}
+{call buck.arg}
+  {param name: 'plugins_arguments' /}
+  {param default: '{}' /}
+  {param desc}
+     <p><code>java_plugin</code> rules arguments to be passed to corresponding
+     rules on <code>plugins</plugins>. It maps the plugin name passed as `plugin_name`
+     on the respective rule to a list of arguments.</p>
+  {/param}
+{/call}
+{/template}

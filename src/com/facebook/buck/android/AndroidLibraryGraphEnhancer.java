@@ -124,8 +124,13 @@ public class AndroidLibraryGraphEnhancer {
         graphBuilder.computeIfAbsent(
             dummyRDotJavaBuildTarget,
             ignored -> {
-              JavacOptions filteredOptions =
-                  javacOptions.withExtraArguments(Collections.emptyList());
+              // No need to run annotation processor or javac plugins
+              JavacOptions filteredOptions = JavacOptions.builder()
+                  .from(javacOptions)
+                  .setExtraArguments(Collections.emptyList())
+                  .setJavaAnnotationProcessorParams(JavacPluginParams.EMPTY)
+                  .setStandardJavacPluginParams(JavacPluginParams.EMPTY)
+                  .build();
 
               JavacToJarStepFactory compileToJarStepFactory =
                   new JavacToJarStepFactory(javac, filteredOptions, ExtraClasspathProvider.EMPTY);

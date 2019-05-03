@@ -239,7 +239,7 @@ abstract class AbstractJavacOptions implements AddsToRuleKey {
         String pluginArguments = getJavacPluginArguments()
             .getOrDefault(pluginName, ImmutableList.of())
             .stream()
-            .reduce(" ", (s, s2) -> s + " " + s2);
+            .reduce("", (s, s2) -> s + " " + s2);
         optionsConsumer.addFlag("Xplugin:" + pluginName + pluginArguments);
       }
 
