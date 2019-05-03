@@ -16,20 +16,20 @@ import logging
 import os
 
 import requests
+
 from platforms.common import (
     ReleaseException,
     copy_from_docker_windows,
     docker,
     temp_file_with_contents,
-    temp_move_file,
 )
 from releases import get_version_and_timestamp_from_release
 
 
-def validate(windows_host, image_tag, nupkg_path):
+def validate(windows_host, docker_memory, docker_isolation, image_tag, nupkg_path):
     """ Spin up a fresh docker image, and make sure that the nupkg installs and runs """
     DOCKERFILE = r"""\
-FROM  microsoft/windowsservercore:1803
+FROM  mcr.microsoft.com/windows/servercore:1809
 SHELL ["powershell", "-command"]
 ARG version=
 ARG timestamp=
@@ -53,12 +53,22 @@ RUN buck --help
     with temp_file_with_contents(dockerfile_temp_path, dockerfile):
         docker(
             windows_host,
-            ["build", "-m", "2g", "-t", image_tag + "-validate", build_dir],
+            [
+                "build",
+                "--isolation=" + docker_isolation,
+                "-m",
+                docker_memory,
+                "-t",
+                image_tag + "-validate",
+                build_dir,
+            ],
         )
         docker(windows_host, ["rmi", image_tag + "-validate"])
 
 
-def build_chocolatey(repository, release, windows_host, output_dir):
+def build_chocolatey(
+    repository, release, windows_host, docker_memory, docker_isolation, output_dir
+):
     """
     Builds a .nupkg package in docker, and copies it to the host.
 
@@ -80,20 +90,19 @@ def build_chocolatey(repository, release, windows_host, output_dir):
 
     # Get the changelog from github rather than locally
     changelog_path = os.path.join(
-        "tools", "release", "platforms", "chocolatey", "Changelog.md"
+        "tools", "release", "platforms", "chocolatey", "Changelog.md.new"
     )
     changelog = release["body"].strip() or "Periodic release"
 
-    with temp_move_file(changelog_path), temp_file_with_contents(
-        changelog_path, changelog
-    ):
+    with temp_file_with_contents(changelog_path, changelog):
         logging.info("Building windows docker image...")
         docker(
             windows_host,
             [
                 "build",
+                "--isolation=" + docker_isolation,
                 "-m",
-                "2g",  # Default memory is 1G
+                docker_memory,  # Default memory is 1G
                 "-t",
                 image_tag,
                 "--build-arg",
@@ -110,7 +119,7 @@ def build_chocolatey(repository, release, windows_host, output_dir):
     copy_from_docker_windows(windows_host, image_tag, "/src/buck.nupkg", nupkg_path)
 
     logging.info("Validating that .nupkg installs...")
-    validate(windows_host, image_tag, nupkg_path)
+    validate(windows_host, docker_memory, docker_isolation, image_tag, nupkg_path)
 
     logging.info("Built .nupkg file at {}".format(nupkg_path))
     return nupkg_path

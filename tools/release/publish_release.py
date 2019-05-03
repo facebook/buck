@@ -142,6 +142,16 @@ def parse_args(args):
         help="If provided, the docker:port to connect to to build windows images",
     )
     parser.add_argument(
+        "--docker-windows-memory",
+        default="4g",
+        help="The memory argument to pass to docker for windows containers",
+    )
+    parser.add_argument(
+        "--docker-windows-isolation",
+        default="process",
+        help="The --isolation= argument for windows docker commands",
+    )
+    parser.add_argument(
         "--keep-temp-files",
         action="store_true",
         help="Keep temporary files regardless of success/failure",
@@ -354,7 +364,12 @@ def build(args, output_dir, release, github_token, homebrew_dir):
         )
     if args.build_chocolatey:
         chocolatey_file = build_chocolatey(
-            args.repository, release, args.docker_windows_host, output_dir
+            args.repository,
+            release,
+            args.docker_windows_host,
+            args.docker_windows_memory,
+            args.docker_windows_isolation,
+            output_dir,
         )
 
     return deb_file, homebrew_file, chocolatey_file
