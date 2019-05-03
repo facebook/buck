@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.builders;
 
 import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
@@ -176,9 +177,14 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
     }
 
     private void handleRemoteBuildFailedWithActionError(Optional<BuildResult> result) {
-      LOG.warn(
-          "Remote build failed so trying locally. The error was: [%s]", result.get().toString());
-      remoteBuildResult = Optional.of(Result.FAIL);
+      if (result.get().getStatus() == BuildRuleStatus.CANCELED || hasCancellationBeenRequested) {
+        LOG.warn("Remote build cancelled: [%s]", result.get().toString());
+        remoteBuildResult = Optional.of(Result.CANCELLED);
+      } else {
+        LOG.warn(
+            "Remote build failed so trying locally. The error was: [%s]", result.get().toString());
+        remoteBuildResult = Optional.of(Result.FAIL);
+      }
       remoteBuildErrorMessage = Optional.of(result.toString());
       fallbackBuildToLocalStrategy();
     }
