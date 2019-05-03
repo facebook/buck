@@ -43,7 +43,7 @@ from releases import (
 )
 
 TARGET_MACOS_VERSION = "yosemite"
-TARGET_MACOS_VERSION_SPEC = TARGET_MACOS_VERSION + "_or_later"
+TARGET_MACOS_VERSION_SPEC = TARGET_MACOS_VERSION
 
 
 def parse_args(args):
@@ -195,7 +195,11 @@ def parse_args(args):
         help=(
             "Where homebrew is (e.g. /usr/local). If not specified, homebrew will be "
             "installed in a separate, temporary directory that gets cleaned up after "
-            "building (unless --keep-temp-files is specified)"
+            "building (unless --keep-temp-files is specified). If --output-dir is "
+            "specified, homebrew will be installed in a subdirectory there. This can "
+            "be useful to ensure that tap directories are preserved and can be "
+            "validated and pushed to github if a first run fails, or if a "
+            "--no-upload-asset run is done"
         ),
     )
     parser.add_argument(
@@ -342,6 +346,7 @@ def build(args, output_dir, release, github_token, homebrew_dir):
         homebrew_file = build_bottle(
             homebrew_dir,
             release,
+            args.repository,
             args.tap_repository,
             args.homebrew_target_macos_version,
             args.homebrew_target_macos_version_spec,
@@ -423,6 +428,10 @@ def main():
             output_dir = temp_dir
         if args.homebrew_dir:
             homebrew_dir = args.homebrew_dir
+        elif args.output_dir:
+            homebrew_dir = os.path.abspath(
+                os.path.join(output_dir, "homebrew_" + version_tag)
+            )
         else:
             temp_homebrew_dir = tempfile.mkdtemp()
             homebrew_dir = temp_homebrew_dir

@@ -21,6 +21,7 @@ import shutil
 import tempfile
 
 import requests
+
 from platforms.common import ReleaseException, run, temp_move_file
 from releases import get_version_and_timestamp_from_release
 
@@ -86,7 +87,7 @@ def setup_tap(homebrew_dir, tap_repository):
 
 
 def update_formula_before_bottle(
-    release, release_version, release_timestamp, formula_path, tarball_sha256
+    repository, release_version, release_timestamp, formula_path, tarball_sha256
 ):
     """
     Updates `formula_path` with correct urls, version and sha for building a bottle
@@ -102,14 +103,14 @@ def update_formula_before_bottle(
     with open(formula_path, "r") as fin:
         all_data = fin.read()
         all_data = re.sub(
-            r"@@buck_version = .*$",
-            '@@buck_version = "{}"'.format(release_version),
+            r"BUCK_VERSION = .*$",
+            'BUCK_VERSION = "{}".freeze'.format(release_version),
             all_data,
             flags=re.MULTILINE,
         )
         all_data = re.sub(
-            r"@@buck_release_timestamp = .*$",
-            '@@buck_release_timestamp = "{}"'.format(release_timestamp),
+            r"BUCK_RELEASE_TIMESTAMP = .*$",
+            'BUCK_RELEASE_TIMESTAMP = "{}".freeze'.format(release_timestamp),
             all_data,
             flags=re.MULTILINE,
         )
@@ -119,12 +120,25 @@ def update_formula_before_bottle(
             all_data,
             flags=re.MULTILINE,
         )
+        # This is a wholly undocumented endpoint, but is not subject to ratelimiting
+        # See https://github.com/facebook/homebrew-fb/pull/33
         all_data = re.sub(
             r'  url "https://.+"$',
-            r'  url "{}"'.format(release["tarball_url"]),
+            r'  url "https://github.com/{repository}/archive/v#{{BUCK_VERSION}}.tar.gz"'.format(
+                repository=repository
+            ),
             all_data,
             flags=re.MULTILINE,
         )
+        all_data = re.sub(
+            r'    root_url "https://github.com/.*/releases/download/v#{BUCK_VERSION}"',
+            r'    root_url "https://github.com/{repository}/releases/download/v#{BUCK_VERSION}"'.format(
+                repository=repository
+            ),
+            all_data,
+            flags=re.MULTILINE,
+        )
+
     with open(formula_path, "w") as fout:
         fout.write(all_data)
 
@@ -302,6 +316,12 @@ def validate_tap(homebrew_dir, tap_repository, version):
             )
 
 
+def audit_tap(homebrew_dir, tap_repository):
+    logging.info("Running brew audit")
+    brew_target = tap_repository + "/buck"
+    brew(homebrew_dir, ["audit", brew_target])
+
+
 def publish_tap_changes(homebrew_dir, tap_repository, version):
     git_user, git_repo = tap_repository.split("/")
     full_git_repo = "{}/homebrew-{}".format(git_user, git_repo)
@@ -324,6 +344,7 @@ def log_about_manual_tap_push(homebrew_dir, tap_repository):
 def build_bottle(
     homebrew_dir,
     release,
+    repository,
     tap_repository,
     target_macos_version,
     target_macos_version_spec,
@@ -337,11 +358,16 @@ def build_bottle(
     formula_path = get_formula_path(homebrew_dir, tap_repository)
     tap_path = os.path.dirname(formula_path)
 
-    tarball_sha256 = fetch_tarball_sha256(release["tarball_url"])
+    # This is a wholly undocumented endpoint, but is not subject to ratelimiting
+    # See https://github.com/facebook/homebrew-fb/pull/33
+    undocumented_tarball_url = "https://github.com/{repository}/archive/{tag_name}.tar.gz".format(
+        repository=repository, tag_name=release["tag_name"]
+    )
+    tarball_sha256 = fetch_tarball_sha256(undocumented_tarball_url)
 
     # First, update the bottle to have the new version and tarball sha.
     update_formula_before_bottle(
-        release, release_version, release_timestamp, formula_path, tarball_sha256
+        repository, release_version, release_timestamp, formula_path, tarball_sha256
     )
 
     # Build the actual bottle file
@@ -357,5 +383,8 @@ def build_bottle(
     # Get the bottle file sha, and update the bottle formula
     bottle_sha = get_sha256(bottle_path)
     update_formula_after_bottle(formula_path, bottle_sha, target_macos_version_spec)
+
+    # Make sure that we still pass `brew audit`
+    audit_tap(homebrew_dir, tap_repository)
 
     return bottle_path
