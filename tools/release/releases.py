@@ -19,11 +19,12 @@ import tempfile
 import dateutil.parser
 import magic
 import requests
+
 from platforms.common import ReleaseException, run
 
 MESSAGE_PROMPT_TEMPLATE = """\
 # Add release notes below. Any lines starting with '#' will be ignored.
-This release as always includes many improvements and bug fixes.
+{default_message}
 
 # Commits since last release:
 #
@@ -203,19 +204,25 @@ def get_release_for_tag(repository, github_token, version_tag):
     return ret
 
 
-def prompt_for_message(summaries):
+def prompt_for_message(html_url, summaries):
     """
     Prompts the user for a release message in an editor, showing them the commits since
     last release, and returns what the user specified
 
     Args:
+        html_url:  The url to see the difference between the current commit and the
+                   commit for the previous release.
         summaries: The commit summaries to display to the user
     """
+    default_message = create_default_message(html_url)
     summaries_text = "\n".join(("# " + line for line in summaries))
+    full_message = MESSAGE_PROMPT_TEMPLATE.format(
+        default_message=default_message, commit_messages=summaries_text
+    )
     temp_fd, temp_path = tempfile.mkstemp()
     try:
         with open(temp_path, "w") as fout:
-            fout.write(MESSAGE_PROMPT_TEMPLATE.format(commit_messages=summaries_text))
+            fout.write(full_message)
         editor = os.environ.get("EDITOR", "vim")
         run([editor, temp_path])
         with open(temp_path, "r") as fin:
@@ -296,7 +303,7 @@ def create_new_release(
                 repository, github_token, latest_release_hash, master_commit
             )
         if should_prompt_for_message:
-            message = prompt_for_message(commit_summaries)
+            message = prompt_for_message(html_url, commit_summaries)
         else:
             message = create_default_message(html_url)
     release = create_release(
