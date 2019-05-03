@@ -67,7 +67,6 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
       SandboxExecutionStrategy sandboxExecutionStrategy,
       BuildRuleResolver resolver,
       BuildRuleParams params,
-      SourcePathRuleFinder ruleFinder,
       SourceSet srcs,
       Optional<Arg> cmd,
       Optional<Arg> bash,
@@ -101,7 +100,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;
-    BuildRule rule = ruleFinder.getRule(this.apk);
+    BuildRule rule = resolver.getSourcePathRuleFinder().getRule(this.apk);
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;
   }

@@ -99,7 +99,7 @@ public class AndroidResourceDescription
       BuildRuleParams params,
       AndroidResourceDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
     if (flavors.contains(RESOURCES_SYMLINK_TREE_FLAVOR)) {

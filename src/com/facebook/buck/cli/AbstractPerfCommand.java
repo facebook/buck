@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -195,7 +194,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
       if (rule instanceof InitializableFromDisk) {
         ((InitializableFromDisk<?>) rule)
             .initializeFromDisk(
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));
+                DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
       }
     }
   }
@@ -217,7 +216,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                   // reflect reality.
                   if (node instanceof HasRuntimeDeps) {
                     ((HasRuntimeDeps) node)
-                        .getRuntimeDeps(new SourcePathRuleFinder(graphBuilder))
+                        .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
                         .map(graphBuilder::getRule)
                         .forEach(depsBuilder::add);
                   }

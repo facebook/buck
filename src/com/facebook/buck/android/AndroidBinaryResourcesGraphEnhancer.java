@@ -131,7 +131,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.graphBuilder = graphBuilder;
-    this.ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    this.ruleFinder = graphBuilder.getSourcePathRuleFinder();
     this.exopackageForResources = exopackageForResources;
     this.resourceFilter = resourceFilter;
     this.resourceCompressionMode = resourceCompressionMode;

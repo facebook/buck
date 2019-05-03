@@ -69,7 +69,7 @@ public class AndroidBuildConfigDescription
       BuildRuleParams params,
       AndroidBuildConfigDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     if (JavaAbis.isClassAbiTarget(buildTarget)) {
       BuildTarget configTarget = JavaAbis.getLibraryTarget(buildTarget);
       BuildRule configRule = graphBuilder.requireRule(configTarget);
@@ -132,7 +132,7 @@ public class AndroidBuildConfigDescription
     //
     // This fixes the issue, but deviates from the common pattern where a build rule has at most
     // one flavored version of itself for a given flavor.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     BuildTarget buildConfigBuildTarget;
     if (!buildTarget.isFlavored()) {
       // android_build_config() case.

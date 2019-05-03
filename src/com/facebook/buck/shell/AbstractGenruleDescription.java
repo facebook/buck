@@ -163,7 +163,7 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             args);
     if (maybeExpanders.isPresent()) {
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+      SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
       StringWithMacrosConverter converter =
           StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), expanders);
       Function<StringWithMacros, Arg> toArg =

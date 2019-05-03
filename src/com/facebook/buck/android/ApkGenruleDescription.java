@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -71,7 +70,6 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
     Supplier<? extends SortedSet<BuildRule>> originalExtraDeps = params.getExtraDeps();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     return new ApkGenrule(
         buildTarget,
         projectFilesystem,
@@ -84,7 +82,6 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
                         .addAll(originalExtraDeps.get())
                         .add(apk)
                         .build())),
-        ruleFinder,
         args.getSrcs(),
         cmd,
         bash,

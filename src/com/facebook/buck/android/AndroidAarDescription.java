@@ -109,7 +109,7 @@ public class AndroidAarDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     buildTarget.assertUnflavored();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     ImmutableSortedSet.Builder<BuildRule> aarExtraDepsBuilder =
         new ImmutableSortedSet.Builder<BuildRule>(Ordering.natural())
             .addAll(originalBuildRuleParams.getExtraDeps().get());

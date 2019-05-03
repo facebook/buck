@@ -229,7 +229,7 @@ public class ActionGraphProvider {
       BuildRuleResolver buildRuleResolver,
       RuleKeyFieldLoader fieldLoader,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathRuleFinder ruleFinder = buildRuleResolver.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ContentAgnosticRuleKeyFactory factory =
         new ContentAgnosticRuleKeyFactory(fieldLoader, pathResolver, ruleFinder, ruleKeyLogger);

@@ -55,7 +55,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       BuildTarget target,
       CellPathResolver cellRoots,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       BuildRuleParams params,
       AppleNativeTargetDescriptionArg args,
       ProjectFilesystem filesystem,
@@ -143,7 +142,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
   public static BuildRule createObjCGeneratedHeaderBuildRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       HeaderVisibility headerVisibility) {
@@ -153,7 +151,11 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
 
     return HeaderSymlinkTreeWithHeaderMap.create(
-        buildTarget, projectFilesystem, outputPath, headers, ruleFinder);
+        buildTarget,
+        projectFilesystem,
+        outputPath,
+        headers,
+        graphBuilder.getSourcePathRuleFinder());
   }
 
   public static ImmutableMap<Path, SourcePath> getObjCGeneratedHeader(

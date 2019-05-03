@@ -267,7 +267,6 @@ public class AppleLibraryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       AppleNativeTargetDescriptionArg args,
       Optional<AppleLibrarySwiftDelegate> swiftDelegate) {
@@ -291,7 +290,6 @@ public class AppleLibraryDescription
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
                     buildTarget,
                     projectFilesystem,
-                    ruleFinder,
                     graphBuilder,
                     cxxPlatform,
                     HeaderVisibility.PUBLIC));
@@ -306,7 +304,6 @@ public class AppleLibraryDescription
                 AppleLibraryDescriptionSwiftEnhancer.createObjCGeneratedHeaderBuildRule(
                     buildTarget,
                     projectFilesystem,
-                    ruleFinder,
                     graphBuilder,
                     cxxPlatform,
                     HeaderVisibility.PRIVATE));
@@ -340,7 +337,6 @@ public class AppleLibraryDescription
                     buildTarget,
                     cellRoots,
                     graphBuilder,
-                    ruleFinder,
                     params,
                     args,
                     projectFilesystem,
@@ -374,7 +370,6 @@ public class AppleLibraryDescription
             context.getProjectFilesystem(),
             params,
             graphBuilder,
-            new SourcePathRuleFinder(graphBuilder),
             context.getCellPathResolver(),
             args,
             Optional.empty());

@@ -72,7 +72,7 @@ abstract class AbstractRuleKeyFactories {
       TrackedRuleKeyCache<RuleKey> defaultRuleKeyFactoryCache,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     RuleKeyFieldLoader fieldLoader = new RuleKeyFieldLoader(ruleKeyConfiguration);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
+    SourcePathRuleFinder ruleFinder = resolver.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     return RuleKeyFactories.of(
         new DefaultRuleKeyFactory(
