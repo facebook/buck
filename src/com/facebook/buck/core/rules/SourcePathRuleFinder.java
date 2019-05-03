@@ -21,8 +21,8 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.Optionals;
 import com.facebook.buck.util.RichStream;
 import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class SourcePathRuleFinder {
@@ -33,23 +33,28 @@ public class SourcePathRuleFinder {
     this.ruleResolver = ruleResolver;
   }
 
-  public final Function<SourcePath, Stream<BuildRule>> FILTER_BUILD_RULE_INPUTS =
-      path -> Optionals.toStream(getRule(path));
-
   public BuildRuleResolver getRuleResolver() {
     return ruleResolver;
   }
 
   public ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources) {
     return RichStream.from(sources)
-        .flatMap(FILTER_BUILD_RULE_INPUTS)
+        .map(this::getRule)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
         .collect(ImmutableSet.toImmutableSet());
   }
 
   public ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
-    return RichStream.of(sources)
-        .flatMap(FILTER_BUILD_RULE_INPUTS)
-        .collect(ImmutableSet.toImmutableSet());
+    return filterBuildRuleInputs(Arrays.asList(sources));
+  }
+
+  public Stream<BuildRule> filterBuildRuleInputs(Stream<SourcePath> sources) {
+    return sources.map(this::getRule).filter(Optional::isPresent).map(Optional::get);
+  }
+
+  public Stream<BuildRule> filterBuildRuleInputs(Optional<SourcePath> sourcePath) {
+    return filterBuildRuleInputs(Optionals.toStream(sourcePath));
   }
 
   /**

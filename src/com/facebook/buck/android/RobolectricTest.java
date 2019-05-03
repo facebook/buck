@@ -309,11 +309,11 @@ public class RobolectricTest extends JavaTest {
                 // exists)
                 // to run this test.
                 Optionals.toStream(optionalDummyRDotJava),
-                Optionals.toStream(optionalDummyRDotJava)
-                    .flatMap(input -> input.getAndroidResourceDeps().stream())
-                    .flatMap(input -> Stream.of(input.getRes(), input.getAssets()))
-                    .filter(Objects::nonNull)
-                    .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS),
+                ruleFinder.filterBuildRuleInputs(
+                    Optionals.toStream(optionalDummyRDotJava)
+                        .flatMap(input -> input.getAndroidResourceDeps().stream())
+                        .flatMap(input -> Stream.of(input.getRes(), input.getAssets()))
+                        .filter(Objects::nonNull)),
                 // It's possible that the user added some tool as a dependency, so make sure we
                 // promote this rules first-order deps to runtime deps, so that these potential
                 // tools are available when this test runs.

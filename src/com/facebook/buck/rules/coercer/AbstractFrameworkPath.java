@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.util.Optionals;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import java.nio.file.Path;
@@ -63,9 +62,7 @@ abstract class AbstractFrameworkPath implements Comparable<AbstractFrameworkPath
   public abstract Optional<SourcePath> getSourcePath();
 
   public Iterator<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
-    return Optionals.toStream(getSourcePath())
-        .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-        .iterator();
+    return ruleFinder.filterBuildRuleInputs(getSourcePath()).iterator();
   }
 
   public Path getFileName(Function<SourcePath, Path> resolver) {

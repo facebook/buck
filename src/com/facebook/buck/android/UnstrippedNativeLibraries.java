@@ -107,8 +107,6 @@ public class UnstrippedNativeLibraries extends AbstractBuildRuleWithDeclaredAndE
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(SourcePathRuleFinder ruleFinder) {
-    return inputs.stream()
-        .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-        .map(BuildRule::getBuildTarget);
+    return ruleFinder.filterBuildRuleInputs(inputs.stream()).map(BuildRule::getBuildTarget);
   }
 }

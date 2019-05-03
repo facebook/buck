@@ -86,9 +86,10 @@ public class AppleDsym extends AbstractBuildRule
     this.dsymOutputPath = dsymOutputPath;
     this.isCacheable = isCacheable;
     this.buildDeps =
-        Stream.concat(
-                Stream.of(this.unstrippedBinarySourcePath), this.additionalSymbolDeps.stream())
-            .flatMap(sourcePathRuleFinder.FILTER_BUILD_RULE_INPUTS)
+        sourcePathRuleFinder
+            .filterBuildRuleInputs(
+                Stream.concat(
+                    Stream.of(this.unstrippedBinarySourcePath), this.additionalSymbolDeps.stream()))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     checkFlavorCorrectness(buildTarget);
   }

@@ -78,9 +78,8 @@ public class AaptPackageResources extends AbstractBuildRule {
     depsBuilder.addAll(
         BuildRules.toBuildRulesFor(aaptTarget, ruleResolver, resourceTargets::iterator));
     depsBuilder.addAll(
-        resourceDeps.stream()
-            .map(HasAndroidResourceDeps::getRes)
-            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
+        ruleFinder
+            .filterBuildRuleInputs(resourceDeps.stream().map(HasAndroidResourceDeps::getRes))
             .iterator());
     for (SourcePath apk : dependencyResourceApks) {
       ruleFinder.getRule(apk).ifPresent(depsBuilder::add);

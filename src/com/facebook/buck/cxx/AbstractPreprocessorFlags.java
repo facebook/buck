@@ -32,7 +32,6 @@ import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.Optionals;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -74,10 +73,7 @@ abstract class AbstractPreprocessorFlags implements AddsToRuleKey {
 
   public Iterable<BuildRule> getDeps(SourcePathRuleFinder ruleFinder) {
     ImmutableList.Builder<BuildRule> deps = ImmutableList.builder();
-    deps.addAll(
-        Optionals.toStream(getPrefixHeader())
-            .flatMap(ruleFinder.FILTER_BUILD_RULE_INPUTS)
-            .iterator());
+    deps.addAll(ruleFinder.filterBuildRuleInputs(getPrefixHeader()).iterator());
     for (CxxHeaders cxxHeaders : getIncludes()) {
       cxxHeaders.getDeps(ruleFinder).forEachOrdered(deps::add);
     }
