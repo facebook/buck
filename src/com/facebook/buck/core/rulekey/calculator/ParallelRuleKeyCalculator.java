@@ -29,6 +29,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.SettableFuture;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -62,17 +63,26 @@ public class ParallelRuleKeyCalculator<T> {
    * @return a {@link ListenableFuture} wrapping the result of calculating the {@link RuleKey} of
    *     the given {@link BuildRule}.
    */
-  public synchronized ListenableFuture<T> calculate(BuckEventBus buckEventBus, BuildRule rule) {
-    ListenableFuture<T> fromOurCache = ruleKeys.get(rule.getBuildTarget());
-    if (fromOurCache != null) {
-      return fromOurCache;
+  public ListenableFuture<T> calculate(BuckEventBus buckEventBus, BuildRule rule) {
+
+    // Do an initial check for an existing future, to avoid allocating a `SettableFuture` (below).
+    ListenableFuture<T> existingFuture = ruleKeys.get(rule.getBuildTarget());
+    if (existingFuture != null) {
+      return existingFuture;
+    }
+
+    // Create a `SettableFuture` and atomically put it in the rule key map.  At this point, if it's
+    // not already created, we should proceed.
+    SettableFuture<T> future = SettableFuture.create();
+    existingFuture = ruleKeys.putIfAbsent(rule.getBuildTarget(), future);
+    if (existingFuture != null) {
+      return existingFuture;
     }
 
     T fromInternalCache = ruleKeyFactory.getFromCache(rule);
     if (fromInternalCache != null) {
-      ListenableFuture<T> future = Futures.immediateFuture(fromInternalCache);
       // Record the rule key future.
-      ruleKeys.put(rule.getBuildTarget(), future);
+      future.set(fromInternalCache);
       // Because a rule key will be invalidated from the internal cache any time one of its
       // dependents is invalidated, we know that all of our transitive deps are also in cache.
       return future;
@@ -107,12 +117,11 @@ public class ParallelRuleKeyCalculator<T> {
             },
             service);
 
-    // Record the rule key future.
-    ruleKeys.put(rule.getBuildTarget(), calculated);
-    return calculated;
+    future.setFuture(calculated);
+    return future;
   }
 
-  public synchronized Set<BuildTarget> getAllKnownTargets() {
+  public Set<BuildTarget> getAllKnownTargets() {
     return ruleKeys.keySet();
   }
 
