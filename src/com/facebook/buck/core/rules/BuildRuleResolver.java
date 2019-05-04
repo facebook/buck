@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 
 /** Provides functions for resolving a BuildTarget to its BuildRule. */
-public interface BuildRuleResolver {
+public interface BuildRuleResolver extends SourcePathRuleFinder {
   /**
    * Returns the {@code BuildRule} associated with the given {@code BuildTarget} if it is already
    * present.

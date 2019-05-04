@@ -18,10 +18,14 @@ package com.facebook.buck.core.rules;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Streams;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** An abstract implementation of BuildTargetResolver that simplifies concrete implementations. */
 public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
@@ -72,5 +76,35 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
     return Streams.stream(targets)
         .map(this::getRule)
         .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources) {
+    return sourcePathRuleFinder.filterBuildRuleInputs(sources);
+  }
+
+  @Override
+  public ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath... sources) {
+    return sourcePathRuleFinder.filterBuildRuleInputs(sources);
+  }
+
+  @Override
+  public Stream<BuildRule> filterBuildRuleInputs(Stream<SourcePath> sources) {
+    return sourcePathRuleFinder.filterBuildRuleInputs(sources);
+  }
+
+  @Override
+  public Stream<BuildRule> filterBuildRuleInputs(Optional<SourcePath> sourcePath) {
+    return sourcePathRuleFinder.filterBuildRuleInputs(sourcePath);
+  }
+
+  @Override
+  public Optional<BuildRule> getRule(SourcePath sourcePath) {
+    return sourcePathRuleFinder.getRule(sourcePath);
+  }
+
+  @Override
+  public BuildRule getRule(BuildTargetSourcePath sourcePath) {
+    return sourcePathRuleFinder.getRule(sourcePath);
   }
 }
