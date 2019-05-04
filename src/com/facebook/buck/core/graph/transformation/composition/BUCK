@@ -6,6 +6,9 @@ java_immutables_library(
     exported_deps = [
         "//src/com/facebook/buck/core/graph/transformation:transformation",
     ],
+    tests = [
+        "//test/com/facebook/buck/core/graph/transformation/composition:composition",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         "//third-party/java/guava:guava",
