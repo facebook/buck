@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -185,8 +184,7 @@ public class NdkLibraryDescription
       ActionGraphBuilder graphBuilder,
       TargetConfiguration targetConfiguration) {
 
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableList.Builder<String> outputLinesBuilder = ImmutableList.builder();
     ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
@@ -210,7 +208,7 @@ public class NdkLibraryDescription
 
       // We add any dependencies from the C/C++ preprocessor input to this rule, even though
       // it technically should be added to the top-level rule.
-      deps.addAll(cxxPreprocessorInput.getDeps(graphBuilder, ruleFinder));
+      deps.addAll(cxxPreprocessorInput.getDeps(graphBuilder));
 
       // Add in the transitive preprocessor flags contributed by C/C++ library rules into the
       // NDK build.
@@ -247,7 +245,7 @@ public class NdkLibraryDescription
       // it technically should be added to the top-level rule.
       deps.addAll(
           nativeLinkableInput.getArgs().stream()
-              .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+              .flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder))
               .iterator());
 
       // Add in the transitive native linkable flags contributed by C/C++ library rules into the

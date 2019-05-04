@@ -81,13 +81,8 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                 baseParams
                     .withDeclaredDeps(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(
-                                BuildableSupport.getDepsCollection(
-                                    nm, graphBuilder.getSourcePathRuleFinder()))
-                            .addAll(
-                                graphBuilder
-                                    .getSourcePathRuleFinder()
-                                    .filterBuildRuleInputs(linkerInputs))
+                            .addAll(BuildableSupport.getDepsCollection(nm, graphBuilder))
+                            .addAll(graphBuilder.filterBuildRuleInputs(linkerInputs))
                             .build())
                     .withoutExtraDeps(),
                 nm,

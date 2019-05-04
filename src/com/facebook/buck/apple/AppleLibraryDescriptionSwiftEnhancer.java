@@ -65,7 +65,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         swiftBuckConfig,
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
+        DefaultSourcePathResolver.from(graphBuilder),
         delegateArgsBuilder,
         args,
         target);
@@ -76,10 +76,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     ImmutableSet<BuildRule> inputDeps =
         RichStream.from(inputs)
-            .flatMap(
-                input ->
-                    RichStream.from(
-                        input.getDeps(graphBuilder, graphBuilder.getSourcePathRuleFinder())))
+            .flatMap(input -> RichStream.from(input.getDeps(graphBuilder)))
             .toImmutableSet();
 
     ImmutableSortedSet.Builder<BuildRule> sortedDeps = ImmutableSortedSet.naturalOrder();
@@ -151,11 +148,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
 
     return HeaderSymlinkTreeWithHeaderMap.create(
-        buildTarget,
-        projectFilesystem,
-        outputPath,
-        headers,
-        graphBuilder.getSourcePathRuleFinder());
+        buildTarget, projectFilesystem, outputPath, headers, graphBuilder);
   }
 
   public static ImmutableMap<Path, SourcePath> getObjCGeneratedHeader(

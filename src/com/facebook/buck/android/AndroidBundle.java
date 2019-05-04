@@ -388,8 +388,6 @@ public class AndroidBundle extends AbstractBuildRule
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return RichStream.from(moduleVerification)
         .map(BuildRule::getBuildTarget)
-        .concat(
-            HasInstallableApkSupport.getRuntimeDepsForInstallableApk(
-                this, buildRuleResolver.getSourcePathRuleFinder()));
+        .concat(HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, buildRuleResolver));
   }
 }

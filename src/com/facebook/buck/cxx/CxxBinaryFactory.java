@@ -159,10 +159,7 @@ public class CxxBinaryFactory {
 
     if (target.getFlavors().contains(CxxDescriptionEnhancer.CXX_LINK_MAP_FLAVOR)) {
       return CxxDescriptionEnhancer.createLinkMap(
-          target,
-          projectFilesystem,
-          graphBuilder.getSourcePathRuleFinder(),
-          cxxLinkAndCompileRules);
+          target, projectFilesystem, graphBuilder, cxxLinkAndCompileRules);
     }
 
     // Return a CxxBinary rule as our representative in the action graph, rather than the CxxLink
@@ -186,7 +183,7 @@ public class CxxBinaryFactory {
             () ->
                 ImmutableSortedSet.copyOf(
                     BuildableSupport.getDepsCollection(
-                        cxxLinkAndCompileRules.executable, graphBuilder.getSourcePathRuleFinder())),
+                        cxxLinkAndCompileRules.executable, graphBuilder)),
             ImmutableSortedSet.of()),
         cxxPlatform,
         cxxLinkAndCompileRules.getBinaryRule(),
@@ -209,8 +206,7 @@ public class CxxBinaryFactory {
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxBinaryDescriptionArg args) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     return CxxDescriptionEnhancer.createHeaderSymlinkTree(
         buildTarget,
         projectFilesystem,

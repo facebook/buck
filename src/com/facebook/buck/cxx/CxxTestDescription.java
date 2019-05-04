@@ -221,7 +221,7 @@ public class CxxTestDescription
             .withDeclaredDeps(cxxLinkAndCompileRules.deps)
             .copyAppendingExtraDeps(
                 BuildableSupport.getDepsCollection(
-                    cxxLinkAndCompileRules.executable, graphBuilder.getSourcePathRuleFinder()));
+                    cxxLinkAndCompileRules.executable, graphBuilder));
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.builder()

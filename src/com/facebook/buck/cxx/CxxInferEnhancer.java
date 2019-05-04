@@ -247,8 +247,7 @@ public final class CxxInferEnhancer {
   private ImmutableMap<String, CxxSource> collectSources(
       BuildTarget buildTarget, CxxConstructorArg args) {
     InferFlavors.checkNoInferFlavors(buildTarget.getFlavors());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     return CxxDescriptionEnhancer.parseCxxSources(
         buildTarget, graphBuilder, pathResolver, cxxPlatform, args);
   }
@@ -320,8 +319,7 @@ public final class CxxInferEnhancer {
 
     InferFlavors.checkNoInferFlavors(target.getFlavors());
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
@@ -381,7 +379,7 @@ public final class CxxInferEnhancer {
             target,
             graphBuilder,
             pathResolver,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             cxxBuckConfig,
             cxxPlatform,
             preprocessorInputs,

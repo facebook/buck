@@ -142,8 +142,7 @@ public class UninstallCommand extends AbstractCommand {
     AndroidDevicesHelper adbHelper = getExecutionContext().getAndroidDevicesHelper().get();
 
     // Find application package name from manifest and uninstall from matching devices.
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String appId =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver, hasInstallableApk.getApkInfo());
     adbHelper.uninstallApp(appId, uninstallOptions().shouldKeepUserData());

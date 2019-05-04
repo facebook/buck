@@ -32,7 +32,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -123,7 +122,6 @@ class NativeLibraryMergeEnhancer {
       CxxBuckConfig cxxBuckConfig,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
@@ -204,7 +202,6 @@ class NativeLibraryMergeEnhancer {
             cxxBuckConfig,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             buildTarget,
             projectFilesystem,
             glueLinkable,
@@ -494,7 +491,6 @@ class NativeLibraryMergeEnhancer {
       CxxBuckConfig cxxBuckConfig,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
       Optional<NativeLinkable> glueLinkable,
@@ -528,7 +524,6 @@ class NativeLibraryMergeEnhancer {
               cxxBuckConfig,
               graphBuilder,
               pathResolver,
-              ruleFinder,
               baseBuildTarget,
               targetProjectFilesystem,
               constituents,
@@ -639,7 +634,6 @@ class NativeLibraryMergeEnhancer {
     private final CxxBuckConfig cxxBuckConfig;
     private final ActionGraphBuilder graphBuilder;
     private final SourcePathResolver pathResolver;
-    private final SourcePathRuleFinder ruleFinder;
     private final ProjectFilesystem projectFilesystem;
     private final MergedNativeLibraryConstituents constituents;
     private final Optional<NativeLinkable> glueLinkable;
@@ -655,7 +649,6 @@ class NativeLibraryMergeEnhancer {
         CxxBuckConfig cxxBuckConfig,
         ActionGraphBuilder graphBuilder,
         SourcePathResolver pathResolver,
-        SourcePathRuleFinder ruleFinder,
         BuildTarget baseBuildTarget,
         ProjectFilesystem projectFilesystem,
         MergedNativeLibraryConstituents constituents,
@@ -667,7 +660,6 @@ class NativeLibraryMergeEnhancer {
       this.cxxBuckConfig = cxxBuckConfig;
       this.graphBuilder = graphBuilder;
       this.pathResolver = pathResolver;
-      this.ruleFinder = ruleFinder;
       this.projectFilesystem = projectFilesystem;
       this.constituents = constituents;
       this.glueLinkable = glueLinkable;
@@ -919,8 +911,7 @@ class NativeLibraryMergeEnhancer {
         CxxPlatform cxxPlatform,
         ActionGraphBuilder graphBuilder,
         TargetConfiguration targetConfiguration,
-        SourcePathResolver pathResolver,
-        SourcePathRuleFinder ruleFinder) {
+        SourcePathResolver pathResolver) {
       Linker linker = cxxPlatform.getLd().resolve(graphBuilder, targetConfiguration);
       ImmutableList.Builder<NativeLinkableInput> builder = ImmutableList.builder();
       ImmutableList<NativeLinkable> usingGlue = ImmutableList.of();
@@ -934,7 +925,7 @@ class NativeLibraryMergeEnhancer {
           // linker flags.
           builder.add(
               ((NativeLinkTarget) linkable)
-                  .getNativeLinkTargetInput(cxxPlatform, graphBuilder, pathResolver, ruleFinder));
+                  .getNativeLinkTargetInput(cxxPlatform, graphBuilder, pathResolver));
         } else {
           // Otherwise, just get the static pic output.
           NativeLinkableInput staticPic =
@@ -1015,11 +1006,7 @@ class NativeLibraryMergeEnhancer {
                       ImmutableSet.of(),
                       ImmutableSet.of(),
                       getImmediateNativeLinkableInput(
-                          cxxPlatform,
-                          graphBuilder,
-                          target.getTargetConfiguration(),
-                          pathResolver,
-                          ruleFinder),
+                          cxxPlatform, graphBuilder, target.getTargetConfiguration(), pathResolver),
                       constituents.isActuallyMerged()
                           ? symbolsToLocalize.map(SymbolLocalizingPostprocessor::new)
                           : Optional.empty(),

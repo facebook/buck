@@ -168,7 +168,7 @@ abstract class AbstractCxxSourceRuleFactory {
   protected ImmutableSortedSet<BuildRule> getPreprocessDeps() {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInput()) {
-      builder.addAll(input.getDeps(getActionGraphBuilder(), getRuleFinder()));
+      builder.addAll(input.getDeps(getActionGraphBuilder()));
     }
     if (getPreInclude().isPresent()) {
       builder.addAll(

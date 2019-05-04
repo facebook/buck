@@ -496,7 +496,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 Stream.concat(Optionals.toStream(testHostApp), Optionals.toStream(uiTestTargetApp)))
             .map(BuildRule::getBuildTarget),
         Optionals.toStream(xctool)
-            .map(buildRuleResolver.getSourcePathRuleFinder()::filterBuildRuleInputs)
+            .map(buildRuleResolver::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
             .map(BuildRule::getBuildTarget));
   }

@@ -179,8 +179,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
           if (rule instanceof SupportsDependencyFileRuleKey
               && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys()) {
             try {
-              SourcePathResolver pathResolver =
-                  DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+              SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
               usedInputs.put(
                   rule,
                   ImmutableSet.copyOf(
@@ -236,13 +235,13 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
       manifest.addEntry(
           getFileHashLoader(random.nextInt()),
           entry.getValue().getRuleKey(),
-          DefaultSourcePathResolver.from(context.graphBuilder.getSourcePathRuleFinder()),
+          DefaultSourcePathResolver.from(context.graphBuilder),
           entry.getValue().getInputs(),
           context.usedInputs.getOrDefault(entry.getKey(), ImmutableSet.of()));
       manifest.addEntry(
           getFileHashLoader(random.nextInt()),
           entry.getValue().getRuleKey(),
-          DefaultSourcePathResolver.from(context.graphBuilder.getSourcePathRuleFinder()),
+          DefaultSourcePathResolver.from(context.graphBuilder),
           entry.getValue().getInputs(),
           context.usedInputs.getOrDefault(entry.getKey(), ImmutableSet.of()));
 

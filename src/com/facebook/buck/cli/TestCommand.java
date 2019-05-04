@@ -325,7 +325,7 @@ public class TestCommand extends BuildCommand {
               testPool.getWeightedListeningExecutorService(),
               buildEngine,
               buildContext,
-              build.getGraphBuilder().getSourcePathRuleFinder());
+              build.getGraphBuilder());
       return ExitCode.map(exitCodeInt);
     }
   }
@@ -593,8 +593,7 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                     actionGraphAndBuilder.getActionGraphBuilder(),
-                    DefaultSourcePathResolver.from(
-                        actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder()),
+                    DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder()),
                     params.getTargetConfigurationSerializer(),
                     params.getBuildInfoStoreManager(),
                     cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),
@@ -658,8 +657,7 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.builder()
                   .setSourcePathResolver(
-                      DefaultSourcePathResolver.from(
-                          actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder()))
+                      DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder()))
                   .setBuildCellRootPath(params.getCell().getRoot())
                   .setJavaPackageFinder(params.getJavaPackageFinder())
                   .setEventBus(params.getBuckEventBus())

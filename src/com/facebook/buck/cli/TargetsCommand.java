@@ -486,9 +486,8 @@ public class TargetsCommand extends AbstractCommand {
           new DefaultRuleKeyFactory(
               new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
               params.getFileHashCache(),
-              DefaultSourcePathResolver.from(
-                  result.getActionGraphBuilder().getSourcePathRuleFinder()),
-              result.getActionGraphBuilder().getSourcePathRuleFinder(),
+              DefaultSourcePathResolver.from(result.getActionGraphBuilder()),
+              result.getActionGraphBuilder(),
               ruleKeyCacheScope.getCache(),
               Optional.empty());
 
@@ -989,9 +988,8 @@ public class TargetsCommand extends AbstractCommand {
                         new DefaultRuleKeyFactory(
                             new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
                             params.getFileHashCache(),
-                            DefaultSourcePathResolver.from(
-                                result.getActionGraphBuilder().getSourcePathRuleFinder()),
-                            result.getActionGraphBuilder().getSourcePathRuleFinder(),
+                            DefaultSourcePathResolver.from(result.getActionGraphBuilder()),
+                            result.getActionGraphBuilder(),
                             ruleKeyCacheScope.getCache(),
                             Optional.ofNullable(ruleKeyLogger)),
                         new DefaultRuleDepsCache(graphBuilder.get()),
@@ -1062,8 +1060,7 @@ public class TargetsCommand extends AbstractCommand {
           BuildRule rule = graphBuilder.requireRule(target);
           builder.setRuleType(rule.getType());
           if (isShowOutput || isShowFullOutput) {
-            SourcePathResolver sourcePathResolver =
-                DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+            SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
             getUserFacingOutputPath(
                     sourcePathResolver,
                     rule,

@@ -54,8 +54,7 @@ public abstract class BinaryWrapperRule extends AbstractBuildRuleWithDeclaredAnd
   public final Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
             getDeclaredDeps().stream(),
-            BuildableSupport.getDeps(
-                getExecutableCommand(), buildRuleResolver.getSourcePathRuleFinder()))
+            BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver))
         .map(BuildRule::getBuildTarget);
   }
 }

@@ -124,7 +124,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
 
       IsolationChecker isolationChecker =
           new IsolationChecker(
-              graphBuilder.getSourcePathRuleFinder(),
+              graphBuilder,
               params.getCell().getCellPathResolver(),
               reportGenerator.getFailureReporter());
       AbstractBreadthFirstTraversal.<BuildRule>traverse(

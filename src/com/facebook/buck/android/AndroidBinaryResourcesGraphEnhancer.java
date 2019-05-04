@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -71,7 +70,6 @@ class AndroidBinaryResourcesGraphEnhancer {
   private static final Flavor COPY_MANIFEST_FLAVOR = InternalFlavor.of("copy_manifest");
 
   private final AndroidPlatformTarget androidPlatformTarget;
-  private final SourcePathRuleFinder ruleFinder;
   private final FilterResourcesSteps.ResourceFilter resourceFilter;
   private final ResourcesFilter.ResourceCompressionMode resourceCompressionMode;
   private final ImmutableSet<String> locales;
@@ -131,7 +129,6 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.graphBuilder = graphBuilder;
-    this.ruleFinder = graphBuilder.getSourcePathRuleFinder();
     this.exopackageForResources = exopackageForResources;
     this.resourceFilter = resourceFilter;
     this.resourceCompressionMode = resourceCompressionMode;
@@ -210,7 +207,7 @@ class AndroidBinaryResourcesGraphEnhancer {
           getTargetsAsRules(resourceDetails.getResourcesWithNonEmptyResDir());
 
       ImmutableCollection<BuildRule> rulesWithResourceDirectories =
-          ruleFinder.filterBuildRuleInputs(resourceDetails.getResourceDirectories());
+          graphBuilder.filterBuildRuleInputs(resourceDetails.getResourceDirectories());
 
       InternalFlavor moduleFlavor = InternalFlavor.of(module.getName());
 
@@ -241,7 +238,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             new AndroidManifest(
                 buildTarget.withAppendedFlavors(MANIFEST_MERGE_FLAVOR, moduleFlavor),
                 projectFilesystem,
-                ruleFinder,
+                graphBuilder,
                 moduleManifestSkeleton.get(),
                 module,
                 packageableCollection.getAndroidManifestPieces().get(module));
@@ -346,7 +343,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             new ExportFile(
                 originalBuildTarget.withAppendedFlavors(COPY_MANIFEST_FLAVOR),
                 projectFilesystem,
-                ruleFinder,
+                graphBuilder,
                 "AndroidManifest.xml",
                 ExportFileDescription.Mode.COPY,
                 aaptOutputInfo.getAndroidManifestXml(),
@@ -459,7 +456,7 @@ class AndroidBinaryResourcesGraphEnhancer {
           new AndroidManifest(
               buildTarget.withAppendedFlavors(MANIFEST_MERGE_FLAVOR),
               projectFilesystem,
-              ruleFinder,
+              graphBuilder,
               manifestSkeleton.get(),
               module,
               packageableCollection.getAndroidManifestPieces().values());
@@ -478,7 +475,7 @@ class AndroidBinaryResourcesGraphEnhancer {
             buildTarget.withAppendedFlavors(
                 WRITE_EXO_RESOURCES_HASH_FLAVOR, InternalFlavor.of(name)),
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             pathToFile);
     graphBuilder.addToIndex(fileHashCode);
     return ExopackagePathAndHash.of(pathToFile, fileHashCode.getSourcePathToOutput());
@@ -489,7 +486,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new MergeThirdPartyJarResources(
         buildTarget.withAppendedFlavors(MERGE_THIRD_PARTY_JAR_RESOURCES_FLAVOR),
         projectFilesystem,
-        ruleFinder,
+        graphBuilder,
         pathsToThirdPartyJars);
   }
 
@@ -498,7 +495,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new SplitResources(
         buildTarget.withAppendedFlavors(SPLIT_RESOURCES_FLAVOR),
         projectFilesystem,
-        ruleFinder,
+        graphBuilder,
         aaptOutputPath,
         aaptRDotTxtPath,
         androidPlatformTarget);
@@ -549,7 +546,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         buildTarget.withAppendedFlavors(
             AAPT2_LINK_FLAVOR, flavor, InternalFlavor.of(isProtoFormat ? "proto" : "arsc")),
         projectFilesystem,
-        ruleFinder,
+        graphBuilder,
         compileListBuilder.build(),
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         realManifest,
@@ -571,7 +568,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new GenerateRDotJava(
         buildTarget.withAppendedFlavors(GENERATE_RDOT_JAVA_FLAVOR),
         projectFilesystem,
-        ruleFinder,
+        graphBuilder,
         bannedDuplicateResourceTypes,
         duplicateResourceWhitelistPath,
         pathToRDotTxtFiles,
@@ -585,7 +582,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     return new GenerateStringResources(
         buildTarget.withAppendedFlavors(GENERATE_STRING_RESOURCES_FLAVOR),
         projectFilesystem,
-        ruleFinder,
+        graphBuilder,
         filteredResourcesProviders);
   }
 
@@ -599,7 +596,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         projectFilesystem,
         resourceRules,
         rulesWithResourceDirectories,
-        ruleFinder,
+        graphBuilder,
         resourceDetails.getResourceDirectories(),
         ImmutableSet.copyOf(resourceDetails.getWhitelistedStringDirectories()),
         locales,
@@ -638,7 +635,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         buildTarget.withAppendedFlavors(
             AndroidBinaryResourcesGraphEnhancer.PACKAGE_STRING_ASSETS_FLAVOR),
         projectFilesystem,
-        ruleFinder,
+        graphBuilder,
         resourceRules,
         rulesWithResourceDirectories,
         filteredResourcesProvider,
@@ -652,7 +649,7 @@ class AndroidBinaryResourcesGraphEnhancer {
         new MergeAssets(
             buildTarget.withAppendedFlavors(MERGE_ASSETS_FLAVOR),
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             baseApk,
             ImmutableSortedSet.copyOf(assetsDirectories));
     graphBuilder.addToIndex(mergeAssets);

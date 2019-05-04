@@ -449,8 +449,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxPreprocessorInput input = lib.getCxxPreprocessorInput(CXX_PLATFORM, graphBuilder);
     assertThat(getHeaderNames(input.getIncludes()), Matchers.hasItem(filesystem.getPath("foo.h")));
     assertThat(
-        ImmutableSortedSet.copyOf(
-            input.getDeps(graphBuilder, graphBuilder.getSourcePathRuleFinder())),
+        ImmutableSortedSet.copyOf(input.getDeps(graphBuilder)),
         Matchers.equalTo(graphBuilder.getAllRules(getInputRules(lib))));
   }
 
@@ -482,8 +481,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         getHeaderNames(input.getIncludes()),
         Matchers.not(Matchers.hasItem(filesystem.getPath("bar.h"))));
     assertThat(
-        ImmutableSortedSet.copyOf(
-            input.getDeps(graphBuilder, graphBuilder.getSourcePathRuleFinder())),
+        ImmutableSortedSet.copyOf(input.getDeps(graphBuilder)),
         Matchers.equalTo(graphBuilder.getAllRules(getInputRules(lib))));
   }
 
@@ -714,9 +712,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
     CxxPreprocessorInput input =
         rule.getCxxPreprocessorInput(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertThat(getHeaderNames(input.getIncludes()), empty());
-    assertThat(
-        ImmutableList.copyOf(input.getDeps(graphBuilder, graphBuilder.getSourcePathRuleFinder())),
-        empty());
+    assertThat(ImmutableList.copyOf(input.getDeps(graphBuilder)), empty());
   }
 
   @Test
@@ -848,10 +844,7 @@ public class PrebuiltCxxLibraryDescriptionTest {
         rule.getNativeLinkTarget(CXX_PLATFORM, graphBuilder)
             .get()
             .getNativeLinkTargetInput(
-                CxxPlatformUtils.DEFAULT_PLATFORM,
-                graphBuilder,
-                pathResolver,
-                graphBuilder.getSourcePathRuleFinder());
+                CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, pathResolver);
     assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--exported-flag"));
   }
 

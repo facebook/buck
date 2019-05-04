@@ -244,8 +244,7 @@ public class LocalBuildExecutor implements BuildExecutor {
         engineConfig.getBuildMaxDepFileCacheEntries(),
         engineConfig.getBuildArtifactCacheSizeLimit(),
         actionGraphAndBuilder.getActionGraphBuilder(),
-        DefaultSourcePathResolver.from(
-            actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder()),
+        DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder()),
         targetConfigurationSerializer,
         args.getBuildInfoStoreManager(),
         engineConfig.getResourceAwareSchedulingInfo(),

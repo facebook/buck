@@ -82,7 +82,6 @@ class AndroidBinaryInstallGraphEnhancer {
     ExopackageDeviceDirectoryLister directoryLister =
         new ExopackageDeviceDirectoryLister(
             buildTarget.withFlavors(DIRECTORY_LISTING_FLAVOR), projectFilesystem);
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     ExopackageInfo exopackageInfo = apkInfo.getExopackageInfo().get();
     ImmutableList.Builder<BuildRule> finisherDeps = ImmutableList.builder();
     if (exopackageInfo.getDexInfo().isPresent()
@@ -98,7 +97,7 @@ class AndroidBinaryInstallGraphEnhancer {
           new ExopackageFilesInstaller(
               buildTarget.withFlavors(EXO_FILE_INSTALL_FLAVOR),
               projectFilesystem,
-              ruleFinder,
+              graphBuilder,
               directoryLister.getSourcePathToOutput(),
               apkInfo.getManifestPath(),
               filteredExopackageInfo);
@@ -109,7 +108,7 @@ class AndroidBinaryInstallGraphEnhancer {
       List<BuildRule> resourceInstallRules =
           createResourceInstallRules(
               exopackageInfo.getResourcesInfo().get(),
-              ruleFinder,
+              graphBuilder,
               apkInfo.getManifestPath(),
               directoryLister.getSourcePathToOutput());
       resourceInstallRules.forEach(graphBuilder::addToIndex);
@@ -120,7 +119,7 @@ class AndroidBinaryInstallGraphEnhancer {
         new ExopackageInstallFinisher(
             buildTarget,
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             apkInfo,
             directoryLister,
             finisherDeps.build());

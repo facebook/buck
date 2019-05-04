@@ -99,7 +99,7 @@ public class ApplePackageDescription
                       .addAll(
                           BuildableSupport.getDepsCollection(
                               applePackageConfigAndPlatformInfo.get().getExpandedArg(),
-                              graphBuilder.getSourcePathRuleFinder()))
+                              graphBuilder))
                       .build()),
           applePackageConfigAndPlatformInfo.get(),
           Objects.requireNonNull(bundle.getSourcePathToOutput()),

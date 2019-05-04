@@ -40,7 +40,7 @@ public class AndroidManifestFactory {
     return new AndroidManifest(
         buildTarget,
         projectFilesystem,
-        resolver.getSourcePathRuleFinder(),
+        resolver,
         skeleton,
         APKModule.of(APKModuleGraph.ROOT_APKMODULE_NAME, true),
         manifestFiles);

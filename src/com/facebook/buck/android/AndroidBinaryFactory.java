@@ -83,7 +83,7 @@ public class AndroidBinaryFactory {
       moduleVerification =
           Optional.of(
               new AndroidAppModularityVerification(
-                  graphBuilder.getSourcePathRuleFinder(),
+                  graphBuilder,
                   buildTarget.withFlavors(ANDROID_MODULARITY_VERIFICATION_FLAVOR),
                   projectFilesystem,
                   args.getAndroidAppModularityResult().get(),
@@ -102,7 +102,7 @@ public class AndroidBinaryFactory {
         toolchainProvider.getByName(
             AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
         params,
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         Optional.of(args.getProguardJvmArgs()),
         (Keystore) keystore,
         dexSplitMode,

@@ -105,8 +105,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
               .getActionGraphProvider()
               .getActionGraph(targetGraphAndBuildTargets.getTargetGraph());
       SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(
-              actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder());
+          DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder());
 
       // Dump the action graph.
       if (generateDotOutput) {

@@ -502,8 +502,7 @@ public class AppleBinaryDescription
             extraCxxDeps = ImmutableSortedSet.of();
           }
 
-          SourcePathResolver pathResolver =
-              DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+          SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
           Optional<Path> stubBinaryPath =
               getStubBinaryPath(buildTarget, appleCxxPlatformsFlavorDomain, args);
@@ -624,10 +623,7 @@ public class AppleBinaryDescription
     if (!metadataClass.isAssignableFrom(FrameworkDependencies.class)) {
       CxxBinaryDescriptionArg.Builder delegateArg = CxxBinaryDescriptionArg.builder().from(args);
       AppleDescriptions.populateCxxBinaryDescriptionArg(
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
-          delegateArg,
-          args,
-          buildTarget);
+          DefaultSourcePathResolver.from(graphBuilder), delegateArg, args, buildTarget);
       return cxxBinaryMetadataFactory.createMetadata(
           buildTarget, graphBuilder, delegateArg.build().getDeps(), metadataClass);
     }

@@ -114,7 +114,7 @@ public class PrebuiltAppleFrameworkDescription
         buildTarget,
         context.getProjectFilesystem(),
         params,
-        DefaultSourcePathResolver.from(context.getActionGraphBuilder().getSourcePathRuleFinder()),
+        DefaultSourcePathResolver.from(context.getActionGraphBuilder()),
         args.getFramework(),
         args.getPreferredLinkage(),
         args.getFrameworks(),

@@ -292,7 +292,7 @@ public class SymlinkTree extends AbstractBuildRule
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return links.values().stream()
-        .map(buildRuleResolver.getSourcePathRuleFinder()::filterBuildRuleInputs)
+        .map(buildRuleResolver::filterBuildRuleInputs)
         .flatMap(ImmutableSet::stream)
         .map(BuildRule::getBuildTarget);
   }

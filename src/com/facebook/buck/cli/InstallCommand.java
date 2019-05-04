@@ -277,8 +277,7 @@ public class InstallCommand extends BuildCommand {
     for (BuildTarget buildTarget : buildRunResult.getBuildTargets()) {
 
       BuildRule buildRule = build.getGraphBuilder().requireRule(buildTarget);
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(build.getGraphBuilder().getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(build.getGraphBuilder());
 
       if (buildRule instanceof HasInstallableApk) {
         exitCode =

@@ -304,10 +304,7 @@ public class Omnibus {
     // Add the args for the root link target first.
     NativeLinkableInput input =
         root.getNativeLinkTargetInput(
-            cxxPlatform,
-            graphBuilder,
-            DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
-            graphBuilder.getSourcePathRuleFinder());
+            cxxPlatform, graphBuilder, DefaultSourcePathResolver.from(graphBuilder));
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.

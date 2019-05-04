@@ -72,11 +72,9 @@ public class VerifyCachesCommand extends AbstractCommand {
         new SingleThreadedActionGraphBuilder(
             TargetGraph.EMPTY, new DefaultTargetNodeToBuildRuleTransformer(), cellProvider);
     contents.forEach(e -> graphBuilder.addToIndex(e.getKey()));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     DefaultRuleKeyFactory defaultRuleKeyFactory =
-        new DefaultRuleKeyFactory(
-            fieldLoader, fileHashCache, pathResolver, graphBuilder.getSourcePathRuleFinder());
+        new DefaultRuleKeyFactory(fieldLoader, fileHashCache, pathResolver, graphBuilder);
     stdOut.println(String.format("Examining %d build rule keys.", contents.size()));
     ImmutableList<BuildRule> mismatches =
         RichStream.from(contents)

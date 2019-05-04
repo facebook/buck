@@ -184,7 +184,7 @@ public class OcamlBuildRulesGenerator {
                       // Depend on the rule that generates the sources and headers we're compiling.
                       .addAll(ruleFinder.filterBuildRuleInputs(cSrc))
                       // Add any deps from the C/C++ preprocessor input.
-                      .addAll(cxxPreprocessorInput.getDeps(graphBuilder, ruleFinder))
+                      .addAll(cxxPreprocessorInput.getDeps(graphBuilder))
                       // Add the clean rule, to ensure that any shared output folders shared with
                       // OCaml build artifacts are properly cleaned.
                       .add(this.cleanRule)

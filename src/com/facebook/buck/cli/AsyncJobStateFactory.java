@@ -64,8 +64,7 @@ public class AsyncJobStateFactory {
     // Compute the file hashes.
     ActionGraphAndBuilder actionGraphAndBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder();
-    SourcePathRuleFinder ruleFinder =
-        actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = actionGraphAndBuilder.getActionGraphBuilder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     clientStatsTracker.ifPresent(tracker -> tracker.startTimer(LOCAL_FILE_HASH_COMPUTATION));

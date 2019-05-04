@@ -112,7 +112,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
         new ModernBuildRuleRemoteExecutionHelper(
             params.getBuckEventBus(),
             protocol,
-            state.graphBuilder.getSourcePathRuleFinder(),
+            state.graphBuilder,
             rootCell.getCellPathResolver(),
             rootCell,
             cellNames,

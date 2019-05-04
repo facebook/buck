@@ -125,10 +125,7 @@ public class GnuLinker extends DelegatingTool implements Linker {
                 projectFilesystem,
                 baseParams
                     .withDeclaredDeps(
-                        ImmutableSortedSet.copyOf(
-                            graphBuilder
-                                .getSourcePathRuleFinder()
-                                .filterBuildRuleInputs(symbolFiles)))
+                        ImmutableSortedSet.copyOf(graphBuilder.filterBuildRuleInputs(symbolFiles)))
                     .withoutExtraDeps(),
                 symbolFiles));
     return ImmutableList.of(SourcePathArg.of(rule.getSourcePathToOutput()));

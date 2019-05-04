@@ -150,8 +150,7 @@ public final class RunCommand extends AbstractCommand {
     // command.
     //
     // If we haven't received a command args file, we assume it's fine to just run in-process.
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(build.getGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(build.getGraphBuilder());
     Tool executable = binaryBuildRule.getExecutableCommand();
     if (commandArgsFile == null) {
       ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();

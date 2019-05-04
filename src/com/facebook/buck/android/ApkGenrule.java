@@ -99,7 +99,7 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     Preconditions.checkState(apk instanceof BuildTargetSourcePath);
     this.apk = (BuildTargetSourcePath) apk;
-    BuildRule rule = resolver.getSourcePathRuleFinder().getRule(this.apk);
+    BuildRule rule = resolver.getRule(this.apk);
     Preconditions.checkState(rule instanceof HasInstallableApk);
     this.hasInstallableApk = (HasInstallableApk) rule;
   }
@@ -129,7 +129,6 @@ public class ApkGenrule extends Genrule implements HasInstallableApk, HasRuntime
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return HasInstallableApkSupport.getRuntimeDepsForInstallableApk(
-        this, buildRuleResolver.getSourcePathRuleFinder());
+    return HasInstallableApkSupport.getRuntimeDepsForInstallableApk(this, buildRuleResolver);
   }
 }

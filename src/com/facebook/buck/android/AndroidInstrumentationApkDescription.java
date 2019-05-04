@@ -256,7 +256,7 @@ public class AndroidInstrumentationApkDescription
         toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
         androidPlatformTarget,
         params,
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         apkUnderTest,
         rulesToExcludeFromDex,
         enhancementResult,

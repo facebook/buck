@@ -143,8 +143,7 @@ public class FetchCommand extends BuildCommand {
                   cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                   cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
                   actionGraphAndBuilder.getActionGraphBuilder(),
-                  DefaultSourcePathResolver.from(
-                      actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder()),
+                  DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder()),
                   params.getTargetConfigurationSerializer(),
                   params.getBuildInfoStoreManager(),
                   cachingBuildEngineBuckConfig.getResourceAwareSchedulingInfo(),

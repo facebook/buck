@@ -128,7 +128,7 @@ public class RobolectricTestDescription
       BuildRule testRule = graphBuilder.requireRule(testTarget);
       return CalculateClassAbi.of(
           buildTarget,
-          graphBuilder.getSourcePathRuleFinder(),
+          graphBuilder,
           projectFilesystem,
           params,
           Objects.requireNonNull(testRule.getSourcePathToOutput()));
@@ -144,7 +144,7 @@ public class RobolectricTestDescription
             ImmutableSortedSet.copyOf(
                 Iterables.concat(
                     params.getBuildDeps(), graphBuilder.getAllRules(args.getExportedDeps()))),
-            javacFactory.create(graphBuilder.getSourcePathRuleFinder(), args),
+            javacFactory.create(graphBuilder, args),
             javacOptions,
             DependencyMode.TRANSITIVE,
             args.isForceFinalResourceIds(),

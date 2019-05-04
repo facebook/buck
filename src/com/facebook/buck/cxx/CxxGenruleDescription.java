@@ -131,7 +131,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
    */
   public static SourcePath fixupSourcePath(
       ActionGraphBuilder graphBuilder, CxxPlatform platform, SourcePath path) {
-    Optional<BuildRule> rule = graphBuilder.getSourcePathRuleFinder().getRule(path);
+    Optional<BuildRule> rule = graphBuilder.getRule(path);
     if (rule.isPresent() && rule.get() instanceof CxxGenrule) {
       Genrule platformRule =
           (Genrule)

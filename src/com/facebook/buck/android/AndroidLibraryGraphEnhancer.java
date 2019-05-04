@@ -133,7 +133,7 @@ public class AndroidLibraryGraphEnhancer {
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,
                   projectFilesystem,
-                  graphBuilder.getSourcePathRuleFinder(),
+                  graphBuilder,
                   androidResourceDeps,
                   compileToJarStepFactory,
                   forceFinalResourceIds,

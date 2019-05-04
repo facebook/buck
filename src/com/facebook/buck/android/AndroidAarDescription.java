@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -109,7 +108,6 @@ public class AndroidAarDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     buildTarget.assertUnflavored();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     ImmutableSortedSet.Builder<BuildRule> aarExtraDepsBuilder =
         new ImmutableSortedSet.Builder<BuildRule>(Ordering.natural())
             .addAll(originalBuildRuleParams.getExtraDeps().get());
@@ -144,7 +142,7 @@ public class AndroidAarDescription
         new AssembleDirectories(
             buildTarget.withAppendedFlavors(AAR_ASSEMBLE_ASSETS_FLAVOR),
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             assetsDirectories);
     aarExtraDepsBuilder.add(graphBuilder.addToIndex(assembleAssetsDirectories));
 
@@ -156,7 +154,7 @@ public class AndroidAarDescription
         new MergeAndroidResourceSources(
             buildTarget.withAppendedFlavors(AAR_ASSEMBLE_RESOURCE_FLAVOR),
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             resDirectories);
     aarExtraDepsBuilder.add(graphBuilder.addToIndex(assembleResourceDirectories));
 
@@ -173,7 +171,7 @@ public class AndroidAarDescription
             buildTarget.withAppendedFlavors(AAR_ANDROID_RESOURCE_FLAVOR),
             projectFilesystem,
             androidResourceParams,
-            ruleFinder,
+            graphBuilder,
             /* deps */ ImmutableSortedSet.<BuildRule>naturalOrder()
                 .add(assembleAssetsDirectories)
                 .add(assembleResourceDirectories)
@@ -213,7 +211,7 @@ public class AndroidAarDescription
               args.getBuildConfigValues(),
               Optional.empty(),
               graphBuilder,
-              javacFactory.create(ruleFinder, args),
+              javacFactory.create(graphBuilder, args),
               toolchainProvider
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),

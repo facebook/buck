@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -69,13 +68,12 @@ public class AndroidBuildConfigDescription
       BuildRuleParams params,
       AndroidBuildConfigDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     if (JavaAbis.isClassAbiTarget(buildTarget)) {
       BuildTarget configTarget = JavaAbis.getLibraryTarget(buildTarget);
       BuildRule configRule = graphBuilder.requireRule(configTarget);
       return CalculateClassAbi.of(
           buildTarget,
-          ruleFinder,
+          graphBuilder,
           context.getProjectFilesystem(),
           params,
           Objects.requireNonNull(configRule.getSourcePathToOutput()));
@@ -89,7 +87,7 @@ public class AndroidBuildConfigDescription
         args.getValues(),
         args.getValuesFile(),
         /* useConstantExpressions */ false,
-        javacFactory.create(ruleFinder, null),
+        javacFactory.create(graphBuilder, null),
         context
             .getToolchainProvider()
             .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
@@ -132,7 +130,6 @@ public class AndroidBuildConfigDescription
     //
     // This fixes the issue, but deviates from the common pattern where a build rule has at most
     // one flavored version of itself for a given flavor.
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     BuildTarget buildConfigBuildTarget;
     if (!buildTarget.isFlavored()) {
       // android_build_config() case.
@@ -148,7 +145,7 @@ public class AndroidBuildConfigDescription
 
     // Create one build rule to generate BuildConfig.java.
     BuildRuleParams buildConfigParams = params;
-    Optional<BuildRule> valuesFileRule = valuesFile.flatMap(ruleFinder::getRule);
+    Optional<BuildRule> valuesFileRule = valuesFile.flatMap(graphBuilder::getRule);
     if (valuesFileRule.isPresent()) {
       buildConfigParams = buildConfigParams.copyAppendingExtraDeps(valuesFileRule.get());
     }
@@ -165,7 +162,7 @@ public class AndroidBuildConfigDescription
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     return new AndroidBuildConfigJavaLibrary(
-        buildTarget, projectFilesystem, ruleFinder, javac, javacOptions, androidBuildConfig);
+        buildTarget, projectFilesystem, graphBuilder, javac, javacOptions, androidBuildConfig);
   }
 
   @Override

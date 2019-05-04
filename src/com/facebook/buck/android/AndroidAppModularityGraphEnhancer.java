@@ -67,12 +67,10 @@ public class AndroidAppModularityGraphEnhancer {
     // Add dependencies on all the build rules generating third-party JARs.  This is mainly to
     // correctly capture deps when a prebuilt_jar forwards the output from another build rule.
     enhancedDeps.addAll(
-        ruleResolver
-            .getSourcePathRuleFinder()
-            .filterBuildRuleInputs(
-                packageableCollection
-                    .getPathsToThirdPartyJars()
-                    .get(apkModuleGraph.getRootAPKModule())));
+        ruleResolver.filterBuildRuleInputs(
+            packageableCollection
+                .getPathsToThirdPartyJars()
+                .get(apkModuleGraph.getRootAPKModule())));
 
     return AndroidAppModularityGraphEnhancementResult.builder()
         .setPackageableCollection(packageableCollection)

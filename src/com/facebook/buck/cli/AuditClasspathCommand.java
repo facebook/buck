@@ -173,8 +173,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckConfig())
                     .getFreshActionGraph(targetGraph))
             .getActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     SortedSet<Path> classpathEntries = new TreeSet<>();
 
     for (BuildTarget target : targets) {
@@ -225,8 +224,7 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckConfig())
                     .getFreshActionGraph(targetGraph))
             .getActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targets) {

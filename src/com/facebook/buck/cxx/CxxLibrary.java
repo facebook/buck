@@ -25,7 +25,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -46,7 +45,7 @@ import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.function.QuadFunction;
+import com.facebook.buck.util.function.TriFunction;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -81,12 +80,8 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       exportedLinkerFlags;
   private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
       postExportedLinkerFlags;
-  private final QuadFunction<
-          ? super CxxPlatform,
-          ActionGraphBuilder,
-          SourcePathResolver,
-          SourcePathRuleFinder,
-          NativeLinkableInput>
+  private final TriFunction<
+          ? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, NativeLinkableInput>
       linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
@@ -124,12 +119,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
           exportedLinkerFlags,
       BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
           postExportedLinkerFlags,
-      QuadFunction<
-              ? super CxxPlatform,
-              ActionGraphBuilder,
-              SourcePathResolver,
-              SourcePathRuleFinder,
-              NativeLinkableInput>
+      TriFunction<? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, NativeLinkableInput>
           linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
@@ -349,8 +339,7 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
                         ? CxxDescriptionEnhancer.STATIC_FLAVOR
                         : CxxDescriptionEnhancer.STATIC_PIC_FLAVOR);
         if (linkWhole || forceLinkWhole) {
-          SourcePathResolver pathResolver =
-              DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+          SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
           Linker linker =
               cxxPlatform.getLd().resolve(graphBuilder, getBuildTarget().getTargetConfiguration());
           linkerArgsBuilder.addAll(linker.linkWhole(archive.toArg(), pathResolver));
@@ -475,15 +464,12 @@ public class CxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
-      CxxPlatform cxxPlatform,
-      ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder) {
+      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
     if (!isPlatformSupported(cxxPlatform)) {
       LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return NativeLinkableInput.of();
     }
-    return linkTargetInput.apply(cxxPlatform, graphBuilder, pathResolver, ruleFinder);
+    return linkTargetInput.apply(cxxPlatform, graphBuilder, pathResolver);
   }
 
   @Override

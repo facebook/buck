@@ -70,7 +70,7 @@ public class PerfMbrSerializationCommand
     Cell rootCell = params.getCell();
     Serializer serializer =
         new Serializer(
-            state.graphBuilder.getSourcePathRuleFinder(),
+            state.graphBuilder,
             rootCell.getCellPathResolver(),
             (instance, data, children) -> Hashing.md5().newHasher().putBytes(data).hash());
     for (BuildRule buildRule : state.rulesInGraph) {

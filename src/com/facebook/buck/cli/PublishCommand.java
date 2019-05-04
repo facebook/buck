@@ -178,9 +178,7 @@ public class PublishCommand extends BuildCommand {
     try {
       ImmutableSet<DeployResult> deployResults =
           publisher.publish(
-              DefaultSourcePathResolver.from(
-                  getBuild().getGraphBuilder().getSourcePathRuleFinder()),
-              publishables.build());
+              DefaultSourcePathResolver.from(getBuild().getGraphBuilder()), publishables.build());
       for (DeployResult deployResult : deployResults) {
         printArtifactsInformation(params, deployResult);
       }

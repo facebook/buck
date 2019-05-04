@@ -33,7 +33,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -119,7 +118,6 @@ public class AndroidBinaryGraphEnhancer {
   private final boolean ignoreAaptProguardConfig;
   private final Optional<BuildTarget> nativeLibraryMergeCodeGenerator;
   private final ActionGraphBuilder graphBuilder;
-  private final SourcePathRuleFinder ruleFinder;
   private final CellPathResolver cellPathResolver;
   private final PackageType packageType;
   private final boolean shouldPreDex;
@@ -219,7 +217,6 @@ public class AndroidBinaryGraphEnhancer {
     this.originalBuildTarget = originalBuildTarget;
     this.originalDeps = originalParams.getBuildDeps();
     this.graphBuilder = graphBuilder;
-    this.ruleFinder = graphBuilder.getSourcePathRuleFinder();
     this.cellPathResolver = cellPathResolver;
     this.packageType = packageType;
     this.shouldPreDex = shouldPreDex;
@@ -292,7 +289,7 @@ public class AndroidBinaryGraphEnhancer {
     this.rulesToExcludeFromDex = rulesToExcludeFromDex;
     this.dexTool = dexTool;
     this.javacFactory = javacFactory;
-    this.javac = javacFactory.create(ruleFinder, null);
+    this.javac = javacFactory.create(graphBuilder, null);
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -340,7 +337,7 @@ public class AndroidBinaryGraphEnhancer {
               originalBuildTarget.withAppendedFlavors(UNSTRIPPED_NATIVE_LIBRARIES_FLAVOR),
               projectFilesystem,
               buildRuleParams.withoutDeclaredDeps(),
-              ruleFinder,
+              graphBuilder,
               nativeLibsEnhancementResult.getUnstrippedLibraries().get());
       graphBuilder.addToIndex(unstrippedNativeLibraries);
     }
@@ -496,7 +493,7 @@ public class AndroidBinaryGraphEnhancer {
         buildRuleParams.withDeclaredDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .addAll(
-                    ruleFinder.filterBuildRuleInputs(
+                    graphBuilder.filterBuildRuleInputs(
                         resourcesEnhancementResult.getRDotJavaDir().orElse(null)))
                 .addAll(preDexedLibrariesForResourceIdFiltering)
                 .build());
@@ -555,7 +552,7 @@ public class AndroidBinaryGraphEnhancer {
         new SplitUberRDotJavaJar(
             splitJarTarget,
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             compileUberRDotJava.getSourcePathToOutput(),
             dexSplitMode);
     graphBuilder.addToIndex(splitJar);
@@ -572,8 +569,9 @@ public class AndroidBinaryGraphEnhancer {
           new PrebuiltJar(
               splitJarTarget.withAppendedFlavors(prebuiltJarFlavor, rtypeFlavor),
               projectFilesystem,
-              buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(ruleFinder.getRule(jarPath))),
-              DefaultSourcePathResolver.from(ruleFinder),
+              buildRuleParams.withDeclaredDeps(
+                  ImmutableSortedSet.of(graphBuilder.getRule(jarPath))),
+              DefaultSourcePathResolver.from(graphBuilder),
               jarPath,
               Optional.empty(),
               Optional.empty(),
@@ -613,7 +611,7 @@ public class AndroidBinaryGraphEnhancer {
         originalBuildTarget.withAppendedFlavors(NATIVE_LIBRARY_PROGUARD_FLAVOR),
         projectFilesystem,
         paramsForNativeLibraryProguardGenerator,
-        ruleFinder,
+        graphBuilder,
         nativeLibsDirs,
         graphBuilder.requireRule(nativeLibraryProguardConfigGenerator.get()));
   }
@@ -826,7 +824,7 @@ public class AndroidBinaryGraphEnhancer {
     NonPreDexedDexBuildable nonPreDexedDexBuildable =
         new NonPreDexedDexBuildable(
             androidPlatformTarget,
-            ruleFinder,
+            graphBuilder,
             additionalJarsForProguardandDesugar,
             apkModuleMap,
             classpathEntriesToDexSourcePaths,
@@ -848,7 +846,7 @@ public class AndroidBinaryGraphEnhancer {
           new ProguardTextOutput(
               originalBuildTarget.withFlavors(PROGUARD_TEXT_OUTPUT_FLAVOR),
               nonPreDexedDexBuildable,
-              ruleFinder);
+              graphBuilder);
       graphBuilder.addToIndex(proguardTextOutput);
     }
 

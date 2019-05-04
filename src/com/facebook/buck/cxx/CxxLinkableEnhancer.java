@@ -142,7 +142,7 @@ public class CxxLinkableEnhancer {
     return new CxxThinLTOIndex(
         target,
         projectFilesystem,
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         linker,
         output,
         ldArgs,
@@ -205,10 +205,7 @@ public class CxxLinkableEnhancer {
           extraOutputsDeriver
               .get()
               .deriveExtraOutputsFromArgs(
-                  Arg.stringify(
-                      ldArgs,
-                      DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder())),
-                  output);
+                  Arg.stringify(ldArgs, DefaultSourcePathResolver.from(ruleResolver)), output);
       if (!derivedExtraOutputs.isEmpty()) {
         allExtraOutputs =
             ImmutableMap.<String, Path>builder()
@@ -221,7 +218,7 @@ public class CxxLinkableEnhancer {
     return new CxxLink(
         target,
         projectFilesystem,
-        ruleResolver.getSourcePathRuleFinder(),
+        ruleResolver,
         cellPathResolver,
         linker,
         output,

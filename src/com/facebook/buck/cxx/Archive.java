@@ -97,7 +97,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     return new Archive(
         target,
         projectFilesystem,
-        resolver.getSourcePathRuleFinder(),
+        resolver,
         platform.getAr().resolve(resolver, target.getTargetConfiguration()),
         platform.getArflags(),
         platform.getRanlib().map(r -> r.resolve(resolver, target.getTargetConfiguration())),

@@ -237,8 +237,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
         super.getRuntimeDeps(buildRuleResolver),
-        BuildableSupport.getDeps(
-                getExecutableCommand(), buildRuleResolver.getSourcePathRuleFinder())
+        BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver)
             .map(BuildRule::getBuildTarget));
   }
 

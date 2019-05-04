@@ -164,8 +164,7 @@ public class MultiarchFileInfos {
     // If any thin rule exists with output, use `MultiarchFile` to generate binary. Otherwise,
     // use a `NoopBuildRule` to handle inputs like those without any sources.
     if (!inputs.isEmpty()) {
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       String multiarchOutputPathFormat = getMultiarchOutputFormatString(pathResolver, inputs);
 
       MultiarchFile multiarchFile =
@@ -173,7 +172,7 @@ public class MultiarchFileInfos {
               buildTarget,
               projectFilesystem,
               params.withoutDeclaredDeps().withExtraDeps(thinRules),
-              graphBuilder.getSourcePathRuleFinder(),
+              graphBuilder,
               info.getRepresentativePlatform().getLipo(),
               inputs,
               cxxBuckConfig.shouldCacheLinks(),

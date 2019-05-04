@@ -217,7 +217,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathRuleFinder ruleFinder) {
     ImmutableSortedSet.Builder<BuildRule> builder = ImmutableSortedSet.naturalOrder();
     for (CxxPreprocessorInput input : getCxxPreprocessorInputs(cxxPlatform, graphBuilder)) {
-      builder.addAll(input.getDeps(graphBuilder, ruleFinder));
+      builder.addAll(input.getDeps(graphBuilder));
     }
     for (CxxHeaders cxxHeaders : getIncludes(cxxPlatform, graphBuilder)) {
       cxxHeaders.getDeps(ruleFinder).forEachOrdered(builder::add);

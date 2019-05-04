@@ -108,8 +108,7 @@ public class Build implements Closeable {
     return BuildEngineBuildContext.builder()
         .setBuildContext(
             BuildContext.builder()
-                .setSourcePathResolver(
-                    DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()))
+                .setSourcePathResolver(DefaultSourcePathResolver.from(graphBuilder))
                 .setBuildCellRootPath(rootCell.getRoot())
                 .setJavaPackageFinder(javaPackageFinder)
                 .setEventBus(executionContext.getBuckEventBus())
@@ -354,8 +353,7 @@ public class Build implements Closeable {
       throws IOException {
     int exitCode;
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildReport buildReport = new BuildReport(buildExecutionResult, pathResolver, rootCell);
 
     if (buildContext.isKeepGoing()) {
@@ -448,8 +446,7 @@ public class Build implements Closeable {
       BuckEventBus eventBus, Path pathToBuildReport, BuildExecutionException e) {
     // Note that pathToBuildReport is an absolute path that may exist outside of the project
     // root, so it is not appropriate to use ProjectFilesystem to write the output.
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildReport buildReport =
         new BuildReport(e.createBuildExecutionResult(), pathResolver, rootCell);
     try {

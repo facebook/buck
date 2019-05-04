@@ -52,7 +52,7 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
         target,
         projectFilesystem,
         pathResolver,
-        resolver.getSourcePathRuleFinder(),
+        resolver,
         getObjcopy().resolve(resolver, target.getTargetConfiguration()),
         library,
         isRemoveUndefinedSymbols());
@@ -70,7 +70,7 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
     return ElfSharedLibraryInterface.from(
         target,
         projectFilesystem,
-        resolver.getSourcePathRuleFinder(),
+        resolver,
         getObjcopy().resolve(resolver, target.getTargetConfiguration()),
         libName,
         linker,

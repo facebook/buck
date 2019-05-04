@@ -167,8 +167,7 @@ public class CxxBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
-            getDeclaredDeps().stream(),
-            BuildableSupport.getDeps(executable, buildRuleResolver.getSourcePathRuleFinder()))
+            getDeclaredDeps().stream(), BuildableSupport.getDeps(executable, buildRuleResolver))
         .map(BuildRule::getBuildTarget);
   }
 

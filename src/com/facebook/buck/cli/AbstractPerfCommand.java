@@ -193,8 +193,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
     for (BuildRule rule : rulesInGraph) {
       if (rule instanceof InitializableFromDisk) {
         ((InitializableFromDisk<?>) rule)
-            .initializeFromDisk(
-                DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
+            .initializeFromDisk(DefaultSourcePathResolver.from(graphBuilder));
       }
     }
   }
