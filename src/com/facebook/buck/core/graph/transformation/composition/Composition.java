@@ -61,7 +61,7 @@ public class Composition {
           ComposedComputation<Key1, ?, Result1> baseComputation,
           KeyComposer<Key1, Result1, Key2> composer) {
 
-    return new ComposedComputation<>(
+    return new ComposingComputation<>(
         baseComputation.getIdentifier(),
         resultClass,
         composer,

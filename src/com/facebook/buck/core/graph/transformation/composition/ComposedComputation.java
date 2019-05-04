@@ -22,11 +22,7 @@ import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 
 /**
  * A {@link GraphComputation} that represents the {@link
@@ -44,86 +40,24 @@ import com.google.common.collect.Maps;
  * @param <Result1> the composed result type of the base computation
  * @param <Result2> the composed result type of this computation
  */
-public class ComposedComputation<
+public interface ComposedComputation<
         Key1 extends ComputeKey<Result1>,
         Result1 extends ComputeResult,
         Result2 extends ComputeResult>
-    implements GraphComputation<ComposedKey<Key1, Result2>, ComposedResult<Result2>> {
-
-  private final Composer<Key1, Result1> composer;
-  private final Transformer<Result2> transformer;
-
-  private final ComposedComputationIdentifier<Result1> baseIdentifier;
-  private final ComposedComputationIdentifier<Result2> identifier;
-
-  /**
-   * Creates a composition that runs the base computation, uses the results to derive further
-   * dependencies and computes a new result.
-   *
-   * @param baseComputationIdentifer the {@link
-   *     com.facebook.buck.core.graph.transformation.model.ComputationIdentifier} of the base
-   *     computation.
-   * @param resultClass the result type class of the {@link ComposedResult} that this computation
-   *     returns
-   * @param composer the {@link Composer} that computes the dependencies of this computation based
-   *     on the result of the base computation.
-   * @param transformer the {@link Transformer} to run on the dependencies to return results of
-   *     {@link Result2}
-   */
-  ComposedComputation(
-      ComposedComputationIdentifier<Result1> baseComputationIdentifer,
-      Class<Result2> resultClass,
-      Composer<Key1, Result1> composer,
-      Transformer<Result2> transformer) {
-    this.composer = composer;
-    this.transformer = transformer;
-    this.baseIdentifier = baseComputationIdentifer;
-    this.identifier = ComposedComputationIdentifier.of(baseComputationIdentifer, resultClass);
-  }
+    extends GraphComputation<ComposedKey<Key1, Result2>, ComposedResult<Result2>> {
 
   @Override
-  public ComposedComputationIdentifier<Result2> getIdentifier() {
-    return identifier;
-  }
+  ComposedComputationIdentifier<Result2> getIdentifier();
 
   @Override
-  public ComposedResult<Result2> transform(
-      ComposedKey<Key1, Result2> key, ComputationEnvironment env) throws Exception {
-    // TODO(bobyf): figure out how to not do this computation twice
-    ComposedResult<Result1> results =
-        env.getDep(
-            ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
-    ImmutableList.Builder<Result2> resultBuilder =
-        ImmutableList.builderWithExpectedSize(results.asList().size());
-
-    for (Result1 result : results) {
-      // TODO(bobyf) make this not serial when we start doing more complicated transforms
-      resultBuilder.add(
-          transformer.transform(
-              Maps.filterKeys(
-                  env.getDeps(), composer.transitionWith(key.getOriginKey(), result)::contains)));
-    }
-    return ImmutableComposedResult.of(resultBuilder.build());
-  }
+  ComposedResult<Result2> transform(ComposedKey<Key1, Result2> key, ComputationEnvironment env)
+      throws Exception;
 
   @Override
-  public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
-      ComposedKey<Key1, Result2> key, ComputationEnvironment env) throws Exception {
-    ComposedResult<Result1> results =
-        env.getDep(
-            ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
-    ImmutableSet.Builder<ComputeKey<?>> depBuilder =
-        ImmutableSet.builderWithExpectedSize(results.asList().size());
-    for (Result1 result : results) {
-      depBuilder.addAll(composer.transitionWith(key.getOriginKey(), result));
-    }
-    return depBuilder.build();
-  }
+  ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
+      ComposedKey<Key1, Result2> key, ComputationEnvironment env) throws Exception;
 
   @Override
-  public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
-      ComposedKey<Key1, Result2> key) {
-    return ImmutableSet.of(
-        ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
-  }
+  ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
+      ComposedKey<Key1, Result2> key);
 }

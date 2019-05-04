@@ -37,7 +37,7 @@ public class CompositionTest {
   @Test
   public void composedComputationReturnsCorrectPreliminaryDeps() {
     ComposedComputation<LongNode, LongNode, LongNode> baseComputation =
-        new ComposedComputation<>(
+        new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
@@ -64,7 +64,7 @@ public class CompositionTest {
         ImmutableSet.of(ImmutableLongMultNode.of(1), ImmutableLongMultNode.of(2));
 
     ComposedComputation<LongNode, LongNode, LongNode> baseComputation =
-        new ComposedComputation<>(
+        new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
@@ -108,7 +108,7 @@ public class CompositionTest {
         (key, result) -> ImmutableSet.of(ImmutableLongMultNode.of(result.get()));
 
     ComposedComputation<LongNode, LongNode, LongNode> baseComputation =
-        new ComposedComputation<>(
+        new ComposingComputation<>(
             ComposedComputationIdentifier.of(LongNode.IDENTIFIER, LongNode.class),
             LongNode.class,
             (ignored1, ignored2) -> ImmutableSet.of(),
