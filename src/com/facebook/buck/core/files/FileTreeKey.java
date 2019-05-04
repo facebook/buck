@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.files;
 
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -24,12 +26,15 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false, prehash = true)
 public abstract class FileTreeKey implements ComputeKey<FileTree> {
 
+  public static final ComputationIdentifier<FileTree> IDENTIFIER =
+      ClassBasedComputationIdentifier.of(FileTreeKey.class, FileTree.class);
+
   @Value.Parameter
   /** Path of the directory to generate a file tree for */
   public abstract Path getPath();
 
   @Override
-  public Class<? extends ComputeKey<?>> getKeyClass() {
-    return FileTreeKey.class;
+  public ComputationIdentifier<FileTree> getIdentifier() {
+    return IDENTIFIER;
   }
 }

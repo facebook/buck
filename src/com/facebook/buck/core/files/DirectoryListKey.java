@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.files;
 
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import java.nio.file.Path;
 import org.immutables.value.Value;
@@ -24,13 +26,16 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false, prehash = true)
 public abstract class DirectoryListKey implements ComputeKey<DirectoryList> {
 
+  public static final ComputationIdentifier<DirectoryList> IDENTIFIER =
+      ClassBasedComputationIdentifier.of(DirectoryListKey.class, DirectoryList.class);
+
   @Value.Parameter
   /** Path of the directory to list */
   public abstract Path getPath();
 
   @Override
-  public Class<? extends ComputeKey<?>> getKeyClass() {
-    return DirectoryListKey.class;
+  public ComputationIdentifier<DirectoryList> getIdentifier() {
+    return IDENTIFIER;
   }
 
   // sergeyb: do we need cell identifier?

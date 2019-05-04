@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parser.targetnode;
 
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
 import java.nio.file.Path;
@@ -29,6 +31,10 @@ import org.immutables.value.Value;
 public abstract class BuildPackagePathToRawTargetNodePackageKey
     implements ComputeKey<RawTargetNodeWithDepsPackage> {
 
+  public static final ComputationIdentifier<RawTargetNodeWithDepsPackage> IDENTIFIER =
+      ClassBasedComputationIdentifier.of(
+          BuildPackagePathToRawTargetNodePackageKey.class, RawTargetNodeWithDepsPackage.class);
+
   /**
    * A path to a package root directory, i.e. a directory containing build file, relative to some
    * root (usually cell folder root)
@@ -37,7 +43,7 @@ public abstract class BuildPackagePathToRawTargetNodePackageKey
   public abstract Path getPath();
 
   @Override
-  public Class<? extends ComputeKey<?>> getKeyClass() {
-    return BuildPackagePathToRawTargetNodePackageKey.class;
+  public ComputationIdentifier<RawTargetNodeWithDepsPackage> getIdentifier() {
+    return IDENTIFIER;
   }
 }

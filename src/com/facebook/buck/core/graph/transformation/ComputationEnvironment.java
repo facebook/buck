@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.graph.transformation;
 
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableMap;
@@ -43,11 +44,11 @@ public interface ComputationEnvironment {
       KeyType key);
 
   /**
-   * @param keyClass the class of the keys
    * @param <KeyType> the type of the key
    * @param <ResultType> the corresponding result type
+   * @param identifier the identifier of the keys
    * @return a casted result of all the keys value pairs of the given class
    */
   <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
-      ImmutableMap<KeyType, ResultType> getDeps(Class<KeyType> keyClass);
+      ImmutableMap<KeyType, ResultType> getDeps(ComputationIdentifier<ResultType> identifier);
 }

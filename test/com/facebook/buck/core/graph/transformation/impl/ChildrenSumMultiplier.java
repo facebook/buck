@@ -20,6 +20,8 @@ import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenSumMultiplier.LongMultNode;
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableSet;
@@ -49,12 +51,15 @@ public class ChildrenSumMultiplier implements GraphComputation<LongMultNode, Lon
 
   @Value.Immutable(builder = false, copy = false, prehash = true)
   public abstract static class LongMultNode implements ComputeKey<LongMultNode>, ComputeResult {
+    public static ComputationIdentifier<LongMultNode> IDENTIFIER =
+        ClassBasedComputationIdentifier.of(LongMultNode.class, LongMultNode.class);
+
     @Value.Parameter
     public abstract long get();
 
     @Override
-    public Class<? extends ComputeKey<?>> getKeyClass() {
-      return LongMultNode.class;
+    public ComputationIdentifier<LongMultNode> getIdentifier() {
+      return IDENTIFIER;
     }
   }
 
@@ -65,15 +70,16 @@ public class ChildrenSumMultiplier implements GraphComputation<LongMultNode, Lon
   }
 
   @Override
-  public Class<LongMultNode> getKeyClass() {
-    return LongMultNode.class;
+  public ComputationIdentifier getIdentifier() {
+    return LongMultNode.IDENTIFIER;
   }
 
   @Override
   public LongMultNode transform(LongMultNode key, ComputationEnvironment env) {
-    LongStream sumDeps = env.getDeps(LongNode.class).values().stream().mapToLong(LongNode::get);
+    LongStream sumDeps =
+        env.getDeps(LongNode.IDENTIFIER).values().stream().mapToLong(LongNode::get);
     LongStream deps =
-        env.getDeps(LongMultNode.class).values().stream().mapToLong(LongMultNode::get);
+        env.getDeps(LongMultNode.IDENTIFIER).values().stream().mapToLong(LongMultNode::get);
     return ImmutableLongMultNode.of(
         key.get() * Streams.concat(sumDeps, deps).reduce(1, (a, b) -> a * b));
   }

@@ -21,6 +21,8 @@ import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.base.VerifyException;
@@ -37,7 +39,7 @@ public class TransformationStageMapTest {
 
   @Test
   public void createAndGetWithSingleStage() {
-    GraphComputationStage<?, ?> stage = new FakeComputationStage<>(LongNode.class);
+    GraphComputationStage<?, ?> stage = new FakeComputationStage<>(LongNode.class, LongNode.class);
     ComputationStageMap map = ComputationStageMap.from(ImmutableList.of(stage));
 
     assertEquals(stage, map.get(ImmutableLongNode.of(1)));
@@ -45,8 +47,9 @@ public class TransformationStageMapTest {
 
   @Test
   public void createAndGetWithMultipleStage() {
-    GraphComputationStage<?, ?> stage1 = new FakeComputationStage<>(LongNode.class);
-    GraphComputationStage<?, ?> stage2 = new FakeComputationStage<>(MyLongNode.class);
+    GraphComputationStage<?, ?> stage1 = new FakeComputationStage<>(LongNode.class, LongNode.class);
+    GraphComputationStage<?, ?> stage2 =
+        new FakeComputationStage<>(MyLongNode.class, MyLongNode.class);
     ComputationStageMap map = ComputationStageMap.from(ImmutableList.of(stage1, stage2));
 
     assertEquals(stage1, map.get(ImmutableLongNode.of(1)));
@@ -61,22 +64,24 @@ public class TransformationStageMapTest {
   }
 
   static class MyLongNode implements ComputeKey<MyLongNode>, ComputeResult {
+    public static final ComputationIdentifier<MyLongNode> IDENTIFIER =
+        ClassBasedComputationIdentifier.of(MyLongNode.class, MyLongNode.class);
 
     @Override
-    public Class<MyLongNode> getKeyClass() {
-      return MyLongNode.class;
+    public ComputationIdentifier<MyLongNode> getIdentifier() {
+      return IDENTIFIER;
     }
   }
 
   static class FakeComputationStage<Key extends ComputeKey<Result>, Result extends ComputeResult>
       extends GraphComputationStage<Key, Result> {
 
-    public FakeComputationStage(Class<Key> keyClass) {
+    public FakeComputationStage(Class<Key> keyClass, Class<Result> resultClass) {
       super(
           new GraphComputation<Key, Result>() {
             @Override
-            public Class<Key> getKeyClass() {
-              return keyClass;
+            public ComputationIdentifier<Result> getIdentifier() {
+              return ClassBasedComputationIdentifier.of(keyClass, resultClass);
             }
 
             @Override

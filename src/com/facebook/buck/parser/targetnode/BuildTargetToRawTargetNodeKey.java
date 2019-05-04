@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parser.targetnode;
 
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.RawTargetNode;
@@ -25,12 +27,15 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false, prehash = true)
 public abstract class BuildTargetToRawTargetNodeKey implements ComputeKey<RawTargetNode> {
 
+  public static final ComputationIdentifier<RawTargetNode> IDENTIFIER =
+      ClassBasedComputationIdentifier.of(BuildTargetToRawTargetNodeKey.class, RawTargetNode.class);
+
   /** Build target that uniquely identifies {@link RawTargetNode} */
   @Value.Parameter
   public abstract UnconfiguredBuildTarget getBuildTarget();
 
   @Override
-  public Class<? extends ComputeKey<?>> getKeyClass() {
-    return BuildTargetToRawTargetNodeKey.class;
+  public ComputationIdentifier<RawTargetNode> getIdentifier() {
+    return IDENTIFIER;
   }
 }

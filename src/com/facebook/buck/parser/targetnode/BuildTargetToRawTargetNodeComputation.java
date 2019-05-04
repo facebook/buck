@@ -19,6 +19,7 @@ package com.facebook.buck.parser.targetnode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -62,8 +63,8 @@ public class BuildTargetToRawTargetNodeComputation
   }
 
   @Override
-  public Class<BuildTargetToRawTargetNodeKey> getKeyClass() {
-    return BuildTargetToRawTargetNodeKey.class;
+  public ComputationIdentifier<RawTargetNode> getIdentifier() {
+    return BuildTargetToRawTargetNodeKey.IDENTIFIER;
   }
 
   @Override

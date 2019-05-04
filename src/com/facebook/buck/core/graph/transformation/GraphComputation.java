@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.graph.transformation;
 
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableSet;
@@ -42,10 +43,10 @@ import com.google.common.collect.ImmutableSet;
 public interface GraphComputation<Key extends ComputeKey<Result>, Result extends ComputeResult> {
 
   /**
-   * @return the class of the key for this transformation. This should match {@link
-   *     ComputeKey#getKeyClass()}
+   * @return the identifier of the key for this transformation. This should match {@link
+   *     ComputeKey#getIdentifier()}
    */
-  Class<Key> getKeyClass();
+  ComputationIdentifier<Result> getIdentifier();
 
   /**
    * Perform a transformation identified by key {@link Key} into a final type {@link Result}. This

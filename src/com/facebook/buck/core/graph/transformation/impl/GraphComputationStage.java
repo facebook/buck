@@ -19,6 +19,7 @@ import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import java.util.Optional;
@@ -67,8 +68,8 @@ public class GraphComputationStage<
     return transformer;
   }
 
-  Class<KeyType> getKeyClass() {
-    return transformer.getKeyClass();
+  ComputationIdentifier<ResultType> getIdentifier() {
+    return transformer.getIdentifier();
   }
 
   GraphEngineCache<KeyType, ResultType> getCache() {

@@ -28,6 +28,7 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareTask;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableList;
@@ -207,8 +208,8 @@ public class DefaultGraphTransformationEngineTest {
         new GraphComputation<LongNode, LongNode>() {
 
           @Override
-          public Class<LongNode> getKeyClass() {
-            return LongNode.class;
+          public ComputationIdentifier getIdentifier() {
+            return LongNode.IDENTIFIER;
           }
 
           @Override
@@ -391,8 +392,8 @@ public class DefaultGraphTransformationEngineTest {
         new GraphComputation<LongNode, LongNode>() {
 
           @Override
-          public Class<LongNode> getKeyClass() {
-            return LongNode.class;
+          public ComputationIdentifier getIdentifier() {
+            return LongNode.IDENTIFIER;
           }
 
           @Override
@@ -431,8 +432,8 @@ public class DefaultGraphTransformationEngineTest {
         new GraphComputation<LongNode, LongNode>() {
 
           @Override
-          public Class<LongNode> getKeyClass() {
-            return LongNode.class;
+          public ComputationIdentifier getIdentifier() {
+            return LongNode.IDENTIFIER;
           }
 
           @Override
@@ -472,8 +473,8 @@ public class DefaultGraphTransformationEngineTest {
         new GraphComputation<LongNode, LongNode>() {
 
           @Override
-          public Class<LongNode> getKeyClass() {
-            return LongNode.class;
+          public ComputationIdentifier getIdentifier() {
+            return LongNode.IDENTIFIER;
           }
 
           @Override

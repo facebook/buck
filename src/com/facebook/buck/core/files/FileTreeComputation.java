@@ -18,6 +18,7 @@ package com.facebook.buck.core.files;
 
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.util.MoreMaps;
@@ -38,15 +39,15 @@ public class FileTreeComputation implements GraphComputation<FileTreeKey, FileTr
   }
 
   @Override
-  public Class<FileTreeKey> getKeyClass() {
-    return FileTreeKey.class;
+  public ComputationIdentifier<FileTree> getIdentifier() {
+    return FileTreeKey.IDENTIFIER;
   }
 
   @Override
   public FileTree transform(FileTreeKey key, ComputationEnvironment env) {
 
     DirectoryList currentDir = env.getDep(ImmutableDirectoryListKey.of(key.getPath()));
-    ImmutableMap<FileTreeKey, FileTree> children = env.getDeps(FileTreeKey.class);
+    ImmutableMap<FileTreeKey, FileTree> children = env.getDeps(FileTreeKey.IDENTIFIER);
 
     ImmutableMap<Path, FileTree> deps;
     if (children.isEmpty()) {

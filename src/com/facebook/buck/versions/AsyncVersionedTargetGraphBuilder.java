@@ -23,6 +23,8 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.impl.DefaultGraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
@@ -182,12 +184,16 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   @Value.Immutable(builder = false, copy = false, prehash = true)
   @Value.Style(visibility = ImplementationVisibility.PACKAGE)
   abstract static class VersionInfoKey implements ComputeKey<VersionInfo> {
+
+    public static final ComputationIdentifier<VersionInfo> IDENTIFIER =
+        ClassBasedComputationIdentifier.of(VersionInfoKey.class, VersionInfo.class);
+
     @Value.Parameter
     public abstract TargetNode<?> getTargetNode();
 
     @Override
-    public Class<? extends ComputeKey<?>> getKeyClass() {
-      return VersionInfoKey.class;
+    public ComputationIdentifier<VersionInfo> getIdentifier() {
+      return IDENTIFIER;
     }
   }
 
@@ -201,8 +207,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     @Override
-    public Class<VersionInfoKey> getKeyClass() {
-      return VersionInfoKey.class;
+    public ComputationIdentifier<VersionInfo> getIdentifier() {
+      return VersionInfoKey.IDENTIFIER;
     }
 
     @Override
@@ -264,7 +270,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         versionDomain.put(node.getBuildTarget(), versions.keySet());
       }
 
-      for (VersionInfo depInfo : env.getDeps(VersionInfoKey.class).values()) {
+      for (VersionInfo depInfo : env.getDeps(VersionInfoKey.IDENTIFIER).values()) {
         versionDomain.putAll(depInfo.getVersionDomain());
       }
       return VersionInfo.of(versionDomain);
@@ -274,6 +280,12 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   /** Key used to request for resolved {@link TargetNode}s. */
   @Value.Immutable(builder = false, copy = false, prehash = true)
   abstract static class VersionTargetGraphKey implements ComputeKey<TargetNode<?>> {
+
+    @SuppressWarnings("unchecked")
+    public static final ComputationIdentifier<TargetNode<?>> IDENTIFIER =
+        ClassBasedComputationIdentifier.of(
+            VersionTargetGraphKey.class, (Class<TargetNode<?>>) (Class<?>) TargetNode.class);
+
     @Value.Parameter
     public abstract TargetNode<?> getTargetNode();
 
@@ -285,8 +297,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     public abstract Optional<TargetNodeTranslator> targetNodeTranslator();
 
     @Override
-    public Class<? extends ComputeKey<?>> getKeyClass() {
-      return VersionTargetGraphKey.class;
+    public ComputationIdentifier<TargetNode<?>> getIdentifier() {
+      return IDENTIFIER;
     }
 
     public static VersionTargetGraphKey of(TargetNode<?> node) {
@@ -336,8 +348,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     }
 
     @Override
-    public Class<VersionTargetGraphKey> getKeyClass() {
-      return VersionTargetGraphKey.class;
+    public ComputationIdentifier<TargetNode<?>> getIdentifier() {
+      return VersionTargetGraphKey.IDENTIFIER;
     }
 
     @Override
@@ -451,7 +463,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                       newNode.getBuildTarget().getFlavors(), node.getBuildTarget().getFlavors())),
           newNode);
 
-      for (TargetNode<?> childNode : env.getDeps(VersionTargetGraphKey.class).values()) {
+      for (TargetNode<?> childNode : env.getDeps(VersionTargetGraphKey.IDENTIFIER).values()) {
         targetGraphBuilder.addEdge(newNode, childNode);
       }
 

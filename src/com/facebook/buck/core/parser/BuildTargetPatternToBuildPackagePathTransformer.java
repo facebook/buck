@@ -23,6 +23,7 @@ import com.facebook.buck.core.files.ImmutableDirectoryListKey;
 import com.facebook.buck.core.files.ImmutableFileTreeKey;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.io.file.MorePaths;
@@ -54,8 +55,8 @@ public class BuildTargetPatternToBuildPackagePathTransformer
   }
 
   @Override
-  public Class<BuildTargetPatternToBuildPackagePathKey> getKeyClass() {
-    return BuildTargetPatternToBuildPackagePathKey.class;
+  public ComputationIdentifier<BuildPackagePaths> getIdentifier() {
+    return BuildTargetPatternToBuildPackagePathKey.IDENTIFIER;
   }
 
   @Override

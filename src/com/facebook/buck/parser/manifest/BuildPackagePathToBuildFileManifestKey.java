@@ -16,6 +16,8 @@
 
 package com.facebook.buck.parser.manifest;
 
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import java.nio.file.Path;
@@ -26,6 +28,10 @@ import org.immutables.value.Value;
 public abstract class BuildPackagePathToBuildFileManifestKey
     implements ComputeKey<BuildFileManifest> {
 
+  public static final ComputationIdentifier<BuildFileManifest> IDENTIFIER =
+      ClassBasedComputationIdentifier.of(
+          BuildPackagePathToBuildFileManifestKey.class, BuildFileManifest.class);
+
   @Value.Parameter
   /**
    * Path of the root of the package to parse, relative to some root (usually cell root). The
@@ -34,7 +40,7 @@ public abstract class BuildPackagePathToBuildFileManifestKey
   public abstract Path getPath();
 
   @Override
-  public Class<? extends ComputeKey<?>> getKeyClass() {
-    return BuildPackagePathToBuildFileManifestKey.class;
+  public ComputationIdentifier<BuildFileManifest> getIdentifier() {
+    return IDENTIFIER;
   }
 }

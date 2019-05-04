@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.parser;
 
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetPatternData;
 import org.immutables.value.Value;
@@ -25,6 +27,10 @@ import org.immutables.value.Value;
 public abstract class BuildTargetPatternToBuildPackagePathKey
     implements ComputeKey<BuildPackagePaths> {
 
+  public static final ComputationIdentifier<BuildPackagePaths> IDENTIFIER =
+      ClassBasedComputationIdentifier.of(
+          BuildTargetPatternToBuildPackagePathKey.class, BuildPackagePaths.class);
+
   @Value.Parameter
   /**
    * Pattern for which to discover paths to appropriate packages. Pattern can specify single target
@@ -33,7 +39,7 @@ public abstract class BuildTargetPatternToBuildPackagePathKey
   public abstract BuildTargetPatternData getPattern();
 
   @Override
-  public Class<? extends ComputeKey<?>> getKeyClass() {
-    return BuildTargetPatternToBuildPackagePathKey.class;
+  public ComputationIdentifier<BuildPackagePaths> getIdentifier() {
+    return IDENTIFIER;
   }
 }

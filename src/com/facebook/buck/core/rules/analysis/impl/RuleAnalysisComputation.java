@@ -19,6 +19,7 @@ import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -51,8 +52,8 @@ public class RuleAnalysisComputation
   }
 
   @Override
-  public Class<RuleAnalysisKey> getKeyClass() {
-    return RuleAnalysisKey.class;
+  public ComputationIdentifier<RuleAnalysisResult> getIdentifier() {
+    return RuleAnalysisKey.IDENTIFIER;
   }
 
   @Override
@@ -84,7 +85,8 @@ public class RuleAnalysisComputation
         new RuleAnalysisContextImpl(
             ImmutableMap.copyOf(
                 Maps.transformValues(
-                    env.getDeps(RuleAnalysisKey.class), RuleAnalysisResult::getProviderInfos)));
+                    env.getDeps(RuleAnalysisKey.IDENTIFIER),
+                    RuleAnalysisResult::getProviderInfos)));
 
     ProviderInfoCollection providers =
         ruleDescription.ruleImpl(

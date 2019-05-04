@@ -19,6 +19,7 @@ package com.facebook.buck.parser.targetnode;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
@@ -71,8 +72,8 @@ public class BuildPackagePathToRawTargetNodePackageComputation
   }
 
   @Override
-  public Class<BuildPackagePathToRawTargetNodePackageKey> getKeyClass() {
-    return BuildPackagePathToRawTargetNodePackageKey.class;
+  public ComputationIdentifier<RawTargetNodeWithDepsPackage> getIdentifier() {
+    return BuildPackagePathToRawTargetNodePackageKey.IDENTIFIER;
   }
 
   @Override
@@ -80,7 +81,7 @@ public class BuildPackagePathToRawTargetNodePackageComputation
       BuildPackagePathToRawTargetNodePackageKey key, ComputationEnvironment env) {
 
     ImmutableMap<BuildTargetToRawTargetNodeKey, RawTargetNode> rawTargetNodes =
-        env.getDeps(BuildTargetToRawTargetNodeKey.class);
+        env.getDeps(BuildTargetToRawTargetNodeKey.IDENTIFIER);
 
     Path buildFileAbsolutePath =
         cell.getRoot()

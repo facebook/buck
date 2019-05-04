@@ -15,6 +15,8 @@
  */
 package com.facebook.buck.core.rules.analysis;
 
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.model.BuildTarget;
 import org.immutables.value.Value;
@@ -29,6 +31,9 @@ import org.immutables.value.Value;
 @Value.Immutable(builder = false, copy = false, prehash = true)
 public abstract class RuleAnalysisKey implements ComputeKey<RuleAnalysisResult> {
 
+  public static final ComputationIdentifier<RuleAnalysisResult> IDENTIFIER =
+      ClassBasedComputationIdentifier.of(RuleAnalysisKey.class, RuleAnalysisResult.class);
+
   /**
    * TODO(bobyf) this really should be a ConfiguredBuildTarget
    *
@@ -38,7 +43,7 @@ public abstract class RuleAnalysisKey implements ComputeKey<RuleAnalysisResult> 
   public abstract BuildTarget getBuildTarget();
 
   @Override
-  public Class<? extends ComputeKey<?>> getKeyClass() {
-    return RuleAnalysisKey.class;
+  public ComputationIdentifier<RuleAnalysisResult> getIdentifier() {
+    return IDENTIFIER;
   }
 }

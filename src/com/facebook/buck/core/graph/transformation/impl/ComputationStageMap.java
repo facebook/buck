@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.core.graph.transformation.impl;
 
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.base.Verify;
@@ -27,18 +28,18 @@ import com.google.common.collect.ImmutableMap;
  */
 class ComputationStageMap {
 
-  private final ImmutableMap<Class<? extends ComputeKey<?>>, GraphComputationStage<?, ?>> stageMaps;
+  private final ImmutableMap<ComputationIdentifier<?>, GraphComputationStage<?, ?>> stageMaps;
 
   ComputationStageMap(
-      ImmutableMap<Class<? extends ComputeKey<?>>, GraphComputationStage<?, ?>> stageMaps) {
+      ImmutableMap<ComputationIdentifier<?>, GraphComputationStage<?, ?>> stageMaps) {
     this.stageMaps = stageMaps;
   }
 
   static ComputationStageMap from(ImmutableList<GraphComputationStage<?, ?>> stages) {
-    ImmutableMap.Builder<Class<? extends ComputeKey<?>>, GraphComputationStage<?, ?>> mapBuilder =
+    ImmutableMap.Builder<ComputationIdentifier<?>, GraphComputationStage<?, ?>> mapBuilder =
         ImmutableMap.builderWithExpectedSize(stages.size());
     for (GraphComputationStage<?, ?> stage : stages) {
-      mapBuilder.put(stage.getKeyClass(), stage);
+      mapBuilder.put(stage.getIdentifier(), stage);
     }
     return new ComputationStageMap(mapBuilder.build());
   }
@@ -47,7 +48,7 @@ class ComputationStageMap {
   /** @return the corresponding {@link GraphComputationStage} for the given {@link ComputeKey} */
   GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult> get(
       ComputeKey<? extends ComputeResult> key) {
-    GraphComputationStage<?, ?> ret = stageMaps.get(key.getKeyClass());
+    GraphComputationStage<?, ?> ret = stageMaps.get(key.getIdentifier());
     Verify.verify(ret != null, "Unknown stage for key: (%s) requested.", key);
     return (GraphComputationStage<ComputeKey<? extends ComputeResult>, ? extends ComputeResult>)
         ret;

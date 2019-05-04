@@ -18,6 +18,7 @@ package com.facebook.buck.core.graph.transformation.impl;
 
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableMap;
@@ -55,12 +56,12 @@ class DefaultComputationEnvironment implements ComputationEnvironment {
   @Override
   @SuppressWarnings("unchecked")
   public <KeyType extends ComputeKey<ResultType>, ResultType extends ComputeResult>
-      ImmutableMap<KeyType, ResultType> getDeps(Class<KeyType> keyClass) {
+      ImmutableMap<KeyType, ResultType> getDeps(ComputationIdentifier<ResultType> identifier) {
     ImmutableMap.Builder<KeyType, ResultType> resultBuilder =
         ImmutableMap.builderWithExpectedSize(deps.size());
 
     for (Entry<? extends ComputeKey<?>, ? extends ComputeResult> dep : deps.entrySet()) {
-      if (dep.getKey().getKeyClass().equals(keyClass)) {
+      if (dep.getKey().getIdentifier().equals(identifier)) {
         resultBuilder.put((KeyType) dep.getKey(), (ResultType) dep.getValue());
       }
     }

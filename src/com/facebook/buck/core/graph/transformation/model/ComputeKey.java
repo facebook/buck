@@ -19,15 +19,18 @@ package com.facebook.buck.core.graph.transformation.model;
  * This is an interface for all keys to be used in {@link
  * com.facebook.buck.core.graph.transformation.GraphComputation}.
  *
+ * <p>Implementation should define a static to expose {@link #getIdentifier()} statically for users
+ * and for avoiding recomputation.
+ *
  * @param <ResultType> should be the corresponding result type of performing the transformation in
  *     the {@link com.facebook.buck.core.graph.transformation.GraphComputation}
  */
 public interface ComputeKey<ResultType extends ComputeResult> {
 
   /**
-   * @return the class identifier of this key. This is different from {@code getClass()} so that
-   *     users can define their own {@link ComputeKey} as an Immutable and still have a consistent
-   *     identifier that returns the interface class instead of the immutable implementation class.
+   * @return the identifier of this key. This identifier is used to map all keys of the same {@link
+   *     ComputationIdentifier} to the same {@link
+   *     com.facebook.buck.core.graph.transformation.GraphComputation}.
    */
-  Class<? extends ComputeKey<?>> getKeyClass();
+  ComputationIdentifier<ResultType> getIdentifier();
 }

@@ -19,6 +19,8 @@ package com.facebook.buck.core.graph.transformation.impl;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.impl.ChildrenAdder.LongNode;
+import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.google.common.collect.ImmutableSet;
@@ -31,16 +33,19 @@ import org.immutables.value.Value;
  * <p>This returns the value of the sum of its input graph's children and itself. For the above
  * graph in {@code graph}, operating on the root would result in 19.
  */
-class ChildrenAdder implements GraphComputation<LongNode, LongNode> {
+public class ChildrenAdder implements GraphComputation<LongNode, LongNode> {
 
   @Value.Immutable(builder = false, copy = false, prehash = true)
   public abstract static class LongNode implements ComputeKey<LongNode>, ComputeResult {
+    public static final ComputationIdentifier<LongNode> IDENTIFIER =
+        ClassBasedComputationIdentifier.of(LongNode.class, LongNode.class);
+
     @Value.Parameter
     public abstract long get();
 
     @Override
-    public Class<? extends ComputeKey<?>> getKeyClass() {
-      return LongNode.class;
+    public ComputationIdentifier<LongNode> getIdentifier() {
+      return IDENTIFIER;
     }
   }
 
@@ -51,14 +56,15 @@ class ChildrenAdder implements GraphComputation<LongNode, LongNode> {
   }
 
   @Override
-  public Class<LongNode> getKeyClass() {
-    return LongNode.class;
+  public ComputationIdentifier getIdentifier() {
+    return LongNode.IDENTIFIER;
   }
 
   @Override
   public LongNode transform(LongNode key, ComputationEnvironment env) {
     return ImmutableLongNode.of(
-        key.get() + env.getDeps(LongNode.class).values().stream().mapToLong(LongNode::get).sum());
+        key.get()
+            + env.getDeps(LongNode.IDENTIFIER).values().stream().mapToLong(LongNode::get).sum());
   }
 
   @Override

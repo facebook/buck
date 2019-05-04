@@ -18,6 +18,7 @@ package com.facebook.buck.parser.manifest;
 
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -49,8 +50,8 @@ public class BuildPackagePathToBuildFileManifestComputation
   }
 
   @Override
-  public Class<BuildPackagePathToBuildFileManifestKey> getKeyClass() {
-    return BuildPackagePathToBuildFileManifestKey.class;
+  public ComputationIdentifier<BuildFileManifest> getIdentifier() {
+    return BuildPackagePathToBuildFileManifestKey.IDENTIFIER;
   }
 
   @Override

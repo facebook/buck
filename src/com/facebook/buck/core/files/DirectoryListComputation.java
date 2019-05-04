@@ -18,6 +18,7 @@ package com.facebook.buck.core.files;
 
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
+import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -43,8 +44,8 @@ public class DirectoryListComputation implements GraphComputation<DirectoryListK
   }
 
   @Override
-  public Class<DirectoryListKey> getKeyClass() {
-    return DirectoryListKey.class;
+  public ComputationIdentifier<DirectoryList> getIdentifier() {
+    return DirectoryListKey.IDENTIFIER;
   }
 
   @Override
