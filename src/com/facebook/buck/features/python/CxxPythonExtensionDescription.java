@@ -225,7 +225,6 @@ public class CxxPythonExtensionDescription
             target,
             graphBuilder,
             pathResolver,
-            graphBuilder,
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,

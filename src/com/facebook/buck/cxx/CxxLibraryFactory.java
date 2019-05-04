@@ -462,7 +462,6 @@ public class CxxLibraryFactory {
             buildTarget,
             graphBuilder,
             sourcePathResolver,
-            graphBuilder,
             cxxBuckConfig,
             cxxPlatform,
             CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(

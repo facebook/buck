@@ -379,7 +379,6 @@ public final class CxxInferEnhancer {
             target,
             graphBuilder,
             pathResolver,
-            graphBuilder,
             cxxBuckConfig,
             cxxPlatform,
             preprocessorInputs,

@@ -183,7 +183,6 @@ public class CxxPrecompiledHeaderRuleTest {
         .setBaseBuildTarget(buildTarget)
         .setProjectFilesystem(projectFilesystem)
         .setActionGraphBuilder(graphBuilder)
-        .setRuleFinder(graphBuilder)
         .setPathResolver(DefaultSourcePathResolver.from(graphBuilder))
         .setCxxPlatform(platformSupportingPch)
         .setPicType(PicType.PIC)

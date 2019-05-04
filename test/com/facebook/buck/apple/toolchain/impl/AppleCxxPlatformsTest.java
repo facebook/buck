@@ -849,7 +849,6 @@ public class AppleCxxPlatformsTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(entry.getValue().getCxxPlatform())
               .setPicType(PicType.PIC)

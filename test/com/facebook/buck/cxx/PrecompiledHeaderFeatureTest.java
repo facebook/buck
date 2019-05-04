@@ -406,7 +406,6 @@ public class PrecompiledHeaderFeatureTest {
         .setBaseBuildTarget(target)
         .setActionGraphBuilder(graphBuilder)
         .setPathResolver(pathResolver)
-        .setRuleFinder(graphBuilder)
         .setPicType(PicType.PDC);
   }
 

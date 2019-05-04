@@ -1079,7 +1079,6 @@ public class CxxDescriptionEnhancer {
             target,
             graphBuilder,
             sourcePathResolver,
-            graphBuilder,
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,

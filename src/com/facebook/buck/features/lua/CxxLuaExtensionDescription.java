@@ -188,7 +188,6 @@ public class CxxLuaExtensionDescription
                 buildTarget,
                 graphBuilder,
                 pathResolver,
-                graphBuilder,
                 cxxBuckConfig,
                 cxxPlatform,
                 cxxPreprocessorInput,

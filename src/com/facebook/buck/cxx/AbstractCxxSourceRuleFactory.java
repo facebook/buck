@@ -26,7 +26,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -101,9 +100,6 @@ abstract class AbstractCxxSourceRuleFactory {
   protected abstract SourcePathResolver getPathResolver();
 
   @Value.Parameter
-  protected abstract SourcePathRuleFinder getRuleFinder();
-
-  @Value.Parameter
   protected abstract CxxBuckConfig getCxxBuckConfig();
 
   @Value.Parameter
@@ -172,7 +168,8 @@ abstract class AbstractCxxSourceRuleFactory {
     }
     if (getPreInclude().isPresent()) {
       builder.addAll(
-          getRuleFinder().filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
+          getActionGraphBuilder()
+              .filterBuildRuleInputs(getPreInclude().get().getHeaderSourcePath()));
       builder.addAll(getPreInclude().get().getBuildDeps());
     }
     return builder.build();
@@ -387,7 +384,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxPreprocessAndCompile.compile(
         target,
         getProjectFilesystem(),
-        getRuleFinder(),
+        getActionGraphBuilder(),
         compilerDelegate,
         getCompileOutputName(name),
         source.getPath(),
@@ -456,7 +453,7 @@ abstract class AbstractCxxSourceRuleFactory {
                   LOG.verbose(
                       "Creating preprocessed InferCapture build rule %s for %s", target, source);
 
-                  DepsBuilder depsBuilder = new DepsBuilder(getRuleFinder());
+                  DepsBuilder depsBuilder = new DepsBuilder(getActionGraphBuilder());
                   depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
                   PreprocessorDelegateCacheValue preprocessorDelegateValue =
@@ -528,7 +525,7 @@ abstract class AbstractCxxSourceRuleFactory {
     return CxxPreprocessAndCompile.preprocessAndCompile(
         target,
         getProjectFilesystem(),
-        getRuleFinder(),
+        getActionGraphBuilder(),
         preprocessorDelegate,
         compilerDelegate,
         getCompileOutputName(name),
@@ -562,7 +559,6 @@ abstract class AbstractCxxSourceRuleFactory {
             sourceType,
             source.getFlags(),
             getActionGraphBuilder(),
-            getRuleFinder(),
             getPathResolver()));
   }
 
@@ -606,7 +602,6 @@ abstract class AbstractCxxSourceRuleFactory {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver) {
 
     // This method should be called only if prefix/precompiled header param present.
@@ -624,7 +619,6 @@ abstract class AbstractCxxSourceRuleFactory {
         sourceType,
         sourceFlags,
         graphBuilder,
-        ruleFinder,
         pathResolver);
   }
 

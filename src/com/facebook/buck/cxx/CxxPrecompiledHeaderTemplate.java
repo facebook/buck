@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -73,10 +72,9 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidP
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver) {
 
-    DepsBuilder depsBuilder = new DepsBuilder(ruleFinder);
+    DepsBuilder depsBuilder = new DepsBuilder(graphBuilder);
 
     Preprocessor preprocessor = preprocessorDelegateForCxxRule.getPreprocessor();
 
@@ -102,7 +100,7 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidP
       depsBuilder.add(rule);
     }
 
-    depsBuilder.add(requireAggregatedDepsRule(cxxPlatform, graphBuilder, ruleFinder));
+    depsBuilder.add(requireAggregatedDepsRule(cxxPlatform, graphBuilder));
     depsBuilder.add(preprocessorDelegate);
 
     return requirePrecompiledHeader(

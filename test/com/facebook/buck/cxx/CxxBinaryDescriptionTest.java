@@ -151,7 +151,6 @@ public class CxxBinaryDescriptionTest {
             .setProjectFilesystem(projectFilesystem)
             .setActionGraphBuilder(graphBuilder)
             .setPathResolver(pathResolver)
-            .setRuleFinder(graphBuilder)
             .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
             .setCxxPlatform(cxxPlatform)
             .setPicType(PicType.PDC)

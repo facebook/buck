@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -58,10 +57,9 @@ public class CxxPrefixHeader extends PreInclude {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       SourcePathResolver pathResolver) {
 
-    DepsBuilder depsBuilder = new DepsBuilder(ruleFinder);
+    DepsBuilder depsBuilder = new DepsBuilder(graphBuilder);
 
     // We need the preprocessor deps for this rule, for its prefix header.
     depsBuilder.add(preprocessorDelegateForCxxRule);

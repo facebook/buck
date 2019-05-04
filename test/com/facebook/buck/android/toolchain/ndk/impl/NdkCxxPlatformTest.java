@@ -130,7 +130,6 @@ public class NdkCxxPlatformTest {
               .setProjectFilesystem(new FakeProjectFilesystem())
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(entry.getValue().resolve(graphBuilder).getCxxPlatform())
               .setPicType(PicType.PIC)
