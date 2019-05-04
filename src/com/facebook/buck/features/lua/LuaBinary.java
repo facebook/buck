@@ -106,8 +106,7 @@ public class LuaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
-            getDeclaredDeps().stream(),
-            BuildableSupport.getDeps(wrappedBinary, buildRuleResolver.getSourcePathRuleFinder()))
+            getDeclaredDeps().stream(), BuildableSupport.getDeps(wrappedBinary, buildRuleResolver))
         .map(BuildRule::getBuildTarget);
   }
 }

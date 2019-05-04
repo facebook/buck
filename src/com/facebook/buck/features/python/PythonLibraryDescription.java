@@ -115,8 +115,7 @@ public class PythonLibraryDescription
               cxxPlatforms.getFlavorAndValue(baseTarget).orElseThrow(IllegalArgumentException::new);
           baseTarget = buildTarget.withoutFlavors(pythonPlatform.getKey(), cxxPlatform.getKey());
 
-          SourcePathResolver pathResolver =
-              DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+          SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
           Path baseModule = PythonUtil.getBasePath(baseTarget, args.getBaseModule());
           PythonPackageComponents components =
               PythonPackageComponents.of(

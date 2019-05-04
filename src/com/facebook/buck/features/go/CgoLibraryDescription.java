@@ -148,8 +148,7 @@ public class CgoLibraryDescription
 
     if (platform.isPresent()) {
       ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
       ImmutableList<BuildTarget> cxxDeps =
           params.getDeclaredDeps().get().stream()

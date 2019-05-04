@@ -145,8 +145,7 @@ public class RustLibraryDescription
       BuildRuleParams params,
       RustLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();

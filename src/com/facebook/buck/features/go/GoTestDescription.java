@@ -177,9 +177,7 @@ public class GoTestDescription
             projectFilesystem,
             params.withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(
-                        BuildableSupport.getDepsCollection(
-                            testMainGenerator, graphBuilder.getSourcePathRuleFinder()))
+                    .addAll(BuildableSupport.getDepsCollection(testMainGenerator, graphBuilder))
                     .build()),
             testMainGenerator,
             srcs,
@@ -201,8 +199,7 @@ public class GoTestDescription
         GoDescriptors.getPlatformForRule(getGoToolchain(), this.goBuckConfig, buildTarget, args);
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     GoTestCoverStep.Mode coverageMode;
@@ -232,7 +229,7 @@ public class GoTestDescription
                       new GoTestCoverSource(
                           target,
                           projectFilesystem,
-                          graphBuilder.getSourcePathRuleFinder(),
+                          graphBuilder,
                           pathResolver,
                           platform,
                           rawSrcs.build(),
@@ -426,10 +423,7 @@ public class GoTestDescription
                       ImmutableSortedSet.<BuildRule>naturalOrder()
                           .addAll(params.getExtraDeps().get())
                           // Make sure to include dynamically generated sources as deps.
-                          .addAll(
-                              graphBuilder
-                                  .getSourcePathRuleFinder()
-                                  .filterBuildRuleInputs(libraryArg.getSrcs()))
+                          .addAll(graphBuilder.filterBuildRuleInputs(libraryArg.getSrcs()))
                           .build());
       testLibrary =
           GoDescriptors.createGoCompileRule(

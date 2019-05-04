@@ -132,8 +132,7 @@ abstract class GoDescriptors {
       Iterable<BuildTarget> deps,
       Iterable<BuildTarget> cgoDeps,
       List<ListType> goListTypes) {
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     Preconditions.checkState(buildTarget.getFlavors().contains(platform.getFlavor()));
 
@@ -142,12 +141,12 @@ abstract class GoDescriptors {
 
     ImmutableList.Builder<BuildRule> linkableDepsBuilder = ImmutableList.builder();
     for (GoLinkable linkable : linkables) {
-      linkableDepsBuilder.addAll(linkable.getDeps(ruleFinder));
+      linkableDepsBuilder.addAll(linkable.getDeps(graphBuilder));
     }
 
     BuildTarget target = createSymlinkTreeTarget(buildTarget);
     SymlinkTree symlinkTree =
-        makeSymlinkTree(target, projectFilesystem, ruleFinder, pathResolver, linkables);
+        makeSymlinkTree(target, projectFilesystem, graphBuilder, pathResolver, linkables);
     graphBuilder.addToIndex(symlinkTree);
 
     ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
@@ -168,7 +167,7 @@ abstract class GoDescriptors {
         params
             .copyAppendingExtraDeps(linkableDepsBuilder.build())
             .copyAppendingExtraDeps(ImmutableList.of(symlinkTree))
-            .copyAppendingExtraDeps(getDependenciesFromSources(ruleFinder, srcs)),
+            .copyAppendingExtraDeps(getDependenciesFromSources(graphBuilder, srcs)),
         symlinkTree,
         packageName,
         getPackageImportMap(
@@ -336,14 +335,13 @@ abstract class GoDescriptors {
     graphBuilder.addToIndex(library);
     extraDeps.add(library);
 
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget target = createTransitiveSymlinkTreeTarget(buildTarget);
     SymlinkTree symlinkTree =
         makeSymlinkTree(
             target,
             projectFilesystem,
-            ruleFinder,
+            graphBuilder,
             pathResolver,
             requireTransitiveGoLinkables(
                 buildTarget,
@@ -412,7 +410,7 @@ abstract class GoDescriptors {
     for (Arg arg : cxxLinkerArgs) {
       if (HasSourcePath.class.isInstance(arg)) {
         SourcePath pth = ((HasSourcePath) arg).getPath();
-        extraDeps.addAll(ruleFinder.filterBuildRuleInputs(pth));
+        extraDeps.addAll(graphBuilder.filterBuildRuleInputs(pth));
       }
     }
 
@@ -435,9 +433,9 @@ abstract class GoDescriptors {
         params
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
+                    .addAll(graphBuilder.filterBuildRuleInputs(symlinkTree.getLinks().values()))
                     .addAll(extraDeps.build())
-                    .addAll(BuildableSupport.getDepsCollection(cxxLinker, ruleFinder))
+                    .addAll(BuildableSupport.getDepsCollection(cxxLinker, graphBuilder))
                     .build())
             .withoutExtraDeps(),
         resources,

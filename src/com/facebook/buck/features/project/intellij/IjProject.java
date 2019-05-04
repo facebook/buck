@@ -60,8 +60,7 @@ public class IjProject {
     this.javaPackageFinder = javaPackageFinder;
     this.javaFileParser = javaFileParser;
     this.graphBuilder = graphBuilder;
-    this.sourcePathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    this.sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     this.projectFilesystem = projectFilesystem;
     this.projectConfig = projectConfig;
     this.outFilesystem = outFilesystem;
@@ -106,11 +105,7 @@ public class IjProject {
     IjLibraryFactory libraryFactory =
         new DefaultIjLibraryFactory(
             new DefaultIjLibraryFactoryResolver(
-                projectFilesystem,
-                sourcePathResolver,
-                graphBuilder,
-                graphBuilder.getSourcePathRuleFinder(),
-                requiredBuildTargets));
+                projectFilesystem, sourcePathResolver, graphBuilder, requiredBuildTargets));
     IjModuleFactoryResolver moduleFactoryResolver =
         new DefaultIjModuleFactoryResolver(
             graphBuilder, sourcePathResolver, projectFilesystem, requiredBuildTargets);

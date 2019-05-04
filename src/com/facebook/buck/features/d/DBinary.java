@@ -72,7 +72,6 @@ public class DBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     // Return the actual executable as a runtime dependency.
     // Without this, the file is not written when we get a cache hit.
-    return BuildableSupport.getDeps(executable, buildRuleResolver.getSourcePathRuleFinder())
-        .map(BuildRule::getBuildTarget);
+    return BuildableSupport.getDeps(executable, buildRuleResolver).map(BuildRule::getBuildTarget);
   }
 }

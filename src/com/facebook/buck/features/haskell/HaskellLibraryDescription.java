@@ -389,7 +389,7 @@ public class HaskellLibraryDescription
         target,
         projectFilesystem,
         baseParams,
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         platform.getPackager().resolve(graphBuilder, target.getTargetConfiguration()),
         platform.getHaskellVersion(),
         depType,
@@ -524,7 +524,7 @@ public class HaskellLibraryDescription
             baseTarget.withAppendedFlavors(Type.HADDOCK.getFlavor(), platform.getFlavor()),
             projectFilesystem,
             baseParams,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             HaskellSources.from(
                 baseTarget, graphBuilder, pathResolver, platform, "srcs", args.getSrcs()),
             platform.getHaddock().resolve(graphBuilder, baseTarget.getTargetConfiguration()),
@@ -649,8 +649,7 @@ public class HaskellLibraryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 

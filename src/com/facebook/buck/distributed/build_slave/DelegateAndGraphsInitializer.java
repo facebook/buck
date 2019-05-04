@@ -166,9 +166,7 @@ public class DelegateAndGraphsInitializer {
     DistBuildConfig remoteConfig = new DistBuildConfig(args.getState().getRemoteRootCellConfig());
     if (remoteConfig.materializeSourceFilesOnDemand()) {
       SourcePathRuleFinder ruleFinder =
-          Objects.requireNonNull(actionGraphAndBuilder)
-              .getActionGraphBuilder()
-              .getSourcePathRuleFinder();
+          Objects.requireNonNull(actionGraphAndBuilder).getActionGraphBuilder();
       cachingBuildEngineDelegate =
           new DistBuildCachingEngineDelegate(
               DefaultSourcePathResolver.from(ruleFinder),

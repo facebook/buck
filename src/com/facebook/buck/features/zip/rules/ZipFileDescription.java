@@ -56,7 +56,7 @@ public class ZipFileDescription
           "Illegal to define merge_source_zips when zip_srcs is present in " + buildTarget);
 
     return new Zip(
-        context.getActionGraphBuilder().getSourcePathRuleFinder(),
+        context.getActionGraphBuilder(),
         buildTarget,
         context.getProjectFilesystem(),
         args.getOut(),

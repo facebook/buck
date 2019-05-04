@@ -114,13 +114,11 @@ public class JsBundleGenruleDescription
       }
 
       Path fileName =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())
-              .getRelativePath(output)
-              .getFileName();
+          DefaultSourcePathResolver.from(graphBuilder).getRelativePath(output).getFileName();
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          graphBuilder.getSourcePathRuleFinder(),
+          graphBuilder,
           fileName.toString(),
           ExportFileDescription.Mode.REFERENCE,
           output,

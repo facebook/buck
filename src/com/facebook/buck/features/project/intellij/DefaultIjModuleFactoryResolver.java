@@ -134,11 +134,7 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
 
   private Path getRelativePathAndRecordRule(SourcePath sourcePath) {
     requiredBuildTargets.addAll(
-        Optionals.toStream(
-                graphBuilder
-                    .getSourcePathRuleFinder()
-                    .getRule(sourcePath)
-                    .map(BuildRule::getBuildTarget))
+        Optionals.toStream(graphBuilder.getRule(sourcePath).map(BuildRule::getBuildTarget))
             .collect(Collectors.toList()));
     return sourcePathResolver.getRelativePath(sourcePath);
   }

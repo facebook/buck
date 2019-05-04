@@ -188,7 +188,7 @@ public class CxxLuaExtensionDescription
                 buildTarget,
                 graphBuilder,
                 pathResolver,
-                graphBuilder.getSourcePathRuleFinder(),
+                graphBuilder,
                 cxxBuckConfig,
                 cxxPlatform,
                 cxxPreprocessorInput,
@@ -222,8 +222,7 @@ public class CxxLuaExtensionDescription
       LuaPlatform luaPlatform,
       CxxLuaExtensionDescriptionArg args) {
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String extensionName = getExtensionName(buildTarget, cxxPlatform);
     Path extensionPath = getExtensionPath(projectFilesystem, buildTarget, cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(

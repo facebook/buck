@@ -43,11 +43,7 @@ public class FilegroupDescription implements DescriptionWithTargetGraph<FileGrou
     String name = args.getName();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     return new Filegroup(
-        buildTarget,
-        projectFilesystem,
-        context.getActionGraphBuilder().getSourcePathRuleFinder(),
-        name,
-        args.getSrcs());
+        buildTarget, projectFilesystem, context.getActionGraphBuilder(), name, args.getSrcs());
   }
 
   @Override

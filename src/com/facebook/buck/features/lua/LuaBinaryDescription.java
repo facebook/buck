@@ -180,7 +180,7 @@ public class LuaBinaryDescription
             baseParams,
             graphBuilder,
             pathResolver,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             luaPlatform,
             target,
             output,
@@ -194,7 +194,7 @@ public class LuaBinaryDescription
             baseParams,
             graphBuilder,
             pathResolver,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             cellPathResolver,
             luaPlatform,
             cxxBuckConfig,
@@ -526,7 +526,7 @@ public class LuaBinaryDescription
             root,
             MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem())),
             ImmutableMultimap.of(),
-            graphBuilder.getSourcePathRuleFinder()));
+            graphBuilder));
   }
 
   /**
@@ -678,17 +678,10 @@ public class LuaBinaryDescription
                 params
                     .withDeclaredDeps(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(
-                                graphBuilder
-                                    .getSourcePathRuleFinder()
-                                    .filterBuildRuleInputs(starter))
-                            .addAll(components.getDeps(graphBuilder.getSourcePathRuleFinder()))
-                            .addAll(
-                                BuildableSupport.getDepsCollection(
-                                    lua, graphBuilder.getSourcePathRuleFinder()))
-                            .addAll(
-                                BuildableSupport.getDepsCollection(
-                                    packager, graphBuilder.getSourcePathRuleFinder()))
+                            .addAll(graphBuilder.filterBuildRuleInputs(starter))
+                            .addAll(components.getDeps(graphBuilder))
+                            .addAll(BuildableSupport.getDepsCollection(lua, graphBuilder))
+                            .addAll(BuildableSupport.getDepsCollection(packager, graphBuilder))
                             .build())
                     .withoutExtraDeps(),
                 packager,
@@ -763,8 +756,7 @@ public class LuaBinaryDescription
       BuildRuleParams params,
       LuaBinaryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     LuaPlatform luaPlatform = getPlatform(buildTarget, args);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<PythonPlatform> pythonPlatforms =
@@ -813,8 +805,7 @@ public class LuaBinaryDescription
     return new LuaBinary(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(
-            BuildableSupport.getDepsCollection(binary, graphBuilder.getSourcePathRuleFinder())),
+        params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(binary, graphBuilder)),
         getOutputPath(buildTarget, projectFilesystem, luaPlatform),
         binary,
         args.getMainModule(),

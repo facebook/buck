@@ -97,7 +97,7 @@ public class PrebuiltOcamlLibraryDescription
         buildTarget,
         projectFilesystem,
         params,
-        context.getActionGraphBuilder().getSourcePathRuleFinder(),
+        context.getActionGraphBuilder(),
         staticNativeLibraryPath,
         staticBytecodeLibraryPath,
         staticCLibraryPaths,

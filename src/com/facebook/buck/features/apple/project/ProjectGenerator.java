@@ -347,10 +347,9 @@ public class ProjectGenerator {
     this.defaultPathResolver =
         DefaultSourcePathResolver.from(
             new SingleThreadedActionGraphBuilder(
-                    TargetGraph.EMPTY,
-                    new DefaultTargetNodeToBuildRuleTransformer(),
-                    cell.getCellProvider())
-                .getSourcePathRuleFinder());
+                TargetGraph.EMPTY,
+                new DefaultTargetNodeToBuildRuleTransformer(),
+                cell.getCellProvider()));
     this.buckEventBus = buckEventBus;
 
     this.projectPath = outputDirectory.resolve(projectName + ".xcodeproj");
@@ -1048,7 +1047,7 @@ public class ProjectGenerator {
             return StringArg.of(
                 Arg.stringify(
                     super.expandFrom(target, cellNames, builderFromNode, input),
-                    DefaultSourcePathResolver.from(builderFromNode.getSourcePathRuleFinder())));
+                    DefaultSourcePathResolver.from(builderFromNode)));
           }
         };
 
@@ -2521,8 +2520,7 @@ public class ProjectGenerator {
       return convertMapKeysToPaths(fullExportedHeaders);
     } else {
       ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
       String platform = defaultCxxPlatform.getFlavor().toString();
@@ -2584,8 +2582,7 @@ public class ProjectGenerator {
       return convertMapKeysToPaths(fullHeaders);
     } else {
       ActionGraphBuilder graphBuilder = actionGraphBuilderForNode.apply(targetNode);
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       ImmutableSortedMap.Builder<Path, SourcePath> allHeadersBuilder =
           ImmutableSortedMap.naturalOrder();
       String platform = defaultCxxPlatform.getFlavor().toString();
@@ -4617,8 +4614,7 @@ public class ProjectGenerator {
         TargetNodes.castArg(node, ExportFileDescriptionArg.class);
     if (!exportFileNode.isPresent()) {
       BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
       Path output = pathResolver.getAbsolutePath(sourcePath);
       if (output == null) {
         throw new HumanReadableException(
@@ -4724,7 +4720,7 @@ public class ProjectGenerator {
     BuildTarget pchTarget = pchTargetSourcePath.getTarget();
     TargetNode<?> node = targetGraph.get(pchTarget);
     BuildRuleResolver resolver = actionGraphBuilderForNode.apply(node);
-    BuildRule rule = resolver.getSourcePathRuleFinder().getRule(pchTargetSourcePath);
+    BuildRule rule = resolver.getRule(pchTargetSourcePath);
     Preconditions.checkArgument(rule instanceof CxxPrecompiledHeaderTemplate);
     CxxPrecompiledHeaderTemplate pch = (CxxPrecompiledHeaderTemplate) rule;
     return Optional.of(pch.getHeaderSourcePath());

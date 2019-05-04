@@ -144,8 +144,7 @@ public class HaskellPrebuiltLibraryDescription
               SourcePathArg.from(
                   args.isEnableProfiling() ? args.getProfiledStaticLibs() : args.getStaticLibs());
           if (forceLinkWhole) {
-            DefaultSourcePathResolver pathResolver =
-                DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+            DefaultSourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
             libArgs =
                 RichStream.from(libArgs)
                     .flatMap(lib -> RichStream.from(linker.linkWhole(lib, pathResolver)))

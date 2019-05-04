@@ -73,17 +73,12 @@ public class DLibraryDescription
       BuildRuleParams params,
       DLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (buildTarget.getFlavors().contains(DDescriptionUtils.SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          buildTarget,
-          projectFilesystem,
-          pathResolver,
-          graphBuilder.getSourcePathRuleFinder(),
-          args.getSrcs());
+          buildTarget, projectFilesystem, pathResolver, graphBuilder, args.getSrcs());
     }
 
     BuildTarget sourceTreeTarget =

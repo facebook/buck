@@ -26,7 +26,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -103,8 +102,7 @@ public class OcamlRuleBuilder {
 
   static boolean shouldUseFineGrainedRules(
       BuildRuleResolver resolver, ImmutableList<SourcePath> srcs) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     boolean noYaccOrLexSources =
         srcs.stream()
             .noneMatch(
@@ -205,8 +203,7 @@ public class OcamlRuleBuilder {
                 graphBuilder,
                 FluentIterable.from(deps).filter(CxxPreprocessorDep.class::isInstance)));
 
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(deps)
@@ -229,11 +226,11 @@ public class OcamlRuleBuilder {
         getTransitiveOcamlLibraryDeps(graphBuilder, ocamlPlatform, deps);
 
     ImmutableSortedSet.Builder<BuildRule> allDepsBuilder = ImmutableSortedSet.naturalOrder();
-    allDepsBuilder.addAll(ruleFinder.filterBuildRuleInputs(srcs));
+    allDepsBuilder.addAll(graphBuilder.filterBuildRuleInputs(srcs));
     allDepsBuilder.addAll(
         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
             .flatMap(input -> input.getArgs().stream())
-            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+            .flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder))
             .iterator());
     for (OcamlLibrary library : ocamlInput) {
       allDepsBuilder.addAll(library.getNativeCompileDeps(ocamlPlatform));
@@ -245,15 +242,15 @@ public class OcamlRuleBuilder {
             ocamlPlatform
                 .getCCompiler()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-            ruleFinder));
+            graphBuilder));
     allDepsBuilder.addAll(
         BuildableSupport.getDepsCollection(
             ocamlPlatform
                 .getCxxCompiler()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-            ruleFinder));
+            graphBuilder));
     allDepsBuilder.addAll(
-        argFlags.stream().flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder)).iterator());
+        argFlags.stream().flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder)).iterator());
 
     // The bulk rule will do preprocessing on sources, and so needs deps from the preprocessor
     // input object.
@@ -340,8 +337,7 @@ public class OcamlRuleBuilder {
                 graphBuilder,
                 FluentIterable.from(deps).filter(CxxPreprocessorDep.class::isInstance)));
 
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableList<String> nativeIncludes =
         FluentIterable.from(deps)
@@ -367,28 +363,28 @@ public class OcamlRuleBuilder {
         params
             .withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(ruleFinder.filterBuildRuleInputs(srcs))
+                    .addAll(graphBuilder.filterBuildRuleInputs(srcs))
                     .addAll(
                         Stream.of(nativeLinkableInput, bytecodeLinkableInput, cLinkableInput)
                             .flatMap(input -> input.getArgs().stream())
-                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder))
                             .iterator())
                     .addAll(
                         argFlags.stream()
-                            .flatMap(arg -> BuildableSupport.getDeps(arg, ruleFinder))
+                            .flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder))
                             .iterator())
                     .addAll(
                         BuildableSupport.getDepsCollection(
                             ocamlPlatform
                                 .getCCompiler()
                                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-                            ruleFinder))
+                            graphBuilder))
                     .addAll(
                         BuildableSupport.getDepsCollection(
                             ocamlPlatform
                                 .getCxxCompiler()
                                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-                            ruleFinder))
+                            graphBuilder))
                     .build())
             .withoutExtraDeps();
 
@@ -445,7 +441,6 @@ public class OcamlRuleBuilder {
             projectFilesystem,
             compileParams,
             pathResolver,
-            ruleFinder,
             graphBuilder,
             ocamlContext,
             mlInput,

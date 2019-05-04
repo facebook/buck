@@ -78,17 +78,12 @@ public class DBinaryDescription
       DBinaryDescriptionArg args) {
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (buildTarget.getFlavors().contains(SOURCE_LINK_TREE)) {
       return DDescriptionUtils.createSourceSymlinkTree(
-          buildTarget,
-          projectFilesystem,
-          pathResolver,
-          graphBuilder.getSourcePathRuleFinder(),
-          args.getSrcs());
+          buildTarget, projectFilesystem, pathResolver, graphBuilder, args.getSrcs());
     }
 
     SymlinkTree sourceTree =

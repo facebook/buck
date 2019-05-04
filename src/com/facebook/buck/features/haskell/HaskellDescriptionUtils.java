@@ -179,7 +179,7 @@ public class HaskellDescriptionUtils {
         target,
         projectFilesystem,
         baseParams,
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         platform.getCompiler().resolve(graphBuilder, target.getTargetConfiguration()),
         platform.getHaskellVersion(),
         platform.shouldUseArgsfile(),
@@ -370,16 +370,11 @@ public class HaskellDescriptionUtils {
             baseParams
                 .withDeclaredDeps(
                     ImmutableSortedSet.<BuildRule>naturalOrder()
-                        .addAll(
-                            BuildableSupport.getDepsCollection(
-                                linker, graphBuilder.getSourcePathRuleFinder()))
+                        .addAll(BuildableSupport.getDepsCollection(linker, graphBuilder))
                         .addAll(
                             Stream.of(args, linkerArgs)
                                 .flatMap(Collection::stream)
-                                .flatMap(
-                                    arg ->
-                                        BuildableSupport.getDeps(
-                                            arg, graphBuilder.getSourcePathRuleFinder()))
+                                .flatMap(arg -> BuildableSupport.getDeps(arg, graphBuilder))
                                 .iterator())
                         .build())
                 .withoutExtraDeps(),
@@ -432,8 +427,7 @@ public class HaskellDescriptionUtils {
       Optional<SourcePath> argGhciInit,
       ImmutableList<SourcePath> argExtraScriptTemplates,
       boolean hsProfile) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
     depsBuilder.addAll(
@@ -567,7 +561,7 @@ public class HaskellDescriptionUtils {
         buildTarget,
         projectFilesystem,
         params,
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         srcs,
         argCompilerFlags,
         argGhciBinDep.map(

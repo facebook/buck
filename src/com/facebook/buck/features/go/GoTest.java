@@ -356,7 +356,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return Stream.concat(
         Stream.of((testMain.getBuildTarget())),
         resources.stream()
-            .map(buildRuleResolver.getSourcePathRuleFinder()::filterBuildRuleInputs)
+            .map(buildRuleResolver::filterBuildRuleInputs)
             .flatMap(ImmutableSet::stream)
             .map(BuildRule::getBuildTarget));
   }

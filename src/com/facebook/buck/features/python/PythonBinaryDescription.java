@@ -174,7 +174,7 @@ public class PythonBinaryDescription
                     .putAll(components.getNativeLibraries())
                     .build(),
                 components.getModuleDirs(),
-                graphBuilder.getSourcePathRuleFinder()));
+                graphBuilder));
 
     return new PythonInPlaceBinary(
         buildTarget,
@@ -227,7 +227,7 @@ public class PythonBinaryDescription
         return new PythonPackagedBinary(
             buildTarget,
             projectFilesystem,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             params.getDeclaredDeps(),
             pythonPlatform,
             toolchainProvider
@@ -279,8 +279,7 @@ public class PythonBinaryDescription
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.

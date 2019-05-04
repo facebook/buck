@@ -240,7 +240,7 @@ public class GoProjectCommandHelper {
     ActionGraphAndBuilder result =
         Objects.requireNonNull(getActionGraph(targetGraphAndTargets.getTargetGraph()));
     DefaultSourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(result.getActionGraphBuilder().getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(result.getActionGraphBuilder());
 
     // cleanup files from previous runs
     for (BuildTargetSourcePath sourcePath : generatedPackages.keySet()) {

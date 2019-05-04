@@ -124,8 +124,7 @@ abstract class DDescriptionUtils {
       ImmutableList<String> linkerFlags,
       DIncludes includes) {
 
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableList<SourcePath> sourcePaths =
         sourcePathsForCompiledSources(
@@ -264,13 +263,12 @@ abstract class DDescriptionUtils {
                   getTransitiveDLibraryRules(baseParams.getBuildDeps()).entrySet()) {
                 transitiveIncludes.put(library.getKey(), library.getValue().getIncludes());
               }
-              SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
 
               ImmutableSortedSet.Builder<BuildRule> depsBuilder = ImmutableSortedSet.naturalOrder();
-              depsBuilder.addAll(BuildableSupport.getDepsCollection(compiler, ruleFinder));
-              depsBuilder.addAll(ruleFinder.filterBuildRuleInputs(src));
+              depsBuilder.addAll(BuildableSupport.getDepsCollection(compiler, graphBuilder));
+              depsBuilder.addAll(graphBuilder.filterBuildRuleInputs(src));
               for (DIncludes dIncludes : transitiveIncludes.values()) {
-                depsBuilder.addAll(dIncludes.getDeps(ruleFinder));
+                depsBuilder.addAll(dIncludes.getDeps(graphBuilder));
               }
               ImmutableSortedSet<BuildRule> deps = depsBuilder.build();
 

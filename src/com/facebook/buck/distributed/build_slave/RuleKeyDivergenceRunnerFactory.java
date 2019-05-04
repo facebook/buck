@@ -173,8 +173,8 @@ public class RuleKeyDivergenceRunnerFactory {
             new DefaultRuleKeyFactory(
                 new RuleKeyFieldLoader(ruleKeyConfiguration),
                 graphs.getCachingBuildEngineDelegate().getFileHashCache(),
-                DefaultSourcePathResolver.from(actionGraphBuilder.getSourcePathRuleFinder()),
-                actionGraphBuilder.getSourcePathRuleFinder(),
+                DefaultSourcePathResolver.from(actionGraphBuilder),
+                actionGraphBuilder,
                 ruleKeyCacheScope.getCache(),
                 Optional.empty()),
             new DefaultRuleDepsCache(actionGraphBuilder),

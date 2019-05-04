@@ -206,9 +206,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
     return RichStream.<BuildTarget>empty()
         .concat(super.getRuntimeDeps(buildRuleResolver))
         .concat(Stream.of(linkTree.getBuildTarget()))
-        .concat(
-            getComponents().getDeps(buildRuleResolver.getSourcePathRuleFinder()).stream()
-                .map(BuildRule::getBuildTarget));
+        .concat(getComponents().getDeps(buildRuleResolver).stream().map(BuildRule::getBuildTarget));
   }
 
   @Override

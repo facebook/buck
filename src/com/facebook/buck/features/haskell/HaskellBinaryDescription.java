@@ -155,8 +155,7 @@ public class HaskellBinaryDescription
           args.isEnableProfiling());
     }
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Linker.LinkableDepType depType = getLinkStyle(args, type);
 
     // The target to use for the link rule.

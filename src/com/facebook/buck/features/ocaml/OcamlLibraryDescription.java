@@ -84,7 +84,7 @@ public class OcamlLibraryDescription
     Optional<OcamlPlatform> ocamlPlatform = ocamlPlatforms.getValue(buildTarget);
     if (ocamlPlatform.isPresent()) {
       SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(context.getActionGraphBuilder().getSourcePathRuleFinder());
+          DefaultSourcePathResolver.from(context.getActionGraphBuilder());
 
       ImmutableList<SourcePath> srcs =
           args.getSrcs().isPresent() ? args.getSrcs().get().getPaths() : ImmutableList.of();
@@ -129,10 +129,7 @@ public class OcamlLibraryDescription
             ImmutableSortedSet.<BuildRule>naturalOrder()
                 .add(result.getBytecodeLink())
                 .addAll(
-                    context
-                        .getActionGraphBuilder()
-                        .getSourcePathRuleFinder()
-                        .filterBuildRuleInputs(result.getObjectFiles()))
+                    context.getActionGraphBuilder().filterBuildRuleInputs(result.getObjectFiles()))
                 .build(),
             result.getRules().stream()
                 .map(BuildRule::getBuildTarget)

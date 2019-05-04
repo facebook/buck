@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -125,7 +124,6 @@ public class HalideLibraryDescription
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       CxxPlatformsProvider cxxPlatformsProvider,
       CxxPlatform cxxPlatform,
@@ -197,7 +195,7 @@ public class HalideLibraryDescription
         buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(
-            BuildableSupport.getDepsCollection(cxxLinkAndCompileRules.executable, ruleFinder)),
+            BuildableSupport.getDepsCollection(cxxLinkAndCompileRules.executable, graphBuilder)),
         cxxPlatform,
         cxxLinkAndCompileRules.getBinaryRule(),
         cxxLinkAndCompileRules.executable,
@@ -290,8 +288,7 @@ public class HalideLibraryDescription
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
     // TODO(cjhopman): This description doesn't handle parse time deps correctly.
     CxxPlatform cxxPlatform =
@@ -334,7 +331,6 @@ public class HalideLibraryDescription
           params.withDeclaredDeps(graphBuilder.getAllRules(compilerDeps)).withoutExtraDeps(),
           graphBuilder,
           pathResolver,
-          ruleFinder,
           context.getCellPathResolver(),
           cxxPlatformsProvider,
           hostCxxPlatform,

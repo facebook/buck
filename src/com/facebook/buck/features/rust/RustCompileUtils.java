@@ -260,7 +260,7 @@ public class RustCompileUtils {
     }
 
     return RustCompileRule.from(
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         target,
         projectFilesystem,
         params,
@@ -389,8 +389,7 @@ public class RustCompileUtils {
       ImmutableSet<String> defaultRoots,
       CrateType crateType,
       Iterable<BuildRule> deps) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableList.Builder<String> rustcArgs = ImmutableList.builder();
 

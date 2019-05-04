@@ -98,7 +98,7 @@ public class HaskellHaddockDescription
             baseTarget,
             context.getProjectFilesystem(),
             params,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             platform.getHaddock().resolve(graphBuilder, baseTarget.getTargetConfiguration()),
             args.getHaddockFlags(),
             haddockInputs.build()));

@@ -248,8 +248,7 @@ public class PythonTestDescription
     CxxPlatform cxxPlatform =
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         context.getTargetGraph().get(buildTarget).getSelectedVersions();

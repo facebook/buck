@@ -126,8 +126,7 @@ public class RustTestDescription
     Tool testExe = testExeBuild.getExecutableCommand();
 
     BuildRuleParams testParams =
-        params.copyAppendingExtraDeps(
-            BuildableSupport.getDepsCollection(testExe, graphBuilder.getSourcePathRuleFinder()));
+        params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(testExe, graphBuilder));
 
     return new RustTest(
         buildTarget,

@@ -43,7 +43,7 @@ public class PrebuiltDotnetLibraryDescription
       BuildRuleParams params,
       PrebuiltDotnetLibraryDescriptionArg args) {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(context.getActionGraphBuilder().getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(context.getActionGraphBuilder());
     return new PrebuiltDotnetLibrary(
         buildTarget, context.getProjectFilesystem(), params, pathResolver, args.getAssembly());
   }

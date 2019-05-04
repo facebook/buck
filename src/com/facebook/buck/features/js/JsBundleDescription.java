@@ -111,7 +111,6 @@ public class JsBundleDescription
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
 
     // Source maps are exposed individually using a special flavor
     if (flavors.contains(JsFlavors.SOURCE_MAP)) {
@@ -123,7 +122,7 @@ public class JsBundleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          ruleFinder,
+          graphBuilder,
           bundleOutputs.getBundleName() + ".map",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToSourceMap(),
@@ -139,7 +138,7 @@ public class JsBundleDescription
       return new ExportFile(
           buildTarget,
           projectFilesystem,
-          ruleFinder,
+          graphBuilder,
           bundleOutputs.getBundleName() + "-misc",
           ExportFileDescription.Mode.REFERENCE,
           bundleOutputs.getSourcePathToMisc(),
@@ -159,17 +158,15 @@ public class JsBundleDescription
           buildTarget,
           projectFilesystem,
           graphBuilder,
-          ruleFinder,
           args.getAndroidPackage());
     }
 
     Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     TransitiveLibraryDependencies libsResolver =
-        new TransitiveLibraryDependencies(
-            buildTarget, context.getTargetGraph(), graphBuilder, ruleFinder);
+        new TransitiveLibraryDependencies(buildTarget, context.getTargetGraph(), graphBuilder);
     ImmutableSet<JsLibrary> flavoredLibraryDeps = libsResolver.collect(args.getDeps());
     Stream<BuildRule> generatedDeps =
-        findGeneratedSources(ruleFinder, flavoredLibraryDeps.stream())
+        findGeneratedSources(graphBuilder, flavoredLibraryDeps.stream())
             .map(graphBuilder::requireRule);
 
     // Flavors are propagated from js_bundle targets to their js_library dependencies
@@ -222,7 +219,6 @@ public class JsBundleDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       Optional<String> rDotJavaPackage) {
     BuildTarget bundleTarget =
         buildTarget
@@ -240,7 +236,7 @@ public class JsBundleDescription
                       "Specify `android_package` when building %s for Android.",
                       buildTarget.getUnflavoredBuildTarget()));
       return createAndroidResources(
-          toolchainProvider, buildTarget, projectFilesystem, ruleFinder, jsBundle, rDot);
+          toolchainProvider, buildTarget, projectFilesystem, graphBuilder, jsBundle, rDot);
     } else {
       return createAndroidBundle(buildTarget, projectFilesystem, graphBuilder, jsBundle);
     }
@@ -354,17 +350,12 @@ public class JsBundleDescription
   private static class TransitiveLibraryDependencies {
     private final ImmutableSortedSet<Flavor> extraFlavors;
     private final ActionGraphBuilder graphBuilder;
-    private final SourcePathRuleFinder ruleFinder;
     private final TargetGraph targetGraph;
 
     private TransitiveLibraryDependencies(
-        BuildTarget bundleTarget,
-        TargetGraph targetGraph,
-        ActionGraphBuilder graphBuilder,
-        SourcePathRuleFinder ruleFinder) {
+        BuildTarget bundleTarget, TargetGraph targetGraph, ActionGraphBuilder graphBuilder) {
       this.targetGraph = targetGraph;
       this.graphBuilder = graphBuilder;
-      this.ruleFinder = ruleFinder;
 
       ImmutableSortedSet<Flavor> bundleFlavors = bundleTarget.getFlavors();
       extraFlavors =
@@ -412,7 +403,7 @@ public class JsBundleDescription
       ImmutableList.Builder<BuildTarget> libraryTargets =
           ImmutableList.builderWithExpectedSize(libraryDependencies.size());
       for (SourcePath sourcePath : libraryDependencies) {
-        Optional<BuildRule> rule = ruleFinder.getRule(sourcePath);
+        Optional<BuildRule> rule = graphBuilder.getRule(sourcePath);
         if (rule.isPresent()) {
           libraryTargets.add(rule.get().getBuildTarget());
         } else {

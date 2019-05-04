@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -104,7 +103,6 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       Iterable<BuildTarget> cxxDeps,
       Tool cgo) {
 
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     CxxDeps allDeps =
         CxxDeps.builder().addDeps(cxxDeps).addPlatformDeps(args.getPlatformDeps()).build();
 
@@ -144,7 +142,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     new CGoGenSource(
                         target,
                         projectFilesystem,
-                        ruleFinder,
+                        graphBuilder,
                         pathResolver,
                         goSourcesFromArg.build(),
                         headerSymlinkTree,
@@ -198,7 +196,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                 new CGoGenImport(
                     target,
                     projectFilesystem,
-                    ruleFinder,
+                    graphBuilder,
                     pathResolver,
                     cgo,
                     platform,
@@ -269,9 +267,10 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     .withDeclaredDeps(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
                             .addAll(
-                                ruleFinder.filterBuildRuleInputs(cgoAllBin.getSourcePathToOutput()))
+                                graphBuilder.filterBuildRuleInputs(
+                                    cgoAllBin.getSourcePathToOutput()))
                             .addAll(
-                                ruleFinder.filterBuildRuleInputs(
+                                graphBuilder.filterBuildRuleInputs(
                                     new Builder<SourcePath>()
                                         .addAll(genSource.getGoFiles())
                                         .add(

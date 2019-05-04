@@ -225,7 +225,7 @@ public class CxxPythonExtensionDescription
             target,
             graphBuilder,
             pathResolver,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             cxxBuckConfig,
             cxxPlatform,
             cxxPreprocessorInput,
@@ -317,8 +317,7 @@ public class CxxPythonExtensionDescription
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
     String extensionName = getExtensionName(moduleName);
     Path extensionPath =
@@ -373,8 +372,7 @@ public class CxxPythonExtensionDescription
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableSet<BuildRule> deps = getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args);
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> objects =
         requireCxxObjects(

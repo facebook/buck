@@ -104,8 +104,7 @@ public class JsLibraryDescription
       JsLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors;
     try {
       sourcesToFlavors =
@@ -348,7 +347,7 @@ public class JsLibraryDescription
     return JsFile.create(
         buildTarget,
         projectFilesystem,
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         worker,
         graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput());
@@ -382,7 +381,7 @@ public class JsLibraryDescription
     return JsFile.create(
         buildTarget,
         projectFilesystem,
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         worker,
         sourcePath,

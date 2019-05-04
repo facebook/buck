@@ -240,8 +240,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .concat(originalExtraDeps.get().stream().map(BuildRule::getBuildTarget))
         .concat(binary.getRuntimeDeps(buildRuleResolver))
         .concat(
-            BuildableSupport.getDeps(
-                    binary.getExecutableCommand(), buildRuleResolver.getSourcePathRuleFinder())
+            BuildableSupport.getDeps(binary.getExecutableCommand(), buildRuleResolver)
                 .map(BuildRule::getBuildTarget));
   }
 

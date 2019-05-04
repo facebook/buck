@@ -748,8 +748,7 @@ class NewNativeTargetProjectMutator {
 
     SourcePath jsOutput = bundle.getSourcePathToOutput();
     SourcePath resOutput = bundle.getSourcePathToResources();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(resolver);
 
     template.add("built_bundle_path", sourcePathResolver.getAbsolutePath(jsOutput));
     template.add("built_resources_path", sourcePathResolver.getAbsolutePath(resOutput));
@@ -772,8 +771,7 @@ class NewNativeTargetProjectMutator {
 
         SourcePath jsOutput = bundle.getSourcePathToOutput();
         SourcePath resOutput = bundle.getSourcePathToResources();
-        SourcePathResolver sourcePathResolver =
-            DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+        SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(resolver);
 
         Path jsOutputPath = sourcePathResolver.getAbsolutePath(jsOutput);
         builder.add(

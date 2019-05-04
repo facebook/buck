@@ -119,15 +119,13 @@ public class GwtBinaryDescription
                           .build();
                   ImmutableSortedSet<BuildRule> deps =
                       ImmutableSortedSet.copyOf(
-                          graphBuilder
-                              .getSourcePathRuleFinder()
-                              .filterBuildRuleInputs(filesForGwtModule));
+                          graphBuilder.filterBuildRuleInputs(filesForGwtModule));
 
                   return new GwtModule(
                       gwtModuleTarget,
                       context.getProjectFilesystem(),
                       params.withDeclaredDeps(deps).withoutExtraDeps(),
-                      graphBuilder.getSourcePathRuleFinder(),
+                      graphBuilder,
                       filesForGwtModule,
                       javaLibrary.getResourcesRoot());
                 });
