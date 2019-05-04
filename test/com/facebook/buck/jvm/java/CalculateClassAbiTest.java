@@ -67,8 +67,7 @@ public class CalculateClassAbiTest {
   @Test
   public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     // Setup the initial java library.
@@ -88,7 +87,7 @@ public class CalculateClassAbiTest {
     CalculateClassAbi calculateAbi =
         CalculateClassAbi.of(
             target,
-            ruleFinder,
+            graphBuilder,
             filesystem,
             builder.createBuildRuleParams(graphBuilder),
             DefaultBuildTargetSourcePath.of(javaLibraryTarget));
@@ -96,10 +95,10 @@ public class CalculateClassAbiTest {
     FileHashCache initialHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory initialRuleKeyFactory =
-        new TestDefaultRuleKeyFactory(initialHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(initialHashCache, pathResolver, graphBuilder);
     RuleKey initialKey = initialRuleKeyFactory.build(calculateAbi);
     RuleKey initialInputKey =
-        new TestInputBasedRuleKeyFactory(initialHashCache, pathResolver, ruleFinder)
+        new TestInputBasedRuleKeyFactory(initialHashCache, pathResolver, graphBuilder)
             .build(calculateAbi);
 
     // Write something to the library source and geneated JAR, so they exist to generate rule keys.
@@ -109,17 +108,16 @@ public class CalculateClassAbiTest {
 
     // Re-setup some entities to drop internal rule key caching.
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     builder.build(graphBuilder, filesystem);
 
     FileHashCache alteredHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
     DefaultRuleKeyFactory alteredRuleKeyFactory =
-        new TestDefaultRuleKeyFactory(alteredHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(alteredHashCache, pathResolver, graphBuilder);
     RuleKey alteredKey = alteredRuleKeyFactory.build(calculateAbi);
     RuleKey alteredInputKey =
-        new TestInputBasedRuleKeyFactory(alteredHashCache, pathResolver, ruleFinder)
+        new TestInputBasedRuleKeyFactory(alteredHashCache, pathResolver, graphBuilder)
             .build(calculateAbi);
 
     assertThat(initialKey, Matchers.not(Matchers.equalTo(alteredKey)));
@@ -129,7 +127,7 @@ public class CalculateClassAbiTest {
   @Test
   public void inputRuleKeyDoesNotChangeIfGeneratedBinaryJarDoesNotChange() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = graphBuilder;
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -169,7 +167,7 @@ public class CalculateClassAbiTest {
 
     // Re-setup some entities to drop internal rule key caching.
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    ruleFinder = graphBuilder;
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     builder.build(graphBuilder, filesystem);
 

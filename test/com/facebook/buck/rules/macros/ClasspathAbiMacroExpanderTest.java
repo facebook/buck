@@ -140,7 +140,7 @@ public class ClasspathAbiMacroExpanderTest {
         expander.expandFrom(forTarget, cellRoots, graphBuilder, classpathAbiMacro);
 
     ImmutableList<String> deps =
-        BuildableSupport.deriveDeps(ruleKeyAppendables, graphBuilder.getSourcePathRuleFinder())
+        BuildableSupport.deriveDeps(ruleKeyAppendables, graphBuilder)
             .map(BuildRule::getFullyQualifiedName)
             .collect(ImmutableList.toImmutableList());
 
@@ -153,8 +153,7 @@ public class ClasspathAbiMacroExpanderTest {
   private void assertExpandsTo(
       BuildRule rule, ActionGraphBuilder graphBuilder, String expectedClasspath)
       throws MacroException {
-    DefaultSourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    DefaultSourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String classpath = Arg.stringify(expander.expand(graphBuilder, rule), pathResolver);
 
     assertEquals(expectedClasspath, classpath);

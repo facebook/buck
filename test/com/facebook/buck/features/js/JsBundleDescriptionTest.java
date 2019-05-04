@@ -156,7 +156,7 @@ public class JsBundleDescriptionTest {
               bundleTarget.withFlavors(JsFlavors.IOS), JsBundleOutputs.class);
 
       DefaultSourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder());
+          DefaultSourcePathResolver.from(scenario.graphBuilder);
       assertEquals(
           pathResolver.getRelativePath(map.getSourcePathToOutput()),
           pathResolver.getRelativePath(bundle.getSourcePathToSourceMap()));
@@ -218,8 +218,7 @@ public class JsBundleDescriptionTest {
               "//:bundle",
               builder -> builder.setExtraJson("[\"1 %s 2\"]", LocationMacro.of(referencedTarget)));
 
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(scenario.graphBuilder);
 
       Function<HashCode, RuleKey> calc =
           (refHash) ->
@@ -227,7 +226,7 @@ public class JsBundleDescriptionTest {
                       new FakeFileHashCache(
                           ImmutableMap.of(pathResolver.getAbsolutePath(referencedSource), refHash)),
                       pathResolver,
-                      scenario.graphBuilder.getSourcePathRuleFinder())
+                      scenario.graphBuilder)
                   .build(bundle);
 
       assertThat(

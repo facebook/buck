@@ -45,8 +45,7 @@ public class ShTestDescriptionTest {
   @Test
   public void argsWithLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -68,8 +67,7 @@ public class ShTestDescriptionTest {
   @Test
   public void envWithLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")

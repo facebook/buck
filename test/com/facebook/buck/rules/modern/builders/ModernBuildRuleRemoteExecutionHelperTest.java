@@ -69,7 +69,7 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
           public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
             return Optional.empty();
           }
-        }.getSourcePathRuleFinder();
+        };
 
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     Cell root = new TestCellBuilder().setFilesystem(filesystem).build();

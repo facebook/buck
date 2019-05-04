@@ -196,8 +196,7 @@ public class DistBuildFileHashesIntegrationTest {
             .build();
     ActionGraphAndBuilder actionGraphAndBuilder = cache.getActionGraph(targetGraph);
     BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(rootCell);
 
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
@@ -218,7 +217,7 @@ public class DistBuildFileHashesIntegrationTest {
     return new DistBuildFileHashes(
         actionGraphAndBuilder.getActionGraph(),
         sourcePathResolver,
-        ruleResolver.getSourcePathRuleFinder(),
+        ruleResolver,
         stackedCache,
         cellIndexer,
         MoreExecutors.newDirectExecutorService(),

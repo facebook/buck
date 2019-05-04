@@ -638,8 +638,7 @@ public class DefaultIjModuleFactoryTest {
             .build();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     IjLibraryFactoryResolver ijLibraryFactoryResolver =
         new IjLibraryFactoryResolver() {
           @Override

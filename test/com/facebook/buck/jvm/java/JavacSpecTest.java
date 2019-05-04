@@ -50,7 +50,7 @@ public class JavacSpecTest {
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
-    sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     specBuilder = JavacSpec.builder();
   }
 
@@ -107,6 +107,6 @@ public class JavacSpecTest {
   }
 
   private Javac getJavac() {
-    return specBuilder.build().getJavacProvider().resolve(graphBuilder.getSourcePathRuleFinder());
+    return specBuilder.build().getJavacProvider().resolve(graphBuilder);
   }
 }

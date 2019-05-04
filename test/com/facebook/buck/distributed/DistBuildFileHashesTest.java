@@ -109,7 +109,7 @@ public class DistBuildFileHashesTest {
       secondJavaFs = secondProjectFilesystem.getRootPath().getFileSystem();
 
       graphBuilder = new TestActionGraphBuilder();
-      sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
       setUpRules(graphBuilder, sourcePathResolver);
       actionGraph = new ActionGraph(graphBuilder.getBuildRules());
       BuckConfig buckConfig = createBuckConfig();
@@ -120,7 +120,7 @@ public class DistBuildFileHashesTest {
           new DistBuildFileHashes(
               actionGraph,
               sourcePathResolver,
-              graphBuilder.getSourcePathRuleFinder(),
+              graphBuilder,
               createFileHashCache(),
               new DistBuildCellIndexer(rootCell),
               MoreExecutors.newDirectExecutorService(),

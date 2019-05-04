@@ -72,8 +72,7 @@ public class HttpFileDescriptionTest {
 
   private Path getOutputPath(HttpFile buildRule) {
     graphBuilder.computeIfAbsent(buildRule.getBuildTarget(), t -> buildRule);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     return pathResolver.getAbsolutePath(buildRule.getSourcePathToOutput());
   }
 

@@ -125,8 +125,7 @@ public class OCamlIntegrationTest {
         toolchain.orElseThrow(AssertionError::new).getDefaultOcamlPlatform();
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     try {
       ocamlPlatform
           .getOcamlCompiler()

@@ -92,7 +92,7 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, ruleNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph, filesystem);
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
 

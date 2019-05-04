@@ -47,8 +47,7 @@ public class SwiftNativeLinkableTest {
     swiftStdTool = VersionedTool.of(FakeSourcePath.of("swift-std"), "foo", "1.0");
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
   }
 
   @Test

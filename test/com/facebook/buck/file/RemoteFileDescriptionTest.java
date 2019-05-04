@@ -115,8 +115,7 @@ public class RemoteFileDescriptionTest {
     graphBuilder.addToIndex(buildRule);
 
     assertThat(buildRule, CoreMatchers.instanceOf(RemoteFileBinary.class));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Tool executableCommand = ((RemoteFileBinary) buildRule).getExecutableCommand();
     assertThat(
         BuildableSupport.deriveInputs(executableCommand).collect(ImmutableList.toImmutableList()),

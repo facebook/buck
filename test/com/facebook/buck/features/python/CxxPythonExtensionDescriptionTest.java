@@ -199,10 +199,7 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getBuildDeps(),
         Matchers.hasItems(
             FluentIterable.from(depInput.getArgs())
-                .transformAndConcat(
-                    arg ->
-                        BuildableSupport.getDepsCollection(
-                            arg, graphBuilder.getSourcePathRuleFinder()))
+                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))
                 .toArray(BuildRule.class)));
   }
 
@@ -300,8 +297,7 @@ public class CxxPythonExtensionDescriptionTest {
         TargetGraphFactory.newInstance(
             python2Builder.build(), python3Builder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     python2Builder.build(graphBuilder, filesystem, targetGraph);
     python3Builder.build(graphBuilder, filesystem, targetGraph);
@@ -395,8 +391,7 @@ public class CxxPythonExtensionDescriptionTest {
     builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxPythonExtension rule = builder.build(graphBuilder);
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     NativeLinkableInput input =

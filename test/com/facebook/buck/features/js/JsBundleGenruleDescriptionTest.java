@@ -238,8 +238,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void exposesReleaseFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.RELEASE);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(setup.graphBuilder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("RELEASE", "1"));
@@ -247,8 +246,7 @@ public class JsBundleGenruleDescriptionTest {
 
   @Test
   public void withoutReleaseFlavorEnvVariableIsEmpty() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(setup.graphBuilder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("RELEASE", ""));
@@ -257,8 +255,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void exposesAndroidFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.ANDROID);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(setup.graphBuilder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", "android"));
@@ -267,8 +264,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void exposesIosFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.IOS);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(setup.graphBuilder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", "ios"));
@@ -276,8 +272,7 @@ public class JsBundleGenruleDescriptionTest {
 
   @Test
   public void withoutPlatformFlavorEnvVariableIsEmpty() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(setup.graphBuilder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", ""));
@@ -770,7 +765,7 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   private DefaultSourcePathResolver sourcePathResolver() {
-    return DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
+    return DefaultSourcePathResolver.from(setup.graphBuilder());
   }
 
   private static class TestSetup {

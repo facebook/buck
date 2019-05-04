@@ -113,9 +113,7 @@ public class HalideLibraryDescriptionTest {
             EmptyTargetConfiguration.INSTANCE);
     BuildRule buildRule =
         FluentIterable.from(input.getArgs())
-            .transformAndConcat(
-                arg ->
-                    BuildableSupport.getDepsCollection(arg, graphBuilder.getSourcePathRuleFinder()))
+            .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))
             .get(0);
     assertThat(buildRule, is(instanceOf(Archive.class)));
   }
@@ -180,8 +178,7 @@ public class HalideLibraryDescriptionTest {
     // First, make sure the compile step doesn't include the extra flags.
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     HalideCompile compile =
         (HalideCompile) compileBuilder.build(graphBuilder, filesystem, targetGraph);
 
@@ -224,8 +221,7 @@ public class HalideLibraryDescriptionTest {
     // for the function output name.
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     HalideCompile compile =
         (HalideCompile) compileBuilder.build(graphBuilder, filesystem, targetGraph);
 

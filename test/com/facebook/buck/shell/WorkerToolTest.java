@@ -44,8 +44,7 @@ public class WorkerToolTest {
   @Test
   public void testCreateWorkerTool() throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -91,8 +90,7 @@ public class WorkerToolTest {
   @Test
   public void testArgsWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -129,8 +127,7 @@ public class WorkerToolTest {
   @Test
   public void testEnvWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))

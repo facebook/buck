@@ -87,8 +87,7 @@ public class NewNativeTargetProjectMutatorTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     generatedProject = new PBXProject("TestProject");
     buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    sourcePathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
   }
@@ -379,7 +378,7 @@ public class NewNativeTargetProjectMutatorTest {
         JsTestScenario.builder().bundle(depBuildTarget, ImmutableSortedSet.of()).build();
 
     NewNativeTargetProjectMutator mutator =
-        mutator(DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder()));
+        mutator(DefaultSourcePathResolver.from(scenario.graphBuilder));
 
     TargetNode<?> jsBundleNode = scenario.targetGraph.get(depBuildTarget);
 
@@ -413,7 +412,7 @@ public class NewNativeTargetProjectMutatorTest {
             .build();
 
     NewNativeTargetProjectMutator mutator =
-        mutator(DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder()));
+        mutator(DefaultSourcePathResolver.from(scenario.graphBuilder));
 
     TargetNode<?> jsBundleGenruleNode = scenario.targetGraph.get(depBuildTarget);
 

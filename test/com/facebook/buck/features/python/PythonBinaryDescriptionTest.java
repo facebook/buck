@@ -186,8 +186,7 @@ public class PythonBinaryDescriptionTest {
   public void extensionConfig() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     PythonBuckConfig config =
         new PythonBuckConfig(
             FakeBuckConfig.builder()
@@ -209,8 +208,7 @@ public class PythonBinaryDescriptionTest {
   public void extensionParameter() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     PythonBinaryBuilder builder = PythonBinaryBuilder.create(target);
     PythonBinary binary =
         builder.setMainModule("main").setExtension(".different_extension").build(graphBuilder);
@@ -225,8 +223,7 @@ public class PythonBinaryDescriptionTest {
   public void buildArgs() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
     PythonBinary binary =
         PythonBinaryBuilder.create(target)
@@ -309,8 +306,7 @@ public class PythonBinaryDescriptionTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Path executor = Paths.get("/root/executor");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonBuckConfig config =
@@ -336,8 +332,7 @@ public class PythonBinaryDescriptionTest {
   public void executableCommandWithNoPathToPexExecutor() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     PythonPackagedBinary binary =
         (PythonPackagedBinary)
             PythonBinaryBuilder.create(target).setMainModule("main").build(graphBuilder);
@@ -651,8 +646,7 @@ public class PythonBinaryDescriptionTest {
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(
                 cxxDepBuilder.build(), cxxBuilder.build(), binaryBuilder.build()));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     cxxDepBuilder.build(graphBuilder);
     cxxBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
@@ -933,8 +927,8 @@ public class PythonBinaryDescriptionTest {
             new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
             StackedFileHashCache.createDefaultHashCaches(
                 rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
-            DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder()),
-            ruleResolver.getSourcePathRuleFinder());
+            DefaultSourcePathResolver.from(ruleResolver),
+            ruleResolver);
     return ruleKeyFactory.build(rule);
   }
 }

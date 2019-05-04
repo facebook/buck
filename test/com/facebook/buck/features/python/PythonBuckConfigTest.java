@@ -56,8 +56,7 @@ public class PythonBuckConfigTest {
   @Test
   public void testPathToPexExecuterUsesConfigSetting() throws IOException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     Path projectDir = Files.createTempDirectory("project");
     Path pexExecuter = Paths.get("pex-executer");
     ProjectFilesystem projectFilesystem =

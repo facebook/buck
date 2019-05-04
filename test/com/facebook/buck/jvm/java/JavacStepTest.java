@@ -60,8 +60,7 @@ public class JavacStepTest {
   public void successfulCompileDoesNotSendStdoutAndStderrToConsole() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
@@ -109,8 +108,7 @@ public class JavacStepTest {
   public void failedCompileSendsStdoutAndStderrToConsole() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
@@ -159,8 +157,7 @@ public class JavacStepTest {
   public void existingBootclasspathDirSucceeds() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
@@ -208,8 +205,7 @@ public class JavacStepTest {
   public void bootclasspathResolvedToAbsolutePath() {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()
@@ -263,8 +259,7 @@ public class JavacStepTest {
   public void missingBootclasspathDirFailsWithError() throws Exception {
     FakeJavac fakeJavac = new FakeJavac();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     ProjectFilesystem fakeFilesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
     JavacOptions javacOptions =
         JavacOptions.builder()

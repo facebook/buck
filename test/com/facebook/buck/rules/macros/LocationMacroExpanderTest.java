@@ -110,8 +110,7 @@ public class LocationMacroExpanderTest {
     String transformedString = coerceAndStringify(originalCmd, javaRule);
 
     // Verify that the correct cmd was created.
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Path absolutePath = pathResolver.getAbsolutePath(javaRule.getSourcePathToOutput());
     String expectedCmd = String.format("%s %s $OUT", absolutePath, absolutePath);
 
@@ -196,7 +195,6 @@ public class LocationMacroExpanderTest {
                     EmptyTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
-    return Arg.stringify(
-        arg, DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
+    return Arg.stringify(arg, DefaultSourcePathResolver.from(graphBuilder));
   }
 }

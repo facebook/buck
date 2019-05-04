@@ -148,8 +148,7 @@ public class PythonTestDescriptionTest {
     PythonTestBuilder builder = PythonTestBuilder.create(target).setBuildArgs(buildArgs);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     PythonTest test = builder.build(graphBuilder, filesystem, targetGraph);
     PythonBinary binary = test.getBinary();
     ImmutableList<? extends Step> buildSteps =
@@ -554,8 +553,8 @@ public class PythonTestDescriptionTest {
             new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
             StackedFileHashCache.createDefaultHashCaches(
                 rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
-            DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder()),
-            ruleResolver.getSourcePathRuleFinder());
+            DefaultSourcePathResolver.from(ruleResolver),
+            ruleResolver);
     return ruleKeyFactory.build(rule);
   }
 }

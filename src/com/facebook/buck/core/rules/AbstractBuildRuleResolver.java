@@ -52,11 +52,6 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
   }
 
   @Override
-  public SourcePathRuleFinder getSourcePathRuleFinder() {
-    return sourcePathRuleFinder;
-  }
-
-  @Override
   public BuildRule getRule(BuildTarget buildTarget) {
     return getRuleOptional(buildTarget).orElseThrow(() -> unresolvableRuleException(buildTarget));
   }

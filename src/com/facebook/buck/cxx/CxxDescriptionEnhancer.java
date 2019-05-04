@@ -295,8 +295,7 @@ public class CxxDescriptionEnhancer {
             buildTarget,
             sourcePathResolver,
             headersParameterName,
-            path ->
-                CxxGenruleDescription.wrapsCxxGenrule(graphBuilder.getSourcePathRuleFinder(), path),
+            path -> CxxGenruleDescription.wrapsCxxGenrule(graphBuilder, path),
             fixup));
 
     // Include all platform specific headers.
@@ -325,11 +324,7 @@ public class CxxDescriptionEnhancer {
     // Add platform-agnostic headers.
     headers.putAll(
         parseOnlyHeaders(
-            buildTarget,
-            graphBuilder.getSourcePathRuleFinder(),
-            sourcePathResolver,
-            "headers",
-            args.getHeaders()));
+            buildTarget, graphBuilder, sourcePathResolver, "headers", args.getHeaders()));
 
     // Add platform-specific headers.
     cxxPlatform.ifPresent(
@@ -366,7 +361,7 @@ public class CxxDescriptionEnhancer {
     headers.putAll(
         parseOnlyHeaders(
             buildTarget,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             sourcePathResolver,
             "exported_headers",
             args.getExportedHeaders()));

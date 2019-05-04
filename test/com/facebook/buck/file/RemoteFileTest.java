@@ -72,8 +72,7 @@ public class RemoteFileTest {
     Downloader downloader = new ExplodingDownloader();
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     RemoteFile remoteFile =
         new RemoteFileBuilder(downloader, target)
             .setUrl("http://www.facebook.com/")
@@ -595,8 +594,7 @@ public class RemoteFileTest {
             type);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(remoteFile);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableList<Step> buildSteps =
         remoteFile.getBuildSteps(

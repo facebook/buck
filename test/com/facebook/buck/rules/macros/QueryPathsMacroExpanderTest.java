@@ -95,8 +95,7 @@ public class QueryPathsMacroExpanderTest {
         coerceAndStringify(filesystem, cellPathResolver, graphBuilder, converter, input, rule);
 
     // Expand the expected results
-    DefaultSourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    DefaultSourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     String expected =
         Stream.of(depNode, targetNode)
@@ -160,7 +159,6 @@ public class QueryPathsMacroExpanderTest {
                     EmptyTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
-    return Arg.stringify(
-        arg, DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
+    return Arg.stringify(arg, DefaultSourcePathResolver.from(graphBuilder));
   }
 }

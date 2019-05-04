@@ -69,7 +69,7 @@ public class SrcZipAwareFileBundlerTest {
 
     SrcZipAwareFileBundler bundler = new SrcZipAwareFileBundler(basePath, PatternsMatcher.EMPTY);
     DefaultSourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     bundler.copy(
         filesystem,
         new DefaultBuildCellRelativePathFactory(

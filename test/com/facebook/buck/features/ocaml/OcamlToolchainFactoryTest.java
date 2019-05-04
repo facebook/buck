@@ -92,8 +92,7 @@ public class OcamlToolchainFactoryTest {
   @Test
   public void customPlatforms() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
 
     Flavor custom = InternalFlavor.of("custom");
     UnresolvedCxxPlatform cxxPlatform =

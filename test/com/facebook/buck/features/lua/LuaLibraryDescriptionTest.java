@@ -50,8 +50,7 @@ public class LuaLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     LuaLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents(pathResolver).getModules(),
@@ -68,8 +67,7 @@ public class LuaLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     LuaLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         library.getLuaPackageComponents(pathResolver).getModules(),
@@ -86,8 +84,7 @@ public class LuaLibraryDescriptionTest {
             .setBaseModule("blah");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     LuaLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(

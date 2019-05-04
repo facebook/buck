@@ -79,7 +79,7 @@ public class SwiftLibraryIntegrationTest {
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
   }
 
   @Test
@@ -95,11 +95,7 @@ public class SwiftLibraryIntegrationTest {
 
     HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            symlinkTarget,
-            projectFilesystem,
-            symlinkTreeRoot,
-            links,
-            graphBuilder.getSourcePathRuleFinder());
+            symlinkTarget, projectFilesystem, symlinkTreeRoot, links, graphBuilder);
     graphBuilder.addToIndex(symlinkTreeBuildRule);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");

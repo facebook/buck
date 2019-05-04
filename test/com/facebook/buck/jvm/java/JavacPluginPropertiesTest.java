@@ -56,7 +56,7 @@ public class JavacPluginPropertiesTest {
             BuildTargetFactory.newInstance("//lib:junit-util"),
             fakeProjectFilesystem,
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
             FakeSourcePath.of("abi-util.jar"),
             Optional.of(FakeSourcePath.of("lib/junit-util-4.11-sources.jar")),
             /* gwtJar */ Optional.empty(),
@@ -77,7 +77,7 @@ public class JavacPluginPropertiesTest {
                 () -> ImmutableSortedSet.of(transitivePrebuiltJarDep),
                 ImmutableSortedSet::of,
                 ImmutableSortedSet.of()),
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
             FakeSourcePath.of("abi.jar"),
             Optional.of(FakeSourcePath.of("lib/junit-4.11-sources.jar")),
             /* gwtJar */ Optional.empty(),
@@ -113,12 +113,12 @@ public class JavacPluginPropertiesTest {
             .build();
 
     assertThat(
-        graphBuilder.getSourcePathRuleFinder().filterBuildRuleInputs(props.getInputs()),
+        graphBuilder.filterBuildRuleInputs(props.getInputs()),
         Matchers.containsInAnyOrder(
             processor, javaLibraryDep, firstLevelPrebuiltJarDep, transitivePrebuiltJarDep));
 
     assertThat(
-        graphBuilder.getSourcePathRuleFinder().filterBuildRuleInputs(props.getClasspathEntries()),
+        graphBuilder.filterBuildRuleInputs(props.getClasspathEntries()),
         Matchers.containsInAnyOrder(
             processor, javaLibraryDep, firstLevelPrebuiltJarDep, transitivePrebuiltJarDep));
   }
@@ -164,8 +164,7 @@ public class JavacPluginPropertiesTest {
 
   private RuleKey createInputRuleKey(Optional<String> resourceName) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Optional<PathSourcePath> resource =
@@ -187,9 +186,7 @@ public class JavacPluginPropertiesTest {
     }
     FakeFileHashCache hashCache = new FakeFileHashCache(builder.build());
 
-    return new TestInputBasedRuleKeyFactory(
-            hashCache, pathResolver, graphBuilder.getSourcePathRuleFinder())
-        .build(processor);
+    return new TestInputBasedRuleKeyFactory(hashCache, pathResolver, graphBuilder).build(processor);
   }
 
   @Test

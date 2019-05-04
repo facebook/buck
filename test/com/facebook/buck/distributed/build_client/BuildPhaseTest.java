@@ -286,8 +286,7 @@ public class BuildPhaseTest {
     replay(mockDistBuildService);
     replay(mockEventBus);
 
-    SourcePathRuleFinder ruleFinder =
-        graphs.getActionGraphAndBuilder().getActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = graphs.getActionGraphAndBuilder().getActionGraphBuilder();
 
     buildPhase.runDistBuildAndUpdateConsoleStatus(
         directExecutor,

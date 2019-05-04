@@ -82,8 +82,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetSrcAndOutToNameParameterIfNeitherAreSet() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExportFile exportFile = new ExportFileBuilder(target).build(graphBuilder, projectFilesystem);
 
     List<Step> steps =
@@ -111,8 +110,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutToNameParamValueIfSrcIsSet() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExportFile exportFile =
         new ExportFileBuilder(target).setOut("fish").build(graphBuilder, projectFilesystem);
 
@@ -141,8 +139,7 @@ public class ExportFileTest {
   @Test
   public void shouldSetOutAndSrcAndNameParametersSeparately() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExportFile exportFile =
         new ExportFileBuilder(target)
             .setSrc(PathSourcePath.of(projectFilesystem, Paths.get("chips")))
@@ -177,8 +174,7 @@ public class ExportFileTest {
         new ExportFileBuilder(target).setSrc(FakeSourcePath.of("chips")).setOut("cake");
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ExportFile exportFile = builder.build(graphBuilder, projectFilesystem);
 
@@ -187,7 +183,7 @@ public class ExportFileTest {
         pathResolver.filterInputsToCompareToOutput(singleton(exportFile.getSource())));
 
     graphBuilder = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     FakeBuildRule rule =
         graphBuilder.addToIndex(new FakeBuildRule(BuildTargetFactory.newInstance("//example:one")));
@@ -199,7 +195,7 @@ public class ExportFileTest {
         Matchers.empty());
 
     graphBuilder = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     builder.setSrc(null);
     exportFile = builder.build(graphBuilder, projectFilesystem);
@@ -229,7 +225,7 @@ public class ExportFileTest {
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder);
@@ -255,7 +251,7 @@ public class ExportFileTest {
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
-    ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    ruleFinder = new TestActionGraphBuilder();
     resolver = DefaultSourcePathResolver.from(ruleFinder);
     ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, resolver, ruleFinder);
     RuleKey refreshed = ruleKeyFactory.build(rule);
@@ -266,8 +262,7 @@ public class ExportFileTest {
   @Test
   public void referenceModeUsesUnderlyingSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     SourcePath src = FakeSourcePath.of(projectFilesystem, "source");
     ExportFile exportFile =
         new ExportFileBuilder(target)
@@ -343,8 +338,7 @@ public class ExportFileTest {
             .setOut("out")
             .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
             .build(graphBuilder, projectFilesystem);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     exportFile.getBuildSteps(
         FakeBuildContext.withSourcePathResolver(pathResolver)
@@ -367,8 +361,7 @@ public class ExportFileTest {
             .setOut("out")
             .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
             .build(graphBuilder, projectFilesystem);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     CapturingConsoleEventListener listener = new CapturingConsoleEventListener();
@@ -395,8 +388,7 @@ public class ExportFileTest {
             .setOut("out")
             .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
             .build(graphBuilder, projectFilesystem);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuckEventBus buckEventBus = BuckEventBusForTests.newInstance();
     CapturingConsoleEventListener listener = new CapturingConsoleEventListener();

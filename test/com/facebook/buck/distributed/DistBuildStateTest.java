@@ -383,8 +383,7 @@ public class DistBuildStateTest {
   private DistBuildFileHashes emptyActionGraph() throws IOException, InterruptedException {
     ActionGraph actionGraph = new ActionGraph(ImmutableList.of());
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     ProjectFilesystem projectFilesystem = createJavaOnlyFilesystem("/opt/buck");
     Cell rootCell =
         new TestCellBuilder()
@@ -394,7 +393,7 @@ public class DistBuildStateTest {
     return new DistBuildFileHashes(
         actionGraph,
         sourcePathResolver,
-        ruleResolver.getSourcePathRuleFinder(),
+        ruleResolver,
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(

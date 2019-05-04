@@ -58,8 +58,7 @@ public class DefaultIjLibraryFactoryTest {
 
   @Before
   public void setUp() {
-    sourcePathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    sourcePathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     guavaJarPath = Paths.get("third_party/java/guava.jar");
     guava =
         PrebuiltJarBuilder.createBuilder(

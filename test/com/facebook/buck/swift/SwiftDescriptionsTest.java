@@ -40,8 +40,7 @@ public class SwiftDescriptionsTest {
   @Test
   public void testPopulateSwiftLibraryDescriptionArg() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 
     SwiftLibraryDescriptionArg.Builder outputBuilder = SwiftLibraryDescriptionArg.builder();

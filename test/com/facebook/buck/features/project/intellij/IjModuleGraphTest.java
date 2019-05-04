@@ -667,7 +667,7 @@ public class IjModuleGraphTest {
       AggregationMode aggregationMode,
       boolean isMultiCellModulesSupported) {
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     IjLibraryFactoryResolver sourceOnlyResolver =
         new IjLibraryFactoryResolver() {
           @Override

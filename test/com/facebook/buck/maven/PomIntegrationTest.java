@@ -72,8 +72,7 @@ public class PomIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-  private final SourcePathResolver pathResolver =
-      DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+  private final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
   private final ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
 

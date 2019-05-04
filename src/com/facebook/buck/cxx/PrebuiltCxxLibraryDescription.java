@@ -189,7 +189,7 @@ public class PrebuiltCxxLibraryDescription
     headers.putAll(
         CxxDescriptionEnhancer.parseOnlyHeaders(
             buildTarget,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             pathResolver,
             "exported_headers",
             args.getExportedHeaders()));

@@ -169,7 +169,6 @@ public class DBuckConfigTest {
   /** Returns the path of a Tool. */
   private String toolPath(Tool tool) {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    return tool.getCommandPrefix(DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder()))
-        .get(0);
+    return tool.getCommandPrefix(DefaultSourcePathResolver.from(resolver)).get(0);
   }
 }

@@ -213,8 +213,7 @@ public class RuleKeyBuilderTest {
     Map<AddsToRuleKey, RuleKey> appendableKeys =
         ImmutableMap.of(APPENDABLE_1, RULE_KEY_1, APPENDABLE_2, RULE_KEY_2);
     BuildRuleResolver ruleResolver = new FakeActionGraphBuilder(ruleMap);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleResolver);
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
@@ -228,7 +227,7 @@ public class RuleKeyBuilderTest {
             ImmutableMap.of());
 
     return new RuleKeyBuilder<HashCode>(
-        ruleResolver.getSourcePathRuleFinder(),
+        ruleResolver,
         pathResolver,
         hashCache,
         RuleKeyBuilder.createDefaultHasher(Optional.empty())) {

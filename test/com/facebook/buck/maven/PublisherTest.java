@@ -93,8 +93,7 @@ public class PublisherTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(depNode, publishableANode, publishableBNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
@@ -152,8 +151,7 @@ public class PublisherTest {
         TargetGraphFactory.newInstance(
             transitiveDepNode, depNode, publishableANode, publishableBNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
@@ -217,8 +215,7 @@ public class PublisherTest {
         TargetGraphFactory.newInstance(
             transitiveDepNode, dep1Node, dep2Node, publishableANode, publishableBNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);

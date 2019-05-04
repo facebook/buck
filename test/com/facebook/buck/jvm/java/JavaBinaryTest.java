@@ -73,8 +73,7 @@ public class JavaBinaryTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(guavaNode, libraryNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildRule libraryRule = graphBuilder.requireRule(libraryNode.getBuildTarget());
 

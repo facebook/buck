@@ -132,8 +132,7 @@ public class Jsr199JavacIntegrationTest {
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                DefaultSourcePathResolver.from(
-                    new TestActionGraphBuilder().getSourcePathRuleFinder()),
+                DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -187,8 +186,7 @@ public class Jsr199JavacIntegrationTest {
         javac
             .newBuildInvocation(
                 javacExecutionContext,
-                DefaultSourcePathResolver.from(
-                    new TestActionGraphBuilder().getSourcePathRuleFinder()),
+                DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -292,8 +290,7 @@ public class Jsr199JavacIntegrationTest {
       javac
           .newBuildInvocation(
               javacExecutionContext,
-              DefaultSourcePathResolver.from(
-                  new TestActionGraphBuilder().getSourcePathRuleFinder()),
+              DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
               BuildTargetFactory.newInstance("//some:example"),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -382,7 +379,7 @@ public class Jsr199JavacIntegrationTest {
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
             BuildTargetFactory.newInstance("//some:example"),
             ImmutableList.of(),
             ImmutableList.of(),

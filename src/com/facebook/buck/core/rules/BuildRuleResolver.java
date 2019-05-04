@@ -54,6 +54,4 @@ public interface BuildRuleResolver extends SourcePathRuleFinder {
   <T> T getRuleWithType(BuildTarget buildTarget, Class<T> cls);
 
   ImmutableSortedSet<BuildRule> getAllRules(Iterable<BuildTarget> targets);
-
-  SourcePathRuleFinder getSourcePathRuleFinder();
 }

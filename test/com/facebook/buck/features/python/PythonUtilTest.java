@@ -39,7 +39,7 @@ public class PythonUtilTest {
     ImmutableMap<Path, SourcePath> srcs =
         PythonUtil.toModuleMap(
             target,
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
             "srcs",
             target.getBasePath(),
             ImmutableList.of(

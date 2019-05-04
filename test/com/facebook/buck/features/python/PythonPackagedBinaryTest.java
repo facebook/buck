@@ -109,7 +109,7 @@ public class PythonPackagedBinaryTest {
 
   @Test
   public void testRuleKeysFromModuleLayouts() throws IOException {
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Create two different sources, which we'll swap in as different modules.

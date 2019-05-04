@@ -107,7 +107,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    resolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     a = graphBuilder.requireRule(aNode.getBuildTarget());
     b = graphBuilder.requireRule(bNode.getBuildTarget());

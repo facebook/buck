@@ -173,8 +173,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput staticInput =
         library.getNativeLinkableInput(

@@ -68,7 +68,7 @@ public class JavaBuckConfigTest {
 
   public static final BuildRuleResolver RULE_RESOLVER = new TestActionGraphBuilder();
   private static final SourcePathResolver PATH_RESOLVER =
-      DefaultSourcePathResolver.from(RULE_RESOLVER.getSourcePathRuleFinder());
+      DefaultSourcePathResolver.from(RULE_RESOLVER);
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem defaultFilesystem;
@@ -231,7 +231,7 @@ public class JavaBuckConfigTest {
       config
           .getJavacSpec(EmptyTargetConfiguration.INSTANCE)
           .getJavacProvider()
-          .resolve(new TestActionGraphBuilder().getSourcePathRuleFinder());
+          .resolve(new TestActionGraphBuilder());
       fail("Should throw exception as javac file is not executable.");
     } catch (HumanReadableException e) {
       assertEquals(e.getHumanReadableErrorMessage(), "javac is not executable: " + javac);

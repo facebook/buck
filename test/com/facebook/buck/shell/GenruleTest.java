@@ -110,11 +110,9 @@ public class GenruleTest {
 
     StandaloneGenruleBuilder(String targetName) {
       graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       ruleKeyFactory =
-          new TestDefaultRuleKeyFactory(
-              new DummyFileHashCache(), pathResolver, graphBuilder.getSourcePathRuleFinder());
+          new TestDefaultRuleKeyFactory(new DummyFileHashCache(), pathResolver, graphBuilder);
       genruleBuilder = GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance(targetName));
     }
 
@@ -140,8 +138,7 @@ public class GenruleTest {
      */
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     createSampleJavaBinaryRule(graphBuilder);
 
     BuildTarget buildTarget =
@@ -318,8 +315,7 @@ public class GenruleTest {
   @Test
   public void testGenruleUsesSpacesForSrcsVariableDelimiterByDefault() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     SourcePath path1 = PathSourcePath.of(filesystem, filesystem.getPath("path1.txt"));
@@ -345,8 +341,7 @@ public class GenruleTest {
   @Test
   public void testGenruleUsesProvidedDelimiterForSrcsVariable() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     SourcePath path1 = PathSourcePath.of(filesystem, filesystem.getPath("path 1.txt"));
@@ -414,8 +409,7 @@ public class GenruleTest {
   @Test
   public void testGenruleWithWorkerMacroUsesSpecialShellStep() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Genrule genrule = createGenruleBuilderThatUsesWorkerMacro(graphBuilder).build(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -513,8 +507,7 @@ public class GenruleTest {
   @Test
   public void ensureFilesInSubdirectoriesAreKeptInSubDirectories() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(pathResolver)
             .withBuildCellRootPath(filesystem.getRootPath());
@@ -574,8 +567,7 @@ public class GenruleTest {
   @Test
   public void testShouldIncludeAndroidSpecificEnvInEnvironmentIfPresent() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     AndroidPlatformTarget android =
         AndroidPlatformTarget.of(
             "android",
@@ -623,8 +615,7 @@ public class GenruleTest {
   @Test
   public void shouldPreventTheParentBuckdBeingUsedIfARecursiveBuckCallIsMade() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     Genrule genrule =
         GenruleBuilder.newGenruleBuilder(target)
@@ -642,8 +633,7 @@ public class GenruleTest {
   public void testGetShellCommand() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildContext buildContext =
-        FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
+        FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(graphBuilder));
     String bash = "rm -rf /usr";
     String cmdExe = "rmdir /s /q C:\\Windows";
     String cmd = "echo \"Hello\"";
@@ -784,7 +774,7 @@ public class GenruleTest {
 
     // Create an initial input-based rule key
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = graphBuilder;
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -817,7 +807,7 @@ public class GenruleTest {
         .setCmd("something else")
         .build(graphBuilder);
     rule = ruleBuilder.build(graphBuilder);
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    ruleFinder = graphBuilder;
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -836,7 +826,7 @@ public class GenruleTest {
 
     // Make a change to the dep's output, which *should* affect the input-based rule key.
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    ruleFinder = graphBuilder;
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -867,7 +857,7 @@ public class GenruleTest {
 
     // Create an initial input-based rule key
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = graphBuilder;
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildRule dep =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -904,7 +894,7 @@ public class GenruleTest {
         .setDeps(ImmutableSortedSet.of(extra.getBuildTarget()))
         .build(graphBuilder, filesystem);
     rule = ruleBuilder.build(graphBuilder);
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    ruleFinder = graphBuilder;
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     defaultRuleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -930,7 +920,7 @@ public class GenruleTest {
     filesystem.writeContentsToPath(
         "something else", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(graphBuilder);
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    ruleFinder = graphBuilder;
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     inputBasedRuleKeyFactory =
         new TestInputBasedRuleKeyFactory(
@@ -953,7 +943,7 @@ public class GenruleTest {
 
     // Create an initial input-based rule key
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = graphBuilder;
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     JavaLibrary dep =
         JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance("//:dep"))
@@ -986,7 +976,7 @@ public class GenruleTest {
         .setResourcesRoot(Paths.get("resource_root"))
         .build(graphBuilder, filesystem);
     rule = ruleBuilder.build(graphBuilder);
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    ruleFinder = graphBuilder;
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     defaultRuleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -1012,7 +1002,7 @@ public class GenruleTest {
     filesystem.writeContentsToPath(
         "something else", pathResolver.getRelativePath(dep.getSourcePathToOutput()));
     rule = ruleBuilder.build(graphBuilder);
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    ruleFinder = graphBuilder;
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     inputBasedRuleKeyFactory =
         new TestInputBasedRuleKeyFactory(

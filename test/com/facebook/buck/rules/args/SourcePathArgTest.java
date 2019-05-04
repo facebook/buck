@@ -36,8 +36,7 @@ public class SourcePathArgTest {
   @Test
   public void stringify() {
     SourcePath path = FakeSourcePath.of("something");
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     SourcePathArg arg = SourcePathArg.of(path);
     assertThat(
         Arg.stringifyList(arg, resolver),
@@ -52,8 +51,6 @@ public class SourcePathArgTest {
             .setOut("output")
             .build(graphBuilder);
     SourcePathArg arg = SourcePathArg.of(rule.getSourcePathToOutput());
-    assertThat(
-        BuildableSupport.getDepsCollection(arg, graphBuilder.getSourcePathRuleFinder()),
-        Matchers.contains(rule));
+    assertThat(BuildableSupport.getDepsCollection(arg, graphBuilder), Matchers.contains(rule));
   }
 }

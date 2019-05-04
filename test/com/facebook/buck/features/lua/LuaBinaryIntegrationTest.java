@@ -117,8 +117,7 @@ public class LuaBinaryIntegrationTest {
                         cxxPlatform
                             .getCc()
                             .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
-                            .getCommandPrefix(
-                                DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder())))
+                            .getCommandPrefix(DefaultSourcePathResolver.from(resolver)))
                     .add("-includelua.h", "-E", "-")
                     .build())
             .setRedirectInput(ProcessBuilder.Redirect.PIPE)

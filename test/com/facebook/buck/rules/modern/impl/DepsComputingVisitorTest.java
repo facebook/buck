@@ -275,7 +275,7 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void customDeps() {
     WithCustomDeps withCustomDeps = new WithCustomDeps();
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     InputRuleResolver ruleResolver =
         new InputRuleResolver() {
           @Override

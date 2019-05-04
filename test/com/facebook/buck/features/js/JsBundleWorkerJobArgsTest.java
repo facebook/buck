@@ -209,7 +209,7 @@ public class JsBundleWorkerJobArgsTest {
   private void buildContext(JsTestScenario scenario) {
     context =
         FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder()));
+            DefaultSourcePathResolver.from(scenario.graphBuilder));
   }
 
   private ArrayNode arrayNodeOf(Object... strings) {

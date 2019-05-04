@@ -128,7 +128,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
     Javac compiler =
         new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
-            .resolve(new TestActionGraphBuilder().getSourcePathRuleFinder());
+            .resolve(new TestActionGraphBuilder());
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
@@ -201,7 +201,7 @@ public class ExternalJavacTest extends EasyMockSupport {
 
     Javac compiler =
         new ExternalJavacProvider(executor, DefaultBuildTargetSourcePath.of(javacTarget))
-            .resolve(graphBuilder.getSourcePathRuleFinder());
+            .resolve(graphBuilder);
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
@@ -212,9 +212,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     Tool tool = identifier.getValue().get();
 
     assertEquals(
-        commandPrefix,
-        tool.getCommandPrefix(
-            DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())));
+        commandPrefix, tool.getCommandPrefix(DefaultSourcePathResolver.from(graphBuilder)));
   }
 
   @Test
@@ -233,7 +231,7 @@ public class ExternalJavacTest extends EasyMockSupport {
 
     Javac compiler =
         new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
-            .resolve(new TestActionGraphBuilder().getSourcePathRuleFinder());
+            .resolve(new TestActionGraphBuilder());
 
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
@@ -258,6 +256,6 @@ public class ExternalJavacTest extends EasyMockSupport {
     return new ExternalJavacProvider(
             new DefaultProcessExecutor(Console.createNullConsole()),
             FakeSourcePath.of(filesystem, fakeJavac))
-        .resolve(new TestActionGraphBuilder().getSourcePathRuleFinder());
+        .resolve(new TestActionGraphBuilder());
   }
 }

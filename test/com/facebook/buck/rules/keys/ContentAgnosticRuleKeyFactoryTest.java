@@ -66,8 +66,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     Path depOutput = Paths.get(filename);
     FakeBuildRule dep =
@@ -84,7 +83,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
             .build(graphBuilder, fileSystem);
 
     return new ContentAgnosticRuleKeyFactory(
-            fieldLoader, pathResolver, graphBuilder.getSourcePathRuleFinder(), Optional.empty())
+            fieldLoader, pathResolver, graphBuilder, Optional.empty())
         .build(rule);
   }
 }

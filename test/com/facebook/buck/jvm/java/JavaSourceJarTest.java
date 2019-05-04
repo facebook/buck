@@ -69,8 +69,7 @@ public class JavaSourceJarTest {
     SourcePath output = rule.getSourcePathToOutput();
 
     assertNotNull(output);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     assertThat(pathResolver.getRelativePath(output).toString(), endsWith(JavaPaths.SRC_JAR));
   }
 
@@ -98,8 +97,7 @@ public class JavaSourceJarTest {
 
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(
-                DefaultSourcePathResolver.from(
-                    new TestActionGraphBuilder().getSourcePathRuleFinder()))
+                DefaultSourcePathResolver.from(new TestActionGraphBuilder()))
             .withJavaPackageFinder(finderStub);
     ImmutableList<Step> steps = rule.getBuildSteps(buildContext, new FakeBuildableContext());
 

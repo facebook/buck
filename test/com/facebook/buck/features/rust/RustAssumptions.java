@@ -40,8 +40,7 @@ abstract class RustAssumptions {
     assumeFalse(Platform.detect() == Platform.WINDOWS);
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
@@ -61,8 +60,7 @@ abstract class RustAssumptions {
   public static void assumeNightly(ProjectWorkspace workspace)
       throws IOException, InterruptedException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
@@ -80,8 +78,7 @@ abstract class RustAssumptions {
   public static void assumeVersion(ProjectWorkspace workspace, String version)
       throws IOException, InterruptedException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)

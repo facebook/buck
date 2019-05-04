@@ -106,8 +106,7 @@ public class LuaBinaryDescriptionTest {
   @Test
   public void extensionOverride() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     LuaBinary binary =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),

@@ -38,8 +38,7 @@ public class RustPlatformFactoryTest {
   @Test
   public void configuredPaths() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
     RustPlatformFactory factory =
         new ImmutableRustPlatformFactory(

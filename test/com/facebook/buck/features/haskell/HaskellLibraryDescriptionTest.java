@@ -101,8 +101,7 @@ public class HaskellLibraryDescriptionTest {
                     HaskellLibraryDescription.Type.SHARED.getFlavor()))
             .build(graphBuilder);
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ImmutableList<Path> outputs =
         ImmutableList.of(
                 Objects.requireNonNull(staticLib.getSourcePathToOutput()),
@@ -125,8 +124,7 @@ public class HaskellLibraryDescriptionTest {
     HaskellLibraryBuilder builder = new HaskellLibraryBuilder(target).setLinkWhole(true);
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     HaskellLibrary library = builder.build(graphBuilder);
 
     // Lookup the link whole flags.
@@ -246,9 +244,7 @@ public class HaskellLibraryDescriptionTest {
             EmptyTargetConfiguration.INSTANCE);
     assertThat(
         FluentIterable.from(staticInput.getArgs())
-            .transformAndConcat(
-                arg ->
-                    BuildableSupport.getDepsCollection(arg, graphBuilder.getSourcePathRuleFinder()))
+            .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))
             .transform(BuildRule::getBuildTarget)
             .toList(),
         Matchers.hasItem(

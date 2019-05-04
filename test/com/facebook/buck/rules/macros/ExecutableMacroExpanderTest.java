@@ -157,8 +157,7 @@ public class ExecutableMacroExpanderTest {
                     EmptyTargetConfiguration.INSTANCE,
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
-    return Arg.stringify(
-        arg, DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
+    return Arg.stringify(arg, DefaultSourcePathResolver.from(graphBuilder));
   }
 
   @Test

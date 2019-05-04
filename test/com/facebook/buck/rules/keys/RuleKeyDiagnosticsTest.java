@@ -36,7 +36,7 @@ public class RuleKeyDiagnosticsTest {
 
   @Test
   public void testTraversal() {
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     AddsToRuleKey app0 =

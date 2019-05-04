@@ -53,7 +53,7 @@ public class PrebuiltJarTest {
             buildTarget,
             filesystem,
             buildRuleParams,
-            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
             FakeSourcePath.of("abi.jar"),
             Optional.of(FakeSourcePath.of("lib/junit-4.11-sources.jar")),
             /* gwtJar */ Optional.empty(),

@@ -503,8 +503,7 @@ public class ProjectGeneratorTest {
     ImmutableSet<Flavor> appleFlavors = ImmutableSet.of(simulator, iOS, macOS);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ImmutableMap<String, ImmutableSortedSet<String>> result =
         ProjectGenerator.gatherExcludedSources(
@@ -7065,8 +7064,7 @@ public class ProjectGeneratorTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     BuildRuleResolver ruleResolver = getActionGraphBuilderNodeFunction(targetGraph).apply(node);
     SourcePath nodeOutput = ruleResolver.getRule(node.getBuildTarget()).getSourcePathToOutput();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     return sourcePathResolver.getAbsolutePath(nodeOutput);
   }
 }
