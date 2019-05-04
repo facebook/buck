@@ -588,7 +588,7 @@ public class AppleDescriptions {
               return new AppleDsym(
                   dsymBuildTarget,
                   projectFilesystem,
-                  new SourcePathRuleFinder(graphBuilder),
+                  graphBuilder.getSourcePathRuleFinder(),
                   appleCxxPlatform.getDsymutil(),
                   appleCxxPlatform.getLldb(),
                   unstrippedBinaryRule.getSourcePathToOutput(),
@@ -700,8 +700,8 @@ public class AppleDescriptions {
     }
     ImmutableSet<SourcePath> frameworks = frameworksBuilder.build();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     BuildTarget buildTargetWithoutBundleSpecificFlavors = stripBundleSpecificFlavors(buildTarget);
 
     Optional<AppleAssetCatalog> assetCatalog =
@@ -711,7 +711,7 @@ public class AppleDescriptions {
             buildTargetWithoutBundleSpecificFlavors,
             projectFilesystem,
             sourcePathResolver,
-            ruleFinder,
+            graphBuilder.getSourcePathRuleFinder(),
             appleCxxPlatform.getAppleSdk().getApplePlatform(),
             appleCxxPlatform.getMinVersion(),
             appleCxxPlatform.getActool(),

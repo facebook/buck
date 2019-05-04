@@ -19,7 +19,6 @@ package com.facebook.buck.cxx.toolchain.linker.impl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.DelegatingTool;
@@ -127,7 +126,6 @@ public class WindowsLinker extends DelegatingTool implements Linker, HasImportLi
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       ImmutableList<? extends SourcePath> symbolFiles) {
     throw new UnsupportedOperationException();

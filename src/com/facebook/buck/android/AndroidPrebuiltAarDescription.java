@@ -103,7 +103,7 @@ public class AndroidPrebuiltAarDescription
       BuildRuleParams params,
       AndroidPrebuiltAarDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     ImmutableSet<Flavor> flavors = buildTarget.getFlavors();

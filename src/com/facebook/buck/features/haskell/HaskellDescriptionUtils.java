@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -433,8 +432,8 @@ public class HaskellDescriptionUtils {
       Optional<SourcePath> argGhciInit,
       ImmutableList<SourcePath> argExtraScriptTemplates,
       boolean hsProfile) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     ImmutableSet.Builder<BuildRule> depsBuilder = ImmutableSet.builder();
     depsBuilder.addAll(
@@ -568,7 +567,7 @@ public class HaskellDescriptionUtils {
         buildTarget,
         projectFilesystem,
         params,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         srcs,
         argCompilerFlags,
         argGhciBinDep.map(

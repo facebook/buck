@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -275,7 +274,6 @@ public class Omnibus {
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       OmnibusSpec spec,
@@ -306,7 +304,10 @@ public class Omnibus {
     // Add the args for the root link target first.
     NativeLinkableInput input =
         root.getNativeLinkTargetInput(
-            cxxPlatform, graphBuilder, DefaultSourcePathResolver.from(ruleFinder), ruleFinder);
+            cxxPlatform,
+            graphBuilder,
+            DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
+            graphBuilder.getSourcePathRuleFinder());
     argsBuilder.addAll(input.getArgs());
 
     // Grab a topologically sorted mapping of all the root's deps.
@@ -436,7 +437,6 @@ public class Omnibus {
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       OmnibusSpec spec,
@@ -447,7 +447,6 @@ public class Omnibus {
         projectFilesystem,
         cellPathResolver,
         graphBuilder,
-        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         spec,
@@ -462,7 +461,6 @@ public class Omnibus {
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       OmnibusSpec spec,
@@ -473,7 +471,6 @@ public class Omnibus {
         projectFilesystem,
         cellPathResolver,
         graphBuilder,
-        ruleFinder,
         cxxBuckConfig,
         cxxPlatform,
         spec,
@@ -488,7 +485,6 @@ public class Omnibus {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       Iterable<? extends SourcePath> linkerInputs) {
     SourcePath undefinedSymbolsFile =
@@ -498,7 +494,6 @@ public class Omnibus {
                 projectFilesystem,
                 params,
                 graphBuilder,
-                ruleFinder,
                 buildTarget.withAppendedFlavors(
                     InternalFlavor.of("omnibus-undefined-symbols-file")),
                 linkerInputs);
@@ -509,7 +504,6 @@ public class Omnibus {
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             buildTarget.withAppendedFlavors(InternalFlavor.of("omnibus-undefined-symbols-args")),
             ImmutableList.of(undefinedSymbolsFile));
   }
@@ -521,7 +515,6 @@ public class Omnibus {
       CellPathResolver cellPathResolver,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
@@ -554,7 +547,6 @@ public class Omnibus {
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             cxxPlatform,
             undefinedSymbolsOnlyRoots));
 
@@ -643,7 +635,6 @@ public class Omnibus {
       BuildRuleParams params,
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraOmnibusLdflags,
@@ -680,7 +671,6 @@ public class Omnibus {
             projectFilesystem,
             cellPathResolver,
             graphBuilder,
-            ruleFinder,
             cxxBuckConfig,
             cxxPlatform,
             spec,
@@ -693,7 +683,6 @@ public class Omnibus {
                 projectFilesystem,
                 cellPathResolver,
                 graphBuilder,
-                ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
                 spec,
@@ -713,7 +702,6 @@ public class Omnibus {
               cellPathResolver,
               params,
               graphBuilder,
-              ruleFinder,
               cxxBuckConfig,
               cxxPlatform,
               extraOmnibusLdflags,
@@ -732,7 +720,6 @@ public class Omnibus {
                 projectFilesystem,
                 cellPathResolver,
                 graphBuilder,
-                ruleFinder,
                 cxxBuckConfig,
                 cxxPlatform,
                 spec,

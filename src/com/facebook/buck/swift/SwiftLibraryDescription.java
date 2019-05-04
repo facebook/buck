@@ -433,7 +433,6 @@ public class SwiftLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CellPathResolver cellRoots,
       ProjectFilesystem projectFilesystem,
       SwiftLibraryDescriptionArg args,
@@ -441,7 +440,7 @@ public class SwiftLibraryDescription
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule) {
 
-    DepsBuilder srcsDepsBuilder = new DepsBuilder(ruleFinder);
+    DepsBuilder srcsDepsBuilder = new DepsBuilder(graphBuilder.getSourcePathRuleFinder());
     args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
     BuildRuleParams paramsWithSrcDeps = params.copyAppendingExtraDeps(srcsDepsBuilder.build());
 

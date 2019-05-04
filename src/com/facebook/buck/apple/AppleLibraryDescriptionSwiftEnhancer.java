@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.CxxLibrary;
@@ -63,11 +62,10 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       SwiftBuckConfig swiftBuckConfig,
       ImmutableSet<CxxPreprocessorInput> inputs) {
 
-    SourcePathRuleFinder rulePathFinder = new SourcePathRuleFinder(graphBuilder);
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         swiftBuckConfig,
-        DefaultSourcePathResolver.from(rulePathFinder),
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
         delegateArgsBuilder,
         args,
         target);
@@ -78,7 +76,10 @@ public class AppleLibraryDescriptionSwiftEnhancer {
 
     ImmutableSet<BuildRule> inputDeps =
         RichStream.from(inputs)
-            .flatMap(input -> RichStream.from(input.getDeps(graphBuilder, rulePathFinder)))
+            .flatMap(
+                input ->
+                    RichStream.from(
+                        input.getDeps(graphBuilder, graphBuilder.getSourcePathRuleFinder())))
             .toImmutableSet();
 
     ImmutableSortedSet.Builder<BuildRule> sortedDeps = ImmutableSortedSet.naturalOrder();
@@ -102,7 +103,6 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         target,
         paramsWithDeps,
         graphBuilder,
-        rulePathFinder,
         cellRoots,
         filesystem,
         swiftArgs,

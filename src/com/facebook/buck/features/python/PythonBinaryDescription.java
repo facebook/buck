@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -140,7 +139,6 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -176,7 +174,7 @@ public class PythonBinaryDescription
                     .putAll(components.getNativeLibraries())
                     .build(),
                 components.getModuleDirs(),
-                ruleFinder));
+                graphBuilder.getSourcePathRuleFinder()));
 
     return new PythonInPlaceBinary(
         buildTarget,
@@ -200,7 +198,6 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
       String mainModule,
@@ -218,7 +215,6 @@ public class PythonBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -231,7 +227,7 @@ public class PythonBinaryDescription
         return new PythonPackagedBinary(
             buildTarget,
             projectFilesystem,
-            ruleFinder,
+            graphBuilder.getSourcePathRuleFinder(),
             params.getDeclaredDeps(),
             pythonPlatform,
             toolchainProvider
@@ -283,8 +279,8 @@ public class PythonBinaryDescription
     String mainModule;
     ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
@@ -340,7 +336,6 @@ public class PythonBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
                 .stream()
                 .map(graphBuilder::getRule)
@@ -359,7 +354,6 @@ public class PythonBinaryDescription
         projectFilesystem,
         params,
         graphBuilder,
-        ruleFinder,
         pythonPlatform,
         cxxPlatform,
         mainModule,

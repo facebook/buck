@@ -35,7 +35,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -249,8 +248,8 @@ public class PythonTestDescription
     CxxPlatform cxxPlatform =
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
     Optional<ImmutableMap<BuildTarget, Version>> selectedVersions =
         context.getTargetGraph().get(buildTarget).getSelectedVersions();
@@ -345,7 +344,6 @@ public class PythonTestDescription
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             deps,
             testComponents,
             pythonPlatform,
@@ -365,7 +363,6 @@ public class PythonTestDescription
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             pythonPlatform,
             cxxPlatform,
             mainModule,
@@ -427,7 +424,7 @@ public class PythonTestDescription
         additionalCoverageTargets.isEmpty()
             ? ImmutableSortedSet.of()
             : binary
-                .getRuntimeDeps(ruleFinder)
+                .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
                 .filter(
                     target -> additionalCoverageTargets.contains(target.getUnflavoredBuildTarget()))
                 .map(target -> DefaultBuildTargetSourcePath.of(target))

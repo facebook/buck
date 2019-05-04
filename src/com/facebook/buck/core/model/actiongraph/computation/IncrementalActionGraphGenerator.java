@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -125,7 +124,6 @@ public class IncrementalActionGraphGenerator {
       ActionGraphBuilder graphBuilder,
       Set<UnflavoredBuildTargetView> allUnflavoredTargetsInNewGraph,
       Set<UnflavoredBuildTargetView> invalidUnflavoredTargets) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     int totalRuleCount = 0;
     int reusedRuleCount = 0;
     for (BuildRule buildRule : lastActionGraphBuilder.getBuildRules()) {
@@ -138,7 +136,7 @@ public class IncrementalActionGraphGenerator {
         // Update build rule resolvers for all reused rules. Build rules may use build rule
         // resolvers to locate and construct other build rules during construction. Furthermore, if
         // we didn't update them, we'd leak previous action graphs.
-        buildRule.updateBuildRuleResolver(graphBuilder, ruleFinder);
+        buildRule.updateBuildRuleResolver(graphBuilder, graphBuilder.getSourcePathRuleFinder());
 
         reusedRuleCount++;
       }

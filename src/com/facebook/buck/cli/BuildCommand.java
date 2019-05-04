@@ -548,8 +548,10 @@ public class BuildCommand extends AbstractCommand {
         ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
         SourcePathResolver pathResolver =
             DefaultSourcePathResolver.from(
-                new SourcePathRuleFinder(
-                    graphs.getActionGraphAndBuilder().getActionGraphBuilder()));
+                graphs
+                    .getActionGraphAndBuilder()
+                    .getActionGraphBuilder()
+                    .getSourcePathRuleFinder());
 
         Path outputPath;
         if (Files.isDirectory(outputPathForSingleBuildTarget)) {

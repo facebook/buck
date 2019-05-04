@@ -483,13 +483,13 @@ public class TargetsCommand extends AbstractCommand {
                 result.getActionGraph()))) {
 
       // ruleKeyFactory is used to calculate rule key that we also want to display on a graph
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(result.getActionGraphBuilder());
       DefaultRuleKeyFactory ruleKeyFactory =
           new DefaultRuleKeyFactory(
               new RuleKeyFieldLoader(params.getRuleKeyConfiguration()),
               params.getFileHashCache(),
-              DefaultSourcePathResolver.from(ruleFinder),
-              ruleFinder,
+              DefaultSourcePathResolver.from(
+                  result.getActionGraphBuilder().getSourcePathRuleFinder()),
+              result.getActionGraphBuilder().getSourcePathRuleFinder(),
               ruleKeyCacheScope.getCache(),
               Optional.empty());
 

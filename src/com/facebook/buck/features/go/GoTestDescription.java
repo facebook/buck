@@ -172,15 +172,15 @@ public class GoTestDescription
             params,
             graphBuilder);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-
     GoTestMain generatedTestMain =
         new GoTestMain(
             buildTarget.withAppendedFlavors(InternalFlavor.of("test-main-src")),
             projectFilesystem,
             params.withDeclaredDeps(
                 ImmutableSortedSet.<BuildRule>naturalOrder()
-                    .addAll(BuildableSupport.getDepsCollection(testMainGenerator, ruleFinder))
+                    .addAll(
+                        BuildableSupport.getDepsCollection(
+                            testMainGenerator, graphBuilder.getSourcePathRuleFinder()))
                     .build()),
             testMainGenerator,
             srcs,

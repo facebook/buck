@@ -28,7 +28,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -66,15 +65,19 @@ public class PrebuiltJarDescription
       BuildRuleParams params,
       PrebuiltJarDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
     if (JavaAbis.isClassAbiTarget(buildTarget)) {
       return CalculateClassAbi.of(
-          buildTarget, ruleFinder, projectFilesystem, params, args.getBinaryJar());
+          buildTarget,
+          graphBuilder.getSourcePathRuleFinder(),
+          projectFilesystem,
+          params,
+          args.getBinaryJar());
     }
 
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildRule prebuilt =
         new PrebuiltJar(

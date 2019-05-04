@@ -24,7 +24,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -117,7 +116,6 @@ public class GnuLinker extends DelegatingTool implements Linker {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       BuildTarget target,
       ImmutableList<? extends SourcePath> symbolFiles) {
     UndefinedSymbolsLinkerScript rule =
@@ -127,7 +125,10 @@ public class GnuLinker extends DelegatingTool implements Linker {
                 projectFilesystem,
                 baseParams
                     .withDeclaredDeps(
-                        ImmutableSortedSet.copyOf(ruleFinder.filterBuildRuleInputs(symbolFiles)))
+                        ImmutableSortedSet.copyOf(
+                            graphBuilder
+                                .getSourcePathRuleFinder()
+                                .filterBuildRuleInputs(symbolFiles)))
                     .withoutExtraDeps(),
                 symbolFiles));
     return ImmutableList.of(SourcePathArg.of(rule.getSourcePathToOutput()));

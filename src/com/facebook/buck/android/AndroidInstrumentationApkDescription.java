@@ -38,7 +38,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -176,8 +175,6 @@ public class AndroidInstrumentationApkDescription
             .setShouldProguard(shouldProguard)
             .build();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
             AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
@@ -259,7 +256,7 @@ public class AndroidInstrumentationApkDescription
         toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
         androidPlatformTarget,
         params,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         apkUnderTest,
         rulesToExcludeFromDex,
         enhancementResult,

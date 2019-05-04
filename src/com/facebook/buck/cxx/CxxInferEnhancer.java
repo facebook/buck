@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -248,8 +247,8 @@ public final class CxxInferEnhancer {
   private ImmutableMap<String, CxxSource> collectSources(
       BuildTarget buildTarget, CxxConstructorArg args) {
     InferFlavors.checkNoInferFlavors(buildTarget.getFlavors());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     return CxxDescriptionEnhancer.parseCxxSources(
         buildTarget, graphBuilder, pathResolver, cxxPlatform, args);
   }

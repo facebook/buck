@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphAndBuildTargets;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.event.ConsoleEvent;
@@ -123,10 +122,9 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
 
       SerializationReportGenerator reportGenerator = new SerializationReportGenerator();
 
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       IsolationChecker isolationChecker =
           new IsolationChecker(
-              ruleFinder,
+              graphBuilder.getSourcePathRuleFinder(),
               params.getCell().getCellPathResolver(),
               reportGenerator.getFailureReporter());
       AbstractBreadthFirstTraversal.<BuildRule>traverse(
@@ -139,7 +137,7 @@ public class AuditMbrIsolationCommand extends AbstractCommand {
               depsBuilder.addAll(
                   graphBuilder.getAllRules(
                       ((HasRuntimeDeps) rule)
-                          .getRuntimeDeps(ruleFinder)
+                          .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
                           .collect(Collectors.toList())));
             }
             return depsBuilder.build();

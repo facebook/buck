@@ -339,8 +339,8 @@ public class PrebuiltCxxLibraryDescription
           baseTarget, cxxPlatform.getFlavor());
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     SourcePath sharedLibrary =
         requireSharedLibrary(
@@ -359,7 +359,6 @@ public class PrebuiltCxxLibraryDescription
             projectFilesystem,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             cxxPlatform,
             sharedLibrary);
   }
@@ -727,7 +726,7 @@ public class PrebuiltCxxLibraryDescription
                   cxxPlatform.getLd().resolve(graphBuilder, buildTarget.getTargetConfiguration());
               DefaultSourcePathResolver pathResolver =
                   DefaultSourcePathResolver.from(
-                      new SourcePathRuleFinder(context.getActionGraphBuilder()));
+                      context.getActionGraphBuilder().getSourcePathRuleFinder());
               linkerArgsBuilder.addAll(linker.linkWhole(staticLibrary, pathResolver));
             } else {
               linkerArgsBuilder.add(FileListableLinkerInputArg.withSourcePathArg(staticLibrary));

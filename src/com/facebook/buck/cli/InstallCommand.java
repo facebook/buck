@@ -46,7 +46,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasInstallHelpers;
 import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
@@ -279,7 +278,7 @@ public class InstallCommand extends BuildCommand {
 
       BuildRule buildRule = build.getGraphBuilder().requireRule(buildTarget);
       SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(build.getGraphBuilder()));
+          DefaultSourcePathResolver.from(build.getGraphBuilder().getSourcePathRuleFinder());
 
       if (buildRule instanceof HasInstallableApk) {
         exitCode =

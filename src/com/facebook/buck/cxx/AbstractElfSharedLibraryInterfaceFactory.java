@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
@@ -47,14 +46,13 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       SourcePath library) {
     return ElfSharedLibraryInterface.from(
         target,
         projectFilesystem,
         pathResolver,
-        ruleFinder,
+        resolver.getSourcePathRuleFinder(),
         getObjcopy().resolve(resolver, target.getTargetConfiguration()),
         library,
         isRemoveUndefinedSymbols());
@@ -66,14 +64,13 @@ abstract class AbstractElfSharedLibraryInterfaceFactory implements SharedLibrary
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       String libName,
       Linker linker,
       ImmutableList<Arg> args) {
     return ElfSharedLibraryInterface.from(
         target,
         projectFilesystem,
-        ruleFinder,
+        resolver.getSourcePathRuleFinder(),
         getObjcopy().resolve(resolver, target.getTargetConfiguration()),
         libName,
         linker,

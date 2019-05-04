@@ -32,7 +32,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
@@ -160,7 +159,6 @@ public class LuaBinaryDescription
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       LuaPlatform luaPlatform,
       BuildTarget target,
       Path output,
@@ -182,7 +180,7 @@ public class LuaBinaryDescription
             baseParams,
             graphBuilder,
             pathResolver,
-            ruleFinder,
+            graphBuilder.getSourcePathRuleFinder(),
             luaPlatform,
             target,
             output,
@@ -196,7 +194,7 @@ public class LuaBinaryDescription
             baseParams,
             graphBuilder,
             pathResolver,
-            ruleFinder,
+            graphBuilder.getSourcePathRuleFinder(),
             cellPathResolver,
             luaPlatform,
             cxxBuckConfig,
@@ -226,7 +224,6 @@ public class LuaBinaryDescription
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       LuaPlatform luaPlatform,
       Optional<BuildTarget> nativeStarterLibrary,
       String mainModule,
@@ -272,7 +269,6 @@ public class LuaBinaryDescription
         baseParams,
         graphBuilder,
         pathResolver,
-        ruleFinder,
         luaPlatform,
         baseTarget.withAppendedFlavors(
             packageStyle == LuaPlatform.PackageStyle.STANDALONE
@@ -295,7 +291,6 @@ public class LuaBinaryDescription
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       SourcePathResolver pathResolver,
-      SourcePathRuleFinder ruleFinder,
       LuaPlatform luaPlatform,
       PythonPlatform pythonPlatform,
       Optional<BuildTarget> nativeStarterLibrary,
@@ -380,7 +375,6 @@ public class LuaBinaryDescription
             baseParams,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             luaPlatform,
             nativeStarterLibrary,
             mainModule,
@@ -405,7 +399,6 @@ public class LuaBinaryDescription
               baseParams,
               cellPathResolver,
               graphBuilder,
-              ruleFinder,
               cxxBuckConfig,
               cxxPlatform,
               ImmutableList.of(),
@@ -523,7 +516,6 @@ public class LuaBinaryDescription
       BuildTarget linkTreeTarget,
       ProjectFilesystem filesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       Path root,
       ImmutableMap<String, SourcePath> components) {
     return graphBuilder.addToIndex(
@@ -534,7 +526,7 @@ public class LuaBinaryDescription
             root,
             MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem())),
             ImmutableMultimap.of(),
-            ruleFinder));
+            graphBuilder.getSourcePathRuleFinder()));
   }
 
   /**
@@ -576,7 +568,6 @@ public class LuaBinaryDescription
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       CxxPlatform cxxPlatform,
       SourcePath starter,
       LuaPackageComponents components) {
@@ -588,7 +579,6 @@ public class LuaBinaryDescription
                 getModulesSymlinkTreeTarget(buildTarget),
                 projectFilesystem,
                 graphBuilder,
-                ruleFinder,
                 getModulesSymlinkTreeRoot(buildTarget, projectFilesystem),
                 components.getModules()));
 
@@ -613,7 +603,6 @@ public class LuaBinaryDescription
                   getPythonModulesSymlinkTreeTarget(buildTarget),
                   projectFilesystem,
                   graphBuilder,
-                  ruleFinder,
                   getPythonModulesSymlinkTreeRoot(buildTarget, projectFilesystem),
                   pythonModules));
       pythonModulesLinktree.add(symlinkTree);
@@ -627,7 +616,6 @@ public class LuaBinaryDescription
                   getNativeLibsSymlinkTreeTarget(buildTarget),
                   projectFilesystem,
                   graphBuilder,
-                  ruleFinder,
                   getNativeLibsSymlinkTreeRoot(buildTarget, projectFilesystem),
                   addVersionLessLibraries(cxxPlatform, components.getNativeLibraries())));
       nativeLibsLinktree.add(symlinkTree);
@@ -672,7 +660,6 @@ public class LuaBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       LuaPlatform luaPlatform,
       SourcePath starter,
       String mainModule,
@@ -691,10 +678,17 @@ public class LuaBinaryDescription
                 params
                     .withDeclaredDeps(
                         ImmutableSortedSet.<BuildRule>naturalOrder()
-                            .addAll(ruleFinder.filterBuildRuleInputs(starter))
-                            .addAll(components.getDeps(ruleFinder))
-                            .addAll(BuildableSupport.getDepsCollection(lua, ruleFinder))
-                            .addAll(BuildableSupport.getDepsCollection(packager, ruleFinder))
+                            .addAll(
+                                graphBuilder
+                                    .getSourcePathRuleFinder()
+                                    .filterBuildRuleInputs(starter))
+                            .addAll(components.getDeps(graphBuilder.getSourcePathRuleFinder()))
+                            .addAll(
+                                BuildableSupport.getDepsCollection(
+                                    lua, graphBuilder.getSourcePathRuleFinder()))
+                            .addAll(
+                                BuildableSupport.getDepsCollection(
+                                    packager, graphBuilder.getSourcePathRuleFinder()))
                             .build())
                     .withoutExtraDeps(),
                 packager,
@@ -714,7 +708,6 @@ public class LuaBinaryDescription
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      SourcePathRuleFinder ruleFinder,
       LuaPlatform luaPlatform,
       String mainModule,
       SourcePath starter,
@@ -727,7 +720,6 @@ public class LuaBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             luaPlatform,
             starter,
             mainModule,
@@ -737,7 +729,6 @@ public class LuaBinaryDescription
             buildTarget,
             projectFilesystem,
             graphBuilder,
-            ruleFinder,
             luaPlatform.getCxxPlatform(),
             starter,
             components);
@@ -772,8 +763,8 @@ public class LuaBinaryDescription
       BuildRuleParams params,
       LuaBinaryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     LuaPlatform luaPlatform = getPlatform(buildTarget, args);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<PythonPlatform> pythonPlatforms =
@@ -795,7 +786,6 @@ public class LuaBinaryDescription
             params,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             luaPlatform,
             pythonPlatform,
             args.getNativeStarterLibrary()
@@ -815,7 +805,6 @@ public class LuaBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            ruleFinder,
             luaPlatform,
             args.getMainModule(),
             components.getStarter(),
@@ -824,7 +813,8 @@ public class LuaBinaryDescription
     return new LuaBinary(
         buildTarget,
         projectFilesystem,
-        params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(binary, ruleFinder)),
+        params.copyAppendingExtraDeps(
+            BuildableSupport.getDepsCollection(binary, graphBuilder.getSourcePathRuleFinder())),
         getOutputPath(buildTarget, projectFilesystem, luaPlatform),
         binary,
         args.getMainModule(),

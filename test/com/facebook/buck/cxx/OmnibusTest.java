@@ -84,7 +84,6 @@ public class OmnibusTest {
                 TestBuildRuleParams.create(),
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
@@ -146,7 +145,6 @@ public class OmnibusTest {
                 TestBuildRuleParams.create(),
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
@@ -215,7 +213,6 @@ public class OmnibusTest {
                 TestBuildRuleParams.create(),
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
@@ -290,7 +287,6 @@ public class OmnibusTest {
                 TestBuildRuleParams.create(),
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
@@ -359,7 +355,6 @@ public class OmnibusTest {
                 TestBuildRuleParams.create(),
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
@@ -419,7 +414,6 @@ public class OmnibusTest {
                 TestBuildRuleParams.create(),
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
@@ -468,7 +462,6 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     ImmutableMap<String, SourcePath> libs =
@@ -479,7 +472,6 @@ public class OmnibusTest {
                 TestBuildRuleParams.create(),
                 TestCellPathResolver.get(projectFilesystem),
                 graphBuilder,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
@@ -508,7 +500,6 @@ public class OmnibusTest {
                 TestBuildRuleParams.create(),
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
-                ruleFinder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(StringArg.of(flag)),

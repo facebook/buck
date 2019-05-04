@@ -169,7 +169,6 @@ public class RustCompileTest {
           ProjectFilesystem projectFilesystem,
           BuildRuleParams baseParams,
           ActionGraphBuilder graphBuilder,
-          SourcePathRuleFinder ruleFinder,
           BuildTarget target,
           ImmutableList<? extends SourcePath> symbolFiles) {
         return null;

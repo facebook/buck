@@ -20,7 +20,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.ExportDependencies;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -104,18 +103,18 @@ public class BuildRules {
 
   public static ImmutableSet<BuildTarget> getTransitiveRuntimeDeps(
       HasRuntimeDeps rule, BuildRuleResolver resolver) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
     ImmutableSet.Builder<BuildTarget> runtimeDeps = ImmutableSet.builder();
     AbstractBreadthFirstTraversal<BuildTarget> visitor =
         new AbstractBreadthFirstTraversal<BuildTarget>(
-            rule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet())) {
+            rule.getRuntimeDeps(resolver.getSourcePathRuleFinder())
+                .collect(ImmutableSet.toImmutableSet())) {
           @Override
           public Iterable<BuildTarget> visit(BuildTarget runtimeDep) {
             runtimeDeps.add(runtimeDep);
             Optional<BuildRule> rule = resolver.getRuleOptional(runtimeDep);
             if (rule.isPresent() && rule.get() instanceof HasRuntimeDeps) {
               return ((HasRuntimeDeps) rule.get())
-                  .getRuntimeDeps(ruleFinder)
+                  .getRuntimeDeps(resolver.getSourcePathRuleFinder())
                   .collect(ImmutableSet.toImmutableSet());
             }
             return ImmutableSet.of();

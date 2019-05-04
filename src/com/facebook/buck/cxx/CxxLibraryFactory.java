@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -870,8 +869,8 @@ public class CxxLibraryFactory {
       CxxPlatform cxxPlatform,
       SharedLibraryInterfaceParams params) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     // Otherwise, grab the rule's original shared library and use that.
     CxxLink sharedLibrary =
@@ -887,7 +886,6 @@ public class CxxLibraryFactory {
             projectFilesystem,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             cxxPlatform,
             sharedLibrary.getSourcePathToOutput());
   }
@@ -901,8 +899,8 @@ public class CxxLibraryFactory {
       CxxPlatform cxxPlatform,
       SharedLibraryInterfaceParams params) {
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     NativeLinkTarget linkTarget =
         (NativeLinkTarget)
@@ -935,7 +933,8 @@ public class CxxLibraryFactory {
 
     // Add the args for the root link target first.
     NativeLinkableInput input =
-        linkTarget.getNativeLinkTargetInput(cxxPlatform, graphBuilder, pathResolver, ruleFinder);
+        linkTarget.getNativeLinkTargetInput(
+            cxxPlatform, graphBuilder, pathResolver, graphBuilder.getSourcePathRuleFinder());
     argsBuilder.addAll(input.getArgs());
 
     // Since we're linking against a dummy libomnibus, ignore undefined symbols.  Put this at the
@@ -958,7 +957,6 @@ public class CxxLibraryFactory {
             projectFilesystem,
             graphBuilder,
             pathResolver,
-            ruleFinder,
             soname,
             linker,
             args);

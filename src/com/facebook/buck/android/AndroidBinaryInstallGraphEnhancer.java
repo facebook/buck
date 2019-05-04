@@ -82,7 +82,7 @@ class AndroidBinaryInstallGraphEnhancer {
     ExopackageDeviceDirectoryLister directoryLister =
         new ExopackageDeviceDirectoryLister(
             buildTarget.withFlavors(DIRECTORY_LISTING_FLAVOR), projectFilesystem);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     ExopackageInfo exopackageInfo = apkInfo.getExopackageInfo().get();
     ImmutableList.Builder<BuildRule> finisherDeps = ImmutableList.builder();
     if (exopackageInfo.getDexInfo().isPresent()

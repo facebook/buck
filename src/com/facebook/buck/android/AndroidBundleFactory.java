@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -74,8 +73,6 @@ public class AndroidBundleFactory {
     ProGuardObfuscateStep.SdkProguardType androidSdkProguardConfig =
         args.getAndroidSdkProguardConfig().orElse(ProGuardObfuscateStep.SdkProguardType.NONE);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-
     AndroidGraphEnhancementResult result = graphEnhancer.createAdditionalBuildables();
 
     AndroidBinaryFilesInfo filesInfo =
@@ -86,7 +83,7 @@ public class AndroidBundleFactory {
       moduleVerification =
           Optional.of(
               new AndroidAppModularityVerification(
-                  ruleFinder,
+                  graphBuilder.getSourcePathRuleFinder(),
                   buildTarget.withFlavors(ANDROID_MODULARITY_VERIFICATION_FLAVOR),
                   projectFilesystem,
                   args.getAndroidAppModularityResult().get(),
@@ -105,7 +102,7 @@ public class AndroidBundleFactory {
         toolchainProvider.getByName(
             AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class),
         params,
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         Optional.of(args.getProguardJvmArgs()),
         (Keystore) keystore,
         dexSplitMode,

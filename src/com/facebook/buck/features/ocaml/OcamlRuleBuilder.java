@@ -104,7 +104,7 @@ public class OcamlRuleBuilder {
   static boolean shouldUseFineGrainedRules(
       BuildRuleResolver resolver, ImmutableList<SourcePath> srcs) {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     boolean noYaccOrLexSources =
         srcs.stream()
             .noneMatch(
