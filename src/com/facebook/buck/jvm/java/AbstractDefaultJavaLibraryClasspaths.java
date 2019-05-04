@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -58,11 +57,6 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
   @Value.Default
   public boolean shouldCreateSourceOnlyAbi() {
     return false;
-  }
-
-  @Value.Lazy
-  SourcePathRuleFinder getSourcePathRuleFinder() {
-    return getActionGraphBuilder();
   }
 
   @Value.Lazy

@@ -101,13 +101,8 @@ public abstract class DefaultJavaLibraryRules {
   abstract CellPathResolver getCellPathResolver();
 
   @Value.Lazy
-  SourcePathRuleFinder getSourcePathRuleFinder() {
-    return getActionGraphBuilder();
-  }
-
-  @Value.Lazy
   SourcePathResolver getSourcePathResolver() {
-    return DefaultSourcePathResolver.from(getSourcePathRuleFinder());
+    return DefaultSourcePathResolver.from(getActionGraphBuilder());
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -416,7 +411,7 @@ public abstract class DefaultJavaLibraryRules {
                 getLibraryTarget(),
                 getProjectFilesystem(),
                 getJarBuildStepsFactory(),
-                getSourcePathRuleFinder(),
+                getActionGraphBuilder(),
                 getProguardConfig(),
                 classpaths.getFirstOrderPackageableDeps(),
                 Objects.requireNonNull(getDeps()).getExportedDeps(),
@@ -456,7 +451,7 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiTarget,
                 getProjectFilesystem(),
                 jarBuildStepsFactory,
-                getSourcePathRuleFinder()));
+                getActionGraphBuilder()));
   }
 
   @Nullable
@@ -474,7 +469,7 @@ public abstract class DefaultJavaLibraryRules {
                 sourceAbiTarget,
                 getProjectFilesystem(),
                 jarBuildStepsFactory,
-                getSourcePathRuleFinder()));
+                getActionGraphBuilder()));
   }
 
   @Nullable
@@ -488,7 +483,7 @@ public abstract class DefaultJavaLibraryRules {
         .addToIndex(
             CalculateClassAbi.of(
                 classAbiTarget,
-                getSourcePathRuleFinder(),
+                getActionGraphBuilder(),
                 getProjectFilesystem(),
                 getInitialParams(),
                 libraryRule.getSourcePathToOutput(),
@@ -610,7 +605,7 @@ public abstract class DefaultJavaLibraryRules {
 
   private ResourcesParameters getResourcesParameters() {
     return ResourcesParameters.create(
-        getProjectFilesystem(), getSourcePathRuleFinder(), getResources(), getResourcesRoot());
+        getProjectFilesystem(), getActionGraphBuilder(), getResources(), getResourcesRoot());
   }
 
   private static UnusedDependenciesAction getUnusedDependenciesAction(
