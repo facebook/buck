@@ -29,7 +29,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -293,7 +293,7 @@ public final class DefaultGraphTransformationEngine implements GraphTransformati
           Maps.transformValues(
               deps,
               futureRes -> {
-                Preconditions.checkState(futureRes.isDone());
+                Verify.verify(futureRes.isDone());
                 return Futures.getUnchecked(futureRes);
               }));
     }
