@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
@@ -144,7 +143,6 @@ public class JavaBinaryDescription
       rule = javaBinary;
     } else {
       graphBuilder.addToIndex(javaBinary);
-      SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
       SourcePath innerJar = javaBinary.getSourcePathToOutput();
       JavacFactory javacFactory = JavacFactory.getDefault(toolchainProvider);
       rule =
@@ -154,13 +152,13 @@ public class JavaBinaryDescription
               params.copyAppendingExtraDeps(
                   Suppliers.<Iterable<BuildRule>>ofInstance(
                       Iterables.concat(
-                          ruleFinder.filterBuildRuleInputs(
+                          graphBuilder.filterBuildRuleInputs(
                               ImmutableList.<SourcePath>builder()
                                   .add(innerJar)
                                   .addAll(nativeLibraries.values())
                                   .build()),
-                          javacFactory.getBuildDeps(ruleFinder)))),
-              javacFactory.create(ruleFinder, null),
+                          javacFactory.getBuildDeps(graphBuilder)))),
+              javacFactory.create(graphBuilder, null),
               toolchainProvider
                   .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
                   .getJavacOptions(),

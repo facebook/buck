@@ -284,7 +284,7 @@ public class JavaTestDescription
                       .relativize(nativeLibsSymlinkTree.getRoot()),
                   filteredLinks.build(),
                   ImmutableMultimap.of(),
-                  graphBuilder.getSourcePathRuleFinder());
+                  graphBuilder);
         }
 
         graphBuilder.addToIndex(nativeLibsSymlinkTree);
@@ -298,9 +298,8 @@ public class JavaTestDescription
                     // (2) They affect the JavaTest's RuleKey, so changing them will invalidate
                     // the test results cache.
                     .addAll(
-                        graphBuilder
-                            .getSourcePathRuleFinder()
-                            .filterBuildRuleInputs(nativeLibsSymlinkTree.getLinks().values()))
+                        graphBuilder.filterBuildRuleInputs(
+                            nativeLibsSymlinkTree.getLinks().values()))
                     .build());
         nativeLibsEnvironment =
             ImmutableMap.of(

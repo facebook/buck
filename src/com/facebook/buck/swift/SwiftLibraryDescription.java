@@ -283,12 +283,10 @@ public class SwiftLibraryDescription
                   ImmutableSet.<BuildRule>builder()
                       .addAll(swiftCompileRules)
                       .addAll(implicitSwiftCompileRules)
-                      .addAll(cxxDeps.getDeps(graphBuilder.getSourcePathRuleFinder()))
+                      .addAll(cxxDeps.getDeps(graphBuilder))
                       // This is only used for generating include args and may not be actually
                       // needed.
-                      .addAll(
-                          BuildableSupport.getDepsCollection(
-                              preprocessor, graphBuilder.getSourcePathRuleFinder()))
+                      .addAll(BuildableSupport.getDepsCollection(preprocessor, graphBuilder))
                       .build()),
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
@@ -336,8 +334,7 @@ public class SwiftLibraryDescription
       CxxPlatform cxxPlatform,
       Optional<String> soname) {
 
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
@@ -401,8 +398,7 @@ public class SwiftLibraryDescription
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
-                  DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
-                  args.getSrcs())
+                  DefaultSourcePathResolver.from(graphBuilder), args.getSrcs())
               .isEmpty();
       return hasSwiftSource
           ? Optional.of(
@@ -413,7 +409,7 @@ public class SwiftLibraryDescription
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
     SwiftDescriptions.populateSwiftLibraryDescriptionArg(
         swiftBuckConfig,
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
+        DefaultSourcePathResolver.from(graphBuilder),
         delegateArgsBuilder,
         args,
         buildTarget);
@@ -440,7 +436,7 @@ public class SwiftLibraryDescription
       PreprocessorFlags preprocessFlags,
       boolean importUnderlyingModule) {
 
-    DepsBuilder srcsDepsBuilder = new DepsBuilder(graphBuilder.getSourcePathRuleFinder());
+    DepsBuilder srcsDepsBuilder = new DepsBuilder(graphBuilder);
     args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
     BuildRuleParams paramsWithSrcDeps = params.copyAppendingExtraDeps(srcsDepsBuilder.build());
 

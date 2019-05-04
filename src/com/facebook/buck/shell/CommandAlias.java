@@ -110,9 +110,8 @@ public class CommandAlias extends NoopBuildRule implements BinaryBuildRule, HasR
     Stream<BuildTarget> deps =
         Stream.of(
                 exe != null ? Stream.of(exe) : Stream.<BuildRule>empty(),
-                extractDepsFromArgs(args.stream(), buildRuleResolver.getSourcePathRuleFinder()),
-                extractDepsFromArgs(
-                    env.values().stream(), buildRuleResolver.getSourcePathRuleFinder()))
+                extractDepsFromArgs(args.stream(), buildRuleResolver),
+                extractDepsFromArgs(env.values().stream(), buildRuleResolver))
             .flatMap(Function.identity())
             .map(BuildRule::getBuildTarget);
     return exe instanceof HasRuntimeDeps

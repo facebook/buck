@@ -82,8 +82,7 @@ public class WorkerMacroArg extends ProxyArg {
               workerTarget, unexpanded, target));
     }
     WorkerTool workerTool = ((ProvidesWorkerTool) workerToolProvider).getWorkerTool();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     Tool exe = workerTool.getTool();
     ImmutableList<String> startupCommand = exe.getCommandPrefix(pathResolver);
     ImmutableMap<String, String> startupEnvironment = exe.getEnvironment(pathResolver);

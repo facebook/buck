@@ -120,7 +120,7 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
                             throw new RuntimeException(
                                 "Cannot resolve rules in deserialized MBR state.");
                           }
-                        }.getSourcePathRuleFinder());
+                        });
 
                     for (Step step :
                         ModernBuildRule.stepsForBuildable(

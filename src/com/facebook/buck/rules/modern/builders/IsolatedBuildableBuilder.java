@@ -321,7 +321,7 @@ public abstract class IsolatedBuildableBuilder {
             public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
               throw new RuntimeException("Cannot resolve rules in deserialized MBR state.");
             }
-          }.getSourcePathRuleFinder());
+          });
 
       final Instant deserializationComplete = Instant.now();
       LOG.info(

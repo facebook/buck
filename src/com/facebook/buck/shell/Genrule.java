@@ -372,8 +372,7 @@ public class Genrule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableList<String> collectExistingArgInputs(
       SourcePathResolver sourcePathResolver, Arg arg) {
-    Collection<BuildRule> buildRules =
-        BuildableSupport.getDepsCollection(arg, buildRuleResolver.getSourcePathRuleFinder());
+    Collection<BuildRule> buildRules = BuildableSupport.getDepsCollection(arg, buildRuleResolver);
     ImmutableList.Builder<String> inputs = ImmutableList.builder();
     for (BuildRule buildRule : buildRules) {
       SourcePath inputPath = buildRule.getSourcePathToOutput();

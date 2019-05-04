@@ -72,7 +72,7 @@ public class ExportFileDescription
 
     SourcePath src;
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(context.getActionGraphBuilder().getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(context.getActionGraphBuilder());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     if (args.getSrc().isPresent()) {
       if (mode == ExportFileDescription.Mode.REFERENCE
@@ -92,7 +92,7 @@ public class ExportFileDescription
     return new ExportFile(
         buildTarget,
         projectFilesystem,
-        context.getActionGraphBuilder().getSourcePathRuleFinder(),
+        context.getActionGraphBuilder(),
         name,
         mode,
         src,

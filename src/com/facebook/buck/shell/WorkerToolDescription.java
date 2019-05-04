@@ -155,7 +155,7 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     return new DefaultWorkerToolRule(
         buildTarget,
         context.getProjectFilesystem(),
-        graphBuilder.getSourcePathRuleFinder(),
+        graphBuilder,
         tool,
         maxWorkers,
         args.getPersistent()

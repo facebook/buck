@@ -69,15 +69,10 @@ public class PrebuiltJarDescription
 
     if (JavaAbis.isClassAbiTarget(buildTarget)) {
       return CalculateClassAbi.of(
-          buildTarget,
-          graphBuilder.getSourcePathRuleFinder(),
-          projectFilesystem,
-          params,
-          args.getBinaryJar());
+          buildTarget, graphBuilder, projectFilesystem, params, args.getBinaryJar());
     }
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildRule prebuilt =
         new PrebuiltJar(

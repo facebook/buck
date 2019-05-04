@@ -96,9 +96,7 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
                 FluentIterable.from(testArgs)
                     .append(testEnv.values())
                     .transformAndConcat(
-                        arg ->
-                            BuildableSupport.getDepsCollection(
-                                arg, graphBuilder.getSourcePathRuleFinder()))),
+                        arg -> BuildableSupport.getDepsCollection(arg, graphBuilder))),
         testArgs,
         testEnv,
         args.getResources(),

@@ -75,6 +75,6 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   }
 
   private Javac getJavac(BuildRuleResolver resolver, @Nullable JvmLibraryArg arg) {
-    return javacFactory.create(resolver.getSourcePathRuleFinder(), arg);
+    return javacFactory.create(resolver, arg);
   }
 }

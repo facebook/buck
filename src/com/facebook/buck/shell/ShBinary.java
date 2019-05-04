@@ -248,7 +248,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(resources.stream(), Stream.of(main))
-        .map(buildRuleResolver.getSourcePathRuleFinder()::filterBuildRuleInputs)
+        .map(buildRuleResolver::filterBuildRuleInputs)
         .flatMap(ImmutableSet::stream)
         .map(BuildRule::getBuildTarget);
   }

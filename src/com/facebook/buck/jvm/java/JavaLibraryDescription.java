@@ -123,7 +123,7 @@ public class JavaLibraryDescription
       // Might as well add them as deps. *sigh*
       ImmutableSortedSet.Builder<BuildRule> deps = ImmutableSortedSet.naturalOrder();
       // Sourcepath deps
-      deps.addAll(graphBuilder.getSourcePathRuleFinder().filterBuildRuleInputs(sources));
+      deps.addAll(graphBuilder.filterBuildRuleInputs(sources));
       // Classpath deps
       deps.add(baseLibrary);
       deps.addAll(

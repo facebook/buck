@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -163,7 +162,6 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
             args);
     if (maybeExpanders.isPresent()) {
       ImmutableList<MacroExpander<? extends Macro, ?>> expanders = maybeExpanders.get();
-      SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
       StringWithMacrosConverter converter =
           StringWithMacrosConverter.of(buildTarget, context.getCellPathResolver(), expanders);
       Function<StringWithMacros, Arg> toArg =
@@ -184,10 +182,10 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
           context.getProjectFilesystem(),
           params.withExtraDeps(
               Stream.concat(
-                      ruleFinder.filterBuildRuleInputs(args.getSrcs().getPaths()).stream(),
+                      graphBuilder.filterBuildRuleInputs(args.getSrcs().getPaths()).stream(),
                       Stream.of(cmd, bash, cmdExe)
                           .flatMap(Optionals::toStream)
-                          .flatMap(input -> BuildableSupport.getDeps(input, ruleFinder)))
+                          .flatMap(input -> BuildableSupport.getDeps(input, graphBuilder)))
                   .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()))),
           graphBuilder,
           args,

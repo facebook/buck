@@ -50,8 +50,7 @@ public abstract class BuildTargetMacroExpander<M extends BuildTargetMacro>
   public Arg expandFrom(
       BuildTarget target, CellPathResolver cellNames, ActionGraphBuilder graphBuilder, M input)
       throws MacroException {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     return expand(pathResolver, input, resolve(graphBuilder, input));
   }
 }

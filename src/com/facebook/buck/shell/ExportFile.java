@@ -212,7 +212,7 @@ public class ExportFile extends AbstractBuildRule
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     // When using reference mode, we need to make sure that any build rule that builds the source
     // is built when we are, so accomplish this by exporting it as a runtime dep.
-    Optional<BuildRule> rule = buildRuleResolver.getSourcePathRuleFinder().getRule(src);
+    Optional<BuildRule> rule = buildRuleResolver.getRule(src);
     return mode == ExportFileDescription.Mode.REFERENCE
         ? RichStream.from(rule).map(BuildRule::getBuildTarget)
         : Stream.empty();

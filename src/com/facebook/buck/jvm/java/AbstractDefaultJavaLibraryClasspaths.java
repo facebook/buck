@@ -62,7 +62,7 @@ abstract class AbstractDefaultJavaLibraryClasspaths {
 
   @Value.Lazy
   SourcePathRuleFinder getSourcePathRuleFinder() {
-    return getActionGraphBuilder().getSourcePathRuleFinder();
+    return getActionGraphBuilder();
   }
 
   @Value.Lazy
