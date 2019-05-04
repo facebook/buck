@@ -180,7 +180,6 @@ public class LuaBinaryDescription
             baseParams,
             graphBuilder,
             pathResolver,
-            graphBuilder,
             luaPlatform,
             target,
             output,

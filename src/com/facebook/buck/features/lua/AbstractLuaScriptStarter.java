@@ -21,7 +21,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.WriteStringTemplateRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -54,8 +53,6 @@ abstract class AbstractLuaScriptStarter implements Starter {
   abstract ActionGraphBuilder getActionGraphBuilder();
 
   abstract SourcePathResolver getPathResolver();
-
-  abstract SourcePathRuleFinder getRuleFinder();
 
   abstract LuaPlatform getLuaPlatform();
 
@@ -103,7 +100,7 @@ abstract class AbstractLuaScriptStarter implements Starter {
                 WriteStringTemplateRule.from(
                     getProjectFilesystem(),
                     getBaseParams(),
-                    getRuleFinder(),
+                    getActionGraphBuilder(),
                     getTarget(),
                     getOutput(),
                     templateRule.getSourcePathToOutput(),
