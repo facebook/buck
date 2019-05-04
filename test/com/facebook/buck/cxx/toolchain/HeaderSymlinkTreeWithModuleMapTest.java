@@ -108,7 +108,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     ruleResolver = new TestActionGraphBuilder(TargetGraph.EMPTY);
-    ruleFinder = new SourcePathRuleFinder(ruleResolver);
+    ruleFinder = ruleResolver.getSourcePathRuleFinder();
     resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Setup the symlink tree buildable.

@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -112,7 +111,7 @@ public class LocationMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Path absolutePath = pathResolver.getAbsolutePath(javaRule.getSourcePathToOutput());
     String expectedCmd = String.format("%s %s $OUT", absolutePath, absolutePath);
 
@@ -198,6 +197,6 @@ public class LocationMacroExpanderTest {
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
     return Arg.stringify(
-        arg, DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));
+        arg, DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
   }
 }

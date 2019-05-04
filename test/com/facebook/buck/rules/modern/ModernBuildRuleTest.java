@@ -44,7 +44,7 @@ public class ModernBuildRuleTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder finder = new SourcePathRuleFinder(buildRuleResolver);
+    SourcePathRuleFinder finder = buildRuleResolver.getSourcePathRuleFinder();
     ModernBuildRule rule = new InvalidPublicOutputPathBuildRule(target, filesystem, finder);
 
     BuildableContext buildableContext = new FakeBuildableContext();

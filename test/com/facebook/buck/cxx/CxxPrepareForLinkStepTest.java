@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -54,7 +53,7 @@ public class CxxPrepareForLinkStepTest {
     Path dummyPath = Paths.get("dummy");
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> dummyArgs =
@@ -158,7 +157,7 @@ public class CxxPrepareForLinkStepTest {
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args =
@@ -223,7 +222,7 @@ public class CxxPrepareForLinkStepTest {
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args =

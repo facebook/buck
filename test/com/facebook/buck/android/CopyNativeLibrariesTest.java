@@ -119,7 +119,7 @@ public class CopyNativeLibrariesTest {
   @Test
   public void testCopyNativeLibrariesCopiesLibDirsInReverseTopoOrder() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     CopyNativeLibraries copyNativeLibraries =
         new CopyNativeLibraries(

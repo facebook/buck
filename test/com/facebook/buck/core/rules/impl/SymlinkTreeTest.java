@@ -123,7 +123,7 @@ public class SymlinkTreeTest {
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ruleFinder = graphBuilder.getSourcePathRuleFinder();
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Setup the symlink tree buildable.
@@ -185,7 +185,7 @@ public class SymlinkTreeTest {
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
             ImmutableMultimap.of(),
             ruleFinder);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
@@ -410,7 +410,7 @@ public class SymlinkTreeTest {
     // rulekey must change when the link contents change.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(symlinkTreeBuildRule);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     Genrule genrule =
@@ -497,7 +497,7 @@ public class SymlinkTreeTest {
   public void resolveDuplicateRelativePathsIsNoopWhenThereAreNoDuplicates() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
 
     ImmutableSortedSet<SourcePath> sourcePaths =
         ImmutableSortedSet.of(
@@ -517,7 +517,7 @@ public class SymlinkTreeTest {
   public void resolveDuplicateRelativePaths() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
     tmp.getRoot().resolve("one").toFile().mkdir();
     tmp.getRoot().resolve("two").toFile().mkdir();
     ProjectFilesystem fsOne =
@@ -543,7 +543,7 @@ public class SymlinkTreeTest {
   public void resolveDuplicateRelativePathsWithConflicts() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
     tmp.getRoot().resolve("a-fs").toFile().mkdir();
     tmp.getRoot().resolve("b-fs").toFile().mkdir();
     tmp.getRoot().resolve("c-fs").toFile().mkdir();

@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -94,7 +93,7 @@ public class CxxToolchainDescriptionTest {
     CxxToolchainBuildRule cxxPlatformRule = builder.build(graphBuilder);
 
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     CxxPlatform platform = cxxPlatformRule.getPlatformWithFlavor(InternalFlavor.of("dontcare"));
 

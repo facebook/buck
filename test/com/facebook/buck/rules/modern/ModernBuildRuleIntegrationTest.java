@@ -113,7 +113,7 @@ public class ModernBuildRuleIntegrationTest {
       return new TemporaryWritingRule(
           buildTarget,
           context.getProjectFilesystem(),
-          new SourcePathRuleFinder(context.getActionGraphBuilder()));
+          context.getActionGraphBuilder().getSourcePathRuleFinder());
     }
   }
 

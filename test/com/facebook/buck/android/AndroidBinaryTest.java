@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -76,7 +75,7 @@ public class AndroidBinaryTest {
   public void testAndroidBinaryNoDx() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     // Two android_library deps, neither with an assets directory.
@@ -223,11 +222,10 @@ public class AndroidBinaryTest {
     if (!Strings.isNullOrEmpty(resDirectory) || !Strings.isNullOrEmpty(assetDirectory)) {
       BuildTarget resourceOnebuildTarget =
           BuildTargetFactory.newInstance(buildTarget + "_resources");
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
       BuildRule androidResourceRule =
           graphBuilder.addToIndex(
               AndroidResourceRuleBuilder.newBuilder()
-                  .setRuleFinder(ruleFinder)
+                  .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
                   .setAssets(FakeSourcePath.of(assetDirectory))
                   .setRes(resDirectory == null ? null : FakeSourcePath.of(resDirectory))
                   .setBuildTarget(resourceOnebuildTarget)
@@ -254,7 +252,7 @@ public class AndroidBinaryTest {
   public void testGetUnsignedApkPath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Keystore keystore = addKeystoreRule(graphBuilder);
 
     BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");
@@ -359,7 +357,7 @@ public class AndroidBinaryTest {
             Optional.empty(),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             FakeBuildContext.withSourcePathResolver(
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))));
+                DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -413,7 +411,7 @@ public class AndroidBinaryTest {
             Optional.of(reorderData),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
             FakeBuildContext.withSourcePathResolver(
-                DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))));
+                DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())));
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -429,7 +427,7 @@ public class AndroidBinaryTest {
   public void testAddPostFilterCommandSteps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     BuildRule keystoreRule = addKeystoreRule(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     AndroidBinaryBuilder builder =

@@ -73,7 +73,6 @@ public class DirectHeaderMapTest {
   private Path headerMapPath;
   private Path file1;
   private Path file2;
-  private SourcePathRuleFinder ruleFinder;
 
   @Before
   public void setUp() throws Exception {
@@ -107,11 +106,15 @@ public class DirectHeaderMapTest {
     // Setup the symlink tree buildable.
     graphBuilder = new TestActionGraphBuilder();
 
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     buildRule =
-        new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+        new DirectHeaderMap(
+            buildTarget,
+            projectFilesystem,
+            symlinkTreeRoot,
+            links,
+            graphBuilder.getSourcePathRuleFinder());
     graphBuilder.addToIndex(buildRule);
 
     headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
@@ -166,9 +169,9 @@ public class DirectHeaderMapTest {
             projectFilesystem,
             symlinkTreeRoot,
             modifiedLinksBuilder.build(),
-            ruleFinder);
+            graphBuilder.getSourcePathRuleFinder());
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
@@ -193,7 +196,7 @@ public class DirectHeaderMapTest {
   public void testRuleKeyDoesNotChangeIfLinkTargetsChange() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(buildRule);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =

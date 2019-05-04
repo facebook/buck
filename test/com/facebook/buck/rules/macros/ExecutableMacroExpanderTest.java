@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -159,7 +158,7 @@ public class ExecutableMacroExpanderTest {
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
     return Arg.stringify(
-        arg, DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));
+        arg, DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
   }
 
   @Test

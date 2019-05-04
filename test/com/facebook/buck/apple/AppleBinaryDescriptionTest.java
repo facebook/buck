@@ -23,7 +23,6 @@ import static org.junit.Assume.assumeThat;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -46,7 +45,7 @@ public class AppleBinaryDescriptionTest {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")

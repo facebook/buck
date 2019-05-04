@@ -47,7 +47,7 @@ public class SanitizedArgTest {
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     projectFilesystem, FileHashCacheMode.DEFAULT)));
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     return new UncachedRuleKeyBuilder(
         ruleFinder,
@@ -66,7 +66,7 @@ public class SanitizedArgTest {
   @Test
   public void stringify() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
 
     SanitizedArg arg = SanitizedArg.create(Functions.constant("sanitized"), "unsanitized");
     assertThat(Arg.stringifyList(arg, pathResolver), Matchers.contains("unsanitized"));

@@ -67,7 +67,7 @@ public class CalculateClassAbiTest {
   @Test
   public void ruleKeysChangeIfGeneratedBinaryJarChanges() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -109,7 +109,7 @@ public class CalculateClassAbiTest {
 
     // Re-setup some entities to drop internal rule key caching.
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ruleFinder = graphBuilder.getSourcePathRuleFinder();
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     builder.build(graphBuilder, filesystem);
 
@@ -129,7 +129,7 @@ public class CalculateClassAbiTest {
   @Test
   public void inputRuleKeyDoesNotChangeIfGeneratedBinaryJarDoesNotChange() throws Exception {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
@@ -169,7 +169,7 @@ public class CalculateClassAbiTest {
 
     // Re-setup some entities to drop internal rule key caching.
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ruleFinder = graphBuilder.getSourcePathRuleFinder();
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     builder.build(graphBuilder, filesystem);
 

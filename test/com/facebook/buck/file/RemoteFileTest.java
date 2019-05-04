@@ -34,7 +34,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -74,7 +73,7 @@ public class RemoteFileTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:cake");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     RemoteFile remoteFile =
         new RemoteFileBuilder(downloader, target)
             .setUrl("http://www.facebook.com/")
@@ -597,7 +596,7 @@ public class RemoteFileTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(remoteFile);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     ImmutableList<Step> buildSteps =
         remoteFile.getBuildSteps(

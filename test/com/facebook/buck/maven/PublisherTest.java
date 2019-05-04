@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -95,7 +94,7 @@ public class PublisherTest {
         TargetGraphFactory.newInstance(depNode, publishableANode, publishableBNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
@@ -154,7 +153,7 @@ public class PublisherTest {
             transitiveDepNode, depNode, publishableANode, publishableBNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);
@@ -219,7 +218,7 @@ public class PublisherTest {
             transitiveDepNode, dep1Node, dep2Node, publishableANode, publishableBNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     MavenPublishable publishableA = (MavenPublishable) graphBuilder.requireRule(publishableTargetA);
     MavenPublishable publishableB = (MavenPublishable) graphBuilder.requireRule(publishableTargetB);

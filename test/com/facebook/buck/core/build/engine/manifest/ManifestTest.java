@@ -19,7 +19,6 @@ package com.facebook.buck.core.build.engine.manifest;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -50,7 +49,7 @@ import org.junit.Test;
 public class ManifestTest {
 
   private static final SourcePathResolver RESOLVER =
-      DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+      DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
 
   @Test
   public void toMap() {

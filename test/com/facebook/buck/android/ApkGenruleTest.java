@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFact
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -118,7 +117,7 @@ public class ApkGenruleTest {
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
 

@@ -41,7 +41,6 @@ import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildT
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -384,8 +383,8 @@ public class DistBuildStateTest {
   private DistBuildFileHashes emptyActionGraph() throws IOException, InterruptedException {
     ActionGraph actionGraph = new ActionGraph(ImmutableList.of());
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
     ProjectFilesystem projectFilesystem = createJavaOnlyFilesystem("/opt/buck");
     Cell rootCell =
         new TestCellBuilder()
@@ -395,7 +394,7 @@ public class DistBuildStateTest {
     return new DistBuildFileHashes(
         actionGraph,
         sourcePathResolver,
-        ruleFinder,
+        ruleResolver.getSourcePathRuleFinder(),
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(

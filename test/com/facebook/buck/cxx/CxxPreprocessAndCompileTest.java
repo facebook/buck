@@ -149,7 +149,7 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void inputChangesCauseRuleKeyChangesForCompilation() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache =
@@ -331,7 +331,7 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void preprocessorFlagsRuleKeyChangesCauseRuleKeyChangesForPreprocessing() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache =
@@ -410,7 +410,7 @@ public class CxxPreprocessAndCompileTest {
   @Test
   public void usesCorrectCommandForCompile() {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -462,7 +462,7 @@ public class CxxPreprocessAndCompileTest {
     SourcePath compiler = FakeSourcePath.of(projectFilesystem, "compiler");
     Tool compilerTool = new CommandTool.Builder().addInput(compiler).build();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
@@ -525,7 +525,7 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void usesColorFlagForCompilationWhenRequested() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -561,7 +561,7 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void usesColorFlagForPreprocessingWhenRequested() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -617,7 +617,7 @@ public class CxxPreprocessAndCompileTest {
   @Test
   public void usesUnixPathSeparatorForCompile() {
     // Setup some dummy values for inputs to the CxxPreprocessAndCompile.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");

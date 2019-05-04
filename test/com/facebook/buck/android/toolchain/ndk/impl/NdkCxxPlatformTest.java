@@ -112,7 +112,7 @@ public class NdkCxxPlatformTest {
   private ImmutableMap<TargetCpuType, RuleKey> constructCompileRuleKeys(
       Operation operation, ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> cxxPlatforms) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
@@ -167,7 +167,7 @@ public class NdkCxxPlatformTest {
       ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> cxxPlatforms)
       throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(

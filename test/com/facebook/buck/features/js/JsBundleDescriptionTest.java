@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -157,7 +156,7 @@ public class JsBundleDescriptionTest {
               bundleTarget.withFlavors(JsFlavors.IOS), JsBundleOutputs.class);
 
       DefaultSourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder));
+          DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder());
       assertEquals(
           pathResolver.getRelativePath(map.getSourcePathToOutput()),
           pathResolver.getRelativePath(bundle.getSourcePathToSourceMap()));
@@ -219,8 +218,8 @@ public class JsBundleDescriptionTest {
               "//:bundle",
               builder -> builder.setExtraJson("[\"1 %s 2\"]", LocationMacro.of(referencedTarget)));
 
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(scenario.graphBuilder);
-      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      SourcePathResolver pathResolver =
+          DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder());
 
       Function<HashCode, RuleKey> calc =
           (refHash) ->
@@ -228,7 +227,7 @@ public class JsBundleDescriptionTest {
                       new FakeFileHashCache(
                           ImmutableMap.of(pathResolver.getAbsolutePath(referencedSource), refHash)),
                       pathResolver,
-                      ruleFinder)
+                      scenario.graphBuilder.getSourcePathRuleFinder())
                   .build(bundle);
 
       assertThat(

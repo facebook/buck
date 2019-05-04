@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -83,7 +82,7 @@ public class ExternallyBuiltApplePackageTest {
   @Test
   public void sdkrootEnvironmentVariableIsSet() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(this.graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -119,7 +118,7 @@ public class ExternallyBuiltApplePackageTest {
   @Test
   public void outputContainsCorrectExtension() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(this.graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -145,7 +144,7 @@ public class ExternallyBuiltApplePackageTest {
   @Test
   public void commandContainsCorrectCommand() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(this.graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -221,11 +220,10 @@ public class ExternallyBuiltApplePackageTest {
   }
 
   private DefaultRuleKeyFactory newRuleKeyFactory() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     return new TestDefaultRuleKeyFactory(
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),
-        DefaultSourcePathResolver.from(ruleFinder),
-        ruleFinder);
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
+        graphBuilder.getSourcePathRuleFinder());
   }
 }

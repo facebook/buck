@@ -52,13 +52,12 @@ public class StripLinkableTest {
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder =
-        new SourcePathRuleFinder(
-            new AbstractBuildRuleResolver() {
-              @Override
-              public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
-                return Optional.ofNullable(ruleMap.get(buildTarget));
-              }
-            });
+        new AbstractBuildRuleResolver() {
+          @Override
+          public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+            return Optional.ofNullable(ruleMap.get(buildTarget));
+          }
+        }.getSourcePathRuleFinder();
 
     SourcePath libraryPath = DefaultBuildTargetSourcePath.of(libraryTarget);
     Tool stripTool = new HashedFileTool(DefaultBuildTargetSourcePath.of(toolTarget));

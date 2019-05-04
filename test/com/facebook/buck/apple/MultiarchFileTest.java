@@ -40,7 +40,6 @@ import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -138,7 +137,7 @@ public class MultiarchFileTest {
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRule multiarchRule =
         nodeBuilderFactory.getNodeBuilder(target).build(graphBuilder, filesystem);

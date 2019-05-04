@@ -33,7 +33,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -188,7 +187,7 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     PythonBuckConfig config =
         new PythonBuckConfig(
             FakeBuckConfig.builder()
@@ -211,7 +210,7 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     PythonBinaryBuilder builder = PythonBinaryBuilder.create(target);
     PythonBinary binary =
         builder.setMainModule("main").setExtension(".different_extension").build(graphBuilder);
@@ -227,7 +226,7 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ImmutableList<String> buildArgs = ImmutableList.of("--some", "--args");
     PythonBinary binary =
         PythonBinaryBuilder.create(target)
@@ -311,7 +310,7 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Path executor = Paths.get("/root/executor");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     PythonBuckConfig config =
@@ -338,7 +337,7 @@ public class PythonBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bin");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     PythonPackagedBinary binary =
         (PythonPackagedBinary)
             PythonBinaryBuilder.create(target).setMainModule("main").build(graphBuilder);
@@ -653,7 +652,7 @@ public class PythonBinaryDescriptionTest {
             TargetGraphFactory.newInstance(
                 cxxDepBuilder.build(), cxxBuilder.build(), binaryBuilder.build()));
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     cxxDepBuilder.build(graphBuilder);
     cxxBuilder.build(graphBuilder);
     PythonBinary binary = binaryBuilder.build(graphBuilder);
@@ -809,7 +808,7 @@ public class PythonBinaryDescriptionTest {
             .build(graphBuilder);
     assertThat(
         standaloneBinary
-            .getRuntimeDeps(new SourcePathRuleFinder(graphBuilder))
+            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
             .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(pyTool.getBuildTarget()));
   }
@@ -931,14 +930,13 @@ public class PythonBinaryDescriptionTest {
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
             StackedFileHashCache.createDefaultHashCaches(
                 rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
-            DefaultSourcePathResolver.from(ruleFinder),
-            ruleFinder);
+            DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder()),
+            ruleResolver.getSourcePathRuleFinder());
     return ruleKeyFactory.build(rule);
   }
 }

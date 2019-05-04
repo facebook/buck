@@ -38,7 +38,7 @@ public class SourcePathRuleFinderTest {
   @Test
   public void getRuleCanGetRuleOfBuildTargetSoucePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     FakeBuildRule rule = new FakeBuildRule("//:foo");
     rule.setOutputFile("foo");
     graphBuilder.addToIndex(rule);
@@ -59,7 +59,7 @@ public class SourcePathRuleFinderTest {
   @Test
   public void testFilterBuildRuleInputsExcludesPathSourcePaths() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     FakeBuildRule rule =
         new FakeBuildRule(BuildTargetFactory.newInstance("//java/com/facebook:facebook"));
     graphBuilder.addToIndex(rule);

@@ -43,7 +43,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -140,7 +139,7 @@ public class JsBundleGenruleDescriptionTest {
   public void underlyingJsBundleIsARuntimeDep() {
     assertArrayEquals(
         new BuildTarget[] {defaultBundleTarget},
-        setup.genrule().getRuntimeDeps(new SourcePathRuleFinder(setup.graphBuilder())).toArray());
+        setup.genrule().getRuntimeDeps(setup.graphBuilder().getSourcePathRuleFinder()).toArray());
   }
 
   @Test
@@ -240,7 +239,7 @@ public class JsBundleGenruleDescriptionTest {
   public void exposesReleaseFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.RELEASE);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
+        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("RELEASE", "1"));
@@ -249,7 +248,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void withoutReleaseFlavorEnvVariableIsEmpty() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
+        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("RELEASE", ""));
@@ -259,7 +258,7 @@ public class JsBundleGenruleDescriptionTest {
   public void exposesAndroidFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.ANDROID);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
+        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", "android"));
@@ -269,7 +268,7 @@ public class JsBundleGenruleDescriptionTest {
   public void exposesIosFlavorAsEnvironmentVariable() {
     setUp(JsFlavors.IOS);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
+        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", "ios"));
@@ -278,7 +277,7 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void withoutPlatformFlavorEnvVariableIsEmpty() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
+        DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     setup.genrule().addEnvironmentVariables(pathResolver, env);
     assertThat(env.build(), hasEntry("PLATFORM", ""));
@@ -771,7 +770,7 @@ public class JsBundleGenruleDescriptionTest {
   }
 
   private DefaultSourcePathResolver sourcePathResolver() {
-    return DefaultSourcePathResolver.from(new SourcePathRuleFinder(setup.graphBuilder()));
+    return DefaultSourcePathResolver.from(setup.graphBuilder().getSourcePathRuleFinder());
   }
 
   private static class TestSetup {

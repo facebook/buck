@@ -23,7 +23,6 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -44,7 +43,6 @@ import org.junit.Test;
 public class JavacSpecTest {
   private ActionGraphBuilder graphBuilder;
   private SourcePathResolver sourcePathResolver;
-  private SourcePathRuleFinder ruleFinder;
   private JavacSpec.Builder specBuilder;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -52,8 +50,7 @@ public class JavacSpecTest {
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     specBuilder = JavacSpec.builder();
   }
 
@@ -110,6 +107,6 @@ public class JavacSpecTest {
   }
 
   private Javac getJavac() {
-    return specBuilder.build().getJavacProvider().resolve(ruleFinder);
+    return specBuilder.build().getJavacProvider().resolve(graphBuilder.getSourcePathRuleFinder());
   }
 }

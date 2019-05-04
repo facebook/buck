@@ -21,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.AndroidPrebuiltAarBuilder;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -60,7 +59,7 @@ public class DefaultIjLibraryFactoryTest {
   @Before
   public void setUp() {
     sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
     guavaJarPath = Paths.get("third_party/java/guava.jar");
     guava =
         PrebuiltJarBuilder.createBuilder(

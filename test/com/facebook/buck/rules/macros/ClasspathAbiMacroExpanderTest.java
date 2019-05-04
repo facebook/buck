@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -141,7 +140,7 @@ public class ClasspathAbiMacroExpanderTest {
         expander.expandFrom(forTarget, cellRoots, graphBuilder, classpathAbiMacro);
 
     ImmutableList<String> deps =
-        BuildableSupport.deriveDeps(ruleKeyAppendables, new SourcePathRuleFinder(graphBuilder))
+        BuildableSupport.deriveDeps(ruleKeyAppendables, graphBuilder.getSourcePathRuleFinder())
             .map(BuildRule::getFullyQualifiedName)
             .collect(ImmutableList.toImmutableList());
 
@@ -155,7 +154,7 @@ public class ClasspathAbiMacroExpanderTest {
       BuildRule rule, ActionGraphBuilder graphBuilder, String expectedClasspath)
       throws MacroException {
     DefaultSourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     String classpath = Arg.stringify(expander.expand(graphBuilder, rule), pathResolver);
 
     assertEquals(expectedClasspath, classpath);

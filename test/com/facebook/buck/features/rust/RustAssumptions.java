@@ -24,7 +24,6 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -42,7 +41,7 @@ abstract class RustAssumptions {
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
@@ -63,7 +62,7 @@ abstract class RustAssumptions {
       throws IOException, InterruptedException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
@@ -82,7 +81,7 @@ abstract class RustAssumptions {
       throws IOException, InterruptedException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     RustPlatform rustPlatform =
         new ImmutableRustPlatformFactory(FakeBuckConfig.builder().build(), new ExecutableFinder())
             .getPlatform("rust", CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)

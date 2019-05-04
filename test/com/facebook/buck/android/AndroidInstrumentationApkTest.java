@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFact
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -51,7 +50,7 @@ public class AndroidInstrumentationApkTest {
   public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     BuildTarget javaLibrary1Target = BuildTargetFactory.newInstance("//java/com/example:lib1");
     FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target);
 

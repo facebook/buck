@@ -73,7 +73,7 @@ public class HttpArchiveTest {
         new HttpArchive(
             target, filesystem, params, httpFile, out, format, stripPrefix.map(Paths::get));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
     return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(httpArchive);

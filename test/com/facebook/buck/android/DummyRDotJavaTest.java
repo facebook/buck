@@ -62,7 +62,7 @@ public class DummyRDotJavaTest {
   public void testBuildSteps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource resourceRule1 =
         graphBuilder.addToIndex(
@@ -172,7 +172,7 @@ public class DummyRDotJavaTest {
 
   @Test
   public void testRDotJavaBinFolder() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(

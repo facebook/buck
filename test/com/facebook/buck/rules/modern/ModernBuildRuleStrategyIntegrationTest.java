@@ -137,7 +137,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
       return new TouchOutput(
           buildTarget,
           creationContext.getProjectFilesystem(),
-          new SourcePathRuleFinder(creationContext.getActionGraphBuilder()),
+          creationContext.getActionGraphBuilder().getSourcePathRuleFinder(),
           args.getOut());
     }
   }
@@ -162,7 +162,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
       return new CheckSerialization(
           buildTarget,
           creationContext.getProjectFilesystem(),
-          new SourcePathRuleFinder(creationContext.getActionGraphBuilder()));
+          creationContext.getActionGraphBuilder().getSourcePathRuleFinder());
     }
   }
 
@@ -226,7 +226,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
       return new LargeDynamics(
           buildTarget,
           context.getProjectFilesystem(),
-          new SourcePathRuleFinder(graphBuilder),
+          graphBuilder.getSourcePathRuleFinder(),
           firstRef,
           secondRef,
           args.getValue().charAt(0));
@@ -255,7 +255,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
       return new FailingRule(
           buildTarget,
           context.getProjectFilesystem(),
-          new SourcePathRuleFinder(context.getActionGraphBuilder()),
+          context.getActionGraphBuilder().getSourcePathRuleFinder(),
           args.getStepFailure());
     }
   }
@@ -409,7 +409,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
       return new DuplicateOutputsRule(
           buildTarget,
           context.getProjectFilesystem(),
-          new SourcePathRuleFinder(context.getActionGraphBuilder()),
+          context.getActionGraphBuilder().getSourcePathRuleFinder(),
           args.getOutputsAreDirectories());
     }
   }

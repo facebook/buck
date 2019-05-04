@@ -21,7 +21,6 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -35,7 +34,7 @@ public class ExplicitBuildTargetSourcePathTest {
   @Test
   public void explicitlySetPath() {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");

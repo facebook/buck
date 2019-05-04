@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -97,7 +96,7 @@ public class QueryPathsMacroExpanderTest {
 
     // Expand the expected results
     DefaultSourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     String expected =
         Stream.of(depNode, targetNode)
@@ -162,6 +161,6 @@ public class QueryPathsMacroExpanderTest {
                     input);
     Arg arg = converter.convert(stringWithMacros, graphBuilder);
     return Arg.stringify(
-        arg, DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)));
+        arg, DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()));
   }
 }

@@ -30,7 +30,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -124,7 +123,7 @@ public class CxxTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     addFramework(graphBuilder, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -163,7 +162,7 @@ public class CxxTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     addFramework(graphBuilder, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -239,7 +238,7 @@ public class CxxTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -268,7 +267,7 @@ public class CxxTestDescriptionTest {
   public void linkerFlagsLocationMacro() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -300,7 +299,7 @@ public class CxxTestDescriptionTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -335,7 +334,7 @@ public class CxxTestDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -407,15 +406,16 @@ public class CxxTestDescriptionTest {
   }
 
   private RuleKey getRuleKey(BuildRuleResolver resolver, BuildRule rule) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     FileHashCache fileHashCache =
         new StackedFileHashCache(
             ImmutableList.of(
                 DefaultFileHashCache.createDefaultFileHashCache(
                     rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(fileHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(
+            fileHashCache, pathResolver, resolver.getSourcePathRuleFinder());
     return factory.build(rule);
   }
 }

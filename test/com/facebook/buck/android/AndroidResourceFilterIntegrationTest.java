@@ -33,7 +33,6 @@ import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -405,7 +404,7 @@ public class AndroidResourceFilterIntegrationTest {
 
   private int runAaptDumpResources(Path apkFile) throws IOException, InterruptedException {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
     Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
     ProcessExecutor.Result result =
         workspace.runCommand(

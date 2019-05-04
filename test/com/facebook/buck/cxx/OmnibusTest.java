@@ -72,7 +72,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -133,7 +133,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -201,7 +201,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -275,7 +275,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -343,7 +343,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -402,7 +402,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -488,7 +488,7 @@ public class OmnibusTest {
 
     // Verify the libs.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();

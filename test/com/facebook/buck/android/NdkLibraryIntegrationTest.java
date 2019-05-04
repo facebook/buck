@@ -25,7 +25,6 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolsAndDtNeeded;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -182,7 +181,7 @@ public class NdkLibraryIntegrationTest {
       throws IOException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
     Path tmpDir = tempLocation.newFolder("symbols_tmp");
     return new SymbolGetter(
         new DefaultProcessExecutor(new TestConsole()), tmpDir, platform.getObjdump(), pathResolver);

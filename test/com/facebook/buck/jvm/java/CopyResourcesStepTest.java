@@ -44,7 +44,7 @@ import org.junit.Test;
 public class CopyResourcesStepTest {
   @Test
   public void testAddResourceCommandsWithBuildFileParentOfSrcDirectory() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Files:
     // android/java/BUCK
@@ -126,7 +126,7 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     DefaultSourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(resolver)
@@ -199,7 +199,7 @@ public class CopyResourcesStepTest {
     JavaPackageFinder javaPackageFinder = createJavaPackageFinder();
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     DefaultSourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(resolver)

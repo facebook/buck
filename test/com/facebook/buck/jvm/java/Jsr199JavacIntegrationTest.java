@@ -24,7 +24,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -134,7 +133,7 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 DefaultSourcePathResolver.from(
-                    new SourcePathRuleFinder(new TestActionGraphBuilder())),
+                    new TestActionGraphBuilder().getSourcePathRuleFinder()),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -189,7 +188,7 @@ public class Jsr199JavacIntegrationTest {
             .newBuildInvocation(
                 javacExecutionContext,
                 DefaultSourcePathResolver.from(
-                    new SourcePathRuleFinder(new TestActionGraphBuilder())),
+                    new TestActionGraphBuilder().getSourcePathRuleFinder()),
                 BuildTargetFactory.newInstance("//some:example"),
                 ImmutableList.of(),
                 ImmutableList.of(),
@@ -294,7 +293,7 @@ public class Jsr199JavacIntegrationTest {
           .newBuildInvocation(
               javacExecutionContext,
               DefaultSourcePathResolver.from(
-                  new SourcePathRuleFinder(new TestActionGraphBuilder())),
+                  new TestActionGraphBuilder().getSourcePathRuleFinder()),
               BuildTargetFactory.newInstance("//some:example"),
               ImmutableList.of(),
               ImmutableList.of(),
@@ -383,7 +382,7 @@ public class Jsr199JavacIntegrationTest {
     Invocation buildInvocation =
         javac.newBuildInvocation(
             javacExecutionContext,
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
             BuildTargetFactory.newInstance("//some:example"),
             ImmutableList.of(),
             ImmutableList.of(),

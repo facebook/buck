@@ -29,7 +29,7 @@ public class SourcePathRuleFinder {
 
   private final BuildRuleResolver ruleResolver;
 
-  public SourcePathRuleFinder(BuildRuleResolver ruleResolver) {
+  SourcePathRuleFinder(BuildRuleResolver ruleResolver) {
     this.ruleResolver = ruleResolver;
   }
 
