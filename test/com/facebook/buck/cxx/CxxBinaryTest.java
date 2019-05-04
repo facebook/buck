@@ -46,8 +46,7 @@ public class CxxBinaryTest {
   @Test
   public void getExecutableCommandUsesAbsolutePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
     Path bin = Paths.get("path/to/exectuable");
@@ -57,7 +56,7 @@ public class CxxBinaryTest {
             new CxxLink(
                 linkTarget,
                 projectFilesystem,
-                graphBuilder.getSourcePathRuleFinder(),
+                graphBuilder,
                 TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM
                     .getLd()

@@ -42,7 +42,7 @@ import org.junit.Test;
 public class HeaderVerificationTest {
 
   private RuleKey getRuleKey(HeaderVerification headerVerification) {
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache fileHashCache =
         new StackedFileHashCache(

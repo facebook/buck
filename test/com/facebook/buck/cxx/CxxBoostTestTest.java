@@ -77,7 +77,7 @@ public class CxxBoostTestTest {
             new CxxLink(
                 linkTarget,
                 new FakeProjectFilesystem(),
-                ruleResolver.getSourcePathRuleFinder(),
+                ruleResolver,
                 TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM
                     .getLd()

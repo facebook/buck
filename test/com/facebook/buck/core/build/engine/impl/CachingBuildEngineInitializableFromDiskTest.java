@@ -602,18 +602,18 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
                         CachingBuildEngineTest.FIELD_LOADER,
                         fileHashCache,
                         pathResolver,
-                        ruleFinder),
+                        graphBuilder),
                     new TestInputBasedRuleKeyFactory(
                         CachingBuildEngineTest.FIELD_LOADER,
                         fileHashCache,
                         pathResolver,
-                        ruleFinder,
+                        graphBuilder,
                         CachingBuildEngineTest.NO_INPUT_FILE_SIZE_LIMIT),
                     new DefaultDependencyFileRuleKeyFactory(
                         CachingBuildEngineTest.FIELD_LOADER,
                         fileHashCache,
                         pathResolver,
-                        ruleFinder)))
+                        graphBuilder)))
             .build()) {
       // Build the dependent.
       BuildId buildId = new BuildId();

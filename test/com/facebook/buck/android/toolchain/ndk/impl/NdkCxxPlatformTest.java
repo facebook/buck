@@ -45,7 +45,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -112,8 +111,7 @@ public class NdkCxxPlatformTest {
   private ImmutableMap<TargetCpuType, RuleKey> constructCompileRuleKeys(
       Operation operation, ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> cxxPlatforms) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -122,7 +120,7 @@ public class NdkCxxPlatformTest {
                     .put("source.cpp", Strings.repeat("a", 40))
                     .build()),
             pathResolver,
-            ruleFinder);
+            graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<TargetCpuType, UnresolvedNdkCxxPlatform> entry : cxxPlatforms.entrySet()) {
@@ -132,7 +130,7 @@ public class NdkCxxPlatformTest {
               .setProjectFilesystem(new FakeProjectFilesystem())
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(ruleFinder)
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(entry.getValue().resolve(graphBuilder).getCxxPlatform())
               .setPicType(PicType.PIC)
@@ -167,8 +165,7 @@ public class NdkCxxPlatformTest {
       ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> cxxPlatforms)
       throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
@@ -176,7 +173,7 @@ public class NdkCxxPlatformTest {
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
             pathResolver,
-            ruleFinder);
+            graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<TargetCpuType, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<TargetCpuType, UnresolvedNdkCxxPlatform> entry : cxxPlatforms.entrySet()) {

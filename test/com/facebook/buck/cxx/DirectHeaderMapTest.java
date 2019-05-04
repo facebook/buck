@@ -106,15 +106,10 @@ public class DirectHeaderMapTest {
     // Setup the symlink tree buildable.
     graphBuilder = new TestActionGraphBuilder();
 
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     buildRule =
-        new DirectHeaderMap(
-            buildTarget,
-            projectFilesystem,
-            symlinkTreeRoot,
-            links,
-            graphBuilder.getSourcePathRuleFinder());
+        new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links, graphBuilder);
     graphBuilder.addToIndex(buildRule);
 
     headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
@@ -169,9 +164,9 @@ public class DirectHeaderMapTest {
             projectFilesystem,
             symlinkTreeRoot,
             modifiedLinksBuilder.build(),
-            graphBuilder.getSourcePathRuleFinder());
+            graphBuilder);
 
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     // Calculate their rule keys and verify they're different.
@@ -196,7 +191,7 @@ public class DirectHeaderMapTest {
   public void testRuleKeyDoesNotChangeIfLinkTargetsChange() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(buildRule);
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = graphBuilder;
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =

@@ -53,7 +53,7 @@ public class AaptStepTest {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     return new AaptStep(
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder()),
         AndroidPlatformTarget.of(
             "android",
             basePath.resolve("mock_android.jar"),

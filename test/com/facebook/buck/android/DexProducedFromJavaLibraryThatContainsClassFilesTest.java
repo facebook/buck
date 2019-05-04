@@ -68,8 +68,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FakeJavaLibrary javaLibraryRule =
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),

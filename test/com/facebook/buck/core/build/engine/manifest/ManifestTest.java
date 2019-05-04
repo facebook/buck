@@ -49,7 +49,7 @@ import org.junit.Test;
 public class ManifestTest {
 
   private static final SourcePathResolver RESOLVER =
-      DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+      DefaultSourcePathResolver.from(new TestActionGraphBuilder());
 
   @Test
   public void toMap() {

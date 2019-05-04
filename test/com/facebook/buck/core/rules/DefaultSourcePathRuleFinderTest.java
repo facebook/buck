@@ -38,13 +38,12 @@ public class DefaultSourcePathRuleFinderTest {
   @Test
   public void getRuleCanGetRuleOfBuildTargetSoucePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     FakeBuildRule rule = new FakeBuildRule("//:foo");
     rule.setOutputFile("foo");
     graphBuilder.addToIndex(rule);
     SourcePath sourcePath = DefaultBuildTargetSourcePath.of(rule.getBuildTarget());
 
-    assertEquals(Optional.of(rule), ruleFinder.getRule(sourcePath));
+    assertEquals(Optional.of(rule), graphBuilder.getRule(sourcePath));
   }
 
   @Test
@@ -59,7 +58,6 @@ public class DefaultSourcePathRuleFinderTest {
   @Test
   public void testFilterBuildRuleInputsExcludesPathSourcePaths() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     FakeBuildRule rule =
         new FakeBuildRule(BuildTargetFactory.newInstance("//java/com/facebook:facebook"));
     graphBuilder.addToIndex(rule);
@@ -75,7 +73,7 @@ public class DefaultSourcePathRuleFinderTest {
             FakeSourcePath.of("java/com/facebook/BuckConfig.java"),
             ExplicitBuildTargetSourcePath.of(rule2.getBuildTarget(), Paths.get("foo")),
             ForwardingBuildTargetSourcePath.of(rule3.getBuildTarget(), FakeSourcePath.of("bar")));
-    Iterable<BuildRule> inputs = ruleFinder.filterBuildRuleInputs(sourcePaths);
+    Iterable<BuildRule> inputs = graphBuilder.filterBuildRuleInputs(sourcePaths);
     MoreAsserts.assertIterablesEquals(
         "Iteration order should be preserved: results should not be alpha-sorted.",
         ImmutableList.of(rule, rule2, rule3),

@@ -136,8 +136,7 @@ public class MultiarchFileTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRule multiarchRule =
         nodeBuilderFactory.getNodeBuilder(target).build(graphBuilder, filesystem);

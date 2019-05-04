@@ -40,8 +40,7 @@ public class BuildTargetSourcePathTest {
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile(null);
     graphBuilder.addToIndex(rule);
@@ -58,8 +57,7 @@ public class BuildTargetSourcePathTest {
   @Test
   public void mustUseProjectFilesystemToResolvePathToFile() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildRule rule =
         new FakeBuildRule(target) {
           @Override
@@ -86,8 +84,7 @@ public class BuildTargetSourcePathTest {
 
   @Test
   public void explicitlySetPath() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");
@@ -99,8 +96,7 @@ public class BuildTargetSourcePathTest {
 
   @Test
   public void explicitlySetSourcePathExplicitTarget() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:baz"));
     FakeBuildRule rule2 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:waz"));
     Path path = Paths.get("blah");
@@ -117,8 +113,7 @@ public class BuildTargetSourcePathTest {
   @Test
   public void explicitlySetSourcePathImplicitTarget() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:baz"));
     graphBuilder.addToIndex(rule1);
     Path path = Paths.get("blah");
@@ -138,8 +133,7 @@ public class BuildTargetSourcePathTest {
   @Test
   public void explicitlySetSourcePathChainsToPathSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FakeBuildRule rule1 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:rule1"));
     graphBuilder.addToIndex(rule1);
     FakeBuildRule rule2 = new FakeBuildRule(BuildTargetFactory.newInstance("//foo/bar:rule2"));

@@ -137,8 +137,7 @@ public class CachingBuildEngineFactory {
   }
 
   public CachingBuildEngine build() {
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     TargetConfigurationSerializer targetConfigurationSerializer =
         TargetConfigurationSerializerForTests.create(
             TestCellPathResolver.get(new FakeProjectFilesystem()));

@@ -180,8 +180,7 @@ public class NdkLibraryIntegrationTest {
   private SymbolGetter getSymbolGetter(ProjectFilesystem filesystem, TemporaryPaths tempLocation)
       throws IOException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     Path tmpDir = tempLocation.newFolder("symbols_tmp");
     return new SymbolGetter(
         new DefaultProcessExecutor(new TestConsole()), tmpDir, platform.getObjdump(), pathResolver);

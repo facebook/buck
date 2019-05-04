@@ -121,8 +121,7 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
@@ -166,8 +165,7 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
@@ -210,8 +208,7 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
@@ -248,8 +245,7 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
@@ -290,8 +286,7 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
@@ -328,8 +323,7 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
@@ -367,8 +361,7 @@ public class RobolectricTestRuleTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             targetGraph, RobolectricTestBuilder.createToolchainProviderForRobolectricTest());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);

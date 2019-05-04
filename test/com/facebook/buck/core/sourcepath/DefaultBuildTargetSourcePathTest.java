@@ -38,8 +38,7 @@ public class DefaultBuildTargetSourcePathTest {
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile(null);
     graphBuilder.addToIndex(rule);
@@ -56,8 +55,7 @@ public class DefaultBuildTargetSourcePathTest {
   @Test
   public void mustUseProjectFilesystemToResolvePathToFile() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     FakeBuildRule rule = new FakeBuildRule(target);
     rule.setOutputFile("cheese");
     graphBuilder.addToIndex(rule);

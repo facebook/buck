@@ -185,7 +185,7 @@ public class CxxTestTest {
     Callable<TestResults> result =
         cxxTest.interpretTestResults(
             executionContext,
-            DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
+            DefaultSourcePathResolver.from(graphBuilder),
             /* isUsingTestSelectors */ false);
     result.call();
   }

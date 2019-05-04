@@ -104,8 +104,7 @@ public class CxxSourceRuleFactoryTest {
     public void createPreprocessAndCompileBuildRulePropagatesCxxPreprocessorDeps() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
       FakeBuildRule dep = graphBuilder.addToIndex(new FakeBuildRule("//:dep1"));
 
@@ -118,7 +117,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(CXX_PLATFORM)
               .addCxxPreprocessorInput(cxxPreprocessorInput)
@@ -144,8 +143,7 @@ public class CxxSourceRuleFactoryTest {
     public void preprocessFlagsFromPlatformArePropagated() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
       ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
       CxxPlatform platform =
@@ -166,7 +164,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .addCxxPreprocessorInput(cxxPreprocessorInput)
@@ -208,8 +206,7 @@ public class CxxSourceRuleFactoryTest {
     public void createCompileBuildRulePropagatesBuildRuleSourcePathDeps() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
       FakeBuildRule dep = createFakeBuildRule("//:test");
       dep.setOutputFile("foo");
@@ -221,7 +218,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(CXX_PLATFORM)
               .setPicType(PicType.PDC)
@@ -249,8 +246,7 @@ public class CxxSourceRuleFactoryTest {
     public void createCompileBuildRulePicOption() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
       CxxSourceRuleFactory.Builder cxxSourceRuleFactoryBuilder =
@@ -259,7 +255,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(CXX_PLATFORM);
       CxxSourceRuleFactory cxxSourceRuleFactoryPDC =
@@ -314,8 +310,7 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void checkPrefixHeaderIsIncluded() {
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
@@ -337,7 +332,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(cxxBuckConfig)
               .setCxxPlatform(platform)
               .setPrefixHeader(prefixHeaderSourcePath)
@@ -360,8 +355,7 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void duplicateRuleFetchedFromResolverShouldCreateTheSameTarget() {
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
@@ -374,7 +368,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .setPicType(PicType.PDC)
@@ -397,8 +391,7 @@ public class CxxSourceRuleFactoryTest {
     public void createPreprocessAndCompileBuildRulePropagatesToolDeps() {
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
       ShBinary cxxpp =
           new ShBinaryBuilder(BuildTargetFactory.newInstance("//:cxxpp"))
@@ -431,7 +424,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(cxxPlatform)
               .addCxxPreprocessorInput(CxxPreprocessorInput.of())
@@ -499,8 +492,7 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void test() {
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
@@ -513,7 +505,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .setPicType(PicType.PDC)
@@ -595,8 +587,7 @@ public class CxxSourceRuleFactoryTest {
 
     // Some common boilerplate.
     private ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    private SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    private SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     private BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver);
     private BuildTarget target = BuildTargetFactory.newInstance("//:target");
     private Joiner space = Joiner.on(" ");
@@ -636,7 +627,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(sourcePathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .addCxxPreprocessorInput(cxxPreprocessorInput)
@@ -684,7 +675,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(sourcePathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(platform)
               .setCompilerFlags(CxxFlags.toLanguageFlags(StringArg.from(expectedCompilerFlags)))
@@ -729,8 +720,7 @@ public class CxxSourceRuleFactoryTest {
     @Test
     public void test() {
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-      SourcePathResolver sourcePathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
       BuildContext context = FakeBuildContext.withSourcePathResolver(sourcePathResolver);
       BuildTarget target = BuildTargetFactory.newInstance("//:target");
       CxxSourceRuleFactory cxxSourceRuleFactory =
@@ -739,7 +729,7 @@ public class CxxSourceRuleFactoryTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(sourcePathResolver)
-              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+              .setRuleFinder(graphBuilder)
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(CXX_PLATFORM)
               .setPicType(PicType.PDC)

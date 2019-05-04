@@ -44,8 +44,7 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromOtherTargetsFromSet() {
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "prefix/some_file.h", FakeSourcePath.of("path/to/some_file.h"),
@@ -66,8 +65,7 @@ public class AppleDescriptionsTest {
 
   @Test
   public void parseAppleHeadersForUseFromTheSameFromSet() {
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "some_file.h", FakeSourcePath.of("path/to/some_file.h"),
@@ -93,8 +91,7 @@ public class AppleDescriptionsTest {
             "another/path.h", FakeSourcePath.of("path/to/another_file.h"),
             "another/file.h", FakeSourcePath.of("different/path/to/a_file.h"),
             "file.h", FakeSourcePath.of("file.h"));
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     assertEquals(
         headerMap,
         AppleDescriptions.parseAppleHeadersForUseFromOtherTargets(
@@ -112,8 +109,7 @@ public class AppleDescriptionsTest {
             "another/path.h", FakeSourcePath.of("path/to/another_file.h"),
             "another/file.h", FakeSourcePath.of("different/path/to/a_file.h"),
             "file.h", FakeSourcePath.of("file.h"));
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     assertEquals(
         ImmutableMap.of(),
         AppleDescriptions.parseAppleHeadersForUseFromTheSameTarget(
@@ -124,8 +120,7 @@ public class AppleDescriptionsTest {
 
   @Test
   public void convertToFlatCxxHeadersWithPrefix() {
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "prefix/some_file.h", FakeSourcePath.of("path/to/some_file.h"),
@@ -145,8 +140,7 @@ public class AppleDescriptionsTest {
 
   @Test
   public void convertToFlatCxxHeadersWithoutPrefix() {
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     assertEquals(
         ImmutableMap.<String, SourcePath>of(
             "some_file.h", FakeSourcePath.of("path/to/some_file.h"),

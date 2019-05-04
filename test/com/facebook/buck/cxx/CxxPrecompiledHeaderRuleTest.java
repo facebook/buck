@@ -138,8 +138,7 @@ public class CxxPrecompiledHeaderRuleTest {
       new DefaultTargetNodeToBuildRuleTransformer();
 
   public final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(transformer);
-  public final SourcePathResolver pathResolver =
-      DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+  public final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
   public final BuildContext context = FakeBuildContext.withSourcePathResolver(pathResolver);
 
   public final Compiler compiler =
@@ -184,8 +183,8 @@ public class CxxPrecompiledHeaderRuleTest {
         .setBaseBuildTarget(buildTarget)
         .setProjectFilesystem(projectFilesystem)
         .setActionGraphBuilder(graphBuilder)
-        .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
-        .setPathResolver(DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()))
+        .setRuleFinder(graphBuilder)
+        .setPathResolver(DefaultSourcePathResolver.from(graphBuilder))
         .setCxxPlatform(platformSupportingPch)
         .setPicType(PicType.PIC)
         .setCxxBuckConfig(CXX_CONFIG_PCH_ENABLED);

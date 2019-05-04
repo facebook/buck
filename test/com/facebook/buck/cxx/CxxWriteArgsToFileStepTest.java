@@ -86,7 +86,7 @@ public class CxxWriteArgsToFileStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     CxxWriteArgsToFileStep step =
         CxxWriteArgsToFileStep.create(
             argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolver, false);

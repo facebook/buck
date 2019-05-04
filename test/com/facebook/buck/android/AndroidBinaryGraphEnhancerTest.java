@@ -748,8 +748,7 @@ public class AndroidBinaryGraphEnhancerTest {
 
     // Verify that android_build_config() was processed correctly.
     Flavor flavor = InternalFlavor.of("buildconfig_com_example_buck");
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget enhancedBuildConfigTarget = apkTarget.withAppendedFlavors(flavor);
     assertEquals(
         "The only classpath entry to dex should be the one from the AndroidBuildConfigJavaLibrary"
@@ -991,7 +990,7 @@ public class AndroidBinaryGraphEnhancerTest {
                 new FakeProjectFilesystem(),
                 TestBuildRuleParams.create()
                     .copyAppendingExtraDeps(ImmutableSortedSet.of(resourcesDep)),
-                graphBuilder.getSourcePathRuleFinder(),
+                graphBuilder,
                 ImmutableSortedSet.of(),
                 resourcesDep.getSourcePathToOutput(),
                 ImmutableSortedMap.of(),

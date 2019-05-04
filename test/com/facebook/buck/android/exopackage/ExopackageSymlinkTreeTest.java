@@ -59,7 +59,7 @@ public class ExopackageSymlinkTreeTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    pathResolver = DefaultSourcePathResolver.from(resolver);
   }
 
   @Test

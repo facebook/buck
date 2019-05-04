@@ -72,8 +72,7 @@ public class AppleLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()));
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -144,8 +143,7 @@ public class AppleLibraryDescriptionTest {
     BuildRuleResolver buildRuleResolver =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(libNode));
 
-    final SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    final SourcePathResolver pathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
 
     CxxLibraryDescriptionArg.Builder delegateArgBuilder =
         CxxLibraryDescriptionArg.builder().from(libNode.getConstructorArg());

@@ -63,8 +63,7 @@ public class FrameworkPathArgTest {
 
     FrameworkPathArg sourcePathFrameworkPathArg = new TestFrameworkPathArg(sourcePathFrameworkPath);
     assertThat(
-        BuildableSupport.getDepsCollection(
-            sourcePathFrameworkPathArg, graphBuilder.getSourcePathRuleFinder()),
+        BuildableSupport.getDepsCollection(sourcePathFrameworkPathArg, graphBuilder),
         Matchers.contains(genrule));
   }
 }

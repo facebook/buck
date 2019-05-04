@@ -106,7 +106,7 @@ public class MergeAndroidResourcesSourcesTest {
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
             FakeSourcePath.of(filesystem, "res_in_1"), FakeSourcePath.of(filesystem, "res_in_2"));
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     MergeAndroidResourceSources mergeAndroidResourceSourcesStep =
         new MergeAndroidResourceSources(target, filesystem, ruleFinder, directories);

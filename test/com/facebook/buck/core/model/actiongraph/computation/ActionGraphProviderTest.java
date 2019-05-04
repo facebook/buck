@@ -536,14 +536,10 @@ public class ActionGraphProviderTest {
       Iterable<BuildRule> buildRules, BuildRuleResolver buildRuleResolver) {
     RuleKeyFieldLoader ruleKeyFieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
     ContentAgnosticRuleKeyFactory factory =
         new ContentAgnosticRuleKeyFactory(
-            ruleKeyFieldLoader,
-            pathResolver,
-            buildRuleResolver.getSourcePathRuleFinder(),
-            Optional.empty());
+            ruleKeyFieldLoader, pathResolver, buildRuleResolver, Optional.empty());
 
     HashMap<BuildRule, RuleKey> ruleKeysMap = new HashMap<>();
 

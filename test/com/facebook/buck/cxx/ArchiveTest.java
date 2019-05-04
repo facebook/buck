@@ -77,7 +77,7 @@ public class ArchiveTest {
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache =
@@ -188,13 +188,12 @@ public class ArchiveTest {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     Archive archive =
         new Archive(
             target,
             projectFilesystem,
-            resolver.getSourcePathRuleFinder(),
+            resolver,
             DEFAULT_ARCHIVER,
             ImmutableList.of("-foo"),
             DEFAULT_RANLIB,
@@ -241,7 +240,7 @@ public class ArchiveTest {
         new Archive(
             target,
             projectFilesystem,
-            graphBuilder.getSourcePathRuleFinder(),
+            graphBuilder,
             DEFAULT_ARCHIVER,
             ImmutableList.of(),
             DEFAULT_RANLIB,

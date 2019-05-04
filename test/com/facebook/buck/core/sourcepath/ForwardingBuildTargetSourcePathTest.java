@@ -39,7 +39,7 @@ public class ForwardingBuildTargetSourcePathTest {
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder);
   }
 
   @Test

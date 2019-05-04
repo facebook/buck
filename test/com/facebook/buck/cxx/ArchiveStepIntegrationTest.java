@@ -70,8 +70,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
     Path input = filesystem.getPath("input.dat");
@@ -122,8 +121,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
 
@@ -163,8 +161,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
     Path output = filesystem.getPath("output.a");
     Path input = filesystem.getPath("foo/blah.dat");
@@ -208,8 +205,7 @@ public class ArchiveStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleResolver);
     Archiver archiver = platform.getAr().resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
 
     assumeTrue(archiver.supportsThinArchives());

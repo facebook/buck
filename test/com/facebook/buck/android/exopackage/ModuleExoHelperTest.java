@@ -68,8 +68,7 @@ public class ModuleExoHelperTest {
             PathSourcePath.of(filesystem, moduleOutputPath));
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
 
     moduleExoHelper = new ModuleExoHelper(pathResolver, filesystem, ImmutableList.of(dexInfo));
   }

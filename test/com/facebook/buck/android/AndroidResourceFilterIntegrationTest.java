@@ -403,8 +403,7 @@ public class AndroidResourceFilterIntegrationTest {
   }
 
   private int runAaptDumpResources(Path apkFile) throws IOException, InterruptedException {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     Pattern pattern = Pattern.compile(".*com.example:string/base_button: t=.*");
     ProcessExecutor.Result result =
         workspace.runCommand(

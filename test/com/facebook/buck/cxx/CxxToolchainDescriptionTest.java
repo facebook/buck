@@ -92,8 +92,7 @@ public class CxxToolchainDescriptionTest {
     graphBuilder.addToIndex(new SimpleToolRule(binaryToolTarget, binaryTool));
     CxxToolchainBuildRule cxxPlatformRule = builder.build(graphBuilder);
 
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     CxxPlatform platform = cxxPlatformRule.getPlatformWithFlavor(InternalFlavor.of("dontcare"));
 

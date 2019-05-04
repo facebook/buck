@@ -73,8 +73,7 @@ public class AppleTestDescriptionTest {
             .setInfoPlist(FakeSourcePath.of("Info.plist"));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build(), depBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Genrule dep = depBuilder.build(graphBuilder, targetGraph);
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(dep.getBuildTarget()));
     AppleTest test = builder.build(graphBuilder, targetGraph);

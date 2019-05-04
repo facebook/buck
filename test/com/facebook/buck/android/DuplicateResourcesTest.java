@@ -260,8 +260,7 @@ public class DuplicateResourcesTest {
             .getFreshActionGraph(new DefaultTargetNodeToBuildRuleTransformer(), targetGraph);
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(
-            actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(actionGraphAndBuilder.getActionGraphBuilder());
 
     ImmutableSet<ImmutableList<Step>> ruleSteps =
         RichStream.from(actionGraphAndBuilder.getActionGraph().getNodes())

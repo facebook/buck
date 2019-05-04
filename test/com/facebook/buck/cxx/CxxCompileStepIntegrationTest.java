@@ -64,8 +64,7 @@ public class CxxCompileStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));
@@ -134,8 +133,7 @@ public class CxxCompileStepIntegrationTest {
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(resolver);
     Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));

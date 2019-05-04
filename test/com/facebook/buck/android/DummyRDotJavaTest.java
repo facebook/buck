@@ -62,12 +62,11 @@ public class DummyRDotJavaTest {
   public void testBuildSteps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     AndroidResource resourceRule1 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res1"))
@@ -76,7 +75,7 @@ public class DummyRDotJavaTest {
     AndroidResource resourceRule2 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res2"))
@@ -88,7 +87,7 @@ public class DummyRDotJavaTest {
         new DummyRDotJava(
             buildTarget,
             filesystem,
-            ruleFinder,
+            graphBuilder,
             ImmutableSet.of(resourceRule1, resourceRule2),
             new JavacToJarStepFactory(
                 DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY),
@@ -172,7 +171,7 @@ public class DummyRDotJavaTest {
 
   @Test
   public void testRDotJavaBinFolder() {
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     DummyRDotJava dummyRDotJava =
         new DummyRDotJava(

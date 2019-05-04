@@ -71,8 +71,7 @@ public class CxxCompilationDatabaseTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver testSourcePathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver testSourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     HeaderSymlinkTree privateSymlinkTree =
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -118,7 +117,7 @@ public class CxxCompilationDatabaseTest {
             CxxPreprocessAndCompile.preprocessAndCompile(
                 compileTarget,
                 filesystem,
-                graphBuilder.getSourcePathRuleFinder(),
+                graphBuilder,
                 new PreprocessorDelegate(
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     FakeSourcePath.of(filesystem.getRootPath()),

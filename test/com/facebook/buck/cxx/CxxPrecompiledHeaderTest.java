@@ -65,8 +65,7 @@ public class CxxPrecompiledHeaderTest {
         CxxPlatformUtils.DEFAULT_PLATFORM
             .getCxx()
             .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
             /* canPrecompile */ true,

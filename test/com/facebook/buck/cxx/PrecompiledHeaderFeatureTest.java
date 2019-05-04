@@ -111,15 +111,13 @@ public class PrecompiledHeaderFeatureTest {
                   "foo.c", preconfiguredCxxSourceBuilder().build());
       boolean hasPchFlag =
           commandLineContainsPchFlag(
-              FakeBuildContext.withSourcePathResolver(
-                  DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())),
+              FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(graphBuilder)),
               rule,
               toolType,
               headerFilename);
       boolean hasPrefixFlag =
           commandLineContainsPrefixFlag(
-              FakeBuildContext.withSourcePathResolver(
-                  DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())),
+              FakeBuildContext.withSourcePathResolver(DefaultSourcePathResolver.from(graphBuilder)),
               rule,
               toolType,
               headerFilename);
@@ -401,15 +399,14 @@ public class PrecompiledHeaderFeatureTest {
    */
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(
       String targetPath, ActionGraphBuilder graphBuilder) {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance(targetPath);
     return CxxSourceRuleFactory.builder()
         .setProjectFilesystem(new FakeProjectFilesystem())
         .setBaseBuildTarget(target)
         .setActionGraphBuilder(graphBuilder)
         .setPathResolver(pathResolver)
-        .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+        .setRuleFinder(graphBuilder)
         .setPicType(PicType.PDC);
   }
 

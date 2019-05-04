@@ -116,8 +116,7 @@ public class ApkGenruleTest {
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
 

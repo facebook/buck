@@ -81,8 +81,7 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void sdkrootEnvironmentVariableIsSet() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -117,8 +116,7 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void outputContainsCorrectExtension() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -143,8 +141,7 @@ public class ExternallyBuiltApplePackageTest {
 
   @Test
   public void commandContainsCorrectCommand() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     ExternallyBuiltApplePackage rule =
         new ExternallyBuiltApplePackage(
             buildTarget,
@@ -223,7 +220,7 @@ public class ExternallyBuiltApplePackageTest {
     return new TestDefaultRuleKeyFactory(
         new FakeFileHashCache(
             ImmutableMap.of(Paths.get(bundleLocation).toAbsolutePath(), HashCode.fromInt(5))),
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
-        graphBuilder.getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(graphBuilder),
+        graphBuilder);
   }
 }

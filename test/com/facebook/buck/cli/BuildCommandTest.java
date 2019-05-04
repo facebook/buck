@@ -58,7 +58,7 @@ public class BuildCommandTest {
   @Before
   public void setUp() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    resolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     rootCell = new TestCellBuilder().build();
 

@@ -40,14 +40,13 @@ public class CxxSourceRuleFactoryHelper {
   public static CxxSourceRuleFactory of(
       Path cellRoot, BuildTarget target, CxxPlatform cxxPlatform, CxxBuckConfig cxxBuckConfig) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     return CxxSourceRuleFactory.builder()
         .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
         .setBaseBuildTarget(target)
         .setActionGraphBuilder(graphBuilder)
         .setPathResolver(pathResolver)
-        .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+        .setRuleFinder(graphBuilder)
         .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
         .setPicType(PicType.PDC)
@@ -66,14 +65,13 @@ public class CxxSourceRuleFactoryHelper {
       CxxBuckConfig cxxBuckConfig,
       PicType picType) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     return CxxSourceRuleFactory.builder()
         .setBaseBuildTarget(target)
         .setProjectFilesystem(new FakeProjectFilesystem(cellRoot))
         .setActionGraphBuilder(graphBuilder)
         .setPathResolver(pathResolver)
-        .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+        .setRuleFinder(graphBuilder)
         .setCxxBuckConfig(cxxBuckConfig)
         .setCxxPlatform(cxxPlatform)
         .setPicType(picType)

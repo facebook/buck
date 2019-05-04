@@ -39,7 +39,7 @@ public class AppleAssetCatalogTest {
 
   private ProjectFilesystem filesystem;
   private SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+      DefaultSourcePathResolver.from(new TestActionGraphBuilder());
 
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
 

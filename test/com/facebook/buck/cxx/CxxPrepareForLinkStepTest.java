@@ -52,8 +52,7 @@ public class CxxPrepareForLinkStepTest {
   public void testCreateCxxPrepareForLinkStep() {
     Path dummyPath = Paths.get("dummy");
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> dummyArgs =
@@ -156,8 +155,7 @@ public class CxxPrepareForLinkStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args =
@@ -221,8 +219,7 @@ public class CxxPrepareForLinkStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(buildRuleResolver);
 
     // Setup some dummy values for inputs to the CxxLinkStep
     ImmutableList<Arg> args =

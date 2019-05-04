@@ -641,8 +641,7 @@ public class InterCellIntegrationTest {
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
     TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
@@ -687,8 +686,7 @@ public class InterCellIntegrationTest {
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
     TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Path tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(

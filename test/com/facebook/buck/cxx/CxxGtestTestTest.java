@@ -97,7 +97,7 @@ public class CxxGtestTestTest {
             new CxxLink(
                 linkTarget,
                 filesystem,
-                ruleResolver.getSourcePathRuleFinder(),
+                ruleResolver,
                 TestCellPathResolver.get(filesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM
                     .getLd()

@@ -69,8 +69,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   @Test
   public void testNdkLibrary() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     NdkLibrary ndkLibrary =
         new NdkLibraryBuilder(BuildTargetFactory.newInstance("//:ndklib")).build(graphBuilder);
@@ -197,12 +196,10 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
                     "strippedObjectName", Matchers.equalTo("libgnustl_shared.so")))));
     assertThat(copyNativeLibraries.getNativeLibDirectories(), Matchers.empty());
     ImmutableCollection<BuildRule> stripRules =
-        graphBuilder
-            .getSourcePathRuleFinder()
-            .filterBuildRuleInputs(
-                copyNativeLibraries.getStrippedObjectDescriptions().stream()
-                    .map(StrippedObjectDescription::getSourcePath)
-                    .collect(ImmutableSet.toImmutableSet()));
+        graphBuilder.filterBuildRuleInputs(
+            copyNativeLibraries.getStrippedObjectDescriptions().stream()
+                .map(StrippedObjectDescription::getSourcePath)
+                .collect(ImmutableSet.toImmutableSet()));
     assertThat(
         stripRules,
         Matchers.contains(

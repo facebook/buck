@@ -52,7 +52,7 @@ import org.junit.Test;
 
 public class AndroidResourceIndexMiniAaptTest {
   private final SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+      DefaultSourcePathResolver.from(new TestActionGraphBuilder());
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();

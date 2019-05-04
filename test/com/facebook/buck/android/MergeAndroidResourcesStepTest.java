@@ -262,7 +262,7 @@ public class MergeAndroidResourcesStepTest {
     thrown.expectMessage("Resource 'c1' (string) is duplicated across: ");
 
     BuildTarget resTarget = BuildTargetFactory.newInstance("//:res1");
-    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     MergeAndroidResourcesStep.sortSymbols(
         entriesBuilder.buildFilePathToPackageNameSet(),
         Optional.empty(),
@@ -310,12 +310,11 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     AndroidResource res =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(resTarget)
             .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.res1")
@@ -375,12 +374,11 @@ public class MergeAndroidResourcesStepTest {
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     AndroidResource resource =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(target)
             .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.facebook")
@@ -460,12 +458,11 @@ public class MergeAndroidResourcesStepTest {
     filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     AndroidResource resource =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(target)
             .setRes(FakeSourcePath.of("res"))
             .setRDotJavaPackage("com.facebook")
@@ -520,12 +517,11 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(buildRuleResolver);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(buildRuleResolver.getSourcePathRuleFinder())
+            .setRuleFinder(buildRuleResolver)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("com.package1")
@@ -533,7 +529,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(buildRuleResolver.getSourcePathRuleFinder())
+            .setRuleFinder(buildRuleResolver)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("com.package2")
@@ -573,12 +569,11 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(buildRuleResolver);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(buildRuleResolver.getSourcePathRuleFinder())
+            .setRuleFinder(buildRuleResolver)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("com.package1")
@@ -586,7 +581,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(buildRuleResolver.getSourcePathRuleFinder())
+            .setRuleFinder(buildRuleResolver)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("com.package2")
@@ -643,12 +638,11 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
@@ -657,7 +651,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("res2")
@@ -713,12 +707,11 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
@@ -727,7 +720,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("res2")
@@ -771,12 +764,11 @@ public class MergeAndroidResourcesStepTest {
             ImmutableList.of("int id id1 0x7f020000")));
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
@@ -820,12 +812,11 @@ public class MergeAndroidResourcesStepTest {
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("res1")
@@ -859,8 +850,7 @@ public class MergeAndroidResourcesStepTest {
     BuildTarget res2Target = BuildTargetFactory.newInstance("//:res2");
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     RDotTxtEntryBuilder entriesBuilder = new RDotTxtEntryBuilder(filesystem);
@@ -881,7 +871,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res1 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res1Target)
             .setRes(FakeSourcePath.of("res1"))
             .setRDotJavaPackage("package")
@@ -890,7 +880,7 @@ public class MergeAndroidResourcesStepTest {
 
     AndroidResource res2 =
         AndroidResourceRuleBuilder.newBuilder()
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder)
             .setBuildTarget(res2Target)
             .setRes(FakeSourcePath.of("res2"))
             .setRDotJavaPackage("package")

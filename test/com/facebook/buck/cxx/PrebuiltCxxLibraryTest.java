@@ -64,8 +64,7 @@ public class PrebuiltCxxLibraryTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genSrcBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
 
     BuildRule genSrc = genSrcBuilder.build(graphBuilder, filesystem, targetGraph);
     filesystem.writeContentsToPath(
@@ -82,8 +81,7 @@ public class PrebuiltCxxLibraryTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(
-            originalHashCache, pathResolver, graphBuilder.getSourcePathRuleFinder());
+        new TestDefaultRuleKeyFactory(originalHashCache, pathResolver, graphBuilder);
 
     RuleKey ruleKey = factory.build(lib);
     assertNotNull(ruleKey);

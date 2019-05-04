@@ -57,7 +57,7 @@ public class MultiarchFileInfosTest {
 
   private static SourcePathResolver newSourcePathResolver() {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    return DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    return DefaultSourcePathResolver.from(ruleResolver);
   }
 
   @Test

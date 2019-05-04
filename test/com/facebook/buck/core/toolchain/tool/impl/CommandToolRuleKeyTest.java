@@ -49,7 +49,7 @@ public class CommandToolRuleKeyTest {
   @Before
   public void setUp() {
     resolver = new TestActionGraphBuilder();
-    pathResolver = DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
+    pathResolver = DefaultSourcePathResolver.from(resolver);
   }
 
   @Test
@@ -123,15 +123,13 @@ public class CommandToolRuleKeyTest {
   }
 
   private RuleKey ruleKey(CommandTool tool, FileHashCache hashCache) {
-    return new UncachedRuleKeyBuilder(
-            resolver.getSourcePathRuleFinder(), pathResolver, hashCache, ruleKeyFactory(hashCache))
+    return new UncachedRuleKeyBuilder(resolver, pathResolver, hashCache, ruleKeyFactory(hashCache))
         .setReflectively("key", tool)
         .build(RuleKey::new);
   }
 
   private DefaultRuleKeyFactory ruleKeyFactory(FileHashCache hashCache) {
-    return new TestDefaultRuleKeyFactory(
-        hashCache, pathResolver, resolver.getSourcePathRuleFinder());
+    return new TestDefaultRuleKeyFactory(hashCache, pathResolver, resolver);
   }
 
   private static FakeFileHashCache fakeHashCache(String file, String hash) {

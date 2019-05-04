@@ -41,8 +41,7 @@ public class CxxLocationMacroExpanderTest {
     TargetNode<?> node = builder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxGenrule cxxGenrule = (CxxGenrule) graphBuilder.requireRule(node.getBuildTarget());
     CxxLocationMacroExpander expander =
         new CxxLocationMacroExpander(CxxPlatformUtils.DEFAULT_PLATFORM);

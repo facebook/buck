@@ -66,7 +66,7 @@ public class MiniAaptTest {
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
   private final SourcePathResolver resolver =
-      DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+      DefaultSourcePathResolver.from(new TestActionGraphBuilder());
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 

@@ -108,7 +108,7 @@ public class AndroidLibraryGraphEnhancerTest {
     BuildRule resourceRule1 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res1"))
@@ -116,7 +116,7 @@ public class AndroidLibraryGraphEnhancerTest {
     BuildRule resourceRule2 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res2"))
@@ -164,7 +164,7 @@ public class AndroidLibraryGraphEnhancerTest {
     BuildRule resourceRule1 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res1"))
@@ -172,7 +172,7 @@ public class AndroidLibraryGraphEnhancerTest {
     BuildRule resourceRule2 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
+                .setRuleFinder(graphBuilder)
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res2"))
@@ -233,8 +233,7 @@ public class AndroidLibraryGraphEnhancerTest {
             target,
             new FakeProjectFilesystem(),
             ImmutableSortedSet.of(dep),
-            JavacFactoryHelper.createJavacFactory(javaConfig)
-                .create(graphBuilder.getSourcePathRuleFinder(), null),
+            JavacFactoryHelper.createJavacFactory(javaConfig).create(graphBuilder, null),
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,

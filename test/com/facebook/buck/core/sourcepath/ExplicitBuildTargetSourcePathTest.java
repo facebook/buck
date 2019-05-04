@@ -33,8 +33,7 @@ public class ExplicitBuildTargetSourcePathTest {
 
   @Test
   public void explicitlySetPath() {
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");

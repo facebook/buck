@@ -120,8 +120,7 @@ public class CxxGenruleDescriptionTest {
       TargetGraph targetGraph =
           TargetGraphFactory.newInstance(bBuilder.build(), aBuilder.build(), builder.build());
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-      SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+      SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
       bBuilder.build(graphBuilder);
       aBuilder.build(graphBuilder);
       Genrule genrule = (Genrule) builder.build(graphBuilder);
@@ -155,8 +154,7 @@ public class CxxGenruleDescriptionTest {
                     CxxppFlagsMacro.of(Optional.empty(), ImmutableList.of())));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Genrule genrule = (Genrule) builder.build(graphBuilder);
     assertThat(
         Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
@@ -181,8 +179,7 @@ public class CxxGenruleDescriptionTest {
             .setCmd(StringWithMacrosUtils.format("%s %s", CcFlagsMacro.of(), CxxFlagsMacro.of()));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     Genrule genrule = (Genrule) builder.build(graphBuilder);
     for (String expected : ImmutableList.of("-asflag", "-cflag", "-cxxflag")) {
       assertThat(
@@ -276,14 +273,12 @@ public class CxxGenruleDescriptionTest {
             .setOut("out");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     CxxGenrule dep = (CxxGenrule) graphBuilder.requireRule(depBuilder.getTarget());
     CxxGenrule rule = (CxxGenrule) graphBuilder.requireRule(builder.getTarget());
     Genrule genrule =
         (Genrule)
             graphBuilder
-                .getSourcePathRuleFinder()
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .orElseThrow(AssertionError::new);
     assertThat(
@@ -307,7 +302,6 @@ public class CxxGenruleDescriptionTest {
     Genrule genrule =
         (Genrule)
             graphBuilder
-                .getSourcePathRuleFinder()
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .orElseThrow(AssertionError::new);
     assertFalse(genrule.isCacheable());

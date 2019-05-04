@@ -49,8 +49,7 @@ public class AndroidInstrumentationApkTest {
   @Test
   public void testAndroidInstrumentationApkExcludesClassesFromInstrumentedApk() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     BuildTarget javaLibrary1Target = BuildTargetFactory.newInstance("//java/com/example:lib1");
     FakeJavaLibrary javaLibrary1 = new FakeJavaLibrary(javaLibrary1Target);
 

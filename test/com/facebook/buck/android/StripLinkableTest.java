@@ -57,7 +57,7 @@ public class StripLinkableTest {
           public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
             return Optional.ofNullable(ruleMap.get(buildTarget));
           }
-        }.getSourcePathRuleFinder();
+        };
 
     SourcePath libraryPath = DefaultBuildTargetSourcePath.of(libraryTarget);
     Tool stripTool = new HashedFileTool(DefaultBuildTargetSourcePath.of(toolTarget));

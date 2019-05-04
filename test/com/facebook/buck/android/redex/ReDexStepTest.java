@@ -58,8 +58,7 @@ public class ReDexStepTest {
     Path proguardConfig = Paths.get("app.proguard.config");
     Path seeds = Paths.get("buck-out/gen/app/__proguard__/seeds.txt");
 
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(new TestActionGraphBuilder());
 
     Path sdkDirectory = Paths.get("/Users/user/android-sdk-macosx");
 

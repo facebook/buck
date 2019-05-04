@@ -74,11 +74,9 @@ public class AssembleDirectoriesTest {
         ImmutableList.of(
             FakeSourcePath.of(filesystem, "folder_a"), FakeSourcePath.of(filesystem, "folder_b"));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(graphBuilder);
     AssembleDirectories assembleDirectories =
-        new AssembleDirectories(
-            target, filesystem, graphBuilder.getSourcePathRuleFinder(), directories);
+        new AssembleDirectories(target, filesystem, graphBuilder, directories);
     graphBuilder.addToIndex(assembleDirectories);
 
     ImmutableList<Step> steps =

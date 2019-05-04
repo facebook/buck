@@ -47,8 +47,7 @@ public class CxxErrorTransformerTest {
   public static Collection<Object[]> data() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
+    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleResolver);
 
     Path original = filesystem.resolve("buck-out/foo#bar/world.h");
     Path replacement = filesystem.resolve("hello/world.h");

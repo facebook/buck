@@ -76,8 +76,7 @@ public class BuildableSupportTest {
 
     MoreAsserts.assertSetEquals(
         rules,
-        BuildableSupport.deriveDeps(rule, graphBuilder.getSourcePathRuleFinder())
-            .collect(ImmutableSet.toImmutableSet()));
+        BuildableSupport.deriveDeps(rule, graphBuilder).collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test

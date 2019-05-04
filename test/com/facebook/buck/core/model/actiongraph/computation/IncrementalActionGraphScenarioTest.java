@@ -1306,13 +1306,10 @@ public class IncrementalActionGraphScenarioTest {
 
   private ImmutableMap<BuildRule, RuleKey> getRuleKeys(ActionGraphAndBuilder result) {
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(result.getActionGraphBuilder().getSourcePathRuleFinder());
+        DefaultSourcePathResolver.from(result.getActionGraphBuilder());
     ContentAgnosticRuleKeyFactory factory =
         new ContentAgnosticRuleKeyFactory(
-            fieldLoader,
-            pathResolver,
-            result.getActionGraphBuilder().getSourcePathRuleFinder(),
-            Optional.empty());
+            fieldLoader, pathResolver, result.getActionGraphBuilder(), Optional.empty());
 
     ImmutableMap.Builder<BuildRule, RuleKey> builder = ImmutableMap.builder();
     for (BuildRule rule : result.getActionGraph().getNodes()) {

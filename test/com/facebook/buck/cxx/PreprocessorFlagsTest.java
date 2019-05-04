@@ -96,7 +96,7 @@ public class PreprocessorFlagsTest {
 
     @Test
     public void shouldAffectRuleKey() {
-      SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+      SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       FakeFileHashCache hashCache =
@@ -128,7 +128,7 @@ public class PreprocessorFlagsTest {
   public static class OtherTests {
     @Test
     public void flagsAreSanitized() {
-      SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
+      SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
       FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());

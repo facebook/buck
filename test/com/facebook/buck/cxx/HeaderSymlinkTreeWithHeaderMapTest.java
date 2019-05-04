@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -74,7 +73,6 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   private ImmutableMap<Path, SourcePath> links;
   private Path symlinkTreeRoot;
   private ActionGraphBuilder graphBuilder;
-  private SourcePathRuleFinder ruleFinder;
   private SourcePathResolver resolver;
 
   @Before
@@ -107,13 +105,12 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink-tree-root");
 
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = graphBuilder.getSourcePathRuleFinder();
-    resolver = DefaultSourcePathResolver.from(ruleFinder);
+    resolver = DefaultSourcePathResolver.from(graphBuilder);
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+            buildTarget, projectFilesystem, symlinkTreeRoot, links, graphBuilder);
   }
 
   @Test
@@ -172,7 +169,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                 Paths.get("different/link"),
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), aFile))),
-            ruleFinder);
+            graphBuilder);
 
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
@@ -181,9 +178,10 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     RuleKey key1 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder).build(symlinkTreeBuildRule);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder)
+            .build(symlinkTreeBuildRule);
     RuleKey key2 =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder)
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder)
             .build(modifiedSymlinkTreeBuildRule);
     assertNotEquals(key1, key2);
   }
@@ -198,7 +196,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
     DefaultRuleKeyFactory ruleKeyFactory =
-        new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder);
 
     // Calculate the rule key
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -207,7 +205,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     Path existingFile = resolver.getAbsolutePath(links.values().asList().get(0));
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
     hashCache.invalidateAll();
-    ruleKeyFactory = new TestDefaultRuleKeyFactory(hashLoader, resolver, ruleFinder);
+    ruleKeyFactory = new TestDefaultRuleKeyFactory(hashLoader, resolver, graphBuilder);
 
     // Re-calculate the rule key
     RuleKey key2 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -223,7 +221,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
     InputBasedRuleKeyFactory ruleKeyFactory =
         new TestInputBasedRuleKeyFactory(
-            FakeFileHashCache.createFromStrings(ImmutableMap.of()), resolver, ruleFinder);
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), resolver, graphBuilder);
 
     // Calculate the rule key
     RuleKey key1 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -233,7 +231,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
     ruleKeyFactory =
         new TestInputBasedRuleKeyFactory(
-            FakeFileHashCache.createFromStrings(ImmutableMap.of()), resolver, ruleFinder);
+            FakeFileHashCache.createFromStrings(ImmutableMap.of()), resolver, graphBuilder);
 
     // Re-calculate the rule key
     RuleKey key2 = ruleKeyFactory.build(symlinkTreeBuildRule);
