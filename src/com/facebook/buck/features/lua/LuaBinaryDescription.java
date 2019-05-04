@@ -194,7 +194,6 @@ public class LuaBinaryDescription
             baseParams,
             graphBuilder,
             pathResolver,
-            graphBuilder,
             cellPathResolver,
             luaPlatform,
             cxxBuckConfig,

@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.WriteStringTemplateRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -85,8 +84,6 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
 
   abstract SourcePathResolver getPathResolver();
 
-  abstract SourcePathRuleFinder getRuleFinder();
-
   abstract CellPathResolver getCellPathResolver();
 
   abstract LuaPlatform getLuaPlatform();
@@ -146,7 +143,7 @@ abstract class AbstractNativeExecutableStarter implements Starter, NativeLinkTar
                   return WriteStringTemplateRule.from(
                       getProjectFilesystem(),
                       getBaseParams(),
-                      getRuleFinder(),
+                      getActionGraphBuilder(),
                       target,
                       output,
                       templateRule.getSourcePathToOutput(),
