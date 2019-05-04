@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -103,7 +102,7 @@ public class HaskellLibraryDescriptionTest {
             .build(graphBuilder);
 
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ImmutableList<Path> outputs =
         ImmutableList.of(
                 Objects.requireNonNull(staticLib.getSourcePathToOutput()),
@@ -127,7 +126,7 @@ public class HaskellLibraryDescriptionTest {
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     HaskellLibrary library = builder.build(graphBuilder);
 
     // Lookup the link whole flags.
@@ -249,7 +248,7 @@ public class HaskellLibraryDescriptionTest {
         FluentIterable.from(staticInput.getArgs())
             .transformAndConcat(
                 arg ->
-                    BuildableSupport.getDepsCollection(arg, new SourcePathRuleFinder(graphBuilder)))
+                    BuildableSupport.getDepsCollection(arg, graphBuilder.getSourcePathRuleFinder()))
             .transform(BuildRule::getBuildTarget)
             .toList(),
         Matchers.hasItem(

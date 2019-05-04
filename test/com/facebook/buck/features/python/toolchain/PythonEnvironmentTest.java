@@ -41,7 +41,7 @@ public class PythonEnvironmentTest {
     Path otherPythonPath = Paths.get("pppyyy");
     PythonEnvironment environment = new PythonEnvironment(pythonPath, pythonVersion, configSection);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     Path root = Paths.get("root");
     CellPathResolver cellResolver = ImmutableDefaultCellPathResolver.of(root, ImmutableMap.of());
     PythonEnvironment reconstructed =

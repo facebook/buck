@@ -25,7 +25,6 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -58,7 +57,6 @@ public class BuildableSupportTest {
     BuildRule rule5 = makeRule(target, filesystem, "rule5");
     ImmutableSet<BuildRule> rules = ImmutableSet.of(rule1, rule2, rule3, rule4, rule5);
     rules.forEach(graphBuilder::addToIndex);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     AddsToRuleKey rule =
         new AddsToRuleKey() {
@@ -78,7 +76,8 @@ public class BuildableSupportTest {
 
     MoreAsserts.assertSetEquals(
         rules,
-        BuildableSupport.deriveDeps(rule, ruleFinder).collect(ImmutableSet.toImmutableSet()));
+        BuildableSupport.deriveDeps(rule, graphBuilder.getSourcePathRuleFinder())
+            .collect(ImmutableSet.toImmutableSet()));
   }
 
   @Test

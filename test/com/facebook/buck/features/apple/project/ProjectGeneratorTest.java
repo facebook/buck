@@ -92,7 +92,6 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -504,8 +503,8 @@ public class ProjectGeneratorTest {
     ImmutableSet<Flavor> appleFlavors = ImmutableSet.of(simulator, iOS, macOS);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     ImmutableMap<String, ImmutableSortedSet<String>> result =
         ProjectGenerator.gatherExcludedSources(
@@ -7066,8 +7065,8 @@ public class ProjectGeneratorTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
     BuildRuleResolver ruleResolver = getActionGraphBuilderNodeFunction(targetGraph).apply(node);
     SourcePath nodeOutput = ruleResolver.getRule(node.getBuildTarget()).getSourcePathToOutput();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
     return sourcePathResolver.getAbsolutePath(nodeOutput);
   }
 }

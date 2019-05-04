@@ -298,7 +298,7 @@ public class DefaultClassInfoTest {
         new NoOpModernBuildRule(
             BuildTargetFactory.newInstance("//some:target"),
             new FakeProjectFilesystem(),
-            new SourcePathRuleFinder(new TestActionGraphBuilder())));
+            new TestActionGraphBuilder().getSourcePathRuleFinder()));
   }
 
   static class NoOpModernBuildRule extends ModernBuildRule<NoOpModernBuildRule>

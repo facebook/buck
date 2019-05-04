@@ -19,7 +19,6 @@ package com.facebook.buck.features.apple.project;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -35,7 +34,7 @@ public class PathRelativizerTest {
     pathRelativizer =
         new PathRelativizer(
             Paths.get("output0/output1"),
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()))
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder())
                 ::getRelativePath);
   }
 

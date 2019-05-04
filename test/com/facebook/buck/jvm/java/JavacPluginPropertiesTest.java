@@ -24,7 +24,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -49,7 +48,6 @@ public class JavacPluginPropertiesTest {
   @Test
   public void transitiveAnnotationProcessorDepsInInputs() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     FakeProjectFilesystem fakeProjectFilesystem = new FakeProjectFilesystem();
 
@@ -58,7 +56,7 @@ public class JavacPluginPropertiesTest {
             BuildTargetFactory.newInstance("//lib:junit-util"),
             fakeProjectFilesystem,
             TestBuildRuleParams.create(),
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
             FakeSourcePath.of("abi-util.jar"),
             Optional.of(FakeSourcePath.of("lib/junit-util-4.11-sources.jar")),
             /* gwtJar */ Optional.empty(),
@@ -79,7 +77,7 @@ public class JavacPluginPropertiesTest {
                 () -> ImmutableSortedSet.of(transitivePrebuiltJarDep),
                 ImmutableSortedSet::of,
                 ImmutableSortedSet.of()),
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
             FakeSourcePath.of("abi.jar"),
             Optional.of(FakeSourcePath.of("lib/junit-4.11-sources.jar")),
             /* gwtJar */ Optional.empty(),
@@ -115,12 +113,12 @@ public class JavacPluginPropertiesTest {
             .build();
 
     assertThat(
-        ruleFinder.filterBuildRuleInputs(props.getInputs()),
+        graphBuilder.getSourcePathRuleFinder().filterBuildRuleInputs(props.getInputs()),
         Matchers.containsInAnyOrder(
             processor, javaLibraryDep, firstLevelPrebuiltJarDep, transitivePrebuiltJarDep));
 
     assertThat(
-        ruleFinder.filterBuildRuleInputs(props.getClasspathEntries()),
+        graphBuilder.getSourcePathRuleFinder().filterBuildRuleInputs(props.getClasspathEntries()),
         Matchers.containsInAnyOrder(
             processor, javaLibraryDep, firstLevelPrebuiltJarDep, transitivePrebuiltJarDep));
   }
@@ -166,8 +164,8 @@ public class JavacPluginPropertiesTest {
 
   private RuleKey createInputRuleKey(Optional<String> resourceName) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Optional<PathSourcePath> resource =
@@ -189,7 +187,9 @@ public class JavacPluginPropertiesTest {
     }
     FakeFileHashCache hashCache = new FakeFileHashCache(builder.build());
 
-    return new TestInputBasedRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(processor);
+    return new TestInputBasedRuleKeyFactory(
+            hashCache, pathResolver, graphBuilder.getSourcePathRuleFinder())
+        .build(processor);
   }
 
   @Test

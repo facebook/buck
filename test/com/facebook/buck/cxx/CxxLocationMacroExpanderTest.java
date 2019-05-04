@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -43,7 +42,7 @@ public class CxxLocationMacroExpanderTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     CxxGenrule cxxGenrule = (CxxGenrule) graphBuilder.requireRule(node.getBuildTarget());
     CxxLocationMacroExpander expander =
         new CxxLocationMacroExpander(CxxPlatformUtils.DEFAULT_PLATFORM);

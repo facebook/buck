@@ -27,7 +27,6 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -207,7 +206,7 @@ public class CxxPreprocessablesTest {
         CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
             target,
             filesystem,
-            new SourcePathRuleFinder(graphBuilder),
+            graphBuilder.getSourcePathRuleFinder(),
             root,
             links,
             HeaderMode.SYMLINK_TREE_ONLY);

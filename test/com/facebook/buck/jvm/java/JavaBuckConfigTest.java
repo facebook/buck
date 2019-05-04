@@ -36,7 +36,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -69,7 +68,7 @@ public class JavaBuckConfigTest {
 
   public static final BuildRuleResolver RULE_RESOLVER = new TestActionGraphBuilder();
   private static final SourcePathResolver PATH_RESOLVER =
-      DefaultSourcePathResolver.from(new SourcePathRuleFinder(RULE_RESOLVER));
+      DefaultSourcePathResolver.from(RULE_RESOLVER.getSourcePathRuleFinder());
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem defaultFilesystem;
@@ -232,7 +231,7 @@ public class JavaBuckConfigTest {
       config
           .getJavacSpec(EmptyTargetConfiguration.INSTANCE)
           .getJavacProvider()
-          .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+          .resolve(new TestActionGraphBuilder().getSourcePathRuleFinder());
       fail("Should throw exception as javac file is not executable.");
     } catch (HumanReadableException e) {
       assertEquals(e.getHumanReadableErrorMessage(), "javac is not executable: " + javac);

@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKeyObjectSink;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
@@ -129,7 +128,7 @@ public class ExternalJavacTest extends EasyMockSupport {
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
     Javac compiler =
         new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
-            .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+            .resolve(new TestActionGraphBuilder().getSourcePathRuleFinder());
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
@@ -200,10 +199,9 @@ public class ExternalJavacTest extends EasyMockSupport {
     BinaryBuildRule binaryRule = new SimpleBinaryRule(javacTarget, filesystem);
     graphBuilder.computeIfAbsent(javacTarget, ignored -> binaryRule);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     Javac compiler =
         new ExternalJavacProvider(executor, DefaultBuildTargetSourcePath.of(javacTarget))
-            .resolve(ruleFinder);
+            .resolve(graphBuilder.getSourcePathRuleFinder());
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
     expect(sink.setReflectively(eq(".class"), anyObject())).andReturn(sink);
@@ -213,7 +211,10 @@ public class ExternalJavacTest extends EasyMockSupport {
     verify(sink);
     Tool tool = identifier.getValue().get();
 
-    assertEquals(commandPrefix, tool.getCommandPrefix(DefaultSourcePathResolver.from(ruleFinder)));
+    assertEquals(
+        commandPrefix,
+        tool.getCommandPrefix(
+            DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())));
   }
 
   @Test
@@ -232,7 +233,7 @@ public class ExternalJavacTest extends EasyMockSupport {
 
     Javac compiler =
         new ExternalJavacProvider(executor, FakeSourcePath.of(javac))
-            .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+            .resolve(new TestActionGraphBuilder().getSourcePathRuleFinder());
 
     RuleKeyObjectSink sink = createMock(RuleKeyObjectSink.class);
     Capture<Supplier<Tool>> identifier = new Capture<>();
@@ -257,6 +258,6 @@ public class ExternalJavacTest extends EasyMockSupport {
     return new ExternalJavacProvider(
             new DefaultProcessExecutor(Console.createNullConsole()),
             FakeSourcePath.of(filesystem, fakeJavac))
-        .resolve(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        .resolve(new TestActionGraphBuilder().getSourcePathRuleFinder());
   }
 }

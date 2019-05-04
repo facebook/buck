@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -74,7 +73,7 @@ public class AppleLibraryDescriptionTest {
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(sandboxTarget).build()));
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     BuildTarget target =
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(DefaultCxxPlatforms.FLAVOR, CxxDescriptionEnhancer.SHARED_FLAVOR);
@@ -146,7 +145,7 @@ public class AppleLibraryDescriptionTest {
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(libNode));
 
     final SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
 
     CxxLibraryDescriptionArg.Builder delegateArgBuilder =
         CxxLibraryDescriptionArg.builder().from(libNode.getConstructorArg());

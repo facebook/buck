@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -42,7 +41,6 @@ public class ShTestTest {
   @Test
   public void depsAreRuntimeDeps() {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
 
     BuildRule extraDep = new FakeBuildRule("//:extra_dep");
     BuildRule dep = new FakeBuildRule("//:dep");
@@ -65,7 +63,9 @@ public class ShTestTest {
             /* contacts */ ImmutableSet.of());
 
     assertThat(
-        shTest.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
+        shTest
+            .getRuntimeDeps(resolver.getSourcePathRuleFinder())
+            .collect(ImmutableSet.toImmutableSet()),
         containsInAnyOrder(dep.getBuildTarget(), extraDep.getBuildTarget()));
   }
 }

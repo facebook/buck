@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -74,7 +73,7 @@ public class PomIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
   private final SourcePathResolver pathResolver =
-      DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+      DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
   private final ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
 

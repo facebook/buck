@@ -19,7 +19,6 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -87,7 +86,7 @@ public class CxxWriteArgsToFileStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
     CxxWriteArgsToFileStep step =
         CxxWriteArgsToFileStep.create(
             argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolver, false);

@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -122,7 +121,7 @@ public class CxxGenruleDescriptionTest {
           TargetGraphFactory.newInstance(bBuilder.build(), aBuilder.build(), builder.build());
       ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
       SourcePathResolver pathResolver =
-          DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+          DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
       bBuilder.build(graphBuilder);
       aBuilder.build(graphBuilder);
       Genrule genrule = (Genrule) builder.build(graphBuilder);
@@ -157,7 +156,7 @@ public class CxxGenruleDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule genrule = (Genrule) builder.build(graphBuilder);
     assertThat(
         Joiner.on(' ').join(Arg.stringify(ImmutableList.of(genrule.getCmd().get()), pathResolver)),
@@ -183,7 +182,7 @@ public class CxxGenruleDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule genrule = (Genrule) builder.build(graphBuilder);
     for (String expected : ImmutableList.of("-asflag", "-cflag", "-cxxflag")) {
       assertThat(
@@ -277,14 +276,14 @@ public class CxxGenruleDescriptionTest {
             .setOut("out");
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     CxxGenrule dep = (CxxGenrule) graphBuilder.requireRule(depBuilder.getTarget());
     CxxGenrule rule = (CxxGenrule) graphBuilder.requireRule(builder.getTarget());
     Genrule genrule =
         (Genrule)
-            ruleFinder
+            graphBuilder
+                .getSourcePathRuleFinder()
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .orElseThrow(AssertionError::new);
     assertThat(
@@ -304,11 +303,11 @@ public class CxxGenruleDescriptionTest {
             .setCacheable(false);
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     CxxGenrule rule = (CxxGenrule) graphBuilder.requireRule(builder.getTarget());
     Genrule genrule =
         (Genrule)
-            ruleFinder
+            graphBuilder
+                .getSourcePathRuleFinder()
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .orElseThrow(AssertionError::new);
     assertFalse(genrule.isCacheable());

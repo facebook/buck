@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -98,7 +97,6 @@ public class DistBuildFileHashesTest {
 
     protected final ActionGraph actionGraph;
     protected final ActionGraphBuilder graphBuilder;
-    protected final SourcePathRuleFinder ruleFinder;
     protected final SourcePathResolver sourcePathResolver;
     protected final DistBuildFileHashes distributedBuildFileHashes;
 
@@ -111,8 +109,7 @@ public class DistBuildFileHashesTest {
       secondJavaFs = secondProjectFilesystem.getRootPath().getFileSystem();
 
       graphBuilder = new TestActionGraphBuilder();
-      ruleFinder = new SourcePathRuleFinder(graphBuilder);
-      sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+      sourcePathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
       setUpRules(graphBuilder, sourcePathResolver);
       actionGraph = new ActionGraph(graphBuilder.getBuildRules());
       BuckConfig buckConfig = createBuckConfig();
@@ -123,7 +120,7 @@ public class DistBuildFileHashesTest {
           new DistBuildFileHashes(
               actionGraph,
               sourcePathResolver,
-              ruleFinder,
+              graphBuilder.getSourcePathRuleFinder(),
               createFileHashCache(),
               new DistBuildCellIndexer(rootCell),
               MoreExecutors.newDirectExecutorService(),

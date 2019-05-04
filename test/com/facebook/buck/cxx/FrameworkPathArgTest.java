@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -52,7 +51,6 @@ public class FrameworkPathArgTest {
   public void testGetDeps() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//:genrule");
     Genrule genrule =
@@ -65,7 +63,8 @@ public class FrameworkPathArgTest {
 
     FrameworkPathArg sourcePathFrameworkPathArg = new TestFrameworkPathArg(sourcePathFrameworkPath);
     assertThat(
-        BuildableSupport.getDepsCollection(sourcePathFrameworkPathArg, ruleFinder),
+        BuildableSupport.getDepsCollection(
+            sourcePathFrameworkPathArg, graphBuilder.getSourcePathRuleFinder()),
         Matchers.contains(genrule));
   }
 }

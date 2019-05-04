@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -179,7 +178,6 @@ public class CxxPythonExtensionDescriptionTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
 
     CxxLibrary dep = (CxxLibrary) cxxLibraryBuilder.build(graphBuilder, filesystem, targetGraph);
     CxxPythonExtension extension = builder.build(graphBuilder, filesystem, targetGraph);
@@ -201,7 +199,10 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getBuildDeps(),
         Matchers.hasItems(
             FluentIterable.from(depInput.getArgs())
-                .transformAndConcat(arg -> BuildableSupport.getDepsCollection(arg, ruleFinder))
+                .transformAndConcat(
+                    arg ->
+                        BuildableSupport.getDepsCollection(
+                            arg, graphBuilder.getSourcePathRuleFinder()))
                 .toArray(BuildRule.class)));
   }
 
@@ -300,7 +301,7 @@ public class CxxPythonExtensionDescriptionTest {
             python2Builder.build(), python3Builder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     python2Builder.build(graphBuilder, filesystem, targetGraph);
     python3Builder.build(graphBuilder, filesystem, targetGraph);
@@ -394,13 +395,16 @@ public class CxxPythonExtensionDescriptionTest {
     builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     CxxPythonExtension rule = builder.build(graphBuilder);
     NativeLinkTarget nativeLinkTarget = rule.getNativeLinkTarget(PY2);
     NativeLinkableInput input =
         nativeLinkTarget.getNativeLinkTargetInput(
-            CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, pathResolver, ruleFinder);
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            graphBuilder,
+            pathResolver,
+            graphBuilder.getSourcePathRuleFinder());
     assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--flag"));
   }
 
@@ -507,7 +511,7 @@ public class CxxPythonExtensionDescriptionTest {
             .build(graphBuilder);
     assertThat(
         cxxPythonExtension
-            .getRuntimeDeps(new SourcePathRuleFinder(graphBuilder))
+            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
             .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(cxxBinary.getBuildTarget()));
   }

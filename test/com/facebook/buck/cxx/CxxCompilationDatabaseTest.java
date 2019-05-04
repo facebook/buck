@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -72,8 +71,8 @@ public class CxxCompilationDatabaseTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver testSourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver testSourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     HeaderSymlinkTree privateSymlinkTree =
         CxxDescriptionEnhancer.createHeaderSymlinkTree(
@@ -119,7 +118,7 @@ public class CxxCompilationDatabaseTest {
             CxxPreprocessAndCompile.preprocessAndCompile(
                 compileTarget,
                 filesystem,
-                ruleFinder,
+                graphBuilder.getSourcePathRuleFinder(),
                 new PreprocessorDelegate(
                     CxxPlatformUtils.DEFAULT_PLATFORM.getHeaderVerification(),
                     FakeSourcePath.of(filesystem.getRootPath()),
@@ -155,7 +154,9 @@ public class CxxCompilationDatabaseTest {
     graphBuilder.addToIndex(compilationDatabase);
 
     assertThat(
-        compilationDatabase.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
+        compilationDatabase
+            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.contains(aggregatedDeps));
 
     assertEquals(

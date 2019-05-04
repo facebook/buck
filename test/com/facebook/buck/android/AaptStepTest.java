@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
@@ -54,7 +53,7 @@ public class AaptStepTest {
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries) {
     return new AaptStep(
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
         AndroidPlatformTarget.of(
             "android",
             basePath.resolve("mock_android.jar"),

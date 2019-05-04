@@ -1,3 +1,8 @@
+load(
+    "//tools/build_rules:java_rules.bzl",
+    "java_test",
+)
+
 java_library(
     name = "testutil",
     srcs = glob(
@@ -10,6 +15,21 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//third-party/java/guava:guava",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_test(
+    name = "rules",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
+        "//test/com/facebook/buck/core/sourcepath:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/junit:junit",
     ],
 )

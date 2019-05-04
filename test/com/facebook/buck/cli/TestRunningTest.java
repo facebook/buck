@@ -118,8 +118,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(sourceGenerator, javaLibraryNode);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -130,7 +130,10 @@ public class TestRunningTest {
 
     ImmutableSet<String> result =
         TestRunning.getPathToSourceFolders(
-            javaLibrary, resolver, ruleFinder, defaultJavaPackageFinder);
+            javaLibrary,
+            resolver,
+            graphBuilder.getSourcePathRuleFinder(),
+            defaultJavaPackageFinder);
 
     assertThat(
         "No path should be returned if the library contains only generated files.",
@@ -153,8 +156,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -162,7 +165,10 @@ public class TestRunningTest {
 
     ImmutableSet<String> result =
         TestRunning.getPathToSourceFolders(
-            javaLibrary, resolver, ruleFinder, defaultJavaPackageFinder);
+            javaLibrary,
+            resolver,
+            graphBuilder.getSourcePathRuleFinder(),
+            defaultJavaPackageFinder);
 
     String expected = javaLibrary.getProjectFilesystem().getRootPath().resolve("package/src") + "/";
     assertEquals(
@@ -182,14 +188,15 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
         new DefaultJavaPackageFinder(pathsFromRoot, ImmutableSet.of("/"));
 
-    TestRunning.getPathToSourceFolders(javaLibrary, resolver, ruleFinder, defaultJavaPackageFinder);
+    TestRunning.getPathToSourceFolders(
+        javaLibrary, resolver, graphBuilder.getSourcePathRuleFinder(), defaultJavaPackageFinder);
   }
   /**
    * If the source paths specified are from the new unified source tmp then we should return the
@@ -206,8 +213,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javaLibraryNode);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -215,7 +222,10 @@ public class TestRunningTest {
 
     ImmutableSet<String> result =
         TestRunning.getPathToSourceFolders(
-            javaLibrary, resolver, ruleFinder, defaultJavaPackageFinder);
+            javaLibrary,
+            resolver,
+            graphBuilder.getSourcePathRuleFinder(),
+            defaultJavaPackageFinder);
 
     assertEquals(
         "All non-generated source files are under one source tmp.",
@@ -251,8 +261,8 @@ public class TestRunningTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(sourceGenerator, javaLibraryNode);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     JavaLibrary javaLibrary = (JavaLibrary) graphBuilder.requireRule(javaLibraryTarget);
 
     DefaultJavaPackageFinder defaultJavaPackageFinder =
@@ -260,7 +270,10 @@ public class TestRunningTest {
 
     ImmutableSet<String> result =
         TestRunning.getPathToSourceFolders(
-            javaLibrary, resolver, ruleFinder, defaultJavaPackageFinder);
+            javaLibrary,
+            resolver,
+            graphBuilder.getSourcePathRuleFinder(),
+            defaultJavaPackageFinder);
 
     Path rootPath = javaLibrary.getProjectFilesystem().getRootPath();
     ImmutableSet<String> expected =
@@ -460,7 +473,7 @@ public class TestRunningTest {
                 separateTest3Target,
                 BuildResult.success(separateTest3, BUILT_LOCALLY, CacheResult.miss())));
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     int ret =
         TestRunning.runTests(
             commandRunnerParams,
@@ -617,7 +630,7 @@ public class TestRunningTest {
                     BuildResult.success(parallelTest3, BUILT_LOCALLY, CacheResult.miss()))
                 .build());
     ExecutionContext fakeExecutionContext = TestExecutionContext.newInstance();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     int ret =
         TestRunning.runTests(
             commandRunnerParams,
@@ -716,7 +729,7 @@ public class TestRunningTest {
                             null,
                             null)))));
     BuildTarget failingTestTarget = BuildTargetFactory.newInstance("//:failingtest");
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeTestRule failingTest =
         new FakeTestRule(

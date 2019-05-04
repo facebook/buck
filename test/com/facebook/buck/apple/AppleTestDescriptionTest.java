@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -75,7 +74,7 @@ public class AppleTestDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build(), depBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep = depBuilder.build(graphBuilder, targetGraph);
     assertThat(builder.build().getExtraDeps(), Matchers.hasItem(dep.getBuildTarget()));
     AppleTest test = builder.build(graphBuilder, targetGraph);

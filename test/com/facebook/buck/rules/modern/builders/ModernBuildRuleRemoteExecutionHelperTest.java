@@ -64,13 +64,12 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
   public void setUp() throws Exception {
     BuckEventBus eventBus = new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("dontcare"));
     ruleFinder =
-        new SourcePathRuleFinder(
-            new AbstractBuildRuleResolver() {
-              @Override
-              public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
-                return Optional.empty();
-              }
-            });
+        new AbstractBuildRuleResolver() {
+          @Override
+          public Optional<BuildRule> getRuleOptional(BuildTarget buildTarget) {
+            return Optional.empty();
+          }
+        }.getSourcePathRuleFinder();
 
     filesystem = new FakeProjectFilesystem(tmp.getRoot());
     Cell root = new TestCellBuilder().setFilesystem(filesystem).build();

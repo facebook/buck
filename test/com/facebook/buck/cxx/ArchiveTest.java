@@ -77,7 +77,7 @@ public class ArchiveTest {
 
   @Test
   public void testThatInputChangesCauseRuleKeyChanges() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     FakeFileHashCache hashCache =
@@ -188,13 +188,13 @@ public class ArchiveTest {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     Archive archive =
         new Archive(
             target,
             projectFilesystem,
-            ruleFinder,
+            resolver.getSourcePathRuleFinder(),
             DEFAULT_ARCHIVER,
             ImmutableList.of("-foo"),
             DEFAULT_RANLIB,
@@ -237,12 +237,11 @@ public class ArchiveTest {
             .build(graphBuilder);
 
     // Build the archive using a normal input the outputs of the genrules above.
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     Archive archive =
         new Archive(
             target,
             projectFilesystem,
-            ruleFinder,
+            graphBuilder.getSourcePathRuleFinder(),
             DEFAULT_ARCHIVER,
             ImmutableList.of(),
             DEFAULT_RANLIB,

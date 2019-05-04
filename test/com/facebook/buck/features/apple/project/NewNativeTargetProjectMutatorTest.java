@@ -53,7 +53,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -89,7 +88,7 @@ public class NewNativeTargetProjectMutatorTest {
     generatedProject = new PBXProject("TestProject");
     buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
   }
@@ -380,7 +379,7 @@ public class NewNativeTargetProjectMutatorTest {
         JsTestScenario.builder().bundle(depBuildTarget, ImmutableSortedSet.of()).build();
 
     NewNativeTargetProjectMutator mutator =
-        mutator(DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
+        mutator(DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder()));
 
     TargetNode<?> jsBundleNode = scenario.targetGraph.get(depBuildTarget);
 
@@ -414,7 +413,7 @@ public class NewNativeTargetProjectMutatorTest {
             .build();
 
     NewNativeTargetProjectMutator mutator =
-        mutator(DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
+        mutator(DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder()));
 
     TargetNode<?> jsBundleGenruleNode = scenario.targetGraph.get(depBuildTarget);
 

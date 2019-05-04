@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -67,7 +66,6 @@ public class CxxBoostTestTest {
 
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
@@ -79,7 +77,7 @@ public class CxxBoostTestTest {
             new CxxLink(
                 linkTarget,
                 new FakeProjectFilesystem(),
-                ruleFinder,
+                ruleResolver.getSourcePathRuleFinder(),
                 TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM
                     .getLd()

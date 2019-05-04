@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -47,8 +46,8 @@ public class CxxBinaryTest {
   @Test
   public void getExecutableCommandUsesAbsolutePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildTarget linkTarget = BuildTargetFactory.newInstance("//:link");
     Path bin = Paths.get("path/to/exectuable");
@@ -58,7 +57,7 @@ public class CxxBinaryTest {
             new CxxLink(
                 linkTarget,
                 projectFilesystem,
-                ruleFinder,
+                graphBuilder.getSourcePathRuleFinder(),
                 TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM
                     .getLd()

@@ -26,7 +26,6 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -75,10 +74,11 @@ public class AssembleDirectoriesTest {
         ImmutableList.of(
             FakeSourcePath.of(filesystem, "folder_a"), FakeSourcePath.of(filesystem, "folder_b"));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     AssembleDirectories assembleDirectories =
-        new AssembleDirectories(target, filesystem, ruleFinder, directories);
+        new AssembleDirectories(
+            target, filesystem, graphBuilder.getSourcePathRuleFinder(), directories);
     graphBuilder.addToIndex(assembleDirectories);
 
     ImmutableList<Step> steps =

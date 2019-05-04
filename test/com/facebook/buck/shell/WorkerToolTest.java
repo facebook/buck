@@ -23,7 +23,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -46,7 +45,7 @@ public class WorkerToolTest {
   public void testCreateWorkerTool() throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -92,8 +91,8 @@ public class WorkerToolTest {
   @Test
   public void testArgsWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -118,7 +117,9 @@ public class WorkerToolTest {
         Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerToolRule.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
-        workerToolRule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
+        workerToolRule
+            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
         Joiner.on(' ')
@@ -130,8 +131,8 @@ public class WorkerToolTest {
   @Test
   public void testEnvWithLocationMacroAffectDependenciesAndExpands() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildRule shBinaryRule =
         new ShBinaryBuilder(BuildTargetFactory.newInstance("//:my_exe"))
@@ -158,7 +159,9 @@ public class WorkerToolTest {
         Matchers.hasItem(exportFileRule.getBuildTarget()));
     assertThat(workerToolRule.getBuildDeps(), Matchers.hasItems(shBinaryRule, exportFileRule));
     assertThat(
-        workerToolRule.getRuntimeDeps(ruleFinder).collect(ImmutableSet.toImmutableSet()),
+        workerToolRule
+            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
+            .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItems(shBinaryRule.getBuildTarget(), exportFileRule.getBuildTarget()));
     assertThat(
         workerToolRule.getWorkerTool().getTool().getEnvironment(pathResolver),

@@ -21,7 +21,6 @@ import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.ExopackageInfo.NativeLibsInfo;
 import com.facebook.buck.android.exopackage.ExopackageInfo.ResourcesInfo;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -60,8 +59,7 @@ public class ExopackageSymlinkTreeTest {
     filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
   }
 
   @Test

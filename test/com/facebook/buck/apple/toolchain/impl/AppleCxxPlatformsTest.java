@@ -210,7 +210,7 @@ public class AppleCxxPlatformsTest {
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -322,7 +322,7 @@ public class AppleCxxPlatformsTest {
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -429,8 +429,8 @@ public class AppleCxxPlatformsTest {
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver resolver =
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
 
     assertEquals(
         ImmutableList.of("/Developer/usr/bin/actool"),
@@ -497,7 +497,7 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolver resolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(ruleResolver));
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
     assertEquals(
         ImmutableList.of(
             "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil", "-num-threads=1"),
@@ -833,8 +833,8 @@ public class AppleCxxPlatformsTest {
   private ImmutableMap<Flavor, RuleKey> constructCompileRuleKeys(
       Operation operation, ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     String source = "source.cpp";
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
@@ -843,7 +843,7 @@ public class AppleCxxPlatformsTest {
                     .put(projectFilesystem.resolve("source.cpp"), HashCode.fromInt(0))
                     .build()),
             pathResolver,
-            ruleFinder);
+            graphBuilder.getSourcePathRuleFinder());
     BuildTarget target =
         BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys = ImmutableMap.builder();
@@ -854,7 +854,7 @@ public class AppleCxxPlatformsTest {
               .setBaseBuildTarget(target)
               .setActionGraphBuilder(graphBuilder)
               .setPathResolver(pathResolver)
-              .setRuleFinder(ruleFinder)
+              .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
               .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
               .setCxxPlatform(entry.getValue().getCxxPlatform())
               .setPicType(PicType.PIC)
@@ -891,8 +891,8 @@ public class AppleCxxPlatformsTest {
   private ImmutableMap<Flavor, RuleKey> constructLinkRuleKeys(
       ImmutableMap<Flavor, AppleCxxPlatform> cxxPlatforms) throws NoSuchBuildTargetException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
             FakeFileHashCache.createFromStrings(
@@ -900,7 +900,7 @@ public class AppleCxxPlatformsTest {
                     .put("input.o", Strings.repeat("a", 40))
                     .build()),
             pathResolver,
-            ruleFinder);
+            graphBuilder.getSourcePathRuleFinder());
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     ImmutableMap.Builder<Flavor, RuleKey> ruleKeys = ImmutableMap.builder();
     for (Map.Entry<Flavor, AppleCxxPlatform> entry : cxxPlatforms.entrySet()) {
@@ -983,7 +983,7 @@ public class AppleCxxPlatformsTest {
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatform();
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
@@ -1052,7 +1052,7 @@ public class AppleCxxPlatformsTest {
                 .build());
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(buildRuleResolver));
+        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
     assertThat(
         appleCxxPlatform
             .getCodesignProvider()
@@ -1207,7 +1207,7 @@ public class AppleCxxPlatformsTest {
                 .setSections("[apple]", "ibtool_version_override = custom_ibtool_version")
                 .build());
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
 

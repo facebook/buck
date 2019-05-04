@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -116,7 +115,7 @@ public class HalideLibraryDescriptionTest {
         FluentIterable.from(input.getArgs())
             .transformAndConcat(
                 arg ->
-                    BuildableSupport.getDepsCollection(arg, new SourcePathRuleFinder(graphBuilder)))
+                    BuildableSupport.getDepsCollection(arg, graphBuilder.getSourcePathRuleFinder()))
             .get(0);
     assertThat(buildRule, is(instanceOf(Archive.class)));
   }
@@ -182,7 +181,7 @@ public class HalideLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     HalideCompile compile =
         (HalideCompile) compileBuilder.build(graphBuilder, filesystem, targetGraph);
 
@@ -226,7 +225,7 @@ public class HalideLibraryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(compileBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     HalideCompile compile =
         (HalideCompile) compileBuilder.build(graphBuilder, filesystem, targetGraph);
 

@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -72,8 +71,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
         RichStream.from(input.getArgs())
             .flatMap(
                 a ->
-                    BuildableSupport.deriveInputs(a)
-                        .collect(ImmutableList.toImmutableList())
+                    BuildableSupport.deriveInputs(a).collect(ImmutableList.toImmutableList())
                         .stream())
             .toImmutableSet(),
         Matchers.contains(lib));
@@ -102,8 +100,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
         RichStream.from(input.getArgs())
             .flatMap(
                 a ->
-                    BuildableSupport.deriveInputs(a)
-                        .collect(ImmutableList.toImmutableList())
+                    BuildableSupport.deriveInputs(a).collect(ImmutableList.toImmutableList())
                         .stream())
             .toImmutableSet(),
         Matchers.contains(lib));
@@ -177,7 +174,7 @@ public class HaskellPrebuiltLibraryDescriptionTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     PrebuiltHaskellLibrary library = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkableInput staticInput =
         library.getNativeLinkableInput(

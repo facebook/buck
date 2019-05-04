@@ -27,7 +27,6 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -66,7 +65,7 @@ public class CxxCompileStepIntegrationTest {
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));
@@ -136,7 +135,7 @@ public class CxxCompileStepIntegrationTest {
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     Compiler compiler = platform.getCc().resolve(resolver, EmptyTargetConfiguration.INSTANCE);
     ImmutableList<String> compilerCommandPrefix = compiler.getCommandPrefix(pathResolver);
     Path output = filesystem.resolve(Paths.get("output.o"));

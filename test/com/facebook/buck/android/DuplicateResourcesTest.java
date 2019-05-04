@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderB
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -262,7 +261,7 @@ public class DuplicateResourcesTest {
 
     SourcePathResolver pathResolver =
         DefaultSourcePathResolver.from(
-            new SourcePathRuleFinder(actionGraphAndBuilder.getActionGraphBuilder()));
+            actionGraphAndBuilder.getActionGraphBuilder().getSourcePathRuleFinder());
 
     ImmutableSet<ImmutableList<Step>> ruleSteps =
         RichStream.from(actionGraphAndBuilder.getActionGraph().getNodes())

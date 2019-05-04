@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
@@ -58,7 +57,7 @@ public class PythonBuckConfigTest {
   public void testPathToPexExecuterUsesConfigSetting() throws IOException {
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver));
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
     Path projectDir = Files.createTempDirectory("project");
     Path pexExecuter = Paths.get("pex-executer");
     ProjectFilesystem projectFilesystem =

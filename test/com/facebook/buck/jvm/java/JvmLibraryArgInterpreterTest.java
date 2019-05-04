@@ -68,7 +68,7 @@ public class JvmLibraryArgInterpreterTest {
                 JavacLanguageLevelOptions.builder().setSourceLevel("8").setTargetLevel("8").build())
             .build();
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ruleFinder = graphBuilder.getSourcePathRuleFinder();
     sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
   }
 

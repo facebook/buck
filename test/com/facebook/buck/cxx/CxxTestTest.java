@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeTestRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -186,7 +185,7 @@ public class CxxTestTest {
     Callable<TestResults> result =
         cxxTest.interpretTestResults(
             executionContext,
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder)),
+            DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder()),
             /* isUsingTestSelectors */ false);
     result.call();
   }

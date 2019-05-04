@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -117,7 +116,7 @@ public class RemoteFileDescriptionTest {
 
     assertThat(buildRule, CoreMatchers.instanceOf(RemoteFileBinary.class));
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Tool executableCommand = ((RemoteFileBinary) buildRule).getExecutableCommand();
     assertThat(
         BuildableSupport.deriveInputs(executableCommand).collect(ImmutableList.toImmutableList()),

@@ -24,7 +24,6 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -66,7 +65,6 @@ public class AaptPackageResources extends AbstractBuildRule {
 
   static ImmutableSortedSet<BuildRule> getAllDeps(
       BuildTarget aaptTarget,
-      SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
       FilteredResourcesProvider filteredResourcesProvider,
@@ -78,13 +76,14 @@ public class AaptPackageResources extends AbstractBuildRule {
     depsBuilder.addAll(
         BuildRules.toBuildRulesFor(aaptTarget, ruleResolver, resourceTargets::iterator));
     depsBuilder.addAll(
-        ruleFinder
+        ruleResolver
+            .getSourcePathRuleFinder()
             .filterBuildRuleInputs(resourceDeps.stream().map(HasAndroidResourceDeps::getRes))
             .iterator());
     for (SourcePath apk : dependencyResourceApks) {
-      ruleFinder.getRule(apk).ifPresent(depsBuilder::add);
+      ruleResolver.getSourcePathRuleFinder().getRule(apk).ifPresent(depsBuilder::add);
     }
-    ruleFinder.getRule(manifest).ifPresent(depsBuilder::add);
+    ruleResolver.getSourcePathRuleFinder().getRule(manifest).ifPresent(depsBuilder::add);
     filteredResourcesProvider.getResourceFilterRule().ifPresent(depsBuilder::add);
     return depsBuilder.build();
   }
@@ -93,7 +92,6 @@ public class AaptPackageResources extends AbstractBuildRule {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       AndroidPlatformTarget androidPlatformTarget,
-      SourcePathRuleFinder ruleFinder,
       BuildRuleResolver ruleResolver,
       SourcePath manifest,
       ImmutableList<SourcePath> dependencyResourceApks,
@@ -115,7 +113,6 @@ public class AaptPackageResources extends AbstractBuildRule {
             () ->
                 getAllDeps(
                     buildTarget,
-                    ruleFinder,
                     ruleResolver,
                     manifest,
                     filteredResourcesProvider,

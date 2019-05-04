@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -66,8 +65,8 @@ public class CxxPrecompiledHeaderTest {
         CxxPlatformUtils.DEFAULT_PLATFORM
             .getCxx()
             .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     CxxPrecompiledHeader precompiledHeader =
         new CxxPrecompiledHeader(
             /* canPrecompile */ true,

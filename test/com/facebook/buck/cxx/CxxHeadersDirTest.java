@@ -43,7 +43,7 @@ import org.junit.Test;
 public class CxxHeadersDirTest {
 
   private RuleKey getRuleKey(ProjectFilesystem filesystem, CxxHeaders cxxHeaders) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache fileHashCache =
         new StackedFileHashCache(

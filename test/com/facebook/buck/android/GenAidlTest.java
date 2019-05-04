@@ -103,7 +103,7 @@ public class GenAidlTest {
         BuildTargetFactory.newInstance(
             stubFilesystem.getRootPath(), "//java/com/example/base:IWhateverService");
     pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder()));
+        DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder());
   }
 
   private GenAidl createGenAidlRule(ImmutableSortedSet<SourcePath> aidlSourceDeps) {
@@ -164,7 +164,7 @@ public class GenAidlTest {
 
   @Test
   public void testTransitiveAidlDependenciesAffectTheRuleKey() throws IOException {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     StackedFileHashCache hashCache =
         StackedFileHashCache.createDefaultHashCaches(

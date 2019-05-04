@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -108,7 +107,7 @@ public class LuaBinaryDescriptionTest {
   public void extensionOverride() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     LuaBinary binary =
         new LuaBinaryBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
@@ -319,7 +318,7 @@ public class LuaBinaryDescriptionTest {
     LuaBinary luaBinary = luaBinaryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         luaBinary
-            .getRuntimeDeps(new SourcePathRuleFinder(graphBuilder))
+            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
             .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(PythonBinaryDescription.getEmptyInitTarget(luaBinary.getBuildTarget())));
   }

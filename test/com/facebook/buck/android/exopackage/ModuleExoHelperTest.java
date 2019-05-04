@@ -19,7 +19,6 @@ package com.facebook.buck.android.exopackage;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -69,8 +68,8 @@ public class ModuleExoHelperTest {
             PathSourcePath.of(filesystem, moduleOutputPath));
 
     BuildRuleResolver resolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(resolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder());
 
     moduleExoHelper = new ModuleExoHelper(pathResolver, filesystem, ImmutableList.of(dexInfo));
   }

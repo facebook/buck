@@ -57,8 +57,8 @@ public class DependencyFileRuleKeyFactoryTest {
   public void testKeysWhenInputPathContentsChanges() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
 
     SourcePath usedSourcePath = PathSourcePath.of(filesystem, Paths.get("usedInput"));
     SourcePath unusedSourcePath = PathSourcePath.of(filesystem, Paths.get("unusedInput"));
@@ -66,7 +66,7 @@ public class DependencyFileRuleKeyFactoryTest {
     SourcePath interestingSourcePath = PathSourcePath.of(filesystem, Paths.get("interestingIn"));
 
     testKeysWhenInputContentsChanges(
-        ruleFinder,
+        ruleResolver.getSourcePathRuleFinder(),
         pathResolver,
         usedSourcePath,
         unusedSourcePath,
@@ -82,8 +82,8 @@ public class DependencyFileRuleKeyFactoryTest {
   @Test
   public void testKeysWhenInputTargetOutputChanges() throws Exception {
     ActionGraphBuilder graphBuilder = newActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildTarget usedTarget = BuildTargetFactory.newInstance("//:used");
     BuildTarget unusedTarget = BuildTargetFactory.newInstance("//:unused");
@@ -99,7 +99,7 @@ public class DependencyFileRuleKeyFactoryTest {
     graphBuilder.addToIndex(new FakeBuildRule(interestingTarget).setOutputFile("in"));
 
     testKeysWhenInputContentsChanges(
-        ruleFinder,
+        graphBuilder.getSourcePathRuleFinder(),
         pathResolver,
         usedSourcePath,
         unusedSourcePath,
@@ -116,8 +116,8 @@ public class DependencyFileRuleKeyFactoryTest {
   public void testKeysWhenInputArchiveMemberChanges() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
 
     SourcePath archivePath = PathSourcePath.of(filesystem, Paths.get("archive"));
     SourcePath usedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("used"));
@@ -127,7 +127,7 @@ public class DependencyFileRuleKeyFactoryTest {
         ArchiveMemberSourcePath.of(archivePath, Paths.get("META-INF"));
 
     testKeysWhenInputContentsChanges(
-        ruleFinder,
+        ruleResolver.getSourcePathRuleFinder(),
         pathResolver,
         usedSourcePath,
         unusedSourcePath,
@@ -891,8 +891,8 @@ public class DependencyFileRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
 
     SourcePath unusedSourcePath = PathSourcePath.of(filesystem, Paths.get("input0"));
     SourcePath sourcePath = PathSourcePath.of(filesystem, Paths.get("input"));
@@ -913,7 +913,8 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setCoveredByDepFilePredicate(coveredPredicate);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
     RuleKeyAndInputs res1 =
-        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+        new DefaultDependencyFileRuleKeyFactory(
+                fieldLoader, hashCache, pathResolver, ruleResolver.getSourcePathRuleFinder())
             .build(rule1, ImmutableList.of(dependencyFileEntry));
 
     FakeDepFileBuildRule rule2 =
@@ -924,7 +925,8 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setCoveredByDepFilePredicate(coveredPredicate);
     hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
     RuleKeyAndInputs res2 =
-        new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, pathResolver, ruleFinder)
+        new DefaultDependencyFileRuleKeyFactory(
+                fieldLoader, hashCache, pathResolver, ruleResolver.getSourcePathRuleFinder())
             .build(rule2, ImmutableList.of(dependencyFileEntry));
 
     assertThat(res2.getRuleKey(), Matchers.not(Matchers.equalTo(res1.getRuleKey())));

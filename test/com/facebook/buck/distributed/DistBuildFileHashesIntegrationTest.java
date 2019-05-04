@@ -30,7 +30,6 @@ import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.distributed.thrift.BuildJobState;
@@ -197,8 +196,8 @@ public class DistBuildFileHashesIntegrationTest {
             .build();
     ActionGraphAndBuilder actionGraphAndBuilder = cache.getActionGraph(targetGraph);
     BuildRuleResolver ruleResolver = actionGraphAndBuilder.getActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver sourcePathResolver =
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
     DistBuildCellIndexer cellIndexer = new DistBuildCellIndexer(rootCell);
 
     ImmutableList.Builder<ProjectFileHashCache> allCaches = ImmutableList.builder();
@@ -219,7 +218,7 @@ public class DistBuildFileHashesIntegrationTest {
     return new DistBuildFileHashes(
         actionGraphAndBuilder.getActionGraph(),
         sourcePathResolver,
-        ruleFinder,
+        ruleResolver.getSourcePathRuleFinder(),
         stackedCache,
         cellIndexer,
         MoreExecutors.newDirectExecutorService(),

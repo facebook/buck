@@ -32,7 +32,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -150,7 +149,7 @@ public class PythonTestDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     PythonTest test = builder.build(graphBuilder, filesystem, targetGraph);
     PythonBinary binary = test.getBinary();
     ImmutableList<? extends Step> buildSteps =
@@ -320,7 +319,7 @@ public class PythonTestDescriptionTest {
     PythonTest binary = builder.build(graphBuilder, filesystem, targetGraph);
     assertThat(
         binary
-            .getRuntimeDeps(new SourcePathRuleFinder(graphBuilder))
+            .getRuntimeDeps(graphBuilder.getSourcePathRuleFinder())
             .collect(ImmutableSet.toImmutableSet()),
         Matchers.hasItem(pexExecutor.getBuildTarget()));
   }
@@ -552,14 +551,13 @@ public class PythonTestDescriptionTest {
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
     DefaultRuleKeyFactory ruleKeyFactory =
         new DefaultRuleKeyFactory(
             new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create()),
             StackedFileHashCache.createDefaultHashCaches(
                 rule.getProjectFilesystem(), FileHashCacheMode.DEFAULT),
-            DefaultSourcePathResolver.from(ruleFinder),
-            ruleFinder);
+            DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder()),
+            ruleResolver.getSourcePathRuleFinder());
     return ruleKeyFactory.build(rule);
   }
 }

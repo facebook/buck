@@ -94,7 +94,7 @@ public class RuleKeyTest {
 
   @Test(expected = HumanReadableException.class)
   public void shouldNotAllowPathsInRuleKeysWhenSetReflectively() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKeyBuilder<HashCode> builder = createBuilder(resolver, ruleFinder);
 
@@ -112,11 +112,11 @@ public class RuleKeyTest {
                     filesystem, FileHashCacheMode.DEFAULT)));
     ActionGraphBuilder graphBuilder1 = new TestActionGraphBuilder();
     ActionGraphBuilder graphBuilder2 = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(graphBuilder1);
+    SourcePathRuleFinder ruleFinder1 = graphBuilder1.getSourcePathRuleFinder();
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
             hashCache, DefaultSourcePathResolver.from(ruleFinder1), ruleFinder1);
-    SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(graphBuilder2);
+    SourcePathRuleFinder ruleFinder2 = graphBuilder2.getSourcePathRuleFinder();
     DefaultRuleKeyFactory ruleKeyFactory2 =
         new TestDefaultRuleKeyFactory(
             hashCache, DefaultSourcePathResolver.from(ruleFinder2), ruleFinder2);
@@ -149,7 +149,7 @@ public class RuleKeyTest {
 
   @Test
   public void ensureSimpleValuesCorrectRuleKeyChangesMade() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey reflective =
         createBuilder(resolver, ruleFinder)
@@ -173,7 +173,7 @@ public class RuleKeyTest {
     ImmutableList<TestRuleKeyAppendable> ruleKeyAppendableList =
         ImmutableList.of(new TestRuleKeyAppendable("foo"), new TestRuleKeyAppendable("bar"));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyPairA =
         createBuilder(resolver, ruleFinder)
@@ -196,7 +196,7 @@ public class RuleKeyTest {
     ImmutableList<TestRuleKeyAppendable> ruleKeyAppendableListB =
         ImmutableList.of(new TestRuleKeyAppendable("bar"), new TestRuleKeyAppendable("foo"));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyPairA =
         createBuilder(resolver, ruleFinder)
@@ -218,7 +218,7 @@ public class RuleKeyTest {
             "foo", new TestRuleKeyAppendable("foo"),
             "bar", new TestRuleKeyAppendable("bar"));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyPairA =
         createBuilder(resolver, ruleFinder)
@@ -245,7 +245,7 @@ public class RuleKeyTest {
             "bar", new TestRuleKeyAppendable("bar"),
             "foo", new TestRuleKeyAppendable("foo"));
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey ruleKeyPairA =
         createBuilder(resolver, ruleFinder)
@@ -264,7 +264,7 @@ public class RuleKeyTest {
   public void ensureListsAreHandledProperly() {
     ImmutableList<String> strings = ImmutableList.of("one", "two");
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey reflective =
         createBuilder(resolver, ruleFinder).setReflectively("strings", strings).build(RuleKey::new);
@@ -277,7 +277,7 @@ public class RuleKeyTest {
 
   @Test
   public void differentSeedsMakeDifferentKeys() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//some:example");
@@ -299,7 +299,7 @@ public class RuleKeyTest {
 
   @Test
   public void testRuleKeyEqualsAndHashCodeMethods() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey keyPair1 =
         createBuilder(resolver, ruleFinder).setReflectively("something", "foo").build(RuleKey::new);
@@ -319,7 +319,7 @@ public class RuleKeyTest {
   public void setInputPathSourcePath() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     // Changing the name of a named source path should change the hash...
     assertNotEquals(
@@ -352,8 +352,8 @@ public class RuleKeyTest {
     PathSourcePath sourcePathTwo = FakeSourcePath.of(projectFilesystem, "something2");
 
     // Changing the relative path should change the rule key
-    SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(new TestActionGraphBuilder());
-    SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder1 = new TestActionGraphBuilder().getSourcePathRuleFinder();
+    SourcePathRuleFinder ruleFinder2 = new TestActionGraphBuilder().getSourcePathRuleFinder();
     assertNotEquals(
         buildResult(
             createBuilder(DefaultSourcePathResolver.from(ruleFinder1), ruleFinder1)
@@ -366,7 +366,7 @@ public class RuleKeyTest {
   @Test
   public void setInputBuildTargetSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeBuildRule fake1 = new FakeBuildRule("//:fake1");
     FakeBuildRule fake2 = new FakeBuildRule("//:fake2");
@@ -437,7 +437,7 @@ public class RuleKeyTest {
   @Test
   public void setInputArchiveMemberSourcePath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 
     FakeBuildRule fakeBuildRule = new FakeBuildRule("//:fake");
@@ -486,7 +486,7 @@ public class RuleKeyTest {
     ImmutableMap<String, ?> map =
         ImmutableMap.of("path", FakeSourcePath.of("some/path"), "boolean", true);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
         createBuilder(resolver, ruleFinder).setReflectively("map", map).build(RuleKey::new);
@@ -500,7 +500,7 @@ public class RuleKeyTest {
         ImmutableMap.of(
             FakeSourcePath.of("some/path"), "woohoo!", 42L, "life, the universe and everything");
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
         createBuilder(resolver, ruleFinder).setReflectively("map", map).build(RuleKey::new);
@@ -510,7 +510,7 @@ public class RuleKeyTest {
 
   @Test
   public void canAddRuleKeyAppendable() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
         createBuilder(resolver, ruleFinder)
@@ -523,7 +523,7 @@ public class RuleKeyTest {
   public void canAddListOfRuleKeyAppendable() {
     ImmutableList<TestRuleKeyAppendable> list =
         ImmutableList.of(new TestRuleKeyAppendable("foo"), new TestRuleKeyAppendable("bar"));
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
         createBuilder(resolver, ruleFinder).setReflectively("list", list).build(RuleKey::new);
@@ -536,7 +536,7 @@ public class RuleKeyTest {
         ImmutableMap.of(
             "foo", new TestRuleKeyAppendable("foo"),
             "bar", new TestRuleKeyAppendable("bar"));
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey key =
         createBuilder(resolver, ruleFinder).setReflectively("map", map).build(RuleKey::new);
@@ -548,7 +548,7 @@ public class RuleKeyTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache =
         new StackedFileHashCache(
@@ -602,7 +602,7 @@ public class RuleKeyTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache =
         new StackedFileHashCache(
@@ -625,7 +625,7 @@ public class RuleKeyTest {
     BuildTarget target = BuildTargetFactory.newInstance("//cheese:peas");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache =
         new StackedFileHashCache(
@@ -675,7 +675,7 @@ public class RuleKeyTest {
       }
     }
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
     RuleKeyFactory<RuleKey> ruleKeyFactory =
@@ -694,7 +694,7 @@ public class RuleKeyTest {
 
   @Test
   public void declaredDepsAndExtraDepsGenerateDifferentRuleKeys() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache hashCache = new FakeFileHashCache(ImmutableMap.of());
     DefaultRuleKeyFactory ruleKeyFactory =
@@ -734,7 +734,7 @@ public class RuleKeyTest {
 
   @Test
   public void immutablesCanAddValueMethodsFromInterfaceImmutablesToRuleKeys() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey first =
         createBuilder(resolver, ruleFinder)
@@ -757,7 +757,7 @@ public class RuleKeyTest {
 
   @Test
   public void lambdaAddsPseudoClassName() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     Result<RuleKey, String> result =
         createFactory(resolver, ruleFinder)
@@ -770,7 +770,7 @@ public class RuleKeyTest {
 
   @Test
   public void anonymousClassAddsPseudoClassName() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     Result<RuleKey, String> result =
         createFactory(resolver, ruleFinder)
@@ -792,7 +792,7 @@ public class RuleKeyTest {
 
   @Test
   public void immutablesCanAddNonDefaultImmutableValues() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey first =
         createBuilder(resolver, ruleFinder)
@@ -821,7 +821,7 @@ public class RuleKeyTest {
 
   @Test
   public void immutablesCanAddValueMethodsFromExtendedInterfaceImmutablesToRuleKeys() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     RuleKey first =
         createBuilder(resolver, ruleFinder)
@@ -858,7 +858,7 @@ public class RuleKeyTest {
 
   @Test
   public void packageVisibleImmutablesCanUseAddToRuleKey() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     createBuilder(resolver, ruleFinder)
         .setReflectively("value", TestPackageVisibleTuple.of(0))
@@ -881,7 +881,7 @@ public class RuleKeyTest {
   @Test(expected = UncheckedExecutionException.class)
   public void badUseOfAddValueMethodsToRuleKey() {
     java.util.logging.Logger.getGlobal().addHandler(new ConsoleHandler());
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     createBuilder(resolver, ruleFinder)
         .setReflectively("value", (BadUseOfAddValueMethodsToRuleKey) () -> "")
@@ -904,7 +904,7 @@ public class RuleKeyTest {
 
   @Test(expected = UncheckedExecutionException.class)
   public void badUseOfAddValueMethodsToRuleKeyInHierarchy() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     createBuilder(resolver, ruleFinder)
         .setReflectively("value", new ClassWithBadThingInHierarchy())
@@ -920,7 +920,7 @@ public class RuleKeyTest {
 
   @Test(expected = UncheckedExecutionException.class)
   public void badUseOfAddValueMethodsToRuleKeyInSomeSuperInterface() {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     createBuilder(resolver, ruleFinder)
         .setReflectively(

@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -65,8 +64,8 @@ public class PrebuiltCxxLibraryTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(genSrcBuilder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildRule genSrc = genSrcBuilder.build(graphBuilder, filesystem, targetGraph);
     filesystem.writeContentsToPath(
@@ -83,7 +82,8 @@ public class PrebuiltCxxLibraryTest {
                 DefaultFileHashCache.createDefaultFileHashCache(
                     filesystem, FileHashCacheMode.DEFAULT)));
     DefaultRuleKeyFactory factory =
-        new TestDefaultRuleKeyFactory(originalHashCache, pathResolver, ruleFinder);
+        new TestDefaultRuleKeyFactory(
+            originalHashCache, pathResolver, graphBuilder.getSourcePathRuleFinder());
 
     RuleKey ruleKey = factory.build(lib);
     assertNotNull(ruleKey);

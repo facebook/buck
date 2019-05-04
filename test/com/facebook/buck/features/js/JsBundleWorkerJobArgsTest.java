@@ -28,7 +28,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.shell.WorkerShellStep;
@@ -210,7 +209,7 @@ public class JsBundleWorkerJobArgsTest {
   private void buildContext(JsTestScenario scenario) {
     context =
         FakeBuildContext.withSourcePathResolver(
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(scenario.graphBuilder)));
+            DefaultSourcePathResolver.from(scenario.graphBuilder.getSourcePathRuleFinder()));
   }
 
   private ArrayNode arrayNodeOf(Object... strings) {

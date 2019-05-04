@@ -29,7 +29,6 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.SingleThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
@@ -214,8 +213,8 @@ public class RuleKeyBuilderTest {
     Map<AddsToRuleKey, RuleKey> appendableKeys =
         ImmutableMap.of(APPENDABLE_1, RULE_KEY_1, APPENDABLE_2, RULE_KEY_2);
     BuildRuleResolver ruleResolver = new FakeActionGraphBuilder(ruleMap);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(ruleResolver);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(ruleResolver.getSourcePathRuleFinder());
     FakeFileHashCache hashCache =
         new FakeFileHashCache(
             ImmutableMap.of(
@@ -229,7 +228,10 @@ public class RuleKeyBuilderTest {
             ImmutableMap.of());
 
     return new RuleKeyBuilder<HashCode>(
-        ruleFinder, pathResolver, hashCache, RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
+        ruleResolver.getSourcePathRuleFinder(),
+        pathResolver,
+        hashCache,
+        RuleKeyBuilder.createDefaultHasher(Optional.empty())) {
 
       @Override
       protected RuleKeyBuilder<HashCode> setBuildRule(BuildRule rule) {

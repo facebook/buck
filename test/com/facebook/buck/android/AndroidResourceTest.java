@@ -94,11 +94,11 @@ public class AndroidResourceTest {
         createResourceRule.apply(Paths.get("java/src/com/facebook/base/res/drawable/C.xml"));
 
     BuildRule androidResource1 = builder1.requireRule(buildTarget);
-    SourcePathRuleFinder ruleFinder1 = new SourcePathRuleFinder(builder1);
+    SourcePathRuleFinder ruleFinder1 = builder1.getSourcePathRuleFinder();
     SourcePathResolver pathResolver1 = DefaultSourcePathResolver.from(ruleFinder1);
 
     BuildRule androidResource2 = builder2.requireRule(buildTarget);
-    SourcePathRuleFinder ruleFinder2 = new SourcePathRuleFinder(builder2);
+    SourcePathRuleFinder ruleFinder2 = builder2.getSourcePathRuleFinder();
     SourcePathResolver pathResolver2 = DefaultSourcePathResolver.from(ruleFinder2);
 
     RuleKey ruleKey1 =
@@ -119,7 +119,7 @@ public class AndroidResourceTest {
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
         new AndroidResource(
@@ -150,7 +150,7 @@ public class AndroidResourceTest {
         BuildTargetFactory.newInstance(
             projectFilesystem.getRootPath(), "//java/src/com/facebook/base:res");
     BuildRuleParams params = TestBuildRuleParams.create();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver resolver = DefaultSourcePathResolver.from(ruleFinder);
     AndroidResource androidResource =
         new AndroidResource(
@@ -195,7 +195,7 @@ public class AndroidResourceTest {
     AndroidResource resource =
         (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FileHashCache fileHashCache =
         StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);

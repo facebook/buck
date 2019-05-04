@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -106,11 +105,10 @@ public class AndroidLibraryGraphEnhancerTest {
   public void testBuildableIsCreated() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     BuildRule resourceRule1 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res1"))
@@ -118,7 +116,7 @@ public class AndroidLibraryGraphEnhancerTest {
     BuildRule resourceRule2 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res2"))
@@ -163,11 +161,10 @@ public class AndroidLibraryGraphEnhancerTest {
   public void testCreatedBuildableHasOverriddenJavacConfig() {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//java/com/example:library");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     BuildRule resourceRule1 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res1"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res1"))
@@ -175,7 +172,7 @@ public class AndroidLibraryGraphEnhancerTest {
     BuildRule resourceRule2 =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
-                .setRuleFinder(ruleFinder)
+                .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
                 .setBuildTarget(BuildTargetFactory.newInstance("//android_res/com/example:res2"))
                 .setRDotJavaPackage("com.facebook")
                 .setRes(FakeSourcePath.of("android_res/com/example/res2"))
@@ -216,7 +213,6 @@ public class AndroidLibraryGraphEnhancerTest {
   @Test
   public void testDummyRDotJavaRuleInheritsJavacOptionsDepsAndNoOthers() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     FakeBuildRule javacDep = new FakeJavaLibrary(BuildTargetFactory.newInstance("//:javac_dep"));
     graphBuilder.addToIndex(javacDep);
     FakeBuildRule dep = new FakeJavaLibrary(BuildTargetFactory.newInstance("//:dep"));
@@ -237,7 +233,8 @@ public class AndroidLibraryGraphEnhancerTest {
             target,
             new FakeProjectFilesystem(),
             ImmutableSortedSet.of(dep),
-            JavacFactoryHelper.createJavacFactory(javaConfig).create(ruleFinder, null),
+            JavacFactoryHelper.createJavacFactory(javaConfig)
+                .create(graphBuilder.getSourcePathRuleFinder(), null),
             options,
             DependencyMode.FIRST_ORDER,
             /* forceFinalResourceIds */ false,

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -54,7 +53,7 @@ public class PrebuiltJarTest {
             buildTarget,
             filesystem,
             buildRuleParams,
-            DefaultSourcePathResolver.from(new SourcePathRuleFinder(new TestActionGraphBuilder())),
+            DefaultSourcePathResolver.from(new TestActionGraphBuilder().getSourcePathRuleFinder()),
             FakeSourcePath.of("abi.jar"),
             Optional.of(FakeSourcePath.of("lib/junit-4.11-sources.jar")),
             /* gwtJar */ Optional.empty(),

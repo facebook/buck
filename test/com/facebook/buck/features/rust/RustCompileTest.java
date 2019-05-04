@@ -235,7 +235,7 @@ public class RustCompileTest {
     static FakeRustCompileRule from(String target, ImmutableSortedSet<SourcePath> srcs) {
       BuildTarget buildTarget = BuildTargetFactory.newInstance(target);
 
-      SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+      SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
 
       SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
 

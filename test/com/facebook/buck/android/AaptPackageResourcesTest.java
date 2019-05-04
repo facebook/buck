@@ -98,7 +98,7 @@ public class AaptPackageResourcesTest {
     resource1 = (AndroidResource) graphBuilder.requireRule(resourceNode.getBuildTarget());
     resource2 = (AndroidResource) graphBuilder.requireRule(resourceNode2.getBuildTarget());
 
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    ruleFinder = graphBuilder.getSourcePathRuleFinder();
     pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     aaptTarget = BuildTargetFactory.newInstance("//foo:bar");
 
@@ -261,7 +261,6 @@ public class AaptPackageResourcesTest {
                 aaptTarget,
                 filesystem,
                 TestAndroidPlatformTargetFactory.create(),
-                ruleFinder,
                 graphBuilder,
                 constructorArgs.manifest,
                 ImmutableList.of(),

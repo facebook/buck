@@ -176,7 +176,7 @@ public class CommandAliasBuilder
         CellPathResolver cellRoots) {
       this.commandAlias = commandAlias;
       this.arg = arg;
-      ruleFinder = new SourcePathRuleFinder(graphBuilder);
+      ruleFinder = graphBuilder.getSourcePathRuleFinder();
       this.cellRoots = cellRoots;
       sourcePathResolver = DefaultSourcePathResolver.from(this.ruleFinder);
       this.graphBuilder = graphBuilder;

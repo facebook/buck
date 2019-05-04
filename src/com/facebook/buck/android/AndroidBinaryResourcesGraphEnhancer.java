@@ -619,7 +619,6 @@ class AndroidBinaryResourcesGraphEnhancer {
         target,
         projectFilesystem,
         androidPlatformTarget,
-        ruleFinder,
         graphBuilder,
         realManifest,
         dependencyResourceApks,

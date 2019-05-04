@@ -166,7 +166,7 @@ public class HttpFileTest {
             out,
             executable);
 
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(new TestActionGraphBuilder());
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder().getSourcePathRuleFinder();
     SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
     return new TestDefaultRuleKeyFactory(hashCache, pathResolver, ruleFinder).build(httpFile);

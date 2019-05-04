@@ -19,7 +19,6 @@ package com.facebook.buck.swift;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -48,8 +47,8 @@ public class SwiftNativeLinkableTest {
     swiftStdTool = VersionedTool.of(FakeSourcePath.of("swift-std"), "foo", "1.0");
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(buildRuleResolver);
-    sourcePathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    sourcePathResolver =
+        DefaultSourcePathResolver.from(buildRuleResolver.getSourcePathRuleFinder());
   }
 
   @Test

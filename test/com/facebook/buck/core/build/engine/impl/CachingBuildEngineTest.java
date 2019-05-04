@@ -242,7 +242,7 @@ public class CachingBuildEngineTest {
   private static final BuildTarget BUILD_TARGET =
       BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
   private static final SourcePathRuleFinder DEFAULT_RULE_FINDER =
-      new SourcePathRuleFinder(new TestActionGraphBuilder());
+      new TestActionGraphBuilder().getSourcePathRuleFinder();
   private static final SourcePathResolver DEFAULT_SOURCE_PATH_RESOLVER =
       DefaultSourcePathResolver.from(DEFAULT_RULE_FINDER);
   public static final long NO_INPUT_FILE_SIZE_LIMIT = Long.MAX_VALUE;
@@ -317,7 +317,7 @@ public class CachingBuildEngineTest {
               .build();
       buildContext.getEventBus().register(listener);
       graphBuilder = new TestActionGraphBuilder();
-      ruleFinder = new SourcePathRuleFinder(graphBuilder);
+      ruleFinder = graphBuilder.getSourcePathRuleFinder();
       pathResolver = DefaultSourcePathResolver.from(ruleFinder);
       defaultRuleKeyFactory =
           new DefaultRuleKeyFactory(FIELD_LOADER, fileHashCache, pathResolver, ruleFinder);

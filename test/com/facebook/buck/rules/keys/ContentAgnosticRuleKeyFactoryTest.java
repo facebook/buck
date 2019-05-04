@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -67,8 +66,8 @@ public class ContentAgnosticRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     Path depOutput = Paths.get(filename);
     FakeBuildRule dep =
@@ -85,7 +84,7 @@ public class ContentAgnosticRuleKeyFactoryTest {
             .build(graphBuilder, fileSystem);
 
     return new ContentAgnosticRuleKeyFactory(
-            fieldLoader, pathResolver, ruleFinder, Optional.empty())
+            fieldLoader, pathResolver, graphBuilder.getSourcePathRuleFinder(), Optional.empty())
         .build(rule);
   }
 }

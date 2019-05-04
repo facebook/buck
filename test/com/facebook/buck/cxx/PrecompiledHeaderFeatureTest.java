@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -113,14 +112,14 @@ public class PrecompiledHeaderFeatureTest {
       boolean hasPchFlag =
           commandLineContainsPchFlag(
               FakeBuildContext.withSourcePathResolver(
-                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))),
+                  DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())),
               rule,
               toolType,
               headerFilename);
       boolean hasPrefixFlag =
           commandLineContainsPrefixFlag(
               FakeBuildContext.withSourcePathResolver(
-                  DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder))),
+                  DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder())),
               rule,
               toolType,
               headerFilename);
@@ -402,15 +401,15 @@ public class PrecompiledHeaderFeatureTest {
    */
   private static CxxSourceRuleFactory.Builder preconfiguredSourceRuleFactoryBuilder(
       String targetPath, ActionGraphBuilder graphBuilder) {
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     BuildTarget target = BuildTargetFactory.newInstance(targetPath);
     return CxxSourceRuleFactory.builder()
         .setProjectFilesystem(new FakeProjectFilesystem())
         .setBaseBuildTarget(target)
         .setActionGraphBuilder(graphBuilder)
         .setPathResolver(pathResolver)
-        .setRuleFinder(ruleFinder)
+        .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
         .setPicType(PicType.PDC);
   }
 

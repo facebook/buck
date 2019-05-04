@@ -26,7 +26,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -119,7 +118,7 @@ public class LuaBinaryIntegrationTest {
                             .getCc()
                             .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
                             .getCommandPrefix(
-                                DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))))
+                                DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder())))
                     .add("-includelua.h", "-E", "-")
                     .build())
             .setRedirectInput(ProcessBuilder.Redirect.PIPE)

@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.impl.DependencyAggregationTestUtil;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -138,8 +137,8 @@ public class CxxBinaryDescriptionTest {
 
     // Create the build rules.
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    SourcePathResolver pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    SourcePathResolver pathResolver =
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     genHeaderBuilder.build(graphBuilder, projectFilesystem, targetGraph);
     genSourceBuilder.build(graphBuilder, projectFilesystem, targetGraph);
     depBuilder.build(graphBuilder, projectFilesystem, targetGraph);
@@ -153,7 +152,7 @@ public class CxxBinaryDescriptionTest {
             .setProjectFilesystem(projectFilesystem)
             .setActionGraphBuilder(graphBuilder)
             .setPathResolver(pathResolver)
-            .setRuleFinder(ruleFinder)
+            .setRuleFinder(graphBuilder.getSourcePathRuleFinder())
             .setCxxBuckConfig(CxxPlatformUtils.DEFAULT_CONFIG)
             .setCxxPlatform(cxxPlatform)
             .setPicType(PicType.PDC)
@@ -248,7 +247,7 @@ public class CxxBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -273,7 +272,7 @@ public class CxxBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -303,7 +302,7 @@ public class CxxBinaryDescriptionTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:rule");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     Genrule dep =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setOut("out")
@@ -347,7 +346,7 @@ public class CxxBinaryDescriptionTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(binaryBuilder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
     CxxBinary binary = binaryBuilder.build(graphBuilder, filesystem, targetGraph);
     assertThat(binary.getLinkRule(), Matchers.instanceOf(CxxLink.class));
     assertThat(

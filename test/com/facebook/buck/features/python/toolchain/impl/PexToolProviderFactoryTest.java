@@ -23,7 +23,6 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -70,7 +69,7 @@ public class PexToolProviderFactoryTest {
     assertThat(
         pexToolProvider
             .getPexTool(resolver, EmptyTargetConfiguration.INSTANCE)
-            .getCommandPrefix(DefaultSourcePathResolver.from(new SourcePathRuleFinder(resolver))),
+            .getCommandPrefix(DefaultSourcePathResolver.from(resolver.getSourcePathRuleFinder())),
         hasConsecutiveItems("--hello", "--world"));
   }
 }

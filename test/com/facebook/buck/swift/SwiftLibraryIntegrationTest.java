@@ -37,7 +37,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -76,13 +75,11 @@ public class SwiftLibraryIntegrationTest {
 
   private ActionGraphBuilder graphBuilder;
   private SourcePathResolver pathResolver;
-  private SourcePathRuleFinder ruleFinder;
 
   @Before
   public void setUp() {
     graphBuilder = new TestActionGraphBuilder();
-    ruleFinder = new SourcePathRuleFinder(graphBuilder);
-    pathResolver = DefaultSourcePathResolver.from(ruleFinder);
+    pathResolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
   }
 
   @Test
@@ -98,7 +95,11 @@ public class SwiftLibraryIntegrationTest {
 
     HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            symlinkTarget, projectFilesystem, symlinkTreeRoot, links, ruleFinder);
+            symlinkTarget,
+            projectFilesystem,
+            symlinkTreeRoot,
+            links,
+            graphBuilder.getSourcePathRuleFinder());
     graphBuilder.addToIndex(symlinkTreeBuildRule);
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");

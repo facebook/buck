@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -108,7 +107,7 @@ public class JavaLibraryClasspathProviderTest extends AbiCompilationModeTest {
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(aNode, bNode, cNode, dNode, eNode, zNode);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    resolver = DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+    resolver = DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     a = graphBuilder.requireRule(aNode.getBuildTarget());
     b = graphBuilder.requireRule(bNode.getBuildTarget());

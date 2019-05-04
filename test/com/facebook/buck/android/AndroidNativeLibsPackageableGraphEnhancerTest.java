@@ -39,7 +39,6 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -71,7 +70,7 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   public void testNdkLibrary() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver sourcePathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     NdkLibrary ndkLibrary =
         new NdkLibraryBuilder(BuildTargetFactory.newInstance("//:ndklib")).build(graphBuilder);
@@ -145,7 +144,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
     TargetNode<CxxLibraryDescriptionArg> cxxLibraryDescription = cxxLibraryBuilder.build();
     TargetGraph targetGraph = TargetGraphFactory.newInstance(cxxLibraryDescription);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
     CxxLibrary cxxLibrary =
         (CxxLibrary)
             cxxLibraryBuilder.build(graphBuilder, new FakeProjectFilesystem(), targetGraph);
@@ -199,10 +197,12 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
                     "strippedObjectName", Matchers.equalTo("libgnustl_shared.so")))));
     assertThat(copyNativeLibraries.getNativeLibDirectories(), Matchers.empty());
     ImmutableCollection<BuildRule> stripRules =
-        ruleFinder.filterBuildRuleInputs(
-            copyNativeLibraries.getStrippedObjectDescriptions().stream()
-                .map(StrippedObjectDescription::getSourcePath)
-                .collect(ImmutableSet.toImmutableSet()));
+        graphBuilder
+            .getSourcePathRuleFinder()
+            .filterBuildRuleInputs(
+                copyNativeLibraries.getStrippedObjectDescriptions().stream()
+                    .map(StrippedObjectDescription::getSourcePath)
+                    .collect(ImmutableSet.toImmutableSet()));
     assertThat(
         stripRules,
         Matchers.contains(

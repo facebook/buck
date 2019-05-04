@@ -187,7 +187,7 @@ public class AndroidPackageableCollectorTest {
             .build();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, toolchainProvider);
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     AndroidBinary binaryRule = (AndroidBinary) graphBuilder.requireRule(binaryTarget);
     NdkLibrary ndkLibraryRule = (NdkLibrary) graphBuilder.requireRule(ndkLibrary.getBuildTarget());
@@ -270,7 +270,7 @@ public class AndroidPackageableCollectorTest {
   @Test
   public void testGetAndroidResourceDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     BuildRule c =
         graphBuilder.addToIndex(
             AndroidResourceRuleBuilder.newBuilder()
@@ -358,7 +358,7 @@ public class AndroidPackageableCollectorTest {
   @Test
   public void testGetAndroidResourceDepsWithDuplicateResourcePaths() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = new SourcePathRuleFinder(graphBuilder);
+    SourcePathRuleFinder ruleFinder = graphBuilder.getSourcePathRuleFinder();
     PathSourcePath resPath = FakeSourcePath.of("res");
     AndroidResource res1 =
         graphBuilder.addToIndex(
@@ -419,7 +419,7 @@ public class AndroidPackageableCollectorTest {
   public void testGraphForAndroidBinaryExcludesKeystoreDeps() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     SourcePathResolver pathResolver =
-        DefaultSourcePathResolver.from(new SourcePathRuleFinder(graphBuilder));
+        DefaultSourcePathResolver.from(graphBuilder.getSourcePathRuleFinder());
 
     BuildTarget androidLibraryKeystoreTarget =
         BuildTargetFactory.newInstance("//java/com/keystore/base:base");
