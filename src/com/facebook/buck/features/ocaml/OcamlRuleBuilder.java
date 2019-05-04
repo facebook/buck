@@ -116,7 +116,9 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableList<OcamlLibrary> getTransitiveOcamlLibraryDeps(
-      OcamlPlatform platform, Iterable<? extends BuildRule> deps) {
+      BuildRuleResolver buildRuleResolver,
+      OcamlPlatform platform,
+      Iterable<? extends BuildRule> deps) {
     MutableDirectedGraph<OcamlLibrary> graph = new MutableDirectedGraph<>();
 
     new AbstractBreadthFirstTraversal<OcamlLibrary>(
@@ -125,7 +127,7 @@ public class OcamlRuleBuilder {
       public Iterable<OcamlLibrary> visit(OcamlLibrary node) {
         graph.addNode(node);
         Iterable<OcamlLibrary> deps =
-            RichStream.from(node.getOcamlLibraryDeps(platform))
+            RichStream.from(node.getOcamlLibraryDeps(buildRuleResolver, platform))
                 .filter(OcamlLibrary.class)
                 .toImmutableList();
         for (OcamlLibrary dep : deps) {
@@ -139,11 +141,12 @@ public class OcamlRuleBuilder {
   }
 
   private static NativeLinkableInput getNativeLinkableInput(
-      OcamlPlatform platform, Iterable<BuildRule> deps) {
+      BuildRuleResolver buildRuleResolver, OcamlPlatform platform, Iterable<BuildRule> deps) {
     List<NativeLinkableInput> inputs = new ArrayList<>();
 
     // Add in the linkable input from OCaml libraries.
-    ImmutableList<OcamlLibrary> ocamlDeps = getTransitiveOcamlLibraryDeps(platform, deps);
+    ImmutableList<OcamlLibrary> ocamlDeps =
+        getTransitiveOcamlLibraryDeps(buildRuleResolver, platform, deps);
     for (OcamlLibrary dep : ocamlDeps) {
       inputs.add(dep.getNativeLinkableInput(platform));
     }
@@ -152,11 +155,12 @@ public class OcamlRuleBuilder {
   }
 
   private static NativeLinkableInput getBytecodeLinkableInput(
-      OcamlPlatform platform, Iterable<BuildRule> deps) {
+      BuildRuleResolver buildRuleResolver, OcamlPlatform platform, Iterable<BuildRule> deps) {
     List<NativeLinkableInput> inputs = new ArrayList<>();
 
     // Add in the linkable input from OCaml libraries.
-    ImmutableList<OcamlLibrary> ocamlDeps = getTransitiveOcamlLibraryDeps(platform, deps);
+    ImmutableList<OcamlLibrary> ocamlDeps =
+        getTransitiveOcamlLibraryDeps(buildRuleResolver, platform, deps);
     for (OcamlLibrary dep : ocamlDeps) {
       inputs.add(dep.getBytecodeLinkableInput(platform));
     }
@@ -177,7 +181,7 @@ public class OcamlRuleBuilder {
         Linker.LinkableDepType.STATIC,
         r ->
             r instanceof OcamlLibrary
-                ? Optional.of(((OcamlLibrary) r).getOcamlLibraryDeps(platform))
+                ? Optional.of(((OcamlLibrary) r).getOcamlLibraryDeps(graphBuilder, platform))
                 : Optional.empty());
   }
 
@@ -214,12 +218,15 @@ public class OcamlRuleBuilder {
             .transformAndConcat(getLibInclude(ocamlPlatform, true)::apply)
             .toList();
 
-    NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(ocamlPlatform, deps);
-    NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(ocamlPlatform, deps);
+    NativeLinkableInput nativeLinkableInput =
+        getNativeLinkableInput(graphBuilder, ocamlPlatform, deps);
+    NativeLinkableInput bytecodeLinkableInput =
+        getBytecodeLinkableInput(graphBuilder, ocamlPlatform, deps);
     NativeLinkableInput cLinkableInput =
         getCLinkableInput(ocamlPlatform, graphBuilder, buildTarget.getTargetConfiguration(), deps);
 
-    ImmutableList<OcamlLibrary> ocamlInput = getTransitiveOcamlLibraryDeps(ocamlPlatform, deps);
+    ImmutableList<OcamlLibrary> ocamlInput =
+        getTransitiveOcamlLibraryDeps(graphBuilder, ocamlPlatform, deps);
 
     ImmutableSortedSet.Builder<BuildRule> allDepsBuilder = ImmutableSortedSet.naturalOrder();
     allDepsBuilder.addAll(ruleFinder.filterBuildRuleInputs(srcs));
@@ -346,12 +353,15 @@ public class OcamlRuleBuilder {
             .transformAndConcat(getLibInclude(ocamlPlatform, true)::apply)
             .toList();
 
-    NativeLinkableInput nativeLinkableInput = getNativeLinkableInput(ocamlPlatform, deps);
-    NativeLinkableInput bytecodeLinkableInput = getBytecodeLinkableInput(ocamlPlatform, deps);
+    NativeLinkableInput nativeLinkableInput =
+        getNativeLinkableInput(graphBuilder, ocamlPlatform, deps);
+    NativeLinkableInput bytecodeLinkableInput =
+        getBytecodeLinkableInput(graphBuilder, ocamlPlatform, deps);
     NativeLinkableInput cLinkableInput =
         getCLinkableInput(ocamlPlatform, graphBuilder, buildTarget.getTargetConfiguration(), deps);
 
-    ImmutableList<OcamlLibrary> ocamlInput = getTransitiveOcamlLibraryDeps(ocamlPlatform, deps);
+    ImmutableList<OcamlLibrary> ocamlInput =
+        getTransitiveOcamlLibraryDeps(graphBuilder, ocamlPlatform, deps);
 
     BuildRuleParams compileParams =
         params

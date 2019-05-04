@@ -20,6 +20,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.CxxDeps;
@@ -139,7 +140,8 @@ class PrebuiltOcamlLibrary extends OcamlLibrary {
   }
 
   @Override
-  public Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform) {
-    return deps.get(ruleFinder.getRuleResolver(), platform.getCxxPlatform());
+  public Iterable<BuildRule> getOcamlLibraryDeps(
+      BuildRuleResolver buildRuleResolver, OcamlPlatform platform) {
+    return deps.get(buildRuleResolver, platform.getCxxPlatform());
   }
 }

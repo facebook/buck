@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.targetgraph.BuildRuleCreationContextWithTarg
 import com.facebook.buck.core.model.targetgraph.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
@@ -220,8 +221,9 @@ public class OcamlLibraryDescription
       }
 
       @Override
-      public Iterable<BuildRule> getOcamlLibraryDeps(OcamlPlatform platform) {
-        return allDeps.get(context.getActionGraphBuilder(), platform.getCxxPlatform());
+      public Iterable<BuildRule> getOcamlLibraryDeps(
+          BuildRuleResolver buildRuleResolver, OcamlPlatform platform) {
+        return allDeps.get(buildRuleResolver, platform.getCxxPlatform());
       }
     };
   }

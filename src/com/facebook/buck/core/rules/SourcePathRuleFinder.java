@@ -24,8 +24,6 @@ import java.util.stream.Stream;
 
 public interface SourcePathRuleFinder {
 
-  BuildRuleResolver getRuleResolver();
-
   ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources);
 
   ImmutableSet<BuildRule> filterBuildRuleInputs(SourcePath... sources);

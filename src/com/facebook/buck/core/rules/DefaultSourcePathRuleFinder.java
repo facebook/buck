@@ -34,11 +34,6 @@ public class DefaultSourcePathRuleFinder implements SourcePathRuleFinder {
   }
 
   @Override
-  public BuildRuleResolver getRuleResolver() {
-    return ruleResolver;
-  }
-
-  @Override
   public ImmutableSet<BuildRule> filterBuildRuleInputs(Iterable<? extends SourcePath> sources) {
     return RichStream.from(sources)
         .map(this::getRule)

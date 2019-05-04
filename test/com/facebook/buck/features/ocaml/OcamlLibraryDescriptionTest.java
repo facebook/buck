@@ -60,7 +60,7 @@ public class OcamlLibraryDescriptionTest {
     OcamlLibrary depB = (OcamlLibrary) graphBuilder.requireRule(depBBuilder.getTarget());
     OcamlLibrary rule = (OcamlLibrary) graphBuilder.requireRule(ruleBuilder.getTarget());
     assertThat(
-        rule.getOcamlLibraryDeps(OcamlTestUtils.DEFAULT_PLATFORM),
+        rule.getOcamlLibraryDeps(graphBuilder, OcamlTestUtils.DEFAULT_PLATFORM),
         Matchers.allOf(Matchers.hasItem(depA), not(Matchers.hasItem(depB))));
   }
 }
